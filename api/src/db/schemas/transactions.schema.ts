@@ -1,4 +1,4 @@
-import { boolean, date, integer, index, pgTable, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { boolean, date, index, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { paymentMethodEnum, transactionTypeEnum } from './finance-enums.schema';
 import { usersTable } from './users.schema';
 import { merchantsTable } from './merchants.schema';
@@ -6,16 +6,14 @@ import { merchantsTable } from './merchants.schema';
 export const transactionsTable = pgTable(
   'transactions',
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    userId: integer('user_id')
-      .notNull()
-      .references(() => usersTable.id, { onDelete: 'cascade' }),
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid('user_id').notNull().references(() => usersTable.id, { onDelete: 'cascade' }),
     type: transactionTypeEnum().notNull(),
     paymentMethod: paymentMethodEnum('payment_method'),
     description: varchar({ length: 512 }).notNull(),
     isExcluded: boolean('is_excluded').notNull().default(false),
     isOneTimeTransaction: boolean('is_one_time_transaction').notNull().default(false),
-    merchantId: integer('merchant_id').references(() => merchantsTable.id, { onDelete: 'set null' }),
+    merchantId: uuid('merchant_id').references(() => merchantsTable.id, { onDelete: 'set null' }),
     purchaseDate: date('purchase_date', { mode: 'date' }).notNull(),
     postedDate: date('posted_date', { mode: 'date' }).notNull(),
     createdAt: timestamp('created_at').notNull().defaultNow(),

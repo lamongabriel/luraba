@@ -32,13 +32,13 @@ export async function findAllUsers(): Promise<User[]> {
   return rows.map((row) => mapUserRowToUser(row as PublicUserRow));
 }
 
-export async function findUserById(id: number): Promise<User | undefined> {
+export async function findUserById(id: string): Promise<User | undefined> {
   const rows = await db.select(userPublicSelect).from(usersTable).where(eq(usersTable.id, id));
   const row = rows[0] as PublicUserRow | undefined;
   return row ? mapUserRowToUser(row) : undefined;
 }
 
-export async function findUserRecordById(id: number): Promise<UserRecord | undefined> {
+export async function findUserRecordById(id: string): Promise<UserRecord | undefined> {
   const rows = await db.select().from(usersTable).where(eq(usersTable.id, id));
   return rows[0];
 }
@@ -58,7 +58,7 @@ export async function createUser(dto: {
 }
 
 export async function updateUser(
-  id: number,
+  id: string,
   dto: {
     name?: string;
     email?: string;
@@ -74,13 +74,13 @@ export async function updateUser(
   return row ? mapUserRowToUser(row) : undefined;
 }
 
-export async function deleteUser(id: number): Promise<User | undefined> {
+export async function deleteUser(id: string): Promise<User | undefined> {
   const rows = await db.delete(usersTable).where(eq(usersTable.id, id)).returning(userPublicSelect);
   const row = rows[0] as PublicUserRow | undefined;
   return row ? mapUserRowToUser(row) : undefined;
 }
 
-export async function getUserPreferences(id: number): Promise<UserPreferences | undefined> {
+export async function getUserPreferences(id: string): Promise<UserPreferences | undefined> {
   const rows = await db
     .select({
       preferredLanguage: usersTable.preferredLanguage,
@@ -113,7 +113,7 @@ export async function getUserPreferences(id: number): Promise<UserPreferences | 
 }
 
 export async function updateUserPreferences(
-  id: number,
+  id: string,
   dto: UpdatePreferencesDto,
 ): Promise<UserPreferences | undefined> {
   const rows = await db

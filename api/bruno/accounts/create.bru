@@ -1,0 +1,45 @@
+meta {
+  name: create account
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/accounts
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Main Checking",
+    "type": "checking",
+    "currencyId": "{{currencyId}}"
+  }
+}
+
+tests {
+  test("account returns 201", function() {
+    expect(res.status).to.equal(201);
+  });
+}
+
+script:post-response {
+  if (res.body?.data?.id) {
+    const createdId = res.body.data.id;
+    const existingAccountId = bru.getEnvVar("accountId");
+
+    if (!existingAccountId) {
+      bru.setEnvVar("accountId", createdId);
+      return;
+    }
+
+    if (existingAccountId !== createdId) {
+      bru.setEnvVar("toAccountId", createdId);
+    }
+  }
+}

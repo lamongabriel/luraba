@@ -1,0 +1,28 @@
+meta {
+  name: create income
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/transactions
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "type": "income",
+    "description": "Salary",
+    "amount": 150000,
+    "currencyId": "{{currencyId}}",
+    "paymentMethod": "pix",
+    "accountId": "{{accountId}}",
+    "purchaseDate": "2026-03-24",
+    "postedDate": "2026-03-24"
+  }
+}

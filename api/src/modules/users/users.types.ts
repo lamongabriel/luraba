@@ -44,7 +44,7 @@ export const updatePreferencesSchema = userPreferencesSchema.partial();
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
 
 export type PublicUserRow = {
-  id: number;
+  id: string;
   name: string;
   email: string;
   preferredLanguage: UserPreferences['language'];
@@ -61,7 +61,7 @@ export type PublicUserRow = {
 };
 
 export type User = {
-  id: number;
+  id: string;
   name: string;
   email: string;
   preferences: UserPreferences;
@@ -104,7 +104,7 @@ export const updateUserSchema = z.object({
 });
 
 export const userIdParamSchema = z.object({
-  id: z.coerce.number().int().positive(),
+  id: z.string().uuid(),
 });
 
 // Inferred request types

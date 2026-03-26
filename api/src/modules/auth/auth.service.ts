@@ -10,7 +10,7 @@ import * as authRepository from './auth.repository';
 import { LoginDto, RegisterDto } from './auth.types';
 
 type SafeUser = {
-  id: number;
+  id: string;
   name: string;
   email: string;
   preferences: {
@@ -41,7 +41,7 @@ type SafeUser = {
 };
 
 function toSafeUser(user: {
-  id: number;
+  id: string;
   name: string;
   email: string;
   preferredLanguage: SafeUser['preferences']['language'];
@@ -128,7 +128,7 @@ export async function refresh(refreshToken: string): Promise<{
   refreshToken: string;
 }> {
   const payload = verifyRefreshToken(refreshToken);
-  const user = await authRepository.findUserById(Number(payload.sub));
+  const user = await authRepository.findUserById(payload.sub);
   if (!user) throw new UnauthorizedError('Invalid refresh token');
 
   const newAccessToken = signAccessToken(user.id, user.email);
@@ -141,7 +141,7 @@ export async function refresh(refreshToken: string): Promise<{
   };
 }
 
-export async function getMe(userId: number): Promise<SafeUser> {
+export async function getMe(userId: string): Promise<SafeUser> {
   const user = await authRepository.findUserById(userId);
   if (!user) throw new NotFoundError('User');
 

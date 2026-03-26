@@ -1,0 +1,13 @@
+meta {
+  name: get history
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/accounts/{{accountId}}/history
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}

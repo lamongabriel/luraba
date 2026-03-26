@@ -1,0 +1,13 @@
+meta {
+  name: get balance
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/accounts/{{accountId}}/balance
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}

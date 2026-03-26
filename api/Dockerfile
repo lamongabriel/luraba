@@ -1,25 +1,32 @@
 # ─── Build stage ────────────────────────────────────────────────────────────
+
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --ignore-scripts
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+COPY package.json ./
+COPY pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 COPY tsconfig.json ./
 COPY src/ ./src/
 
-RUN npm run build
+RUN pnpm run build
 
 # ─── Production stage ───────────────────────────────────────────────────────
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 ENV NODE_ENV=production
 
-COPY package*.json ./
-RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
+COPY package.json ./
+COPY pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts && pnpm store prune
 
 COPY --from=builder /app/dist ./dist
 

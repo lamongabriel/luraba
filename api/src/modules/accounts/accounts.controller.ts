@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { getAuthenticatedUser } from '@/middleware/auth.middleware';
 import { sendCreated, sendSuccess } from '@/shared/response';
 import * as accountsService from './accounts.service';
-import { createAccountSchema } from './accounts.types';
+import { accountIdParamSchema, createAccountSchema } from './accounts.types';
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -20,6 +20,28 @@ export async function list(req: Request, res: Response, next: NextFunction): Pro
     const user = getAuthenticatedUser(req);
     const accounts = await accountsService.listAccounts(user.id);
     sendSuccess(res, accounts);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function balance(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const user = getAuthenticatedUser(req);
+    const { id } = accountIdParamSchema.parse(req.params);
+    const data = await accountsService.getAccountBalance(user.id, id);
+    sendSuccess(res, data);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function history(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const user = getAuthenticatedUser(req);
+    const { id } = accountIdParamSchema.parse(req.params);
+    const data = await accountsService.getAccountHistory(user.id, id);
+    sendSuccess(res, data);
   } catch (err) {
     next(err);
   }

@@ -1,5 +1,7 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
+import type { StringValue } from 'ms';
+import { env } from '@/config/env';
 import { UnauthorizedError } from './errors';
 
 type AccessPayload = {
@@ -13,14 +15,6 @@ type RefreshPayload = {
   type: 'refresh';
 };
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_ACCESS_EXPIRES_IN = process.env.JWT_ACCESS_EXPIRES_IN ?? '15m';
-const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN ?? '7d';
-
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET is required');
-}
-
 export const REFRESH_COOKIE_NAME = 'luraba_refresh_token';
 
 export async function hashPassword(password: string): Promise<string> {
@@ -31,21 +25,25 @@ export async function verifyPassword(password: string, passwordHash: string): Pr
   return bcrypt.compare(password, passwordHash);
 }
 
-export function signAccessToken(userId: number, email: string): string {
-  return jwt.sign({ sub: String(userId), email }, JWT_SECRET, {
-    expiresIn: JWT_ACCESS_EXPIRES_IN,
-  });
+const accessTokenOptions: SignOptions = {
+  expiresIn: env.jwtAccessExpiresIn as StringValue,
+};
+
+const refreshTokenOptions: SignOptions = {
+  expiresIn: env.jwtRefreshExpiresIn as StringValue,
+};
+
+export function signAccessToken(userId: string, email: string): string {
+  return jwt.sign({ sub: userId, email }, env.jwtSecret, accessTokenOptions);
 }
 
-export function signRefreshToken(userId: number, email: string): string {
-  return jwt.sign({ sub: String(userId), email, type: 'refresh' }, JWT_SECRET, {
-    expiresIn: JWT_REFRESH_EXPIRES_IN,
-  });
+export function signRefreshToken(userId: string, email: string): string {
+  return jwt.sign({ sub: userId, email, type: 'refresh' }, env.jwtSecret, refreshTokenOptions);
 }
 
 export function verifyAccessToken(token: string): AccessPayload {
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
+    const payload = jwt.verify(token, env.jwtSecret) as jwt.JwtPayload;
     if (!payload?.sub || !payload?.email) {
       throw new UnauthorizedError('Invalid access token');
     }
@@ -57,7 +55,7 @@ export function verifyAccessToken(token: string): AccessPayload {
 
 export function verifyRefreshToken(token: string): RefreshPayload {
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
+    const payload = jwt.verify(token, env.jwtSecret) as jwt.JwtPayload;
     if (!payload?.sub || !payload?.email || payload.type !== 'refresh') {
       throw new UnauthorizedError('Invalid refresh token');
     }

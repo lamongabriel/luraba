@@ -4,12 +4,12 @@ import { merchantsTable } from '@/db/schemas/merchants.schema';
 import { usersTable } from '@/db/schemas/users.schema';
 import { Merchant } from './merchants.types';
 
-export async function findUserById(userId: number): Promise<{ id: number } | undefined> {
+export async function findUserById(userId: string): Promise<{ id: string } | undefined> {
   const rows = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, userId));
   return rows[0];
 }
 
-export async function findByUserAndName(userId: number, name: string): Promise<Merchant | undefined> {
+export async function findByUserAndName(userId: string, name: string): Promise<Merchant | undefined> {
   const rows = await db
     .select()
     .from(merchantsTable)
@@ -19,7 +19,7 @@ export async function findByUserAndName(userId: number, name: string): Promise<M
 }
 
 export async function createMerchant(dto: {
-  userId: number;
+  userId: string;
   name: string;
   website?: string;
   logoUrl?: string;
@@ -28,13 +28,13 @@ export async function createMerchant(dto: {
   return rows[0];
 }
 
-export async function listByUserId(userId: number): Promise<Merchant[]> {
+export async function listByUserId(userId: string): Promise<Merchant[]> {
   return db.select().from(merchantsTable).where(eq(merchantsTable.userId, userId));
 }
 
 export async function findOwnedMerchant(
-  merchantId: number,
-  userId: number,
+  merchantId: string,
+  userId: string,
 ): Promise<Merchant | undefined> {
   const rows = await db
     .select()

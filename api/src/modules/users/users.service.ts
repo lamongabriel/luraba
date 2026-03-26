@@ -7,7 +7,7 @@ export async function getAllUsers(): Promise<User[]> {
   return usersRepository.findAllUsers();
 }
 
-export async function getUserById(id: number): Promise<User> {
+export async function getUserById(id: string): Promise<User> {
   const user = await usersRepository.findUserById(id);
   if (!user) throw new NotFoundError('User');
   return user;
@@ -24,7 +24,7 @@ export async function createUser(dto: CreateUserDto): Promise<User> {
   });
 }
 
-export async function updateUser(id: number, dto: UpdateUserDto): Promise<User> {
+export async function updateUser(id: string, dto: UpdateUserDto): Promise<User> {
   await getUserById(id); // throws NotFoundError if missing
 
   if (dto.email) {
@@ -43,19 +43,19 @@ export async function updateUser(id: number, dto: UpdateUserDto): Promise<User> 
   return updated;
 }
 
-export async function deleteUser(id: number): Promise<User> {
+export async function deleteUser(id: string): Promise<User> {
   const deleted = await usersRepository.deleteUser(id);
   if (!deleted) throw new NotFoundError('User');
   return deleted;
 }
 
-export async function getUserPreferences(userId: number): Promise<UserPreferences> {
+export async function getUserPreferences(userId: string): Promise<UserPreferences> {
   const preferences = await usersRepository.getUserPreferences(userId);
   if (!preferences) throw new NotFoundError('User');
   return preferences;
 }
 
-export async function updateUserPreferences(userId: number, dto: UpdatePreferencesDto): Promise<UserPreferences> {
+export async function updateUserPreferences(userId: string, dto: UpdatePreferencesDto): Promise<UserPreferences> {
   await getUserById(userId);
   const updated = await usersRepository.updateUserPreferences(userId, dto);
   if (!updated) throw new NotFoundError('User');

@@ -1,0 +1,36 @@
+meta {
+  name: list currencies
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/currencies
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("currencies returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}
+
+script:post-response {
+  const currencies = res.body?.data;
+  if (!Array.isArray(currencies)) {
+    return;
+  }
+
+  const brl = currencies.find((currency) => currency.code === "BRL");
+  if (brl?.id) {
+    bru.setEnvVar("currencyId", brl.id);
+    return;
+  }
+
+  if (currencies[0]?.id) {
+    bru.setEnvVar("currencyId", currencies[0].id);
+  }
+}

@@ -1,27 +1,37 @@
-import 'dotenv/config';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+
+// ─── Config ──────────────────────────────────────────────────────────────────
+import { env } from '@/config/env';
+
+// ─── Infrastructure ──────────────────────────────────────────────────────────
+import { pool } from '@/db';
 import { authenticateUser } from '@/middleware/auth.middleware';
 import { errorMiddleware } from '@/middleware/error.middleware';
+import { logger } from '@/shared/logger';
+import { jsonBigIntReplacer } from '@/shared/response';
+
+// ─── Feature routes ───────────────────────────────────────────
 import accountsRouter from '@/modules/accounts/accounts.routes';
 import authRouter from '@/modules/auth/auth.routes';
+import categoriesRouter from '@/modules/categories/categories.routes';
 import creditCardsRouter from '@/modules/credit-cards/credit-cards.routes';
+import currenciesRouter from '@/modules/currencies/currencies.routes';
 import merchantsRouter from '@/modules/merchants/merchants.routes';
 import transactionsRouter from '@/modules/transactions/transactions.routes';
 import usersRouter from '@/modules/users/users.routes';
-import { pool } from '@/db';
-import { logger } from '@/shared/logger';
 
 const app = express();
-const PORT = process.env.PORT ?? 8080;
+const PORT = env.port;
+app.set('json replacer', jsonBigIntReplacer);
 
 // ─── Middleware ──────────────────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: process.env.FRONTEND_ORIGIN ?? 'http://localhost:3000',
+    origin: env.frontendOrigin,
     credentials: true,
   }),
 );
@@ -40,12 +50,14 @@ app.get('/health', async (_req, res) => {
 // ─── Routes ──────────────────────────────────────────────────────────────────
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', authenticateUser, usersRouter);
+app.use('/api/v1/currencies', authenticateUser, currenciesRouter);
 app.use('/api/v1/accounts', authenticateUser, accountsRouter);
 app.use('/api/v1/cards', authenticateUser, creditCardsRouter);
+app.use('/api/v1/categories', authenticateUser, categoriesRouter);
 app.use('/api/v1/merchants', authenticateUser, merchantsRouter);
 app.use('/api/v1/transactions', authenticateUser, transactionsRouter);
 
-// ─── Error handler (must be last) ────────────────────────────────────────────
+// ─── Error handler ────────────────────────────────────────────
 app.use(errorMiddleware);
 
 // ─── Start ───────────────────────────────────────────────────────────────────

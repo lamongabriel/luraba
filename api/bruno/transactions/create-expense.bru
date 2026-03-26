@@ -1,0 +1,29 @@
+meta {
+  name: create expense
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/transactions
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "type": "expense",
+    "description": "Lunch",
+    "amount": 2500,
+    "currencyId": "{{currencyId}}",
+    "paymentMethod": "pix",
+    "accountId": "{{accountId}}",
+    "categoryId": "{{categoryId}}",
+    "purchaseDate": "2026-03-24",
+    "postedDate": "2026-03-24"
+  }
+}

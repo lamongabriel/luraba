@@ -7,12 +7,12 @@ import { currenciesTable } from '@/db/schemas/currencies.schema';
 import { usersTable } from '@/db/schemas/users.schema';
 import { CreditCard, CreateCreditCardDto } from './credit-cards.types';
 
-export async function findUserById(userId: number): Promise<{ id: number } | undefined> {
+export async function findUserById(userId: string): Promise<{ id: string } | undefined> {
   const rows = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, userId));
   return rows[0];
 }
 
-export async function findCurrencyById(currencyId: number): Promise<{ id: number } | undefined> {
+export async function findCurrencyById(currencyId: string): Promise<{ id: string } | undefined> {
   const rows = await db
     .select({ id: currenciesTable.id })
     .from(currenciesTable)
@@ -21,8 +21,8 @@ export async function findCurrencyById(currencyId: number): Promise<{ id: number
 }
 
 export async function findOwnedAccount(
-  accountId: number,
-  userId: number,
+  accountId: string,
+  userId: string,
 ): Promise<(typeof accountsTable.$inferSelect) | undefined> {
   const rows = await db
     .select()
@@ -51,8 +51,8 @@ export async function createCreditCard(dto: CreateCreditCardDto): Promise<Credit
 }
 
 export async function findOwnedCreditCard(
-  cardId: number,
-  userId: number,
+  cardId: string,
+  userId: string,
 ): Promise<CreditCard | undefined> {
   const rows = await db
     .select({
@@ -76,7 +76,7 @@ export async function findOwnedCreditCard(
   return rows[0];
 }
 
-export async function listCyclesByCard(cardId: number): Promise<(typeof billingCyclesTable.$inferSelect)[]> {
+export async function listCyclesByCard(cardId: string): Promise<(typeof billingCyclesTable.$inferSelect)[]> {
   return db
     .select()
     .from(billingCyclesTable)

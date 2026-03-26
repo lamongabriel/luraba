@@ -7,9 +7,6 @@ dist/
 # Environment variables
 .env
 
-# Drizzle snapshots (generated, not committed)
-drizzle/meta/
-
 # macOS
 .DS_Store
 

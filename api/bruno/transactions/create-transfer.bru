@@ -1,0 +1,28 @@
+meta {
+  name: create transfer
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/transactions
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "type": "transfer",
+    "description": "Move to savings",
+    "amount": 10000,
+    "currencyId": "{{currencyId}}",
+    "accountId": "{{accountId}}",
+    "toAccountId": "{{toAccountId}}",
+    "purchaseDate": "2026-03-24",
+    "postedDate": "2026-03-24"
+  }
+}

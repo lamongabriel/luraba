@@ -2,7 +2,7 @@ import { ConflictError, NotFoundError } from '@/shared/errors';
 import * as merchantsRepository from './merchants.repository';
 import { CreateMerchantDto, Merchant } from './merchants.types';
 
-export async function createMerchant(userId: number, dto: CreateMerchantDto): Promise<Merchant> {
+export async function createMerchant(userId: string, dto: CreateMerchantDto): Promise<Merchant> {
   const user = await merchantsRepository.findUserById(userId);
   if (!user) throw new NotFoundError('User');
 
@@ -15,7 +15,7 @@ export async function createMerchant(userId: number, dto: CreateMerchantDto): Pr
   });
 }
 
-export async function listMerchants(userId: number): Promise<Merchant[]> {
+export async function listMerchants(userId: string): Promise<Merchant[]> {
   const user = await merchantsRepository.findUserById(userId);
   if (!user) throw new NotFoundError('User');
 

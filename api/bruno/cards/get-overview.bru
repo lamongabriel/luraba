@@ -1,0 +1,22 @@
+meta {
+  name: get overview
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/cards/{{cardId}}/overview
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+script:post-response {
+  const data = res.body?.data;
+  if (data?.currentCycle?.id) {
+    bru.setEnvVar("billingCycleId", data.currentCycle.id);
+  } else if (data?.cycles?.length) {
+    bru.setEnvVar("billingCycleId", data.cycles[0].id);
+  }
+}

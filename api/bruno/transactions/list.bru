@@ -1,0 +1,13 @@
+meta {
+  name: list transactions
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/transactions
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}

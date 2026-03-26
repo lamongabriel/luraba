@@ -7,7 +7,7 @@ export async function findUserByEmail(email: string): Promise<typeof usersTable.
   return rows[0];
 }
 
-export async function findUserById(id: number): Promise<typeof usersTable.$inferSelect | undefined> {
+export async function findUserById(id: string): Promise<typeof usersTable.$inferSelect | undefined> {
   const rows = await db.select().from(usersTable).where(eq(usersTable.id, id));
   return rows[0];
 }

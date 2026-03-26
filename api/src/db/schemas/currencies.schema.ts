@@ -1,9 +1,9 @@
-import { integer, pgTable, timestamp, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
+import { integer, pgTable, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 
 export const currenciesTable = pgTable(
   'currencies',
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    id: uuid().primaryKey().defaultRandom(),
     code: varchar({ length: 3 }).notNull(),
     symbol: varchar({ length: 8 }).notNull(),
     precision: integer().notNull(),

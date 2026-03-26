@@ -10,6 +10,10 @@ export interface ApiResponse<T> {
   meta?: Record<string, unknown>;
 }
 
+export function jsonBigIntReplacer(_key: string, value: unknown): unknown {
+  return typeof value === 'bigint' ? value.toString() : value;
+}
+
 export function sendSuccess<T>(
   res: Response,
   data: T,

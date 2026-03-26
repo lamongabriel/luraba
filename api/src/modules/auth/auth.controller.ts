@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import { env } from '@/config/env';
 import { REFRESH_COOKIE_NAME } from '@/shared/auth';
 import { sendSuccess } from '@/shared/response';
 import { getAuthenticatedUser } from '@/middleware/auth.middleware';
@@ -10,7 +11,7 @@ function setRefreshCookie(res: Response, refreshToken: string): void {
   res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: env.nodeEnv === 'production',
     path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
@@ -68,7 +69,7 @@ export async function logout(_req: Request, res: Response, next: NextFunction): 
     res.clearCookie(REFRESH_COOKIE_NAME, {
       httpOnly: true,
       sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      secure: env.nodeEnv === 'production',
       path: '/',
     });
 

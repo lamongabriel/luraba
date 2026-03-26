@@ -1,0 +1,29 @@
+meta {
+  name: create card purchase
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/transactions
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "type": "card_purchase",
+    "description": "Groceries",
+    "amount": 9000,
+    "currencyId": "{{currencyId}}",
+    "paymentMethod": "credit_card",
+    "creditCardId": "{{cardId}}",
+    "categoryId": "{{categoryId}}",
+    "purchaseDate": "2026-03-24",
+    "postedDate": "2026-03-24"
+  }
+}

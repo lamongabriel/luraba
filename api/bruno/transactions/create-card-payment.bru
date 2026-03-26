@@ -1,0 +1,26 @@
+meta {
+  name: create card payment
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/transactions
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "type": "card_payment",
+    "accountId": "{{accountId}}",
+    "billingCycleId": "{{billingCycleId}}",
+    "paymentMethod": "pix",
+    "purchaseDate": "2026-03-25",
+    "postedDate": "2026-03-25"
+  }
+}

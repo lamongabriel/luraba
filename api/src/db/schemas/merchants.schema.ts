@@ -1,13 +1,11 @@
-import { integer, pgTable, timestamp, uniqueIndex, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { usersTable } from './users.schema';
 
 export const merchantsTable = pgTable(
   'merchants',
   {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    userId: integer('user_id')
-      .notNull()
-      .references(() => usersTable.id, { onDelete: 'cascade' }),
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid('user_id').notNull().references(() => usersTable.id, { onDelete: 'cascade' }),
     name: varchar({ length: 255 }).notNull(),
     website: varchar({ length: 255 }),
     logoUrl: varchar('logo_url', { length: 512 }),

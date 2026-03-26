@@ -9,7 +9,11 @@ export const createAccountSchema = z.object({
   institutionDomain: z.string().min(1).max(255).optional(),
   notes: z.string().max(4000).optional(),
   type: z.enum(['checking', 'savings', 'cash', 'wallet']),
-  currencyId: z.coerce.number().int().positive(),
+  currencyId: z.string().uuid(),
+});
+
+export const accountIdParamSchema = z.object({
+  id: z.string().uuid(),
 });
 
 export type CreateAccountDto = z.infer<typeof createAccountSchema>;

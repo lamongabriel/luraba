@@ -12,14 +12,14 @@ export function authenticateUser(req: Request, _res: Response, next: NextFunctio
   const payload = verifyAccessToken(token);
 
   req.user = {
-    id: Number(payload.sub),
+    id: payload.sub,
     email: payload.email,
   };
 
   next();
 }
 
-export function getAuthenticatedUser(req: Request): { id: number; email: string } {
+export function getAuthenticatedUser(req: Request): { id: string; email: string } {
   if (!req.user) {
     throw new UnauthorizedError('Authentication required');
   }
