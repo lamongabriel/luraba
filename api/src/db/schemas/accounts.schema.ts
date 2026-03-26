@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
-import { accountTypeEnum } from './finance-enums.schema';
+import { accountClassificationEnum, accountTypeEnum } from './enums.schema';
 import { usersTable } from './users.schema';
 import { currenciesTable } from './currencies.schema';
 
@@ -12,8 +12,9 @@ export const accountsTable = pgTable(
     institutionName: varchar('institution_name', { length: 255 }),
     institutionDomain: varchar('institution_domain', { length: 255 }),
     notes: text(),
+    classification: accountClassificationEnum().notNull(),
     type: accountTypeEnum().notNull(),
-    currencyId: uuid('currency_id').notNull().references(() => currenciesTable.id, { onDelete: 'restrict' }),
+    currencyId: varchar('currency_id', { length: 3 }).notNull().references(() => currenciesTable.code, { onDelete: 'restrict' }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

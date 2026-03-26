@@ -1,5 +1,5 @@
 import { pgTable, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
-import { categoryTypeEnum } from './finance-enums.schema';
+import { categoryTypeEnum } from './enums.schema';
 import { usersTable } from './users.schema';
 
 export const categoriesTable = pgTable(

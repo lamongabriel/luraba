@@ -8,7 +8,7 @@ import {
   defaultAccountOrderEnum,
   countryCodeEnum,
   themePreferenceEnum,
-} from './user-enums.schema';
+} from './enums.schema';
 
 export const usersTable = pgTable('users', {
   id: uuid().primaryKey().defaultRandom(),

@@ -1,12 +1,12 @@
-import { date, integer, pgTable, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { date, integer, pgTable, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { currenciesTable } from './currencies.schema';
 
 export const exchangeRatesTable = pgTable(
   'exchange_rates',
   {
     id: uuid().primaryKey().defaultRandom(),
-    fromCurrencyId: uuid('from_currency_id').notNull().references(() => currenciesTable.id, { onDelete: 'restrict' }),
-    toCurrencyId: uuid('to_currency_id').notNull().references(() => currenciesTable.id, { onDelete: 'restrict' }),
+    fromCurrencyId: varchar('from_currency_id', { length: 3 }).notNull().references(() => currenciesTable.code, { onDelete: 'restrict' }),
+    toCurrencyId: varchar('to_currency_id', { length: 3 }).notNull().references(() => currenciesTable.code, { onDelete: 'restrict' }),
     rateNumerator: integer('rate_numerator').notNull(),
     rateDenominator: integer('rate_denominator').notNull(),
     rateDate: date('rate_date', { mode: 'date' }).notNull(),

@@ -1,16 +1,16 @@
 import { sql } from 'drizzle-orm';
 import { pgTable, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
-import { ledgerAccountTypeEnum, ledgerOwnerTypeEnum } from './finance-enums.schema';
+import { ledgerClassificationEnum, ledgerOwnerTypeEnum } from './enums.schema';
 import { currenciesTable } from './currencies.schema';
 
 export const ledgerAccountsTable = pgTable(
   'ledger_accounts',
   {
     id: uuid().primaryKey().defaultRandom(),
-    type: ledgerAccountTypeEnum().notNull(),
+    classification: ledgerClassificationEnum().notNull(),
     ownerType: ledgerOwnerTypeEnum('owner_type').notNull(),
     ownerId: uuid('owner_id').notNull(),
-    currencyId: uuid('currency_id').notNull().references(() => currenciesTable.id, { onDelete: 'restrict' }),
+    currencyId: varchar('currency_id', { length: 3 }).notNull().references(() => currenciesTable.code, { onDelete: 'restrict' }),
     systemKey: varchar('system_key', { length: 128 }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },

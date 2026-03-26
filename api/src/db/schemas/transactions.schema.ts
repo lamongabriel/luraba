@@ -1,5 +1,6 @@
 import { boolean, date, index, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
-import { paymentMethodEnum, transactionTypeEnum } from './finance-enums.schema';
+import { transactionTypeEnum } from './enums.schema';
+import { paymentMethodsTable } from './payment-methods.schema';
 import { usersTable } from './users.schema';
 import { merchantsTable } from './merchants.schema';
 
@@ -9,7 +10,7 @@ export const transactionsTable = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     userId: uuid('user_id').notNull().references(() => usersTable.id, { onDelete: 'cascade' }),
     type: transactionTypeEnum().notNull(),
-    paymentMethod: paymentMethodEnum('payment_method'),
+    paymentMethodId: uuid('payment_method_id').references(() => paymentMethodsTable.id, { onDelete: 'restrict' }),
     description: varchar({ length: 512 }).notNull(),
     isExcluded: boolean('is_excluded').notNull().default(false),
     isOneTimeTransaction: boolean('is_one_time_transaction').notNull().default(false),
@@ -21,7 +22,7 @@ export const transactionsTable = pgTable(
   },
   (table) => [
     index('transactions_user_id_idx').on(table.userId),
-    index('transactions_payment_method_idx').on(table.paymentMethod),
+    index('transactions_payment_method_id_idx').on(table.paymentMethodId),
     index('transactions_posted_date_idx').on(table.postedDate),
     index('transactions_purchase_date_idx').on(table.purchaseDate),
   ],
