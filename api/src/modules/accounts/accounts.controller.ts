@@ -25,17 +25,6 @@ export async function list(req: Request, res: Response, next: NextFunction): Pro
   }
 }
 
-export async function balance(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const user = getAuthenticatedUser(req);
-    const { id } = accountIdParamSchema.parse(req.params);
-    const data = await accountsService.getAccountBalance(user.id, id);
-    sendSuccess(res, data);
-  } catch (err) {
-    next(err);
-  }
-}
-
 export async function history(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const user = getAuthenticatedUser(req);

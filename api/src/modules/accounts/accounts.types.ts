@@ -63,6 +63,10 @@ export type AccountResponse = {
   updatedAt: Date;
 };
 
+export type AccountListItemResponse = AccountResponse & {
+  balance: bigint;
+};
+
 export function mapAccountRecord(account: AccountRecord): AccountResponse {
   return {
     id: account.id,

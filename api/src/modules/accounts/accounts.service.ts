@@ -3,7 +3,13 @@ import { accountsTable } from '@/db/schemas/accounts.schema';
 import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import * as accountsRepository from './accounts.repository';
-import { AccountClassification, AccountResponse, CreateAccountDto, mapAccountRecord } from './accounts.types';
+import {
+  AccountClassification,
+  AccountListItemResponse,
+  AccountResponse,
+  CreateAccountDto,
+  mapAccountRecord,
+} from './accounts.types';
 
 function toDisplayedAmount(rawAmount: bigint, classification: AccountClassification): bigint {
   return classification === 'asset' ? rawAmount : -rawAmount;
@@ -51,30 +57,25 @@ export async function createAccount(userId: string, dto: CreateAccountDto): Prom
   });
 }
 
-export async function listAccounts(userId: string): Promise<AccountResponse[]> {
+export async function listAccounts(userId: string): Promise<AccountListItemResponse[]> {
   const user = await accountsRepository.findUserById(userId);
   if (!user) throw new NotFoundError('User');
 
   const accounts = await accountsRepository.listByUserId(userId);
-  return accounts.map(mapAccountRecord);
-}
 
-export async function getAccountBalance(userId: string, accountId: string): Promise<{
-  account: AccountResponse;
-  balance: bigint;
-}> {
-  const account = await accountsRepository.findOwnedAccount(accountId, userId);
-  if (!account) throw new NotFoundError('Account');
+  return Promise.all(
+    accounts.map(async (account) => {
+      const ledger = await accountsRepository.findLedgerByAccountId(account.id);
+      if (!ledger) throw new NotFoundError('Account ledger');
 
-  const ledger = await accountsRepository.findLedgerByAccountId(account.id);
-  if (!ledger) throw new NotFoundError('Account ledger');
+      const balance = await accountsRepository.getAccountBalanceByLedgerId(ledger.id);
 
-  const balance = await accountsRepository.getAccountBalanceByLedgerId(ledger.id);
-
-  return {
-    account: mapAccountRecord(account),
-    balance: toDisplayedAmount(balance, account.classification),
-  };
+      return {
+        ...mapAccountRecord(account),
+        balance: toDisplayedAmount(balance, account.classification),
+      };
+    }),
+  );
 }
 
 export async function getAccountHistory(userId: string, accountId: string): Promise<{
