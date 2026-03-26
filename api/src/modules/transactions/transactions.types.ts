@@ -1,13 +1,15 @@
 import { z } from 'zod';
+import { accountsTable } from '@/db/schemas/accounts.schema';
 import { entriesTable } from '@/db/schemas/entries.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
 
-export type Transaction = typeof transactionsTable.$inferSelect;
-export type Entry = typeof entriesTable.$inferSelect;
-export type TransactionListItem = Transaction & {
-  amount: bigint;
-  currencyId: string;
-};
+export type TransactionRecord = typeof transactionsTable.$inferSelect;
+export type EntryRecord = typeof entriesTable.$inferSelect;
+export type AccountClassification = typeof accountsTable.$inferSelect['classification'];
+export type TransactionType = TransactionRecord['type'];
+
+const currencyCodeSchema = z.string().trim().length(3).transform((value) => value.toUpperCase());
+const paymentMethodCodeSchema = z.string().trim().min(1).max(32).transform((value) => value.toLowerCase());
 
 const baseFields = {
   description: z.string().min(1).max(512),
@@ -17,82 +19,45 @@ const baseFields = {
   isOneTimeTransaction: z.boolean().optional(),
 };
 
-const monetaryFields = {
-  amount: z.coerce.bigint().positive(),
-  currencyId: z.string().uuid(),
-};
-
 const optionalLinkFields = {
   categoryId: z.string().uuid().optional(),
   merchantId: z.string().uuid().optional(),
 };
 
-const nonCardPaymentMethodSchema = z.enum(['cash', 'debit', 'pix', 'boleto']);
-
 const expenseTransactionSchema = z.object({
   type: z.literal('expense'),
   ...baseFields,
-  ...monetaryFields,
   ...optionalLinkFields,
+  amount: z.coerce.bigint().positive(),
+  currencyCode: currencyCodeSchema,
   accountId: z.string().uuid(),
-  paymentMethod: nonCardPaymentMethodSchema,
+  paymentMethodCode: paymentMethodCodeSchema,
 });
 
 const incomeTransactionSchema = z.object({
   type: z.literal('income'),
   ...baseFields,
-  ...monetaryFields,
   ...optionalLinkFields,
+  amount: z.coerce.bigint().positive(),
+  currencyCode: currencyCodeSchema,
   accountId: z.string().uuid(),
-  paymentMethod: nonCardPaymentMethodSchema.optional(),
+  paymentMethodCode: paymentMethodCodeSchema,
 });
 
 const transferTransactionSchema = z.object({
   type: z.literal('transfer'),
   ...baseFields,
-  ...monetaryFields,
-  accountId: z.string().uuid(),
+  amount: z.coerce.bigint().positive(),
+  currencyCode: currencyCodeSchema,
+  fromAccountId: z.string().uuid(),
   toAccountId: z.string().uuid(),
-  paymentMethod: nonCardPaymentMethodSchema.optional(),
-});
-
-const cardPurchaseTransactionSchema = z.object({
-  type: z.literal('card_purchase'),
-  ...baseFields,
-  ...monetaryFields,
-  ...optionalLinkFields,
-  creditCardId: z.string().uuid(),
-  paymentMethod: z.literal('credit_card'),
-});
-
-const installmentTransactionSchema = z.object({
-  type: z.literal('installment'),
-  ...baseFields,
-  ...monetaryFields,
-  ...optionalLinkFields,
-  creditCardId: z.string().uuid(),
-  installmentCount: z.coerce.number().int().min(2).max(240),
-  paymentMethod: z.literal('credit_card'),
-});
-
-const cardPaymentTransactionSchema = z.object({
-  type: z.literal('card_payment'),
-  description: z.string().min(1).max(512).optional(),
-  purchaseDate: z.coerce.date(),
-  postedDate: z.coerce.date(),
-  accountId: z.string().uuid(),
-  billingCycleId: z.string().uuid(),
-  paymentMethod: nonCardPaymentMethodSchema.optional(),
-  isExcluded: z.boolean().optional(),
-  isOneTimeTransaction: z.boolean().optional(),
 });
 
 const adjustmentTransactionSchema = z.object({
   type: z.literal('adjustment'),
   ...baseFields,
   amount: z.coerce.bigint().positive(),
-  targetType: z.enum(['account', 'credit_card']),
-  targetId: z.string().uuid(),
+  accountId: z.string().uuid(),
   direction: z.enum(['increase', 'decrease']),
 });
 
@@ -100,10 +65,33 @@ export const createTransactionSchema = z.discriminatedUnion('type', [
   expenseTransactionSchema,
   incomeTransactionSchema,
   transferTransactionSchema,
-  cardPurchaseTransactionSchema,
-  installmentTransactionSchema,
-  cardPaymentTransactionSchema,
   adjustmentTransactionSchema,
 ]);
 
 export type CreateTransactionDto = z.infer<typeof createTransactionSchema>;
+
+export type TransactionResponse = {
+  id: string;
+  userId: string;
+  type: TransactionType;
+  description: string;
+  amount: bigint;
+  currencyCode: string;
+  accountId: string | null;
+  accountName: string | null;
+  accountClassification: AccountClassification | null;
+  toAccountId: string | null;
+  toAccountName: string | null;
+  toAccountClassification: AccountClassification | null;
+  categoryId: string | null;
+  merchantId: string | null;
+  paymentMethodId: string | null;
+  paymentMethodCode: string | null;
+  paymentMethodName: string | null;
+  isExcluded: boolean;
+  isOneTimeTransaction: boolean;
+  purchaseDate: string;
+  postedDate: string;
+  createdAt: Date;
+  updatedAt: Date;
+};

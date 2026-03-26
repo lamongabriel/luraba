@@ -1,38 +1,30 @@
-import { and, eq, gte, lte } from 'drizzle-orm';
 import { db } from '@/db';
-import { billingCyclesTable } from '@/db/schemas/billing-cycles.schema';
-import { ensureBillingCycleWindow, getCycleOutstanding } from '@/modules/finance/billing-cycles.service';
-import {
-  deriveBillingCycleStatus,
-  resolveBudgetMonth,
-  splitInstallments,
-} from '@/modules/finance/finance.helpers';
 import { NotFoundError, ValidationError } from '@/shared/errors';
 import * as txRepository from './transactions.repository';
-import { CreateTransactionDto } from './transactions.types';
+import { CreateTransactionDto, TransactionResponse } from './transactions.types';
 
 type EntryDraft = {
   ledgerAccountId: string;
   amount: bigint;
-  currencyId: string;
+  currencyCode: string;
   categoryId?: string;
-  billingCycleId?: string;
-  budgetMonth?: Date;
 };
 
-type CreatedTransaction = Awaited<ReturnType<typeof txRepository.createTransaction>>;
-type CreatedEntry = Awaited<ReturnType<typeof txRepository.createEntries>>[number];
-type CreatedInstallment = Awaited<ReturnType<typeof txRepository.createInstallment>>;
-type CreatedInstallmentItem = Awaited<ReturnType<typeof txRepository.createInstallmentItems>>[number];
-type CreatedCardPayment = Awaited<ReturnType<typeof txRepository.createCardPayment>>;
+type DetailedTransactionRow = Awaited<ReturnType<typeof txRepository.listDetailedByUserId>>[number];
 
-type CreateTransactionResult = {
-  transaction: CreatedTransaction;
-  entries: CreatedEntry[];
-  installment?: CreatedInstallment;
-  installmentItems?: CreatedInstallmentItem[];
-  cardPayment?: CreatedCardPayment;
-};
+const SYSTEM_LEDGER_CLASSIFICATIONS = {
+  expense: 'liability',
+  income: 'asset',
+  adjustment: 'liability',
+} as const;
+
+function absoluteBigInt(value: bigint): bigint {
+  return value < 0n ? -value : value;
+}
+
+function formatDateOnly(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
 
 function validateBalanced(entries: EntryDraft[]): void {
   if (entries.length < 2) {
@@ -42,13 +34,13 @@ function validateBalanced(entries: EntryDraft[]): void {
   const sumsByCurrency = new Map<string, bigint>();
 
   for (const entry of entries) {
-    const current = sumsByCurrency.get(entry.currencyId) ?? 0n;
-    sumsByCurrency.set(entry.currencyId, current + entry.amount);
+    const current = sumsByCurrency.get(entry.currencyCode) ?? 0n;
+    sumsByCurrency.set(entry.currencyCode, current + entry.amount);
   }
 
-  for (const [currencyId, total] of sumsByCurrency.entries()) {
+  for (const [currencyCode, total] of sumsByCurrency.entries()) {
     if (total !== 0n) {
-      throw new ValidationError(`Entries are not balanced for currency ${currencyId}`);
+      throw new ValidationError(`Entries are not balanced for currency ${currencyCode}`);
     }
   }
 }
@@ -61,6 +53,88 @@ function normalizeFlags(dto: CreateTransactionDto): {
     isExcluded: dto.isExcluded ?? false,
     isOneTimeTransaction: dto.isOneTimeTransaction ?? false,
   };
+}
+
+function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResponse[] {
+  const rowsByTransaction = new Map<string, DetailedTransactionRow[]>();
+
+  for (const row of rows) {
+    const grouped = rowsByTransaction.get(row.transactionId);
+    if (grouped) {
+      grouped.push(row);
+      continue;
+    }
+
+    rowsByTransaction.set(row.transactionId, [row]);
+  }
+
+  return Array.from(rowsByTransaction.values()).map((group) => {
+    const first = group[0];
+    const categoryId = group.find((row) => row.categoryId)?.categoryId ?? null;
+    const accountEntries = group.filter((row) => row.accountId);
+
+    if (first.type === 'transfer') {
+      const fromEntry = accountEntries.find((row) => row.entryAmount < 0n) ?? accountEntries[0] ?? null;
+      const toEntry =
+        accountEntries.find((row) => row.entryAmount > 0n && row.accountId !== fromEntry?.accountId) ??
+        accountEntries.find((row) => row.accountId !== fromEntry?.accountId) ??
+        null;
+
+      return {
+        id: first.transactionId,
+        userId: first.userId,
+        type: first.type,
+        description: first.description,
+        amount: absoluteBigInt(fromEntry?.entryAmount ?? toEntry?.entryAmount ?? 0n),
+        currencyCode: fromEntry?.entryCurrencyCode ?? toEntry?.entryCurrencyCode ?? first.entryCurrencyCode,
+        accountId: fromEntry?.accountId ?? null,
+        accountName: fromEntry?.accountName ?? null,
+        accountClassification: fromEntry?.accountClassification ?? null,
+        toAccountId: toEntry?.accountId ?? null,
+        toAccountName: toEntry?.accountName ?? null,
+        toAccountClassification: toEntry?.accountClassification ?? null,
+        categoryId,
+        merchantId: first.merchantId ?? null,
+        paymentMethodId: first.paymentMethodId ?? null,
+        paymentMethodCode: first.paymentMethodCode ?? null,
+        paymentMethodName: first.paymentMethodName ?? null,
+        isExcluded: first.isExcluded,
+        isOneTimeTransaction: first.isOneTimeTransaction,
+        purchaseDate: formatDateOnly(first.purchaseDate),
+        postedDate: formatDateOnly(first.postedDate),
+        createdAt: first.createdAt,
+        updatedAt: first.updatedAt,
+      };
+    }
+
+    const accountEntry = accountEntries[0] ?? null;
+
+    return {
+      id: first.transactionId,
+      userId: first.userId,
+      type: first.type,
+      description: first.description,
+      amount: absoluteBigInt(accountEntry?.entryAmount ?? first.entryAmount),
+      currencyCode: accountEntry?.entryCurrencyCode ?? first.entryCurrencyCode,
+      accountId: accountEntry?.accountId ?? null,
+      accountName: accountEntry?.accountName ?? null,
+      accountClassification: accountEntry?.accountClassification ?? null,
+      toAccountId: null,
+      toAccountName: null,
+      toAccountClassification: null,
+      categoryId,
+      merchantId: first.merchantId ?? null,
+      paymentMethodId: first.paymentMethodId ?? null,
+      paymentMethodCode: first.paymentMethodCode ?? null,
+      paymentMethodName: first.paymentMethodName ?? null,
+      isExcluded: first.isExcluded,
+      isOneTimeTransaction: first.isOneTimeTransaction,
+      purchaseDate: formatDateOnly(first.purchaseDate),
+      postedDate: formatDateOnly(first.postedDate),
+      createdAt: first.createdAt,
+      updatedAt: first.updatedAt,
+    };
+  });
 }
 
 async function validateOptionalMerchant(userId: string, merchantId?: string): Promise<void> {
@@ -84,12 +158,21 @@ async function validateOptionalCategory(
   }
 }
 
+async function resolvePaymentMethod(paymentMethodCode: string, currencyCode: string) {
+  const paymentMethod = await txRepository.findPaymentMethodByCode(paymentMethodCode, currencyCode);
+  if (!paymentMethod) {
+    throw new ValidationError(`Payment method ${paymentMethodCode} is not available for currency ${currencyCode}`);
+  }
+
+  return paymentMethod;
+}
+
 async function createBaseTransaction(
   tx: txRepository.TxClient,
   userId: string,
   values: {
     type: CreateTransactionDto['type'];
-    paymentMethod?: 'cash' | 'debit' | 'pix' | 'boleto' | 'credit_card';
+    paymentMethodId?: string | null;
     description: string;
     purchaseDate: Date;
     postedDate: Date;
@@ -97,11 +180,11 @@ async function createBaseTransaction(
     isOneTimeTransaction: boolean;
     merchantId?: string;
   },
-): Promise<CreatedTransaction> {
-  return txRepository.createTransaction(tx, {
+): Promise<string> {
+  const transaction = await txRepository.createTransaction(tx, {
     userId,
     type: values.type,
-    paymentMethod: values.paymentMethod,
+    paymentMethodId: values.paymentMethodId ?? null,
     description: values.description,
     isExcluded: values.isExcluded,
     isOneTimeTransaction: values.isOneTimeTransaction,
@@ -109,90 +192,68 @@ async function createBaseTransaction(
     purchaseDate: values.purchaseDate,
     postedDate: values.postedDate,
   });
+
+  return transaction.id;
 }
 
-async function persistEntries(
-  tx: txRepository.TxClient,
-  transactionId: string,
-  entries: EntryDraft[],
-): Promise<CreatedEntry[]> {
+async function persistEntries(tx: txRepository.TxClient, transactionId: string, entries: EntryDraft[]): Promise<void> {
   validateBalanced(entries);
 
-  return txRepository.createEntries(
+  await txRepository.createEntries(
     tx,
     entries.map((entry) => ({
       transactionId,
       ledgerAccountId: entry.ledgerAccountId,
       amount: entry.amount,
-      currencyId: entry.currencyId,
+      currencyId: entry.currencyCode,
       categoryId: entry.categoryId,
-      billingCycleId: entry.billingCycleId,
-      budgetMonth: entry.budgetMonth,
     })),
   );
 }
 
-async function findCycleInTransaction(
-  tx: txRepository.TxClient,
-  cardId: string,
-  purchaseDate: Date,
-): Promise<(typeof billingCyclesTable.$inferSelect) | undefined> {
-  const rows = await tx
-    .select()
-    .from(billingCyclesTable)
-    .where(
-      and(
-        eq(billingCyclesTable.creditCardId, cardId),
-        lte(billingCyclesTable.startDate, purchaseDate),
-        gte(billingCyclesTable.endDate, purchaseDate),
-      ),
-    );
+async function loadCreatedTransaction(userId: string, transactionId: string): Promise<TransactionResponse> {
+  const rows = await txRepository.listDetailedByTransactionIds(userId, [transactionId]);
+  const [transaction] = mapDetailedRows(rows);
 
-  return rows[0];
+  if (!transaction) {
+    throw new NotFoundError('Transaction');
+  }
+
+  return transaction;
 }
 
-async function listCyclesFromTransaction(
-  tx: txRepository.TxClient,
-  cardId: string,
-  startDate: Date,
-): Promise<(typeof billingCyclesTable.$inferSelect)[]> {
-  return tx
-    .select()
-    .from(billingCyclesTable)
-    .where(and(eq(billingCyclesTable.creditCardId, cardId), gte(billingCyclesTable.startDate, startDate)))
-    .orderBy(billingCyclesTable.startDate);
-}
-
-async function createExpense(userId: string, dto: Extract<CreateTransactionDto, { type: 'expense' }>): Promise<CreateTransactionResult> {
+async function createExpense(userId: string, dto: Extract<CreateTransactionDto, { type: 'expense' }>): Promise<TransactionResponse> {
   const user = await txRepository.findUserById(userId);
   if (!user) throw new NotFoundError('User');
 
-  const currency = await txRepository.findCurrencyById(dto.currencyId);
+  const currency = await txRepository.findCurrencyByCode(dto.currencyCode);
   if (!currency) throw new NotFoundError('Currency');
+
+  const paymentMethod = await resolvePaymentMethod(dto.paymentMethodCode, dto.currencyCode);
 
   await validateOptionalMerchant(userId, dto.merchantId);
   await validateOptionalCategory(userId, dto.categoryId, 'expense');
 
   const account = await txRepository.findOwnedAccount(dto.accountId, userId);
   if (!account) throw new NotFoundError('Account');
-  if (account.currencyId !== dto.currencyId) {
+  if (account.currencyId !== dto.currencyCode) {
     throw new ValidationError('Transaction currency must match account currency');
   }
 
   const accountLedger = await txRepository.findLedgerAccountByOwner('account', account.id);
   if (!accountLedger) throw new NotFoundError('Account ledger');
 
-  return db.transaction(async (tx) => {
+  const transactionId = await db.transaction(async (tx) => {
     const expenseLedger = await txRepository.findOrCreateSystemLedger(
       tx,
-      `system:expense:${dto.currencyId}`,
-      'expense',
-      dto.currencyId,
+      `system:expense:${dto.currencyCode}`,
+      SYSTEM_LEDGER_CLASSIFICATIONS.expense,
+      dto.currencyCode,
     );
 
-    const transaction = await createBaseTransaction(tx, userId, {
+    const createdTransactionId = await createBaseTransaction(tx, userId, {
       type: dto.type,
-      paymentMethod: dto.paymentMethod,
+      paymentMethodId: paymentMethod.id,
       description: dto.description,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
@@ -200,55 +261,58 @@ async function createExpense(userId: string, dto: Extract<CreateTransactionDto, 
       ...normalizeFlags(dto),
     });
 
-    const entries = await persistEntries(tx, transaction.id, [
-      {
-        ledgerAccountId: expenseLedger.id,
-        amount: dto.amount,
-        currencyId: dto.currencyId,
-        categoryId: dto.categoryId,
-        budgetMonth: resolveBudgetMonth('purchase', dto.purchaseDate),
-      },
+    await persistEntries(tx, createdTransactionId, [
       {
         ledgerAccountId: accountLedger.id,
         amount: -dto.amount,
-        currencyId: dto.currencyId,
+        currencyCode: dto.currencyCode,
+        categoryId: dto.categoryId,
+      },
+      {
+        ledgerAccountId: expenseLedger.id,
+        amount: dto.amount,
+        currencyCode: dto.currencyCode,
       },
     ]);
 
-    return { transaction, entries };
+    return createdTransactionId;
   });
+
+  return loadCreatedTransaction(userId, transactionId);
 }
 
-async function createIncome(userId: string, dto: Extract<CreateTransactionDto, { type: 'income' }>): Promise<CreateTransactionResult> {
+async function createIncome(userId: string, dto: Extract<CreateTransactionDto, { type: 'income' }>): Promise<TransactionResponse> {
   const user = await txRepository.findUserById(userId);
   if (!user) throw new NotFoundError('User');
 
-  const currency = await txRepository.findCurrencyById(dto.currencyId);
+  const currency = await txRepository.findCurrencyByCode(dto.currencyCode);
   if (!currency) throw new NotFoundError('Currency');
+
+  const paymentMethod = await resolvePaymentMethod(dto.paymentMethodCode, dto.currencyCode);
 
   await validateOptionalMerchant(userId, dto.merchantId);
   await validateOptionalCategory(userId, dto.categoryId, 'income');
 
   const account = await txRepository.findOwnedAccount(dto.accountId, userId);
   if (!account) throw new NotFoundError('Account');
-  if (account.currencyId !== dto.currencyId) {
+  if (account.currencyId !== dto.currencyCode) {
     throw new ValidationError('Transaction currency must match account currency');
   }
 
   const accountLedger = await txRepository.findLedgerAccountByOwner('account', account.id);
   if (!accountLedger) throw new NotFoundError('Account ledger');
 
-  return db.transaction(async (tx) => {
+  const transactionId = await db.transaction(async (tx) => {
     const incomeLedger = await txRepository.findOrCreateSystemLedger(
       tx,
-      `system:income:${dto.currencyId}`,
-      'income',
-      dto.currencyId,
+      `system:income:${dto.currencyCode}`,
+      SYSTEM_LEDGER_CLASSIFICATIONS.income,
+      dto.currencyCode,
     );
 
-    const transaction = await createBaseTransaction(tx, userId, {
+    const createdTransactionId = await createBaseTransaction(tx, userId, {
       type: dto.type,
-      paymentMethod: dto.paymentMethod,
+      paymentMethodId: paymentMethod.id,
       description: dto.description,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
@@ -256,43 +320,44 @@ async function createIncome(userId: string, dto: Extract<CreateTransactionDto, {
       ...normalizeFlags(dto),
     });
 
-    const entries = await persistEntries(tx, transaction.id, [
+    await persistEntries(tx, createdTransactionId, [
       {
         ledgerAccountId: accountLedger.id,
         amount: dto.amount,
-        currencyId: dto.currencyId,
+        currencyCode: dto.currencyCode,
+        categoryId: dto.categoryId,
       },
       {
         ledgerAccountId: incomeLedger.id,
         amount: -dto.amount,
-        currencyId: dto.currencyId,
-        categoryId: dto.categoryId,
-        budgetMonth: resolveBudgetMonth('purchase', dto.purchaseDate),
+        currencyCode: dto.currencyCode,
       },
     ]);
 
-    return { transaction, entries };
+    return createdTransactionId;
   });
+
+  return loadCreatedTransaction(userId, transactionId);
 }
 
-async function createTransfer(userId: string, dto: Extract<CreateTransactionDto, { type: 'transfer' }>): Promise<CreateTransactionResult> {
+async function createTransfer(userId: string, dto: Extract<CreateTransactionDto, { type: 'transfer' }>): Promise<TransactionResponse> {
   const user = await txRepository.findUserById(userId);
   if (!user) throw new NotFoundError('User');
 
-  const currency = await txRepository.findCurrencyById(dto.currencyId);
+  const currency = await txRepository.findCurrencyByCode(dto.currencyCode);
   if (!currency) throw new NotFoundError('Currency');
 
-  if (dto.accountId === dto.toAccountId) {
+  if (dto.fromAccountId === dto.toAccountId) {
     throw new ValidationError('Transfer source and destination must be different accounts');
   }
 
-  const fromAccount = await txRepository.findOwnedAccount(dto.accountId, userId);
+  const fromAccount = await txRepository.findOwnedAccount(dto.fromAccountId, userId);
   if (!fromAccount) throw new NotFoundError('Source account');
 
   const toAccount = await txRepository.findOwnedAccount(dto.toAccountId, userId);
   if (!toAccount) throw new NotFoundError('Destination account');
 
-  if (fromAccount.currencyId !== dto.currencyId || toAccount.currencyId !== dto.currencyId) {
+  if (fromAccount.currencyId !== dto.currencyCode || toAccount.currencyId !== dto.currencyCode) {
     throw new ValidationError('Transfer currency must match both account currencies');
   }
 
@@ -300,324 +365,65 @@ async function createTransfer(userId: string, dto: Extract<CreateTransactionDto,
   const toLedger = await txRepository.findLedgerAccountByOwner('account', toAccount.id);
   if (!fromLedger || !toLedger) throw new NotFoundError('Account ledger');
 
-  return db.transaction(async (tx) => {
-    const transaction = await createBaseTransaction(tx, userId, {
+  const transactionId = await db.transaction(async (tx) => {
+    const createdTransactionId = await createBaseTransaction(tx, userId, {
       type: dto.type,
-      paymentMethod: dto.paymentMethod,
       description: dto.description,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
       ...normalizeFlags(dto),
     });
 
-    const entries = await persistEntries(tx, transaction.id, [
-      {
-        ledgerAccountId: toLedger.id,
-        amount: dto.amount,
-        currencyId: dto.currencyId,
-      },
+    await persistEntries(tx, createdTransactionId, [
       {
         ledgerAccountId: fromLedger.id,
         amount: -dto.amount,
-        currencyId: dto.currencyId,
+        currencyCode: dto.currencyCode,
       },
-    ]);
-
-    return { transaction, entries };
-  });
-}
-
-async function createCardPurchase(
-  userId: string,
-  dto: Extract<CreateTransactionDto, { type: 'card_purchase' }>,
-): Promise<CreateTransactionResult> {
-  const user = await txRepository.findUserById(userId);
-  if (!user) throw new NotFoundError('User');
-
-  const currency = await txRepository.findCurrencyById(dto.currencyId);
-  if (!currency) throw new NotFoundError('Currency');
-
-  await validateOptionalMerchant(userId, dto.merchantId);
-  await validateOptionalCategory(userId, dto.categoryId, 'expense');
-
-  const card = await txRepository.findOwnedCreditCard(dto.creditCardId, userId);
-  if (!card) throw new NotFoundError('Credit card');
-  if (card.currencyId !== dto.currencyId) {
-    throw new ValidationError('Transaction currency must match credit card currency');
-  }
-
-  const cardLedger = await txRepository.findLedgerAccountByOwner('credit_card', card.id);
-  if (!cardLedger) throw new NotFoundError('Credit card ledger');
-
-  return db.transaction(async (tx) => {
-    await ensureBillingCycleWindow(tx, card, dto.purchaseDate, 2, 12);
-
-    const cycle = await findCycleInTransaction(tx, card.id, dto.purchaseDate);
-    if (!cycle) throw new ValidationError('No billing cycle found for purchase date');
-
-    const expenseLedger = await txRepository.findOrCreateSystemLedger(
-      tx,
-      `system:expense:${dto.currencyId}`,
-      'expense',
-      dto.currencyId,
-    );
-
-    const transaction = await createBaseTransaction(tx, userId, {
-      type: dto.type,
-      paymentMethod: dto.paymentMethod,
-      description: dto.description,
-      purchaseDate: dto.purchaseDate,
-      postedDate: dto.postedDate,
-      merchantId: dto.merchantId,
-      ...normalizeFlags(dto),
-    });
-
-    const entries = await persistEntries(tx, transaction.id, [
       {
-        ledgerAccountId: expenseLedger.id,
+        ledgerAccountId: toLedger.id,
         amount: dto.amount,
-        currencyId: dto.currencyId,
-        categoryId: dto.categoryId,
-        billingCycleId: cycle.id,
-        budgetMonth: resolveBudgetMonth('purchase', dto.purchaseDate),
-      },
-      {
-        ledgerAccountId: cardLedger.id,
-        amount: -dto.amount,
-        currencyId: dto.currencyId,
-        billingCycleId: cycle.id,
+        currencyCode: dto.currencyCode,
       },
     ]);
 
-    const outstanding = await getCycleOutstanding(tx, cardLedger.id, cycle.id);
-    await txRepository.updateBillingCycleStatus(tx, cycle.id, deriveBillingCycleStatus(cycle, outstanding, new Date()));
-
-    return { transaction, entries };
+    return createdTransactionId;
   });
+
+  return loadCreatedTransaction(userId, transactionId);
 }
 
-async function createInstallmentPurchase(
+async function createAdjustment(
   userId: string,
-  dto: Extract<CreateTransactionDto, { type: 'installment' }>,
-): Promise<CreateTransactionResult> {
-  const user = await txRepository.findUserById(userId);
-  if (!user) throw new NotFoundError('User');
-
-  const currency = await txRepository.findCurrencyById(dto.currencyId);
-  if (!currency) throw new NotFoundError('Currency');
-
-  await validateOptionalMerchant(userId, dto.merchantId);
-  await validateOptionalCategory(userId, dto.categoryId, 'expense');
-
-  const card = await txRepository.findOwnedCreditCard(dto.creditCardId, userId);
-  if (!card) throw new NotFoundError('Credit card');
-  if (card.currencyId !== dto.currencyId) {
-    throw new ValidationError('Transaction currency must match credit card currency');
-  }
-
-  const cardLedger = await txRepository.findLedgerAccountByOwner('credit_card', card.id);
-  if (!cardLedger) throw new NotFoundError('Credit card ledger');
-
-  return db.transaction(async (tx) => {
-    await ensureBillingCycleWindow(tx, card, dto.purchaseDate, 2, Math.max(12, dto.installmentCount + 2));
-
-    const purchaseCycle = await findCycleInTransaction(tx, card.id, dto.purchaseDate);
-    if (!purchaseCycle) throw new ValidationError('No billing cycle found for purchase date');
-
-    const cycles = await listCyclesFromTransaction(tx, card.id, purchaseCycle.startDate);
-    const targetCycles = cycles.slice(0, dto.installmentCount);
-
-    if (targetCycles.length !== dto.installmentCount) {
-      throw new ValidationError('Not enough future billing cycles available for the installment schedule');
-    }
-
-    const expenseLedger = await txRepository.findOrCreateSystemLedger(
-      tx,
-      `system:expense:${dto.currencyId}`,
-      'expense',
-      dto.currencyId,
-    );
-
-    const transaction = await createBaseTransaction(tx, userId, {
-      type: dto.type,
-      paymentMethod: dto.paymentMethod,
-      description: dto.description,
-      purchaseDate: dto.purchaseDate,
-      postedDate: dto.postedDate,
-      merchantId: dto.merchantId,
-      ...normalizeFlags(dto),
-    });
-
-    const installmentSlices = splitInstallments(dto.amount, dto.installmentCount);
-    const entryDrafts: EntryDraft[] = [];
-
-    for (let index = 0; index < targetCycles.length; index += 1) {
-      const cycle = targetCycles[index];
-      const sliceAmount = installmentSlices[index];
-
-      entryDrafts.push(
-        {
-          ledgerAccountId: expenseLedger.id,
-          amount: sliceAmount,
-          currencyId: dto.currencyId,
-          categoryId: dto.categoryId,
-          billingCycleId: cycle.id,
-          budgetMonth: resolveBudgetMonth('cycle', dto.purchaseDate, cycle.closingDate),
-        },
-        {
-          ledgerAccountId: cardLedger.id,
-          amount: -sliceAmount,
-          currencyId: dto.currencyId,
-          billingCycleId: cycle.id,
-        },
-      );
-    }
-
-    const entries = await persistEntries(tx, transaction.id, entryDrafts);
-    const installment = await txRepository.createInstallment(tx, {
-      transactionId: transaction.id,
-      creditCardId: card.id,
-      totalAmount: dto.amount,
-      count: dto.installmentCount,
-    });
-
-    const liabilityEntriesByCycle = new Map<string, CreatedEntry>();
-    for (const entry of entries) {
-      if (entry.ledgerAccountId === cardLedger.id && entry.billingCycleId && entry.amount < 0n) {
-        liabilityEntriesByCycle.set(entry.billingCycleId, entry);
-      }
-    }
-
-    const installmentItems = await txRepository.createInstallmentItems(
-      tx,
-      targetCycles.map((cycle, index) => {
-        const liabilityEntry = liabilityEntriesByCycle.get(cycle.id);
-        if (!liabilityEntry) {
-          throw new ValidationError(`Missing liability entry for installment cycle ${cycle.id}`);
-        }
-
-        return {
-          installmentId: installment.id,
-          billingCycleId: cycle.id,
-          amount: installmentSlices[index],
-          entryId: liabilityEntry.id,
-        };
-      }),
-    );
-
-    for (const cycle of targetCycles) {
-      const outstanding = await getCycleOutstanding(tx, cardLedger.id, cycle.id);
-      await txRepository.updateBillingCycleStatus(tx, cycle.id, deriveBillingCycleStatus(cycle, outstanding, new Date()));
-    }
-
-    return {
-      transaction,
-      entries,
-      installment,
-      installmentItems,
-    };
-  });
-}
-
-async function createCardPayment(
-  userId: string,
-  dto: Extract<CreateTransactionDto, { type: 'card_payment' }>,
-): Promise<CreateTransactionResult> {
+  dto: Extract<CreateTransactionDto, { type: 'adjustment' }>,
+): Promise<TransactionResponse> {
   const user = await txRepository.findUserById(userId);
   if (!user) throw new NotFoundError('User');
 
   const account = await txRepository.findOwnedAccount(dto.accountId, userId);
   if (!account) throw new NotFoundError('Account');
 
-  const cycle = await txRepository.findOwnedBillingCycle(dto.billingCycleId, userId);
-  if (!cycle) throw new NotFoundError('Billing cycle');
-
-  if (account.currencyId !== cycle.cardCurrencyId) {
-    throw new ValidationError('Card payment account currency must match the card currency');
-  }
-
   const accountLedger = await txRepository.findLedgerAccountByOwner('account', account.id);
   if (!accountLedger) throw new NotFoundError('Account ledger');
 
-  const cardLedger = await txRepository.findLedgerAccountByOwner('credit_card', cycle.creditCardId);
-  if (!cardLedger) throw new NotFoundError('Credit card ledger');
+  const accountAmount =
+    account.classification === 'asset'
+      ? dto.direction === 'increase'
+        ? dto.amount
+        : -dto.amount
+      : dto.direction === 'increase'
+        ? -dto.amount
+        : dto.amount;
 
-  return db.transaction(async (tx) => {
-    const outstanding = await getCycleOutstanding(tx, cardLedger.id, cycle.id);
-    if (outstanding <= 0n) {
-      throw new ValidationError('Billing cycle is already fully paid');
-    }
-
-    const transaction = await createBaseTransaction(tx, userId, {
-      type: dto.type,
-      paymentMethod: dto.paymentMethod,
-      description:
-        dto.description ?? `${cycle.cardName} payment for cycle closing ${cycle.closingDate.toISOString().slice(0, 10)}`,
-      purchaseDate: dto.purchaseDate,
-      postedDate: dto.postedDate,
-      ...normalizeFlags(dto),
-    });
-
-    const entries = await persistEntries(tx, transaction.id, [
-      {
-        ledgerAccountId: cardLedger.id,
-        amount: outstanding,
-        currencyId: cycle.cardCurrencyId,
-        billingCycleId: cycle.id,
-      },
-      {
-        ledgerAccountId: accountLedger.id,
-        amount: -outstanding,
-        currencyId: cycle.cardCurrencyId,
-      },
-    ]);
-
-    const cardPayment = await txRepository.createCardPayment(tx, {
-      transactionId: transaction.id,
-      billingCycleId: cycle.id,
-      amount: outstanding,
-    });
-
-    await txRepository.updateBillingCycleStatus(tx, cycle.id, deriveBillingCycleStatus(cycle, 0n, new Date()));
-
-    return {
-      transaction,
-      entries,
-      cardPayment,
-    };
-  });
-}
-
-async function createAdjustment(
-  userId: string,
-  dto: Extract<CreateTransactionDto, { type: 'adjustment' }>,
-): Promise<CreateTransactionResult> {
-  const user = await txRepository.findUserById(userId);
-  if (!user) throw new NotFoundError('User');
-
-  const target =
-    dto.targetType === 'account'
-      ? await txRepository.findOwnedAccount(dto.targetId, userId)
-      : await txRepository.findOwnedCreditCard(dto.targetId, userId);
-
-  if (!target) {
-    throw new NotFoundError(dto.targetType === 'account' ? 'Account' : 'Credit card');
-  }
-
-  const targetLedger = await txRepository.findLedgerAccountByOwner(dto.targetType, dto.targetId);
-  if (!targetLedger) {
-    throw new NotFoundError(dto.targetType === 'account' ? 'Account ledger' : 'Credit card ledger');
-  }
-
-  return db.transaction(async (tx) => {
-    const equityLedger = await txRepository.findOrCreateSystemLedger(
+  const transactionId = await db.transaction(async (tx) => {
+    const adjustmentLedger = await txRepository.findOrCreateSystemLedger(
       tx,
-      `system:equity:${targetLedger.currencyId}`,
-      'equity',
-      targetLedger.currencyId,
+      `system:adjustment:${account.currencyId}`,
+      SYSTEM_LEDGER_CLASSIFICATIONS.adjustment,
+      account.currencyId,
     );
 
-    const transaction = await createBaseTransaction(tx, userId, {
+    const createdTransactionId = await createBaseTransaction(tx, userId, {
       type: dto.type,
       description: dto.description,
       purchaseDate: dto.purchaseDate,
@@ -625,33 +431,26 @@ async function createAdjustment(
       ...normalizeFlags(dto),
     });
 
-    const targetIncreaseAmount =
-      targetLedger.type === 'asset'
-        ? dto.direction === 'increase'
-          ? dto.amount
-          : -dto.amount
-        : dto.direction === 'increase'
-          ? -dto.amount
-          : dto.amount;
-
-    const entries = await persistEntries(tx, transaction.id, [
+    await persistEntries(tx, createdTransactionId, [
       {
-        ledgerAccountId: targetLedger.id,
-        amount: targetIncreaseAmount,
-        currencyId: targetLedger.currencyId,
+        ledgerAccountId: accountLedger.id,
+        amount: accountAmount,
+        currencyCode: account.currencyId,
       },
       {
-        ledgerAccountId: equityLedger.id,
-        amount: -targetIncreaseAmount,
-        currencyId: targetLedger.currencyId,
+        ledgerAccountId: adjustmentLedger.id,
+        amount: -accountAmount,
+        currencyCode: account.currencyId,
       },
     ]);
 
-    return { transaction, entries };
+    return createdTransactionId;
   });
+
+  return loadCreatedTransaction(userId, transactionId);
 }
 
-export async function createTransaction(userId: string, dto: CreateTransactionDto): Promise<CreateTransactionResult> {
+export async function createTransaction(userId: string, dto: CreateTransactionDto): Promise<TransactionResponse> {
   switch (dto.type) {
     case 'expense':
       return createExpense(userId, dto);
@@ -659,26 +458,17 @@ export async function createTransaction(userId: string, dto: CreateTransactionDt
       return createIncome(userId, dto);
     case 'transfer':
       return createTransfer(userId, dto);
-    case 'card_purchase':
-      return createCardPurchase(userId, dto);
-    case 'installment':
-      return createInstallmentPurchase(userId, dto);
-    case 'card_payment':
-      return createCardPayment(userId, dto);
     case 'adjustment':
       return createAdjustment(userId, dto);
-    default: {
-      const exhaustiveCheck: never = dto;
-      return exhaustiveCheck;
-    }
+    default:
+      throw new ValidationError('Invalid transaction type');
   }
 }
 
-export async function listTransactions(userId: string): Promise<Awaited<ReturnType<typeof txRepository.listByUserId>>> {
+export async function listTransactions(userId: string): Promise<TransactionResponse[]> {
   const user = await txRepository.findUserById(userId);
   if (!user) throw new NotFoundError('User');
 
-  return txRepository.listByUserId(userId);
+  const rows = await txRepository.listDetailedByUserId(userId);
+  return mapDetailedRows(rows);
 }
-
-export { deriveBillingCycleStatus };

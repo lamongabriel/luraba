@@ -1,20 +1,21 @@
 {
-  "name": "@lamongabriel/drizzle-express-api-template",
+  "name": "luraba-api",
   "version": "1.0.0",
-  "description": "drizzle-express-api-template — REST API template with Express, Drizzle ORM, PostgreSQL and TypeScript",
+  "description": "Luraba — Finance Made Easy",
   "private": true,
   "main": "dist/app.js",
   "scripts": {
     "dev": "tsx watch src/app.ts",
+    "dev:docker": "docker compose -f docker-compose.yml up --build",
+    "dev:docker:down": "docker compose -f docker-compose.yml down -v",
     "build": "tsup src/app.ts --format cjs --dts --out-dir dist",
     "start": "node dist/app.js",
-    "test": "node --import tsx --test src/**/*.test.ts",
-    "test:integration": "RUN_DB_TESTS=1 node --import tsx --test src/**/*.test.ts",
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "seed:currencies": "tsx src/scripts/seed-currencies.ts"
+    "db:seed": "tsx src/db/seed/index.ts",
+    "db:configure": "npm run db:migrate && npm run db:seed"
   },
   "keywords": [
     "drizzle",
@@ -31,7 +32,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lamongabriel/drizzle-express-api-template"
+    "url": "https://github.com/lamongabriel/luraba"
   },
   "engines": {
     "node": ">=20.0.0"

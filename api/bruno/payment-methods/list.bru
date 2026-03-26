@@ -1,0 +1,36 @@
+meta {
+  name: list payment methods
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/payment-methods?currencyCode={{currencyCode}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("payment methods returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}
+
+script:post-response {
+  const methods = res.body?.data;
+  if (!Array.isArray(methods)) {
+    return;
+  }
+
+  const preferred = methods.find((method) => method.code === "pix");
+  if (preferred?.code) {
+    bru.setEnvVar("paymentMethodCode", preferred.code);
+    return;
+  }
+
+  if (methods[0]?.code) {
+    bru.setEnvVar("paymentMethodCode", methods[0].code);
+  }
+}

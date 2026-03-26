@@ -1,30 +1,28 @@
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { accountsTable } from '@/db/schemas/accounts.schema';
-import { billingCyclesTable } from '@/db/schemas/billing-cycles.schema';
-import { cardPaymentsTable } from '@/db/schemas/card-payments.schema';
-import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
 import { currenciesTable } from '@/db/schemas/currencies.schema';
 import { entriesTable } from '@/db/schemas/entries.schema';
 import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
+import { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
 import { usersTable } from '@/db/schemas/users.schema';
-import { Account, CreateAccountDto } from './accounts.types';
+import { AccountRecord, CreateAccountDto } from './accounts.types';
 
 export async function findUserById(userId: string): Promise<{ id: string } | undefined> {
   const rows = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, userId));
   return rows[0];
 }
 
-export async function findCurrencyById(currencyId: string): Promise<{ id: string } | undefined> {
+export async function findCurrencyByCode(currencyCode: string): Promise<{ code: string } | undefined> {
   const rows = await db
-    .select({ id: currenciesTable.id })
+    .select({ code: currenciesTable.code })
     .from(currenciesTable)
-    .where(eq(currenciesTable.id, currencyId));
+    .where(eq(currenciesTable.code, currencyCode));
   return rows[0];
 }
 
-export async function findByUserAndName(userId: string, name: string): Promise<Account | undefined> {
+export async function findByUserAndName(userId: string, name: string): Promise<AccountRecord | undefined> {
   const rows = await db
     .select()
     .from(accountsTable)
@@ -32,7 +30,7 @@ export async function findByUserAndName(userId: string, name: string): Promise<A
   return rows[0];
 }
 
-export async function findOwnedAccount(accountId: string, userId: string): Promise<Account | undefined> {
+export async function findOwnedAccount(accountId: string, userId: string): Promise<AccountRecord | undefined> {
   const rows = await db
     .select()
     .from(accountsTable)
@@ -41,28 +39,36 @@ export async function findOwnedAccount(accountId: string, userId: string): Promi
   return rows[0];
 }
 
-export async function createAccount(userId: string, dto: CreateAccountDto): Promise<Account> {
+export async function createAccount(userId: string, dto: CreateAccountDto): Promise<AccountRecord> {
   const rows = await db
     .insert(accountsTable)
     .values({
-      ...dto,
       userId,
+      name: dto.name,
+      institutionName: dto.institutionName,
+      institutionDomain: dto.institutionDomain,
+      notes: dto.notes,
+      classification: dto.classification,
+      type: dto.type,
+      currencyId: dto.currencyCode,
     })
     .returning();
   return rows[0];
 }
 
-export async function listByUserId(userId: string): Promise<Account[]> {
-  return db.select().from(accountsTable).where(eq(accountsTable.userId, userId));
+export async function listByUserId(userId: string): Promise<AccountRecord[]> {
+  return db.select().from(accountsTable).where(eq(accountsTable.userId, userId)).orderBy(asc(accountsTable.name));
 }
 
 export async function findLedgerByAccountId(accountId: string): Promise<{
   id: string;
+  classification: 'asset' | 'liability';
   currencyId: string;
 } | undefined> {
   const rows = await db
     .select({
       id: ledgerAccountsTable.id,
+      classification: ledgerAccountsTable.classification,
       currencyId: ledgerAccountsTable.currencyId,
     })
     .from(ledgerAccountsTable)
@@ -86,12 +92,15 @@ export async function listHistoryByLedgerId(ledgerAccountId: string): Promise<
   Array<{
     entryId: string;
     transactionId: string;
-    amount: bigint;
-    currencyId: string;
-    billingCycleId: string | null;
-    type: 'expense' | 'income' | 'transfer' | 'card_purchase' | 'card_payment' | 'installment' | 'adjustment';
-    paymentMethod: 'cash' | 'debit' | 'pix' | 'boleto' | 'credit_card' | null;
+    rawAmount: bigint;
+    currencyCode: string;
+    type: 'expense' | 'income' | 'transfer' | 'adjustment';
+    paymentMethodId: string | null;
+    paymentMethodCode: string | null;
+    paymentMethodName: string | null;
     description: string;
+    merchantId: string | null;
+    categoryId: string | null;
     purchaseDate: Date;
     postedDate: Date;
     createdAt: Date;
@@ -101,18 +110,22 @@ export async function listHistoryByLedgerId(ledgerAccountId: string): Promise<
     .select({
       entryId: entriesTable.id,
       transactionId: transactionsTable.id,
-      amount: entriesTable.amount,
-      currencyId: entriesTable.currencyId,
-      billingCycleId: entriesTable.billingCycleId,
+      rawAmount: entriesTable.amount,
+      currencyCode: entriesTable.currencyId,
       type: transactionsTable.type,
-      paymentMethod: transactionsTable.paymentMethod,
+      paymentMethodId: transactionsTable.paymentMethodId,
+      paymentMethodCode: paymentMethodsTable.code,
+      paymentMethodName: paymentMethodsTable.name,
       description: transactionsTable.description,
+      merchantId: transactionsTable.merchantId,
+      categoryId: entriesTable.categoryId,
       purchaseDate: transactionsTable.purchaseDate,
       postedDate: transactionsTable.postedDate,
       createdAt: transactionsTable.createdAt,
     })
     .from(entriesTable)
     .innerJoin(transactionsTable, eq(transactionsTable.id, entriesTable.transactionId))
+    .leftJoin(paymentMethodsTable, eq(paymentMethodsTable.id, transactionsTable.paymentMethodId))
     .where(eq(entriesTable.ledgerAccountId, ledgerAccountId))
     .orderBy(
       desc(transactionsTable.postedDate),
@@ -120,35 +133,4 @@ export async function listHistoryByLedgerId(ledgerAccountId: string): Promise<
       desc(transactionsTable.id),
       desc(entriesTable.id),
     );
-}
-
-export async function listCardPaymentsByTransactionIds(transactionIds: string[]): Promise<
-  Array<{
-    transactionId: string;
-    amount: bigint;
-    billingCycleId: string;
-    closingDate: Date;
-    dueDate: Date;
-    cardId: string;
-    cardName: string;
-  }>
-> {
-  if (transactionIds.length === 0) {
-    return [];
-  }
-
-  return db
-    .select({
-      transactionId: cardPaymentsTable.transactionId,
-      amount: cardPaymentsTable.amount,
-      billingCycleId: cardPaymentsTable.billingCycleId,
-      closingDate: billingCyclesTable.closingDate,
-      dueDate: billingCyclesTable.dueDate,
-      cardId: creditCardsTable.id,
-      cardName: creditCardsTable.name,
-    })
-    .from(cardPaymentsTable)
-    .innerJoin(billingCyclesTable, eq(billingCyclesTable.id, cardPaymentsTable.billingCycleId))
-    .innerJoin(creditCardsTable, eq(creditCardsTable.id, billingCyclesTable.creditCardId))
-    .where(inArray(cardPaymentsTable.transactionId, transactionIds));
 }

@@ -1,7 +1,7 @@
 meta {
-  name: create adjustment
+  name: create liability adjustment
   type: http
-  seq: 7
+  seq: 8
 }
 
 post {
@@ -17,11 +17,17 @@ headers {
 body:json {
   {
     "type": "adjustment",
-    "description": "Initial balance adjustment",
-    "amount": 5000,
-    "accountId": "{{accountId}}",
+    "description": "Liability opening balance",
+    "amount": 12000,
+    "accountId": "{{liabilityAccountId}}",
     "direction": "increase",
     "purchaseDate": "2026-03-24",
     "postedDate": "2026-03-24"
   }
+}
+
+tests {
+  test("liability adjustment returns 201", function() {
+    expect(res.status).to.equal(201);
+  });
 }

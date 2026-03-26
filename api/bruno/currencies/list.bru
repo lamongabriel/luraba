@@ -25,12 +25,12 @@ script:post-response {
   }
 
   const brl = currencies.find((currency) => currency.code === "BRL");
-  if (brl?.id) {
-    bru.setEnvVar("currencyId", brl.id);
+  if (brl?.code) {
+    bru.setEnvVar("currencyCode", brl.code);
     return;
   }
 
-  if (currencies[0]?.id) {
-    bru.setEnvVar("currencyId", currencies[0].id);
+  if (currencies[0]?.code) {
+    bru.setEnvVar("currencyCode", currencies[0].code);
   }
 }

@@ -1,7 +1,7 @@
 meta {
-  name: create account
+  name: create loan account
   type: http
-  seq: 1
+  seq: 2
 }
 
 post {
@@ -16,22 +16,21 @@ headers {
 
 body:json {
   {
-    "name": "Primary Depository",
-    "classification": "asset",
-    "type": "depository",
+    "name": "Primary Loan",
+    "classification": "liability",
+    "type": "loan",
     "currencyCode": "{{currencyCode}}"
   }
 }
 
 tests {
-  test("account returns 201", function() {
+  test("loan account returns 201", function() {
     expect(res.status).to.equal(201);
   });
 }
 
 script:post-response {
   if (res.body?.data?.id) {
-    const createdId = res.body.data.id;
-    bru.setEnvVar("accountId", createdId);
+    bru.setEnvVar("liabilityAccountId", res.body.data.id);
   }
 }

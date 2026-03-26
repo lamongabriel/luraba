@@ -16,9 +16,9 @@ import { jsonBigIntReplacer } from '@/shared/response';
 import accountsRouter from '@/modules/accounts/accounts.routes';
 import authRouter from '@/modules/auth/auth.routes';
 import categoriesRouter from '@/modules/categories/categories.routes';
-import creditCardsRouter from '@/modules/credit-cards/credit-cards.routes';
 import currenciesRouter from '@/modules/currencies/currencies.routes';
 import merchantsRouter from '@/modules/merchants/merchants.routes';
+import paymentMethodsRouter from '@/modules/payment-methods/payment-methods.routes';
 import transactionsRouter from '@/modules/transactions/transactions.routes';
 import usersRouter from '@/modules/users/users.routes';
 
@@ -52,9 +52,9 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', authenticateUser, usersRouter);
 app.use('/api/v1/currencies', authenticateUser, currenciesRouter);
 app.use('/api/v1/accounts', authenticateUser, accountsRouter);
-app.use('/api/v1/cards', authenticateUser, creditCardsRouter);
 app.use('/api/v1/categories', authenticateUser, categoriesRouter);
 app.use('/api/v1/merchants', authenticateUser, merchantsRouter);
+app.use('/api/v1/payment-methods', authenticateUser, paymentMethodsRouter);
 app.use('/api/v1/transactions', authenticateUser, transactionsRouter);
 
 // ─── Error handler ────────────────────────────────────────────

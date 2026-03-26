@@ -3,13 +3,21 @@ import { accountsTable } from '@/db/schemas/accounts.schema';
 import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import * as accountsRepository from './accounts.repository';
-import { Account, CreateAccountDto } from './accounts.types';
+import { AccountClassification, AccountResponse, CreateAccountDto, mapAccountRecord } from './accounts.types';
 
-export async function createAccount(userId: string, dto: CreateAccountDto): Promise<Account> {
+function toDisplayedAmount(rawAmount: bigint, classification: AccountClassification): bigint {
+  return classification === 'asset' ? rawAmount : -rawAmount;
+}
+
+function formatDateOnly(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+export async function createAccount(userId: string, dto: CreateAccountDto): Promise<AccountResponse> {
   const user = await accountsRepository.findUserById(userId);
   if (!user) throw new NotFoundError('User');
 
-  const currency = await accountsRepository.findCurrencyById(dto.currencyId);
+  const currency = await accountsRepository.findCurrencyByCode(dto.currencyCode);
   if (!currency) throw new NotFoundError('Currency');
 
   const existing = await accountsRepository.findByUserAndName(userId, dto.name);
@@ -19,32 +27,40 @@ export async function createAccount(userId: string, dto: CreateAccountDto): Prom
     const createdAccountRows = await tx
       .insert(accountsTable)
       .values({
-        ...dto,
         userId,
+        name: dto.name,
+        institutionName: dto.institutionName,
+        institutionDomain: dto.institutionDomain,
+        notes: dto.notes,
+        classification: dto.classification,
+        type: dto.type,
+        currencyId: dto.currencyCode,
       })
       .returning();
 
     const account = createdAccountRows[0];
 
     await tx.insert(ledgerAccountsTable).values({
-      type: 'asset',
+      classification: account.classification,
       ownerType: 'account',
       ownerId: account.id,
       currencyId: account.currencyId,
     });
 
-    return account;
+    return mapAccountRecord(account);
   });
 }
 
-export async function listAccounts(userId: string): Promise<Account[]> {
+export async function listAccounts(userId: string): Promise<AccountResponse[]> {
   const user = await accountsRepository.findUserById(userId);
   if (!user) throw new NotFoundError('User');
-  return accountsRepository.listByUserId(userId);
+
+  const accounts = await accountsRepository.listByUserId(userId);
+  return accounts.map(mapAccountRecord);
 }
 
 export async function getAccountBalance(userId: string, accountId: string): Promise<{
-  account: Account;
+  account: AccountResponse;
   balance: bigint;
 }> {
   const account = await accountsRepository.findOwnedAccount(accountId, userId);
@@ -56,33 +72,29 @@ export async function getAccountBalance(userId: string, accountId: string): Prom
   const balance = await accountsRepository.getAccountBalanceByLedgerId(ledger.id);
 
   return {
-    account,
-    balance,
+    account: mapAccountRecord(account),
+    balance: toDisplayedAmount(balance, account.classification),
   };
 }
 
 export async function getAccountHistory(userId: string, accountId: string): Promise<{
-  account: Account;
+  account: AccountResponse;
   balance: bigint;
   items: Array<{
     entryId: string;
     transactionId: string;
-    type: 'expense' | 'income' | 'transfer' | 'card_purchase' | 'card_payment' | 'installment' | 'adjustment';
-    paymentMethod: 'cash' | 'debit' | 'pix' | 'boleto' | 'credit_card' | null;
+    type: 'expense' | 'income' | 'transfer' | 'adjustment';
+    paymentMethodId: string | null;
+    paymentMethodCode: string | null;
+    paymentMethodName: string | null;
     description: string;
     amount: bigint;
-    currencyId: string;
-    purchaseDate: Date;
-    postedDate: Date;
+    currencyCode: string;
+    merchantId: string | null;
+    categoryId: string | null;
+    purchaseDate: string;
+    postedDate: string;
     createdAt: Date;
-    cardPayment: null | {
-      amount: bigint;
-      billingCycleId: string;
-      closingDate: Date;
-      dueDate: Date;
-      cardId: string;
-      cardName: string;
-    };
   }>;
 }> {
   const account = await accountsRepository.findOwnedAccount(accountId, userId);
@@ -96,24 +108,24 @@ export async function getAccountHistory(userId: string, accountId: string): Prom
     accountsRepository.listHistoryByLedgerId(ledger.id),
   ]);
 
-  const cardPayments = await accountsRepository.listCardPaymentsByTransactionIds(items.map((item) => item.transactionId));
-  const paymentsByTransactionId = new Map(cardPayments.map((payment) => [payment.transactionId, payment]));
-
   return {
-    account,
-    balance,
+    account: mapAccountRecord(account),
+    balance: toDisplayedAmount(balance, account.classification),
     items: items.map((item) => ({
       entryId: item.entryId,
       transactionId: item.transactionId,
       type: item.type,
-      paymentMethod: item.paymentMethod,
+      paymentMethodId: item.paymentMethodId ?? null,
+      paymentMethodCode: item.paymentMethodCode ?? null,
+      paymentMethodName: item.paymentMethodName ?? null,
       description: item.description,
-      amount: item.amount,
-      currencyId: item.currencyId,
-      purchaseDate: item.purchaseDate,
-      postedDate: item.postedDate,
+      amount: toDisplayedAmount(item.rawAmount, account.classification),
+      currencyCode: item.currencyCode,
+      merchantId: item.merchantId ?? null,
+      categoryId: item.categoryId ?? null,
+      purchaseDate: formatDateOnly(item.purchaseDate),
+      postedDate: formatDateOnly(item.postedDate),
       createdAt: item.createdAt,
-      cardPayment: paymentsByTransactionId.get(item.transactionId) ?? null,
     })),
   };
 }
