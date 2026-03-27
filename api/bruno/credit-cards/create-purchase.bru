@@ -1,0 +1,32 @@
+meta {
+  name: create purchase
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/credit-cards/{{creditCardId}}/purchases
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "description": "Laptop installment purchase",
+    "amount": 120000,
+    "categoryId": "{{expenseCategoryId}}",
+    "purchaseDate": "2026-03-24",
+    "postedDate": "2026-03-24",
+    "installmentCount": 6
+  }
+}
+
+tests {
+  test("credit card purchase returns 201", function() {
+    expect(res.status).to.equal(201);
+  });
+}

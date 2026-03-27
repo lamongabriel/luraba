@@ -236,6 +236,9 @@ async function createExpense(userId: string, dto: Extract<CreateTransactionDto, 
 
   const account = await txRepository.findOwnedAccount(dto.accountId, userId);
   if (!account) throw new NotFoundError('Account');
+  if (account.type === 'credit_card') {
+    throw new ValidationError('Direct expense creation for credit card accounts must use the credit card purchase endpoint');
+  }
   if (account.currencyId !== dto.currencyCode) {
     throw new ValidationError('Transaction currency must match account currency');
   }
@@ -297,6 +300,9 @@ async function createIncome(userId: string, dto: Extract<CreateTransactionDto, {
 
   const account = await txRepository.findOwnedAccount(dto.accountId, userId);
   if (!account) throw new NotFoundError('Account');
+  if (account.type === 'credit_card') {
+    throw new ValidationError('Direct income creation for credit card accounts must use the credit card purchase/payment APIs');
+  }
   if (account.currencyId !== dto.currencyCode) {
     throw new ValidationError('Transaction currency must match account currency');
   }
@@ -357,9 +363,15 @@ async function createTransfer(userId: string, dto: Extract<CreateTransactionDto,
 
   const fromAccount = await txRepository.findOwnedAccount(dto.fromAccountId, userId);
   if (!fromAccount) throw new NotFoundError('Source account');
+  if (fromAccount.type === 'credit_card') {
+    throw new ValidationError('Direct transfers from credit card accounts must use the credit card payment endpoint');
+  }
 
   const toAccount = await txRepository.findOwnedAccount(dto.toAccountId, userId);
   if (!toAccount) throw new NotFoundError('Destination account');
+  if (toAccount.type === 'credit_card') {
+    throw new ValidationError('Direct transfers to credit card accounts must use the credit card payment endpoint');
+  }
 
   if (fromAccount.currencyId !== dto.currencyCode || toAccount.currencyId !== dto.currencyCode) {
     throw new ValidationError('Transfer currency must match both account currencies');
@@ -406,6 +418,9 @@ async function createAdjustment(
 
   const account = await txRepository.findOwnedAccount(dto.accountId, userId);
   if (!account) throw new NotFoundError('Account');
+  if (account.type === 'credit_card') {
+    throw new ValidationError('Direct adjustments for credit card accounts are not supported');
+  }
 
   const accountLedger = await txRepository.findLedgerAccountByOwner('account', account.id);
   if (!accountLedger) throw new NotFoundError('Account ledger');

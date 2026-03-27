@@ -1,0 +1,27 @@
+meta {
+  name: list cycles
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/credit-cards/{{creditCardId}}/cycles
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("credit card cycles return 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}
+
+script:post-response {
+  const first = res.body?.data?.[0];
+
+  if (first?.id) {
+    bru.setEnvVar("creditCardCycleId", first.id);
+  }
+}

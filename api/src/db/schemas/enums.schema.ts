@@ -32,6 +32,7 @@ export const accountClassificationEnum = pgEnum('account_classification', ['asse
 export const accountTypeEnum = pgEnum('account_type', [
   'depository',
   'loan',
+  'credit_card',
   'property',
   'vehicle',
   'other_asset',
@@ -52,3 +53,8 @@ export const transactionTypeEnum = pgEnum('transaction_type', [
   'adjustment',
 ]);
 export const categoryTypeEnum = pgEnum('category_type', ['expense', 'income']);
+
+export const creditExpenseTimingEnum = pgEnum('credit_expense_timing', ['spend_month', 'payment_month']);
+export const creditInstallmentBudgetModeEnum = pgEnum('credit_installment_budget_mode', ['per_installment', 'full_amount']);
+export const creditCardProductTypeEnum = pgEnum('credit_card_product_type', ['credit']);
+export const creditCardCycleStatusEnum = pgEnum('credit_card_cycle_status', ['open', 'closed', 'paid']);

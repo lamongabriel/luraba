@@ -7,7 +7,8 @@ function buildMonthlyBudgetResponse(params: {
   month: Date;
   currencyCode: string;
   budgetRows: Awaited<ReturnType<typeof budgetsRepository.listMonthBudgets>>;
-  actualRows: Awaited<ReturnType<typeof budgetsRepository.listMonthActuals>>;
+  standardActualRows: Awaited<ReturnType<typeof budgetsRepository.listMonthActuals>>;
+  creditCardActualRows: Awaited<ReturnType<typeof budgetsRepository.listMonthCreditCardActuals>>;
 }): MonthlyBudgetResponse {
   const categories = {
     income: new Map<
@@ -43,7 +44,7 @@ function buildMonthlyBudgetResponse(params: {
     });
   }
 
-  for (const row of params.actualRows) {
+  for (const row of [...params.standardActualRows, ...params.creditCardActualRows]) {
     if (!row.categoryId) {
       continue;
     }
@@ -52,7 +53,7 @@ function buildMonthlyBudgetResponse(params: {
     const existing = target.get(row.categoryId);
 
     if (existing) {
-      existing.actualAmount = row.actualAmount;
+      existing.actualAmount += row.actualAmount;
       continue;
     }
 
@@ -104,16 +105,18 @@ export async function getMonthlyBudget(
 ): Promise<MonthlyBudgetResponse> {
   const { currencyCode } = await resolveBudgetContext(userId, preferredCurrencyOverride);
 
-  const [budgetRows, actualRows] = await Promise.all([
+  const [budgetRows, standardActualRows, creditCardActualRows] = await Promise.all([
     budgetsRepository.listMonthBudgets(userId, month, currencyCode),
     budgetsRepository.listMonthActuals(userId, month, currencyCode),
+    budgetsRepository.listMonthCreditCardActuals(userId, month, currencyCode),
   ]);
 
   return buildMonthlyBudgetResponse({
     month,
     currencyCode,
     budgetRows,
-    actualRows,
+    standardActualRows,
+    creditCardActualRows,
   });
 }
 

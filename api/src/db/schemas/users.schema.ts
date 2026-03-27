@@ -8,6 +8,8 @@ import {
   defaultAccountOrderEnum,
   countryCodeEnum,
   themePreferenceEnum,
+  creditExpenseTimingEnum,
+  creditInstallmentBudgetModeEnum,
 } from './enums.schema';
 
 export const usersTable = pgTable('users', {
@@ -23,6 +25,10 @@ export const usersTable = pgTable('users', {
   defaultAccountOrder: defaultAccountOrderEnum('default_account_order').notNull().default('name_asc'),
   countryCode: countryCodeEnum('country_code').notNull().default('BR'),
   budgetMonthStartsOn: integer('budget_month_starts_on').notNull().default(1),
+  creditExpenseTiming: creditExpenseTimingEnum('credit_expense_timing').notNull().default('spend_month'),
+  creditInstallmentBudgetMode: creditInstallmentBudgetModeEnum('credit_installment_budget_mode')
+    .notNull()
+    .default('per_installment'),
   themePreference: themePreferenceEnum('theme_preference').notNull().default('system'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

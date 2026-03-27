@@ -1,0 +1,19 @@
+meta {
+  name: get forecast
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/credit-cards/{{creditCardId}}/forecast?fromMonth={{creditCardForecastMonth}}&months=6
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("credit card forecast returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

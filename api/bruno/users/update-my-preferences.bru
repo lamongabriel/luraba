@@ -1,0 +1,28 @@
+meta {
+  name: update my preferences
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/users/me/preferences
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "creditExpenseTiming": "payment_month",
+    "creditInstallmentBudgetMode": "full_amount"
+  }
+}
+
+tests {
+  test("preferences update returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

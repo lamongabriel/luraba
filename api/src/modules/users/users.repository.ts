@@ -22,6 +22,8 @@ const userPublicSelect = {
   defaultAccountOrder: usersTable.defaultAccountOrder,
   countryCode: usersTable.countryCode,
   budgetMonthStartsOn: usersTable.budgetMonthStartsOn,
+  creditExpenseTiming: usersTable.creditExpenseTiming,
+  creditInstallmentBudgetMode: usersTable.creditInstallmentBudgetMode,
   themePreference: usersTable.themePreference,
   createdAt: usersTable.createdAt,
   updatedAt: usersTable.updatedAt,
@@ -91,6 +93,8 @@ export async function getUserPreferences(id: string): Promise<UserPreferences | 
       defaultAccountOrder: usersTable.defaultAccountOrder,
       countryCode: usersTable.countryCode,
       budgetMonthStartsOn: usersTable.budgetMonthStartsOn,
+      creditExpenseTiming: usersTable.creditExpenseTiming,
+      creditInstallmentBudgetMode: usersTable.creditInstallmentBudgetMode,
       themePreference: usersTable.themePreference,
     })
     .from(usersTable)
@@ -108,6 +112,8 @@ export async function getUserPreferences(id: string): Promise<UserPreferences | 
     defaultAccountOrder: row.defaultAccountOrder,
     countryCode: row.countryCode,
     budgetMonthStartsOn: row.budgetMonthStartsOn,
+    creditExpenseTiming: row.creditExpenseTiming,
+    creditInstallmentBudgetMode: row.creditInstallmentBudgetMode,
     theme: row.themePreference,
   };
 }
@@ -127,6 +133,8 @@ export async function updateUserPreferences(
       defaultAccountOrder: dto.defaultAccountOrder,
       countryCode: dto.countryCode,
       budgetMonthStartsOn: dto.budgetMonthStartsOn,
+      creditExpenseTiming: dto.creditExpenseTiming,
+      creditInstallmentBudgetMode: dto.creditInstallmentBudgetMode,
       themePreference: dto.theme,
       updatedAt: new Date(),
     })
@@ -140,6 +148,8 @@ export async function updateUserPreferences(
       defaultAccountOrder: usersTable.defaultAccountOrder,
       countryCode: usersTable.countryCode,
       budgetMonthStartsOn: usersTable.budgetMonthStartsOn,
+      creditExpenseTiming: usersTable.creditExpenseTiming,
+      creditInstallmentBudgetMode: usersTable.creditInstallmentBudgetMode,
       themePreference: usersTable.themePreference,
     });
 
@@ -155,6 +165,8 @@ export async function updateUserPreferences(
     defaultAccountOrder: row.defaultAccountOrder,
     countryCode: row.countryCode,
     budgetMonthStartsOn: row.budgetMonthStartsOn,
+    creditExpenseTiming: row.creditExpenseTiming,
+    creditInstallmentBudgetMode: row.creditInstallmentBudgetMode,
     theme: row.themePreference,
   };
 }

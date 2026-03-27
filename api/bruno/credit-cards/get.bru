@@ -1,0 +1,19 @@
+meta {
+  name: get credit card
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/credit-cards/{{creditCardId}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("credit card returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

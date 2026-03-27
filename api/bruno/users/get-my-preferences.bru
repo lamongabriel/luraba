@@ -1,0 +1,19 @@
+meta {
+  name: get my preferences
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/users/me/preferences
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("preferences returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

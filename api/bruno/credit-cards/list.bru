@@ -1,0 +1,31 @@
+meta {
+  name: list credit cards
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/credit-cards
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("credit card list returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}
+
+script:post-response {
+  const first = res.body?.data?.[0];
+
+  if (first?.id) {
+    bru.setEnvVar("creditCardId", first.id);
+  }
+
+  if (first?.accountId) {
+    bru.setEnvVar("creditCardAccountId", first.accountId);
+  }
+}

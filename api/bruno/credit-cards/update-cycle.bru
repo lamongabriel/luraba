@@ -1,0 +1,30 @@
+meta {
+  name: update cycle
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/credit-cards/{{creditCardId}}/cycles/{{creditCardCycleId}}
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "periodStart": "{{creditCardCycleStartDate}}",
+    "periodEnd": "{{creditCardCycleEndDate}}",
+    "closingDate": "{{creditCardCycleEndDate}}",
+    "dueDate": "{{creditCardCycleDueDate}}"
+  }
+}
+
+tests {
+  test("credit card cycle update returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

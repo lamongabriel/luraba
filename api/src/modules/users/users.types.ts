@@ -26,6 +26,8 @@ export const defaultPeriodSchema = z.enum([
 export const defaultAccountOrderSchema = z.enum(['name_asc', 'name_desc', 'newest', 'oldest']);
 export const countryCodeSchema = z.enum(['BR', 'US']);
 export const themePreferenceSchema = z.enum(['light', 'dark', 'system']);
+export const creditExpenseTimingSchema = z.enum(['spend_month', 'payment_month']);
+export const creditInstallmentBudgetModeSchema = z.enum(['per_installment', 'full_amount']);
 
 export const userPreferencesSchema = z.object({
   language: languageSchema,
@@ -36,6 +38,8 @@ export const userPreferencesSchema = z.object({
   defaultAccountOrder: defaultAccountOrderSchema,
   countryCode: countryCodeSchema,
   budgetMonthStartsOn: z.number().int().min(1).max(28),
+  creditExpenseTiming: creditExpenseTimingSchema,
+  creditInstallmentBudgetMode: creditInstallmentBudgetModeSchema,
   theme: themePreferenceSchema,
 });
 
@@ -55,6 +59,8 @@ export type PublicUserRow = {
   defaultAccountOrder: UserPreferences['defaultAccountOrder'];
   countryCode: UserPreferences['countryCode'];
   budgetMonthStartsOn: UserPreferences['budgetMonthStartsOn'];
+  creditExpenseTiming: UserPreferences['creditExpenseTiming'];
+  creditInstallmentBudgetMode: UserPreferences['creditInstallmentBudgetMode'];
   themePreference: UserPreferences['theme'];
   createdAt: Date;
   updatedAt: Date;
@@ -83,6 +89,8 @@ export function mapUserRowToUser(row: PublicUserRow): User {
       defaultAccountOrder: row.defaultAccountOrder,
       countryCode: row.countryCode,
       budgetMonthStartsOn: row.budgetMonthStartsOn,
+      creditExpenseTiming: row.creditExpenseTiming,
+      creditInstallmentBudgetMode: row.creditInstallmentBudgetMode,
       theme: row.themePreference,
     },
     createdAt: row.createdAt,

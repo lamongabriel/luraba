@@ -1,0 +1,29 @@
+meta {
+  name: update credit card
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/credit-cards/{{creditCardId}}
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "color": "graphite",
+    "closingDay": {{creditCardClosingDay}},
+    "dueDay": {{creditCardDueDay}}
+  }
+}
+
+tests {
+  test("credit card update returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

@@ -1,0 +1,31 @@
+meta {
+  name: create payment
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/v1/credit-cards/{{creditCardId}}/payments
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "description": "Credit card payment",
+    "amount": 30000,
+    "fromAccountId": "{{accountId}}",
+    "paymentDate": "2026-03-28",
+    "postedDate": "2026-03-28"
+  }
+}
+
+tests {
+  test("credit card payment returns 201", function() {
+    expect(res.status).to.equal(201);
+  });
+}

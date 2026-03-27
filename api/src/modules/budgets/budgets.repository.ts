@@ -2,6 +2,9 @@ import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { budgetsTable } from '@/db/schemas/budgets.schema';
 import { categoriesTable } from '@/db/schemas/categories.schema';
+import { creditCardBudgetRecognitionsTable } from '@/db/schemas/credit-card-budget-recognitions.schema';
+import { creditCardPurchasesTable } from '@/db/schemas/credit-card-purchases.schema';
+import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
 import { currenciesTable } from '@/db/schemas/currencies.schema';
 import { entriesTable } from '@/db/schemas/entries.schema';
 import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
@@ -95,6 +98,35 @@ export async function listMonthActuals(userId: string, month: Date, currencyCode
       ),
     )
     .groupBy(transactionsTable.categoryId, categoriesTable.name, categoriesTable.parentId, categoriesTable.type)
+    .orderBy(asc(categoriesTable.type), asc(categoriesTable.name));
+}
+
+export async function listMonthCreditCardActuals(userId: string, month: Date, currencyCode: string) {
+  return db
+    .select({
+      categoryId: creditCardBudgetRecognitionsTable.categoryId,
+      categoryName: categoriesTable.name,
+      parentId: categoriesTable.parentId,
+      categoryType: categoriesTable.type,
+      actualAmount: sql<number>`coalesce(sum(${creditCardBudgetRecognitionsTable.amount}), 0)::integer`,
+    })
+    .from(creditCardBudgetRecognitionsTable)
+    .innerJoin(categoriesTable, eq(categoriesTable.id, creditCardBudgetRecognitionsTable.categoryId))
+    .innerJoin(creditCardPurchasesTable, eq(creditCardPurchasesTable.id, creditCardBudgetRecognitionsTable.purchaseId))
+    .innerJoin(creditCardsTable, eq(creditCardsTable.id, creditCardPurchasesTable.creditCardId))
+    .where(
+      and(
+        eq(creditCardsTable.userId, userId),
+        eq(creditCardBudgetRecognitionsTable.currencyId, currencyCode),
+        eq(creditCardBudgetRecognitionsTable.budgetMonth, month),
+      ),
+    )
+    .groupBy(
+      creditCardBudgetRecognitionsTable.categoryId,
+      categoriesTable.name,
+      categoriesTable.parentId,
+      categoriesTable.type,
+    )
     .orderBy(asc(categoriesTable.type), asc(categoriesTable.name));
 }
 

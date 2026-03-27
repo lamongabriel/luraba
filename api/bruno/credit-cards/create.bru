@@ -1,0 +1,44 @@
+meta {
+  name: create credit card
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/credit-cards
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Primary Credit Card",
+    "currencyCode": "{{currencyCode}}",
+    "brand": "{{creditCardBrand}}",
+    "productType": "credit",
+    "last4": "{{creditCardLast4}}",
+    "color": "{{creditCardColor}}",
+    "closingDay": {{creditCardClosingDay}},
+    "dueDay": {{creditCardDueDay}}
+  }
+}
+
+tests {
+  test("credit card returns 201", function() {
+    expect(res.status).to.equal(201);
+  });
+}
+
+script:post-response {
+  if (res.body?.data?.id) {
+    bru.setEnvVar("creditCardId", res.body.data.id);
+  }
+
+  if (res.body?.data?.accountId) {
+    bru.setEnvVar("creditCardAccountId", res.body.data.accountId);
+  }
+}

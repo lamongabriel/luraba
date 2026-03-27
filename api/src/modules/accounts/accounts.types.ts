@@ -7,16 +7,19 @@ export const accountClassificationSchema = z.enum(['asset', 'liability']);
 export const accountTypeSchema = z.enum([
   'depository',
   'loan',
+  'credit_card',
   'property',
   'vehicle',
   'other_asset',
   'other_liability',
 ]);
+const createAccountTypeSchema = z.enum(['depository', 'loan', 'property', 'vehicle', 'other_asset', 'other_liability']);
 export const currencyCodeSchema = z.string().trim().length(3).transform((value) => value.toUpperCase());
 
 export const ACCOUNT_TYPE_TO_CLASSIFICATION = {
   depository: 'asset',
   loan: 'liability',
+  credit_card: 'liability',
   property: 'asset',
   vehicle: 'asset',
   other_asset: 'asset',
@@ -29,7 +32,7 @@ export const createAccountSchema = z.object({
   institutionDomain: z.string().min(1).max(255).optional(),
   notes: z.string().max(4000).optional(),
   classification: accountClassificationSchema,
-  type: accountTypeSchema,
+  type: createAccountTypeSchema,
   currencyCode: currencyCodeSchema,
 }).superRefine((value, ctx) => {
   if (ACCOUNT_TYPE_TO_CLASSIFICATION[value.type] !== value.classification) {
