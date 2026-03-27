@@ -67,6 +67,16 @@ const COUNTRY_OPTIONS = [
   { value: "US", label: "🇺🇸 United States" },
 ] as const;
 
+const CREDIT_EXPENSE_TIMING_OPTIONS = [
+  { value: "spend_month", label: "Spend month" },
+  { value: "payment_month", label: "Payment month" },
+] as const;
+
+const CREDIT_INSTALLMENT_MODE_OPTIONS = [
+  { value: "per_installment", label: "Per installment" },
+  { value: "full_amount", label: "Full amount at once" },
+] as const;
+
 const THEME_OPTIONS = [
   {
     value: "light",
@@ -97,6 +107,8 @@ const DEFAULT_VALUES: UserPreferences = {
   defaultAccountOrder: "name_asc",
   countryCode: "BR",
   budgetMonthStartsOn: 1,
+  creditExpenseTiming: "spend_month",
+  creditInstallmentBudgetMode: "per_installment",
   theme: "system",
 };
 
@@ -303,6 +315,48 @@ export default function SettingsPage() {
                     {Array.from({ length: 28 }, (_, index) => index + 1).map((day) => (
                       <SelectItem key={day} value={String(day)}>
                         {toOrdinalDay(day)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Credit expense timing</Label>
+                <Select
+                  value={form.watch("creditExpenseTiming")}
+                  onValueChange={(value: UserPreferences["creditExpenseTiming"]) =>
+                    form.setValue("creditExpenseTiming", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select timing" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CREDIT_EXPENSE_TIMING_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Credit installment budget mode</Label>
+                <Select
+                  value={form.watch("creditInstallmentBudgetMode")}
+                  onValueChange={(value: UserPreferences["creditInstallmentBudgetMode"]) =>
+                    form.setValue("creditInstallmentBudgetMode", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select installment mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CREDIT_INSTALLMENT_MODE_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

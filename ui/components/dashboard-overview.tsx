@@ -7,16 +7,17 @@ export function DashboardOverview() {
   const { data = [] } = useTransactionsQuery()
 
   const income = data.filter((tx) => tx.type === "income").length
-  const expenses = data.filter((tx) => tx.type === "expense" || tx.type === "card_purchase").length
+  const expenses = data.filter((tx) => tx.type === "expense").length
   const transfers = data.filter((tx) => tx.type === "transfer").length
+  const adjustments = data.filter((tx) => tx.type === "adjustment").length
 
   const cards = [
     { label: "Income Tx", value: income.toString() },
     { label: "Expense Tx", value: expenses.toString() },
     { label: "Transfer Tx", value: transfers.toString() },
     {
-      label: "Total Transactions",
-      value: data.length.toString(),
+      label: "Adjustments",
+      value: adjustments.toString(),
     },
   ]
 

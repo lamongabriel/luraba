@@ -1,17 +1,5 @@
-import { Geist_Mono, IBM_Plex_Sans, Noto_Serif } from "next/font/google"
-
 import "./globals.css"
 import { Providers } from "@/components/providers"
-import { cn } from "@/lib/utils"
-
-const notoSerifHeading = Noto_Serif({ subsets: ["latin"], variable: "--font-heading" })
-
-const ibmPlexSans = IBM_Plex_Sans({ subsets: ["latin"], variable: "--font-sans" })
-
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
 
 export default function RootLayout({
   children,
@@ -22,7 +10,17 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", ibmPlexSans.variable, notoSerifHeading.variable)}
+      className="antialiased font-sans"
+      style={
+        {
+          "--font-sans":
+            '"Avenir Next", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif',
+          "--font-heading":
+            '"Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif',
+          "--font-mono":
+            '"SFMono-Regular", "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+        } as React.CSSProperties
+      }
     >
       <body>
         <Providers>{children}</Providers>

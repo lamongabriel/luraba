@@ -12,6 +12,9 @@ export type DefaultPeriodOption =
   | "last_10_years"
   | "all_time";
 
+export type CreditExpenseTiming = "spend_month" | "payment_month";
+export type CreditInstallmentBudgetMode = "per_installment" | "full_amount";
+
 export interface UserPreferences {
   language: "en" | "pt-BR";
   currency: "BRL" | "USD" | "EUR";
@@ -21,11 +24,13 @@ export interface UserPreferences {
   defaultAccountOrder: "name_asc" | "name_desc" | "newest" | "oldest";
   countryCode: "BR" | "US";
   budgetMonthStartsOn: number;
+  creditExpenseTiming: CreditExpenseTiming;
+  creditInstallmentBudgetMode: CreditInstallmentBudgetMode;
   theme: "light" | "dark" | "system";
 }
 
 export interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   preferences: UserPreferences;

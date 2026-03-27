@@ -1,48 +1,174 @@
-import { budgetCategories } from "@/lib/mock-data"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+"use client";
+
+import * as React from "react";
+import { PencilLine } from "lucide-react";
+
+import { EmptyState } from "@/components/finance/empty-state";
+import { BudgetAllocationSheet } from "@/components/finance/forms/budget-allocation-sheet";
+import { MonthSwitcher } from "@/components/finance/month-switcher";
+import { MoneyValue } from "@/components/finance/money-value";
+import { PageHeader } from "@/components/finance/page-header";
+import { SectionPanel } from "@/components/finance/section-panel";
+import { SegmentedBar } from "@/components/finance/segmented-bar";
+import { StatusPill } from "@/components/finance/status-pill";
+import { SummaryCard } from "@/components/finance/summary-card";
+import { Button } from "@/components/ui/button";
+import { getCurrentMonthKey } from "@/lib/finance";
+import { useBudgetQuery } from "@/queries/use-budget.query";
+import { useCategoriesQuery } from "@/queries/use-categories.query";
+import { useAuthStore } from "@/stores/auth.store";
+
+const CATEGORY_COLORS = ["#0891b2", "#0f766e", "#e11d48", "#f59e0b", "#7c3aed", "#2563eb"];
 
 export default function BudgetsPage() {
+  const [month, setMonth] = React.useState(getCurrentMonthKey());
+  const [sheetOpen, setSheetOpen] = React.useState(false);
+  const preferredCurrency = useAuthStore((state) => state.user?.preferences.currency);
+
+  const { data: budget, isLoading, isError } = useBudgetQuery(month, preferredCurrency);
+  const { data: categories = [] } = useCategoriesQuery();
+
   return (
     <div className="space-y-6">
-      <section className="space-y-1">
-        <h1 className="font-heading text-3xl">Budgets</h1>
-        <p className="text-sm text-muted-foreground">Monitor planned versus actual spending by category.</p>
-      </section>
+      <PageHeader
+        title="Budgets"
+        description="Monitor planned versus actual spending and income by month, including credit-card budget recognition."
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <MonthSwitcher month={month} onChange={setMonth} />
+            {budget ? (
+              <Button className="rounded-full" onClick={() => setSheetOpen(true)}>
+                <PencilLine className="size-4" />
+                Edit allocations
+              </Button>
+            ) : null}
+          </div>
+        }
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>March 2026</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-lg border p-4">
-              <p className="text-xs text-muted-foreground">Spent</p>
-              <p className="text-2xl font-semibold">R$6.226,00</p>
-              <p className="text-xs text-muted-foreground">of R$5.000,00 budgeted</p>
-            </div>
-            <div className="rounded-lg border p-4">
-              <p className="text-xs text-muted-foreground">Expected income</p>
-              <p className="text-2xl font-semibold">R$15.000,00</p>
-              <p className="text-xs text-muted-foreground">R$15.255,90 earned</p>
-            </div>
+      {isLoading ? <p className="text-sm text-muted-foreground">Loading budget...</p> : null}
+      {isError ? <p className="text-sm text-destructive">Failed to load budget.</p> : null}
+
+      {budget ? (
+        <>
+          <div className="grid gap-4 xl:grid-cols-4">
+            <SummaryCard
+              label="Income budgeted"
+              value={<MoneyValue amount={budget.totals.incomeBudgeted} currencyCode={budget.currencyCode} />}
+              accent="positive"
+            />
+            <SummaryCard
+              label="Income actual"
+              value={<MoneyValue amount={budget.totals.incomeActual} currencyCode={budget.currencyCode} />}
+              hint="Includes credit-card budget recognition rules"
+              accent="positive"
+            />
+            <SummaryCard
+              label="Expense budgeted"
+              value={<MoneyValue amount={budget.totals.expenseBudgeted} currencyCode={budget.currencyCode} />}
+              accent="negative"
+            />
+            <SummaryCard
+              label="Expense actual"
+              value={<MoneyValue amount={budget.totals.expenseActual} currencyCode={budget.currencyCode} />}
+              hint="Current month recognized spending"
+              accent="negative"
+            />
           </div>
 
-          <div className="space-y-2">
-            {budgetCategories.map((category) => (
-              <div key={category.name} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3">
-                <div>
-                  <p className="font-medium">{category.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Spent {category.spent} / Budgeted {category.budgeted}
-                  </p>
+          <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+            <SectionPanel title="Income mix" description="How actual income is distributed across the configured categories.">
+              {budget.categories.income.length === 0 ? (
+                <EmptyState title="No income categories yet" description="Create income categories and budget allocations to build this view." />
+              ) : (
+                <div className="space-y-5">
+                  <SegmentedBar
+                    className="h-3"
+                    segments={budget.categories.income.map((category, index) => ({
+                      label: category.categoryName,
+                      value: category.actualAmount,
+                      color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
+                    }))}
+                  />
+                  <div className="space-y-3">
+                    {budget.categories.income.map((category, index) => (
+                      <div key={category.categoryId} className="rounded-[1rem] border border-border/70 bg-[var(--color-container-inset)] px-4 py-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <div className="size-2.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[index % CATEGORY_COLORS.length] }} />
+                            <p className="font-medium">{category.categoryName}</p>
+                          </div>
+                          <MoneyValue amount={category.actualAmount} currencyCode={budget.currencyCode} />
+                        </div>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Budgeted <MoneyValue amount={category.budgetedAmount} currencyCode={budget.currencyCode} />
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <Badge variant="outline">{category.status}</Badge>
-              </div>
-            ))}
+              )}
+            </SectionPanel>
+
+            <SectionPanel title="Expense performance" description="Budget versus actual per expense category.">
+              {budget.categories.expense.length === 0 ? (
+                <EmptyState title="No expense categories yet" description="Create expense categories and set monthly allocations to track performance." />
+              ) : (
+                <div className="space-y-3">
+                  {budget.categories.expense.map((category) => {
+                    const overBudget = category.actualAmount > category.budgetedAmount;
+                    return (
+                      <div key={category.categoryId} className="rounded-[1rem] border border-border/70 bg-[var(--color-container-inset)] px-4 py-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="font-medium">{category.categoryName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Budgeted <MoneyValue amount={category.budgetedAmount} currencyCode={budget.currencyCode} />
+                            </p>
+                          </div>
+                          <StatusPill tone={overBudget ? "negative" : "positive"}>
+                            {overBudget ? "Over" : "On track"}
+                          </StatusPill>
+                        </div>
+                        <div className="mt-4 flex items-center justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <SegmentedBar
+                              segments={[
+                                { label: "Actual", value: category.actualAmount, color: overBudget ? "#e11d48" : "#0f766e" },
+                                {
+                                  label: "Remaining",
+                                  value: Math.max(category.budgetedAmount - category.actualAmount, 0),
+                                  color: "#cbd5e1",
+                                },
+                              ]}
+                            />
+                          </div>
+                          <div className="font-semibold">
+                            <MoneyValue amount={category.actualAmount} currencyCode={budget.currencyCode} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </SectionPanel>
           </div>
-        </CardContent>
-      </Card>
+
+          <BudgetAllocationSheet
+            open={sheetOpen}
+            onOpenChange={setSheetOpen}
+            month={month}
+            budget={budget}
+            categories={categories}
+          />
+        </>
+      ) : (
+        <EmptyState
+          title="Budget unavailable"
+          description="Once the monthly budget endpoint is available for this month and currency, it will appear here."
+        />
+      )}
     </div>
-  )
+  );
 }

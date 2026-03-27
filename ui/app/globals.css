@@ -37,6 +37,9 @@
     --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
     --sidebar-border: oklch(0.925 0.005 214.3);
     --sidebar-ring: oklch(0.723 0.014 214.4);
+    --container: oklch(0.995 0.002 190);
+    --container-inset: oklch(0.978 0.004 214);
+    --surface: oklch(0.986 0.003 214);
 }
 
 .dark {
@@ -71,6 +74,9 @@
     --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.56 0.021 213.5);
+    --container: oklch(0.235 0.008 223.9);
+    --container-inset: oklch(0.275 0.01 223.9);
+    --surface: oklch(0.19 0.008 223.9);
 }
 
 @theme inline {
@@ -107,6 +113,9 @@
     --color-card: var(--card);
     --color-foreground: var(--foreground);
     --color-background: var(--background);
+    --color-container: var(--container);
+    --color-container-inset: var(--container-inset);
+    --color-surface: var(--surface);
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
@@ -122,7 +131,11 @@
     }
   body {
     @apply bg-background text-foreground;
-    background-image: radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--color-primary) 9%, transparent) 0, transparent 40%);
+    background-image:
+      radial-gradient(circle at top left, color-mix(in oklab, var(--color-primary) 10%, transparent) 0, transparent 28%),
+      radial-gradient(circle at bottom right, color-mix(in oklab, var(--color-chart-2) 10%, transparent) 0, transparent 24%),
+      linear-gradient(180deg, color-mix(in oklab, var(--color-background) 88%, white 12%) 0%, var(--color-background) 100%);
+    min-height: 100vh;
     }
   html {
     @apply font-sans;

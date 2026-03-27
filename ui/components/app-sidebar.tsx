@@ -32,12 +32,18 @@ export function AppSidebar() {
 
   return (
     <Sidebar variant="inset">
-      <SidebarHeader>
+      <SidebarHeader className="gap-4 px-3 py-4">
         <Logo />
+        <div className="rounded-[1.25rem] border border-sidebar-border/70 bg-sidebar-accent/50 px-3 py-3">
+          <p className="text-[0.68rem] uppercase tracking-[0.2em] text-sidebar-foreground/60">Workspace</p>
+          <p className="mt-2 text-sm font-medium text-sidebar-foreground">
+            Accounts, cards, budgets, and cashflow in one place.
+          </p>
+        </div>
       </SidebarHeader>
       <SidebarSeparator />
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="px-2">
           <SidebarGroupLabel>Workspace</SidebarGroupLabel>
           <SidebarMenu>
             {mainNav.map((item) => {
@@ -58,7 +64,7 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="px-2 pb-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Settings">
