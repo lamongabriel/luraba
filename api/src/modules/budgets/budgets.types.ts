@@ -16,9 +16,11 @@ export const budgetQuerySchema = z.object({
   currencyCode: currencyCodeSchema.optional(),
 });
 
+const moneyAmountSchema = z.coerce.number().int().positive().max(2_147_483_647);
+
 const budgetAllocationInputSchema = z.object({
   categoryId: z.string().uuid(),
-  amount: z.coerce.bigint().positive(),
+  amount: moneyAmountSchema,
 });
 
 export const replaceBudgetSchema = z.object({
@@ -34,18 +36,18 @@ export type BudgetCategoryBreakdown = {
   categoryId: string;
   categoryName: string;
   parentId: string | null;
-  budgetedAmount: bigint;
-  actualAmount: bigint;
+  budgetedAmount: number;
+  actualAmount: number;
 };
 
 export type MonthlyBudgetResponse = {
   month: string;
   currencyCode: string;
   totals: {
-    incomeBudgeted: bigint;
-    incomeActual: bigint;
-    expenseBudgeted: bigint;
-    expenseActual: bigint;
+    incomeBudgeted: number;
+    incomeActual: number;
+    expenseBudgeted: number;
+    expenseActual: number;
   };
   categories: {
     income: BudgetCategoryBreakdown[];

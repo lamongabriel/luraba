@@ -8,6 +8,13 @@
       "when": 1774564572180,
       "tag": "0000_heavy_human_cannonball",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774570836361,
+      "tag": "0001_cheerful_the_phantom",
+      "breakpoints": true
     }
   ]
 }

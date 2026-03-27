@@ -10,6 +10,7 @@ export type TransactionType = TransactionRecord['type'];
 
 const currencyCodeSchema = z.string().trim().length(3).transform((value) => value.toUpperCase());
 const paymentMethodCodeSchema = z.string().trim().min(1).max(32).transform((value) => value.toLowerCase());
+const moneyAmountSchema = z.coerce.number().int().positive().max(2_147_483_647);
 
 const baseFields = {
   description: z.string().min(1).max(512),
@@ -27,7 +28,7 @@ const expenseTransactionSchema = z.object({
   type: z.literal('expense'),
   ...baseFields,
   ...categorizedLinkFields,
-  amount: z.coerce.bigint().positive(),
+  amount: moneyAmountSchema,
   currencyCode: currencyCodeSchema,
   accountId: z.string().uuid(),
   paymentMethodCode: paymentMethodCodeSchema,
@@ -37,7 +38,7 @@ const incomeTransactionSchema = z.object({
   type: z.literal('income'),
   ...baseFields,
   ...categorizedLinkFields,
-  amount: z.coerce.bigint().positive(),
+  amount: moneyAmountSchema,
   currencyCode: currencyCodeSchema,
   accountId: z.string().uuid(),
   paymentMethodCode: paymentMethodCodeSchema,
@@ -46,7 +47,7 @@ const incomeTransactionSchema = z.object({
 const transferTransactionSchema = z.object({
   type: z.literal('transfer'),
   ...baseFields,
-  amount: z.coerce.bigint().positive(),
+  amount: moneyAmountSchema,
   currencyCode: currencyCodeSchema,
   fromAccountId: z.string().uuid(),
   toAccountId: z.string().uuid(),
@@ -55,7 +56,7 @@ const transferTransactionSchema = z.object({
 const adjustmentTransactionSchema = z.object({
   type: z.literal('adjustment'),
   ...baseFields,
-  amount: z.coerce.bigint().positive(),
+  amount: moneyAmountSchema,
   accountId: z.string().uuid(),
   direction: z.enum(['increase', 'decrease']),
 });
@@ -74,7 +75,7 @@ export type TransactionResponse = {
   userId: string;
   type: TransactionType;
   description: string;
-  amount: bigint;
+  amount: number;
   currencyCode: string;
   accountId: string | null;
   accountName: string | null;

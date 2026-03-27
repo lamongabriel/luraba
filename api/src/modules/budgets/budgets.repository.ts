@@ -79,7 +79,7 @@ export async function listMonthActuals(userId: string, month: Date, currencyCode
       categoryName: categoriesTable.name,
       parentId: categoriesTable.parentId,
       categoryType: categoriesTable.type,
-      actualAmount: sql<bigint>`coalesce(sum(abs(${entriesTable.amount})), 0)::bigint`,
+      actualAmount: sql<number>`coalesce(sum(abs(${entriesTable.amount})), 0)::integer`,
     })
     .from(entriesTable)
     .innerJoin(transactionsTable, eq(transactionsTable.id, entriesTable.transactionId))
@@ -105,7 +105,7 @@ export async function replaceMonthBudgets(
   currencyCode: string,
   values: Array<{
     categoryId: string;
-    amount: bigint;
+    amount: number;
   }>,
 ): Promise<void> {
   await tx

@@ -16,8 +16,8 @@ function buildMonthlyBudgetResponse(params: {
         categoryId: string;
         categoryName: string;
         parentId: string | null;
-        budgetedAmount: bigint;
-        actualAmount: bigint;
+        budgetedAmount: number;
+        actualAmount: number;
       }
     >(),
     expense: new Map<
@@ -26,8 +26,8 @@ function buildMonthlyBudgetResponse(params: {
         categoryId: string;
         categoryName: string;
         parentId: string | null;
-        budgetedAmount: bigint;
-        actualAmount: bigint;
+        budgetedAmount: number;
+        actualAmount: number;
       }
     >(),
   };
@@ -39,7 +39,7 @@ function buildMonthlyBudgetResponse(params: {
       categoryName: row.categoryName,
       parentId: row.parentId ?? null,
       budgetedAmount: row.amount,
-      actualAmount: 0n,
+      actualAmount: 0,
     });
   }
 
@@ -60,7 +60,7 @@ function buildMonthlyBudgetResponse(params: {
       categoryId: row.categoryId,
       categoryName: row.categoryName,
       parentId: row.parentId ?? null,
-      budgetedAmount: 0n,
+      budgetedAmount: 0,
       actualAmount: row.actualAmount,
     });
   }
@@ -72,10 +72,10 @@ function buildMonthlyBudgetResponse(params: {
     month: formatMonthKey(params.month),
     currencyCode: params.currencyCode,
     totals: {
-      incomeBudgeted: income.reduce((sum, item) => sum + item.budgetedAmount, 0n),
-      incomeActual: income.reduce((sum, item) => sum + item.actualAmount, 0n),
-      expenseBudgeted: expense.reduce((sum, item) => sum + item.budgetedAmount, 0n),
-      expenseActual: expense.reduce((sum, item) => sum + item.actualAmount, 0n),
+      incomeBudgeted: income.reduce((sum, item) => sum + item.budgetedAmount, 0),
+      incomeActual: income.reduce((sum, item) => sum + item.actualAmount, 0),
+      expenseBudgeted: expense.reduce((sum, item) => sum + item.budgetedAmount, 0),
+      expenseActual: expense.reduce((sum, item) => sum + item.actualAmount, 0),
     },
     categories: {
       income,

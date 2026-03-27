@@ -77,22 +77,22 @@ export async function findLedgerByAccountId(accountId: string): Promise<{
   return rows[0];
 }
 
-export async function getAccountBalanceByLedgerId(ledgerAccountId: string): Promise<bigint> {
+export async function getAccountBalanceByLedgerId(ledgerAccountId: string): Promise<number> {
   const [row] = await db
     .select({
-      balance: sql<bigint>`coalesce(sum(${entriesTable.amount}), 0)::bigint`,
+      balance: sql<number>`coalesce(sum(${entriesTable.amount}), 0)::integer`,
     })
     .from(entriesTable)
     .where(eq(entriesTable.ledgerAccountId, ledgerAccountId));
 
-  return row?.balance ?? 0n;
+  return row?.balance ?? 0;
 }
 
 export async function listHistoryByLedgerId(ledgerAccountId: string): Promise<
   Array<{
     entryId: string;
     transactionId: string;
-    rawAmount: bigint;
+    rawAmount: number;
     currencyCode: string;
     type: 'expense' | 'income' | 'transfer' | 'adjustment';
     paymentMethodId: string | null;

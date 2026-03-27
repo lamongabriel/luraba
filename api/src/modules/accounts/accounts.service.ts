@@ -11,7 +11,7 @@ import {
   mapAccountRecord,
 } from './accounts.types';
 
-function toDisplayedAmount(rawAmount: bigint, classification: AccountClassification): bigint {
+function toDisplayedAmount(rawAmount: number, classification: AccountClassification): number {
   return classification === 'asset' ? rawAmount : -rawAmount;
 }
 
@@ -80,7 +80,7 @@ export async function listAccounts(userId: string): Promise<AccountListItemRespo
 
 export async function getAccountHistory(userId: string, accountId: string): Promise<{
   account: AccountResponse;
-  balance: bigint;
+  balance: number;
   items: Array<{
     entryId: string;
     transactionId: string;
@@ -89,7 +89,7 @@ export async function getAccountHistory(userId: string, accountId: string): Prom
     paymentMethodCode: string | null;
     paymentMethodName: string | null;
     description: string;
-    amount: bigint;
+    amount: number;
     currencyCode: string;
     merchantId: string | null;
     categoryId: string | null;

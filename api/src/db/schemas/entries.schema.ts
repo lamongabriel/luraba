@@ -1,4 +1,4 @@
-import { bigint, check, date, index, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { check, date, index, integer, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { transactionsTable } from './transactions.schema';
 import { ledgerAccountsTable } from './ledger-accounts.schema';
@@ -11,7 +11,7 @@ export const entriesTable = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     transactionId: uuid('transaction_id').notNull().references(() => transactionsTable.id, { onDelete: 'cascade' }),
     ledgerAccountId: uuid('ledger_account_id').notNull().references(() => ledgerAccountsTable.id, { onDelete: 'restrict' }),
-    amount: bigint({ mode: 'bigint' }).notNull(),
+    amount: integer('amount').notNull(),
     currencyId: varchar('currency_id', { length: 3 }).notNull().references(() => currenciesTable.code, { onDelete: 'restrict' }),
     categoryId: uuid('category_id').references(() => categoriesTable.id, { onDelete: 'set null' }),
     budgetMonth: date('budget_month', { mode: 'date' }),

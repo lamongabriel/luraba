@@ -64,7 +64,7 @@ export type AccountResponse = {
 };
 
 export type AccountListItemResponse = AccountResponse & {
-  balance: bigint;
+  balance: number;
 };
 
 export function mapAccountRecord(account: AccountRecord): AccountResponse {

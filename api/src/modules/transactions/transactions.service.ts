@@ -5,7 +5,7 @@ import { CreateTransactionDto, TransactionResponse } from './transactions.types'
 
 type EntryDraft = {
   ledgerAccountId: string;
-  amount: bigint;
+  amount: number;
   currencyCode: string;
   categoryId?: string;
   budgetMonth?: Date;
@@ -19,8 +19,8 @@ const SYSTEM_LEDGER_CLASSIFICATIONS = {
   adjustment: 'liability',
 } as const;
 
-function absoluteBigInt(value: bigint): bigint {
-  return value < 0n ? -value : value;
+function absoluteAmount(value: number): number {
+  return value < 0 ? -value : value;
 }
 
 function formatDateOnly(date: Date): string {
@@ -36,15 +36,15 @@ function validateBalanced(entries: EntryDraft[]): void {
     throw new ValidationError('Every transaction must create at least two entries');
   }
 
-  const sumsByCurrency = new Map<string, bigint>();
+  const sumsByCurrency = new Map<string, number>();
 
   for (const entry of entries) {
-    const current = sumsByCurrency.get(entry.currencyCode) ?? 0n;
+    const current = sumsByCurrency.get(entry.currencyCode) ?? 0;
     sumsByCurrency.set(entry.currencyCode, current + entry.amount);
   }
 
   for (const [currencyCode, total] of sumsByCurrency.entries()) {
-    if (total !== 0n) {
+    if (total !== 0) {
       throw new ValidationError(`Entries are not balanced for currency ${currencyCode}`);
     }
   }
@@ -77,9 +77,9 @@ function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResponse[] 
     const accountEntries = group.filter((row) => row.accountId);
 
     if (first.type === 'transfer') {
-      const fromEntry = accountEntries.find((row) => row.entryAmount < 0n) ?? accountEntries[0] ?? null;
+      const fromEntry = accountEntries.find((row) => row.entryAmount < 0) ?? accountEntries[0] ?? null;
       const toEntry =
-        accountEntries.find((row) => row.entryAmount > 0n && row.accountId !== fromEntry?.accountId) ??
+        accountEntries.find((row) => row.entryAmount > 0 && row.accountId !== fromEntry?.accountId) ??
         accountEntries.find((row) => row.accountId !== fromEntry?.accountId) ??
         null;
 
@@ -88,7 +88,7 @@ function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResponse[] 
         userId: first.userId,
         type: first.type,
         description: first.description,
-        amount: absoluteBigInt(fromEntry?.entryAmount ?? toEntry?.entryAmount ?? 0n),
+        amount: absoluteAmount(fromEntry?.entryAmount ?? toEntry?.entryAmount ?? 0),
         currencyCode: fromEntry?.entryCurrencyCode ?? toEntry?.entryCurrencyCode ?? first.entryCurrencyCode,
         accountId: fromEntry?.accountId ?? null,
         accountName: fromEntry?.accountName ?? null,
@@ -116,7 +116,7 @@ function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResponse[] 
       userId: first.userId,
       type: first.type,
       description: first.description,
-      amount: absoluteBigInt(accountEntry?.entryAmount ?? first.entryAmount),
+      amount: absoluteAmount(accountEntry?.entryAmount ?? first.entryAmount),
       currencyCode: accountEntry?.entryCurrencyCode ?? first.entryCurrencyCode,
       accountId: accountEntry?.accountId ?? null,
       accountName: accountEntry?.accountName ?? null,

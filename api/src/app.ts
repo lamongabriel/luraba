@@ -10,7 +10,6 @@ import { pool } from '@/db';
 import { authenticateUser } from '@/middleware/auth.middleware';
 import { errorMiddleware } from '@/middleware/error.middleware';
 import { logger } from '@/shared/logger';
-import { jsonBigIntReplacer } from '@/shared/response';
 
 // ─── Feature routes ───────────────────────────────────────────
 import accountsRouter from '@/modules/accounts/accounts.routes';
@@ -25,7 +24,6 @@ import usersRouter from '@/modules/users/users.routes';
 
 const app = express();
 const PORT = env.port;
-app.set('json replacer', jsonBigIntReplacer);
 
 // ─── Middleware ──────────────────────────────────────────────────────────────
 app.use(express.json());
