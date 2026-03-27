@@ -837,25 +837,24 @@
           "primaryKey": false,
           "notNull": false
         },
+        "category_id": {
+          "name": "category_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "description": {
           "name": "description",
           "type": "varchar(512)",
           "primaryKey": false,
           "notNull": true
         },
-        "is_excluded": {
-          "name": "is_excluded",
+        "include_in_budget": {
+          "name": "include_in_budget",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": false
-        },
-        "is_one_time_transaction": {
-          "name": "is_one_time_transaction",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
+          "default": true
         },
         "merchant_id": {
           "name": "merchant_id",
@@ -977,6 +976,19 @@
             "id"
           ],
           "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "transactions_category_id_categories_id_fk": {
+          "name": "transactions_category_id_categories_id_fk",
+          "tableFrom": "transactions",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         },
         "transactions_merchant_id_merchants_id_fk": {

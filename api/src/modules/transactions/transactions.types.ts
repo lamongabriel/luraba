@@ -15,19 +15,18 @@ const baseFields = {
   description: z.string().min(1).max(512),
   purchaseDate: z.coerce.date(),
   postedDate: z.coerce.date(),
-  isExcluded: z.boolean().optional(),
-  isOneTimeTransaction: z.boolean().optional(),
+  includeInBudget: z.boolean().optional(),
 };
 
-const optionalLinkFields = {
-  categoryId: z.string().uuid().optional(),
+const categorizedLinkFields = {
+  categoryId: z.string().uuid(),
   merchantId: z.string().uuid().optional(),
 };
 
 const expenseTransactionSchema = z.object({
   type: z.literal('expense'),
   ...baseFields,
-  ...optionalLinkFields,
+  ...categorizedLinkFields,
   amount: z.coerce.bigint().positive(),
   currencyCode: currencyCodeSchema,
   accountId: z.string().uuid(),
@@ -37,7 +36,7 @@ const expenseTransactionSchema = z.object({
 const incomeTransactionSchema = z.object({
   type: z.literal('income'),
   ...baseFields,
-  ...optionalLinkFields,
+  ...categorizedLinkFields,
   amount: z.coerce.bigint().positive(),
   currencyCode: currencyCodeSchema,
   accountId: z.string().uuid(),
@@ -88,8 +87,7 @@ export type TransactionResponse = {
   paymentMethodId: string | null;
   paymentMethodCode: string | null;
   paymentMethodName: string | null;
-  isExcluded: boolean;
-  isOneTimeTransaction: boolean;
+  includeInBudget: boolean;
   purchaseDate: string;
   postedDate: string;
   createdAt: Date;

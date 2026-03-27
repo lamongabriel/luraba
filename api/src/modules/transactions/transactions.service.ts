@@ -8,6 +8,7 @@ type EntryDraft = {
   amount: bigint;
   currencyCode: string;
   categoryId?: string;
+  budgetMonth?: Date;
 };
 
 type DetailedTransactionRow = Awaited<ReturnType<typeof txRepository.listDetailedByUserId>>[number];
@@ -24,6 +25,10 @@ function absoluteBigInt(value: bigint): bigint {
 
 function formatDateOnly(date: Date): string {
   return date.toISOString().slice(0, 10);
+}
+
+function toBudgetMonth(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
 }
 
 function validateBalanced(entries: EntryDraft[]): void {
@@ -45,13 +50,11 @@ function validateBalanced(entries: EntryDraft[]): void {
   }
 }
 
-function normalizeFlags(dto: CreateTransactionDto): {
-  isExcluded: boolean;
-  isOneTimeTransaction: boolean;
+function normalizeBudgetInclusion(dto: CreateTransactionDto): {
+  includeInBudget: boolean;
 } {
   return {
-    isExcluded: dto.isExcluded ?? false,
-    isOneTimeTransaction: dto.isOneTimeTransaction ?? false,
+    includeInBudget: dto.includeInBudget ?? true,
   };
 }
 
@@ -70,7 +73,7 @@ function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResponse[] 
 
   return Array.from(rowsByTransaction.values()).map((group) => {
     const first = group[0];
-    const categoryId = group.find((row) => row.categoryId)?.categoryId ?? null;
+    const categoryId = first.categoryId ?? null;
     const accountEntries = group.filter((row) => row.accountId);
 
     if (first.type === 'transfer') {
@@ -98,8 +101,7 @@ function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResponse[] 
         paymentMethodId: first.paymentMethodId ?? null,
         paymentMethodCode: first.paymentMethodCode ?? null,
         paymentMethodName: first.paymentMethodName ?? null,
-        isExcluded: first.isExcluded,
-        isOneTimeTransaction: first.isOneTimeTransaction,
+        includeInBudget: first.includeInBudget,
         purchaseDate: formatDateOnly(first.purchaseDate),
         postedDate: formatDateOnly(first.postedDate),
         createdAt: first.createdAt,
@@ -127,8 +129,7 @@ function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResponse[] 
       paymentMethodId: first.paymentMethodId ?? null,
       paymentMethodCode: first.paymentMethodCode ?? null,
       paymentMethodName: first.paymentMethodName ?? null,
-      isExcluded: first.isExcluded,
-      isOneTimeTransaction: first.isOneTimeTransaction,
+      includeInBudget: first.includeInBudget,
       purchaseDate: formatDateOnly(first.purchaseDate),
       postedDate: formatDateOnly(first.postedDate),
       createdAt: first.createdAt,
@@ -144,13 +145,11 @@ async function validateOptionalMerchant(userId: string, merchantId?: string): Pr
   if (!merchant) throw new NotFoundError('Merchant');
 }
 
-async function validateOptionalCategory(
+async function validateCategory(
   userId: string,
-  categoryId: string | undefined,
+  categoryId: string,
   expectedType: 'expense' | 'income',
 ): Promise<void> {
-  if (!categoryId) return;
-
   const category = await txRepository.findOwnedCategory(categoryId, userId);
   if (!category) throw new NotFoundError('Category');
   if (category.type !== expectedType) {
@@ -173,11 +172,11 @@ async function createBaseTransaction(
   values: {
     type: CreateTransactionDto['type'];
     paymentMethodId?: string | null;
+    categoryId?: string | null;
     description: string;
     purchaseDate: Date;
     postedDate: Date;
-    isExcluded: boolean;
-    isOneTimeTransaction: boolean;
+    includeInBudget: boolean;
     merchantId?: string;
   },
 ): Promise<string> {
@@ -185,9 +184,9 @@ async function createBaseTransaction(
     userId,
     type: values.type,
     paymentMethodId: values.paymentMethodId ?? null,
+    categoryId: values.categoryId ?? null,
     description: values.description,
-    isExcluded: values.isExcluded,
-    isOneTimeTransaction: values.isOneTimeTransaction,
+    includeInBudget: values.includeInBudget,
     merchantId: values.merchantId,
     purchaseDate: values.purchaseDate,
     postedDate: values.postedDate,
@@ -207,6 +206,7 @@ async function persistEntries(tx: txRepository.TxClient, transactionId: string, 
       amount: entry.amount,
       currencyId: entry.currencyCode,
       categoryId: entry.categoryId,
+      budgetMonth: entry.budgetMonth,
     })),
   );
 }
@@ -232,7 +232,7 @@ async function createExpense(userId: string, dto: Extract<CreateTransactionDto, 
   const paymentMethod = await resolvePaymentMethod(dto.paymentMethodCode, dto.currencyCode);
 
   await validateOptionalMerchant(userId, dto.merchantId);
-  await validateOptionalCategory(userId, dto.categoryId, 'expense');
+  await validateCategory(userId, dto.categoryId, 'expense');
 
   const account = await txRepository.findOwnedAccount(dto.accountId, userId);
   if (!account) throw new NotFoundError('Account');
@@ -254,11 +254,12 @@ async function createExpense(userId: string, dto: Extract<CreateTransactionDto, 
     const createdTransactionId = await createBaseTransaction(tx, userId, {
       type: dto.type,
       paymentMethodId: paymentMethod.id,
+      categoryId: dto.categoryId,
       description: dto.description,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
       merchantId: dto.merchantId,
-      ...normalizeFlags(dto),
+      ...normalizeBudgetInclusion(dto),
     });
 
     await persistEntries(tx, createdTransactionId, [
@@ -267,6 +268,7 @@ async function createExpense(userId: string, dto: Extract<CreateTransactionDto, 
         amount: -dto.amount,
         currencyCode: dto.currencyCode,
         categoryId: dto.categoryId,
+        budgetMonth: toBudgetMonth(dto.postedDate),
       },
       {
         ledgerAccountId: expenseLedger.id,
@@ -291,7 +293,7 @@ async function createIncome(userId: string, dto: Extract<CreateTransactionDto, {
   const paymentMethod = await resolvePaymentMethod(dto.paymentMethodCode, dto.currencyCode);
 
   await validateOptionalMerchant(userId, dto.merchantId);
-  await validateOptionalCategory(userId, dto.categoryId, 'income');
+  await validateCategory(userId, dto.categoryId, 'income');
 
   const account = await txRepository.findOwnedAccount(dto.accountId, userId);
   if (!account) throw new NotFoundError('Account');
@@ -313,11 +315,12 @@ async function createIncome(userId: string, dto: Extract<CreateTransactionDto, {
     const createdTransactionId = await createBaseTransaction(tx, userId, {
       type: dto.type,
       paymentMethodId: paymentMethod.id,
+      categoryId: dto.categoryId,
       description: dto.description,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
       merchantId: dto.merchantId,
-      ...normalizeFlags(dto),
+      ...normalizeBudgetInclusion(dto),
     });
 
     await persistEntries(tx, createdTransactionId, [
@@ -326,6 +329,7 @@ async function createIncome(userId: string, dto: Extract<CreateTransactionDto, {
         amount: dto.amount,
         currencyCode: dto.currencyCode,
         categoryId: dto.categoryId,
+        budgetMonth: toBudgetMonth(dto.postedDate),
       },
       {
         ledgerAccountId: incomeLedger.id,
@@ -371,7 +375,7 @@ async function createTransfer(userId: string, dto: Extract<CreateTransactionDto,
       description: dto.description,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
-      ...normalizeFlags(dto),
+      ...normalizeBudgetInclusion(dto),
     });
 
     await persistEntries(tx, createdTransactionId, [
@@ -428,7 +432,7 @@ async function createAdjustment(
       description: dto.description,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
-      ...normalizeFlags(dto),
+      ...normalizeBudgetInclusion(dto),
     });
 
     await persistEntries(tx, createdTransactionId, [

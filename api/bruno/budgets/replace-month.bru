@@ -1,0 +1,39 @@
+meta {
+  name: replace month
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{baseUrl}}/api/v1/budgets/{{budgetMonth}}
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "currencyCode": "{{currencyCode}}",
+    "income": [
+      {
+        "categoryId": "{{incomeCategoryId}}",
+        "amount": 150000
+      }
+    ],
+    "expense": [
+      {
+        "categoryId": "{{expenseCategoryId}}",
+        "amount": 25000
+      }
+    ]
+  }
+}
+
+tests {
+  test("budget replace returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

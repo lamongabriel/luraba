@@ -118,7 +118,7 @@ export async function listHistoryByLedgerId(ledgerAccountId: string): Promise<
       paymentMethodName: paymentMethodsTable.name,
       description: transactionsTable.description,
       merchantId: transactionsTable.merchantId,
-      categoryId: entriesTable.categoryId,
+      categoryId: transactionsTable.categoryId,
       purchaseDate: transactionsTable.purchaseDate,
       postedDate: transactionsTable.postedDate,
       createdAt: transactionsTable.createdAt,

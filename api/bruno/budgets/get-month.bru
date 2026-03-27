@@ -1,0 +1,19 @@
+meta {
+  name: get month
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/budgets/{{budgetMonth}}?currencyCode={{currencyCode}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("budget month returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

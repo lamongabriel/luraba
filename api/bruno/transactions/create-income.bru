@@ -7,6 +7,7 @@ meta {
 post {
   url: {{baseUrl}}/api/v1/transactions
   body: json
+  auth: none
 }
 
 headers {
@@ -21,8 +22,9 @@ body:json {
     "amount": 150000,
     "currencyCode": "{{currencyCode}}",
     "paymentMethodCode": "{{paymentMethodCode}}",
+    "categoryId": "{{incomeCategoryId}}",
     "accountId": "{{accountId}}",
-    "purchaseDate": "2026-03-24",
-    "postedDate": "2026-03-24"
+    "purchaseDate": "2026-01-24",
+    "postedDate": "2026-01-24"
   }
 }

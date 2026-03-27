@@ -1,12 +1,13 @@
 meta {
-  name: create category
+  name: create income category
   type: http
-  seq: 1
+  seq: 4
 }
 
 post {
   url: {{baseUrl}}/api/v1/categories
   body: json
+  auth: none
 }
 
 headers {
@@ -16,8 +17,15 @@ headers {
 
 body:json {
   {
-    "name": "Food",
-    "type": "expense"
+    "name": "Salary",
+    "type": "income"
+  }
+}
+
+script:post-response {
+  if (res.body?.data?.id) {
+    bru.setEnvVar("categoryId", res.body.data.id);
+    bru.setEnvVar("incomeCategoryId", res.body.data.id);
   }
 }
 
@@ -25,11 +33,4 @@ tests {
   test("category returns 201", function() {
     expect(res.status).to.equal(201);
   });
-}
-
-script:post-response {
-  if (res.body?.data?.id) {
-    bru.setEnvVar("categoryId", res.body.data.id);
-    bru.setEnvVar("expenseCategoryId", res.body.data.id);
-  }
 }

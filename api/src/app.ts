@@ -15,6 +15,7 @@ import { jsonBigIntReplacer } from '@/shared/response';
 // ─── Feature routes ───────────────────────────────────────────
 import accountsRouter from '@/modules/accounts/accounts.routes';
 import authRouter from '@/modules/auth/auth.routes';
+import budgetsRouter from '@/modules/budgets/budgets.routes';
 import categoriesRouter from '@/modules/categories/categories.routes';
 import currenciesRouter from '@/modules/currencies/currencies.routes';
 import merchantsRouter from '@/modules/merchants/merchants.routes';
@@ -52,6 +53,7 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', authenticateUser, usersRouter);
 app.use('/api/v1/currencies', authenticateUser, currenciesRouter);
 app.use('/api/v1/accounts', authenticateUser, accountsRouter);
+app.use('/api/v1/budgets', authenticateUser, budgetsRouter);
 app.use('/api/v1/categories', authenticateUser, categoriesRouter);
 app.use('/api/v1/merchants', authenticateUser, merchantsRouter);
 app.use('/api/v1/payment-methods', authenticateUser, paymentMethodsRouter);
