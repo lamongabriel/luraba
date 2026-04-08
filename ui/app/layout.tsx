@@ -1,5 +1,31 @@
+import type { Metadata } from "next";
+
 import "./globals.css"
+
 import { Providers } from "@/components/providers"
+
+const DEFAULT_DESCRIPTION = "Manage accounts, budgets, transactions, and categories in one place.";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  applicationName: "Luraba",
+  title: {
+    default: "Luraba",
+    template: "%s | Luraba",
+  },
+  description: DEFAULT_DESCRIPTION,
+  openGraph: {
+    title: "Luraba",
+    description: DEFAULT_DESCRIPTION,
+    siteName: "Luraba",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Luraba",
+    description: DEFAULT_DESCRIPTION,
+  },
+}
 
 export default function RootLayout({
   children,
