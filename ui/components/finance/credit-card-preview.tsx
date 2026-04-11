@@ -1,6 +1,7 @@
 "use client";
 
-import { CreditCard, Wifi } from "lucide-react";
+import { CreditCardIcon, Wifi01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import { cn } from "@/lib/utils";
 import { maskCardNumber } from "@/lib/finance";
@@ -20,7 +21,7 @@ function getCardPalette(color?: string | null) {
   if (!color) {
     return {
       base: "from-slate-900 via-slate-800 to-slate-700",
-      glow: "from-cyan-400/25 via-transparent to-amber-300/10",
+      glow: "from-violet-400/22 via-transparent to-blue-300/10",
     };
   }
 
@@ -30,7 +31,7 @@ function getCardPalette(color?: string | null) {
     return { base: "from-emerald-900 via-emerald-700 to-emerald-600", glow: "from-emerald-300/20 via-transparent to-lime-200/10" };
   }
   if (tone.includes("blue") || tone.includes("navy")) {
-    return { base: "from-sky-900 via-blue-800 to-indigo-700", glow: "from-sky-200/20 via-transparent to-indigo-200/10" };
+    return { base: "from-sky-900 via-blue-800 to-indigo-700", glow: "from-violet-200/20 via-transparent to-indigo-200/10" };
   }
   if (tone.includes("red") || tone.includes("wine")) {
     return { base: "from-rose-950 via-rose-800 to-red-700", glow: "from-rose-200/20 via-transparent to-orange-200/10" };
@@ -44,7 +45,7 @@ function getCardPalette(color?: string | null) {
 
   return {
     base: "from-slate-900 via-slate-800 to-slate-700",
-    glow: "from-cyan-400/25 via-transparent to-amber-300/10",
+    glow: "from-violet-400/22 via-transparent to-blue-300/10",
   };
 }
 
@@ -63,7 +64,7 @@ export function CreditCardPreview({
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-[1.6rem] border border-white/20 bg-linear-to-br p-5 text-white shadow-[0_24px_60px_rgba(15,23,42,0.28)] transition-transform duration-300 hover:-translate-y-1",
+        "group relative overflow-hidden rounded-[1.6rem] border border-white/20 bg-linear-to-br p-5 text-white shadow-[0_24px_60px_rgba(15,23,42,0.28)] transition-transform duration-300 hover:-translate-y-0.5",
         palette.base,
         detail ? "min-h-[260px]" : "min-h-[220px]",
         className,
@@ -75,11 +76,11 @@ export function CreditCardPreview({
         <div className="flex items-start justify-between">
           <div className="space-y-2">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm">
-              <CreditCard className="size-6" />
+              <HugeiconsIcon icon={CreditCardIcon} strokeWidth={2} className="size-6" />
             </div>
             <div className="text-[0.68rem] uppercase tracking-[0.28em] text-white/70">{brand}</div>
           </div>
-          <Wifi className="size-5 rotate-90 text-white/70" />
+          <HugeiconsIcon icon={Wifi01Icon} strokeWidth={2} className="size-5 rotate-90 text-white/70" />
         </div>
 
         <div className="space-y-4">

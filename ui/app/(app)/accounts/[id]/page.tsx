@@ -3,7 +3,14 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { CalendarRange, ChevronRight, CreditCard, PencilLine, Plus, ReceiptText } from "lucide-react";
+import {
+  Add01Icon,
+  ArrowRight01Icon,
+  Calendar03Icon,
+  PencilEdit02Icon,
+  ReceiptTextIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import { CreditCardPreview } from "@/components/finance/credit-card-preview";
 import { EmptyState } from "@/components/finance/empty-state";
@@ -17,6 +24,7 @@ import { SectionPanel } from "@/components/finance/section-panel";
 import { StatusPill } from "@/components/finance/status-pill";
 import { SummaryCard } from "@/components/finance/summary-card";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 import { ACCOUNT_TYPE_LABELS, isCreditCardAccount } from "@/lib/finance";
 import { useAccountHistoryQuery } from "@/queries/use-account-history.query";
 import { useAccountsQuery } from "@/queries/use-accounts.query";
@@ -59,8 +67,8 @@ export default function AccountDetailPage() {
 
   if (!account && !historyLoading) {
     return (
-      <div className="space-y-6">
-        <PageHeader title="Account not found" description="This account could not be found in the current workspace." />
+      <div className="space-y-8">
+        <PageHeader title="Account not found" />
         <EmptyState
           title="Account unavailable"
           description="Go back to the accounts list and pick another account."
@@ -75,33 +83,32 @@ export default function AccountDetailPage() {
   }
 
   if (!account) {
-    return <p className="text-sm text-muted-foreground">Loading account...</p>;
+    return <Typography variant="body-muted">Loading account...</Typography>;
   }
 
   const historyItems = history?.items ?? [];
 
   if (isCreditCardAccount(account) && !creditCard) {
-    return <p className="text-sm text-muted-foreground">Loading credit card details...</p>;
+    return <Typography variant="body-muted">Loading credit card details...</Typography>;
   }
 
   if (isCreditCardAccount(account) && creditCard) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <PageHeader
           title={creditCard.name}
-          description={`${creditCard.brand} ending in ${creditCard.last4}. Statement cycles and forecast are tracked separately from the liability balance.`}
           actions={
             <>
               <Button variant="outline" className="rounded-full" onClick={() => setEditCardOpen(true)}>
-                <PencilLine className="size-4" />
+                <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} className="size-4" />
                 Edit card
               </Button>
               <Button variant="outline" className="rounded-full" onClick={() => setPaymentOpen(true)}>
-                <ReceiptText className="size-4" />
+                <HugeiconsIcon icon={ReceiptTextIcon} strokeWidth={2} className="size-4" />
                 Make payment
               </Button>
               <Button className="rounded-full" onClick={() => setPurchaseOpen(true)}>
-                <Plus className="size-4" />
+                <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
                 New purchase
               </Button>
             </>
@@ -147,7 +154,7 @@ export default function AccountDetailPage() {
             action={
               selectedCycle ? (
                 <Button variant="outline" className="rounded-full" onClick={() => setCycleEditOpen(true)}>
-                  <CalendarRange className="size-4" />
+                  <HugeiconsIcon icon={Calendar03Icon} strokeWidth={2} className="size-4" />
                   Edit cycle
                 </Button>
               ) : null
@@ -170,27 +177,27 @@ export default function AccountDetailPage() {
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="font-medium">
+                        <Typography variant="small-strong">
                           {cycle.periodStart} to {cycle.periodEnd}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
+                        </Typography>
+                        <Typography variant="small-muted">
                           Closing {cycle.closingDate} • Due {cycle.dueDate}
-                        </p>
+                        </Typography>
                       </div>
-                      <ChevronRight className="size-4 text-muted-foreground" />
+                      <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} className="size-4 text-muted-foreground" />
                     </div>
                     <div className="mt-3 flex items-center justify-between">
                       <StatusPill tone={cycle.status}>{cycle.status}</StatusPill>
-                      <div className="text-right">
-                        <div className="font-semibold">
-                          <MoneyValue amount={cycle.remainingAmount} currencyCode={creditCard.currencyCode} />
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Statement <MoneyValue amount={cycle.statementAmount} currencyCode={creditCard.currencyCode} />
+                        <div className="text-right">
+                          <div className="font-semibold">
+                            <MoneyValue amount={cycle.remainingAmount} currencyCode={creditCard.currencyCode} />
+                          </div>
+                          <Typography as="div" variant="small-muted">
+                            Statement <MoneyValue amount={cycle.statementAmount} currencyCode={creditCard.currencyCode} />
+                          </Typography>
                         </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
                 ))}
               </div>
             )}
@@ -227,10 +234,10 @@ export default function AccountDetailPage() {
                       <div key={item.installmentId} className="rounded-[1rem] border border-border/70 bg-[var(--color-container-inset)] px-4 py-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="font-medium">{item.description}</p>
-                            <p className="text-xs text-muted-foreground">
+                            <Typography variant="small-strong">{item.description}</Typography>
+                            <Typography variant="small-muted">
                               Installment {item.installmentNumber} of {item.installmentCount} • {item.postedDate}
-                            </p>
+                            </Typography>
                           </div>
                           <div className="font-semibold">
                             <MoneyValue amount={item.amount} currencyCode={creditCard.currencyCode} />
@@ -242,7 +249,7 @@ export default function AccountDetailPage() {
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Select a billing cycle to load its statement items.</p>
+              <Typography variant="body-muted">Select a billing cycle to load its statement items.</Typography>
             )}
           </SectionPanel>
         </div>
@@ -254,17 +261,19 @@ export default function AccountDetailPage() {
                 <div key={cycle.id} className="rounded-[1rem] border border-border/70 bg-[var(--color-container-inset)] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium">
+                      <Typography variant="small-strong">
                         {cycle.periodStart} to {cycle.periodEnd}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Due {cycle.dueDate}</p>
+                      </Typography>
+                      <Typography variant="small-muted">Due {cycle.dueDate}</Typography>
                     </div>
                     <StatusPill tone={cycle.status}>{cycle.status}</StatusPill>
                   </div>
                   <div className="mt-4 text-xl font-semibold">
                     <MoneyValue amount={cycle.remainingAmount} currencyCode={creditCard.currencyCode} />
                   </div>
-                  <p className="mt-2 text-xs text-muted-foreground">{cycle.items.length} scheduled item(s)</p>
+                  <Typography className="mt-2" variant="small-muted">
+                    {cycle.items.length} scheduled item(s)
+                  </Typography>
                 </div>
               ))}
             </div>
@@ -281,10 +290,10 @@ export default function AccountDetailPage() {
               {historyItems.map((item) => (
                 <div key={item.entryId} className="flex items-center justify-between rounded-[1rem] border border-border/70 bg-[var(--color-container-inset)] px-4 py-4">
                   <div>
-                    <p className="font-medium">{item.description}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <Typography variant="small-strong">{item.description}</Typography>
+                    <Typography variant="small-muted">
                       {item.postedDate} • {item.paymentMethodName ?? item.type}
-                    </p>
+                    </Typography>
                   </div>
                   <div className="text-right">
                     <div className="font-semibold">
@@ -314,10 +323,9 @@ export default function AccountDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={account.name}
-        description={`${ACCOUNT_TYPE_LABELS[account.type]} account in ${account.currencyCode}.`}
         actions={
           <Button asChild variant="outline" className="rounded-full">
             <Link href="/transactions">Open transactions</Link>
@@ -343,10 +351,10 @@ export default function AccountDetailPage() {
             {historyItems.map((item) => (
               <div key={item.entryId} className="flex items-center justify-between rounded-[1rem] border border-border/70 bg-[var(--color-container-inset)] px-4 py-4">
                 <div>
-                  <p className="font-medium">{item.description}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <Typography variant="small-strong">{item.description}</Typography>
+                  <Typography variant="small-muted">
                     {item.postedDate} • {item.paymentMethodName ?? item.type}
-                  </p>
+                  </Typography>
                 </div>
                 <div className="text-right">
                   <div className="font-semibold">

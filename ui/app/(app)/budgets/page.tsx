@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { PencilLine } from "lucide-react";
+import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import { EmptyState } from "@/components/finance/empty-state";
 import { BudgetAllocationSheet } from "@/components/finance/forms/budget-allocation-sheet";
@@ -13,6 +14,7 @@ import { SegmentedBar } from "@/components/finance/segmented-bar";
 import { StatusPill } from "@/components/finance/status-pill";
 import { SummaryCard } from "@/components/finance/summary-card";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 import { getCurrentMonthKey } from "@/lib/finance";
 import { useBudgetQuery } from "@/queries/use-budget.query";
 import { useCategoriesQuery } from "@/queries/use-categories.query";
@@ -29,16 +31,15 @@ export default function BudgetsPage() {
   const { data: categories = [] } = useCategoriesQuery();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Budgets"
-        description="Monitor planned versus actual spending and income by month, including credit-card budget recognition."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <MonthSwitcher month={month} onChange={setMonth} />
             {budget ? (
               <Button className="rounded-full" onClick={() => setSheetOpen(true)}>
-                <PencilLine className="size-4" />
+                <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} className="size-4" />
                 Edit allocations
               </Button>
             ) : null}
@@ -46,8 +47,8 @@ export default function BudgetsPage() {
         }
       />
 
-      {isLoading ? <p className="text-sm text-muted-foreground">Loading budget...</p> : null}
-      {isError ? <p className="text-sm text-destructive">Failed to load budget.</p> : null}
+      {isLoading ? <Typography variant="body-muted">Loading budget...</Typography> : null}
+      {isError ? <Typography variant="small-destructive">Failed to load budget.</Typography> : null}
 
       {budget ? (
         <>
@@ -96,13 +97,13 @@ export default function BudgetsPage() {
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
                             <div className="size-2.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[index % CATEGORY_COLORS.length] }} />
-                            <p className="font-medium">{category.categoryName}</p>
+                            <Typography variant="small-strong">{category.categoryName}</Typography>
                           </div>
                           <MoneyValue amount={category.actualAmount} currencyCode={budget.currencyCode} />
                         </div>
-                        <p className="mt-2 text-xs text-muted-foreground">
+                        <Typography as="div" variant="small-muted" className="mt-2">
                           Budgeted <MoneyValue amount={category.budgetedAmount} currencyCode={budget.currencyCode} />
-                        </p>
+                        </Typography>
                       </div>
                     ))}
                   </div>
@@ -121,10 +122,10 @@ export default function BudgetsPage() {
                       <div key={category.categoryId} className="rounded-[1rem] border border-border/70 bg-[var(--color-container-inset)] px-4 py-4">
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="font-medium">{category.categoryName}</p>
-                            <p className="text-xs text-muted-foreground">
+                            <Typography variant="small-strong">{category.categoryName}</Typography>
+                            <Typography as="div" variant="small-muted">
                               Budgeted <MoneyValue amount={category.budgetedAmount} currencyCode={budget.currencyCode} />
-                            </p>
+                            </Typography>
                           </div>
                           <StatusPill tone={overBudget ? "negative" : "positive"}>
                             {overBudget ? "Over" : "On track"}

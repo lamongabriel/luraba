@@ -2,7 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { CreditCard, Landmark, Plus, Wallet } from "lucide-react";
+import {
+  Add01Icon,
+  CreditCardIcon,
+  LandmarkIcon,
+  WalletIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import { CreditCardPreview } from "@/components/finance/credit-card-preview";
 import { EmptyState } from "@/components/finance/empty-state";
@@ -14,6 +20,7 @@ import { SectionPanel } from "@/components/finance/section-panel";
 import { StatusPill } from "@/components/finance/status-pill";
 import { SummaryCard } from "@/components/finance/summary-card";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 import { ACCOUNT_TYPE_LABELS, CLASSIFICATION_LABELS, isCreditCardAccount, sumAccountBalances } from "@/lib/finance";
 import { useAccountsQuery } from "@/queries/use-accounts.query";
 import { useCreditCardsQuery } from "@/queries/use-credit-cards.query";
@@ -43,18 +50,17 @@ export default function AccountsPage() {
   const liabilityAccounts = visibleAccounts.filter((account) => account.classification === "liability");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Accounts"
-        description="Track assets and liabilities with one workspace for cash accounts, loans, property, and real credit cards."
         actions={
           <>
             <Button variant="outline" className="rounded-full" onClick={() => setAccountSheetOpen(true)}>
-              <Plus className="size-4" />
+              <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
               New account
             </Button>
             <Button className="rounded-full" onClick={() => setCreditCardSheetOpen(true)}>
-              <CreditCard className="size-4" />
+              <HugeiconsIcon icon={CreditCardIcon} strokeWidth={2} className="size-4" />
               New credit card
             </Button>
           </>
@@ -99,8 +105,8 @@ export default function AccountsPage() {
         </Button>
       </div>
 
-      {isLoading ? <p className="text-sm text-muted-foreground">Loading accounts...</p> : null}
-      {isError ? <p className="text-sm text-destructive">Failed to load accounts.</p> : null}
+      {isLoading ? <Typography variant="body-muted">Loading accounts...</Typography> : null}
+      {isError ? <Typography variant="small-destructive">Failed to load accounts.</Typography> : null}
 
       <SectionPanel title={CLASSIFICATION_LABELS.asset} description="Depository, property, vehicle, and other asset accounts.">
         {assetAccounts.length === 0 ? (
@@ -120,14 +126,14 @@ export default function AccountsPage() {
                   <div className="flex items-center gap-3">
                     <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                       {account.type === "property" || account.type === "vehicle" ? (
-                        <Landmark className="size-5" />
+                        <HugeiconsIcon icon={LandmarkIcon} strokeWidth={2} className="size-5" />
                       ) : (
-                        <Wallet className="size-5" />
+                        <HugeiconsIcon icon={WalletIcon} strokeWidth={2} className="size-5" />
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">{account.name}</p>
-                      <p className="text-xs text-muted-foreground">{ACCOUNT_TYPE_LABELS[account.type]}</p>
+                      <Typography variant="small-strong">{account.name}</Typography>
+                      <Typography variant="small-muted">{ACCOUNT_TYPE_LABELS[account.type]}</Typography>
                     </div>
                   </div>
                   <StatusPill tone="positive">Asset</StatusPill>
@@ -135,9 +141,9 @@ export default function AccountsPage() {
                 <div className="mt-6 text-2xl font-semibold">
                   <MoneyValue amount={account.balance} currencyCode={account.currencyCode} />
                 </div>
-                <div className="mt-3 text-xs text-muted-foreground">
+                <Typography as="div" variant="small-muted" className="mt-3">
                   {account.institutionName ?? "Manual account"} • {account.currencyCode}
-                </div>
+                </Typography>
               </Link>
             ))}
           </div>
@@ -163,8 +169,10 @@ export default function AccountsPage() {
                       href={`/accounts/${account.id}`}
                       className="rounded-[1.35rem] border border-border/70 bg-[var(--color-container-inset)] p-5"
                     >
-                      <p className="font-medium">{account.name}</p>
-                      <p className="mt-2 text-sm text-muted-foreground">Loading card metadata...</p>
+                      <Typography variant="small-strong">{account.name}</Typography>
+                      <Typography className="mt-2" variant="body-muted">
+                        Loading card metadata...
+                      </Typography>
                     </Link>
                   );
                 }
@@ -192,11 +200,11 @@ export default function AccountsPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                        <Landmark className="size-5" />
+                        <HugeiconsIcon icon={LandmarkIcon} strokeWidth={2} className="size-5" />
                       </div>
                       <div>
-                        <p className="font-medium">{account.name}</p>
-                        <p className="text-xs text-muted-foreground">{ACCOUNT_TYPE_LABELS[account.type]}</p>
+                        <Typography variant="small-strong">{account.name}</Typography>
+                        <Typography variant="small-muted">{ACCOUNT_TYPE_LABELS[account.type]}</Typography>
                       </div>
                     </div>
                     <StatusPill tone="negative">Liability</StatusPill>
@@ -204,9 +212,9 @@ export default function AccountsPage() {
                   <div className="mt-6 text-2xl font-semibold">
                     <MoneyValue amount={account.balance} currencyCode={account.currencyCode} />
                   </div>
-                  <div className="mt-3 text-xs text-muted-foreground">
+                  <Typography as="div" variant="small-muted" className="mt-3">
                     {account.institutionName ?? "Manual liability"} • {account.currencyCode}
-                  </div>
+                  </Typography>
                 </Link>
               );
             })}

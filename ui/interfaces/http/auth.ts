@@ -19,5 +19,4 @@ export interface AuthDataHttp {
 
 export type LoginHttpResponse = ApiSuccessHttp<AuthDataHttp>;
 export type RegisterHttpResponse = ApiSuccessHttp<AuthDataHttp>;
-export type RefreshHttpResponse = ApiSuccessHttp<AuthDataHttp>;
 export type MeHttpResponse = ApiSuccessHttp<User>;

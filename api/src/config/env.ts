@@ -13,7 +13,6 @@ const envSchema = z.object({
   DB_PASSWORD: z.string().min(1).default('postgres'),
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
   JWT_ACCESS_EXPIRES_IN: z.string().min(1).default('15m'),
-  JWT_REFRESH_EXPIRES_IN: z.string().min(1).default('7d'),
   RUN_DB_TESTS: z.enum(['0', '1']).optional().default('0').transform((value) => value === '1'),
 });
 
@@ -39,7 +38,6 @@ export const env = {
   dbPassword: parsedEnv.data.DB_PASSWORD,
   jwtSecret: parsedEnv.data.JWT_SECRET,
   jwtAccessExpiresIn: parsedEnv.data.JWT_ACCESS_EXPIRES_IN,
-  jwtRefreshExpiresIn: parsedEnv.data.JWT_REFRESH_EXPIRES_IN,
   runDbTests: parsedEnv.data.RUN_DB_TESTS,
 } as const;
 

@@ -2,9 +2,7 @@ import { ConflictError, UnauthorizedError, NotFoundError } from '@/shared/errors
 import {
   hashPassword,
   signAccessToken,
-  signRefreshToken,
   verifyPassword,
-  verifyRefreshToken,
 } from '@/shared/auth';
 import * as authRepository from './auth.repository';
 import { LoginDto, RegisterDto } from './auth.types';
@@ -79,7 +77,6 @@ function toSafeUser(user: {
 export async function register(dto: RegisterDto): Promise<{
   user: SafeUser;
   accessToken: string;
-  refreshToken: string;
 }> {
   const existing = await authRepository.findUserByEmail(dto.email);
   if (existing) throw new ConflictError('A user with this email already exists');
@@ -92,19 +89,16 @@ export async function register(dto: RegisterDto): Promise<{
   });
 
   const accessToken = signAccessToken(user.id, user.email);
-  const refreshToken = signRefreshToken(user.id, user.email);
 
   return {
     user: toSafeUser(user),
     accessToken,
-    refreshToken,
   };
 }
 
 export async function login(dto: LoginDto): Promise<{
   user: SafeUser;
   accessToken: string;
-  refreshToken: string;
 }> {
   const user = await authRepository.findUserByEmail(dto.email);
   if (!user) throw new UnauthorizedError('Invalid email or password');
@@ -113,31 +107,10 @@ export async function login(dto: LoginDto): Promise<{
   if (!isValid) throw new UnauthorizedError('Invalid email or password');
 
   const accessToken = signAccessToken(user.id, user.email);
-  const refreshToken = signRefreshToken(user.id, user.email);
 
   return {
     user: toSafeUser(user),
     accessToken,
-    refreshToken,
-  };
-}
-
-export async function refresh(refreshToken: string): Promise<{
-  user: SafeUser;
-  accessToken: string;
-  refreshToken: string;
-}> {
-  const payload = verifyRefreshToken(refreshToken);
-  const user = await authRepository.findUserById(payload.sub);
-  if (!user) throw new UnauthorizedError('Invalid refresh token');
-
-  const newAccessToken = signAccessToken(user.id, user.email);
-  const newRefreshToken = signRefreshToken(user.id, user.email);
-
-  return {
-    user: toSafeUser(user),
-    accessToken: newAccessToken,
-    refreshToken: newRefreshToken,
   };
 }
 

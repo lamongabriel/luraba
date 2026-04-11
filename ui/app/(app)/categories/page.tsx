@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Plus } from "lucide-react";
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import { EmptyState } from "@/components/finance/empty-state";
 import { CategoryFormSheet } from "@/components/finance/forms/category-form-sheet";
@@ -9,6 +10,7 @@ import { PageHeader } from "@/components/finance/page-header";
 import { SectionPanel } from "@/components/finance/section-panel";
 import { StatusPill } from "@/components/finance/status-pill";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 import { useCategoriesQuery } from "@/queries/use-categories.query";
 
 export default function CategoriesPage() {
@@ -23,20 +25,19 @@ export default function CategoriesPage() {
   const expenseCategories = categories.filter((category) => category.type === "expense");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Categories"
-        description="Manage the taxonomy used across budgets, transactions, and credit-card purchases."
         actions={
           <Button className="rounded-full" onClick={() => setSheetOpen(true)}>
-            <Plus className="size-4" />
+            <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
             New category
           </Button>
         }
       />
 
-      {isLoading ? <p className="text-sm text-muted-foreground">Loading categories...</p> : null}
-      {isError ? <p className="text-sm text-destructive">Failed to load categories.</p> : null}
+      {isLoading ? <Typography variant="body-muted">Loading categories...</Typography> : null}
+      {isError ? <Typography variant="small-destructive">Failed to load categories.</Typography> : null}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <SectionPanel title="Income categories" description="Used for incoming cashflow and credit budget recognition.">
@@ -47,10 +48,10 @@ export default function CategoriesPage() {
               {incomeCategories.map((category) => (
                 <div key={category.id} className="flex items-center justify-between rounded-[1rem] border border-border/70 bg-[var(--color-container-inset)] px-4 py-4">
                   <div>
-                    <p className="font-medium">{category.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <Typography variant="small-strong">{category.name}</Typography>
+                    <Typography variant="small-muted">
                       {category.parentId ? `Child of ${categoryNames[category.parentId] ?? "another category"}` : "Top-level category"}
-                    </p>
+                    </Typography>
                   </div>
                   <StatusPill tone="positive">Income</StatusPill>
                 </div>
@@ -67,10 +68,10 @@ export default function CategoriesPage() {
               {expenseCategories.map((category) => (
                 <div key={category.id} className="flex items-center justify-between rounded-[1rem] border border-border/70 bg-[var(--color-container-inset)] px-4 py-4">
                   <div>
-                    <p className="font-medium">{category.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <Typography variant="small-strong">{category.name}</Typography>
+                    <Typography variant="small-muted">
                       {category.parentId ? `Child of ${categoryNames[category.parentId] ?? "another category"}` : "Top-level category"}
-                    </p>
+                    </Typography>
                   </div>
                   <StatusPill tone="negative">Expense</StatusPill>
                 </div>

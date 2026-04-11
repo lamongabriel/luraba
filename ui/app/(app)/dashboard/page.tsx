@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRightLeft, CreditCard, Landmark, ReceiptText, Wallet } from "lucide-react";
+import {
+  ArrowLeftRightIcon,
+  CreditCardIcon,
+  LandmarkIcon,
+  ReceiptTextIcon,
+  WalletIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import { EmptyState } from "@/components/finance/empty-state";
 import { MoneyValue } from "@/components/finance/money-value";
@@ -11,6 +18,7 @@ import { SegmentedBar } from "@/components/finance/segmented-bar";
 import { StatusPill } from "@/components/finance/status-pill";
 import { SummaryCard } from "@/components/finance/summary-card";
 import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 import { ACCOUNT_TYPE_LABELS, getCurrentMonthKey, sumAccountBalances } from "@/lib/finance";
 import { useAccountsQuery } from "@/queries/use-accounts.query";
 import { useBudgetQuery } from "@/queries/use-budget.query";
@@ -54,10 +62,9 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title={`Welcome back, ${user?.name ?? "there"}`}
-        description="Track assets, liabilities, budgets, and card obligations with the same mental model you use in a real banking app."
         actions={
           <>
             <Button asChild variant="outline" className="rounded-full">
@@ -116,11 +123,11 @@ export default function DashboardPage() {
           }
         >
           {accountsLoading ? (
-            <p className="text-sm text-muted-foreground">Loading accounts...</p>
+            <Typography variant="body-muted">Loading accounts...</Typography>
           ) : accounts.length === 0 ? (
             <EmptyState
               title="No accounts yet"
-              description="Create a depository, loan, property, or credit card account to start building the workspace."
+              description="Create a depository, loan, property, or credit card account to get started."
               action={
                 <Button asChild>
                   <Link href="/accounts">Create your first account</Link>
@@ -142,7 +149,7 @@ export default function DashboardPage() {
                   <div key={group.label} className="rounded-[1.1rem] border border-border/70 bg-[var(--color-container-inset)] p-4">
                     <div className="flex items-center gap-2">
                       <div className="size-2.5 rounded-full" style={{ backgroundColor: group.color }} />
-                      <p className="font-medium">{group.label}</p>
+                      <Typography variant="small-strong">{group.label}</Typography>
                     </div>
                     <div className="mt-2 text-lg font-semibold">
                       <MoneyValue amount={group.balance} currencyCode={user?.preferences.currency ?? "BRL"} />
@@ -184,10 +191,10 @@ export default function DashboardPage() {
                 {budget.categories.expense.slice(0, 4).map((category) => (
                   <div key={category.categoryId} className="flex items-center justify-between rounded-[1rem] bg-[var(--color-container-inset)] px-4 py-3">
                     <div>
-                      <p className="font-medium">{category.categoryName}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <Typography variant="small-strong">{category.categoryName}</Typography>
+                      <Typography as="div" variant="small-muted">
                         Budgeted <MoneyValue amount={category.budgetedAmount} currencyCode={budget.currencyCode} />
-                      </p>
+                      </Typography>
                     </div>
                     <StatusPill tone={category.actualAmount > category.budgetedAmount ? "negative" : "positive"}>
                       <MoneyValue amount={category.actualAmount} currencyCode={budget.currencyCode} />
@@ -197,7 +204,7 @@ export default function DashboardPage() {
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Loading budget snapshot...</p>
+            <Typography variant="body-muted">Loading budget snapshot...</Typography>
           )}
         </SectionPanel>
       </div>
@@ -227,13 +234,13 @@ export default function DashboardPage() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                      <CreditCard className="size-5" />
+                      <HugeiconsIcon icon={CreditCardIcon} strokeWidth={2} className="size-5" />
                     </div>
                     <div>
-                      <p className="font-medium">{card.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <Typography variant="small-strong">{card.name}</Typography>
+                      <Typography variant="small-muted">
                         Closing day {card.closingDay} • Due day {card.dueDay}
-                      </p>
+                      </Typography>
                     </div>
                   </div>
                   <div className="text-right">
@@ -241,9 +248,9 @@ export default function DashboardPage() {
                       <MoneyValue amount={card.balance} currencyCode={card.currencyCode} />
                     </div>
                     {card.unappliedCreditAmount > 0 ? (
-                      <p className="text-xs text-muted-foreground">
+                      <Typography as="div" variant="small-muted">
                         Credit <MoneyValue amount={card.unappliedCreditAmount} currencyCode={card.currencyCode} />
-                      </p>
+                      </Typography>
                     ) : null}
                   </div>
                 </Link>
@@ -273,20 +280,20 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-3">
                     <div className="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                       {transaction.type === "transfer" ? (
-                        <ArrowRightLeft className="size-4" />
+                        <HugeiconsIcon icon={ArrowLeftRightIcon} strokeWidth={2} className="size-4" />
                       ) : transaction.type === "income" ? (
-                        <Wallet className="size-4" />
+                        <HugeiconsIcon icon={WalletIcon} strokeWidth={2} className="size-4" />
                       ) : transaction.type === "adjustment" ? (
-                        <Landmark className="size-4" />
+                        <HugeiconsIcon icon={LandmarkIcon} strokeWidth={2} className="size-4" />
                       ) : (
-                        <ReceiptText className="size-4" />
+                        <HugeiconsIcon icon={ReceiptTextIcon} strokeWidth={2} className="size-4" />
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">{transaction.description}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <Typography variant="small-strong">{transaction.description}</Typography>
+                      <Typography variant="small-muted">
                         {transaction.accountName ?? transaction.toAccountName ?? "No account"} • {transaction.postedDate}
-                      </p>
+                      </Typography>
                     </div>
                   </div>
                   <div className="text-right">

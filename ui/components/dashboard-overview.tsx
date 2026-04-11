@@ -1,15 +1,16 @@
-"use client"
+"use client";
 
-import { useTransactionsQuery } from "@/queries/use-transactions.query"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Typography } from "@/components/ui/typography";
+import { useTransactionsQuery } from "@/queries/use-transactions.query";
 
 export function DashboardOverview() {
-  const { data = [] } = useTransactionsQuery()
+  const { data = [] } = useTransactionsQuery();
 
-  const income = data.filter((tx) => tx.type === "income").length
-  const expenses = data.filter((tx) => tx.type === "expense").length
-  const transfers = data.filter((tx) => tx.type === "transfer").length
-  const adjustments = data.filter((tx) => tx.type === "adjustment").length
+  const income = data.filter((tx) => tx.type === "income").length;
+  const expenses = data.filter((tx) => tx.type === "expense").length;
+  const transfers = data.filter((tx) => tx.type === "transfer").length;
+  const adjustments = data.filter((tx) => tx.type === "adjustment").length;
 
   const cards = [
     { label: "Income Tx", value: income.toString() },
@@ -19,22 +20,22 @@ export function DashboardOverview() {
       label: "Adjustments",
       value: adjustments.toString(),
     },
-  ]
+  ];
 
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => (
         <Card key={card.label}>
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <Typography as="h3" variant="body-muted" className="font-medium">
               {card.label}
-            </CardTitle>
+            </Typography>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold tracking-tight">{card.value}</p>
+            <Typography variant="metric">{card.value}</Typography>
           </CardContent>
         </Card>
       ))}
     </div>
-  )
+  );
 }

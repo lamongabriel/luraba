@@ -1,5 +1,5 @@
 # Production compose — uses the multi-stage production image
-name: drizzle-express-api-prod
+name: luraba-api-prod
 
 services:
   api:

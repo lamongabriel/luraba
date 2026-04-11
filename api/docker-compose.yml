@@ -1,5 +1,5 @@
 # Development compose — runs the API with hot-reload + a local Postgres instance
-name: drizzle-express-api-dev
+name: luraba-api-dev
 
 services:
   postgres:

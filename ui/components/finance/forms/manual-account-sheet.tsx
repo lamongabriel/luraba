@@ -102,7 +102,7 @@ export function ManualAccountSheet({
       open={open}
       onOpenChange={onOpenChange}
       title="Create account"
-      description="Add a manual asset or liability account to the workspace."
+      description="Add a manual asset or liability account."
     >
       <form onSubmit={onSubmit} className="space-y-5">
         <div className="space-y-2">

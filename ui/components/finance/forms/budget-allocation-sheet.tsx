@@ -8,6 +8,7 @@ import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Typography } from "@/components/ui/typography";
 import type { MonthlyBudgetHttp } from "@/interfaces/http/budgets";
 import type { CategoryHttp } from "@/interfaces/http/categories";
 import { useAppMutation } from "@/lib/mutations";
@@ -91,8 +92,10 @@ export function BudgetAllocationSheet({
       <div className="space-y-6">
         <div className="space-y-4">
           <div>
-            <h3 className="font-heading text-lg">Income categories</h3>
-            <p className="text-sm text-muted-foreground">Amounts are stored in minor units.</p>
+            <Typography as="h3" variant="subheading">
+              Income categories
+            </Typography>
+            <Typography variant="body-muted">Amounts are stored in minor units.</Typography>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {incomeCategories.map((category) => (
@@ -117,8 +120,12 @@ export function BudgetAllocationSheet({
 
         <div className="space-y-4">
           <div>
-            <h3 className="font-heading text-lg">Expense categories</h3>
-            <p className="text-sm text-muted-foreground">Allocate the target spending by category for this month.</p>
+            <Typography as="h3" variant="subheading">
+              Expense categories
+            </Typography>
+            <Typography variant="body-muted">
+              Allocate the target spending by category for this month.
+            </Typography>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {expenseCategories.map((category) => (

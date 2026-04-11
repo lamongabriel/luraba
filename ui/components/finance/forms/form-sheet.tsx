@@ -29,7 +29,7 @@ export function FormSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className={cn("w-full overflow-y-auto border-l border-border/70 sm:max-w-xl", className)}>
-        <SheetHeader className="border-b border-border/70 pb-5">
+        <SheetHeader className="border-b border-dashed border-border/70 pb-5">
           <SheetTitle className="text-xl">{title}</SheetTitle>
           {description ? <SheetDescription>{description}</SheetDescription> : null}
         </SheetHeader>

@@ -2,7 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowRightLeft, Plus, Search, SlidersHorizontal } from "lucide-react";
+import {
+  Add01Icon,
+  ArrowLeftRightIcon,
+  Search01Icon,
+  SlidersHorizontalIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 import { EmptyState } from "@/components/finance/empty-state";
 import { TransactionFormSheet } from "@/components/finance/forms/transaction-form-sheet";
@@ -14,6 +20,7 @@ import { SummaryCard } from "@/components/finance/summary-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Typography } from "@/components/ui/typography";
 import {
   Select,
   SelectContent,
@@ -61,13 +68,12 @@ export default function TransactionsPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Transactions"
-        description="Review income, expenses, transfers, and adjustments from the live ledger-backed API."
         actions={
           <Button className="rounded-full" onClick={() => setSheetOpen(true)}>
-            <Plus className="size-4" />
+            <HugeiconsIcon icon={Add01Icon} strokeWidth={2} className="size-4" />
             New transaction
           </Button>
         }
@@ -95,7 +101,11 @@ export default function TransactionsPage() {
           <div className="space-y-2">
             <Label htmlFor="transactions-search">Search</Label>
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <HugeiconsIcon
+                icon={Search01Icon}
+                strokeWidth={2}
+                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              />
               <Input
                 id="transactions-search"
                 className="pl-9"
@@ -127,14 +137,14 @@ export default function TransactionsPage() {
         title="Latest transactions"
         description="Amounts are displayed using the API’s integer money fields."
         action={
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <SlidersHorizontal className="size-4" />
+          <Typography as="div" variant="small-muted" className="flex items-center gap-2">
+            <HugeiconsIcon icon={SlidersHorizontalIcon} strokeWidth={2} className="size-4" />
             {filteredTransactions.length} row(s)
-          </div>
+          </Typography>
         }
       >
-        {isLoading ? <p className="text-sm text-muted-foreground">Loading transactions...</p> : null}
-        {isError ? <p className="text-sm text-destructive">Failed to load transactions.</p> : null}
+        {isLoading ? <Typography variant="body-muted">Loading transactions...</Typography> : null}
+        {isError ? <Typography variant="small-destructive">Failed to load transactions.</Typography> : null}
 
         {!isLoading && filteredTransactions.length === 0 ? (
           <EmptyState
@@ -150,7 +160,7 @@ export default function TransactionsPage() {
               >
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="font-medium">{transaction.description}</p>
+                    <Typography variant="small-strong">{transaction.description}</Typography>
                     <StatusPill
                       tone={
                         transaction.type === "income"
@@ -163,26 +173,26 @@ export default function TransactionsPage() {
                       {TRANSACTION_TYPE_LABELS[transaction.type]}
                     </StatusPill>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <Typography className="mt-1" variant="small-muted">
                     {transaction.accountName ?? "No account"}
                     {transaction.type === "transfer" && transaction.toAccountName ? ` → ${transaction.toAccountName}` : ""}
-                  </p>
+                  </Typography>
                 </div>
 
                 <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Category / method</p>
-                  <p className="mt-1 text-sm">
+                  <Typography variant="meta">Category / method</Typography>
+                  <Typography className="mt-1">
                     {transaction.paymentMethodName ?? "No payment method"}
-                  </p>
+                  </Typography>
                 </div>
 
                 <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Date</p>
-                  <p className="mt-1 text-sm">{transaction.postedDate}</p>
+                  <Typography variant="meta">Date</Typography>
+                  <Typography className="mt-1">{transaction.postedDate}</Typography>
                 </div>
 
                 <div className="text-left md:text-right">
-                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Amount</p>
+                  <Typography variant="meta">Amount</Typography>
                   <div className="mt-1 text-sm font-semibold">
                     <MoneyValue amount={transaction.amount} currencyCode={transaction.currencyCode} />
                   </div>
@@ -191,7 +201,9 @@ export default function TransactionsPage() {
                       <Button asChild variant="ghost" size="sm" className="rounded-full">
                         <Link href={`/accounts/${transaction.accountId}`}>
                           Open account
-                          {transaction.type === "transfer" ? <ArrowRightLeft className="size-4" /> : null}
+                          {transaction.type === "transfer" ? (
+                            <HugeiconsIcon icon={ArrowLeftRightIcon} strokeWidth={2} className="size-4" />
+                          ) : null}
                         </Link>
                       </Button>
                     ) : null}

@@ -1,12 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { useTheme } from "next-themes";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
+
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
+import { PageHeader } from "@/components/finance/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Typography } from "@/components/ui/typography";
 import {
   Select,
   SelectContent,
@@ -63,8 +65,8 @@ const ACCOUNT_ORDER_OPTIONS = [
 ] as const;
 
 const COUNTRY_OPTIONS = [
-  { value: "BR", label: "🇧🇷 Brazil" },
-  { value: "US", label: "🇺🇸 United States" },
+  { value: "BR", label: "Brazil" },
+  { value: "US", label: "United States" },
 ] as const;
 
 const CREDIT_EXPENSE_TIMING_OPTIONS = [
@@ -75,27 +77,6 @@ const CREDIT_EXPENSE_TIMING_OPTIONS = [
 const CREDIT_INSTALLMENT_MODE_OPTIONS = [
   { value: "per_installment", label: "Per installment" },
   { value: "full_amount", label: "Full amount at once" },
-] as const;
-
-const THEME_OPTIONS = [
-  {
-    value: "light",
-    title: "Light",
-    previewLabel: "Light Theme Preview",
-    previewClassName: "bg-white text-black border-zinc-300",
-  },
-  {
-    value: "dark",
-    title: "Dark",
-    previewLabel: "Dark Theme Preview",
-    previewClassName: "bg-zinc-950 text-zinc-100 border-zinc-700",
-  },
-  {
-    value: "system",
-    title: "System",
-    previewLabel: "System Theme Preview",
-    previewClassName: "bg-linear-to-r from-zinc-100 to-zinc-900 text-zinc-50 border-zinc-600",
-  },
 ] as const;
 
 const DEFAULT_VALUES: UserPreferences = {
@@ -109,7 +90,7 @@ const DEFAULT_VALUES: UserPreferences = {
   budgetMonthStartsOn: 1,
   creditExpenseTiming: "spend_month",
   creditInstallmentBudgetMode: "per_installment",
-  theme: "system",
+  theme: "dark",
 };
 
 function toOrdinalDay(value: number) {
@@ -130,7 +111,6 @@ function toOrdinalDay(value: number) {
 }
 
 export default function SettingsPage() {
-  const { setTheme } = useTheme();
   const { data, isLoading, isError } = usePreferencesQuery();
   const updateMutation = useUpdatePreferencesMutation();
 
@@ -138,41 +118,48 @@ export default function SettingsPage() {
     defaultValues: DEFAULT_VALUES,
   });
 
+  const language = useWatch({ control: form.control, name: "language" });
+  const currency = useWatch({ control: form.control, name: "currency" });
+  const timezone = useWatch({ control: form.control, name: "timezone" });
+  const dateFormat = useWatch({ control: form.control, name: "dateFormat" });
+  const defaultPeriod = useWatch({ control: form.control, name: "defaultPeriod" });
+  const defaultAccountOrder = useWatch({ control: form.control, name: "defaultAccountOrder" });
+  const countryCode = useWatch({ control: form.control, name: "countryCode" });
+  const budgetMonthStartsOn = useWatch({ control: form.control, name: "budgetMonthStartsOn" });
+  const creditExpenseTiming = useWatch({ control: form.control, name: "creditExpenseTiming" });
+  const creditInstallmentBudgetMode = useWatch({
+    control: form.control,
+    name: "creditInstallmentBudgetMode",
+  });
+
   React.useEffect(() => {
     if (!data) return;
-    form.reset(data);
-    setTheme(data.theme);
-  }, [data, form, setTheme]);
-
-  const watchedTheme = form.watch("theme");
+    form.reset({ ...data, theme: "dark" });
+  }, [data, form]);
 
   const onSubmit = form.handleSubmit(async (values) => {
-    await updateMutation.mutateAsync(values);
-    setTheme(values.theme);
+    await updateMutation.mutateAsync({ ...values, theme: "dark" });
   });
 
   return (
-    <div className="space-y-6">
-      <section className="space-y-1">
-        <h1 className="font-heading text-3xl">Settings</h1>
-        <p className="text-sm text-muted-foreground">Manage profile, language, and appearance preferences.</p>
-      </section>
+    <div className="space-y-8">
+      <PageHeader title="Settings" />
 
       <Card>
         <CardHeader>
-          <CardTitle>General</CardTitle>
-          <CardDescription>Configure your preferences</CardDescription>
+          <CardTitle>Preferences</CardTitle>
+          <CardDescription>Configure dates, budgets, and account ordering.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {isLoading ? <p className="text-sm text-muted-foreground">Loading preferences...</p> : null}
-          {isError ? <p className="text-sm text-destructive">Failed to load preferences.</p> : null}
+        <CardContent className="space-y-6">
+          {isLoading ? <Typography variant="body-muted">Loading preferences...</Typography> : null}
+          {isError ? <Typography variant="body" className="text-destructive">Failed to load preferences.</Typography> : null}
 
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form onSubmit={onSubmit} className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Language</Label>
                 <Select
-                  value={form.watch("language")}
+                  value={language}
                   onValueChange={(value: UserPreferences["language"]) => form.setValue("language", value)}
                 >
                   <SelectTrigger>
@@ -191,7 +178,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label>Currency</Label>
                 <Select
-                  value={form.watch("currency")}
+                  value={currency}
                   onValueChange={(value: UserPreferences["currency"]) => form.setValue("currency", value)}
                 >
                   <SelectTrigger>
@@ -210,7 +197,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label>Timezone</Label>
                 <Select
-                  value={form.watch("timezone")}
+                  value={timezone}
                   onValueChange={(value: UserPreferences["timezone"]) => form.setValue("timezone", value)}
                 >
                   <SelectTrigger>
@@ -229,7 +216,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label>Date format</Label>
                 <Select
-                  value={form.watch("dateFormat")}
+                  value={dateFormat}
                   onValueChange={(value: UserPreferences["dateFormat"]) => form.setValue("dateFormat", value)}
                 >
                   <SelectTrigger>
@@ -246,9 +233,9 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Default Period</Label>
+                <Label>Default period</Label>
                 <Select
-                  value={form.watch("defaultPeriod")}
+                  value={defaultPeriod}
                   onValueChange={(value: UserPreferences["defaultPeriod"]) => form.setValue("defaultPeriod", value)}
                 >
                   <SelectTrigger>
@@ -265,9 +252,9 @@ export default function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Default Account Order</Label>
+                <Label>Default account order</Label>
                 <Select
-                  value={form.watch("defaultAccountOrder")}
+                  value={defaultAccountOrder}
                   onValueChange={(value: UserPreferences["defaultAccountOrder"]) => form.setValue("defaultAccountOrder", value)}
                 >
                   <SelectTrigger>
@@ -286,7 +273,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label>Country</Label>
                 <Select
-                  value={form.watch("countryCode")}
+                  value={countryCode}
                   onValueChange={(value: UserPreferences["countryCode"]) => form.setValue("countryCode", value)}
                 >
                   <SelectTrigger>
@@ -305,7 +292,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label>Budget month starts on</Label>
                 <Select
-                  value={String(form.watch("budgetMonthStartsOn"))}
+                  value={String(budgetMonthStartsOn)}
                   onValueChange={(value) => form.setValue("budgetMonthStartsOn", Number(value))}
                 >
                   <SelectTrigger>
@@ -324,7 +311,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label>Credit expense timing</Label>
                 <Select
-                  value={form.watch("creditExpenseTiming")}
+                  value={creditExpenseTiming}
                   onValueChange={(value: UserPreferences["creditExpenseTiming"]) =>
                     form.setValue("creditExpenseTiming", value)
                   }
@@ -345,7 +332,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label>Credit installment budget mode</Label>
                 <Select
-                  value={form.watch("creditInstallmentBudgetMode")}
+                  value={creditInstallmentBudgetMode}
                   onValueChange={(value: UserPreferences["creditInstallmentBudgetMode"]) =>
                     form.setValue("creditInstallmentBudgetMode", value)
                   }
@@ -364,43 +351,13 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <p className="text-xs text-muted-foreground">
-              Please note, we are still working on translations for various languages.
-            </p>
-
-            <Card className="border-dashed" size="sm">
-              <CardHeader>
-                <CardTitle>Theme</CardTitle>
-                <CardDescription>Choose a preferred theme for the app</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-3 md:grid-cols-3">
-                  {THEME_OPTIONS.map((option) => {
-                    const selected = watchedTheme === option.value;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => {
-                          form.setValue("theme", option.value);
-                          setTheme(option.value);
-                        }}
-                        className={`rounded-lg border p-3 text-left transition ${selected ? "border-primary ring-2 ring-primary/25" : "border-border"}`}
-                      >
-                        <p className="text-xs text-muted-foreground">{option.previewLabel}</p>
-                        <div className={`mt-2 rounded-md border px-3 py-2 text-sm font-medium ${option.previewClassName}`}>
-                          {option.title}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="rounded-[1.25rem] border border-dashed border-border/70 bg-[var(--color-container-inset)] px-4 py-4 text-sm leading-6 text-muted-foreground">
+              Appearance is locked to Luraba dark. Existing preference data still stores a `theme` field for compatibility, but the app no longer exposes light or system themes.
+            </div>
 
             <FormErrorBoundary error={updateMutation.error} />
 
-            <Button type="submit" disabled={updateMutation.isPending}>
+            <Button type="submit" className="rounded-full" disabled={updateMutation.isPending}>
               {updateMutation.isPending ? "Saving..." : "Save preferences"}
             </Button>
           </form>

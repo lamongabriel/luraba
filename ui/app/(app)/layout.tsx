@@ -1,31 +1,40 @@
-import { AppSidebar } from "@/components/app-sidebar"
+import Link from "next/link"
+import { Home01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+
+import { AuthGate } from "@/components/auth/auth-gate"
+import { AppCommandMenu } from "@/components/navigation/app-command-menu"
+import { AppSidebar } from "@/components/navigation/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { formatMonthLabel, getCurrentMonthKey } from "@/lib/finance"
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="sticky top-0 z-10 flex min-h-16 items-center justify-between border-b border-border/60 bg-background/85 px-4 backdrop-blur md:px-6">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger />
-            <div>
-              <p className="text-[0.68rem] uppercase tracking-[0.24em] text-muted-foreground">Money workspace</p>
-              <p className="text-sm font-medium text-foreground">{formatMonthLabel(getCurrentMonthKey())}</p>
+    <AuthGate mode="protected">
+      <SidebarProvider>
+        <AppSidebar />
+        
+        <SidebarInset>
+          <header className="sticky top-0 z-20 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+            <div className="mx-auto flex min-h-16 w-full max-w-[1220px] items-center gap-3 px-4 md:px-6">
+              <div className="flex items-center gap-2">
+                <SidebarTrigger />
+                <Button asChild variant="outline" size="sm" className="rounded-xl border-border/80">
+                  <Link href="/dashboard">
+                    <HugeiconsIcon icon={Home01Icon} strokeWidth={2} className="size-4" />
+                    Home
+                  </Link>
+                </Button>
+              </div>
+              <AppCommandMenu />
             </div>
+          </header>
+
+          <div className="mx-auto flex w-full max-w-[1220px] flex-1 flex-col px-4 py-6 md:px-6 md:py-8">
+            {children}
           </div>
-          <Button variant="outline" className="rounded-full">
-            Review month
-          </Button>
-        </header>
-        <div className="flex-1 p-4 md:p-6">{children}</div>
-      </SidebarInset>
-    </SidebarProvider>
+        </SidebarInset>
+      </SidebarProvider>
+    </AuthGate>
   )
 }

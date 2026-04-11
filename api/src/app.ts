@@ -1,4 +1,3 @@
-import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 
@@ -32,10 +31,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: env.frontendOrigin,
-    credentials: true,
   }),
 );
-app.use(cookieParser());
 
 // ─── Health check ────────────────────────────────────────────────────────────
 app.get('/health', async (_req, res) => {
