@@ -2,14 +2,14 @@ import { boolean, date, index, pgTable, timestamp, uuid, varchar } from 'drizzle
 import { transactionTypeEnum } from './enums.schema';
 import { categoriesTable } from './categories.schema';
 import { paymentMethodsTable } from './payment-methods.schema';
-import { usersTable } from './users.schema';
 import { merchantsTable } from './merchants.schema';
+import { householdsTable } from './households.schema';
 
 export const transactionsTable = pgTable(
   'transactions',
   {
     id: uuid().primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().references(() => usersTable.id, { onDelete: 'cascade' }),
+    householdId: uuid('household_id').notNull().references(() => householdsTable.id, { onDelete: 'cascade' }),
     type: transactionTypeEnum().notNull(),
     paymentMethodId: uuid('payment_method_id').references(() => paymentMethodsTable.id, { onDelete: 'restrict' }),
     categoryId: uuid('category_id').references(() => categoriesTable.id, { onDelete: 'set null' }),
@@ -22,7 +22,7 @@ export const transactionsTable = pgTable(
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => [
-    index('transactions_user_id_idx').on(table.userId),
+    index('transactions_household_id_idx').on(table.householdId),
     index('transactions_payment_method_id_idx').on(table.paymentMethodId),
     index('transactions_posted_date_idx').on(table.postedDate),
     index('transactions_purchase_date_idx').on(table.purchaseDate),

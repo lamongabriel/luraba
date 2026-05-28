@@ -1,13 +1,13 @@
 import { integer, pgTable, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { accountsTable } from './accounts.schema';
 import { creditCardProductTypeEnum } from './enums.schema';
-import { usersTable } from './users.schema';
+import { householdsTable } from './households.schema';
 
 export const creditCardsTable = pgTable(
   'credit_cards',
   {
     id: uuid().primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().references(() => usersTable.id, { onDelete: 'cascade' }),
+    householdId: uuid('household_id').notNull().references(() => householdsTable.id, { onDelete: 'cascade' }),
     accountId: uuid('account_id').notNull().references(() => accountsTable.id, { onDelete: 'cascade' }),
     brand: varchar({ length: 64 }).notNull(),
     productType: creditCardProductTypeEnum('product_type').notNull().default('credit'),

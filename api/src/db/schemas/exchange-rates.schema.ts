@@ -5,6 +5,7 @@ export const exchangeRatesTable = pgTable(
   'exchange_rates',
   {
     id: uuid().primaryKey().defaultRandom(),
+    provider: varchar({ length: 64 }).notNull().default('frankfurter'),
     fromCurrencyId: varchar('from_currency_id', { length: 3 }).notNull().references(() => currenciesTable.code, { onDelete: 'restrict' }),
     toCurrencyId: varchar('to_currency_id', { length: 3 }).notNull().references(() => currenciesTable.code, { onDelete: 'restrict' }),
     rateNumerator: integer('rate_numerator').notNull(),
@@ -14,6 +15,7 @@ export const exchangeRatesTable = pgTable(
   },
   (table) => [
     uniqueIndex('exchange_rates_pair_date_unique').on(
+      table.provider,
       table.fromCurrencyId,
       table.toCurrencyId,
       table.rateDate,

@@ -1,19 +1,17 @@
-import { date, integer, pgTable, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
-import { usersTable } from './users.schema';
+import { date, integer, pgTable, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { categoriesTable } from './categories.schema';
-import { currenciesTable } from './currencies.schema';
+import { householdsTable } from './households.schema';
 
 export const budgetsTable = pgTable(
   'budgets',
   {
     id: uuid().primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().references(() => usersTable.id, { onDelete: 'cascade' }),
+    householdId: uuid('household_id').notNull().references(() => householdsTable.id, { onDelete: 'cascade' }),
     month: date('month', { mode: 'date' }).notNull(),
     categoryId: uuid('category_id').notNull().references(() => categoriesTable.id, { onDelete: 'restrict' }),
     amount: integer('amount').notNull(),
-    currencyId: varchar('currency_id', { length: 3 }).notNull().references(() => currenciesTable.code, { onDelete: 'restrict' }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => [uniqueIndex('budgets_user_month_category_unique').on(table.userId, table.month, table.categoryId)],
+  (table) => [uniqueIndex('budgets_household_month_category_unique').on(table.householdId, table.month, table.categoryId)],
 );

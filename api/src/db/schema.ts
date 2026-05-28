@@ -2,6 +2,7 @@ export * from './schemas/enums.schema';
 export * from './schemas/users.schema';
 export * from './schemas/currencies.schema';
 export * from './schemas/exchange-rates.schema';
+export * from './schemas/households.schema';
 export * from './schemas/accounts.schema';
 export * from './schemas/ledger-accounts.schema';
 export * from './schemas/categories.schema';

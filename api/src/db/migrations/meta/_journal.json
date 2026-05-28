@@ -22,6 +22,41 @@
       "when": 1774573232908,
       "tag": "0002_loud_zuras",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779828606392,
+      "tag": "0003_left_rage",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779846609345,
+      "tag": "0004_slow_calypso",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780285200000,
+      "tag": "0005_nifty_mayday",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780371600000,
+      "tag": "0006_fancy_penance",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1780915200000,
+      "tag": "0007_clever_orphan",
+      "breakpoints": true
     }
   ]
 }

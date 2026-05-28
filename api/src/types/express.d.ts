@@ -1,4 +1,5 @@
 import 'express';
+import type { HouseholdContext } from '@/config/permissions';
 
 declare global {
   namespace Express {
@@ -7,6 +8,7 @@ declare global {
         id: string;
         email: string;
       };
+      household?: HouseholdContext;
     }
   }
 }

@@ -1,13 +1,13 @@
 import { pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { accountClassificationEnum, accountTypeEnum } from './enums.schema';
-import { usersTable } from './users.schema';
 import { currenciesTable } from './currencies.schema';
+import { householdsTable } from './households.schema';
 
 export const accountsTable = pgTable(
   'accounts',
   {
     id: uuid().primaryKey().defaultRandom(),
-    userId: uuid('user_id').notNull().references(() => usersTable.id, { onDelete: 'cascade' }),
+    householdId: uuid('household_id').notNull().references(() => householdsTable.id, { onDelete: 'cascade' }),
     name: varchar({ length: 255 }).notNull(),
     institutionName: varchar('institution_name', { length: 255 }),
     institutionDomain: varchar('institution_domain', { length: 255 }),
@@ -18,5 +18,5 @@ export const accountsTable = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => [uniqueIndex('accounts_user_name_unique').on(table.userId, table.name)],
+  (table) => [uniqueIndex('accounts_household_name_unique').on(table.householdId, table.name)],
 );

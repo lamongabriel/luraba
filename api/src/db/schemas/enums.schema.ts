@@ -1,8 +1,6 @@
 import { pgEnum } from 'drizzle-orm/pg-core';
 
 // ─── User Preference Enums ───────────────────────────────────────────────
-// ─── User Preference Enums ───────────────────────────────────────────────
-
 export const preferredLanguageEnum = pgEnum('preferred_language', ['en', 'pt-BR']);
 export const preferredCurrencyEnum = pgEnum('preferred_currency', ['BRL', 'USD', 'EUR']);
 export const preferredTimezoneEnum = pgEnum('preferred_timezone', ['America/Sao_Paulo', 'UTC']);
@@ -26,8 +24,6 @@ export const countryCodeEnum = pgEnum('country_code', ['BR', 'US']);
 export const themePreferenceEnum = pgEnum('theme_preference', ['light', 'dark', 'system']);
 
 // ─── Account & Ledger Enums ──────────────────────────────────────────────
-// ─── Account & Ledger Enums ──────────────────────────────────────────────
-
 export const accountClassificationEnum = pgEnum('account_classification', ['asset', 'liability']);
 export const accountTypeEnum = pgEnum('account_type', [
   'depository',
@@ -41,11 +37,10 @@ export const accountTypeEnum = pgEnum('account_type', [
 export const ledgerClassificationEnum = pgEnum('ledger_classification', ['asset', 'liability']);
 export const ledgerAccountTypeEnum = ledgerClassificationEnum;
 export const ledgerOwnerTypeEnum = pgEnum('ledger_owner_type', ['account', 'system']);
-
+export const householdRoleEnum = pgEnum('household_role', ['owner', 'admin', 'member', 'viewer']);
+export const householdInviteStatusEnum = pgEnum('household_invite_status', ['pending', 'accepted', 'revoked']);
 
 // ─── Transaction & Category Enums ────────────────────────────────────────
-// ─── Transaction & Category Enums ────────────────────────────────────────
-
 export const transactionTypeEnum = pgEnum('transaction_type', [
   'expense',
   'income',
