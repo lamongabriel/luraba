@@ -1,0 +1,39 @@
+meta {
+  name: create merchant
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/merchants
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "{{merchantName}}",
+    "domain": "{{merchantDomain}}"
+  }
+}
+
+tests {
+  test("merchant returns 201", function() {
+    expect(res.status).to.equal(201);
+  });
+
+  test("merchant includes normalized domain", function() {
+    expect(res.body?.data?.name).to.equal(bru.getEnvVar("merchantName"));
+    expect(res.body?.data?.domain).to.be.a("string");
+  });
+}
+
+script:post-response {
+  if (res.body?.data?.id) {
+    bru.setEnvVar("merchantId", res.body.data.id);
+  }
+}

@@ -1,0 +1,23 @@
+meta {
+  name: list merchants
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/merchants
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("list merchants returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("list merchants returns an array", function() {
+    expect(res.body?.data).to.be.an("array");
+  });
+}

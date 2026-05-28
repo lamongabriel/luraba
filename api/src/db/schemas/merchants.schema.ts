@@ -7,7 +7,7 @@ export const merchantsTable = pgTable(
     id: uuid().primaryKey().defaultRandom(),
     householdId: uuid('household_id').notNull().references(() => householdsTable.id, { onDelete: 'cascade' }),
     name: varchar({ length: 255 }).notNull(),
-    website: varchar({ length: 255 }),
+    domain: varchar({ length: 255 }),
     logoUrl: varchar('logo_url', { length: 512 }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),

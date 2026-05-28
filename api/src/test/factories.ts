@@ -10,6 +10,7 @@ import { usersTable } from '@/db/schemas/users.schema';
 import type { HouseholdContext } from '@/config/permissions';
 import type { CreateAccountRequestBody } from '@/modules/accounts/accounts.types';
 import type { RegisterRequestBody } from '@/modules/auth/auth.types';
+import type { CreateMerchantRequestBody } from '@/modules/merchants/merchants.types';
 
 function randomSuffix() {
   return Math.random().toString(36).slice(2, 10);
@@ -98,6 +99,14 @@ export function buildRegisterInput(overrides: Partial<RegisterRequestBody> = {})
     household: {
       settings: {},
     },
+    ...overrides,
+  };
+}
+
+export function buildMerchantInput(overrides: Partial<CreateMerchantRequestBody> = {}): CreateMerchantRequestBody {
+  return {
+    name: `Merchant ${randomSuffix()}`,
+    domain: `${randomSuffix()}.example.com`,
     ...overrides,
   };
 }

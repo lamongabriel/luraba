@@ -1,26 +1,19 @@
-import { NextFunction, Request, Response } from 'express';
-import { getAuthenticatedUser } from '@/middleware/auth.middleware';
-import { sendCreated, sendSuccess } from '@/shared/response';
+import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import * as merchantsService from './merchants.service';
-import { createMerchantSchema } from './merchants.types';
+import {
+  CreateMerchantRequestBodySchema,
+  CreateMerchantResponseSchema,
+  ListMerchantsResponseSchema,
+} from './merchants.types';
 
-export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const user = getAuthenticatedUser(req);
-    const dto = createMerchantSchema.parse(req.body);
-    const merchant = await merchantsService.createMerchant(user.id, dto);
-    sendCreated(res, merchant);
-  } catch (err) {
-    next(err);
-  }
-}
+export const create = createHouseholdHandler({
+  body: CreateMerchantRequestBodySchema,
+  response: CreateMerchantResponseSchema,
+  handle: ({ household, body }) => merchantsService.createMerchant(household, body),
+  status: 'created',
+});
 
-export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const user = getAuthenticatedUser(req);
-    const merchants = await merchantsService.listMerchants(user.id);
-    sendSuccess(res, merchants);
-  } catch (err) {
-    next(err);
-  }
-}
+export const list = createHouseholdHandler({
+  response: ListMerchantsResponseSchema,
+  handle: ({ household }) => merchantsService.listMerchants(household),
+});

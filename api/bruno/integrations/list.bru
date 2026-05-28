@@ -1,0 +1,27 @@
+meta {
+  name: list integrations
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/integrations
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("list integrations returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("list integrations includes brandfetch summary", function() {
+    expect(res.body?.data).to.be.an("array");
+
+    const brandfetch = res.body?.data?.find((integration) => integration.provider === "brandfetch");
+    expect(brandfetch).to.not.equal(undefined);
+    expect(brandfetch.status).to.be.oneOf(["not_configured", "connected"]);
+  });
+}
