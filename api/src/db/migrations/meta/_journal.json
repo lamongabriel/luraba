@@ -57,6 +57,13 @@
       "when": 1780915200000,
       "tag": "0007_clever_orphan",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1780952400000,
+      "tag": "0008_brisk_sage",
+      "breakpoints": true
     }
   ]
 }
