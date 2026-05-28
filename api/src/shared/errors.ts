@@ -39,3 +39,9 @@ export class ForbiddenError extends AppError {
     super(message, 403, 'FORBIDDEN');
   }
 }
+
+export class DependencyUnavailableError extends AppError {
+  constructor(message = 'Dependency unavailable') {
+    super(message, 503, 'DEPENDENCY_UNAVAILABLE');
+  }
+}
