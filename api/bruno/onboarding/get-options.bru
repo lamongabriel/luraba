@@ -1,0 +1,16 @@
+meta {
+  name: get options
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/onboarding/options
+  auth: none
+}
+
+tests {
+  test("onboarding options returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}
