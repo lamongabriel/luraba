@@ -1,0 +1,33 @@
+meta {
+  name: connect brandfetch
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/v1/integrations/brandfetch
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "clientId": "{{brandfetchClientId}}"
+  }
+}
+
+tests {
+  test("connect brandfetch returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("connect brandfetch returns connected summary", function() {
+    expect(res.body?.data?.provider).to.equal("brandfetch");
+    expect(res.body?.data?.configured).to.equal(true);
+    expect(res.body?.data?.status).to.equal("connected");
+  });
+}

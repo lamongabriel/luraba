@@ -64,6 +64,20 @@
       "when": 1780952400000,
       "tag": "0008_brisk_sage",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1780963200000,
+      "tag": "0009_modern_salem",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1780981200000,
+      "tag": "0010_bright_valkyrie",
+      "breakpoints": true
     }
   ]
 }
