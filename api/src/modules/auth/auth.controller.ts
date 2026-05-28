@@ -1,51 +1,49 @@
-import { NextFunction, Request, Response } from 'express';
-import { sendSuccess } from '@/shared/response';
-import { getAuthenticatedUser } from '@/middleware/auth.middleware';
+import { createAuthenticatedHandler } from '@/shared/controllers/authenticated.controller';
+import { createHouseholdHandler } from '@/shared/controllers/household.controller';
+import { createHandler } from '@/shared/controllers/controller';
 import * as authService from './auth.service';
-import { loginSchema, registerSchema } from './auth.types';
+import {
+  GetMeResponseSchema,
+  GetMyPreferencesResponseSchema,
+  LoginRequestBodySchema,
+  LoginResponseSchema,
+  LogoutResponseSchema,
+  RegisterRequestBodySchema,
+  RegisterResponseSchema,
+  UpdateMyPreferencesRequestBodySchema,
+  UpdateMyPreferencesResponseSchema,
+} from './auth.types';
 
-export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const dto = registerSchema.parse(req.body);
-    const result = await authService.register(dto);
+export const register = createHandler({
+  body: RegisterRequestBodySchema,
+  response: RegisterResponseSchema,
+  status: 'created',
+  handle: ({ body }) => authService.register(body),
+});
 
-    sendSuccess(res, {
-      user: result.user,
-      accessToken: result.accessToken,
-    }, 201);
-  } catch (err) {
-    next(err);
-  }
-}
+export const login = createHandler({
+  body: LoginRequestBodySchema,
+  response: LoginResponseSchema,
+  handle: ({ body }) => authService.login(body),
+});
 
-export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const dto = loginSchema.parse(req.body);
-    const result = await authService.login(dto);
+export const logout = createHandler({
+  response: LogoutResponseSchema,
+  handle: async () => ({ ok: true as const }),
+});
 
-    sendSuccess(res, {
-      user: result.user,
-      accessToken: result.accessToken,
-    });
-  } catch (err) {
-    next(err);
-  }
-}
+export const me = createHouseholdHandler({
+  response: GetMeResponseSchema,
+  handle: ({ household }) => authService.getMe(household.userId, household.householdId),
+});
 
-export async function logout(_req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    sendSuccess(res, { ok: true });
-  } catch (err) {
-    next(err);
-  }
-}
+export const getMyPreferences = createAuthenticatedHandler({
+  response: GetMyPreferencesResponseSchema,
+  handle: ({ user }) => authService.getMyPreferences(user.id),
+});
 
-export async function me(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const user = getAuthenticatedUser(req);
-    const data = await authService.getMe(user.id);
-    sendSuccess(res, data);
-  } catch (err) {
-    next(err);
-  }
-}
+export const updateMyPreferences = createAuthenticatedHandler({
+  body: UpdateMyPreferencesRequestBodySchema,
+  response: UpdateMyPreferencesResponseSchema,
+  handle: ({ user, body }) => authService.updateMyPreferences(user.id, body),
+});

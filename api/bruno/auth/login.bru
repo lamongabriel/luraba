@@ -24,6 +24,10 @@ tests {
   test("login returns 200", function() {
     expect(res.status).to.equal(200);
   });
+
+  test("login returns active household name", function() {
+    expect(res.body.data.household.name).to.be.a("string");
+  });
 }
 
 script:post-response {

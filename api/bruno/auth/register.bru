@@ -18,7 +18,26 @@ body:json {
   {
     "name": "{{userName}}",
     "email": "{{userEmail}}",
-    "password": "{{userPassword}}"
+    "password": "{{userPassword}}",
+    "preferences": {
+      "language": "en",
+      "currency": "{{currencyCode}}",
+      "timezone": "America/Sao_Paulo",
+      "dateFormat": "DD/MM/YYYY",
+      "preferredPeriod": "current_month",
+      "preferredTheme": "system"
+    },
+    "household": {
+      "name": "{{userName}}'s Household",
+      "settings": {
+        "defaultCurrencyId": "{{currencyCode}}",
+        "countryCode": "BR",
+        "timezone": "America/Sao_Paulo",
+        "budgetMonthStartsOn": 1,
+        "creditExpenseTiming": "spend_month",
+        "creditInstallmentBudgetMode": "per_installment"
+      }
+    }
   }
 }
 
@@ -38,5 +57,9 @@ script:post-response {
 tests {
   test("register returns 201", function() {
     expect(res.status).to.equal(201);
+  });
+
+  test("register returns active household name", function() {
+    expect(res.body.data.household.name).to.be.a("string");
   });
 }

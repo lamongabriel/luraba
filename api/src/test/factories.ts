@@ -9,6 +9,7 @@ import { transactionsTable } from '@/db/schemas/transactions.schema';
 import { usersTable } from '@/db/schemas/users.schema';
 import type { HouseholdContext } from '@/config/permissions';
 import type { CreateAccountRequestBody } from '@/modules/accounts/accounts.types';
+import type { RegisterRequestBody } from '@/modules/auth/auth.types';
 
 function randomSuffix() {
   return Math.random().toString(36).slice(2, 10);
@@ -84,6 +85,19 @@ export function buildAccountInput(overrides: Partial<CreateAccountRequestBody> =
     name: `Account ${randomSuffix()}`,
     type: 'depository',
     currencyCode: 'BRL',
+    ...overrides,
+  };
+}
+
+export function buildRegisterInput(overrides: Partial<RegisterRequestBody> = {}): RegisterRequestBody {
+  return {
+    name: `User ${randomSuffix()}`,
+    email: `register-${randomSuffix()}@example.com`,
+    password: '123123123',
+    preferences: {},
+    household: {
+      settings: {},
+    },
     ...overrides,
   };
 }
