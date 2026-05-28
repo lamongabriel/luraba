@@ -1,37 +1,27 @@
-import { NextFunction, Request, Response } from 'express';
-import { getAuthenticatedUser } from '@/middleware/auth.middleware';
-import { sendCreated, sendSuccess } from '@/shared/response';
+import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import * as accountsService from './accounts.service';
-import { accountIdParamSchema, createAccountSchema } from './accounts.types';
+import {
+  CreateAccountRequestBodySchema,
+  CreateAccountResponseSchema,
+  GetAccountDetailsRequestParamsSchema,
+  GetAccountDetailsResponseSchema,
+  ListAccountsResponseSchema,
+} from './accounts.types';
 
-export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const user = getAuthenticatedUser(req);
-    const dto = createAccountSchema.parse(req.body);
-    const account = await accountsService.createAccount(user.id, dto);
-    sendCreated(res, account);
-  } catch (err) {
-    next(err);
-  }
-}
+export const create = createHouseholdHandler({
+  body: CreateAccountRequestBodySchema,
+  response: CreateAccountResponseSchema,
+  handle: ({ household, body }) => accountsService.createAccount(household, body),
+  status: 'created',
+});
 
-export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const user = getAuthenticatedUser(req);
-    const accounts = await accountsService.listAccounts(user.id);
-    sendSuccess(res, accounts);
-  } catch (err) {
-    next(err);
-  }
-}
+export const list = createHouseholdHandler({
+  response: ListAccountsResponseSchema,
+  handle: ({ household }) => accountsService.listAccounts(household),
+});
 
-export async function history(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const user = getAuthenticatedUser(req);
-    const { id } = accountIdParamSchema.parse(req.params);
-    const data = await accountsService.getAccountHistory(user.id, id);
-    sendSuccess(res, data);
-  } catch (err) {
-    next(err);
-  }
-}
+export const details = createHouseholdHandler({
+  params: GetAccountDetailsRequestParamsSchema,
+  response: GetAccountDetailsResponseSchema,
+  handle: ({ household, params }) => accountsService.getAccountDetails(household, params.id),
+});

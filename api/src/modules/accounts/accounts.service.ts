@@ -1,46 +1,67 @@
+import { ACCOUNT_TYPE_TO_CLASSIFICATION } from '@/config/accounts';
 import { db } from '@/db';
 import { accountsTable } from '@/db/schemas/accounts.schema';
 import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
 import { ConflictError, NotFoundError } from '@/shared/errors';
-import * as accountsRepository from './accounts.repository';
+import type { HouseholdContext } from '@/config/permissions';
+import { accountsRepository } from './accounts.repository';
 import {
+  Account,
   AccountClassification,
-  AccountListItemResponse,
-  AccountResponse,
-  CreateAccountDto,
-  mapAccountRecord,
+  AccountDetails,
+  AccountRecord,
+  CreateAccountRequestBody,
 } from './accounts.types';
 
 function toDisplayedAmount(rawAmount: number, classification: AccountClassification): number {
   return classification === 'asset' ? rawAmount : -rawAmount;
 }
 
-function formatDateOnly(date: Date): string {
-  return date.toISOString().slice(0, 10);
+function mapAccountRecord(account: AccountRecord): Account {
+  return {
+    id: account.id,
+    name: account.name,
+    institutionName: account.institutionName ?? null,
+    institutionDomain: account.institutionDomain ?? null,
+    notes: account.notes ?? null,
+    classification: account.classification,
+    type: account.type,
+    currencyCode: account.currencyId,
+    createdAt: account.createdAt.toISOString(),
+    updatedAt: account.updatedAt.toISOString(),
+  };
 }
 
-export async function createAccount(userId: string, dto: CreateAccountDto): Promise<AccountResponse> {
-  const user = await accountsRepository.findUserById(userId);
-  if (!user) throw new NotFoundError('User');
+function mapAccountDetails(account: AccountRecord, balance: number): AccountDetails {
+  return {
+    ...mapAccountRecord(account),
+    balance: toDisplayedAmount(balance, account.classification),
+  };
+}
 
+export async function createAccount(context: HouseholdContext, dto: CreateAccountRequestBody): Promise<Account> {
   const currency = await accountsRepository.findCurrencyByCode(dto.currencyCode);
   if (!currency) throw new NotFoundError('Currency');
 
-  const existing = await accountsRepository.findByUserAndName(userId, dto.name);
+  const existing = await accountsRepository.findByHouseholdAndName(context, dto.name);
   if (existing) throw new ConflictError('An account with this name already exists');
+  const classification = ACCOUNT_TYPE_TO_CLASSIFICATION[dto.type];
 
   return db.transaction(async (tx) => {
+    const now = new Date();
     const createdAccountRows = await tx
       .insert(accountsTable)
       .values({
-        userId,
+        householdId: context.householdId,
         name: dto.name,
         institutionName: dto.institutionName,
         institutionDomain: dto.institutionDomain,
         notes: dto.notes,
-        classification: dto.classification,
+        classification,
         type: dto.type,
         currencyId: dto.currencyCode,
+        createdAt: now,
+        updatedAt: now,
       })
       .returning();
 
@@ -57,11 +78,8 @@ export async function createAccount(userId: string, dto: CreateAccountDto): Prom
   });
 }
 
-export async function listAccounts(userId: string): Promise<AccountListItemResponse[]> {
-  const user = await accountsRepository.findUserById(userId);
-  if (!user) throw new NotFoundError('User');
-
-  const accounts = await accountsRepository.listByUserId(userId);
+export async function listAccounts(context: HouseholdContext): Promise<AccountDetails[]> {
+  const accounts = await accountsRepository.list(context);
 
   return Promise.all(
     accounts.map(async (account) => {
@@ -69,64 +87,18 @@ export async function listAccounts(userId: string): Promise<AccountListItemRespo
       if (!ledger) throw new NotFoundError('Account ledger');
 
       const balance = await accountsRepository.getAccountBalanceByLedgerId(ledger.id);
-
-      return {
-        ...mapAccountRecord(account),
-        balance: toDisplayedAmount(balance, account.classification),
-      };
+      return mapAccountDetails(account, balance);
     }),
   );
 }
 
-export async function getAccountHistory(userId: string, accountId: string): Promise<{
-  account: AccountResponse;
-  balance: number;
-  items: Array<{
-    entryId: string;
-    transactionId: string;
-    type: 'expense' | 'income' | 'transfer' | 'adjustment';
-    paymentMethodId: string | null;
-    paymentMethodCode: string | null;
-    paymentMethodName: string | null;
-    description: string;
-    amount: number;
-    currencyCode: string;
-    merchantId: string | null;
-    categoryId: string | null;
-    purchaseDate: string;
-    postedDate: string;
-    createdAt: Date;
-  }>;
-}> {
-  const account = await accountsRepository.findOwnedAccount(accountId, userId);
+export async function getAccountDetails(context: HouseholdContext, accountId: string): Promise<AccountDetails> {
+  const account = await accountsRepository.get(accountId, context);
   if (!account) throw new NotFoundError('Account');
 
   const ledger = await accountsRepository.findLedgerByAccountId(account.id);
   if (!ledger) throw new NotFoundError('Account ledger');
 
-  const [balance, items] = await Promise.all([
-    accountsRepository.getAccountBalanceByLedgerId(ledger.id),
-    accountsRepository.listHistoryByLedgerId(ledger.id),
-  ]);
-
-  return {
-    account: mapAccountRecord(account),
-    balance: toDisplayedAmount(balance, account.classification),
-    items: items.map((item) => ({
-      entryId: item.entryId,
-      transactionId: item.transactionId,
-      type: item.type,
-      paymentMethodId: item.paymentMethodId ?? null,
-      paymentMethodCode: item.paymentMethodCode ?? null,
-      paymentMethodName: item.paymentMethodName ?? null,
-      description: item.description,
-      amount: toDisplayedAmount(item.rawAmount, account.classification),
-      currencyCode: item.currencyCode,
-      merchantId: item.merchantId ?? null,
-      categoryId: item.categoryId ?? null,
-      purchaseDate: formatDateOnly(item.purchaseDate),
-      postedDate: formatDateOnly(item.postedDate),
-      createdAt: item.createdAt,
-    })),
-  };
+  const balance = await accountsRepository.getAccountBalanceByLedgerId(ledger.id);
+  return mapAccountDetails(account, balance);
 }

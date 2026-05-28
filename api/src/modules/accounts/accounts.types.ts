@@ -1,87 +1,61 @@
 import { z } from 'zod';
 import { accountsTable } from '@/db/schemas/accounts.schema';
+import {
+  accountClassificationSchema,
+  accountTypeSchema,
+  type AccountClassification,
+  type AccountType,
+} from '@/shared/validation/accounts';
+
+export { accountClassificationSchema, accountTypeSchema };
+export type { AccountClassification, AccountType };
 
 export type AccountRecord = typeof accountsTable.$inferSelect;
 
-export const accountClassificationSchema = z.enum(['asset', 'liability']);
-export const accountTypeSchema = z.enum([
-  'depository',
-  'loan',
-  'credit_card',
-  'property',
-  'vehicle',
-  'other_asset',
-  'other_liability',
-]);
-const createAccountTypeSchema = z.enum(['depository', 'loan', 'property', 'vehicle', 'other_asset', 'other_liability']);
+const createAccountTypeSchema = accountTypeSchema.exclude(['credit_card']);
 export const currencyCodeSchema = z.string().trim().length(3).transform((value) => value.toUpperCase());
+const dateTimeSchema = z.iso.datetime();
 
-export const ACCOUNT_TYPE_TO_CLASSIFICATION = {
-  depository: 'asset',
-  loan: 'liability',
-  credit_card: 'liability',
-  property: 'asset',
-  vehicle: 'asset',
-  other_asset: 'asset',
-  other_liability: 'liability',
-} as const;
+export const accountSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  institutionName: z.string().nullable(),
+  institutionDomain: z.string().nullable(),
+  notes: z.string().nullable(),
+  classification: accountClassificationSchema,
+  type: accountTypeSchema,
+  currencyCode: currencyCodeSchema,
+  createdAt: dateTimeSchema,
+  updatedAt: dateTimeSchema,
+});
 
-export const createAccountSchema = z.object({
+export const accountDetailsSchema = accountSchema.extend({
+  balance: z.number().int(),
+});
+
+export const CreateAccountRequestBodySchema = z.object({
   name: z.string().min(1).max(255),
   institutionName: z.string().min(1).max(255).optional(),
   institutionDomain: z.string().min(1).max(255).optional(),
   notes: z.string().max(4000).optional(),
-  classification: accountClassificationSchema,
   type: createAccountTypeSchema,
   currencyCode: currencyCodeSchema,
-}).superRefine((value, ctx) => {
-  if (ACCOUNT_TYPE_TO_CLASSIFICATION[value.type] !== value.classification) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['classification'],
-      message: `Account type ${value.type} must use classification ${ACCOUNT_TYPE_TO_CLASSIFICATION[value.type]}`,
-    });
-  }
 });
 
-export const accountIdParamSchema = z.object({
-  id: z.string().uuid(),
+export const CreateAccountResponseSchema = accountSchema;
+
+export const ListAccountsResponseSchema = z.array(accountDetailsSchema);
+
+export const GetAccountDetailsRequestParamsSchema = z.object({
+  id: z.uuid(),
 });
 
-export type AccountClassification = z.infer<typeof accountClassificationSchema>;
-export type AccountType = z.infer<typeof accountTypeSchema>;
-export type CreateAccountDto = z.infer<typeof createAccountSchema>;
+export const GetAccountDetailsResponseSchema = accountDetailsSchema;
 
-export type AccountResponse = {
-  id: string;
-  userId: string;
-  name: string;
-  institutionName: string | null;
-  institutionDomain: string | null;
-  notes: string | null;
-  classification: AccountClassification;
-  type: AccountType;
-  currencyCode: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export type AccountListItemResponse = AccountResponse & {
-  balance: number;
-};
-
-export function mapAccountRecord(account: AccountRecord): AccountResponse {
-  return {
-    id: account.id,
-    userId: account.userId,
-    name: account.name,
-    institutionName: account.institutionName ?? null,
-    institutionDomain: account.institutionDomain ?? null,
-    notes: account.notes ?? null,
-    classification: account.classification,
-    type: account.type,
-    currencyCode: account.currencyId,
-    createdAt: account.createdAt,
-    updatedAt: account.updatedAt,
-  };
-}
+export type Account = z.infer<typeof accountSchema>;
+export type AccountDetails = z.infer<typeof accountDetailsSchema>;
+export type CreateAccountRequestBody = z.infer<typeof CreateAccountRequestBodySchema>;
+export type CreateAccountResponse = z.infer<typeof CreateAccountResponseSchema>;
+export type ListAccountsResponse = z.infer<typeof ListAccountsResponseSchema>;
+export type GetAccountDetailsRequestParams = z.infer<typeof GetAccountDetailsRequestParamsSchema>;
+export type GetAccountDetailsResponse = z.infer<typeof GetAccountDetailsResponseSchema>;
