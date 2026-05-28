@@ -4,6 +4,19 @@ import { AppError } from '@/shared/errors';
 import { sendError } from '@/shared/response';
 import { logger } from '@/shared/logger';
 
+type ValidationIssue = ZodError['issues'][number];
+
+function formatZodIssue(issue: ValidationIssue): string {
+  const field = String(issue.path.join('.'));
+
+  if (issue.code === 'invalid_value' && 'values' in issue && Array.isArray(issue.values)) {
+    const values = issue.values.map((value) => String(value)).join(', ');
+    return field ? `${field}: must be one of ${values}` : `Must be one of ${values}`;
+  }
+
+  return field ? `${field}: ${issue.message}` : issue.message;
+}
+
 export function errorMiddleware(
   err: unknown,
   _req: Request,
@@ -12,7 +25,7 @@ export function errorMiddleware(
 ): void {
   // Zod validation errors
   if (err instanceof ZodError) {
-    const message = err.issues.map((e) => `${String(e.path.join('.'))}: ${e.message}`).join(', ');
+    const message = err.issues.map(formatZodIssue).join(', ');
     sendError(res, 422, 'VALIDATION_ERROR', message);
     return;
   }
