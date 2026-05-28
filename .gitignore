@@ -1,1 +1,8 @@
 **/node_modules
+**/dist
+**/build
+**/coverage
+**/logs
+.DS_Store
+.env
+.pnpm-store
