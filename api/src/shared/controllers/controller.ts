@@ -1,0 +1,68 @@
+import { NextFunction, Request, Response } from 'express';
+import { z } from 'zod';
+import { sendCreated, sendSuccess } from '@/shared/response';
+
+export type ControllerStatus = 'ok' | 'created';
+
+type Schema = z.ZodTypeAny;
+export type ControllerSchema = Schema | undefined;
+type EmptyInput = Record<string, never>;
+
+export type ParsedInput<TSchema extends ControllerSchema> = TSchema extends Schema ? z.output<TSchema> : EmptyInput;
+export type ParsedResponse<TSchema extends Schema> = z.output<TSchema>;
+
+export type ControllerArgs<
+  TBody extends ControllerSchema,
+  TParams extends ControllerSchema,
+  TQuery extends ControllerSchema,
+> = {
+  req: Request;
+  body: ParsedInput<TBody>;
+  params: ParsedInput<TParams>;
+  query: ParsedInput<TQuery>;
+};
+
+function parseInput<TSchema extends ControllerSchema>(schema: TSchema, value: unknown): ParsedInput<TSchema> {
+  if (!schema) {
+    return {} as ParsedInput<TSchema>;
+  }
+
+  return schema.parse(value) as ParsedInput<TSchema>;
+}
+
+function sendResponse(res: Response, data: unknown, status: ControllerStatus = 'ok'): void {
+  if (status === 'created') {
+    sendCreated(res, data);
+    return;
+  }
+
+  sendSuccess(res, data);
+}
+
+export function createHandler<
+  TBody extends ControllerSchema = undefined,
+  TParams extends ControllerSchema = undefined,
+  TQuery extends ControllerSchema = undefined,
+  TResponse extends Schema = Schema,
+>(options: {
+  body?: TBody;
+  params?: TParams;
+  query?: TQuery;
+  response: TResponse;
+  handle: (input: ControllerArgs<TBody, TParams, TQuery>) => Promise<ParsedResponse<TResponse>>;
+  status?: ControllerStatus;
+}) {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const body = parseInput(options.body, req.body);
+      const params = parseInput(options.params, req.params);
+      const query = parseInput(options.query, req.query);
+      const data = await options.handle({ req, body, params, query } as ControllerArgs<TBody, TParams, TQuery>);
+      const response = options.response.parse(data) as ParsedResponse<TResponse>;
+
+      sendResponse(res, response, options.status);
+    } catch (err) {
+      next(err);
+    }
+  };
+}
