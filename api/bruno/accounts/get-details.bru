@@ -1,11 +1,11 @@
 meta {
-  name: list accounts
+  name: get details
   type: http
-  seq: 2
+  seq: 4
 }
 
 get {
-  url: {{baseUrl}}/api/v1/accounts
+  url: {{baseUrl}}/api/v1/accounts/{{accountId}}
 }
 
 headers {
@@ -13,7 +13,7 @@ headers {
 }
 
 tests {
-  test("list accounts returns 200", function() {
+  test("account details returns 200", function() {
     expect(res.status).to.equal(200);
   });
 }
