@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { householdInvitesTable } from '@/db/schemas/households.schema';
 import { ConflictError, NotFoundError, UnauthorizedError } from '@/shared/errors';
-import * as householdsRepository from '@/modules/households/households.repository';
+import { householdsRepository } from '@/modules/households/households.repository';
 import * as authService from '../auth.service';
 import { authRepository } from '../auth.repository';
 import { createAuthenticatedContext } from '@/test/auth';

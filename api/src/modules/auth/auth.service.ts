@@ -1,7 +1,7 @@
 import { getPermissionsForRole } from '@/config/permissions';
 import { currenciesRepository } from '@/modules/currencies/currencies.repository';
-import * as householdsRepository from '@/modules/households/households.repository';
 import * as householdsService from '@/modules/households/households.service';
+import { householdsRepository } from '@/modules/households/households.repository';
 import {
   hashPassword,
   signAccessToken,

@@ -1,11 +1,9 @@
 import { z } from 'zod';
 import { usersTable } from '@/db/schemas/users.schema';
 import { HOUSEHOLD_PERMISSIONS } from '@/config/permissions';
+import { householdSettingsSchema } from '@/modules/households/households.types';
 import { householdRoleSchema } from '@/shared/validation/households';
 import {
-  countryCodeSchema,
-  creditExpenseTimingSchema,
-  creditInstallmentBudgetModeSchema,
   currencySchema,
   dateFormatSchema,
   languageSchema,
@@ -26,15 +24,6 @@ export const userPreferencesSchema = z.object({
 });
 
 const userPreferencesPatchSchema = userPreferencesSchema.partial();
-
-export const householdSettingsSchema = z.object({
-  defaultCurrencyId: currencySchema,
-  countryCode: countryCodeSchema,
-  timezone: timezoneSchema,
-  budgetMonthStartsOn: z.number().int().min(1).max(31),
-  creditExpenseTiming: creditExpenseTimingSchema,
-  creditInstallmentBudgetMode: creditInstallmentBudgetModeSchema,
-});
 
 export const sessionUserSchema = z.object({
   id: z.uuid(),
