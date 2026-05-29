@@ -10,7 +10,9 @@ import { usersTable } from '@/db/schemas/users.schema';
 import type { HouseholdContext } from '@/config/permissions';
 import type { CreateAccountRequestBody } from '@/modules/accounts/accounts.types';
 import type { RegisterRequestBody } from '@/modules/auth/auth.types';
+import type { CreateCategoryRequestBody } from '@/modules/categories/categories.types';
 import type { CreateMerchantRequestBody } from '@/modules/merchants/merchants.types';
+import type { CreateTagRequestBody } from '@/modules/tags/tags.types';
 
 function randomSuffix() {
   return Math.random().toString(36).slice(2, 10);
@@ -107,6 +109,25 @@ export function buildMerchantInput(overrides: Partial<CreateMerchantRequestBody>
   return {
     name: `Merchant ${randomSuffix()}`,
     domain: `${randomSuffix()}.example.com`,
+    ...overrides,
+  };
+}
+
+export function buildCategoryInput(overrides: Partial<CreateCategoryRequestBody> = {}): CreateCategoryRequestBody {
+  return {
+    name: `Category ${randomSuffix()}`,
+    type: 'expense',
+    color: '#2563EB',
+    icon: 'ShoppingBag02Icon',
+    ...overrides,
+  };
+}
+
+export function buildTagInput(overrides: Partial<CreateTagRequestBody> = {}): CreateTagRequestBody {
+  return {
+    name: `Tag ${randomSuffix()}`,
+    color: '#7C3AED',
+    icon: 'Tag01Icon',
     ...overrides,
   };
 }

@@ -92,6 +92,13 @@
       "when": 1781020800000,
       "tag": "0012_proud_oracle",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1781024400000,
+      "tag": "0013_sturdy_falcon",
+      "breakpoints": true
     }
   ]
 }

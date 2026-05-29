@@ -11,6 +11,7 @@ import integrationsRouter from '@/modules/integrations/integrations.routes';
 import merchantsRouter from '@/modules/merchants/merchants.routes';
 import onboardingRouter from '@/modules/onboarding/onboarding.routes';
 import paymentMethodsRouter from '@/modules/payment-methods/payment-methods.routes';
+import tagsRouter from '@/modules/tags/tags.routes';
 import transactionsRouter from '@/modules/transactions/transactions.routes';
 
 const router = Router();
@@ -26,6 +27,7 @@ router.use('/credit-cards', creditCardsRouter);
 router.use('/merchants', merchantsRouter);
 router.use('/onboarding', onboardingRouter);
 router.use('/payment-methods', paymentMethodsRouter);
+router.use('/tags', tagsRouter);
 router.use('/transactions', transactionsRouter);
 
 export default router;
