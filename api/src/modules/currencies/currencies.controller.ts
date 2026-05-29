@@ -1,12 +1,18 @@
-import { NextFunction, Request, Response } from 'express';
-import { sendSuccess } from '@/shared/response';
+import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import * as currenciesService from './currencies.service';
+import {
+  GetCurrencyRateRequestQuerySchema,
+  GetCurrencyRateResponseSchema,
+  ListCurrenciesResponseSchema,
+} from './currencies.types';
 
-export async function list(_req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const currencies = await currenciesService.listCurrencies();
-    sendSuccess(res, currencies);
-  } catch (err) {
-    next(err);
-  }
-}
+export const list = createHouseholdHandler({
+  response: ListCurrenciesResponseSchema,
+  handle: () => currenciesService.listCurrencies(),
+});
+
+export const rate = createHouseholdHandler({
+  query: GetCurrencyRateRequestQuerySchema,
+  response: GetCurrencyRateResponseSchema,
+  handle: ({ query }) => currenciesService.getCurrencyRate(query),
+});
