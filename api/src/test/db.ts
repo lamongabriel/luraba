@@ -5,8 +5,9 @@ import { sql } from 'drizzle-orm';
 import { Pool } from 'pg';
 import { db } from '@/db';
 import { env } from '@/config/env';
+import { seedPaymentMethods } from '@/db/seed/seed-payment-methods';
 
-const TEST_REFERENCE_TABLES = ['currencies', 'payment_methods', '__drizzle_migrations'] as const;
+const TEST_REFERENCE_TABLES = ['currencies', '__drizzle_migrations'] as const;
 
 function createPool(database: string) {
   return new Pool({
@@ -86,4 +87,5 @@ export async function resetTestDatabase(): Promise<void> {
 
   const truncatedTables = tableNames.map((tableName) => `"${tableName}"`).join(', ');
   await db.execute(sql.raw(`TRUNCATE TABLE ${truncatedTables} RESTART IDENTITY CASCADE`));
+  await seedPaymentMethods();
 }

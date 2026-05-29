@@ -12,6 +12,7 @@ import type { CreateAccountRequestBody } from '@/modules/accounts/accounts.types
 import type { RegisterRequestBody } from '@/modules/auth/auth.types';
 import type { CreateCategoryRequestBody } from '@/modules/categories/categories.types';
 import type { CreateMerchantRequestBody } from '@/modules/merchants/merchants.types';
+import type { CreatePaymentMethodRequestBody } from '@/modules/payment-methods/payment-methods.types';
 import type { CreateTagRequestBody } from '@/modules/tags/tags.types';
 
 function randomSuffix() {
@@ -128,6 +129,17 @@ export function buildTagInput(overrides: Partial<CreateTagRequestBody> = {}): Cr
     name: `Tag ${randomSuffix()}`,
     color: '#7C3AED',
     icon: 'Tag01Icon',
+    ...overrides,
+  };
+}
+
+export function buildPaymentMethodInput(
+  overrides: Partial<CreatePaymentMethodRequestBody> = {},
+): CreatePaymentMethodRequestBody {
+  return {
+    name: `Payment Method ${randomSuffix()}`,
+    color: '#0EA5E9',
+    icon: 'CreditCardIcon',
     ...overrides,
   };
 }
