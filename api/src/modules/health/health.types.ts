@@ -1,24 +1,23 @@
 import { z } from 'zod';
 
-const timestampSchema = z.iso.datetime();
 const serviceStatusSchema = z.enum(['up', 'down']);
 const healthStatusSchema = z.enum(['ok', 'degraded', 'error']);
 
 const dependencyHealthSchema = z.object({
   status: serviceStatusSchema,
-  checkedAt: timestampSchema,
+  checkedAt: z.iso.datetime(),
   error: z.string().optional(),
 });
 
 const apiHealthSchema = z.object({
   status: z.literal('up'),
-  checkedAt: timestampSchema,
+  checkedAt: z.iso.datetime(),
   uptimeSeconds: z.number().nonnegative(),
 });
 
 export const HealthResponseSchema = z.object({
   status: healthStatusSchema,
-  checkedAt: timestampSchema,
+  checkedAt: z.iso.datetime(),
   uptimeSeconds: z.number().nonnegative(),
   services: z.object({
     api: apiHealthSchema,
