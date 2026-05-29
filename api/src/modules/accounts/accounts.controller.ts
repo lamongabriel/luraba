@@ -3,9 +3,13 @@ import * as accountsService from './accounts.service';
 import {
   CreateAccountRequestBodySchema,
   CreateAccountResponseSchema,
+  DeleteAccountRequestParamsSchema,
   GetAccountDetailsRequestParamsSchema,
   GetAccountDetailsResponseSchema,
   ListAccountsResponseSchema,
+  UpdateAccountRequestBodySchema,
+  UpdateAccountRequestParamsSchema,
+  UpdateAccountResponseSchema,
 } from './accounts.types';
 
 export const create = createHouseholdHandler({
@@ -24,4 +28,17 @@ export const details = createHouseholdHandler({
   params: GetAccountDetailsRequestParamsSchema,
   response: GetAccountDetailsResponseSchema,
   handle: ({ household, params }) => accountsService.getAccountDetails(household, params.id),
+});
+
+export const update = createHouseholdHandler({
+  params: UpdateAccountRequestParamsSchema,
+  body: UpdateAccountRequestBodySchema,
+  response: UpdateAccountResponseSchema,
+  handle: ({ household, params, body }) => accountsService.updateAccount(household, params.id, body),
+});
+
+export const deleteAccount = createHouseholdHandler({
+  params: DeleteAccountRequestParamsSchema,
+  status: 'no-content',
+  handle: ({ household, params }) => accountsService.deleteAccount(household, params.id),
 });

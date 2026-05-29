@@ -1,3 +1,7 @@
+import { eq } from 'drizzle-orm';
+import { db } from '@/db';
+import { entriesTable } from '@/db/schemas/entries.schema';
+import { transactionsTable } from '@/db/schemas/transactions.schema';
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
 import { accountsRepository } from '../accounts.repository';
@@ -163,6 +167,71 @@ describe('accounts service', () => {
     expect(details.id).toBe(account.id);
     expect(details.balance).toBe(-9_999);
     expect(details.classification).toBe('liability');
+  });
+
+  it('updates account details and clears institution branding', async () => {
+    const context = await createAuthenticatedContext();
+    const account = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({
+        name: 'Old Account',
+        institutionName: 'Old Bank',
+        institutionDomain: 'old.example.com',
+      }),
+    );
+
+    const updated = await accountsService.updateAccount(context.householdContext, account.id, {
+      name: 'New Account',
+      institutionName: null,
+      institutionDomain: null,
+      notes: 'Kept simple',
+    });
+
+    expect(updated.name).toBe('New Account');
+    expect(updated.institutionName).toBeNull();
+    expect(updated.institutionDomain).toBeNull();
+    expect(updated.institutionLogoUrl).toBeNull();
+    expect(updated.notes).toBe('Kept simple');
+  });
+
+  it('deletes an account and its backing ledger when it has no entries', async () => {
+    const context = await createAuthenticatedContext();
+    const account = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Delete Me' }),
+    );
+
+    await accountsService.deleteAccount(context.householdContext, account.id);
+
+    await expect(accountsService.getAccountDetails(context.householdContext, account.id)).rejects.toThrow(NotFoundError);
+    await expect(accountsRepository.findLedgerByAccountId(account.id)).resolves.toBeUndefined();
+  });
+
+  it('deletes account transactions, entries, and the backing ledger when deleting an account with history', async () => {
+    const context = await createAuthenticatedContext();
+    const account = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Has History' }),
+    );
+
+    const entry = await createBalanceEntryForAccount({
+      householdId: context.household.id,
+      accountId: account.id,
+      amount: 2_500,
+    });
+
+    await accountsService.deleteAccount(context.householdContext, account.id);
+
+    const transactions = await db
+      .select()
+      .from(transactionsTable)
+      .where(eq(transactionsTable.id, entry.transactionId));
+    const entries = await db.select().from(entriesTable).where(eq(entriesTable.transactionId, entry.transactionId));
+
+    expect(transactions).toHaveLength(0);
+    expect(entries).toHaveLength(0);
+    await expect(accountsRepository.findLedgerByAccountId(account.id)).resolves.toBeUndefined();
+    await expect(accountsService.getAccountDetails(context.householdContext, account.id)).rejects.toThrow(NotFoundError);
   });
 
   it('rejects access to account details across households', async () => {

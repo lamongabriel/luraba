@@ -52,6 +52,26 @@ export const GetAccountDetailsRequestParamsSchema = z.object({
 
 export const GetAccountDetailsResponseSchema = accountDetailsSchema;
 
+export const UpdateAccountRequestParamsSchema = z.object({
+  id: z.uuid(),
+});
+
+export const UpdateAccountRequestBodySchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  institutionName: z.string().min(1).max(255).nullable().optional(),
+  institutionDomain: z.string().min(1).max(255).nullable().optional(),
+  notes: z.string().max(4000).nullable().optional(),
+}).refine(
+  (value) => Object.keys(value).length > 0,
+  'At least one field must be provided',
+);
+
+export const UpdateAccountResponseSchema = accountSchema;
+
+export const DeleteAccountRequestParamsSchema = z.object({
+  id: z.uuid(),
+});
+
 export type Account = z.infer<typeof accountSchema>;
 export type AccountDetails = z.infer<typeof accountDetailsSchema>;
 export type CreateAccountRequestBody = z.infer<typeof CreateAccountRequestBodySchema>;
@@ -59,3 +79,7 @@ export type CreateAccountResponse = z.infer<typeof CreateAccountResponseSchema>;
 export type ListAccountsResponse = z.infer<typeof ListAccountsResponseSchema>;
 export type GetAccountDetailsRequestParams = z.infer<typeof GetAccountDetailsRequestParamsSchema>;
 export type GetAccountDetailsResponse = z.infer<typeof GetAccountDetailsResponseSchema>;
+export type UpdateAccountRequestParams = z.infer<typeof UpdateAccountRequestParamsSchema>;
+export type UpdateAccountRequestBody = z.infer<typeof UpdateAccountRequestBodySchema>;
+export type UpdateAccountResponse = z.infer<typeof UpdateAccountResponseSchema>;
+export type DeleteAccountRequestParams = z.infer<typeof DeleteAccountRequestParamsSchema>;

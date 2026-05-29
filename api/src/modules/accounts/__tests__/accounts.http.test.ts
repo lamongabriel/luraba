@@ -168,4 +168,60 @@ describe('accounts routes', () => {
     expect(response.body.success).toBe(false);
     expect(response.body.error.code).toBe('NOT_FOUND');
   });
+
+  it('PATCH /api/v1/accounts/:id updates account details', async () => {
+    const context = await createAuthenticatedContext();
+    const created = await request(app)
+      .post('/api/v1/accounts')
+      .set(createAuthHeaders(context.token, context.household.id))
+      .send(buildAccountInput({ name: 'Patch Account', institutionDomain: 'patch.example.com' }));
+
+    const response = await request(app)
+      .patch(`/api/v1/accounts/${created.body.data.id}`)
+      .set(createAuthHeaders(context.token, context.household.id))
+      .send({
+        name: 'Patched Account',
+        institutionDomain: null,
+        notes: 'Updated from HTTP',
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toEqual(
+      expect.objectContaining({
+        id: created.body.data.id,
+        name: 'Patched Account',
+        institutionDomain: null,
+        institutionLogoUrl: null,
+        notes: 'Updated from HTTP',
+      }),
+    );
+  });
+
+  it('DELETE /api/v1/accounts/:id deletes an account and its history', async () => {
+    const context = await createAuthenticatedContext();
+    const created = await request(app)
+      .post('/api/v1/accounts')
+      .set(createAuthHeaders(context.token, context.household.id))
+      .send(buildAccountInput({ name: 'Delete HTTP Account' }));
+
+    await createBalanceEntryForAccount({
+      householdId: context.household.id,
+      accountId: created.body.data.id,
+      amount: 1_500,
+    });
+
+    const response = await request(app)
+      .delete(`/api/v1/accounts/${created.body.data.id}`)
+      .set(createAuthHeaders(context.token, context.household.id));
+
+    expect(response.status).toBe(204);
+    expect(response.body).toEqual({});
+
+    const details = await request(app)
+      .get(`/api/v1/accounts/${created.body.data.id}`)
+      .set(createAuthHeaders(context.token, context.household.id));
+
+    expect(details.status).toBe(404);
+  });
 });

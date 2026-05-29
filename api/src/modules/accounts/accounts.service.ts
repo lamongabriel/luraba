@@ -3,7 +3,10 @@ import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch
 import { buildBrandfetchLogoUrl, normalizeBrandDomain } from '@/modules/integrations/brandfetch/brandfetch.utils';
 import { db } from '@/db';
 import { accountsTable } from '@/db/schemas/accounts.schema';
+import { entriesTable } from '@/db/schemas/entries.schema';
 import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
+import { transactionsTable } from '@/db/schemas/transactions.schema';
+import { and, eq, inArray } from 'drizzle-orm';
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import type { HouseholdContext } from '@/config/permissions';
 import { accountsRepository } from './accounts.repository';
@@ -13,6 +16,7 @@ import {
   AccountDetails,
   AccountRecord,
   CreateAccountRequestBody,
+  UpdateAccountRequestBody,
 } from './accounts.types';
 
 function toDisplayedAmount(rawAmount: number, classification: AccountClassification): number {
@@ -114,4 +118,89 @@ export async function getAccountDetails(context: HouseholdContext, accountId: st
 
   const balance = await accountsRepository.getAccountBalanceByLedgerId(ledger.id);
   return mapAccountDetails(account, balance);
+}
+
+export async function updateAccount(context: HouseholdContext, accountId: string, dto: UpdateAccountRequestBody): Promise<Account> {
+  const account = await accountsRepository.get(accountId, context);
+  if (!account) {
+    throw new NotFoundError('Account');
+  }
+
+  if (dto.name && dto.name !== account.name) {
+    const existing = await accountsRepository.findByHouseholdAndName(context, dto.name);
+    if (existing && existing.id !== accountId) {
+      throw new ConflictError('An account with this name already exists');
+    }
+  }
+
+  const institutionDomain =
+    dto.institutionDomain === null
+      ? null
+      : dto.institutionDomain
+        ? normalizeBrandDomain(dto.institutionDomain)
+        : undefined;
+
+  let institutionLogoUrl: string | null | undefined;
+  if (institutionDomain === null) {
+    institutionLogoUrl = null;
+  } else if (institutionDomain) {
+    const brandfetchClientId = await brandfetchService.getBrandfetchClientId(context);
+    institutionLogoUrl = brandfetchClientId
+      ? buildBrandfetchLogoUrl(institutionDomain, brandfetchClientId)
+      : null;
+  }
+
+  const updated = await accountsRepository.update(accountId, context, {
+    name: dto.name,
+    institutionName: dto.institutionName,
+    institutionDomain,
+    institutionLogoUrl,
+    notes: dto.notes,
+  });
+
+  if (!updated) {
+    throw new NotFoundError('Account');
+  }
+
+  return mapAccountRecord(updated);
+}
+
+export async function deleteAccount(context: HouseholdContext, accountId: string): Promise<void> {
+  const account = await accountsRepository.get(accountId, context);
+  if (!account) {
+    throw new NotFoundError('Account');
+  }
+
+  const ledger = await accountsRepository.findLedgerByAccountId(account.id);
+  if (!ledger) {
+    throw new NotFoundError('Account ledger');
+  }
+
+  await db.transaction(async (tx) => {
+    const transactionRows = await tx
+      .select({ id: entriesTable.transactionId })
+      .from(entriesTable)
+      .innerJoin(transactionsTable, eq(transactionsTable.id, entriesTable.transactionId))
+      .where(and(eq(entriesTable.ledgerAccountId, ledger.id), eq(transactionsTable.householdId, context.householdId)));
+
+    const transactionIds = Array.from(new Set(transactionRows.map((row) => row.id)));
+    if (transactionIds.length > 0) {
+      await tx
+        .delete(transactionsTable)
+        .where(and(eq(transactionsTable.householdId, context.householdId), inArray(transactionsTable.id, transactionIds)));
+    }
+
+    await tx
+      .delete(ledgerAccountsTable)
+      .where(and(eq(ledgerAccountsTable.ownerType, 'account'), eq(ledgerAccountsTable.ownerId, account.id)));
+
+    const deletedRows = await tx
+      .delete(accountsTable)
+      .where(and(eq(accountsTable.id, account.id), eq(accountsTable.householdId, context.householdId)))
+      .returning();
+
+    if (!deletedRows[0]) {
+      throw new NotFoundError('Account');
+    }
+  });
 }
