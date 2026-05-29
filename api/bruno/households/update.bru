@@ -1,0 +1,36 @@
+meta {
+  name: update household
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/households/{{householdId}}
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "{{householdName}}",
+    "description": "{{householdDescription}}",
+    "timezone": "America/Sao_Paulo",
+    "budgetMonthStartsOn": 1,
+    "creditExpenseTiming": "spend_month",
+    "creditInstallmentBudgetMode": "per_installment"
+  }
+}
+
+tests {
+  test("household update returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("household update returns selected household", function() {
+    expect(res.body?.data?.id).to.equal(bru.getEnvVar("householdId"));
+  });
+}

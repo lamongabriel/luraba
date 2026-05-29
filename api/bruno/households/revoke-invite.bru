@@ -1,0 +1,19 @@
+meta {
+  name: revoke invite
+  type: http
+  seq: 11
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/households/{{householdId}}/invites/{{householdInviteId}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("invite revoke returns 204", function() {
+    expect(res.status).to.equal(204);
+  });
+}

@@ -1,0 +1,31 @@
+meta {
+  name: list my invites
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/households/invites
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("my invites returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("my invites returns an array", function() {
+    expect(res.body?.data).to.be.an("array");
+  });
+}
+
+script:post-response {
+  const first = res.body?.data?.[0];
+
+  if (first?.id) {
+    bru.setEnvVar("householdInviteId", first.id);
+  }
+}

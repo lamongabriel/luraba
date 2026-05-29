@@ -1,0 +1,32 @@
+meta {
+  name: list household invites
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/households/{{householdId}}/invites
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("household invites returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("household invites returns an array", function() {
+    expect(res.body?.data).to.be.an("array");
+  });
+}
+
+script:post-response {
+  const pending = res.body?.data?.find((invite) => invite.status === "pending");
+  const first = pending ?? res.body?.data?.[0];
+
+  if (first?.id) {
+    bru.setEnvVar("householdInviteId", first.id);
+  }
+}

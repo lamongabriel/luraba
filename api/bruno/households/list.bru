@@ -1,0 +1,31 @@
+meta {
+  name: list households
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/households
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("list households returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("list households returns an array", function() {
+    expect(res.body?.data).to.be.an("array");
+  });
+}
+
+script:post-response {
+  const first = res.body?.data?.[0];
+
+  if (first?.id) {
+    bru.setEnvVar("householdId", first.id);
+  }
+}

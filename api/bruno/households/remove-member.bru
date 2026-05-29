@@ -1,0 +1,19 @@
+meta {
+  name: remove member
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/households/{{householdId}}/members/{{householdMemberUserId}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("member remove returns a handled status", function() {
+    expect([204, 403, 404, 422]).to.include(res.status);
+  });
+}

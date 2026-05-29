@@ -1,0 +1,19 @@
+meta {
+  name: accept invite
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/households/invites/{{householdInviteId}}/accept
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("invite accept returns a handled status", function() {
+    expect([204, 404]).to.include(res.status);
+  });
+}

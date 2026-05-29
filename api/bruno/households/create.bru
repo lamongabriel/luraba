@@ -1,0 +1,44 @@
+meta {
+  name: create household
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/households
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "{{householdName}}",
+    "description": "{{householdDescription}}",
+    "defaultCurrencyId": "{{currencyCode}}",
+    "countryCode": "BR",
+    "timezone": "America/Sao_Paulo",
+    "budgetMonthStartsOn": 1,
+    "creditExpenseTiming": "spend_month",
+    "creditInstallmentBudgetMode": "per_installment"
+  }
+}
+
+tests {
+  test("household returns 201", function() {
+    expect(res.status).to.equal(201);
+  });
+
+  test("household returns owner role", function() {
+    expect(res.body?.data?.role).to.equal("owner");
+  });
+}
+
+script:post-response {
+  if (res.body?.data?.id) {
+    bru.setEnvVar("householdId", res.body.data.id);
+  }
+}

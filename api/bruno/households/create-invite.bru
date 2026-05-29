@@ -1,0 +1,38 @@
+meta {
+  name: create invite
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/households/{{householdId}}/invites
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "{{householdInviteEmail}}",
+    "role": "{{householdInviteRole}}"
+  }
+}
+
+tests {
+  test("invite returns 201", function() {
+    expect(res.status).to.equal(201);
+  });
+
+  test("invite returns pending status", function() {
+    expect(res.body?.data?.status).to.equal("pending");
+  });
+}
+
+script:post-response {
+  if (res.body?.data?.id) {
+    bru.setEnvVar("householdInviteId", res.body.data.id);
+  }
+}

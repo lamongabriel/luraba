@@ -21,3 +21,9 @@ tests {
     expect(res.body.data.household.name).to.be.a("string");
   });
 }
+
+script:post-response {
+  if (res.body?.data?.household?.id) {
+    bru.setEnvVar("householdId", res.body.data.household.id);
+  }
+}

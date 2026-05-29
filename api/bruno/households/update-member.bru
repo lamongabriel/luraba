@@ -1,0 +1,31 @@
+meta {
+  name: update member
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/households/{{householdId}}/members/{{householdMemberUserId}}
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "role": "{{householdMemberRole}}"
+  }
+}
+
+tests {
+  test("member update returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("member update returns selected member", function() {
+    expect(res.body?.data?.userId).to.equal(bru.getEnvVar("householdMemberUserId"));
+  });
+}

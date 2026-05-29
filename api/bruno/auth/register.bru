@@ -52,6 +52,10 @@ script:post-response {
   if (res.body?.data?.accessToken) {
     bru.setEnvVar("accessToken", res.body.data.accessToken);
   }
+
+  if (res.body?.data?.household?.id) {
+    bru.setEnvVar("householdId", res.body.data.household.id);
+  }
 }
 
 tests {
