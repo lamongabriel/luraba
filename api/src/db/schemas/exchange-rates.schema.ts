@@ -10,7 +10,7 @@ export const exchangeRatesTable = pgTable(
     toCurrencyId: varchar('to_currency_id', { length: 3 }).notNull().references(() => currenciesTable.code, { onDelete: 'restrict' }),
     rateNumerator: bigint('rate_numerator', { mode: 'number' }).notNull(),
     rateDenominator: bigint('rate_denominator', { mode: 'number' }).notNull(),
-    rateDate: date('rate_date', { mode: 'date' }).notNull(),
+    rateDate: date('rate_date').notNull(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (table) => [
