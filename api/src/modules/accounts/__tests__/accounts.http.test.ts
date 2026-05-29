@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { vi } from 'vitest';
 import app from '@/app';
 import { createAuthHeaders, createAuthenticatedContext } from '@/test/auth';
 import { buildAccountInput, createBalanceEntryForAccount, createHousehold, createHouseholdMembership } from '@/test/factories';
@@ -22,6 +23,33 @@ describe('accounts routes', () => {
     expect(response.body.success).toBe(true);
     expect(response.body.data.name).toBe('HTTP Checking');
     expect(response.body.data.classification).toBe('asset');
+  });
+
+  it('POST /api/v1/accounts derives the institution logo from Brandfetch when configured', async () => {
+    const context = await createAuthenticatedContext();
+    vi.spyOn(global, 'fetch').mockResolvedValue(new Response('ok', { status: 200 }));
+
+    await request(app)
+      .put('/api/v1/integrations/brandfetch')
+      .set(createAuthHeaders(context.token, context.household.id))
+      .send({ clientId: 'brandfetch-client-id' });
+
+    const response = await request(app)
+      .post('/api/v1/accounts')
+      .set(createAuthHeaders(context.token, context.household.id))
+      .send(
+        buildAccountInput({
+          name: 'HTTP Nubank',
+          institutionName: 'Nubank',
+          institutionDomain: 'https://www.nubank.com.br/conta',
+        }),
+      );
+
+    expect(response.status).toBe(201);
+    expect(response.body.data.institutionDomain).toBe('nubank.com.br');
+    expect(response.body.data.institutionLogoUrl).toBe(
+      'https://cdn.brandfetch.io/nubank.com.br/icon.png?c=brandfetch-client-id',
+    );
   });
 
   it('POST /api/v1/accounts requires authentication', async () => {

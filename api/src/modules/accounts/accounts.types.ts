@@ -14,19 +14,19 @@ export type AccountRecord = typeof accountsTable.$inferSelect;
 
 const createAccountTypeSchema = accountTypeSchema.exclude(['credit_card']);
 export const currencyCodeSchema = z.string().trim().length(3).transform((value) => value.toUpperCase());
-const dateTimeSchema = z.iso.datetime();
 
 export const accountSchema = z.object({
   id: z.uuid(),
   name: z.string(),
   institutionName: z.string().nullable(),
   institutionDomain: z.string().nullable(),
+  institutionLogoUrl: z.string().nullable(),
   notes: z.string().nullable(),
   classification: accountClassificationSchema,
   type: accountTypeSchema,
   currencyCode: currencyCodeSchema,
-  createdAt: dateTimeSchema,
-  updatedAt: dateTimeSchema,
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 });
 
 export const accountDetailsSchema = accountSchema.extend({

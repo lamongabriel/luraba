@@ -11,6 +11,7 @@ export const accountsTable = pgTable(
     name: varchar({ length: 255 }).notNull(),
     institutionName: varchar('institution_name', { length: 255 }),
     institutionDomain: varchar('institution_domain', { length: 255 }),
+    institutionLogoUrl: varchar('institution_logo_url', { length: 512 }),
     notes: text(),
     classification: accountClassificationEnum().notNull(),
     type: accountTypeEnum().notNull(),

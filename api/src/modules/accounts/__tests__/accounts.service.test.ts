@@ -1,10 +1,16 @@
 import { ConflictError, NotFoundError } from '@/shared/errors';
+import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
 import { accountsRepository } from '../accounts.repository';
 import * as accountsService from '../accounts.service';
 import { createAuthenticatedContext } from '@/test/auth';
 import { buildAccountInput, createBalanceEntryForAccount } from '@/test/factories';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 describe('accounts service', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('creates an account, derives classification, and creates a backing ledger account', async () => {
     const context = await createAuthenticatedContext();
 
@@ -21,11 +27,35 @@ describe('accounts service', () => {
     expect(account.classification).toBe('asset');
     expect(account.type).toBe('depository');
     expect(account.currencyCode).toBe('BRL');
+    expect(account.institutionLogoUrl).toBeNull();
 
     const ledger = await accountsRepository.findLedgerByAccountId(account.id);
     expect(ledger).toBeDefined();
     expect(ledger?.classification).toBe('asset');
     expect(ledger?.currencyId).toBe('BRL');
+  });
+
+  it('creates an account with a Brandfetch institution logo when the integration is configured', async () => {
+    const context = await createAuthenticatedContext();
+    vi.spyOn(global, 'fetch').mockResolvedValue(new Response('ok', { status: 200 }));
+
+    await brandfetchService.updateBrandfetchIntegration(context.householdContext, {
+      clientId: 'brandfetch-client-id',
+    });
+
+    const account = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({
+        name: 'Nu Checking',
+        institutionName: 'Nubank',
+        institutionDomain: 'https://www.nubank.com.br/conta',
+      }),
+    );
+
+    expect(account.institutionDomain).toBe('nubank.com.br');
+    expect(account.institutionLogoUrl).toBe(
+      'https://cdn.brandfetch.io/nubank.com.br/icon.png?c=brandfetch-client-id',
+    );
   });
 
   it('rejects unknown currencies', async () => {

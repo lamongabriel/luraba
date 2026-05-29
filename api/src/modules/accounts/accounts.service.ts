@@ -1,4 +1,6 @@
 import { ACCOUNT_TYPE_TO_CLASSIFICATION } from '@/config/accounts';
+import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
+import { buildBrandfetchLogoUrl, normalizeBrandDomain } from '@/modules/integrations/brandfetch/brandfetch.utils';
 import { db } from '@/db';
 import { accountsTable } from '@/db/schemas/accounts.schema';
 import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
@@ -23,6 +25,7 @@ function mapAccountRecord(account: AccountRecord): Account {
     name: account.name,
     institutionName: account.institutionName ?? null,
     institutionDomain: account.institutionDomain ?? null,
+    institutionLogoUrl: account.institutionLogoUrl ?? null,
     notes: account.notes ?? null,
     classification: account.classification,
     type: account.type,
@@ -46,6 +49,15 @@ export async function createAccount(context: HouseholdContext, dto: CreateAccoun
   const existing = await accountsRepository.findByHouseholdAndName(context, dto.name);
   if (existing) throw new ConflictError('An account with this name already exists');
   const classification = ACCOUNT_TYPE_TO_CLASSIFICATION[dto.type];
+  const institutionDomain = dto.institutionDomain ? normalizeBrandDomain(dto.institutionDomain) : undefined;
+
+  let institutionLogoUrl: string | undefined;
+  if (institutionDomain) {
+    const brandfetchClientId = await brandfetchService.getBrandfetchClientId(context);
+    if (brandfetchClientId) {
+      institutionLogoUrl = buildBrandfetchLogoUrl(institutionDomain, brandfetchClientId);
+    }
+  }
 
   return db.transaction(async (tx) => {
     const now = new Date();
@@ -55,7 +67,8 @@ export async function createAccount(context: HouseholdContext, dto: CreateAccoun
         householdId: context.householdId,
         name: dto.name,
         institutionName: dto.institutionName,
-        institutionDomain: dto.institutionDomain,
+        institutionDomain,
+        institutionLogoUrl,
         notes: dto.notes,
         classification,
         type: dto.type,
