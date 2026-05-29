@@ -16,16 +16,39 @@ export function createAuthenticatedHandler<
   TParams extends ControllerSchema = undefined,
   TQuery extends ControllerSchema = undefined,
   TResponse extends Schema = Schema,
->(options: {
-  body?: TBody;
-  params?: TParams;
-  query?: TQuery;
-  response: TResponse;
-  handle: (
-    input: ControllerArgs<TBody, TParams, TQuery> & { user: AuthenticatedUser },
-  ) => Promise<ParsedResponse<TResponse>>;
-  status?: ControllerStatus;
-}) {
+>(
+  options:
+    | {
+        body?: TBody;
+        params?: TParams;
+        query?: TQuery;
+        response: TResponse;
+        handle: (
+          input: ControllerArgs<TBody, TParams, TQuery> & { user: AuthenticatedUser },
+        ) => Promise<ParsedResponse<TResponse>>;
+        status?: Exclude<ControllerStatus, 'no-content'>;
+      }
+    | {
+        body?: TBody;
+        params?: TParams;
+        query?: TQuery;
+        handle: (input: ControllerArgs<TBody, TParams, TQuery> & { user: AuthenticatedUser }) => Promise<void>;
+        status: 'no-content';
+      },
+) {
+  if (options.status === 'no-content') {
+    return createHandler({
+      body: options.body,
+      params: options.params,
+      query: options.query,
+      status: 'no-content',
+      handle: ({ req, body, params, query }) => {
+        const user = getAuthenticatedUser(req);
+        return options.handle({ req, user, body, params, query });
+      },
+    });
+  }
+
   return createHandler({
     body: options.body,
     params: options.params,
