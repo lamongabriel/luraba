@@ -1,0 +1,34 @@
+meta {
+  name: update category
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/categories/{{categoryId}}
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "color": "#F97316",
+    "icon": "Wallet02Icon"
+  }
+}
+
+tests {
+  test("category update returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("category update returns updated display fields", function() {
+    expect(res.body?.data?.id).to.equal(bru.getEnvVar("categoryId"));
+    expect(res.body?.data?.color).to.equal("#F97316");
+    expect(res.body?.data?.icon).to.equal("Wallet02Icon");
+  });
+}

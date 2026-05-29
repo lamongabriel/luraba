@@ -17,6 +17,8 @@ headers {
 body:json {
   {
     "name": "Primary Depository",
+    "institutionName": "{{accountInstitutionName}}",
+    "institutionDomain": "{{accountInstitutionDomain}}",
     "type": "depository",
     "currencyCode": "{{currencyCode}}"
   }
@@ -25,6 +27,11 @@ body:json {
 tests {
   test("account returns 201", function() {
     expect(res.status).to.equal(201);
+  });
+
+  test("account returns institution fields", function() {
+    expect(res.body?.data?.institutionName).to.equal(bru.getEnvVar("accountInstitutionName"));
+    expect(res.body?.data?.institutionDomain).to.be.a("string");
   });
 }
 

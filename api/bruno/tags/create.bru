@@ -1,0 +1,41 @@
+meta {
+  name: create tag
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tags
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "{{tagName}}",
+    "color": "{{tagColor}}",
+    "icon": "{{tagIcon}}"
+  }
+}
+
+tests {
+  test("tag returns 201", function() {
+    expect(res.status).to.equal(201);
+  });
+
+  test("tag returns display fields", function() {
+    expect(res.body?.data?.name).to.equal(bru.getEnvVar("tagName"));
+    expect(res.body?.data?.color).to.equal(bru.getEnvVar("tagColor"));
+    expect(res.body?.data?.icon).to.equal(bru.getEnvVar("tagIcon"));
+  });
+}
+
+script:post-response {
+  if (res.body?.data?.id) {
+    bru.setEnvVar("tagId", res.body.data.id);
+  }
+}

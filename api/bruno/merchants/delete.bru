@@ -1,0 +1,19 @@
+meta {
+  name: delete merchant
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/merchants/{{merchantId}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("merchant delete returns 204", function() {
+    expect(res.status).to.equal(204);
+  });
+}

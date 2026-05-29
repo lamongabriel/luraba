@@ -1,0 +1,33 @@
+meta {
+  name: update merchant
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/merchants/{{merchantId}}
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "{{merchantName}}",
+    "domain": "{{merchantDomain}}"
+  }
+}
+
+tests {
+  test("merchant update returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("merchant update returns normalized domain", function() {
+    expect(res.body?.data?.id).to.equal(bru.getEnvVar("merchantId"));
+    expect(res.body?.data?.domain).to.be.a("string");
+  });
+}

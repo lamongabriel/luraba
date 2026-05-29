@@ -16,4 +16,8 @@ tests {
   test("account details returns 200", function() {
     expect(res.status).to.equal(200);
   });
+
+  test("account details includes institution logo field", function() {
+    expect(res.body?.data).to.have.property("institutionLogoUrl");
+  });
 }

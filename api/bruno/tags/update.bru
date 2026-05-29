@@ -1,0 +1,34 @@
+meta {
+  name: update tag
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/tags/{{tagId}}
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "{{tagName}}",
+    "color": "{{tagColor}}",
+    "icon": "{{tagIcon}}"
+  }
+}
+
+tests {
+  test("tag update returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("tag update returns updated fields", function() {
+    expect(res.body?.data?.id).to.equal(bru.getEnvVar("tagId"));
+    expect(res.body?.data?.name).to.equal(bru.getEnvVar("tagName"));
+  });
+}

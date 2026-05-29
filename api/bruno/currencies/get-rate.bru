@@ -1,0 +1,36 @@
+meta {
+  name: get currency rate
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/currencies/rate?fromCurrencyCode={{fromCurrencyCode}}&toCurrencyCode={{toCurrencyCode}}&amount={{conversionAmount}}&provider={{fxProvider}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("currency rate returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("currency rate includes quote details", function() {
+    expect(res.body?.data?.fromCurrency?.code).to.equal(bru.getEnvVar("fromCurrencyCode"));
+    expect(res.body?.data?.toCurrency?.code).to.equal(bru.getEnvVar("toCurrencyCode"));
+    expect(res.body?.data?.rate).to.be.a("number");
+  });
+}
+
+script:post-response {
+  const quote = res.body?.data;
+  if (quote?.rate) {
+    bru.setEnvVar("fxRate", String(quote.rate));
+  }
+
+  if (quote?.convertedAmount !== undefined) {
+    bru.setEnvVar("convertedAmount", String(quote.convertedAmount));
+  }
+}

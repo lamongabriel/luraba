@@ -1,0 +1,43 @@
+meta {
+  name: update payment method
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/payment-methods/{{paymentMethodId}}
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "{{paymentMethodName}}",
+    "code": "{{customPaymentMethodCode}}",
+    "currencyCode": null,
+    "color": "{{paymentMethodColor}}",
+    "icon": "{{paymentMethodIcon}}"
+  }
+}
+
+tests {
+  test("payment method update returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("payment method update returns household method", function() {
+    expect(res.body?.data?.id).to.equal(bru.getEnvVar("paymentMethodId"));
+    expect(res.body?.data?.scope).to.equal("household");
+    expect(res.body?.data?.currencyCode).to.equal(null);
+  });
+}
+
+script:post-response {
+  if (res.body?.data?.code) {
+    bru.setEnvVar("paymentMethodCode", res.body.data.code);
+  }
+}

@@ -1,0 +1,47 @@
+meta {
+  name: create payment method
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/payment-methods
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "{{paymentMethodName}}",
+    "code": "{{customPaymentMethodCode}}",
+    "currencyCode": "{{currencyCode}}",
+    "color": "{{paymentMethodColor}}",
+    "icon": "{{paymentMethodIcon}}"
+  }
+}
+
+tests {
+  test("payment method returns 201", function() {
+    expect(res.status).to.equal(201);
+  });
+
+  test("payment method is household-scoped", function() {
+    expect(res.body?.data?.scope).to.equal("household");
+    expect(res.body?.data?.translationKey).to.equal(null);
+    expect(res.body?.data?.code).to.equal(bru.getEnvVar("customPaymentMethodCode"));
+  });
+}
+
+script:post-response {
+  if (res.body?.data?.id) {
+    bru.setEnvVar("paymentMethodId", res.body.data.id);
+  }
+
+  if (res.body?.data?.code) {
+    bru.setEnvVar("paymentMethodCode", res.body.data.code);
+  }
+}

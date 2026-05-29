@@ -1,0 +1,19 @@
+meta {
+  name: delete account
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/accounts/{{accountId}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("account delete returns 204", function() {
+    expect(res.status).to.equal(204);
+  });
+}

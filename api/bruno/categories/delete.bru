@@ -1,0 +1,19 @@
+meta {
+  name: delete category
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/categories/{{categoryId}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("category delete returns 204", function() {
+    expect(res.status).to.equal(204);
+  });
+}

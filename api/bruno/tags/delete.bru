@@ -1,0 +1,19 @@
+meta {
+  name: delete tag
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/tags/{{tagId}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("tag delete returns 204", function() {
+    expect(res.status).to.equal(204);
+  });
+}

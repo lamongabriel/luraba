@@ -1,0 +1,19 @@
+meta {
+  name: delete payment method
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/payment-methods/{{paymentMethodId}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("payment method delete returns 204", function() {
+    expect(res.status).to.equal(204);
+  });
+}

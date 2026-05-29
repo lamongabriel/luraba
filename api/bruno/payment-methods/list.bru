@@ -16,6 +16,15 @@ tests {
   test("payment methods returns 200", function() {
     expect(res.status).to.equal(200);
   });
+
+  test("payment methods include system metadata", function() {
+    const methods = res.body?.data;
+    expect(methods).to.be.an("array");
+
+    const systemMethod = methods.find((method) => method.scope === "system");
+    expect(systemMethod).to.exist;
+    expect(systemMethod.translationKey).to.be.a("string");
+  });
 }
 
 script:post-response {
@@ -27,10 +36,14 @@ script:post-response {
   const preferred = methods.find((method) => method.code === "pix");
   if (preferred?.code) {
     bru.setEnvVar("paymentMethodCode", preferred.code);
-    return;
   }
 
-  if (methods[0]?.code) {
+  const householdMethod = methods.find((method) => method.scope === "household");
+  if (householdMethod?.id) {
+    bru.setEnvVar("paymentMethodId", householdMethod.id);
+  }
+
+  if (!preferred?.code && methods[0]?.code) {
     bru.setEnvVar("paymentMethodCode", methods[0].code);
   }
 }

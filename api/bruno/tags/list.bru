@@ -1,11 +1,11 @@
 meta {
-  name: list merchants
+  name: list tags
   type: http
   seq: 2
 }
 
 get {
-  url: {{baseUrl}}/api/v1/merchants
+  url: {{baseUrl}}/api/v1/tags
 }
 
 headers {
@@ -13,11 +13,11 @@ headers {
 }
 
 tests {
-  test("list merchants returns 200", function() {
+  test("list tags returns 200", function() {
     expect(res.status).to.equal(200);
   });
 
-  test("list merchants returns an array", function() {
+  test("list tags returns an array", function() {
     expect(res.body?.data).to.be.an("array");
   });
 }
@@ -26,6 +26,6 @@ script:post-response {
   const first = res.body?.data?.[0];
 
   if (first?.id) {
-    bru.setEnvVar("merchantId", first.id);
+    bru.setEnvVar("tagId", first.id);
   }
 }
