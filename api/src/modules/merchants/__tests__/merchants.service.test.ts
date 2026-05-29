@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { brandfetchIntegrationsTable } from '@/db/schemas/brandfetch-integrations.schema';
-import { ConflictError } from '@/shared/errors';
+import { ConflictError, NotFoundError } from '@/shared/errors';
 import { db } from '@/db';
 import { createAuthenticatedContext } from '@/test/auth';
 import { buildMerchantInput } from '@/test/factories';
@@ -92,5 +92,39 @@ describe('merchants service', () => {
 
     expect(merchants).toHaveLength(1);
     expect(merchants[0]?.name).toBe('Household Merchant');
+  });
+
+  it('updates a merchant and can clear its domain and logo', async () => {
+    const context = await createAuthenticatedContext();
+    const merchant = await merchantsService.createMerchant(
+      context.householdContext,
+      buildMerchantInput({ name: 'Domain Merchant', domain: 'domain.example.com' }),
+    );
+
+    const updated = await merchantsService.updateMerchant(context.householdContext, merchant.id, {
+      name: 'Updated Merchant',
+      domain: null,
+    });
+
+    expect(updated).toEqual(
+      expect.objectContaining({
+        id: merchant.id,
+        name: 'Updated Merchant',
+        domain: null,
+        logoUrl: null,
+      }),
+    );
+  });
+
+  it('deletes a merchant from the active household', async () => {
+    const context = await createAuthenticatedContext();
+    const merchant = await merchantsService.createMerchant(
+      context.householdContext,
+      buildMerchantInput({ name: 'Temporary Merchant' }),
+    );
+
+    await merchantsService.deleteMerchant(context.householdContext, merchant.id);
+
+    await expect(merchantsService.deleteMerchant(context.householdContext, merchant.id)).rejects.toThrow(NotFoundError);
   });
 });

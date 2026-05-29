@@ -119,4 +119,53 @@ describe('merchants routes', () => {
     expect(secondaryResponse.body.data).toHaveLength(1);
     expect(secondaryResponse.body.data[0].name).toBe('Secondary Merchant');
   });
+
+  it('PATCH /api/v1/merchants/:id updates a merchant', async () => {
+    const context = await createAuthenticatedContext();
+    const created = await request(app)
+      .post('/api/v1/merchants')
+      .set(createAuthHeaders(context.token, context.household.id))
+      .send(buildMerchantInput({ name: 'Patch Merchant', domain: 'patch.example.com' }));
+
+    const response = await request(app)
+      .patch(`/api/v1/merchants/${created.body.data.id}`)
+      .set(createAuthHeaders(context.token, context.household.id))
+      .send({
+        name: 'Patched Merchant',
+        domain: null,
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toEqual(
+      expect.objectContaining({
+        id: created.body.data.id,
+        name: 'Patched Merchant',
+        domain: null,
+        logoUrl: null,
+      }),
+    );
+  });
+
+  it('DELETE /api/v1/merchants/:id deletes a merchant', async () => {
+    const context = await createAuthenticatedContext();
+    const created = await request(app)
+      .post('/api/v1/merchants')
+      .set(createAuthHeaders(context.token, context.household.id))
+      .send(buildMerchantInput({ name: 'Delete Merchant' }));
+
+    const response = await request(app)
+      .delete(`/api/v1/merchants/${created.body.data.id}`)
+      .set(createAuthHeaders(context.token, context.household.id));
+
+    expect(response.status).toBe(204);
+
+    const list = await request(app)
+      .get('/api/v1/merchants')
+      .set(createAuthHeaders(context.token, context.household.id));
+
+    expect(list.body.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: created.body.data.id })]),
+    );
+  });
 });
