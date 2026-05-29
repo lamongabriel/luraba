@@ -10,6 +10,8 @@ export const categoriesTable = pgTable(
     name: varchar({ length: 255 }).notNull(),
     parentId: uuid('parent_id'),
     type: categoryTypeEnum().notNull(),
+    color: varchar({ length: 7 }),
+    icon: varchar({ length: 128 }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

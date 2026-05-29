@@ -1,9 +1,10 @@
 import { Router } from 'express';
+import { requireAccess } from '@/middleware/access.middleware';
 import * as categoriesController from './categories.controller';
 
 const router = Router();
 
-router.get('/', categoriesController.list);
-router.post('/', categoriesController.create);
+router.get('/', requireAccess({ permission: 'categories.read' }), categoriesController.list);
+router.post('/', requireAccess({ permission: 'categories.create' }), categoriesController.create);
 
 export default router;

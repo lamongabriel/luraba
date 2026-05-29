@@ -1,26 +1,19 @@
-import { NextFunction, Request, Response } from 'express';
-import { getAuthenticatedUser } from '@/middleware/auth.middleware';
-import { sendCreated, sendSuccess } from '@/shared/response';
+import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import * as categoriesService from './categories.service';
-import { createCategorySchema } from './categories.types';
+import {
+  CreateCategoryRequestBodySchema,
+  CreateCategoryResponseSchema,
+  ListCategoriesResponseSchema,
+} from './categories.types';
 
-export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const user = getAuthenticatedUser(req);
-    const dto = createCategorySchema.parse(req.body);
-    const category = await categoriesService.createCategory(user.id, dto);
-    sendCreated(res, category);
-  } catch (err) {
-    next(err);
-  }
-}
+export const create = createHouseholdHandler({
+  body: CreateCategoryRequestBodySchema,
+  response: CreateCategoryResponseSchema,
+  handle: ({ household, body }) => categoriesService.createCategory(household, body),
+  status: 'created',
+});
 
-export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const user = getAuthenticatedUser(req);
-    const categories = await categoriesService.listCategories(user.id);
-    sendSuccess(res, categories);
-  } catch (err) {
-    next(err);
-  }
-}
+export const list = createHouseholdHandler({
+  response: ListCategoriesResponseSchema,
+  handle: ({ household }) => categoriesService.listCategories(household),
+});
