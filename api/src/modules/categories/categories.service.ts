@@ -5,6 +5,7 @@ import type {
   Category,
   CategoryRecord,
   CreateCategoryRequestBody,
+  UpdateCategoryRequestBody,
 } from './categories.types';
 
 function mapCategoryRecord(category: CategoryRecord): Category {
@@ -51,4 +52,60 @@ export async function createCategory(context: HouseholdContext, body: CreateCate
 export async function listCategories(context: HouseholdContext): Promise<Category[]> {
   const categories = await categoriesRepository.list(context);
   return categories.map(mapCategoryRecord);
+}
+
+export async function updateCategory(
+  context: HouseholdContext,
+  categoryId: string,
+  body: UpdateCategoryRequestBody,
+): Promise<Category> {
+  const category = await categoriesRepository.get(categoryId, context);
+  if (!category) {
+    throw new NotFoundError('Category');
+  }
+
+  if (body.name && body.name !== category.name) {
+    const existing = await categoriesRepository.findByHouseholdAndName(context, body.name);
+    if (existing && existing.id !== categoryId) {
+      throw new ConflictError('A category with this name already exists');
+    }
+  }
+
+  const nextType = body.type ?? category.type;
+  const nextParentId = body.parentId === undefined ? category.parentId : body.parentId;
+  if (nextParentId) {
+    const parent = await categoriesRepository.get(nextParentId, context);
+    if (!parent) {
+      throw new NotFoundError('Parent category');
+    }
+
+    if (parent.id === categoryId) {
+      throw new ValidationError('Category cannot be its own parent');
+    }
+
+    if (parent.type !== nextType) {
+      throw new ValidationError('Parent category type must match child category type');
+    }
+  }
+
+  const updated = await categoriesRepository.update(categoryId, context, {
+    name: body.name,
+    parentId: body.parentId,
+    type: body.type,
+    color: body.color,
+    icon: body.icon,
+  });
+
+  if (!updated) {
+    throw new NotFoundError('Category');
+  }
+
+  return mapCategoryRecord(updated);
+}
+
+export async function deleteCategory(context: HouseholdContext, categoryId: string): Promise<void> {
+  const deleted = await categoriesRepository.delete(categoryId, context);
+  if (!deleted) {
+    throw new NotFoundError('Category');
+  }
 }

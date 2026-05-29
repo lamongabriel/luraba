@@ -103,4 +103,45 @@ describe('categories service', () => {
     expect(categories).toHaveLength(1);
     expect(categories[0]?.name).toBe('Household Category');
   });
+
+  it('updates a category and can clear optional display fields and parent', async () => {
+    const context = await createAuthenticatedContext();
+    const parent = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Parent', type: 'expense' }),
+    );
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Child', type: 'expense', parentId: parent.id }),
+    );
+
+    const updated = await categoriesService.updateCategory(context.householdContext, category.id, {
+      name: 'Updated Child',
+      parentId: null,
+      color: null,
+      icon: null,
+    });
+
+    expect(updated).toEqual(
+      expect.objectContaining({
+        id: category.id,
+        name: 'Updated Child',
+        parentId: null,
+        color: null,
+        icon: null,
+      }),
+    );
+  });
+
+  it('deletes a category from the active household', async () => {
+    const context = await createAuthenticatedContext();
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Temporary Category' }),
+    );
+
+    await categoriesService.deleteCategory(context.householdContext, category.id);
+
+    await expect(categoriesService.deleteCategory(context.householdContext, category.id)).rejects.toThrow(NotFoundError);
+  });
 });

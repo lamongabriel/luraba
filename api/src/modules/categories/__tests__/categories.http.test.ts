@@ -99,4 +99,54 @@ describe('categories routes', () => {
     expect(secondaryResponse.body.data).toHaveLength(1);
     expect(secondaryResponse.body.data[0].name).toBe('Secondary Household Category');
   });
+
+  it('PATCH /api/v1/categories/:id updates a category', async () => {
+    const context = await createAuthenticatedContext();
+    const created = await request(app)
+      .post('/api/v1/categories')
+      .set(createAuthHeaders(context.token, context.household.id))
+      .send(buildCategoryInput({ name: 'Patch Category' }));
+
+    const response = await request(app)
+      .patch(`/api/v1/categories/${created.body.data.id}`)
+      .set(createAuthHeaders(context.token, context.household.id))
+      .send({
+        name: 'Patched Category',
+        color: null,
+        icon: null,
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toEqual(
+      expect.objectContaining({
+        id: created.body.data.id,
+        name: 'Patched Category',
+        color: null,
+        icon: null,
+      }),
+    );
+  });
+
+  it('DELETE /api/v1/categories/:id deletes a category', async () => {
+    const context = await createAuthenticatedContext();
+    const created = await request(app)
+      .post('/api/v1/categories')
+      .set(createAuthHeaders(context.token, context.household.id))
+      .send(buildCategoryInput({ name: 'Delete Category' }));
+
+    const response = await request(app)
+      .delete(`/api/v1/categories/${created.body.data.id}`)
+      .set(createAuthHeaders(context.token, context.household.id));
+
+    expect(response.status).toBe(204);
+
+    const list = await request(app)
+      .get('/api/v1/categories')
+      .set(createAuthHeaders(context.token, context.household.id));
+
+    expect(list.body.data).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: created.body.data.id })]),
+    );
+  });
 });

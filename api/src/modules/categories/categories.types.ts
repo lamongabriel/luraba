@@ -37,7 +37,32 @@ export const CreateCategoryResponseSchema = categorySchema;
 
 export const ListCategoriesResponseSchema = z.array(categorySchema);
 
+export const UpdateCategoryRequestParamsSchema = z.object({
+  id: z.uuid(),
+});
+
+export const UpdateCategoryRequestBodySchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  parentId: z.uuid().nullable().optional(),
+  type: categoryTypeSchema.optional(),
+  color: categoryColorSchema.nullable().optional(),
+  icon: categoryIconSchema.nullable().optional(),
+}).refine(
+  (value) => Object.keys(value).length > 0,
+  'At least one field must be provided',
+);
+
+export const UpdateCategoryResponseSchema = categorySchema;
+
+export const DeleteCategoryRequestParamsSchema = z.object({
+  id: z.uuid(),
+});
+
 export type Category = z.infer<typeof categorySchema>;
 export type CreateCategoryRequestBody = z.infer<typeof CreateCategoryRequestBodySchema>;
 export type CreateCategoryResponse = z.infer<typeof CreateCategoryResponseSchema>;
 export type ListCategoriesResponse = z.infer<typeof ListCategoriesResponseSchema>;
+export type UpdateCategoryRequestParams = z.infer<typeof UpdateCategoryRequestParamsSchema>;
+export type UpdateCategoryRequestBody = z.infer<typeof UpdateCategoryRequestBodySchema>;
+export type UpdateCategoryResponse = z.infer<typeof UpdateCategoryResponseSchema>;
+export type DeleteCategoryRequestParams = z.infer<typeof DeleteCategoryRequestParamsSchema>;
