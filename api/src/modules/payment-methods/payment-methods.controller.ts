@@ -1,14 +1,38 @@
-import { NextFunction, Request, Response } from 'express';
-import { sendSuccess } from '@/shared/response';
+import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import * as paymentMethodsService from './payment-methods.service';
-import { listPaymentMethodsQuerySchema } from './payment-methods.types';
+import {
+  CreatePaymentMethodRequestBodySchema,
+  CreatePaymentMethodResponseSchema,
+  DeletePaymentMethodRequestParamsSchema,
+  ListPaymentMethodsRequestQuerySchema,
+  ListPaymentMethodsResponseSchema,
+  UpdatePaymentMethodRequestBodySchema,
+  UpdatePaymentMethodRequestParamsSchema,
+  UpdatePaymentMethodResponseSchema,
+} from './payment-methods.types';
 
-export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const query = listPaymentMethodsQuerySchema.parse(req.query);
-    const methods = await paymentMethodsService.listPaymentMethods(query);
-    sendSuccess(res, methods);
-  } catch (err) {
-    next(err);
-  }
-}
+export const list = createHouseholdHandler({
+  query: ListPaymentMethodsRequestQuerySchema,
+  response: ListPaymentMethodsResponseSchema,
+  handle: ({ household, query }) => paymentMethodsService.listPaymentMethods(household, query),
+});
+
+export const create = createHouseholdHandler({
+  body: CreatePaymentMethodRequestBodySchema,
+  response: CreatePaymentMethodResponseSchema,
+  handle: ({ household, body }) => paymentMethodsService.createPaymentMethod(household, body),
+  status: 'created',
+});
+
+export const update = createHouseholdHandler({
+  params: UpdatePaymentMethodRequestParamsSchema,
+  body: UpdatePaymentMethodRequestBodySchema,
+  response: UpdatePaymentMethodResponseSchema,
+  handle: ({ household, params, body }) => paymentMethodsService.updatePaymentMethod(household, params.id, body),
+});
+
+export const deletePaymentMethod = createHouseholdHandler({
+  params: DeletePaymentMethodRequestParamsSchema,
+  status: 'no-content',
+  handle: ({ household, params }) => paymentMethodsService.deletePaymentMethod(household, params.id),
+});

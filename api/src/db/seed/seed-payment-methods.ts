@@ -6,9 +6,10 @@ interface PaymentMethodSeed {
   code: string;
   name: string;
   currencyId: string | null
+  translationKey: string;
 }
 
-const paymentMethods: Record<string, Array<Omit<PaymentMethodSeed, 'currencyId'>>> = {
+const paymentMethods: Record<string, Array<Omit<PaymentMethodSeed, 'currencyId' | 'translationKey'>>> = {
   common: [
     { code: 'cash', name: 'Cash' },
     { code: 'credit_card', name: 'Credit Card' },
@@ -44,6 +45,7 @@ export async function seedPaymentMethods() {
         code: method.code,
         name: method.name,
         currencyId: currency === 'common' ? null : currency,
+        translationKey: `paymentMethods.system.${method.code}`,
       });
     }
   }
