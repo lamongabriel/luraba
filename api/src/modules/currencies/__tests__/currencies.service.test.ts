@@ -1,6 +1,6 @@
-import { NotFoundError } from '@/shared/errors';
-import { fxService } from '@/modules/fx/fx.service';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fxService } from '@/modules/fx/fx.service';
+import { NotFoundError } from '@/shared/errors';
 import * as currenciesService from '../currencies.service';
 
 describe('currencies service', () => {

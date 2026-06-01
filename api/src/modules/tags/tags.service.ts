@@ -15,7 +15,10 @@ function mapTagRecord(tag: TagRecord): Tag {
   };
 }
 
-export async function createTag(context: HouseholdContext, body: CreateTagRequestBody): Promise<Tag> {
+export async function createTag(
+  context: HouseholdContext,
+  body: CreateTagRequestBody,
+): Promise<Tag> {
   const existing = await tagsRepository.findByHouseholdAndName(context, body.name);
   if (existing) {
     throw new ConflictError('A tag with this name already exists');

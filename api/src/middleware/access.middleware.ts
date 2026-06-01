@@ -1,9 +1,13 @@
 import { and, eq } from 'drizzle-orm';
-import { NextFunction, Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
+import {
+  getPermissionsForRole,
+  type HouseholdPermission,
+  hasHouseholdPermission,
+} from '@/config/permissions';
 import { db } from '@/db';
 import { householdMembersTable } from '@/db/schemas/households.schema';
 import * as householdsService from '@/modules/households/households.service';
-import { getPermissionsForRole, hasHouseholdPermission, type HouseholdPermission } from '@/config/permissions';
 import { verifyAccessToken } from '@/shared/auth';
 import { ForbiddenError, UnauthorizedError } from '@/shared/errors';
 
@@ -54,20 +58,33 @@ function getHouseholdIdFromRoute(req: Request, householdParam?: string): string 
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
 
-async function resolveHousehold(req: Request, options: AccessOptions): Promise<NonNullable<Request['household']>> {
+async function resolveHousehold(
+  req: Request,
+  options: AccessOptions,
+): Promise<NonNullable<Request['household']>> {
   const user = authenticateRequest(req);
-  const requestedHouseholdId = getHouseholdIdFromHeader(req) ?? getHouseholdIdFromRoute(req, options.householdParam);
+  const requestedHouseholdId =
+    getHouseholdIdFromHeader(req) ?? getHouseholdIdFromRoute(req, options.householdParam);
 
-  if (req.household && (!requestedHouseholdId || req.household.householdId === requestedHouseholdId)) {
+  if (
+    req.household &&
+    (!requestedHouseholdId || req.household.householdId === requestedHouseholdId)
+  ) {
     return req.household;
   }
 
-  const householdId = requestedHouseholdId ?? (await householdsService.createDefaultHouseholdForUser(user.id));
+  const householdId =
+    requestedHouseholdId ?? (await householdsService.createDefaultHouseholdForUser(user.id));
 
   const rows = await db
     .select({ role: householdMembersTable.role })
     .from(householdMembersTable)
-    .where(and(eq(householdMembersTable.householdId, householdId), eq(householdMembersTable.userId, user.id)));
+    .where(
+      and(
+        eq(householdMembersTable.householdId, householdId),
+        eq(householdMembersTable.userId, user.id),
+      ),
+    );
 
   const membership = rows[0];
   if (!membership) {

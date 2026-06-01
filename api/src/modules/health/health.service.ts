@@ -1,6 +1,6 @@
 import { pool } from '@/db';
-import { formatISODateTime, now } from '@/shared/lib/date';
 import { fxProviderOrder, fxProvidersById } from '@/modules/fx/fx.providers';
+import { formatISODateTime, now } from '@/shared/lib/date';
 import type { HealthResponse } from './health.types';
 
 const PROVIDER_HEALTH_TIMEOUT_MS = 3_000;
@@ -48,11 +48,17 @@ async function checkDbHealth(): Promise<DependencyStatus> {
   }
 }
 
-async function checkFxProviderHealth(providerId: keyof typeof fxProvidersById): Promise<DependencyStatus> {
+async function checkFxProviderHealth(
+  providerId: keyof typeof fxProvidersById,
+): Promise<DependencyStatus> {
   const checkedAt = nowIso();
 
   try {
-    await withTimeout(fxProvidersById[providerId].healthCheck(), PROVIDER_HEALTH_TIMEOUT_MS, providerId);
+    await withTimeout(
+      fxProvidersById[providerId].healthCheck(),
+      PROVIDER_HEALTH_TIMEOUT_MS,
+      providerId,
+    );
     return {
       status: 'up',
       checkedAt,
@@ -73,7 +79,9 @@ export async function getHealth(): Promise<HealthResponse> {
   const [db, fxProviderEntries] = await Promise.all([
     checkDbHealth(),
     Promise.all(
-      fxProviderOrder.map(async (providerId) => [providerId, await checkFxProviderHealth(providerId)] as const),
+      fxProviderOrder.map(
+        async (providerId) => [providerId, await checkFxProviderHealth(providerId)] as const,
+      ),
     ),
   ]);
 

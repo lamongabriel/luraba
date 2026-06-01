@@ -28,7 +28,9 @@ describe('health route', () => {
   it('GET /health returns degraded when an fx provider is down', async () => {
     vi.spyOn(pool, 'query').mockResolvedValue({ rows: [], rowCount: 1 } as never);
     vi.spyOn(fxProvidersById.frankfurter, 'healthCheck').mockResolvedValue();
-    vi.spyOn(fxProvidersById['yahoo-finance2'], 'healthCheck').mockRejectedValue(new Error('Provider offline'));
+    vi.spyOn(fxProvidersById['yahoo-finance2'], 'healthCheck').mockRejectedValue(
+      new Error('Provider offline'),
+    );
 
     const response = await request(app).get('/health');
 
@@ -37,7 +39,9 @@ describe('health route', () => {
     expect(response.body.services.db.status).toBe('up');
     expect(response.body.services.fxProviders.frankfurter.status).toBe('up');
     expect(response.body.services.fxProviders['yahoo-finance2'].status).toBe('down');
-    expect(response.body.services.fxProviders['yahoo-finance2'].error).toContain('Provider offline');
+    expect(response.body.services.fxProviders['yahoo-finance2'].error).toContain(
+      'Provider offline',
+    );
   });
 
   it('GET /health returns 503 when the database is down', async () => {

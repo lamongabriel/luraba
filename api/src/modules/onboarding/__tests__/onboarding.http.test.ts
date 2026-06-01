@@ -15,8 +15,12 @@ describe('onboarding routes', () => {
       ]),
     );
     expect(response.body.data.timezones).toContain('UTC');
-    expect(response.body.data.preferredThemes).toEqual(expect.arrayContaining(['light', 'dark', 'system']));
-    expect(response.body.data.budgetMonthStartDays).toEqual(Array.from({ length: 31 }, (_, index) => index + 1));
+    expect(response.body.data.preferredThemes).toEqual(
+      expect.arrayContaining(['light', 'dark', 'system']),
+    );
+    expect(response.body.data.budgetMonthStartDays).toEqual(
+      Array.from({ length: 31 }, (_, index) => index + 1),
+    );
   });
 
   it('GET /api/v1/onboarding/options does not require authentication', async () => {

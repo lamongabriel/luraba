@@ -26,7 +26,8 @@ export const update = createHouseholdHandler({
   params: UpdateMerchantRequestParamsSchema,
   body: UpdateMerchantRequestBodySchema,
   response: UpdateMerchantResponseSchema,
-  handle: ({ household, params, body }) => merchantsService.updateMerchant(household, params.id, body),
+  handle: ({ household, params, body }) =>
+    merchantsService.updateMerchant(household, params.id, body),
 });
 
 export const deleteMerchant = createHouseholdHandler({

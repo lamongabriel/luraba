@@ -1,4 +1,12 @@
-import { addDays as dfnsAddDays, addMonths as dfnsAddMonths, isAfter as dfnsIsAfter, isBefore as dfnsIsBefore, isEqual as dfnsIsEqual, startOfMonth as dfnsStartOfMonth, subDays as dfnsSubDays } from 'date-fns';
+import {
+  addDays as dfnsAddDays,
+  addMonths as dfnsAddMonths,
+  isAfter as dfnsIsAfter,
+  isBefore as dfnsIsBefore,
+  isEqual as dfnsIsEqual,
+  startOfMonth as dfnsStartOfMonth,
+  subDays as dfnsSubDays,
+} from 'date-fns';
 
 // ---------------------------------------------------------------------------
 // Primitives — thin wrappers around date-fns + ISO formatting/parsing
@@ -140,13 +148,21 @@ export function dateWithClampedDay(year: number, monthIndex: number, day: number
  * computes the full billing cycle: periodStart, periodEnd, closingDate, dueDate.
  */
 export function buildCycleFromClosingDate(closingDate: Date, closingDay: number, dueDay: number) {
-  const previousClosing = dateWithClampedDay(closingDate.getUTCFullYear(), closingDate.getUTCMonth() - 1, closingDay);
+  const previousClosing = dateWithClampedDay(
+    closingDate.getUTCFullYear(),
+    closingDate.getUTCMonth() - 1,
+    closingDay,
+  );
   const periodStart = addDays(previousClosing, 1);
   const periodEnd = closingDate;
 
   let dueDate = dateWithClampedDay(closingDate.getUTCFullYear(), closingDate.getUTCMonth(), dueDay);
   if (!isAfter(dueDate, closingDate)) {
-    dueDate = dateWithClampedDay(closingDate.getUTCFullYear(), closingDate.getUTCMonth() + 1, dueDay);
+    dueDate = dateWithClampedDay(
+      closingDate.getUTCFullYear(),
+      closingDate.getUTCMonth() + 1,
+      dueDay,
+    );
   }
 
   return {

@@ -1,4 +1,8 @@
-import { addDays as addFxDays, formatISODate as formatFxDate, parseISODate as parseFxDate } from '@/shared/lib/date';
+import {
+  addDays as addFxDays,
+  formatISODate as formatFxDate,
+  parseISODate as parseFxDate,
+} from '@/shared/lib/date';
 import type { FxProviderRate, FxResolvedRate } from './fx.types';
 
 const FX_RATE_DECIMAL_SCALE = 12;
@@ -6,7 +10,7 @@ const FX_RATE_DECIMAL_SCALE = 12;
 // formatFxDate and parseFxDate are imported from @/shared/lib/date
 // addFxDays is imported from @/shared/lib/date
 
-export { formatFxDate, parseFxDate, addFxDays };
+export { addFxDays, formatFxDate, parseFxDate };
 
 function greatestCommonDivisor(left: number, right: number): number {
   let a = Math.abs(left);
@@ -42,7 +46,9 @@ function normalizeFxRateDecimal(rate: string | number): string {
   return trimTrailingDecimalZeros(numericRate.toFixed(FX_RATE_DECIMAL_SCALE));
 }
 
-export function toFxFraction(rate: string | number): Pick<FxResolvedRate, 'rateNumerator' | 'rateDenominator'> {
+export function toFxFraction(
+  rate: string | number,
+): Pick<FxResolvedRate, 'rateNumerator' | 'rateDenominator'> {
   const normalized = normalizeFxRateDecimal(rate);
   const [wholePart, fractionPart = ''] = normalized.split('.');
   const precision = fractionPart.length;

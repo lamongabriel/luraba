@@ -76,7 +76,7 @@ async function getHistoricalChartRate(
 export class YahooFinanceFxProvider implements FxProvider {
   readonly id = 'yahoo-finance2' as const;
 
-  constructor(private readonly client: YahooFinanceClient = createYahooFinanceClient()) { }
+  constructor(private readonly client: YahooFinanceClient = createYahooFinanceClient()) {}
 
   async healthCheck(): Promise<void> {
     const rates = await this.getLatestRates('USD', ['BRL']);
@@ -85,7 +85,10 @@ export class YahooFinanceFxProvider implements FxProvider {
     }
   }
 
-  async getLatestRates(baseCurrencyCode: string, quoteCurrencyCodes: string[]): Promise<FxProviderRate[]> {
+  async getLatestRates(
+    baseCurrencyCode: string,
+    quoteCurrencyCodes: string[],
+  ): Promise<FxProviderRate[]> {
     const today = now();
     const rates = await Promise.all(
       quoteCurrencyCodes.map((quoteCurrencyCode) =>
@@ -96,7 +99,11 @@ export class YahooFinanceFxProvider implements FxProvider {
     return rates.filter((rate): rate is FxProviderRate => rate !== undefined);
   }
 
-  async getHistoricalRates(baseCurrencyCode: string, quoteCurrencyCodes: string[], date: Date): Promise<FxProviderRate[]> {
+  async getHistoricalRates(
+    baseCurrencyCode: string,
+    quoteCurrencyCodes: string[],
+    date: Date,
+  ): Promise<FxProviderRate[]> {
     const rates = await Promise.all(
       quoteCurrencyCodes.map((quoteCurrencyCode) =>
         getHistoricalChartRate(this.client, baseCurrencyCode, quoteCurrencyCode, date),
@@ -106,18 +113,28 @@ export class YahooFinanceFxProvider implements FxProvider {
     return rates.filter((rate): rate is FxProviderRate => rate !== undefined);
   }
 
-  async getTimeSeries(baseCurrencyCode: string, quoteCurrencyCodes: string[], from: Date, to: Date): Promise<FxProviderRate[]> {
+  async getTimeSeries(
+    baseCurrencyCode: string,
+    quoteCurrencyCodes: string[],
+    from: Date,
+    to: Date,
+  ): Promise<FxProviderRate[]> {
     if (quoteCurrencyCodes.length !== 1) {
-      throw new ValidationError('Yahoo Finance time-series sync supports one quote currency at a time');
+      throw new ValidationError(
+        'Yahoo Finance time-series sync supports one quote currency at a time',
+      );
     }
 
     const quoteCurrencyCode = quoteCurrencyCodes[0];
-    const chartResult = await this.client.chart(buildFxSymbol(baseCurrencyCode, quoteCurrencyCode), {
-      period1: from,
-      period2: addFxDays(to, 1),
-      interval: '1d',
-      return: 'array',
-    });
+    const chartResult = await this.client.chart(
+      buildFxSymbol(baseCurrencyCode, quoteCurrencyCode),
+      {
+        period1: from,
+        period2: addFxDays(to, 1),
+        interval: '1d',
+        return: 'array',
+      },
+    );
     const quotes = toChartRows(chartResult);
 
     return quotes

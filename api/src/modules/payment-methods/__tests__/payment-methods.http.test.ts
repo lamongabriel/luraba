@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '@/app';
-import { createAuthHeaders, createAuthenticatedContext } from '@/test/auth';
+import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
 import { buildPaymentMethodInput } from '@/test/factories';
 
 describe('payment methods routes', () => {
@@ -18,7 +18,13 @@ describe('payment methods routes', () => {
     await request(app)
       .post('/api/v1/payment-methods')
       .set(createAuthHeaders(context.token, context.household.id))
-      .send(buildPaymentMethodInput({ name: 'Meal Voucher', color: '#16A34A', icon: 'Restaurant02Icon' }));
+      .send(
+        buildPaymentMethodInput({
+          name: 'Meal Voucher',
+          color: '#16A34A',
+          icon: 'Restaurant02Icon',
+        }),
+      );
 
     const response = await request(app)
       .get('/api/v1/payment-methods')

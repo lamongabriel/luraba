@@ -1,6 +1,6 @@
 import { createAuthenticatedHandler } from '@/shared/controllers/authenticated.controller';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import { createHandler } from '@/shared/controllers/controller';
+import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import * as authService from './auth.service';
 import {
   GetMeResponseSchema,

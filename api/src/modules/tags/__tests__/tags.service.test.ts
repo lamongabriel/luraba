@@ -28,7 +28,9 @@ describe('tags service', () => {
 
     await tagsService.createTag(context.householdContext, input);
 
-    await expect(tagsService.createTag(context.householdContext, input)).rejects.toThrow(ConflictError);
+    await expect(tagsService.createTag(context.householdContext, input)).rejects.toThrow(
+      ConflictError,
+    );
   });
 
   it('allows the same tag name in different households', async () => {
@@ -81,10 +83,15 @@ describe('tags service', () => {
 
   it('deletes a tag from the active household', async () => {
     const context = await createAuthenticatedContext();
-    const tag = await tagsService.createTag(context.householdContext, buildTagInput({ name: 'Temporary Tag' }));
+    const tag = await tagsService.createTag(
+      context.householdContext,
+      buildTagInput({ name: 'Temporary Tag' }),
+    );
 
     await tagsService.deleteTag(context.householdContext, tag.id);
 
-    await expect(tagsService.deleteTag(context.householdContext, tag.id)).rejects.toThrow(NotFoundError);
+    await expect(tagsService.deleteTag(context.householdContext, tag.id)).rejects.toThrow(
+      NotFoundError,
+    );
   });
 });

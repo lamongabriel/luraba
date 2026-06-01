@@ -22,7 +22,9 @@ describe('onboarding service', () => {
     expect(result.countryCodes).toEqual([...COUNTRY_CODE_VALUES]);
     expect(result.creditExpenseTimings).toEqual([...CREDIT_EXPENSE_TIMING_VALUES]);
     expect(result.creditInstallmentBudgetModes).toEqual([...CREDIT_INSTALLMENT_BUDGET_MODE_VALUES]);
-    expect(result.budgetMonthStartDays).toEqual(Array.from({ length: 31 }, (_, index) => index + 1));
+    expect(result.budgetMonthStartDays).toEqual(
+      Array.from({ length: 31 }, (_, index) => index + 1),
+    );
 
     expect(result.currencies).toEqual(
       expect.arrayContaining([

@@ -1,8 +1,8 @@
 import { FX_PRIMARY_PROVIDER_ID, FX_PROVIDER_FAILURE_MESSAGES } from '@/config/fx';
 import { DependencyUnavailableError, NotFoundError } from '@/shared/errors';
 import { formatISODate, isAfter, isBefore, now, toStartOfDay } from '@/shared/lib/date';
-import { fxRateRepository } from './fx.repository';
 import { fxProviderOrder, fxProvidersById } from './fx.providers';
+import { fxRateRepository } from './fx.repository';
 import type {
   FxConversionInput,
   FxGroupedValuationInput,
@@ -12,7 +12,13 @@ import type {
   FxResolvedRate,
   FxValuationInput,
 } from './fx.types';
-import { buildFxLookupKey, invertFxRate, normalizeProviderRate, parseFxDate, roundHalfUp } from './fx.utils';
+import {
+  buildFxLookupKey,
+  invertFxRate,
+  normalizeProviderRate,
+  parseFxDate,
+  roundHalfUp,
+} from './fx.utils';
 
 function toStartOfUtcDay(date: Date): Date {
   return toStartOfDay(date);
@@ -44,13 +50,8 @@ function convertMinorUnitsWithRate(
 ): number {
   const sign = amount < 0 ? -1n : 1n;
   const absoluteAmount = BigInt(Math.abs(amount));
-  const numerator =
-    absoluteAmount *
-    BigInt(rate.rateNumerator) *
-    BigInt(10 ** targetPrecision);
-  const denominator =
-    BigInt(rate.rateDenominator) *
-    BigInt(10 ** sourcePrecision);
+  const numerator = absoluteAmount * BigInt(rate.rateNumerator) * BigInt(10 ** targetPrecision);
+  const denominator = BigInt(rate.rateDenominator) * BigInt(10 ** sourcePrecision);
 
   const rounded = roundHalfUp(numerator, denominator);
   return Number(rounded * sign);
@@ -189,17 +190,20 @@ export class FxService {
 
   async syncLatestRates(baseCurrencyCode: string, quoteCurrencyCodes: string[]): Promise<void> {
     const normalizedBaseCurrencyCode = baseCurrencyCode.toUpperCase();
-    const normalizedQuoteCurrencyCodes = quoteCurrencyCodes.map((currencyCode) => currencyCode.toUpperCase());
+    const normalizedQuoteCurrencyCodes = quoteCurrencyCodes.map((currencyCode) =>
+      currencyCode.toUpperCase(),
+    );
 
     for (const providerId of this.providerOrder) {
       try {
         const provider = this.providersById[providerId];
-        const rates = await provider.getLatestRates(normalizedBaseCurrencyCode, normalizedQuoteCurrencyCodes);
+        const rates = await provider.getLatestRates(
+          normalizedBaseCurrencyCode,
+          normalizedQuoteCurrencyCodes,
+        );
         await this.repository.upsertRates(rates.map(normalizeProviderRate));
         return;
-      } catch {
-        continue;
-      }
+      } catch {}
     }
 
     throw new DependencyUnavailableError(FX_PROVIDER_FAILURE_MESSAGES.unavailable);
@@ -212,7 +216,9 @@ export class FxService {
     to: Date,
   ): Promise<void> {
     const normalizedBaseCurrencyCode = baseCurrencyCode.toUpperCase();
-    const normalizedQuoteCurrencyCodes = quoteCurrencyCodes.map((currencyCode) => currencyCode.toUpperCase());
+    const normalizedQuoteCurrencyCodes = quoteCurrencyCodes.map((currencyCode) =>
+      currencyCode.toUpperCase(),
+    );
 
     for (const providerId of this.providerOrder) {
       const provider = this.providersById[providerId];
@@ -229,9 +235,7 @@ export class FxService {
         );
         await this.repository.upsertRates(rates.map(normalizeProviderRate));
         return;
-      } catch {
-        continue;
-      }
+      } catch {}
     }
 
     throw new DependencyUnavailableError(FX_PROVIDER_FAILURE_MESSAGES.unavailable);
@@ -276,7 +280,12 @@ export class FxService {
 
         return {
           ...input,
-          convertedAmount: convertMinorUnitsWithRate(input.amount, rate, sourcePrecision, targetPrecision),
+          convertedAmount: convertMinorUnitsWithRate(
+            input.amount,
+            rate,
+            sourcePrecision,
+            targetPrecision,
+          ),
         };
       }),
     );
@@ -377,22 +386,30 @@ export class FxService {
         const rates =
           requestedDate >= today
             ? await provider.getLatestRates(query.fromCurrencyCode, [query.toCurrencyCode])
-            : await provider.getHistoricalRates(query.fromCurrencyCode, [query.toCurrencyCode], query.date);
+            : await provider.getHistoricalRates(
+                query.fromCurrencyCode,
+                [query.toCurrencyCode],
+                query.date,
+              );
 
         const normalizedRates = rates.map(normalizeProviderRate);
         await this.repository.upsertRates(normalizedRates);
 
         const resolvedRate = normalizedRates
           .filter((rate) => !isAfter(rate.rateDate, query.date))
-          .sort((left, right) => (isAfter(left.rateDate, right.rateDate) ? -1 : isBefore(left.rateDate, right.rateDate) ? 1 : 0))
+          .sort((left, right) =>
+            isAfter(left.rateDate, right.rateDate)
+              ? -1
+              : isBefore(left.rateDate, right.rateDate)
+                ? 1
+                : 0,
+          )
           .at(0);
 
         if (resolvedRate) {
           return resolvedRate;
         }
-      } catch {
-        continue;
-      }
+      } catch {}
     }
 
     return this.findStoredRateOnOrBefore(query);

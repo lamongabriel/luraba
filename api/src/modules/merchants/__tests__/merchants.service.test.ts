@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { brandfetchIntegrationsTable } from '@/db/schemas/brandfetch-integrations.schema';
-import { ConflictError, NotFoundError } from '@/shared/errors';
 import { db } from '@/db';
+import { brandfetchIntegrationsTable } from '@/db/schemas/brandfetch-integrations.schema';
+import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
+import { ConflictError, NotFoundError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import { buildMerchantInput } from '@/test/factories';
-import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
 import * as merchantsService from '../merchants.service';
 
 describe('merchants service', () => {
@@ -59,7 +59,9 @@ describe('merchants service', () => {
 
     await merchantsService.createMerchant(context.householdContext, input);
 
-    await expect(merchantsService.createMerchant(context.householdContext, input)).rejects.toThrow(ConflictError);
+    await expect(merchantsService.createMerchant(context.householdContext, input)).rejects.toThrow(
+      ConflictError,
+    );
   });
 
   it('allows the same merchant name in different households', async () => {
@@ -125,6 +127,8 @@ describe('merchants service', () => {
 
     await merchantsService.deleteMerchant(context.householdContext, merchant.id);
 
-    await expect(merchantsService.deleteMerchant(context.householdContext, merchant.id)).rejects.toThrow(NotFoundError);
+    await expect(
+      merchantsService.deleteMerchant(context.householdContext, merchant.id),
+    ).rejects.toThrow(NotFoundError);
   });
 });

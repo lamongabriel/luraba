@@ -1,9 +1,5 @@
-import {
-  createAuthenticatedHandler,
-} from '@/shared/controllers/authenticated.controller';
-import {
-  createHouseholdHandler,
-} from '@/shared/controllers/household.controller';
+import { createAuthenticatedHandler } from '@/shared/controllers/authenticated.controller';
+import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import * as householdsService from './households.service';
 import {
   AcceptHouseholdInviteRequestParamsSchema,
@@ -44,7 +40,8 @@ export const update = createHouseholdHandler({
   params: UpdateHouseholdRequestParamsSchema,
   body: UpdateHouseholdRequestBodySchema,
   response: UpdateHouseholdResponseSchema,
-  handle: ({ household, params, body }) => householdsService.updateHousehold(household, params.id, body),
+  handle: ({ household, params, body }) =>
+    householdsService.updateHousehold(household, params.id, body),
 });
 
 export const listMembers = createHouseholdHandler({
@@ -57,12 +54,14 @@ export const updateMember = createHouseholdHandler({
   params: UpdateHouseholdMemberRequestParamsSchema,
   body: UpdateHouseholdMemberRequestBodySchema,
   response: UpdateHouseholdMemberResponseSchema,
-  handle: ({ household, params, body }) => householdsService.updateMemberRole(household, params.id, params.userId, body),
+  handle: ({ household, params, body }) =>
+    householdsService.updateMemberRole(household, params.id, params.userId, body),
 });
 
 export const removeMember = createHouseholdHandler({
   params: RemoveHouseholdMemberRequestParamsSchema,
-  handle: ({ household, params }) => householdsService.removeMember(household, params.id, params.userId),
+  handle: ({ household, params }) =>
+    householdsService.removeMember(household, params.id, params.userId),
   status: 'no-content',
 });
 
@@ -70,7 +69,8 @@ export const createInvite = createHouseholdHandler({
   params: CreateHouseholdInviteRequestParamsSchema,
   body: CreateHouseholdInviteRequestBodySchema,
   response: CreateHouseholdInviteResponseSchema,
-  handle: ({ household, params, body }) => householdsService.createInvite(household, params.id, body),
+  handle: ({ household, params, body }) =>
+    householdsService.createInvite(household, params.id, body),
   status: 'created',
 });
 
@@ -93,6 +93,7 @@ export const acceptInvite = createAuthenticatedHandler({
 
 export const revokeInvite = createHouseholdHandler({
   params: RevokeHouseholdInviteRequestParamsSchema,
-  handle: ({ household, params }) => householdsService.revokeInvite(household, params.id, params.inviteId),
+  handle: ({ household, params }) =>
+    householdsService.revokeInvite(household, params.id, params.inviteId),
   status: 'no-content',
 });

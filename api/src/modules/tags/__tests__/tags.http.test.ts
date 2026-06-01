@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import app from '@/app';
-import { createAuthHeaders, createAuthenticatedContext } from '@/test/auth';
+import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
 import { buildTagInput, createHousehold, createHouseholdMembership } from '@/test/factories';
 
 describe('tags routes', () => {

@@ -6,12 +6,14 @@ export const creditCardPaymentsTable = pgTable(
   'credit_card_payments',
   {
     id: uuid().primaryKey().defaultRandom(),
-    creditCardId: uuid('credit_card_id').notNull().references(() => creditCardsTable.id, { onDelete: 'cascade' }),
-    transactionId: uuid('transaction_id').notNull().references(() => transactionsTable.id, { onDelete: 'cascade' }),
+    creditCardId: uuid('credit_card_id')
+      .notNull()
+      .references(() => creditCardsTable.id, { onDelete: 'cascade' }),
+    transactionId: uuid('transaction_id')
+      .notNull()
+      .references(() => transactionsTable.id, { onDelete: 'cascade' }),
     amount: integer('amount').notNull(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
-  (table) => [
-    uniqueIndex('credit_card_payments_transaction_id_unique').on(table.transactionId),
-  ],
+  (table) => [uniqueIndex('credit_card_payments_transaction_id_unique').on(table.transactionId)],
 );

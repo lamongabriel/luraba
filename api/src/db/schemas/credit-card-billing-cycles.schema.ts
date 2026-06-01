@@ -6,7 +6,9 @@ export const creditCardBillingCyclesTable = pgTable(
   'credit_card_billing_cycles',
   {
     id: uuid().primaryKey().defaultRandom(),
-    creditCardId: uuid('credit_card_id').notNull().references(() => creditCardsTable.id, { onDelete: 'cascade' }),
+    creditCardId: uuid('credit_card_id')
+      .notNull()
+      .references(() => creditCardsTable.id, { onDelete: 'cascade' }),
     periodStart: date('period_start', { mode: 'date' }).notNull(),
     periodEnd: date('period_end', { mode: 'date' }).notNull(),
     closingDate: date('closing_date', { mode: 'date' }).notNull(),
@@ -19,6 +21,9 @@ export const creditCardBillingCyclesTable = pgTable(
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex('credit_card_billing_cycles_card_period_start_unique').on(table.creditCardId, table.periodStart),
+    uniqueIndex('credit_card_billing_cycles_card_period_start_unique').on(
+      table.creditCardId,
+      table.periodStart,
+    ),
   ],
 );

@@ -1,11 +1,14 @@
 import { and, eq } from 'drizzle-orm';
+import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
 import { merchantsTable } from '@/db/schemas/merchants.schema';
-import type { HouseholdContext } from '@/config/permissions';
 import { HouseholdScopedRepository } from '@/shared/repositories/household-scoped.repository';
 import type { MerchantRecord } from './merchants.types';
 
-type CreateMerchantValues = Omit<typeof merchantsTable.$inferInsert, 'id' | 'householdId' | 'createdAt' | 'updatedAt'>;
+type CreateMerchantValues = Omit<
+  typeof merchantsTable.$inferInsert,
+  'id' | 'householdId' | 'createdAt' | 'updatedAt'
+>;
 
 class MerchantRepository extends HouseholdScopedRepository<MerchantRecord, CreateMerchantValues> {
   constructor() {
@@ -16,7 +19,9 @@ class MerchantRepository extends HouseholdScopedRepository<MerchantRecord, Creat
     const rows = await db
       .select()
       .from(merchantsTable)
-      .where(and(eq(merchantsTable.householdId, context.householdId), eq(merchantsTable.name, name)))
+      .where(
+        and(eq(merchantsTable.householdId, context.householdId), eq(merchantsTable.name, name)),
+      )
       .limit(1);
 
     return rows[0];

@@ -13,7 +13,10 @@ class CategoriesRepository extends HouseholdScopedRepository<CategoryRecord, Cre
     super(categoriesTable, { orderBy: categoriesTable.name });
   }
 
-  async findByHouseholdAndName(context: HouseholdContext, name: string): Promise<CategoryRecord | undefined> {
+  async findByHouseholdAndName(
+    context: HouseholdContext,
+    name: string,
+  ): Promise<CategoryRecord | undefined> {
     const rows = await this.list(context);
     return rows.find((category) => category.name === name);
   }

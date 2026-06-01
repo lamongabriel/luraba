@@ -1,16 +1,16 @@
 import { z } from 'zod';
-import { categoriesTable } from '@/db/schemas/categories.schema';
+import type { categoriesTable } from '@/db/schemas/categories.schema';
 import {
-  categoryColorSchema,
-  categoryIconSchema,
-  categoryTypeSchema,
   type CategoryColor,
   type CategoryIcon,
   type CategoryType,
+  categoryColorSchema,
+  categoryIconSchema,
+  categoryTypeSchema,
 } from '@/shared/validation/categories';
 
-export { categoryColorSchema, categoryIconSchema, categoryTypeSchema };
 export type { CategoryColor, CategoryIcon, CategoryType };
+export { categoryColorSchema, categoryIconSchema, categoryTypeSchema };
 
 export type CategoryRecord = typeof categoriesTable.$inferSelect;
 
@@ -41,16 +41,15 @@ export const UpdateCategoryRequestParamsSchema = z.object({
   id: z.uuid(),
 });
 
-export const UpdateCategoryRequestBodySchema = z.object({
-  name: z.string().min(1).max(255).optional(),
-  parentId: z.uuid().nullable().optional(),
-  type: categoryTypeSchema.optional(),
-  color: categoryColorSchema.nullable().optional(),
-  icon: categoryIconSchema.nullable().optional(),
-}).refine(
-  (value) => Object.keys(value).length > 0,
-  'At least one field must be provided',
-);
+export const UpdateCategoryRequestBodySchema = z
+  .object({
+    name: z.string().min(1).max(255).optional(),
+    parentId: z.uuid().nullable().optional(),
+    type: categoryTypeSchema.optional(),
+    color: categoryColorSchema.nullable().optional(),
+    icon: categoryIconSchema.nullable().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, 'At least one field must be provided');
 
 export const UpdateCategoryResponseSchema = categorySchema;
 

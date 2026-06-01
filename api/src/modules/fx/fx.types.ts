@@ -1,4 +1,4 @@
-import { FX_PROVIDER_IDS } from '@/config/fx';
+import type { FX_PROVIDER_IDS } from '@/config/fx';
 
 export type FxProviderId = (typeof FX_PROVIDER_IDS)[number];
 
@@ -44,6 +44,15 @@ export interface FxProvider {
   readonly id: FxProviderId;
   healthCheck(): Promise<void>;
   getLatestRates(baseCurrencyCode: string, quoteCurrencyCodes: string[]): Promise<FxProviderRate[]>;
-  getHistoricalRates(baseCurrencyCode: string, quoteCurrencyCodes: string[], date: Date): Promise<FxProviderRate[]>;
-  getTimeSeries?(baseCurrencyCode: string, quoteCurrencyCodes: string[], from: Date, to: Date): Promise<FxProviderRate[]>;
+  getHistoricalRates(
+    baseCurrencyCode: string,
+    quoteCurrencyCodes: string[],
+    date: Date,
+  ): Promise<FxProviderRate[]>;
+  getTimeSeries?(
+    baseCurrencyCode: string,
+    quoteCurrencyCodes: string[],
+    from: Date,
+    to: Date,
+  ): Promise<FxProviderRate[]>;
 }

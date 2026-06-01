@@ -1,10 +1,10 @@
 import { and, asc, eq, isNull, or, sql } from 'drizzle-orm';
+import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
 import { currenciesTable } from '@/db/schemas/currencies.schema';
 import { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
 import { now } from '@/shared/lib/date';
-import type { HouseholdContext } from '@/config/permissions';
 import type { PaymentMethodRecord } from './payment-methods.types';
 
 type CreatePaymentMethodValues = {
@@ -27,7 +27,10 @@ class PaymentMethodsRepository {
   }
 
   async list(context: HouseholdContext, currencyCode?: string): Promise<PaymentMethodRecord[]> {
-    const scopeCondition = or(isNull(paymentMethodsTable.householdId), eq(paymentMethodsTable.householdId, context.householdId));
+    const scopeCondition = or(
+      isNull(paymentMethodsTable.householdId),
+      eq(paymentMethodsTable.householdId, context.householdId),
+    );
     const currencyCondition = currencyCode
       ? or(isNull(paymentMethodsTable.currencyId), eq(paymentMethodsTable.currencyId, currencyCode))
       : undefined;
@@ -55,7 +58,9 @@ class PaymentMethodsRepository {
         and(
           eq(paymentMethodsTable.householdId, context.householdId),
           eq(paymentMethodsTable.code, code),
-          currencyCode ? eq(paymentMethodsTable.currencyId, currencyCode) : isNull(paymentMethodsTable.currencyId),
+          currencyCode
+            ? eq(paymentMethodsTable.currencyId, currencyCode)
+            : isNull(paymentMethodsTable.currencyId),
         ),
       )
       .limit(1);
@@ -63,7 +68,10 @@ class PaymentMethodsRepository {
     return rows[0];
   }
 
-  async create(context: HouseholdContext, values: CreatePaymentMethodValues): Promise<PaymentMethodRecord> {
+  async create(
+    context: HouseholdContext,
+    values: CreatePaymentMethodValues,
+  ): Promise<PaymentMethodRecord> {
     const rows = await db
       .insert(paymentMethodsTable)
       .values({
@@ -84,7 +92,12 @@ class PaymentMethodsRepository {
     const rows = await db
       .select()
       .from(paymentMethodsTable)
-      .where(and(eq(paymentMethodsTable.id, id), eq(paymentMethodsTable.householdId, context.householdId)))
+      .where(
+        and(
+          eq(paymentMethodsTable.id, id),
+          eq(paymentMethodsTable.householdId, context.householdId),
+        ),
+      )
       .limit(1);
 
     return rows[0];
@@ -105,7 +118,12 @@ class PaymentMethodsRepository {
         icon: values.icon,
         updatedAt: now(),
       })
-      .where(and(eq(paymentMethodsTable.id, id), eq(paymentMethodsTable.householdId, context.householdId)))
+      .where(
+        and(
+          eq(paymentMethodsTable.id, id),
+          eq(paymentMethodsTable.householdId, context.householdId),
+        ),
+      )
       .returning();
 
     return rows[0];
@@ -114,7 +132,12 @@ class PaymentMethodsRepository {
   async delete(id: string, context: HouseholdContext): Promise<PaymentMethodRecord | undefined> {
     const rows = await db
       .delete(paymentMethodsTable)
-      .where(and(eq(paymentMethodsTable.id, id), eq(paymentMethodsTable.householdId, context.householdId)))
+      .where(
+        and(
+          eq(paymentMethodsTable.id, id),
+          eq(paymentMethodsTable.householdId, context.householdId),
+        ),
+      )
       .returning();
 
     return rows[0];
@@ -124,7 +147,12 @@ class PaymentMethodsRepository {
     const [row] = await db
       .select({ count: sql<number>`count(*)::integer` })
       .from(transactionsTable)
-      .where(and(eq(transactionsTable.householdId, context.householdId), eq(transactionsTable.paymentMethodId, id)));
+      .where(
+        and(
+          eq(transactionsTable.householdId, context.householdId),
+          eq(transactionsTable.paymentMethodId, id),
+        ),
+      );
 
     return (row?.count ?? 0) > 0;
   }
@@ -133,12 +161,15 @@ class PaymentMethodsRepository {
     context: HouseholdContext,
     code: string,
     currencyCode: string,
-  ): Promise<{
-    id: string;
-    code: string;
-    name: string;
-    currencyCode: string | null;
-  } | undefined> {
+  ): Promise<
+    | {
+        id: string;
+        code: string;
+        name: string;
+        currencyCode: string | null;
+      }
+    | undefined
+  > {
     const rows = await db
       .select({
         id: paymentMethodsTable.id,
@@ -150,8 +181,14 @@ class PaymentMethodsRepository {
       .where(
         and(
           eq(paymentMethodsTable.code, code),
-          or(isNull(paymentMethodsTable.householdId), eq(paymentMethodsTable.householdId, context.householdId)),
-          or(isNull(paymentMethodsTable.currencyId), eq(paymentMethodsTable.currencyId, currencyCode)),
+          or(
+            isNull(paymentMethodsTable.householdId),
+            eq(paymentMethodsTable.householdId, context.householdId),
+          ),
+          or(
+            isNull(paymentMethodsTable.currencyId),
+            eq(paymentMethodsTable.currencyId, currencyCode),
+          ),
         ),
       )
       .orderBy(

@@ -1,15 +1,18 @@
 import type { HouseholdContext } from '@/config/permissions';
+import { getBrandfetchClientId } from '@/modules/integrations/brandfetch/brandfetch.service';
+import {
+  buildBrandfetchLogoUrl,
+  normalizeBrandDomain,
+} from '@/modules/integrations/brandfetch/brandfetch.utils';
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
-import { buildBrandfetchLogoUrl, normalizeBrandDomain } from '@/modules/integrations/brandfetch/brandfetch.utils';
-import { getBrandfetchClientId } from '@/modules/integrations/brandfetch/brandfetch.service';
 import { merchantsRepository } from './merchants.repository';
 import type {
-  Merchant,
-  MerchantRecord,
   CreateMerchantRequestBody,
   CreateMerchantResponse,
   ListMerchantsResponse,
+  Merchant,
+  MerchantRecord,
   UpdateMerchantRequestBody,
 } from './merchants.types';
 
@@ -35,10 +38,13 @@ export async function createMerchant(
   }
 
   const normalizedDomain = body.domain ? normalizeBrandDomain(body.domain) : undefined;
-  const brandfetchClientId = normalizedDomain ? await getBrandfetchClientId(context).catch(() => undefined) : undefined;
-  const logoUrl = normalizedDomain && brandfetchClientId
-    ? buildBrandfetchLogoUrl(normalizedDomain, brandfetchClientId)
+  const brandfetchClientId = normalizedDomain
+    ? await getBrandfetchClientId(context).catch(() => undefined)
     : undefined;
+  const logoUrl =
+    normalizedDomain && brandfetchClientId
+      ? buildBrandfetchLogoUrl(normalizedDomain, brandfetchClientId)
+      : undefined;
 
   const merchant = await merchantsRepository.create(context, {
     name: body.name,
@@ -71,17 +77,16 @@ export async function updateMerchant(
   }
 
   const normalizedDomain =
-    body.domain === null
-      ? null
-      : body.domain
-        ? normalizeBrandDomain(body.domain)
-        : undefined;
-  const brandfetchClientId = normalizedDomain ? await getBrandfetchClientId(context).catch(() => undefined) : undefined;
-  const logoUrl = normalizedDomain && brandfetchClientId
-    ? buildBrandfetchLogoUrl(normalizedDomain, brandfetchClientId)
-    : normalizedDomain === undefined
-      ? undefined
-      : null;
+    body.domain === null ? null : body.domain ? normalizeBrandDomain(body.domain) : undefined;
+  const brandfetchClientId = normalizedDomain
+    ? await getBrandfetchClientId(context).catch(() => undefined)
+    : undefined;
+  const logoUrl =
+    normalizedDomain && brandfetchClientId
+      ? buildBrandfetchLogoUrl(normalizedDomain, brandfetchClientId)
+      : normalizedDomain === undefined
+        ? undefined
+        : null;
 
   const updated = await merchantsRepository.update(merchantId, context, {
     name: body.name,

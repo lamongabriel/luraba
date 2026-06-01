@@ -57,7 +57,10 @@ class AuthRepository extends Repository<UserRecord, CreateAuthUserValues> {
     };
   }
 
-  async updateUserPreferences(id: string, dto: UpdateMyPreferencesRequestBody): Promise<UserPreferences | undefined> {
+  async updateUserPreferences(
+    id: string,
+    dto: UpdateMyPreferencesRequestBody,
+  ): Promise<UserPreferences | undefined> {
     const row = await this.update(id, {
       preferredLanguage: dto.language,
       preferredCurrency: dto.currency,

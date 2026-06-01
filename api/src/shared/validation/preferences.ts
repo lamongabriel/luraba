@@ -22,7 +22,11 @@ export const CREDIT_EXPENSE_TIMING_VALUES = creditExpenseTimingEnum.enumValues;
 export const CREDIT_INSTALLMENT_BUDGET_MODE_VALUES = creditInstallmentBudgetModeEnum.enumValues;
 
 export const languageSchema = z.enum(preferredLanguageEnum.enumValues);
-export const currencySchema = z.string().trim().length(3).transform((value) => value.toUpperCase());
+export const currencySchema = z
+  .string()
+  .trim()
+  .length(3)
+  .transform((value) => value.toUpperCase());
 export const timezoneSchema = z.enum(preferredTimezoneEnum.enumValues);
 export const dateFormatSchema = z.enum(preferredDateFormatEnum.enumValues);
 export const preferredPeriodSchema = z.enum(defaultPeriodEnum.enumValues);

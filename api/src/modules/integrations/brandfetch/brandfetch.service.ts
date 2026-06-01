@@ -4,14 +4,16 @@ import { decryptIntegrationSecret, encryptIntegrationSecret } from '../integrati
 import type { IntegrationSummary } from '../integrations.types';
 import { buildIntegrationSummary } from '../integrations.utils';
 import { brandfetchRepository } from './brandfetch.repository';
-import { validateBrandfetchClientId } from './brandfetch.utils';
 import type {
   DeleteBrandfetchIntegrationResponse,
   UpdateBrandfetchIntegrationRequestBody,
   UpdateBrandfetchIntegrationResponse,
 } from './brandfetch.types';
+import { validateBrandfetchClientId } from './brandfetch.utils';
 
-export async function getBrandfetchIntegrationSummary(context: HouseholdContext): Promise<IntegrationSummary> {
+export async function getBrandfetchIntegrationSummary(
+  context: HouseholdContext,
+): Promise<IntegrationSummary> {
   const record = await brandfetchRepository.findByHousehold(context);
   return buildIntegrationSummary('brandfetch', record);
 }
@@ -38,7 +40,9 @@ export async function deleteBrandfetchIntegration(
   return buildIntegrationSummary('brandfetch');
 }
 
-export async function getBrandfetchClientId(context: HouseholdContext): Promise<string | undefined> {
+export async function getBrandfetchClientId(
+  context: HouseholdContext,
+): Promise<string | undefined> {
   const record = await brandfetchRepository.findByHousehold(context);
   if (!record) {
     return undefined;

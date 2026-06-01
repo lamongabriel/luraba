@@ -13,7 +13,10 @@ class TagsRepository extends HouseholdScopedRepository<TagRecord, CreateTagValue
     super(tagsTable, { orderBy: tagsTable.name });
   }
 
-  async findByHouseholdAndName(context: HouseholdContext, name: string): Promise<TagRecord | undefined> {
+  async findByHouseholdAndName(
+    context: HouseholdContext,
+    name: string,
+  ): Promise<TagRecord | undefined> {
     const tags = await this.list(context);
     return tags.find((tag) => tag.name === name);
   }

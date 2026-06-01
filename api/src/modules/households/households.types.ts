@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { householdInvitesTable, householdMembersTable, householdsTable } from '@/db/schemas/households.schema';
+import type {
+  householdInvitesTable,
+  householdMembersTable,
+  householdsTable,
+} from '@/db/schemas/households.schema';
 import { householdInviteStatusSchema, householdRoleSchema } from '@/shared/validation/households';
 import {
   countryCodeSchema,
@@ -124,7 +128,10 @@ export const CreateHouseholdInviteRequestParamsSchema = z.object({
 });
 
 export const CreateHouseholdInviteRequestBodySchema = z.object({
-  email: z.email().max(255).transform((value) => value.trim().toLowerCase()),
+  email: z
+    .email()
+    .max(255)
+    .transform((value) => value.trim().toLowerCase()),
   role: householdRoleSchema.exclude(['owner']).default('member'),
 });
 
@@ -157,17 +164,35 @@ export type ListHouseholdsResponse = z.infer<typeof ListHouseholdsResponseSchema
 export type UpdateHouseholdRequestParams = z.infer<typeof UpdateHouseholdRequestParamsSchema>;
 export type UpdateHouseholdRequestBody = z.infer<typeof UpdateHouseholdRequestBodySchema>;
 export type UpdateHouseholdResponse = z.infer<typeof UpdateHouseholdResponseSchema>;
-export type ListHouseholdMembersRequestParams = z.infer<typeof ListHouseholdMembersRequestParamsSchema>;
+export type ListHouseholdMembersRequestParams = z.infer<
+  typeof ListHouseholdMembersRequestParamsSchema
+>;
 export type ListHouseholdMembersResponse = z.infer<typeof ListHouseholdMembersResponseSchema>;
-export type UpdateHouseholdMemberRequestParams = z.infer<typeof UpdateHouseholdMemberRequestParamsSchema>;
-export type UpdateHouseholdMemberRequestBody = z.infer<typeof UpdateHouseholdMemberRequestBodySchema>;
+export type UpdateHouseholdMemberRequestParams = z.infer<
+  typeof UpdateHouseholdMemberRequestParamsSchema
+>;
+export type UpdateHouseholdMemberRequestBody = z.infer<
+  typeof UpdateHouseholdMemberRequestBodySchema
+>;
 export type UpdateHouseholdMemberResponse = z.infer<typeof UpdateHouseholdMemberResponseSchema>;
-export type RemoveHouseholdMemberRequestParams = z.infer<typeof RemoveHouseholdMemberRequestParamsSchema>;
-export type CreateHouseholdInviteRequestParams = z.infer<typeof CreateHouseholdInviteRequestParamsSchema>;
-export type CreateHouseholdInviteRequestBody = z.infer<typeof CreateHouseholdInviteRequestBodySchema>;
+export type RemoveHouseholdMemberRequestParams = z.infer<
+  typeof RemoveHouseholdMemberRequestParamsSchema
+>;
+export type CreateHouseholdInviteRequestParams = z.infer<
+  typeof CreateHouseholdInviteRequestParamsSchema
+>;
+export type CreateHouseholdInviteRequestBody = z.infer<
+  typeof CreateHouseholdInviteRequestBodySchema
+>;
 export type CreateHouseholdInviteResponse = z.infer<typeof CreateHouseholdInviteResponseSchema>;
-export type ListHouseholdInvitesRequestParams = z.infer<typeof ListHouseholdInvitesRequestParamsSchema>;
+export type ListHouseholdInvitesRequestParams = z.infer<
+  typeof ListHouseholdInvitesRequestParamsSchema
+>;
 export type ListHouseholdInvitesResponse = z.infer<typeof ListHouseholdInvitesResponseSchema>;
 export type ListMyHouseholdInvitesResponse = z.infer<typeof ListMyHouseholdInvitesResponseSchema>;
-export type AcceptHouseholdInviteRequestParams = z.infer<typeof AcceptHouseholdInviteRequestParamsSchema>;
-export type RevokeHouseholdInviteRequestParams = z.infer<typeof RevokeHouseholdInviteRequestParamsSchema>;
+export type AcceptHouseholdInviteRequestParams = z.infer<
+  typeof AcceptHouseholdInviteRequestParamsSchema
+>;
+export type RevokeHouseholdInviteRequestParams = z.infer<
+  typeof RevokeHouseholdInviteRequestParamsSchema
+>;

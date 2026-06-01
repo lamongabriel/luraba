@@ -1,18 +1,33 @@
-import { check, date, index, integer, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { transactionsTable } from './transactions.schema';
-import { ledgerAccountsTable } from './ledger-accounts.schema';
-import { currenciesTable } from './currencies.schema';
+import {
+  check,
+  date,
+  index,
+  integer,
+  pgTable,
+  timestamp,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 import { categoriesTable } from './categories.schema';
+import { currenciesTable } from './currencies.schema';
+import { ledgerAccountsTable } from './ledger-accounts.schema';
+import { transactionsTable } from './transactions.schema';
 
 export const entriesTable = pgTable(
   'entries',
   {
     id: uuid().primaryKey().defaultRandom(),
-    transactionId: uuid('transaction_id').notNull().references(() => transactionsTable.id, { onDelete: 'cascade' }),
-    ledgerAccountId: uuid('ledger_account_id').notNull().references(() => ledgerAccountsTable.id, { onDelete: 'restrict' }),
+    transactionId: uuid('transaction_id')
+      .notNull()
+      .references(() => transactionsTable.id, { onDelete: 'cascade' }),
+    ledgerAccountId: uuid('ledger_account_id')
+      .notNull()
+      .references(() => ledgerAccountsTable.id, { onDelete: 'restrict' }),
     amount: integer('amount').notNull(),
-    currencyId: varchar('currency_id', { length: 3 }).notNull().references(() => currenciesTable.code, { onDelete: 'restrict' }),
+    currencyId: varchar('currency_id', { length: 3 })
+      .notNull()
+      .references(() => currenciesTable.code, { onDelete: 'restrict' }),
     categoryId: uuid('category_id').references(() => categoriesTable.id, { onDelete: 'set null' }),
     budgetMonth: date('budget_month', { mode: 'date' }),
     createdAt: timestamp('created_at').notNull().defaultNow(),

@@ -1,4 +1,5 @@
 import type { HouseholdRole } from '@/shared/validation/households';
+
 export type { HouseholdRole };
 
 export const HOUSEHOLD_PERMISSIONS = [
@@ -87,6 +88,9 @@ export function getPermissionsForRole(role: HouseholdRole): HouseholdPermission[
   return Array.from(HOUSEHOLD_ROLE_PERMISSIONS[role]);
 }
 
-export function hasHouseholdPermission(role: HouseholdRole, permission: HouseholdPermission): boolean {
+export function hasHouseholdPermission(
+  role: HouseholdRole,
+  permission: HouseholdPermission,
+): boolean {
   return HOUSEHOLD_ROLE_PERMISSIONS[role].has(permission);
 }

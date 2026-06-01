@@ -1,20 +1,20 @@
 import { and, eq } from 'drizzle-orm';
-import { db } from '@/db';
+import type { HouseholdContext } from '@/config/permissions';
 import { getPermissionsForRole } from '@/config/permissions';
-import { now, parseISODate } from '@/shared/lib/date';
+import { db } from '@/db';
 import { accountsTable } from '@/db/schemas/accounts.schema';
 import { entriesTable } from '@/db/schemas/entries.schema';
 import { householdMembersTable, householdsTable } from '@/db/schemas/households.schema';
 import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
 import { usersTable } from '@/db/schemas/users.schema';
-import type { HouseholdContext } from '@/config/permissions';
 import type { CreateAccountRequestBody } from '@/modules/accounts/accounts.types';
 import type { RegisterRequestBody } from '@/modules/auth/auth.types';
 import type { CreateCategoryRequestBody } from '@/modules/categories/categories.types';
 import type { CreateMerchantRequestBody } from '@/modules/merchants/merchants.types';
 import type { CreatePaymentMethodRequestBody } from '@/modules/payment-methods/payment-methods.types';
 import type { CreateTagRequestBody } from '@/modules/tags/tags.types';
+import { now, parseISODate } from '@/shared/lib/date';
 
 function randomSuffix() {
   return Math.random().toString(36).slice(2, 10);
@@ -81,11 +81,17 @@ export async function createHouseholdMembership(
 }
 
 export async function setDefaultHousehold(userId: string, householdId: string) {
-  const rows = await db.update(usersTable).set({ defaultHouseholdId: householdId }).where(eq(usersTable.id, userId)).returning();
+  const rows = await db
+    .update(usersTable)
+    .set({ defaultHouseholdId: householdId })
+    .where(eq(usersTable.id, userId))
+    .returning();
   return rows[0];
 }
 
-export function buildAccountInput(overrides: Partial<CreateAccountRequestBody> = {}): CreateAccountRequestBody {
+export function buildAccountInput(
+  overrides: Partial<CreateAccountRequestBody> = {},
+): CreateAccountRequestBody {
   return {
     name: `Account ${randomSuffix()}`,
     type: 'depository',
@@ -94,7 +100,9 @@ export function buildAccountInput(overrides: Partial<CreateAccountRequestBody> =
   };
 }
 
-export function buildRegisterInput(overrides: Partial<RegisterRequestBody> = {}): RegisterRequestBody {
+export function buildRegisterInput(
+  overrides: Partial<RegisterRequestBody> = {},
+): RegisterRequestBody {
   return {
     name: `User ${randomSuffix()}`,
     email: `register-${randomSuffix()}@example.com`,
@@ -107,7 +115,9 @@ export function buildRegisterInput(overrides: Partial<RegisterRequestBody> = {})
   };
 }
 
-export function buildMerchantInput(overrides: Partial<CreateMerchantRequestBody> = {}): CreateMerchantRequestBody {
+export function buildMerchantInput(
+  overrides: Partial<CreateMerchantRequestBody> = {},
+): CreateMerchantRequestBody {
   return {
     name: `Merchant ${randomSuffix()}`,
     domain: `${randomSuffix()}.example.com`,
@@ -115,7 +125,9 @@ export function buildMerchantInput(overrides: Partial<CreateMerchantRequestBody>
   };
 }
 
-export function buildCategoryInput(overrides: Partial<CreateCategoryRequestBody> = {}): CreateCategoryRequestBody {
+export function buildCategoryInput(
+  overrides: Partial<CreateCategoryRequestBody> = {},
+): CreateCategoryRequestBody {
   return {
     name: `Category ${randomSuffix()}`,
     type: 'expense',
@@ -157,7 +169,12 @@ export async function createBalanceEntryForAccount(input: {
       id: ledgerAccountsTable.id,
     })
     .from(ledgerAccountsTable)
-    .where(and(eq(ledgerAccountsTable.ownerType, 'account'), eq(ledgerAccountsTable.ownerId, input.accountId)))
+    .where(
+      and(
+        eq(ledgerAccountsTable.ownerType, 'account'),
+        eq(ledgerAccountsTable.ownerId, input.accountId),
+      ),
+    )
     .limit(1);
 
   const ledger = ledgerRows[0];
@@ -211,6 +228,10 @@ export function buildHouseholdContext(input: {
 }
 
 export async function findAccountRecord(accountId: string) {
-  const rows = await db.select().from(accountsTable).where(eq(accountsTable.id, accountId)).limit(1);
+  const rows = await db
+    .select()
+    .from(accountsTable)
+    .where(eq(accountsTable.id, accountId))
+    .limit(1);
   return rows[0];
 }

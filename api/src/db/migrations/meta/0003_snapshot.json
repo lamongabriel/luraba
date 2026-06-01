@@ -148,9 +148,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -285,12 +283,8 @@
           "name": "exchange_rates_from_currency_id_currencies_code_fk",
           "tableFrom": "exchange_rates",
           "tableTo": "currencies",
-          "columnsFrom": [
-            "from_currency_id"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["from_currency_id"],
+          "columnsTo": ["code"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -298,12 +292,8 @@
           "name": "exchange_rates_to_currency_id_currencies_code_fk",
           "tableFrom": "exchange_rates",
           "tableTo": "currencies",
-          "columnsFrom": [
-            "to_currency_id"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["to_currency_id"],
+          "columnsTo": ["code"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -414,12 +404,8 @@
           "name": "household_invites_household_id_households_id_fk",
           "tableFrom": "household_invites",
           "tableTo": "households",
-          "columnsFrom": [
-            "household_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["household_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -427,12 +413,8 @@
           "name": "household_invites_invited_by_user_id_users_id_fk",
           "tableFrom": "household_invites",
           "tableTo": "users",
-          "columnsFrom": [
-            "invited_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invited_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -516,12 +498,8 @@
           "name": "household_members_household_id_households_id_fk",
           "tableFrom": "household_members",
           "tableTo": "households",
-          "columnsFrom": [
-            "household_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["household_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -529,12 +507,8 @@
           "name": "household_members_user_id_users_id_fk",
           "tableFrom": "household_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -624,12 +598,8 @@
           "name": "households_default_currency_id_currencies_code_fk",
           "tableFrom": "households",
           "tableTo": "currencies",
-          "columnsFrom": [
-            "default_currency_id"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["default_currency_id"],
+          "columnsTo": ["code"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -637,12 +607,8 @@
           "name": "households_created_by_user_id_users_id_fk",
           "tableFrom": "households",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -763,12 +729,8 @@
           "name": "accounts_user_id_users_id_fk",
           "tableFrom": "accounts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -776,12 +738,8 @@
           "name": "accounts_household_id_households_id_fk",
           "tableFrom": "accounts",
           "tableTo": "households",
-          "columnsFrom": [
-            "household_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["household_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -789,12 +747,8 @@
           "name": "accounts_currency_id_currencies_code_fk",
           "tableFrom": "accounts",
           "tableTo": "currencies",
-          "columnsFrom": [
-            "currency_id"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["currency_id"],
+          "columnsTo": ["code"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -900,12 +854,8 @@
           "name": "ledger_accounts_currency_id_currencies_code_fk",
           "tableFrom": "ledger_accounts",
           "tableTo": "currencies",
-          "columnsFrom": [
-            "currency_id"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["currency_id"],
+          "columnsTo": ["code"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1001,12 +951,8 @@
           "name": "categories_user_id_users_id_fk",
           "tableFrom": "categories",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1014,12 +960,8 @@
           "name": "categories_household_id_households_id_fk",
           "tableFrom": "categories",
           "tableTo": "households",
-          "columnsFrom": [
-            "household_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["household_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1102,12 +1044,8 @@
           "name": "tags_user_id_users_id_fk",
           "tableFrom": "tags",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1115,12 +1053,8 @@
           "name": "tags_household_id_households_id_fk",
           "tableFrom": "tags",
           "tableTo": "households",
-          "columnsFrom": [
-            "household_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["household_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1215,12 +1149,8 @@
           "name": "merchants_user_id_users_id_fk",
           "tableFrom": "merchants",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1228,12 +1158,8 @@
           "name": "merchants_household_id_households_id_fk",
           "tableFrom": "merchants",
           "tableTo": "households",
-          "columnsFrom": [
-            "household_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["household_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1414,12 +1340,8 @@
           "name": "transactions_user_id_users_id_fk",
           "tableFrom": "transactions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1427,12 +1349,8 @@
           "name": "transactions_household_id_households_id_fk",
           "tableFrom": "transactions",
           "tableTo": "households",
-          "columnsFrom": [
-            "household_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["household_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1440,12 +1358,8 @@
           "name": "transactions_payment_method_id_payment_methods_id_fk",
           "tableFrom": "transactions",
           "tableTo": "payment_methods",
-          "columnsFrom": [
-            "payment_method_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["payment_method_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1453,12 +1367,8 @@
           "name": "transactions_category_id_categories_id_fk",
           "tableFrom": "transactions",
           "tableTo": "categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1466,12 +1376,8 @@
           "name": "transactions_merchant_id_merchants_id_fk",
           "tableFrom": "transactions",
           "tableTo": "merchants",
-          "columnsFrom": [
-            "merchant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["merchant_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1589,12 +1495,8 @@
           "name": "entries_transaction_id_transactions_id_fk",
           "tableFrom": "entries",
           "tableTo": "transactions",
-          "columnsFrom": [
-            "transaction_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["transaction_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1602,12 +1504,8 @@
           "name": "entries_ledger_account_id_ledger_accounts_id_fk",
           "tableFrom": "entries",
           "tableTo": "ledger_accounts",
-          "columnsFrom": [
-            "ledger_account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ledger_account_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1615,12 +1513,8 @@
           "name": "entries_currency_id_currencies_code_fk",
           "tableFrom": "entries",
           "tableTo": "currencies",
-          "columnsFrom": [
-            "currency_id"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["currency_id"],
+          "columnsTo": ["code"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1628,12 +1522,8 @@
           "name": "entries_category_id_categories_id_fk",
           "tableFrom": "entries",
           "tableTo": "categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1745,12 +1635,8 @@
           "name": "budgets_user_id_users_id_fk",
           "tableFrom": "budgets",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1758,12 +1644,8 @@
           "name": "budgets_household_id_households_id_fk",
           "tableFrom": "budgets",
           "tableTo": "households",
-          "columnsFrom": [
-            "household_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["household_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1771,12 +1653,8 @@
           "name": "budgets_category_id_categories_id_fk",
           "tableFrom": "budgets",
           "tableTo": "categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1784,12 +1662,8 @@
           "name": "budgets_currency_id_currencies_code_fk",
           "tableFrom": "budgets",
           "tableTo": "currencies",
-          "columnsFrom": [
-            "currency_id"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["currency_id"],
+          "columnsTo": ["code"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1823,12 +1697,8 @@
           "name": "transaction_tags_transaction_id_transactions_id_fk",
           "tableFrom": "transaction_tags",
           "tableTo": "transactions",
-          "columnsFrom": [
-            "transaction_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["transaction_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1836,12 +1706,8 @@
           "name": "transaction_tags_tag_id_tags_id_fk",
           "tableFrom": "transaction_tags",
           "tableTo": "tags",
-          "columnsFrom": [
-            "tag_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tag_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1849,10 +1715,7 @@
       "compositePrimaryKeys": {
         "transaction_tags_pk": {
           "name": "transaction_tags_pk",
-          "columns": [
-            "transaction_id",
-            "tag_id"
-          ]
+          "columns": ["transaction_id", "tag_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1935,12 +1798,8 @@
           "name": "payment_methods_currency_id_currencies_code_fk",
           "tableFrom": "payment_methods",
           "tableTo": "currencies",
-          "columnsFrom": [
-            "currency_id"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["currency_id"],
+          "columnsTo": ["code"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2062,12 +1921,8 @@
           "name": "credit_cards_user_id_users_id_fk",
           "tableFrom": "credit_cards",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2075,12 +1930,8 @@
           "name": "credit_cards_household_id_households_id_fk",
           "tableFrom": "credit_cards",
           "tableTo": "households",
-          "columnsFrom": [
-            "household_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["household_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2088,12 +1939,8 @@
           "name": "credit_cards_account_id_accounts_id_fk",
           "tableFrom": "credit_cards",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2217,12 +2064,8 @@
           "name": "credit_card_billing_cycles_credit_card_id_credit_cards_id_fk",
           "tableFrom": "credit_card_billing_cycles",
           "tableTo": "credit_cards",
-          "columnsFrom": [
-            "credit_card_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["credit_card_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2312,12 +2155,8 @@
           "name": "credit_card_purchases_credit_card_id_credit_cards_id_fk",
           "tableFrom": "credit_card_purchases",
           "tableTo": "credit_cards",
-          "columnsFrom": [
-            "credit_card_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["credit_card_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2325,12 +2164,8 @@
           "name": "credit_card_purchases_transaction_id_transactions_id_fk",
           "tableFrom": "credit_card_purchases",
           "tableTo": "transactions",
-          "columnsFrom": [
-            "transaction_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["transaction_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2418,12 +2253,8 @@
           "name": "credit_card_installments_credit_card_id_credit_cards_id_fk",
           "tableFrom": "credit_card_installments",
           "tableTo": "credit_cards",
-          "columnsFrom": [
-            "credit_card_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["credit_card_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2431,12 +2262,8 @@
           "name": "credit_card_installments_purchase_id_credit_card_purchases_id_fk",
           "tableFrom": "credit_card_installments",
           "tableTo": "credit_card_purchases",
-          "columnsFrom": [
-            "purchase_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["purchase_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2444,12 +2271,8 @@
           "name": "credit_card_installments_billing_cycle_id_credit_card_billing_cycles_id_fk",
           "tableFrom": "credit_card_installments",
           "tableTo": "credit_card_billing_cycles",
-          "columnsFrom": [
-            "billing_cycle_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["billing_cycle_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2519,12 +2342,8 @@
           "name": "credit_card_payments_credit_card_id_credit_cards_id_fk",
           "tableFrom": "credit_card_payments",
           "tableTo": "credit_cards",
-          "columnsFrom": [
-            "credit_card_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["credit_card_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2532,12 +2351,8 @@
           "name": "credit_card_payments_transaction_id_transactions_id_fk",
           "tableFrom": "credit_card_payments",
           "tableTo": "transactions",
-          "columnsFrom": [
-            "transaction_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["transaction_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2591,12 +2406,8 @@
           "name": "credit_card_payment_allocations_payment_id_credit_card_payments_id_fk",
           "tableFrom": "credit_card_payment_allocations",
           "tableTo": "credit_card_payments",
-          "columnsFrom": [
-            "payment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["payment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2604,12 +2415,8 @@
           "name": "credit_card_payment_allocations_billing_cycle_id_credit_card_billing_cycles_id_fk",
           "tableFrom": "credit_card_payment_allocations",
           "tableTo": "credit_card_billing_cycles",
-          "columnsFrom": [
-            "billing_cycle_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["billing_cycle_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2697,12 +2504,8 @@
           "name": "credit_card_budget_recognitions_purchase_id_credit_card_purchases_id_fk",
           "tableFrom": "credit_card_budget_recognitions",
           "tableTo": "credit_card_purchases",
-          "columnsFrom": [
-            "purchase_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["purchase_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2710,12 +2513,8 @@
           "name": "credit_card_budget_recognitions_installment_id_credit_card_installments_id_fk",
           "tableFrom": "credit_card_budget_recognitions",
           "tableTo": "credit_card_installments",
-          "columnsFrom": [
-            "installment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["installment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2723,12 +2522,8 @@
           "name": "credit_card_budget_recognitions_category_id_categories_id_fk",
           "tableFrom": "credit_card_budget_recognitions",
           "tableTo": "categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2736,12 +2531,8 @@
           "name": "credit_card_budget_recognitions_currency_id_currencies_code_fk",
           "tableFrom": "credit_card_budget_recognitions",
           "tableTo": "currencies",
-          "columnsFrom": [
-            "currency_id"
-          ],
-          "columnsTo": [
-            "code"
-          ],
+          "columnsFrom": ["currency_id"],
+          "columnsTo": ["code"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2757,10 +2548,7 @@
     "public.account_classification": {
       "name": "account_classification",
       "schema": "public",
-      "values": [
-        "asset",
-        "liability"
-      ]
+      "values": ["asset", "liability"]
     },
     "public.account_type": {
       "name": "account_type",
@@ -2778,60 +2566,37 @@
     "public.category_type": {
       "name": "category_type",
       "schema": "public",
-      "values": [
-        "expense",
-        "income"
-      ]
+      "values": ["expense", "income"]
     },
     "public.country_code": {
       "name": "country_code",
       "schema": "public",
-      "values": [
-        "BR",
-        "US"
-      ]
+      "values": ["BR", "US"]
     },
     "public.credit_card_cycle_status": {
       "name": "credit_card_cycle_status",
       "schema": "public",
-      "values": [
-        "open",
-        "closed",
-        "paid"
-      ]
+      "values": ["open", "closed", "paid"]
     },
     "public.credit_card_product_type": {
       "name": "credit_card_product_type",
       "schema": "public",
-      "values": [
-        "credit"
-      ]
+      "values": ["credit"]
     },
     "public.credit_expense_timing": {
       "name": "credit_expense_timing",
       "schema": "public",
-      "values": [
-        "spend_month",
-        "payment_month"
-      ]
+      "values": ["spend_month", "payment_month"]
     },
     "public.credit_installment_budget_mode": {
       "name": "credit_installment_budget_mode",
       "schema": "public",
-      "values": [
-        "per_installment",
-        "full_amount"
-      ]
+      "values": ["per_installment", "full_amount"]
     },
     "public.default_account_order": {
       "name": "default_account_order",
       "schema": "public",
-      "values": [
-        "name_asc",
-        "name_desc",
-        "newest",
-        "oldest"
-      ]
+      "values": ["name_asc", "name_desc", "newest", "oldest"]
     },
     "public.default_period": {
       "name": "default_period",
@@ -2854,90 +2619,52 @@
     "public.household_invite_status": {
       "name": "household_invite_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "accepted",
-        "revoked"
-      ]
+      "values": ["pending", "accepted", "revoked"]
     },
     "public.household_role": {
       "name": "household_role",
       "schema": "public",
-      "values": [
-        "owner",
-        "admin",
-        "member",
-        "viewer"
-      ]
+      "values": ["owner", "admin", "member", "viewer"]
     },
     "public.ledger_classification": {
       "name": "ledger_classification",
       "schema": "public",
-      "values": [
-        "asset",
-        "liability"
-      ]
+      "values": ["asset", "liability"]
     },
     "public.ledger_owner_type": {
       "name": "ledger_owner_type",
       "schema": "public",
-      "values": [
-        "account",
-        "system"
-      ]
+      "values": ["account", "system"]
     },
     "public.preferred_currency": {
       "name": "preferred_currency",
       "schema": "public",
-      "values": [
-        "BRL",
-        "USD",
-        "EUR"
-      ]
+      "values": ["BRL", "USD", "EUR"]
     },
     "public.preferred_date_format": {
       "name": "preferred_date_format",
       "schema": "public",
-      "values": [
-        "DD/MM/YYYY",
-        "MM/DD/YYYY",
-        "YYYY-MM-DD"
-      ]
+      "values": ["DD/MM/YYYY", "MM/DD/YYYY", "YYYY-MM-DD"]
     },
     "public.preferred_language": {
       "name": "preferred_language",
       "schema": "public",
-      "values": [
-        "en",
-        "pt-BR"
-      ]
+      "values": ["en", "pt-BR"]
     },
     "public.preferred_timezone": {
       "name": "preferred_timezone",
       "schema": "public",
-      "values": [
-        "America/Sao_Paulo",
-        "UTC"
-      ]
+      "values": ["America/Sao_Paulo", "UTC"]
     },
     "public.theme_preference": {
       "name": "theme_preference",
       "schema": "public",
-      "values": [
-        "light",
-        "dark",
-        "system"
-      ]
+      "values": ["light", "dark", "system"]
     },
     "public.transaction_type": {
       "name": "transaction_type",
       "schema": "public",
-      "values": [
-        "expense",
-        "income",
-        "transfer",
-        "adjustment"
-      ]
+      "values": ["expense", "income", "transfer", "adjustment"]
     }
   },
   "schemas": {},

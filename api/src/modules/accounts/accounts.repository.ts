@@ -1,12 +1,12 @@
 import { and, eq, sql } from 'drizzle-orm';
+import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
 import { accountsTable } from '@/db/schemas/accounts.schema';
 import { currenciesTable } from '@/db/schemas/currencies.schema';
 import { entriesTable } from '@/db/schemas/entries.schema';
 import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
-import type { HouseholdContext } from '@/config/permissions';
 import { HouseholdScopedRepository } from '@/shared/repositories/household-scoped.repository';
-import { AccountRecord } from './accounts.types';
+import type { AccountRecord } from './accounts.types';
 
 class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
   constructor() {
@@ -21,7 +21,10 @@ class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
     return rows[0];
   }
 
-  async findByHouseholdAndName(context: HouseholdContext, name: string): Promise<AccountRecord | undefined> {
+  async findByHouseholdAndName(
+    context: HouseholdContext,
+    name: string,
+  ): Promise<AccountRecord | undefined> {
     const rows = await db
       .select()
       .from(accountsTable)
@@ -29,11 +32,14 @@ class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
     return rows[0];
   }
 
-  async findLedgerByAccountId(accountId: string): Promise<{
-    id: string;
-    classification: 'asset' | 'liability';
-    currencyId: string;
-  } | undefined> {
+  async findLedgerByAccountId(accountId: string): Promise<
+    | {
+        id: string;
+        classification: 'asset' | 'liability';
+        currencyId: string;
+      }
+    | undefined
+  > {
     const rows = await db
       .select({
         id: ledgerAccountsTable.id,
@@ -41,7 +47,12 @@ class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
         currencyId: ledgerAccountsTable.currencyId,
       })
       .from(ledgerAccountsTable)
-      .where(and(eq(ledgerAccountsTable.ownerType, 'account'), eq(ledgerAccountsTable.ownerId, accountId)));
+      .where(
+        and(
+          eq(ledgerAccountsTable.ownerType, 'account'),
+          eq(ledgerAccountsTable.ownerId, accountId),
+        ),
+      );
 
     return rows[0];
   }

@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import type { Response } from 'express';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -29,12 +29,7 @@ export function sendNoContent(res: Response): void {
   res.status(204).send();
 }
 
-export function sendError(
-  res: Response,
-  statusCode: number,
-  code: string,
-  message: string,
-): void {
+export function sendError(res: Response, statusCode: number, code: string, message: string): void {
   const body: ApiResponse<never> = {
     success: false,
     error: { code, message },

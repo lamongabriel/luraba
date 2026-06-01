@@ -1,7 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import app from '@/app';
-import { createAuthHeaders, createAuthenticatedContext } from '@/test/auth';
+import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
 
 describe('brandfetch integration routes', () => {
   afterEach(() => {

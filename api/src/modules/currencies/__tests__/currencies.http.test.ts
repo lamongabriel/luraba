@@ -1,7 +1,7 @@
 import request from 'supertest';
 import app from '@/app';
 import { fxRateRepository } from '@/modules/fx/fx.repository';
-import { createAuthHeaders, createAuthenticatedContext } from '@/test/auth';
+import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
 
 describe('currencies routes', () => {
   it('GET /api/v1/currencies requires authentication', async () => {

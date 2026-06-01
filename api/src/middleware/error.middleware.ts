@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { AppError } from '@/shared/errors';
-import { sendError } from '@/shared/response';
 import { logger } from '@/shared/logger';
+import { sendError } from '@/shared/response';
 
 type ValidationIssue = ZodError['issues'][number];
 

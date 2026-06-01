@@ -1,24 +1,25 @@
-import { db } from '../index';
 import { logger } from '../../shared/logger';
+import { db } from '../index';
 import { paymentMethodsTable } from '../schemas/payment-methods.schema';
 
 interface PaymentMethodSeed {
   code: string;
   name: string;
-  currencyId: string | null
+  currencyId: string | null;
   translationKey: string;
 }
 
-const paymentMethods: Record<string, Array<Omit<PaymentMethodSeed, 'currencyId' | 'translationKey'>>> = {
+const paymentMethods: Record<
+  string,
+  Array<Omit<PaymentMethodSeed, 'currencyId' | 'translationKey'>>
+> = {
   common: [
     { code: 'cash', name: 'Cash' },
     { code: 'credit_card', name: 'Credit Card' },
     { code: 'debit_card', name: 'Debit Card' },
     { code: 'paypal', name: 'PayPal' },
   ],
-  USD: [
-    { code: 'wire', name: 'Wire Transfer' },
-  ],
+  USD: [{ code: 'wire', name: 'Wire Transfer' }],
   BRL: [
     { code: 'pix', name: 'Pix' },
     { code: 'boleto', name: 'Boleto' },
@@ -27,19 +28,14 @@ const paymentMethods: Record<string, Array<Omit<PaymentMethodSeed, 'currencyId' 
     { code: 'alipay', name: 'Alipay' },
     { code: 'wechat_pay', name: 'WeChat Pay' },
   ],
-  INR: [
-    { code: 'upi', name: 'UPI' },
-  ],
-  ZAR: [
-    { code: 'eft', name: 'EFT' },
-  ],
+  INR: [{ code: 'upi', name: 'UPI' }],
+  ZAR: [{ code: 'eft', name: 'EFT' }],
 };
 
 export async function seedPaymentMethods() {
   const allMethods: PaymentMethodSeed[] = [];
 
   for (const [currency, methods] of Object.entries(paymentMethods)) {
-
     for (const method of methods) {
       allMethods.push({
         code: method.code,
@@ -53,6 +49,6 @@ export async function seedPaymentMethods() {
   for (const method of allMethods) {
     await db.insert(paymentMethodsTable).values(method).onConflictDoNothing();
   }
-  
-  logger.info({ codes: allMethods.map(m => m.code) }, 'Payment methods seeded');
+
+  logger.info({ codes: allMethods.map((m) => m.code) }, 'Payment methods seeded');
 }

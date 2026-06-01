@@ -1,8 +1,12 @@
-import { NotFoundError } from '@/shared/errors';
 import { fxService } from '@/modules/fx/fx.service';
+import { NotFoundError } from '@/shared/errors';
 import { formatISODate, now } from '@/shared/lib/date';
 import { currenciesRepository } from './currencies.repository';
-import type { GetCurrencyRateRequestQuery, GetCurrencyRateResponse, ListCurrenciesResponse } from './currencies.types';
+import type {
+  GetCurrencyRateRequestQuery,
+  GetCurrencyRateResponse,
+  ListCurrenciesResponse,
+} from './currencies.types';
 
 function formatRate(rateNumerator: number, rateDenominator: number): number {
   const decimalRate = rateNumerator / rateDenominator;
@@ -13,7 +17,9 @@ export async function listCurrencies(): Promise<ListCurrenciesResponse> {
   return currenciesRepository.list();
 }
 
-export async function getCurrencyRate(query: GetCurrencyRateRequestQuery): Promise<GetCurrencyRateResponse> {
+export async function getCurrencyRate(
+  query: GetCurrencyRateRequestQuery,
+): Promise<GetCurrencyRateResponse> {
   const [fromCurrency, toCurrency] = await Promise.all([
     currenciesRepository.findByCode(query.fromCurrencyCode),
     currenciesRepository.findByCode(query.toCurrencyCode),

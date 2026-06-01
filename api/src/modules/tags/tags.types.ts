@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { tagsTable } from '@/db/schemas/tags.schema';
+import type { tagsTable } from '@/db/schemas/tags.schema';
 import { hexColorSchema, iconNameSchema } from '@/shared/validation/categories';
 
 export type TagRecord = typeof tagsTable.$inferSelect;
@@ -27,14 +27,13 @@ export const UpdateTagRequestParamsSchema = z.object({
   id: z.uuid(),
 });
 
-export const UpdateTagRequestBodySchema = z.object({
-  name: z.string().min(1).max(64).optional(),
-  color: hexColorSchema.nullable().optional(),
-  icon: iconNameSchema.nullable().optional(),
-}).refine(
-  (value) => Object.keys(value).length > 0,
-  'At least one field must be provided',
-);
+export const UpdateTagRequestBodySchema = z
+  .object({
+    name: z.string().min(1).max(64).optional(),
+    color: hexColorSchema.nullable().optional(),
+    icon: iconNameSchema.nullable().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, 'At least one field must be provided');
 
 export const UpdateTagResponseSchema = tagSchema;
 

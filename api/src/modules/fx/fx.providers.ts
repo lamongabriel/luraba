@@ -8,4 +8,7 @@ export const fxProvidersById: Record<FxProviderId, FxProvider> = {
   'yahoo-finance2': new YahooFinanceFxProvider(),
 };
 
-export const fxProviderOrder: FxProviderId[] = [FX_PRIMARY_PROVIDER_ID, ...FX_FALLBACK_PROVIDER_IDS];
+export const fxProviderOrder: FxProviderId[] = [
+  FX_PRIMARY_PROVIDER_ID,
+  ...FX_FALLBACK_PROVIDER_IDS,
+];

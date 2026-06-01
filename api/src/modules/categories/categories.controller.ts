@@ -26,7 +26,8 @@ export const update = createHouseholdHandler({
   params: UpdateCategoryRequestParamsSchema,
   body: UpdateCategoryRequestBodySchema,
   response: UpdateCategoryResponseSchema,
-  handle: ({ household, params, body }) => categoriesService.updateCategory(household, params.id, body),
+  handle: ({ household, params, body }) =>
+    categoriesService.updateCategory(household, params.id, body),
 });
 
 export const deleteCategory = createHouseholdHandler({

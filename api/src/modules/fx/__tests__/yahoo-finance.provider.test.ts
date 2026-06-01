@@ -1,5 +1,5 @@
-import { ValidationError } from '@/shared/errors';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ValidationError } from '@/shared/errors';
 import { YahooFinanceFxProvider } from '../providers/yahoo-finance.provider';
 
 describe('YahooFinanceFxProvider', () => {
@@ -17,7 +17,11 @@ describe('YahooFinanceFxProvider', () => {
     ]);
 
     const provider = new YahooFinanceFxProvider({ chart });
-    const rates = await provider.getHistoricalRates('USD', ['BRL'], new Date('2026-05-20T16:00:00.000Z'));
+    const rates = await provider.getHistoricalRates(
+      'USD',
+      ['BRL'],
+      new Date('2026-05-20T16:00:00.000Z'),
+    );
 
     expect(chart).toHaveBeenCalledWith(
       'USDBRL=X',
@@ -46,7 +50,11 @@ describe('YahooFinanceFxProvider', () => {
     });
 
     const provider = new YahooFinanceFxProvider({ chart });
-    const rates = await provider.getHistoricalRates('USD', ['EUR'], new Date('2026-05-21T00:00:00.000Z'));
+    const rates = await provider.getHistoricalRates(
+      'USD',
+      ['EUR'],
+      new Date('2026-05-21T00:00:00.000Z'),
+    );
 
     expect(rates[0]).toEqual({
       provider: 'yahoo-finance2',

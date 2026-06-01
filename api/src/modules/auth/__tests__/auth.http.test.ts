@@ -1,6 +1,6 @@
 import request from 'supertest';
 import app from '@/app';
-import { createAuthHeaders, createAuthenticatedContext } from '@/test/auth';
+import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
 import { buildRegisterInput, createHousehold, createHouseholdMembership } from '@/test/factories';
 import * as authService from '../auth.service';
 
@@ -33,13 +33,15 @@ describe('auth routes', () => {
   });
 
   it('POST /api/v1/auth/register validates the payload', async () => {
-    const response = await request(app).post('/api/v1/auth/register').send({
-      name: '',
-      email: 'invalid@example.com',
-      password: 'short',
-      preferences: {},
-      household: { settings: {} },
-    });
+    const response = await request(app)
+      .post('/api/v1/auth/register')
+      .send({
+        name: '',
+        email: 'invalid@example.com',
+        password: 'short',
+        preferences: {},
+        household: { settings: {} },
+      });
 
     expect(response.status).toBe(422);
     expect(response.body.success).toBe(false);

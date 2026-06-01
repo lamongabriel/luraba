@@ -1,10 +1,10 @@
-import { db } from '@/db';
 import type { HouseholdContext } from '@/config/permissions';
-import { formatISODateTime } from '@/shared/lib/date';
+import { db } from '@/db';
 import { budgetsRepository } from '@/modules/budgets/budgets.repository';
 import { currenciesRepository } from '@/modules/currencies/currencies.repository';
 import { fxService } from '@/modules/fx/fx.service';
 import { ForbiddenError, NotFoundError, ValidationError } from '@/shared/errors';
+import { formatISODateTime } from '@/shared/lib/date';
 import { householdsRepository } from './households.repository';
 import type {
   CreateHouseholdInviteRequestBody,
@@ -37,7 +37,10 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-function canManageRole(actorRole: HouseholdContext['role'], targetRole: HouseholdContext['role']): boolean {
+function canManageRole(
+  actorRole: HouseholdContext['role'],
+  targetRole: HouseholdContext['role'],
+): boolean {
   if (actorRole === 'owner') {
     return true;
   }
@@ -45,7 +48,9 @@ function canManageRole(actorRole: HouseholdContext['role'], targetRole: Househol
   return targetRole !== 'owner';
 }
 
-function mapHousehold(record: Awaited<ReturnType<typeof householdsRepository.listHouseholdsForUser>>[number]): Household {
+function mapHousehold(
+  record: Awaited<ReturnType<typeof householdsRepository.listHouseholdsForUser>>[number],
+): Household {
   return {
     id: record.id,
     name: record.name,
@@ -63,7 +68,9 @@ function mapHousehold(record: Awaited<ReturnType<typeof householdsRepository.lis
   };
 }
 
-function mapHouseholdMember(record: Awaited<ReturnType<typeof householdsRepository.listMembers>>[number]): HouseholdMember {
+function mapHouseholdMember(
+  record: Awaited<ReturnType<typeof householdsRepository.listMembers>>[number],
+): HouseholdMember {
   return {
     householdId: record.householdId,
     userId: record.userId,
@@ -103,7 +110,10 @@ export async function createDefaultHouseholdForUser(
   if (!user) throw new NotFoundError('User');
 
   if (user.defaultHouseholdId) {
-    const defaultMembership = await householdsRepository.findMembership(user.defaultHouseholdId, userId);
+    const defaultMembership = await householdsRepository.findMembership(
+      user.defaultHouseholdId,
+      userId,
+    );
     if (defaultMembership) {
       return user.defaultHouseholdId;
     }
@@ -136,7 +146,9 @@ export async function createDefaultHouseholdForUser(
 }
 
 export async function acceptPendingInvitesForUser(userId: string, email: string): Promise<void> {
-  const pendingInvites = await householdsRepository.listPendingInvitesForEmail(normalizeEmail(email));
+  const pendingInvites = await householdsRepository.listPendingInvitesForEmail(
+    normalizeEmail(email),
+  );
   if (pendingInvites.length === 0) {
     return;
   }
@@ -155,7 +167,10 @@ export async function listHouseholds(userId: string): Promise<Household[]> {
   return households.map(mapHousehold);
 }
 
-export async function createHousehold(userId: string, body: CreateHouseholdRequestBody): Promise<Household> {
+export async function createHousehold(
+  userId: string,
+  body: CreateHouseholdRequestBody,
+): Promise<Household> {
   const currency = await currenciesRepository.findByCode(body.defaultCurrencyId);
   if (!currency) throw new NotFoundError('Currency');
 
@@ -165,7 +180,9 @@ export async function createHousehold(userId: string, body: CreateHouseholdReque
     return household.id;
   });
 
-  const household = (await householdsRepository.listHouseholdsForUser(userId)).find((item) => item.id === householdId);
+  const household = (await householdsRepository.listHouseholdsForUser(userId)).find(
+    (item) => item.id === householdId,
+  );
   if (!household) throw new NotFoundError('Household');
 
   return mapHousehold(household);
@@ -211,7 +228,11 @@ export async function updateHousehold(
         await budgetsRepository.updateBudgetAmount(tx, budget.id, convertedAmount);
       }
 
-      const updated = await householdsRepository.updateHouseholdInTransaction(tx, householdId, body);
+      const updated = await householdsRepository.updateHouseholdInTransaction(
+        tx,
+        householdId,
+        body,
+      );
       if (!updated) throw new NotFoundError('Household');
     });
   } else {
@@ -219,13 +240,18 @@ export async function updateHousehold(
     if (!updated) throw new NotFoundError('Household');
   }
 
-  const household = (await householdsRepository.listHouseholdsForUser(context.userId)).find((item) => item.id === householdId);
+  const household = (await householdsRepository.listHouseholdsForUser(context.userId)).find(
+    (item) => item.id === householdId,
+  );
   if (!household) throw new NotFoundError('Household');
 
   return mapHousehold(household);
 }
 
-export async function listMembers(context: HouseholdContext, householdId: string): Promise<HouseholdMember[]> {
+export async function listMembers(
+  context: HouseholdContext,
+  householdId: string,
+): Promise<HouseholdMember[]> {
   assertCurrentHousehold(context, householdId);
   const members = await householdsRepository.listMembers(householdId);
   return members.map(mapHouseholdMember);
@@ -242,7 +268,10 @@ export async function updateMemberRole(
   const targetMembership = await householdsRepository.findMembership(householdId, userId);
   if (!targetMembership) throw new NotFoundError('Household member');
 
-  if (!canManageRole(context.role, targetMembership.role) || !canManageRole(context.role, body.role)) {
+  if (
+    !canManageRole(context.role, targetMembership.role) ||
+    !canManageRole(context.role, body.role)
+  ) {
     throw new ForbiddenError('You do not have permission to manage this member role');
   }
 
@@ -256,7 +285,9 @@ export async function updateMemberRole(
   const updated = await householdsRepository.updateMemberRole(householdId, userId, body.role);
   if (!updated) throw new NotFoundError('Household member');
 
-  const member = (await householdsRepository.listMembers(householdId)).find((item) => item.userId === userId);
+  const member = (await householdsRepository.listMembers(householdId)).find(
+    (item) => item.userId === userId,
+  );
   if (!member) throw new NotFoundError('Household member');
 
   return mapHouseholdMember(member);
@@ -302,7 +333,9 @@ export async function createInvite(
     email: normalizeEmail(body.email),
   });
 
-  const created = (await householdsRepository.listInvitesForHousehold(householdId)).find((item) => item.id === invite.id);
+  const created = (await householdsRepository.listInvitesForHousehold(householdId)).find(
+    (item) => item.id === invite.id,
+  );
   if (!created) throw new NotFoundError('Household invite');
 
   return mapHouseholdInvite(created);
@@ -322,7 +355,11 @@ export async function listMyPendingInvites(userEmail: string): Promise<Household
   return invites.map(mapHouseholdInvite);
 }
 
-export async function acceptInvite(userId: string, userEmail: string, inviteId: string): Promise<void> {
+export async function acceptInvite(
+  userId: string,
+  userEmail: string,
+  inviteId: string,
+): Promise<void> {
   const invite = await householdsRepository.findPendingInviteById(inviteId);
   if (!invite || invite.email !== normalizeEmail(userEmail)) {
     throw new NotFoundError('Household invite');

@@ -5,7 +5,9 @@ export const merchantsTable = pgTable(
   'merchants',
   {
     id: uuid().primaryKey().defaultRandom(),
-    householdId: uuid('household_id').notNull().references(() => householdsTable.id, { onDelete: 'cascade' }),
+    householdId: uuid('household_id')
+      .notNull()
+      .references(() => householdsTable.id, { onDelete: 'cascade' }),
     name: varchar({ length: 255 }).notNull(),
     domain: varchar({ length: 255 }),
     logoUrl: varchar('logo_url', { length: 512 }),

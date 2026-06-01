@@ -44,9 +44,14 @@ describe('households service', () => {
     const context = await createAuthenticatedContext();
 
     await expect(
-      householdsService.updateMemberRole(context.householdContext, context.household.id, context.user.id, {
-        role: 'admin',
-      }),
+      householdsService.updateMemberRole(
+        context.householdContext,
+        context.household.id,
+        context.user.id,
+        {
+          role: 'admin',
+        },
+      ),
     ).rejects.toThrow(ValidationError);
   });
 
@@ -54,17 +59,24 @@ describe('households service', () => {
     const owner = await createAuthenticatedContext();
     const invitedUser = await createUser({ email: 'invited-household@example.com' });
 
-    const invite = await householdsService.createInvite(owner.householdContext, owner.household.id, {
-      email: invitedUser.email,
-      role: 'member',
-    });
+    const invite = await householdsService.createInvite(
+      owner.householdContext,
+      owner.household.id,
+      {
+        email: invitedUser.email,
+        role: 'member',
+      },
+    );
 
     expect(invite.email).toBe(invitedUser.email);
     expect(invite.status).toBe('pending');
 
     await householdsService.acceptInvite(invitedUser.id, invitedUser.email, invite.id);
 
-    const membership = await householdsRepository.findMembership(owner.household.id, invitedUser.id);
+    const membership = await householdsRepository.findMembership(
+      owner.household.id,
+      invitedUser.id,
+    );
     expect(membership?.role).toBe('member');
 
     const pendingInvites = await householdsService.listMyPendingInvites(invitedUser.email);

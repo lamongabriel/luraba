@@ -1,9 +1,9 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import app from '@/app';
-import { createAuthHeaders, createAuthenticatedContext } from '@/test/auth';
-import { buildMerchantInput } from '@/test/factories';
 import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
+import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
+import { buildMerchantInput } from '@/test/factories';
 
 describe('merchants routes', () => {
   afterEach(() => {

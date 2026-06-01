@@ -95,7 +95,7 @@ export async function updatePaymentMethod(
     throw new NotFoundError('Payment method');
   }
 
-  const currencyId = dto.currencyCode === null ? null : dto.currencyCode ?? method.currencyId;
+  const currencyId = dto.currencyCode === null ? null : (dto.currencyCode ?? method.currencyId);
   await assertCurrencyExists(currencyId ?? undefined);
 
   const code = dto.code ? toPaymentMethodCode(dto.code) : method.code;
@@ -125,7 +125,10 @@ export async function updatePaymentMethod(
   return mapPaymentMethodRecord(updated);
 }
 
-export async function deletePaymentMethod(context: HouseholdContext, paymentMethodId: string): Promise<void> {
+export async function deletePaymentMethod(
+  context: HouseholdContext,
+  paymentMethodId: string,
+): Promise<void> {
   const method = await paymentMethodsRepository.get(paymentMethodId, context);
   if (!method) {
     throw new NotFoundError('Payment method');

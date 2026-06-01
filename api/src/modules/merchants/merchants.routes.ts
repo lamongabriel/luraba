@@ -7,6 +7,10 @@ const router = Router();
 router.get('/', requireAccess({ permission: 'merchants.read' }), merchantsController.list);
 router.post('/', requireAccess({ permission: 'merchants.create' }), merchantsController.create);
 router.patch('/:id', requireAccess({ permission: 'merchants.update' }), merchantsController.update);
-router.delete('/:id', requireAccess({ permission: 'merchants.delete' }), merchantsController.deleteMerchant);
+router.delete(
+  '/:id',
+  requireAccess({ permission: 'merchants.delete' }),
+  merchantsController.deleteMerchant,
+);
 
 export default router;

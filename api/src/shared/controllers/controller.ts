@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from 'express';
-import { z } from 'zod';
+import type { NextFunction, Request, Response } from 'express';
+import type { z } from 'zod';
 import { sendCreated, sendNoContent, sendSuccess } from '@/shared/response';
 
 export type ControllerStatus = 'ok' | 'created' | 'no-content';
@@ -8,7 +8,9 @@ type Schema = z.ZodTypeAny;
 export type ControllerSchema = Schema | undefined;
 type EmptyInput = Record<string, never>;
 
-export type ParsedInput<TSchema extends ControllerSchema> = TSchema extends Schema ? z.output<TSchema> : EmptyInput;
+export type ParsedInput<TSchema extends ControllerSchema> = TSchema extends Schema
+  ? z.output<TSchema>
+  : EmptyInput;
 export type ParsedResponse<TSchema extends Schema> = z.output<TSchema>;
 
 export type ControllerArgs<
@@ -22,7 +24,10 @@ export type ControllerArgs<
   query: ParsedInput<TQuery>;
 };
 
-function parseInput<TSchema extends ControllerSchema>(schema: TSchema, value: unknown): ParsedInput<TSchema> {
+function parseInput<TSchema extends ControllerSchema>(
+  schema: TSchema,
+  value: unknown,
+): ParsedInput<TSchema> {
   if (!schema) {
     return {} as ParsedInput<TSchema>;
   }
@@ -85,7 +90,11 @@ export function createHandler<
       const body = parseInput(options.body, req.body);
       const params = parseInput(options.params, req.params);
       const query = parseInput(options.query, req.query);
-      const data = await options.handle({ req, body, params, query } as ControllerArgs<TBody, TParams, TQuery>);
+      const data = await options.handle({ req, body, params, query } as ControllerArgs<
+        TBody,
+        TParams,
+        TQuery
+      >);
 
       if (options.status === 'no-content') {
         sendResponse(res, undefined, 'no-content');

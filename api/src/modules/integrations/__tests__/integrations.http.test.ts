@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import request from 'supertest';
+import { describe, expect, it } from 'vitest';
 import app from '@/app';
-import { createAuthHeaders, createAuthenticatedContext } from '@/test/auth';
+import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
 
 describe('integrations routes', () => {
   it('GET /api/v1/integrations returns the active household integrations', async () => {

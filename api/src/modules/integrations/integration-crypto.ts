@@ -29,7 +29,11 @@ export function decryptIntegrationSecret(payload: string): string {
     throw new ValidationError('Invalid encrypted integration payload');
   }
 
-  const decipher = createDecipheriv(ENCRYPTION_ALGORITHM, getEncryptionKey(), Buffer.from(ivHex, 'hex'));
+  const decipher = createDecipheriv(
+    ENCRYPTION_ALGORITHM,
+    getEncryptionKey(),
+    Buffer.from(ivHex, 'hex'),
+  );
   decipher.setAuthTag(Buffer.from(authTagHex, 'hex'));
 
   const decrypted = Buffer.concat([

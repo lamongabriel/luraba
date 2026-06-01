@@ -1,5 +1,5 @@
-import { brandfetchIntegrationsTable } from '@/db/schemas/brandfetch-integrations.schema';
 import type { HouseholdContext } from '@/config/permissions';
+import { brandfetchIntegrationsTable } from '@/db/schemas/brandfetch-integrations.schema';
 import { HouseholdScopedRepository } from '@/shared/repositories/household-scoped.repository';
 
 export type BrandfetchIntegrationRecord = typeof brandfetchIntegrationsTable.$inferSelect;
@@ -16,7 +16,9 @@ class BrandfetchRepository extends HouseholdScopedRepository<
     super(brandfetchIntegrationsTable);
   }
 
-  async findByHousehold(context: HouseholdContext): Promise<BrandfetchIntegrationRecord | undefined> {
+  async findByHousehold(
+    context: HouseholdContext,
+  ): Promise<BrandfetchIntegrationRecord | undefined> {
     const rows = await this.list(context);
     return rows[0];
   }

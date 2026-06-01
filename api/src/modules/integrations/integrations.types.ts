@@ -1,8 +1,5 @@
 import { z } from 'zod';
-import {
-  INTEGRATION_PROVIDER_IDS,
-  INTEGRATION_STATUS_VALUES,
-} from '@/config/integrations';
+import { INTEGRATION_PROVIDER_IDS, INTEGRATION_STATUS_VALUES } from '@/config/integrations';
 
 export const integrationProviderSchema = z.enum(INTEGRATION_PROVIDER_IDS);
 export const integrationStatusSchema = z.enum(INTEGRATION_STATUS_VALUES);

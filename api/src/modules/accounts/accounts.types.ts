@@ -1,19 +1,23 @@
 import { z } from 'zod';
-import { accountsTable } from '@/db/schemas/accounts.schema';
+import type { accountsTable } from '@/db/schemas/accounts.schema';
 import {
-  accountClassificationSchema,
-  accountTypeSchema,
   type AccountClassification,
   type AccountType,
+  accountClassificationSchema,
+  accountTypeSchema,
 } from '@/shared/validation/accounts';
 
-export { accountClassificationSchema, accountTypeSchema };
 export type { AccountClassification, AccountType };
+export { accountClassificationSchema, accountTypeSchema };
 
 export type AccountRecord = typeof accountsTable.$inferSelect;
 
 const createAccountTypeSchema = accountTypeSchema.exclude(['credit_card']);
-export const currencyCodeSchema = z.string().trim().length(3).transform((value) => value.toUpperCase());
+export const currencyCodeSchema = z
+  .string()
+  .trim()
+  .length(3)
+  .transform((value) => value.toUpperCase());
 
 export const accountSchema = z.object({
   id: z.uuid(),
@@ -56,15 +60,14 @@ export const UpdateAccountRequestParamsSchema = z.object({
   id: z.uuid(),
 });
 
-export const UpdateAccountRequestBodySchema = z.object({
-  name: z.string().min(1).max(255).optional(),
-  institutionName: z.string().min(1).max(255).nullable().optional(),
-  institutionDomain: z.string().min(1).max(255).nullable().optional(),
-  notes: z.string().max(4000).nullable().optional(),
-}).refine(
-  (value) => Object.keys(value).length > 0,
-  'At least one field must be provided',
-);
+export const UpdateAccountRequestBodySchema = z
+  .object({
+    name: z.string().min(1).max(255).optional(),
+    institutionName: z.string().min(1).max(255).nullable().optional(),
+    institutionDomain: z.string().min(1).max(255).nullable().optional(),
+    notes: z.string().max(4000).nullable().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, 'At least one field must be provided');
 
 export const UpdateAccountResponseSchema = accountSchema;
 

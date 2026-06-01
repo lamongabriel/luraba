@@ -34,7 +34,8 @@ export const update = createHouseholdHandler({
   params: UpdateAccountRequestParamsSchema,
   body: UpdateAccountRequestBodySchema,
   response: UpdateAccountResponseSchema,
-  handle: ({ household, params, body }) => accountsService.updateAccount(household, params.id, body),
+  handle: ({ household, params, body }) =>
+    accountsService.updateAccount(household, params.id, body),
 });
 
 export const deleteAccount = createHouseholdHandler({

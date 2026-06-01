@@ -1,12 +1,12 @@
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { householdInvitesTable } from '@/db/schemas/households.schema';
-import { ConflictError, NotFoundError, UnauthorizedError } from '@/shared/errors';
 import { householdsRepository } from '@/modules/households/households.repository';
-import * as authService from '../auth.service';
-import { authRepository } from '../auth.repository';
+import { ConflictError, NotFoundError, UnauthorizedError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import { buildRegisterInput, createHousehold, createHouseholdMembership } from '@/test/factories';
+import { authRepository } from '../auth.repository';
+import * as authService from '../auth.service';
 
 describe('auth service', () => {
   it('register creates the user, default household, owner membership, and returns a session', async () => {
@@ -41,7 +41,10 @@ describe('auth service', () => {
     expect(result.household.settings.defaultCurrencyId).toBe('USD');
     expect(result.household.settings.timezone).toBe('UTC');
 
-    const membership = await householdsRepository.findMembership(result.household.id, result.user.id);
+    const membership = await householdsRepository.findMembership(
+      result.household.id,
+      result.user.id,
+    );
     expect(membership?.role).toBe('owner');
   });
 
@@ -82,10 +85,16 @@ describe('auth service', () => {
       }),
     );
 
-    const membership = await householdsRepository.findMembership(inviter.household.id, result.user.id);
+    const membership = await householdsRepository.findMembership(
+      inviter.household.id,
+      result.user.id,
+    );
     expect(membership?.role).toBe('member');
 
-    const inviteRows = await db.select().from(householdInvitesTable).where(eq(householdInvitesTable.id, invite.id));
+    const inviteRows = await db
+      .select()
+      .from(householdInvitesTable)
+      .where(eq(householdInvitesTable.id, invite.id));
     expect(inviteRows[0]?.status).toBe('accepted');
     expect(inviteRows[0]?.acceptedAt).toBeTruthy();
   });

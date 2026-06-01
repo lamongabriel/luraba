@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { usersTable } from '@/db/schemas/users.schema';
 import { HOUSEHOLD_PERMISSIONS } from '@/config/permissions';
+import type { usersTable } from '@/db/schemas/users.schema';
 import { householdSettingsSchema } from '@/modules/households/households.types';
 import { householdRoleSchema } from '@/shared/validation/households';
 import {

@@ -1,6 +1,12 @@
 import { getPermissionsForRole, type HouseholdContext } from '@/config/permissions';
 import { signAccessToken } from '@/shared/auth';
-import { buildHouseholdContext, createHousehold, createHouseholdMembership, createUser, setDefaultHousehold } from './factories';
+import {
+  buildHouseholdContext,
+  createHousehold,
+  createHouseholdMembership,
+  createUser,
+  setDefaultHousehold,
+} from './factories';
 
 export function createAccessTokenForUser(user: { id: string; email: string }) {
   return signAccessToken(user.id, user.email);
@@ -13,7 +19,9 @@ export function createAuthHeaders(token: string, householdId?: string) {
   };
 }
 
-export async function createAuthenticatedContext(options: { role?: HouseholdContext['role']; defaultHousehold?: boolean } = {}) {
+export async function createAuthenticatedContext(
+  options: { role?: HouseholdContext['role']; defaultHousehold?: boolean } = {},
+) {
   const role = options.role ?? 'owner';
   const user = await createUser();
   const household = await createHousehold(user.id);
@@ -24,7 +32,7 @@ export async function createAuthenticatedContext(options: { role?: HouseholdCont
   }
 
   const token = createAccessTokenForUser(user);
-  
+
   const householdContext = buildHouseholdContext({
     householdId: household.id,
     userId: user.id,

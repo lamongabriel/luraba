@@ -9,6 +9,12 @@ export const UpdateBrandfetchIntegrationResponseSchema = integrationSummarySchem
 
 export const DeleteBrandfetchIntegrationResponseSchema = integrationSummarySchema;
 
-export type UpdateBrandfetchIntegrationRequestBody = z.infer<typeof UpdateBrandfetchIntegrationRequestBodySchema>;
-export type UpdateBrandfetchIntegrationResponse = z.infer<typeof UpdateBrandfetchIntegrationResponseSchema>;
-export type DeleteBrandfetchIntegrationResponse = z.infer<typeof DeleteBrandfetchIntegrationResponseSchema>;
+export type UpdateBrandfetchIntegrationRequestBody = z.infer<
+  typeof UpdateBrandfetchIntegrationRequestBodySchema
+>;
+export type UpdateBrandfetchIntegrationResponse = z.infer<
+  typeof UpdateBrandfetchIntegrationResponseSchema
+>;
+export type DeleteBrandfetchIntegrationResponse = z.infer<
+  typeof DeleteBrandfetchIntegrationResponseSchema
+>;

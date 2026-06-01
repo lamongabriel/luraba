@@ -2,8 +2,8 @@ import { and, desc, eq, inArray, lte } from 'drizzle-orm';
 import { db } from '@/db';
 import { currenciesTable } from '@/db/schemas/currencies.schema';
 import { exchangeRatesTable } from '@/db/schemas/exchange-rates.schema';
-import type { FxProviderId, FxResolvedRate } from './fx.types';
 import { formatISODate } from '@/shared/lib/date';
+import type { FxProviderId, FxResolvedRate } from './fx.types';
 
 type ExchangeRateRecord = typeof exchangeRatesTable.$inferSelect;
 
@@ -30,7 +30,12 @@ class FxRateRepository {
     return rows[0];
   }
 
-  async findRateOnOrBefore(provider: FxProviderId, fromCurrencyCode: string, toCurrencyCode: string, date: Date): Promise<ExchangeRateRecord | undefined> {
+  async findRateOnOrBefore(
+    provider: FxProviderId,
+    fromCurrencyCode: string,
+    toCurrencyCode: string,
+    date: Date,
+  ): Promise<ExchangeRateRecord | undefined> {
     const rows = await db
       .select()
       .from(exchangeRatesTable)
@@ -80,7 +85,9 @@ class FxRateRepository {
     return Object.fromEntries(rows.map((row) => [row.code, row.precision]));
   }
 
-  async findCurrencyByCode(currencyCode: string): Promise<{ code: string; precision: number } | undefined> {
+  async findCurrencyByCode(
+    currencyCode: string,
+  ): Promise<{ code: string; precision: number } | undefined> {
     const rows = await db
       .select({
         code: currenciesTable.code,

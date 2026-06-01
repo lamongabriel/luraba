@@ -1,12 +1,8 @@
 import { getPermissionsForRole } from '@/config/permissions';
 import { currenciesRepository } from '@/modules/currencies/currencies.repository';
-import * as householdsService from '@/modules/households/households.service';
 import { householdsRepository } from '@/modules/households/households.repository';
-import {
-  hashPassword,
-  signAccessToken,
-  verifyPassword,
-} from '@/shared/auth';
+import * as householdsService from '@/modules/households/households.service';
+import { hashPassword, signAccessToken, verifyPassword } from '@/shared/auth';
 import { ConflictError, NotFoundError, UnauthorizedError } from '@/shared/errors';
 import { authRepository } from './auth.repository';
 import type {
@@ -48,7 +44,8 @@ async function findRequiredUser(userId: string): Promise<UserRecord> {
 }
 
 async function getSessionHousehold(userId: string, householdId?: string): Promise<AuthHousehold> {
-  const resolvedHouseholdId = householdId ?? (await householdsService.createDefaultHouseholdForUser(userId));
+  const resolvedHouseholdId =
+    householdId ?? (await householdsService.createDefaultHouseholdForUser(userId));
   const membership = await householdsRepository.findMembership(resolvedHouseholdId, userId);
   if (!membership) throw new NotFoundError('Household membership');
 
@@ -154,7 +151,10 @@ export async function getMyPreferences(userId: string): Promise<UserPreferences>
   return preferences;
 }
 
-export async function updateMyPreferences(userId: string, dto: UpdateMyPreferencesRequestBody): Promise<UserPreferences> {
+export async function updateMyPreferences(
+  userId: string,
+  dto: UpdateMyPreferencesRequestBody,
+): Promise<UserPreferences> {
   await findRequiredUser(userId);
 
   if (dto.currency) {

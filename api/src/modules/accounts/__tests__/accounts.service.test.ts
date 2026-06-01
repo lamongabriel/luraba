@@ -1,14 +1,14 @@
 import { eq } from 'drizzle-orm';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/db';
 import { entriesTable } from '@/db/schemas/entries.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
-import { ConflictError, NotFoundError } from '@/shared/errors';
 import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
-import { accountsRepository } from '../accounts.repository';
-import * as accountsService from '../accounts.service';
+import { ConflictError, NotFoundError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import { buildAccountInput, createBalanceEntryForAccount } from '@/test/factories';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { accountsRepository } from '../accounts.repository';
+import * as accountsService from '../accounts.service';
 
 describe('accounts service', () => {
   afterEach(() => {
@@ -81,7 +81,9 @@ describe('accounts service', () => {
 
     await accountsService.createAccount(context.householdContext, input);
 
-    await expect(accountsService.createAccount(context.householdContext, input)).rejects.toThrow(ConflictError);
+    await expect(accountsService.createAccount(context.householdContext, input)).rejects.toThrow(
+      ConflictError,
+    );
   });
 
   it('allows the same account name in different households', async () => {
@@ -203,7 +205,9 @@ describe('accounts service', () => {
 
     await accountsService.deleteAccount(context.householdContext, account.id);
 
-    await expect(accountsService.getAccountDetails(context.householdContext, account.id)).rejects.toThrow(NotFoundError);
+    await expect(
+      accountsService.getAccountDetails(context.householdContext, account.id),
+    ).rejects.toThrow(NotFoundError);
     await expect(accountsRepository.findLedgerByAccountId(account.id)).resolves.toBeUndefined();
   });
 
@@ -226,12 +230,17 @@ describe('accounts service', () => {
       .select()
       .from(transactionsTable)
       .where(eq(transactionsTable.id, entry.transactionId));
-    const entries = await db.select().from(entriesTable).where(eq(entriesTable.transactionId, entry.transactionId));
+    const entries = await db
+      .select()
+      .from(entriesTable)
+      .where(eq(entriesTable.transactionId, entry.transactionId));
 
     expect(transactions).toHaveLength(0);
     expect(entries).toHaveLength(0);
     await expect(accountsRepository.findLedgerByAccountId(account.id)).resolves.toBeUndefined();
-    await expect(accountsService.getAccountDetails(context.householdContext, account.id)).rejects.toThrow(NotFoundError);
+    await expect(
+      accountsService.getAccountDetails(context.householdContext, account.id),
+    ).rejects.toThrow(NotFoundError);
   });
 
   it('rejects access to account details across households', async () => {

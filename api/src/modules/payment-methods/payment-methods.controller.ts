@@ -28,11 +28,13 @@ export const update = createHouseholdHandler({
   params: UpdatePaymentMethodRequestParamsSchema,
   body: UpdatePaymentMethodRequestBodySchema,
   response: UpdatePaymentMethodResponseSchema,
-  handle: ({ household, params, body }) => paymentMethodsService.updatePaymentMethod(household, params.id, body),
+  handle: ({ household, params, body }) =>
+    paymentMethodsService.updatePaymentMethod(household, params.id, body),
 });
 
 export const deletePaymentMethod = createHouseholdHandler({
   params: DeletePaymentMethodRequestParamsSchema,
   status: 'no-content',
-  handle: ({ household, params }) => paymentMethodsService.deletePaymentMethod(household, params.id),
+  handle: ({ household, params }) =>
+    paymentMethodsService.deletePaymentMethod(household, params.id),
 });

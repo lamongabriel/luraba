@@ -1,17 +1,20 @@
+import { and, eq, inArray } from 'drizzle-orm';
 import { ACCOUNT_TYPE_TO_CLASSIFICATION } from '@/config/accounts';
-import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
-import { buildBrandfetchLogoUrl, normalizeBrandDomain } from '@/modules/integrations/brandfetch/brandfetch.utils';
+import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
 import { accountsTable } from '@/db/schemas/accounts.schema';
 import { entriesTable } from '@/db/schemas/entries.schema';
 import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
-import { and, eq, inArray } from 'drizzle-orm';
+import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
+import {
+  buildBrandfetchLogoUrl,
+  normalizeBrandDomain,
+} from '@/modules/integrations/brandfetch/brandfetch.utils';
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import { formatISODateTime, now } from '@/shared/lib/date';
-import type { HouseholdContext } from '@/config/permissions';
 import { accountsRepository } from './accounts.repository';
-import {
+import type {
   Account,
   AccountClassification,
   AccountDetails,
@@ -47,14 +50,19 @@ function mapAccountDetails(account: AccountRecord, balance: number): AccountDeta
   };
 }
 
-export async function createAccount(context: HouseholdContext, dto: CreateAccountRequestBody): Promise<Account> {
+export async function createAccount(
+  context: HouseholdContext,
+  dto: CreateAccountRequestBody,
+): Promise<Account> {
   const currency = await accountsRepository.findCurrencyByCode(dto.currencyCode);
   if (!currency) throw new NotFoundError('Currency');
 
   const existing = await accountsRepository.findByHouseholdAndName(context, dto.name);
   if (existing) throw new ConflictError('An account with this name already exists');
   const classification = ACCOUNT_TYPE_TO_CLASSIFICATION[dto.type];
-  const institutionDomain = dto.institutionDomain ? normalizeBrandDomain(dto.institutionDomain) : undefined;
+  const institutionDomain = dto.institutionDomain
+    ? normalizeBrandDomain(dto.institutionDomain)
+    : undefined;
 
   let institutionLogoUrl: string | undefined;
   if (institutionDomain) {
@@ -110,7 +118,10 @@ export async function listAccounts(context: HouseholdContext): Promise<AccountDe
   );
 }
 
-export async function getAccountDetails(context: HouseholdContext, accountId: string): Promise<AccountDetails> {
+export async function getAccountDetails(
+  context: HouseholdContext,
+  accountId: string,
+): Promise<AccountDetails> {
   const account = await accountsRepository.get(accountId, context);
   if (!account) throw new NotFoundError('Account');
 
@@ -121,7 +132,11 @@ export async function getAccountDetails(context: HouseholdContext, accountId: st
   return mapAccountDetails(account, balance);
 }
 
-export async function updateAccount(context: HouseholdContext, accountId: string, dto: UpdateAccountRequestBody): Promise<Account> {
+export async function updateAccount(
+  context: HouseholdContext,
+  accountId: string,
+  dto: UpdateAccountRequestBody,
+): Promise<Account> {
   const account = await accountsRepository.get(accountId, context);
   if (!account) {
     throw new NotFoundError('Account');
@@ -182,22 +197,39 @@ export async function deleteAccount(context: HouseholdContext, accountId: string
       .select({ id: entriesTable.transactionId })
       .from(entriesTable)
       .innerJoin(transactionsTable, eq(transactionsTable.id, entriesTable.transactionId))
-      .where(and(eq(entriesTable.ledgerAccountId, ledger.id), eq(transactionsTable.householdId, context.householdId)));
+      .where(
+        and(
+          eq(entriesTable.ledgerAccountId, ledger.id),
+          eq(transactionsTable.householdId, context.householdId),
+        ),
+      );
 
     const transactionIds = Array.from(new Set(transactionRows.map((row) => row.id)));
     if (transactionIds.length > 0) {
       await tx
         .delete(transactionsTable)
-        .where(and(eq(transactionsTable.householdId, context.householdId), inArray(transactionsTable.id, transactionIds)));
+        .where(
+          and(
+            eq(transactionsTable.householdId, context.householdId),
+            inArray(transactionsTable.id, transactionIds),
+          ),
+        );
     }
 
     await tx
       .delete(ledgerAccountsTable)
-      .where(and(eq(ledgerAccountsTable.ownerType, 'account'), eq(ledgerAccountsTable.ownerId, account.id)));
+      .where(
+        and(
+          eq(ledgerAccountsTable.ownerType, 'account'),
+          eq(ledgerAccountsTable.ownerId, account.id),
+        ),
+      );
 
     const deletedRows = await tx
       .delete(accountsTable)
-      .where(and(eq(accountsTable.id, account.id), eq(accountsTable.householdId, context.householdId)))
+      .where(
+        and(eq(accountsTable.id, account.id), eq(accountsTable.householdId, context.householdId)),
+      )
       .returning();
 
     if (!deletedRows[0]) {

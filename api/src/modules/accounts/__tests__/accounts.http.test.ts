@@ -1,8 +1,13 @@
 import request from 'supertest';
 import { vi } from 'vitest';
 import app from '@/app';
-import { createAuthHeaders, createAuthenticatedContext } from '@/test/auth';
-import { buildAccountInput, createBalanceEntryForAccount, createHousehold, createHouseholdMembership } from '@/test/factories';
+import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
+import {
+  buildAccountInput,
+  createBalanceEntryForAccount,
+  createHousehold,
+  createHouseholdMembership,
+} from '@/test/factories';
 
 describe('accounts routes', () => {
   it('POST /api/v1/accounts returns 201 for a valid authenticated request', async () => {

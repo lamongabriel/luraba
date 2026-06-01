@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
-import { currencySchema } from '@/shared/validation/preferences';
+import type { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
 import { hexColorSchema, iconNameSchema } from '@/shared/validation/categories';
+import { currencySchema } from '@/shared/validation/preferences';
 
 export type PaymentMethodRecord = typeof paymentMethodsTable.$inferSelect;
 
@@ -40,16 +40,15 @@ export const UpdatePaymentMethodRequestParamsSchema = z.object({
   id: z.uuid(),
 });
 
-export const UpdatePaymentMethodRequestBodySchema = z.object({
-  name: z.string().trim().min(1).max(64).optional(),
-  code: z.string().trim().min(1).max(32).optional(),
-  currencyCode: currencySchema.nullable().optional(),
-  color: hexColorSchema.nullable().optional(),
-  icon: iconNameSchema.nullable().optional(),
-}).refine(
-  (value) => Object.keys(value).length > 0,
-  'At least one field must be provided',
-);
+export const UpdatePaymentMethodRequestBodySchema = z
+  .object({
+    name: z.string().trim().min(1).max(64).optional(),
+    code: z.string().trim().min(1).max(32).optional(),
+    currencyCode: currencySchema.nullable().optional(),
+    color: hexColorSchema.nullable().optional(),
+    icon: iconNameSchema.nullable().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, 'At least one field must be provided');
 
 export const UpdatePaymentMethodResponseSchema = paymentMethodSchema;
 
@@ -62,7 +61,11 @@ export type ListPaymentMethodsRequestQuery = z.infer<typeof ListPaymentMethodsRe
 export type ListPaymentMethodsResponse = z.infer<typeof ListPaymentMethodsResponseSchema>;
 export type CreatePaymentMethodRequestBody = z.infer<typeof CreatePaymentMethodRequestBodySchema>;
 export type CreatePaymentMethodResponse = z.infer<typeof CreatePaymentMethodResponseSchema>;
-export type UpdatePaymentMethodRequestParams = z.infer<typeof UpdatePaymentMethodRequestParamsSchema>;
+export type UpdatePaymentMethodRequestParams = z.infer<
+  typeof UpdatePaymentMethodRequestParamsSchema
+>;
 export type UpdatePaymentMethodRequestBody = z.infer<typeof UpdatePaymentMethodRequestBodySchema>;
 export type UpdatePaymentMethodResponse = z.infer<typeof UpdatePaymentMethodResponseSchema>;
-export type DeletePaymentMethodRequestParams = z.infer<typeof DeletePaymentMethodRequestParamsSchema>;
+export type DeletePaymentMethodRequestParams = z.infer<
+  typeof DeletePaymentMethodRequestParamsSchema
+>;

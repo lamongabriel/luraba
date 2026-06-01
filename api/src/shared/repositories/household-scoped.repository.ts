@@ -1,8 +1,8 @@
 import { and, asc, eq } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
-import { now as _now } from '@/shared/lib/date';
-import { db } from '@/db';
 import type { HouseholdContext } from '@/config/permissions';
+import { db } from '@/db';
+import { now as _now } from '@/shared/lib/date';
 
 type HouseholdScopedTable = PgTable & {
   id: PgColumn;
@@ -28,7 +28,10 @@ export abstract class HouseholdScopedRepository<
   ) {}
 
   async list(context: HouseholdContext): Promise<TRecord[]> {
-    const query = db.select().from(this.table).where(eq(this.table.householdId, context.householdId));
+    const query = db
+      .select()
+      .from(this.table)
+      .where(eq(this.table.householdId, context.householdId));
 
     if (this.options.orderBy) {
       return query.orderBy(asc(this.options.orderBy)) as Promise<TRecord[]>;
@@ -47,11 +50,18 @@ export abstract class HouseholdScopedRepository<
   }
 
   async create(context: HouseholdContext, values: TCreateValues): Promise<TRecord> {
-    const rows = await db.insert(this.table).values(this.withCreateDefaults(context, values)).returning();
+    const rows = await db
+      .insert(this.table)
+      .values(this.withCreateDefaults(context, values))
+      .returning();
     return rows[0] as TRecord;
   }
 
-  async update(id: string, context: HouseholdContext, values: TUpdateValues): Promise<TRecord | undefined> {
+  async update(
+    id: string,
+    context: HouseholdContext,
+    values: TUpdateValues,
+  ): Promise<TRecord | undefined> {
     const rows = await db
       .update(this.table)
       .set(this.withUpdateTimestamp(values))

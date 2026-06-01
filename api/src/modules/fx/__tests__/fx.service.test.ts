@@ -1,5 +1,5 @@
-import { DependencyUnavailableError, NotFoundError } from '@/shared/errors';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { DependencyUnavailableError, NotFoundError } from '@/shared/errors';
 import { FxService } from '../fx.service';
 import type { FxProvider, FxProviderId } from '../fx.types';
 
@@ -18,14 +18,12 @@ function createRepository() {
     findRateOnOrBefore: vi.fn<(...args: unknown[]) => Promise<StoredRate | undefined>>(),
     upsertRates: vi.fn<(...args: unknown[]) => Promise<void>>(),
     listCurrencyPrecisions: vi.fn<(...args: unknown[]) => Promise<Record<string, number>>>(),
-    findCurrencyByCode: vi.fn<(...args: unknown[]) => Promise<{ code: string; precision: number } | undefined>>(),
+    findCurrencyByCode:
+      vi.fn<(...args: unknown[]) => Promise<{ code: string; precision: number } | undefined>>(),
   };
 }
 
-function createProvider(
-  id: FxProviderId,
-  overrides: Partial<FxProvider> = {},
-): FxProvider {
+function createProvider(id: FxProviderId, overrides: Partial<FxProvider> = {}): FxProvider {
   return {
     id,
     healthCheck: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
@@ -120,10 +118,23 @@ describe('FxService', () => {
     repository.findRateOnOrBefore.mockResolvedValue(undefined);
 
     const frankfurter = createProvider('frankfurter', {
-      getLatestRates: vi.fn<(...args: unknown[]) => Promise<never>>().mockRejectedValue(new Error('down')),
+      getLatestRates: vi
+        .fn<(...args: unknown[]) => Promise<never>>()
+        .mockRejectedValue(new Error('down')),
     });
     const yahoo = createProvider('yahoo-finance2', {
-      getLatestRates: vi.fn<(...args: unknown[]) => Promise<Array<{ provider: 'yahoo-finance2'; fromCurrencyCode: string; toCurrencyCode: string; rateDate: Date; rate: number }>>>()
+      getLatestRates: vi
+        .fn<
+          (...args: unknown[]) => Promise<
+            Array<{
+              provider: 'yahoo-finance2';
+              fromCurrencyCode: string;
+              toCurrencyCode: string;
+              rateDate: Date;
+              rate: number;
+            }>
+          >
+        >()
         .mockResolvedValue([
           {
             provider: 'yahoo-finance2',
@@ -173,15 +184,29 @@ describe('FxService', () => {
     repository.findRateByDate.mockResolvedValue(undefined);
     repository.findRateOnOrBefore.mockResolvedValue(undefined);
 
-    let resolveRates: ((value: Array<{
-      provider: 'frankfurter';
-      fromCurrencyCode: string;
-      toCurrencyCode: string;
-      rateDate: Date;
-      rate: number;
-    }>) => void) | undefined;
+    let resolveRates:
+      | ((
+          value: Array<{
+            provider: 'frankfurter';
+            fromCurrencyCode: string;
+            toCurrencyCode: string;
+            rateDate: Date;
+            rate: number;
+          }>,
+        ) => void)
+      | undefined;
     const getLatestRates = vi
-      .fn<(...args: unknown[]) => Promise<Array<{ provider: 'frankfurter'; fromCurrencyCode: string; toCurrencyCode: string; rateDate: Date; rate: number }>>>()
+      .fn<
+        (...args: unknown[]) => Promise<
+          Array<{
+            provider: 'frankfurter';
+            fromCurrencyCode: string;
+            toCurrencyCode: string;
+            rateDate: Date;
+            rate: number;
+          }>
+        >
+      >()
       .mockImplementation(
         async () =>
           await new Promise((resolve) => {
@@ -305,10 +330,14 @@ describe('FxService', () => {
 
     const service = new FxService(repository, {
       frankfurter: createProvider('frankfurter', {
-        getLatestRates: vi.fn<(...args: unknown[]) => Promise<never>>().mockRejectedValue(new Error('down')),
+        getLatestRates: vi
+          .fn<(...args: unknown[]) => Promise<never>>()
+          .mockRejectedValue(new Error('down')),
       }),
       'yahoo-finance2': createProvider('yahoo-finance2', {
-        getLatestRates: vi.fn<(...args: unknown[]) => Promise<never>>().mockRejectedValue(new Error('down')),
+        getLatestRates: vi
+          .fn<(...args: unknown[]) => Promise<never>>()
+          .mockRejectedValue(new Error('down')),
       }),
     });
 
@@ -334,7 +363,18 @@ describe('FxService', () => {
     });
 
     const frankfurter = createProvider('frankfurter', {
-      getHistoricalRates: vi.fn<(...args: unknown[]) => Promise<Array<{ provider: 'frankfurter'; fromCurrencyCode: string; toCurrencyCode: string; rateDate: Date; rate: number }>>>()
+      getHistoricalRates: vi
+        .fn<
+          (...args: unknown[]) => Promise<
+            Array<{
+              provider: 'frankfurter';
+              fromCurrencyCode: string;
+              toCurrencyCode: string;
+              rateDate: Date;
+              rate: number;
+            }>
+          >
+        >()
         .mockResolvedValue([
           {
             provider: 'frankfurter',

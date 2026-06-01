@@ -1,13 +1,13 @@
-import { z } from 'zod';
+import type { z } from 'zod';
 import type { HouseholdContext } from '@/config/permissions';
+import { getHouseholdContext } from '@/middleware/access.middleware';
 import {
-  createHandler,
   type ControllerArgs,
   type ControllerSchema,
   type ControllerStatus,
+  createHandler,
   type ParsedResponse,
 } from '@/shared/controllers/controller';
-import { getHouseholdContext } from '@/middleware/access.middleware';
 
 type Schema = z.ZodTypeAny;
 

@@ -22,7 +22,10 @@ function mapCategoryRecord(category: CategoryRecord): Category {
   };
 }
 
-export async function createCategory(context: HouseholdContext, body: CreateCategoryRequestBody): Promise<Category> {
+export async function createCategory(
+  context: HouseholdContext,
+  body: CreateCategoryRequestBody,
+): Promise<Category> {
   const existing = await categoriesRepository.findByHouseholdAndName(context, body.name);
   if (existing) {
     throw new ConflictError('A category with this name already exists');

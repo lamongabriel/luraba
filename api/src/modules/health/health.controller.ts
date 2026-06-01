@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import * as healthService from './health.service';
 
 export async function get(_req: Request, res: Response, next: NextFunction): Promise<void> {

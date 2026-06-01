@@ -13,8 +13,14 @@ const envSchema = z.object({
   DB_PASSWORD: z.string().min(1).default('postgres'),
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
   JWT_ACCESS_EXPIRES_IN: z.string().min(1).default('15m'),
-  INTEGRATIONS_ENCRYPTION_KEY: z.string().regex(/^[0-9a-fA-F]{64}$/, 'INTEGRATIONS_ENCRYPTION_KEY must be a 64-character hex string'),
-  RUN_DB_TESTS: z.enum(['0', '1']).optional().default('0').transform((value) => value === '1'),
+  INTEGRATIONS_ENCRYPTION_KEY: z
+    .string()
+    .regex(/^[0-9a-fA-F]{64}$/, 'INTEGRATIONS_ENCRYPTION_KEY must be a 64-character hex string'),
+  RUN_DB_TESTS: z
+    .enum(['0', '1'])
+    .optional()
+    .default('0')
+    .transform((value) => value === '1'),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

@@ -6,7 +6,15 @@ const router = Router();
 
 router.get('/', requireAccess({ permission: 'categories.read' }), categoriesController.list);
 router.post('/', requireAccess({ permission: 'categories.create' }), categoriesController.create);
-router.patch('/:id', requireAccess({ permission: 'categories.update' }), categoriesController.update);
-router.delete('/:id', requireAccess({ permission: 'categories.delete' }), categoriesController.deleteCategory);
+router.patch(
+  '/:id',
+  requireAccess({ permission: 'categories.update' }),
+  categoriesController.update,
+);
+router.delete(
+  '/:id',
+  requireAccess({ permission: 'categories.delete' }),
+  categoriesController.deleteCategory,
+);
 
 export default router;

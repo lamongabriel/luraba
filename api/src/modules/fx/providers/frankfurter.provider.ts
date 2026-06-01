@@ -13,7 +13,9 @@ type FrankfurterRateRow = {
 async function fetchRates(url: URL): Promise<FrankfurterRateRow[]> {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new ValidationError(`Frankfurter returned ${response.status} while fetching exchange rates`);
+    throw new ValidationError(
+      `Frankfurter returned ${response.status} while fetching exchange rates`,
+    );
   }
 
   return (await response.json()) as FrankfurterRateRow[];
@@ -29,7 +31,10 @@ export class FrankfurterFxProvider implements FxProvider {
     }
   }
 
-  async getLatestRates(baseCurrencyCode: string, quoteCurrencyCodes: string[]): Promise<FxProviderRate[]> {
+  async getLatestRates(
+    baseCurrencyCode: string,
+    quoteCurrencyCodes: string[],
+  ): Promise<FxProviderRate[]> {
     const url = new URL(`${FRANKFURTER_API_URL}/rates`);
     url.searchParams.set('base', baseCurrencyCode);
     url.searchParams.set('quotes', quoteCurrencyCodes.join(','));
@@ -44,7 +49,11 @@ export class FrankfurterFxProvider implements FxProvider {
     }));
   }
 
-  async getHistoricalRates(baseCurrencyCode: string, quoteCurrencyCodes: string[], date: Date): Promise<FxProviderRate[]> {
+  async getHistoricalRates(
+    baseCurrencyCode: string,
+    quoteCurrencyCodes: string[],
+    date: Date,
+  ): Promise<FxProviderRate[]> {
     const url = new URL(`${FRANKFURTER_API_URL}/rates`);
     url.searchParams.set('base', baseCurrencyCode);
     url.searchParams.set('quotes', quoteCurrencyCodes.join(','));
@@ -60,7 +69,12 @@ export class FrankfurterFxProvider implements FxProvider {
     }));
   }
 
-  async getTimeSeries(baseCurrencyCode: string, quoteCurrencyCodes: string[], from: Date, to: Date): Promise<FxProviderRate[]> {
+  async getTimeSeries(
+    baseCurrencyCode: string,
+    quoteCurrencyCodes: string[],
+    from: Date,
+    to: Date,
+  ): Promise<FxProviderRate[]> {
     const url = new URL(`${FRANKFURTER_API_URL}/rates`);
     url.searchParams.set('base', baseCurrencyCode);
     url.searchParams.set('quotes', quoteCurrencyCodes.join(','));

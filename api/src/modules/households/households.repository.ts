@@ -1,10 +1,14 @@
 import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import { db } from '@/db';
-import { householdInvitesTable, householdMembersTable, householdsTable } from '@/db/schemas/households.schema';
+import {
+  householdInvitesTable,
+  householdMembersTable,
+  householdsTable,
+} from '@/db/schemas/households.schema';
 import { usersTable } from '@/db/schemas/users.schema';
 import { now } from '@/shared/lib/date';
-import { currencySchema } from '@/shared/validation/preferences';
 import type { Currency } from '@/shared/validation/preferences';
+import { currencySchema } from '@/shared/validation/preferences';
 import type {
   CreateHouseholdInviteRequestBody,
   CreateHouseholdRequestBody,
@@ -49,7 +53,10 @@ class HouseholdsRepository {
     return rows[0];
   }
 
-  async updateHousehold(householdId: string, values: UpdateHouseholdRequestBody): Promise<HouseholdRecord | undefined> {
+  async updateHousehold(
+    householdId: string,
+    values: UpdateHouseholdRequestBody,
+  ): Promise<HouseholdRecord | undefined> {
     return this.updateHouseholdWithClient(db, householdId, values);
   }
 
@@ -84,7 +91,11 @@ class HouseholdsRepository {
   }
 
   async findHouseholdById(householdId: string): Promise<HouseholdRecord | undefined> {
-    const rows = await db.select().from(householdsTable).where(eq(householdsTable.id, householdId)).limit(1);
+    const rows = await db
+      .select()
+      .from(householdsTable)
+      .where(eq(householdsTable.id, householdId))
+      .limit(1);
     return rows[0];
   }
 
@@ -120,13 +131,16 @@ class HouseholdsRepository {
       .where(eq(usersTable.id, userId));
   }
 
-  async findUserDefaults(userId: string): Promise<{
-    id: string;
-    name: string;
-    preferredCurrency: Currency;
-    preferredTimezone: 'America/Sao_Paulo' | 'UTC';
-    defaultHouseholdId: string | null;
-  } | undefined> {
+  async findUserDefaults(userId: string): Promise<
+    | {
+        id: string;
+        name: string;
+        preferredCurrency: Currency;
+        preferredTimezone: 'America/Sao_Paulo' | 'UTC';
+        defaultHouseholdId: string | null;
+      }
+    | undefined
+  > {
     const rows = await db
       .select({
         id: usersTable.id,
@@ -141,7 +155,10 @@ class HouseholdsRepository {
     return rows[0];
   }
 
-  async findMembership(householdId: string, userId: string): Promise<HouseholdMembership | undefined> {
+  async findMembership(
+    householdId: string,
+    userId: string,
+  ): Promise<HouseholdMembership | undefined> {
     const rows = await db
       .select({
         id: householdMembersTable.id,
@@ -160,7 +177,12 @@ class HouseholdsRepository {
       })
       .from(householdMembersTable)
       .innerJoin(householdsTable, eq(householdsTable.id, householdMembersTable.householdId))
-      .where(and(eq(householdMembersTable.householdId, householdId), eq(householdMembersTable.userId, userId)));
+      .where(
+        and(
+          eq(householdMembersTable.householdId, householdId),
+          eq(householdMembersTable.userId, userId),
+        ),
+      );
 
     const row = rows[0];
     if (!row) {
@@ -217,7 +239,12 @@ class HouseholdsRepository {
     const rows = await db
       .select({ count: sql<number>`count(*)::integer` })
       .from(householdMembersTable)
-      .where(and(eq(householdMembersTable.householdId, householdId), eq(householdMembersTable.role, 'owner')));
+      .where(
+        and(
+          eq(householdMembersTable.householdId, householdId),
+          eq(householdMembersTable.role, 'owner'),
+        ),
+      );
 
     return rows[0]?.count ?? 0;
   }
@@ -230,16 +257,29 @@ class HouseholdsRepository {
     const rows = await db
       .update(householdMembersTable)
       .set({ role, updatedAt: now() })
-      .where(and(eq(householdMembersTable.householdId, householdId), eq(householdMembersTable.userId, userId)))
+      .where(
+        and(
+          eq(householdMembersTable.householdId, householdId),
+          eq(householdMembersTable.userId, userId),
+        ),
+      )
       .returning();
 
     return rows[0];
   }
 
-  async removeMember(householdId: string, userId: string): Promise<HouseholdMemberRecord | undefined> {
+  async removeMember(
+    householdId: string,
+    userId: string,
+  ): Promise<HouseholdMemberRecord | undefined> {
     const rows = await db
       .delete(householdMembersTable)
-      .where(and(eq(householdMembersTable.householdId, householdId), eq(householdMembersTable.userId, userId)))
+      .where(
+        and(
+          eq(householdMembersTable.householdId, householdId),
+          eq(householdMembersTable.userId, userId),
+        ),
+      )
       .returning();
 
     return rows[0];
@@ -301,7 +341,9 @@ class HouseholdsRepository {
       })
       .from(householdInvitesTable)
       .innerJoin(householdsTable, eq(householdsTable.id, householdInvitesTable.householdId))
-      .where(and(eq(householdInvitesTable.email, email), eq(householdInvitesTable.status, 'pending')))
+      .where(
+        and(eq(householdInvitesTable.email, email), eq(householdInvitesTable.status, 'pending')),
+      )
       .orderBy(asc(householdsTable.name));
   }
 
@@ -309,7 +351,9 @@ class HouseholdsRepository {
     const rows = await db
       .select()
       .from(householdInvitesTable)
-      .where(and(eq(householdInvitesTable.id, inviteId), eq(householdInvitesTable.status, 'pending')));
+      .where(
+        and(eq(householdInvitesTable.id, inviteId), eq(householdInvitesTable.status, 'pending')),
+      );
 
     return rows[0];
   }
@@ -321,7 +365,10 @@ class HouseholdsRepository {
       .where(eq(householdInvitesTable.id, inviteId));
   }
 
-  async revokeInvite(householdId: string, inviteId: string): Promise<HouseholdInviteRecord | undefined> {
+  async revokeInvite(
+    householdId: string,
+    inviteId: string,
+  ): Promise<HouseholdInviteRecord | undefined> {
     const rows = await db
       .update(householdInvitesTable)
       .set({ status: 'revoked', revokedAt: now(), updatedAt: now() })

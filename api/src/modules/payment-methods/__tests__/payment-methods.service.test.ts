@@ -70,8 +70,12 @@ describe('payment methods service', () => {
 
     const methods = await paymentMethodsService.listPaymentMethods(context.householdContext, {});
 
-    expect(methods).toEqual(expect.arrayContaining([expect.objectContaining({ code: 'meal_voucher' })]));
-    expect(methods).not.toEqual(expect.arrayContaining([expect.objectContaining({ code: 'foreign_voucher' })]));
+    expect(methods).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: 'meal_voucher' })]),
+    );
+    expect(methods).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: 'foreign_voucher' })]),
+    );
   });
 
   it('filters methods by currency while keeping global methods', async () => {
@@ -90,16 +94,20 @@ describe('payment methods service', () => {
       buildPaymentMethodInput({ name: 'Global Wallet', code: 'wallet' }),
     );
 
-    const methods = await paymentMethodsService.listPaymentMethods(context.householdContext, { currencyCode: 'BRL' });
+    const methods = await paymentMethodsService.listPaymentMethods(context.householdContext, {
+      currencyCode: 'BRL',
+    });
 
-    expect(methods).toEqual(expect.arrayContaining([
-      expect.objectContaining({ code: 'voucher', name: 'BRL Voucher', currencyCode: 'BRL' }),
-      expect.objectContaining({ code: 'wallet', name: 'Global Wallet', currencyCode: null }),
-      expect.objectContaining({ code: 'cash', currencyCode: null }),
-    ]));
-    expect(methods).not.toEqual(expect.arrayContaining([
-      expect.objectContaining({ code: 'voucher', name: 'USD Voucher' }),
-    ]));
+    expect(methods).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'voucher', name: 'BRL Voucher', currencyCode: 'BRL' }),
+        expect.objectContaining({ code: 'wallet', name: 'Global Wallet', currencyCode: null }),
+        expect.objectContaining({ code: 'cash', currencyCode: null }),
+      ]),
+    );
+    expect(methods).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: 'voucher', name: 'USD Voucher' })]),
+    );
   });
 
   it('rejects unknown currencies', async () => {
@@ -163,13 +171,17 @@ describe('payment methods service', () => {
       }),
     );
 
-    const updated = await paymentMethodsService.updatePaymentMethod(context.householdContext, method.id, {
-      name: 'Updated Voucher',
-      code: 'updated-voucher',
-      currencyCode: null,
-      color: null,
-      icon: null,
-    });
+    const updated = await paymentMethodsService.updatePaymentMethod(
+      context.householdContext,
+      method.id,
+      {
+        name: 'Updated Voucher',
+        code: 'updated-voucher',
+        currencyCode: null,
+        color: null,
+        icon: null,
+      },
+    );
 
     expect(updated).toEqual(
       expect.objectContaining({
@@ -192,8 +204,8 @@ describe('payment methods service', () => {
 
     await paymentMethodsService.deletePaymentMethod(context.householdContext, method.id);
 
-    await expect(paymentMethodsService.deletePaymentMethod(context.householdContext, method.id)).rejects.toThrow(
-      NotFoundError,
-    );
+    await expect(
+      paymentMethodsService.deletePaymentMethod(context.householdContext, method.id),
+    ).rejects.toThrow(NotFoundError);
   });
 });

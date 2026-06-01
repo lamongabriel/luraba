@@ -7,8 +7,12 @@ export const creditCardsTable = pgTable(
   'credit_cards',
   {
     id: uuid().primaryKey().defaultRandom(),
-    householdId: uuid('household_id').notNull().references(() => householdsTable.id, { onDelete: 'cascade' }),
-    accountId: uuid('account_id').notNull().references(() => accountsTable.id, { onDelete: 'cascade' }),
+    householdId: uuid('household_id')
+      .notNull()
+      .references(() => householdsTable.id, { onDelete: 'cascade' }),
+    accountId: uuid('account_id')
+      .notNull()
+      .references(() => accountsTable.id, { onDelete: 'cascade' }),
     brand: varchar({ length: 64 }).notNull(),
     productType: creditCardProductTypeEnum('product_type').notNull().default('credit'),
     last4: varchar('last4', { length: 4 }).notNull(),
@@ -19,7 +23,5 @@ export const creditCardsTable = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => [
-    uniqueIndex('credit_cards_account_id_unique').on(table.accountId),
-  ],
+  (table) => [uniqueIndex('credit_cards_account_id_unique').on(table.accountId)],
 );

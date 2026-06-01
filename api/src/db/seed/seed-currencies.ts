@@ -1,5 +1,5 @@
-import { db } from '../index';
 import { logger } from '../../shared/logger';
+import { db } from '../index';
 import { currenciesTable } from '../schemas/currencies.schema';
 
 const currencies = [
@@ -28,10 +28,9 @@ export async function seedCurrencies() {
   for (const currency of currencies) {
     await db.insert(currenciesTable).values(currency).onConflictDoNothing();
   }
-  
-  logger.info({ codes: currencies.map(c => c.code) }, 'Currencies seeded');
-}
 
+  logger.info({ codes: currencies.map((c) => c.code) }, 'Currencies seeded');
+}
 
 // Only run if executed directly
 if (require.main === module) {

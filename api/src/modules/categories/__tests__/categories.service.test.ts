@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
-import { buildCategoryInput } from '@/test/factories';
 import { createAuthenticatedContext } from '@/test/auth';
+import { buildCategoryInput } from '@/test/factories';
 import * as categoriesService from '../categories.service';
 
 describe('categories service', () => {
@@ -30,7 +30,9 @@ describe('categories service', () => {
 
     await categoriesService.createCategory(context.householdContext, input);
 
-    await expect(categoriesService.createCategory(context.householdContext, input)).rejects.toThrow(ConflictError);
+    await expect(categoriesService.createCategory(context.householdContext, input)).rejects.toThrow(
+      ConflictError,
+    );
   });
 
   it('allows the same category name in different households', async () => {
@@ -142,6 +144,8 @@ describe('categories service', () => {
 
     await categoriesService.deleteCategory(context.householdContext, category.id);
 
-    await expect(categoriesService.deleteCategory(context.householdContext, category.id)).rejects.toThrow(NotFoundError);
+    await expect(
+      categoriesService.deleteCategory(context.householdContext, category.id),
+    ).rejects.toThrow(NotFoundError);
   });
 });

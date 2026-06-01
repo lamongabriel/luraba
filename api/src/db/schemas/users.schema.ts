@@ -1,6 +1,12 @@
 import { pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
-import { preferredLanguageEnum, preferredTimezoneEnum, preferredDateFormatEnum, defaultPeriodEnum, themePreferenceEnum } from './enums.schema';
 import { currenciesTable } from './currencies.schema';
+import {
+  defaultPeriodEnum,
+  preferredDateFormatEnum,
+  preferredLanguageEnum,
+  preferredTimezoneEnum,
+  themePreferenceEnum,
+} from './enums.schema';
 
 export const usersTable = pgTable('users', {
   id: uuid().primaryKey().defaultRandom(),
@@ -9,9 +15,16 @@ export const usersTable = pgTable('users', {
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
   defaultHouseholdId: uuid('default_household_id'),
   preferredLanguage: preferredLanguageEnum('preferred_language').notNull().default('en'),
-  preferredCurrency: varchar('preferred_currency', { length: 3 }).notNull().default('BRL').references(() => currenciesTable.code, { onDelete: 'restrict' }),
-  preferredTimezone: preferredTimezoneEnum('preferred_timezone').notNull().default('America/Sao_Paulo'),
-  preferredDateFormat: preferredDateFormatEnum('preferred_date_format').notNull().default('DD/MM/YYYY'),
+  preferredCurrency: varchar('preferred_currency', { length: 3 })
+    .notNull()
+    .default('BRL')
+    .references(() => currenciesTable.code, { onDelete: 'restrict' }),
+  preferredTimezone: preferredTimezoneEnum('preferred_timezone')
+    .notNull()
+    .default('America/Sao_Paulo'),
+  preferredDateFormat: preferredDateFormatEnum('preferred_date_format')
+    .notNull()
+    .default('DD/MM/YYYY'),
   preferredPeriod: defaultPeriodEnum('preferred_period').notNull().default('current_month'),
   preferredTheme: themePreferenceEnum('preferred_theme').notNull().default('system'),
   createdAt: timestamp('created_at').notNull().defaultNow(),

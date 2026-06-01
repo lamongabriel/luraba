@@ -1,7 +1,11 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import app from '@/app';
-import { createAccessTokenForUser, createAuthHeaders, createAuthenticatedContext } from '@/test/auth';
+import {
+  createAccessTokenForUser,
+  createAuthenticatedContext,
+  createAuthHeaders,
+} from '@/test/auth';
 import { createUser } from '@/test/factories';
 
 describe('households routes', () => {

@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { pgTable, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
-import { ledgerClassificationEnum, ledgerOwnerTypeEnum } from './enums.schema';
 import { currenciesTable } from './currencies.schema';
+import { ledgerClassificationEnum, ledgerOwnerTypeEnum } from './enums.schema';
 
 export const ledgerAccountsTable = pgTable(
   'ledger_accounts',
@@ -10,7 +10,9 @@ export const ledgerAccountsTable = pgTable(
     classification: ledgerClassificationEnum().notNull(),
     ownerType: ledgerOwnerTypeEnum('owner_type').notNull(),
     ownerId: uuid('owner_id').notNull(),
-    currencyId: varchar('currency_id', { length: 3 }).notNull().references(() => currenciesTable.code, { onDelete: 'restrict' }),
+    currencyId: varchar('currency_id', { length: 3 })
+      .notNull()
+      .references(() => currenciesTable.code, { onDelete: 'restrict' }),
     systemKey: varchar('system_key', { length: 128 }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },

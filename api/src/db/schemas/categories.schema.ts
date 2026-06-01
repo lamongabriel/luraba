@@ -6,7 +6,9 @@ export const categoriesTable = pgTable(
   'categories',
   {
     id: uuid().primaryKey().defaultRandom(),
-    householdId: uuid('household_id').notNull().references(() => householdsTable.id, { onDelete: 'cascade' }),
+    householdId: uuid('household_id')
+      .notNull()
+      .references(() => householdsTable.id, { onDelete: 'cascade' }),
     name: varchar({ length: 255 }).notNull(),
     parentId: uuid('parent_id'),
     type: categoryTypeEnum().notNull(),

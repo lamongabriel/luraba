@@ -1,10 +1,10 @@
 import path from 'node:path';
+import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import { sql } from 'drizzle-orm';
 import { Pool } from 'pg';
-import { db } from '@/db';
 import { env } from '@/config/env';
+import { db } from '@/db';
 import { seedPaymentMethods } from '@/db/seed/seed-payment-methods';
 
 const TEST_REFERENCE_TABLES = ['currencies', '__drizzle_migrations'] as const;
@@ -23,7 +23,9 @@ async function databaseExists(databaseName: string): Promise<boolean> {
   const maintenancePool = createPool('postgres');
 
   try {
-    const result = await maintenancePool.query('SELECT 1 FROM pg_database WHERE datname = $1', [databaseName]);
+    const result = await maintenancePool.query('SELECT 1 FROM pg_database WHERE datname = $1', [
+      databaseName,
+    ]);
     return result.rowCount !== 0;
   } finally {
     await maintenancePool.end();
@@ -53,7 +55,9 @@ export async function migrateTestDatabase(): Promise<void> {
 
   try {
     const migrationDb = drizzle(migrationPool);
-    await migrate(migrationDb, { migrationsFolder: path.resolve(process.cwd(), 'src/db/migrations') });
+    await migrate(migrationDb, {
+      migrationsFolder: path.resolve(process.cwd(), 'src/db/migrations'),
+    });
   } finally {
     await migrationPool.end();
   }
@@ -70,7 +74,10 @@ async function listMutableTableNames(): Promise<string[]> {
     SELECT tablename
     FROM pg_tables
     WHERE schemaname = 'public'
-      AND tablename NOT IN (${sql.join(TEST_REFERENCE_TABLES.map((tableName) => sql`${tableName}`), sql`, `)})
+      AND tablename NOT IN (${sql.join(
+        TEST_REFERENCE_TABLES.map((tableName) => sql`${tableName}`),
+        sql`, `,
+      )})
     ORDER BY tablename
   `);
 

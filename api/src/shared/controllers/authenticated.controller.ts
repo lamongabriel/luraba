@@ -1,12 +1,12 @@
+import type { z } from 'zod';
+import { getAuthenticatedUser } from '@/middleware/access.middleware';
 import {
-  createHandler,
   type ControllerArgs,
   type ControllerSchema,
   type ControllerStatus,
+  createHandler,
   type ParsedResponse,
 } from '@/shared/controllers/controller';
-import { getAuthenticatedUser } from '@/middleware/access.middleware';
-import { z } from 'zod';
 
 type Schema = z.ZodTypeAny;
 type AuthenticatedUser = ReturnType<typeof getAuthenticatedUser>;
@@ -32,7 +32,9 @@ export function createAuthenticatedHandler<
         body?: TBody;
         params?: TParams;
         query?: TQuery;
-        handle: (input: ControllerArgs<TBody, TParams, TQuery> & { user: AuthenticatedUser }) => Promise<void>;
+        handle: (
+          input: ControllerArgs<TBody, TParams, TQuery> & { user: AuthenticatedUser },
+        ) => Promise<void>;
         status: 'no-content';
       },
 ) {

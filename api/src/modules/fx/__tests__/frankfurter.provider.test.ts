@@ -1,5 +1,5 @@
-import { ValidationError } from '@/shared/errors';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ValidationError } from '@/shared/errors';
 import { FrankfurterFxProvider } from '../providers/frankfurter.provider';
 
 describe('FrankfurterFxProvider', () => {
@@ -82,7 +82,11 @@ describe('FrankfurterFxProvider', () => {
     );
 
     const provider = new FrankfurterFxProvider();
-    const rates = await provider.getHistoricalRates('USD', ['BRL'], new Date('2026-05-03T00:00:00.000Z'));
+    const rates = await provider.getHistoricalRates(
+      'USD',
+      ['BRL'],
+      new Date('2026-05-03T00:00:00.000Z'),
+    );
 
     expect(rates).toEqual([
       {
@@ -96,9 +100,9 @@ describe('FrankfurterFxProvider', () => {
   });
 
   it('fetches time-series rates for a date range', async () => {
-    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify([]), { status: 200 }),
-    );
+    const fetchSpy = vi
+      .spyOn(global, 'fetch')
+      .mockResolvedValue(new Response(JSON.stringify([]), { status: 200 }));
 
     const provider = new FrankfurterFxProvider();
     await provider.getTimeSeries(
