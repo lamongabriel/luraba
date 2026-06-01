@@ -1,0 +1,11 @@
+{
+  "name": "luraba",
+  "private": true,
+  "scripts": {
+    "pre-commit": "pnpm run --filter \"./api\" pre-commit",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}
