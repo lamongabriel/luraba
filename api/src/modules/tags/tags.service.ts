@@ -1,5 +1,6 @@
 import type { HouseholdContext } from '@/config/permissions';
 import { ConflictError, NotFoundError } from '@/shared/errors';
+import { formatISODateTime } from '@/shared/lib/date';
 import { tagsRepository } from './tags.repository';
 import type { CreateTagRequestBody, Tag, TagRecord, UpdateTagRequestBody } from './tags.types';
 
@@ -9,8 +10,8 @@ function mapTagRecord(tag: TagRecord): Tag {
     name: tag.name,
     color: tag.color ?? null,
     icon: tag.icon ?? null,
-    createdAt: tag.createdAt.toISOString(),
-    updatedAt: tag.updatedAt.toISOString(),
+    createdAt: formatISODateTime(tag.createdAt),
+    updatedAt: formatISODateTime(tag.updatedAt),
   };
 }
 

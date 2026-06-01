@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import type { HouseholdContext } from '@/config/permissions';
+import { formatISODateTime } from '@/shared/lib/date';
 import { budgetsRepository } from '@/modules/budgets/budgets.repository';
 import { currenciesRepository } from '@/modules/currencies/currencies.repository';
 import { fxService } from '@/modules/fx/fx.service';
@@ -57,8 +58,8 @@ function mapHousehold(record: Awaited<ReturnType<typeof householdsRepository.lis
     creditInstallmentBudgetMode: record.creditInstallmentBudgetMode,
     role: record.role,
     createdByUserId: record.createdByUserId,
-    createdAt: record.createdAt.toISOString(),
-    updatedAt: record.updatedAt.toISOString(),
+    createdAt: formatISODateTime(record.createdAt),
+    updatedAt: formatISODateTime(record.updatedAt),
   };
 }
 
@@ -69,8 +70,8 @@ function mapHouseholdMember(record: Awaited<ReturnType<typeof householdsReposito
     name: record.name,
     email: record.email,
     role: record.role,
-    createdAt: record.createdAt.toISOString(),
-    updatedAt: record.updatedAt.toISOString(),
+    createdAt: formatISODateTime(record.createdAt),
+    updatedAt: formatISODateTime(record.updatedAt),
   };
 }
 
@@ -87,10 +88,10 @@ function mapHouseholdInvite(
     role: record.role,
     status: record.status,
     invitedByUserId: record.invitedByUserId,
-    createdAt: record.createdAt.toISOString(),
-    updatedAt: record.updatedAt.toISOString(),
-    acceptedAt: record.acceptedAt?.toISOString() ?? null,
-    revokedAt: record.revokedAt?.toISOString() ?? null,
+    createdAt: formatISODateTime(record.createdAt),
+    updatedAt: formatISODateTime(record.updatedAt),
+    acceptedAt: record.acceptedAt ? formatISODateTime(record.acceptedAt) : null,
+    revokedAt: record.revokedAt ? formatISODateTime(record.revokedAt) : null,
   };
 }
 

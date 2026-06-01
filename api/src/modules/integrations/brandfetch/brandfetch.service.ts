@@ -1,4 +1,5 @@
 import type { HouseholdContext } from '@/config/permissions';
+import { now } from '@/shared/lib/date';
 import { decryptIntegrationSecret, encryptIntegrationSecret } from '../integration-crypto';
 import type { IntegrationSummary } from '../integrations.types';
 import { buildIntegrationSummary } from '../integrations.utils';
@@ -24,7 +25,7 @@ export async function updateBrandfetchIntegration(
 
   const record = await brandfetchRepository.upsert(context, {
     encryptedClientId: encryptIntegrationSecret(normalizedClientId),
-    lastCheckedAt: new Date(),
+    lastCheckedAt: now(),
   });
 
   return buildIntegrationSummary('brandfetch', record);

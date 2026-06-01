@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { currenciesTable } from '@/db/schemas/currencies.schema';
 import { exchangeRatesTable } from '@/db/schemas/exchange-rates.schema';
 import type { FxProviderId, FxResolvedRate } from './fx.types';
-import { formatFxDate } from './fx.utils';
+import { formatISODate } from '@/shared/lib/date';
 
 type ExchangeRateRecord = typeof exchangeRatesTable.$inferSelect;
 
@@ -22,7 +22,7 @@ class FxRateRepository {
           eq(exchangeRatesTable.provider, provider),
           eq(exchangeRatesTable.fromCurrencyId, fromCurrencyCode),
           eq(exchangeRatesTable.toCurrencyId, toCurrencyCode),
-          eq(exchangeRatesTable.rateDate, formatFxDate(date)),
+          eq(exchangeRatesTable.rateDate, formatISODate(date)),
         ),
       )
       .limit(1);
@@ -39,7 +39,7 @@ class FxRateRepository {
           eq(exchangeRatesTable.provider, provider),
           eq(exchangeRatesTable.fromCurrencyId, fromCurrencyCode),
           eq(exchangeRatesTable.toCurrencyId, toCurrencyCode),
-          lte(exchangeRatesTable.rateDate, formatFxDate(date)),
+          lte(exchangeRatesTable.rateDate, formatISODate(date)),
         ),
       )
       .orderBy(desc(exchangeRatesTable.rateDate))
@@ -62,7 +62,7 @@ class FxRateRepository {
           toCurrencyId: rate.toCurrencyCode,
           rateNumerator: rate.rateNumerator,
           rateDenominator: rate.rateDenominator,
-          rateDate: formatFxDate(rate.rateDate),
+          rateDate: formatISODate(rate.rateDate),
         })),
       )
       .onConflictDoNothing();

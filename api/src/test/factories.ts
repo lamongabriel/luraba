@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { getPermissionsForRole } from '@/config/permissions';
+import { now, parseISODate } from '@/shared/lib/date';
 import { accountsTable } from '@/db/schemas/accounts.schema';
 import { entriesTable } from '@/db/schemas/entries.schema';
 import { householdMembersTable, householdsTable } from '@/db/schemas/households.schema';
@@ -164,7 +165,7 @@ export async function createBalanceEntryForAccount(input: {
     throw new Error('Account ledger not found for test balance setup');
   }
 
-  const postedDate = input.postedDate ?? new Date('2026-01-15T00:00:00.000Z');
+  const postedDate = input.postedDate ?? parseISODate('2026-01-15');
   const transactionRows = await db
     .insert(transactionsTable)
     .values({
@@ -186,7 +187,7 @@ export async function createBalanceEntryForAccount(input: {
       ledgerAccountId: ledger.id,
       amount: input.amount,
       currencyId: input.currencyCode ?? 'BRL',
-      createdAt: new Date(),
+      createdAt: now(),
     })
     .returning();
 

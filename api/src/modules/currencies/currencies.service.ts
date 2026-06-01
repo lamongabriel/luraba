@@ -1,6 +1,6 @@
 import { NotFoundError } from '@/shared/errors';
 import { fxService } from '@/modules/fx/fx.service';
-import { formatFxDate } from '@/modules/fx/fx.utils';
+import { formatISODate, now } from '@/shared/lib/date';
 import { currenciesRepository } from './currencies.repository';
 import type { GetCurrencyRateRequestQuery, GetCurrencyRateResponse, ListCurrenciesResponse } from './currencies.types';
 
@@ -27,7 +27,7 @@ export async function getCurrencyRate(query: GetCurrencyRateRequestQuery): Promi
     throw new NotFoundError('Currency');
   }
 
-  const date = query.date ?? new Date();
+  const date = query.date ?? now();
   const rate = await fxService.getRate({
     fromCurrencyCode: fromCurrency.code,
     toCurrencyCode: toCurrency.code,
@@ -50,7 +50,7 @@ export async function getCurrencyRate(query: GetCurrencyRateRequestQuery): Promi
     fromCurrency,
     toCurrency,
     provider: rate.provider,
-    rateDate: formatFxDate(rate.rateDate),
+    rateDate: formatISODate(rate.rateDate),
     rate: formatRate(rate.rateNumerator, rate.rateDenominator),
     amount: query.amount,
     convertedAmount,

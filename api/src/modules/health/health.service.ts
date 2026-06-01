@@ -1,4 +1,5 @@
 import { pool } from '@/db';
+import { formatISODateTime, now } from '@/shared/lib/date';
 import { fxProviderOrder, fxProvidersById } from '@/modules/fx/fx.providers';
 import type { HealthResponse } from './health.types';
 
@@ -7,7 +8,7 @@ const PROVIDER_HEALTH_TIMEOUT_MS = 3_000;
 type DependencyStatus = HealthResponse['services']['db'];
 
 function nowIso() {
-  return new Date().toISOString();
+  return formatISODateTime(now());
 }
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {

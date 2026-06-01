@@ -1,19 +1,12 @@
+import { addDays as addFxDays, formatISODate as formatFxDate, parseISODate as parseFxDate } from '@/shared/lib/date';
 import type { FxProviderRate, FxResolvedRate } from './fx.types';
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const FX_RATE_DECIMAL_SCALE = 12;
 
-export function formatFxDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
+// formatFxDate and parseFxDate are imported from @/shared/lib/date
+// addFxDays is imported from @/shared/lib/date
 
-export function parseFxDate(date: string): Date {
-  return new Date(`${date}T00:00:00.000Z`);
-}
-
-export function addFxDays(date: Date, days: number): Date {
-  return new Date(date.getTime() + days * MS_PER_DAY);
-}
+export { formatFxDate, parseFxDate, addFxDays };
 
 function greatestCommonDivisor(left: number, right: number): number {
   let a = Math.abs(left);

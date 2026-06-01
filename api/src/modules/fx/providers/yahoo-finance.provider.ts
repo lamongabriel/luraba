@@ -1,7 +1,7 @@
 import YahooFinance from 'yahoo-finance2';
 import { ValidationError } from '@/shared/errors';
+import { addDays as addFxDays, isAfter, isBefore, now, toStartOfDay } from '@/shared/lib/date';
 import type { FxProvider, FxProviderRate } from '../fx.types';
-import { addFxDays, formatFxDate } from '../fx.utils';
 
 type YahooChartRow = {
   date: Date;
@@ -54,11 +54,10 @@ async function getHistoricalChartRate(
   });
   const quotes = toChartRows(chartResult);
 
-  const targetDay = date.getTime();
   const row = quotes
     .filter((quote) => quote.close !== null)
-    .sort((left, right) => left.date.getTime() - right.date.getTime())
-    .filter((quote) => quote.date.getTime() <= targetDay)
+    .sort((left, right) => (isBefore(left.date, right.date) ? -1 : 1))
+    .filter((quote) => !isAfter(quote.date, date))
     .at(-1);
 
   if (!row?.close) {
@@ -69,7 +68,7 @@ async function getHistoricalChartRate(
     provider: 'yahoo-finance2',
     fromCurrencyCode: baseCurrencyCode,
     toCurrencyCode: quoteCurrencyCode,
-    rateDate: new Date(`${formatFxDate(row.date)}T00:00:00.000Z`),
+    rateDate: toStartOfDay(row.date),
     rate: row.close,
   };
 }
@@ -87,7 +86,7 @@ export class YahooFinanceFxProvider implements FxProvider {
   }
 
   async getLatestRates(baseCurrencyCode: string, quoteCurrencyCodes: string[]): Promise<FxProviderRate[]> {
-    const today = new Date();
+    const today = now();
     const rates = await Promise.all(
       quoteCurrencyCodes.map((quoteCurrencyCode) =>
         getHistoricalChartRate(this.client, baseCurrencyCode, quoteCurrencyCode, today),
@@ -127,7 +126,7 @@ export class YahooFinanceFxProvider implements FxProvider {
         provider: this.id,
         fromCurrencyCode: baseCurrencyCode,
         toCurrencyCode: quoteCurrencyCode,
-        rateDate: new Date(`${formatFxDate(quote.date)}T00:00:00.000Z`),
+        rateDate: toStartOfDay(quote.date),
         rate: quote.close!,
       }));
   }

@@ -1,5 +1,6 @@
 import type { HouseholdContext } from '@/config/permissions';
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
+import { formatISODateTime } from '@/shared/lib/date';
 import { categoriesRepository } from './categories.repository';
 import type {
   Category,
@@ -16,8 +17,8 @@ function mapCategoryRecord(category: CategoryRecord): Category {
     type: category.type,
     color: category.color ?? null,
     icon: category.icon ?? null,
-    createdAt: category.createdAt.toISOString(),
-    updatedAt: category.updatedAt.toISOString(),
+    createdAt: formatISODateTime(category.createdAt),
+    updatedAt: formatISODateTime(category.updatedAt),
   };
 }
 

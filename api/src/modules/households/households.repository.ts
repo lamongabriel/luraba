@@ -2,6 +2,7 @@ import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { householdInvitesTable, householdMembersTable, householdsTable } from '@/db/schemas/households.schema';
 import { usersTable } from '@/db/schemas/users.schema';
+import { now } from '@/shared/lib/date';
 import { currencySchema } from '@/shared/validation/preferences';
 import type { Currency } from '@/shared/validation/preferences';
 import type {
@@ -67,7 +68,7 @@ class HouseholdsRepository {
   ): Promise<HouseholdRecord | undefined> {
     const rows = await client
       .update(householdsTable)
-      .set({ ...values, updatedAt: new Date() })
+      .set({ ...values, updatedAt: now() })
       .where(eq(householdsTable.id, householdId))
       .returning();
 
@@ -98,7 +99,7 @@ class HouseholdsRepository {
       .values({ householdId, userId, role })
       .onConflictDoUpdate({
         target: [householdMembersTable.householdId, householdMembersTable.userId],
-        set: { role, updatedAt: new Date() },
+        set: { role, updatedAt: now() },
       })
       .returning();
 
@@ -108,14 +109,14 @@ class HouseholdsRepository {
   async setDefaultHousehold(tx: TxClient, userId: string, householdId: string): Promise<void> {
     await tx
       .update(usersTable)
-      .set({ defaultHouseholdId: householdId, updatedAt: new Date() })
+      .set({ defaultHouseholdId: householdId, updatedAt: now() })
       .where(eq(usersTable.id, userId));
   }
 
   async setDefaultHouseholdForUser(userId: string, householdId: string): Promise<void> {
     await db
       .update(usersTable)
-      .set({ defaultHouseholdId: householdId, updatedAt: new Date() })
+      .set({ defaultHouseholdId: householdId, updatedAt: now() })
       .where(eq(usersTable.id, userId));
   }
 
@@ -228,7 +229,7 @@ class HouseholdsRepository {
   ): Promise<HouseholdMemberRecord | undefined> {
     const rows = await db
       .update(householdMembersTable)
-      .set({ role, updatedAt: new Date() })
+      .set({ role, updatedAt: now() })
       .where(and(eq(householdMembersTable.householdId, householdId), eq(householdMembersTable.userId, userId)))
       .returning();
 
@@ -316,14 +317,14 @@ class HouseholdsRepository {
   async acceptInvite(tx: TxClient, inviteId: string): Promise<void> {
     await tx
       .update(householdInvitesTable)
-      .set({ status: 'accepted', acceptedAt: new Date(), updatedAt: new Date() })
+      .set({ status: 'accepted', acceptedAt: now(), updatedAt: now() })
       .where(eq(householdInvitesTable.id, inviteId));
   }
 
   async revokeInvite(householdId: string, inviteId: string): Promise<HouseholdInviteRecord | undefined> {
     const rows = await db
       .update(householdInvitesTable)
-      .set({ status: 'revoked', revokedAt: new Date(), updatedAt: new Date() })
+      .set({ status: 'revoked', revokedAt: now(), updatedAt: now() })
       .where(
         and(
           eq(householdInvitesTable.householdId, householdId),

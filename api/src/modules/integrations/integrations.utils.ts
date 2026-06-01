@@ -1,4 +1,5 @@
 import type { IntegrationProviderId } from '@/config/integrations';
+import { formatISODateTime } from '@/shared/lib/date';
 import type { IntegrationSummary } from './integrations.types';
 
 export function buildIntegrationSummary(
@@ -9,6 +10,6 @@ export function buildIntegrationSummary(
     provider,
     configured: Boolean(record),
     status: record ? 'connected' : 'not_configured',
-    lastCheckedAt: record?.lastCheckedAt?.toISOString() ?? null,
+    lastCheckedAt: record?.lastCheckedAt ? formatISODateTime(record.lastCheckedAt) : null,
   };
 }

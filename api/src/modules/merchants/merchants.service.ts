@@ -1,5 +1,6 @@
 import type { HouseholdContext } from '@/config/permissions';
 import { ConflictError, NotFoundError } from '@/shared/errors';
+import { formatISODateTime } from '@/shared/lib/date';
 import { buildBrandfetchLogoUrl, normalizeBrandDomain } from '@/modules/integrations/brandfetch/brandfetch.utils';
 import { getBrandfetchClientId } from '@/modules/integrations/brandfetch/brandfetch.service';
 import { merchantsRepository } from './merchants.repository';
@@ -18,8 +19,8 @@ function mapMerchantRecord(merchant: MerchantRecord): Merchant {
     name: merchant.name,
     domain: merchant.domain ?? null,
     logoUrl: merchant.logoUrl ?? null,
-    createdAt: merchant.createdAt.toISOString(),
-    updatedAt: merchant.updatedAt.toISOString(),
+    createdAt: formatISODateTime(merchant.createdAt),
+    updatedAt: formatISODateTime(merchant.updatedAt),
   };
 }
 

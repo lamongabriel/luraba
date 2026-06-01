@@ -1,5 +1,6 @@
 import { and, asc, eq } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
+import { now as _now } from '@/shared/lib/date';
 import { db } from '@/db';
 import type { HouseholdContext } from '@/config/permissions';
 
@@ -70,7 +71,7 @@ export abstract class HouseholdScopedRepository<
   }
 
   private withCreateDefaults(context: HouseholdContext, values: TCreateValues): TCreateValues {
-    const now = new Date();
+    const now = _now();
     const nextValues: MutationValues = { ...values };
 
     if (nextValues.householdId === undefined) {
@@ -90,6 +91,6 @@ export abstract class HouseholdScopedRepository<
 
   private withUpdateTimestamp(values: TUpdateValues): TUpdateValues {
     if (!this.table.updatedAt) return values;
-    return { ...values, updatedAt: new Date() } as TUpdateValues;
+    return { ...values, updatedAt: _now() } as TUpdateValues;
   }
 }

@@ -1,7 +1,7 @@
 import { FRANKFURTER_API_URL } from '@/config/fx';
 import { ValidationError } from '@/shared/errors';
+import { formatISODate as formatFxDate, parseISODate as parseFxDate } from '@/shared/lib/date';
 import type { FxProvider, FxProviderRate } from '../fx.types';
-import { formatFxDate, parseFxDate } from '../fx.utils';
 
 type FrankfurterRateRow = {
   date: string;

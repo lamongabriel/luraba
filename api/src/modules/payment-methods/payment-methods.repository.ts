@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { currenciesTable } from '@/db/schemas/currencies.schema';
 import { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
+import { now } from '@/shared/lib/date';
 import type { HouseholdContext } from '@/config/permissions';
 import type { PaymentMethodRecord } from './payment-methods.types';
 
@@ -102,7 +103,7 @@ class PaymentMethodsRepository {
         currencyId: values.currencyId,
         color: values.color,
         icon: values.icon,
-        updatedAt: new Date(),
+        updatedAt: now(),
       })
       .where(and(eq(paymentMethodsTable.id, id), eq(paymentMethodsTable.householdId, context.householdId)))
       .returning();

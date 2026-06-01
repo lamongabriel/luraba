@@ -1,5 +1,6 @@
 import { FX_PRIMARY_PROVIDER_ID, FX_PROVIDER_FAILURE_MESSAGES } from '@/config/fx';
 import { DependencyUnavailableError, NotFoundError } from '@/shared/errors';
+import { formatISODate, isAfter, isBefore, now, toStartOfDay } from '@/shared/lib/date';
 import { fxRateRepository } from './fx.repository';
 import { fxProviderOrder, fxProvidersById } from './fx.providers';
 import type {
@@ -11,10 +12,10 @@ import type {
   FxResolvedRate,
   FxValuationInput,
 } from './fx.types';
-import { buildFxLookupKey, formatFxDate, invertFxRate, normalizeProviderRate, parseFxDate, roundHalfUp } from './fx.utils';
+import { buildFxLookupKey, invertFxRate, normalizeProviderRate, parseFxDate, roundHalfUp } from './fx.utils';
 
 function toStartOfUtcDay(date: Date): Date {
-  return new Date(`${formatFxDate(date)}T00:00:00.000Z`);
+  return toStartOfDay(date);
 }
 
 function mapStoredRate(rate: {
@@ -365,8 +366,8 @@ export class FxService {
   }
 
   private async fetchAndStoreRate(query: FxRateQuery): Promise<FxResolvedRate | undefined> {
-    const today = formatFxDate(new Date());
-    const requestedDate = formatFxDate(query.date);
+    const today = formatISODate(now());
+    const requestedDate = formatISODate(query.date);
     const providersToCheck = query.provider ? [query.provider] : this.providerOrder;
 
     for (const providerId of providersToCheck) {
@@ -382,8 +383,8 @@ export class FxService {
         await this.repository.upsertRates(normalizedRates);
 
         const resolvedRate = normalizedRates
-          .filter((rate) => rate.rateDate.getTime() <= query.date.getTime())
-          .sort((left, right) => right.rateDate.getTime() - left.rateDate.getTime())
+          .filter((rate) => !isAfter(rate.rateDate, query.date))
+          .sort((left, right) => (isAfter(left.rateDate, right.rateDate) ? -1 : isBefore(left.rateDate, right.rateDate) ? 1 : 0))
           .at(0);
 
         if (resolvedRate) {

@@ -8,6 +8,7 @@ import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
 import { and, eq, inArray } from 'drizzle-orm';
 import { ConflictError, NotFoundError } from '@/shared/errors';
+import { formatISODateTime, now } from '@/shared/lib/date';
 import type { HouseholdContext } from '@/config/permissions';
 import { accountsRepository } from './accounts.repository';
 import {
@@ -34,8 +35,8 @@ function mapAccountRecord(account: AccountRecord): Account {
     classification: account.classification,
     type: account.type,
     currencyCode: account.currencyId,
-    createdAt: account.createdAt.toISOString(),
-    updatedAt: account.updatedAt.toISOString(),
+    createdAt: formatISODateTime(account.createdAt),
+    updatedAt: formatISODateTime(account.updatedAt),
   };
 }
 
@@ -64,7 +65,7 @@ export async function createAccount(context: HouseholdContext, dto: CreateAccoun
   }
 
   return db.transaction(async (tx) => {
-    const now = new Date();
+    const _now = now();
     const createdAccountRows = await tx
       .insert(accountsTable)
       .values({
@@ -77,8 +78,8 @@ export async function createAccount(context: HouseholdContext, dto: CreateAccoun
         classification,
         type: dto.type,
         currencyId: dto.currencyCode,
-        createdAt: now,
-        updatedAt: now,
+        createdAt: _now,
+        updatedAt: _now,
       })
       .returning();
 

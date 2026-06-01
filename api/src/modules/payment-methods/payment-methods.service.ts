@@ -1,5 +1,6 @@
 import type { HouseholdContext } from '@/config/permissions';
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
+import { formatISODateTime } from '@/shared/lib/date';
 import { paymentMethodsRepository } from './payment-methods.repository';
 import type {
   CreatePaymentMethodRequestBody,
@@ -31,8 +32,8 @@ function mapPaymentMethodRecord(method: PaymentMethodRecord): PaymentMethod {
     translationKey: method.translationKey ?? null,
     color: method.color ?? null,
     icon: method.icon ?? null,
-    createdAt: method.createdAt.toISOString(),
-    updatedAt: method.updatedAt.toISOString(),
+    createdAt: formatISODateTime(method.createdAt),
+    updatedAt: formatISODateTime(method.updatedAt),
   };
 }
 
