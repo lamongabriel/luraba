@@ -1,6 +1,5 @@
-import { and, desc, eq, inArray, lte } from 'drizzle-orm';
+import { and, desc, eq, lte } from 'drizzle-orm';
 import { db } from '@/db';
-import { currenciesTable } from '@/db/schemas/currencies.schema';
 import { exchangeRatesTable } from '@/db/schemas/exchange-rates.schema';
 import { formatISODate } from '@/shared/lib/date';
 import type { FxProviderId, FxResolvedRate } from './fx.types';
@@ -71,33 +70,6 @@ class FxRateRepository {
         })),
       )
       .onConflictDoNothing();
-  }
-
-  async listCurrencyPrecisions(currencyCodes: string[]): Promise<Record<string, number>> {
-    const rows = await db
-      .select({
-        code: currenciesTable.code,
-        precision: currenciesTable.precision,
-      })
-      .from(currenciesTable)
-      .where(inArray(currenciesTable.code, currencyCodes));
-
-    return Object.fromEntries(rows.map((row) => [row.code, row.precision]));
-  }
-
-  async findCurrencyByCode(
-    currencyCode: string,
-  ): Promise<{ code: string; precision: number } | undefined> {
-    const rows = await db
-      .select({
-        code: currenciesTable.code,
-        precision: currenciesTable.precision,
-      })
-      .from(currenciesTable)
-      .where(eq(currenciesTable.code, currencyCode))
-      .limit(1);
-
-    return rows[0];
   }
 }
 

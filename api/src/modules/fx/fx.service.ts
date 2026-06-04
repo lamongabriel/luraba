@@ -1,4 +1,5 @@
 import { FX_PRIMARY_PROVIDER_ID, FX_PROVIDER_FAILURE_MESSAGES } from '@/config/fx';
+import { currenciesRepository } from '@/modules/currencies/currencies.repository';
 import { DependencyUnavailableError, NotFoundError } from '@/shared/errors';
 import { formatISODate, isAfter, isBefore, now, toStartOfDay } from '@/shared/lib/date';
 import { fxProviderOrder, fxProvidersById } from './fx.providers';
@@ -91,8 +92,11 @@ type FxRateRepositoryLike = {
     | undefined
   >;
   upsertRates: typeof fxRateRepository.upsertRates;
-  listCurrencyPrecisions: typeof fxRateRepository.listCurrencyPrecisions;
-  findCurrencyByCode: typeof fxRateRepository.findCurrencyByCode;
+};
+
+type CurrencyRepositoryLike = {
+  findByCode: typeof currenciesRepository.findByCode;
+  listPrecisions: typeof currenciesRepository.listPrecisions;
 };
 
 type FxProvidersById = Record<FxProviderId, FxProvider>;
@@ -104,6 +108,7 @@ export class FxService {
     private readonly repository: FxRateRepositoryLike = fxRateRepository,
     private readonly providersById: FxProvidersById = fxProvidersById,
     private readonly providerOrder: readonly FxProviderId[] = fxProviderOrder,
+    private readonly currencyRepository: CurrencyRepositoryLike = currenciesRepository,
   ) {}
 
   async getRate(query: FxRateQuery): Promise<FxResolvedRate> {
@@ -149,7 +154,7 @@ export class FxService {
   async convertAmount(input: FxConversionInput): Promise<number> {
     const [rate, precisions] = await Promise.all([
       this.getRate(input),
-      this.repository.listCurrencyPrecisions([input.fromCurrencyCode, input.toCurrencyCode]),
+      this.currencyRepository.listPrecisions([input.fromCurrencyCode, input.toCurrencyCode]),
     ]);
 
     const sourcePrecision = precisions[input.fromCurrencyCode];
@@ -163,7 +168,7 @@ export class FxService {
   }
 
   async assertCurrencyExists(currencyCode: string): Promise<void> {
-    const currency = await this.repository.findCurrencyByCode(currencyCode.toUpperCase());
+    const currency = await this.currencyRepository.findByCode(currencyCode.toUpperCase());
     if (!currency) {
       throw new NotFoundError('Currency');
     }
@@ -246,7 +251,7 @@ export class FxService {
     targetCurrencyCode: string,
   ): Promise<Array<TInput & { convertedAmount: number }>> {
     const normalizedTargetCurrencyCode = targetCurrencyCode.toUpperCase();
-    const precisionMap = await this.repository.listCurrencyPrecisions([
+    const precisionMap = await this.currencyRepository.listPrecisions([
       normalizedTargetCurrencyCode,
       ...inputs.map((input) => input.currencyCode.toUpperCase()),
     ]);
