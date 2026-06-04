@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, inArray } from 'drizzle-orm';
 import { db } from '@/db';
 import { currenciesTable } from '@/db/schemas/currencies.schema';
 import type { Currency } from './currencies.types';
@@ -27,6 +27,22 @@ class CurrenciesRepository {
       .limit(1);
 
     return rows[0];
+  }
+
+  async listPrecisions(currencyCodes: string[]): Promise<Record<string, number>> {
+    if (currencyCodes.length === 0) {
+      return {};
+    }
+
+    const rows = await db
+      .select({
+        code: currenciesTable.code,
+        precision: currenciesTable.precision,
+      })
+      .from(currenciesTable)
+      .where(inArray(currenciesTable.code, currencyCodes));
+
+    return Object.fromEntries(rows.map((row) => [row.code, row.precision]));
   }
 }
 

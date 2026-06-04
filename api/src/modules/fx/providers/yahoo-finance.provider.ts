@@ -137,14 +137,18 @@ export class YahooFinanceFxProvider implements FxProvider {
     );
     const quotes = toChartRows(chartResult);
 
-    return quotes
-      .filter((quote) => quote.close !== null)
-      .map((quote) => ({
+    return quotes.flatMap((quote) => {
+      if (quote.close === null) {
+        return [];
+      }
+
+      return {
         provider: this.id,
         fromCurrencyCode: baseCurrencyCode,
         toCurrencyCode: quoteCurrencyCode,
         rateDate: toStartOfDay(quote.date),
-        rate: quote.close!,
-      }));
+        rate: quote.close,
+      };
+    });
   }
 }

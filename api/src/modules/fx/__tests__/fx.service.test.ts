@@ -17,9 +17,19 @@ function createRepository() {
     findRateByDate: vi.fn<(...args: unknown[]) => Promise<StoredRate | undefined>>(),
     findRateOnOrBefore: vi.fn<(...args: unknown[]) => Promise<StoredRate | undefined>>(),
     upsertRates: vi.fn<(...args: unknown[]) => Promise<void>>(),
-    listCurrencyPrecisions: vi.fn<(...args: unknown[]) => Promise<Record<string, number>>>(),
-    findCurrencyByCode:
-      vi.fn<(...args: unknown[]) => Promise<{ code: string; precision: number } | undefined>>(),
+  };
+}
+
+function createCurrencyRepository(precisions: Record<string, number> = {}) {
+  return {
+    findByCode: vi.fn(async (currencyCode: string) =>
+      precisions[currencyCode] === undefined
+        ? undefined
+        : { code: currencyCode, symbol: currencyCode, precision: precisions[currencyCode] },
+    ),
+    listPrecisions: vi
+      .fn<(...args: unknown[]) => Promise<Record<string, number>>>()
+      .mockResolvedValue(precisions),
   };
 }
 
@@ -252,7 +262,7 @@ describe('FxService', () => {
 
   it('converts grouped amounts into the requested target currency', async () => {
     const repository = createRepository();
-    repository.listCurrencyPrecisions.mockResolvedValue({
+    const currencyRepository = createCurrencyRepository({
       USD: 2,
       BRL: 2,
     });
@@ -267,10 +277,15 @@ describe('FxService', () => {
       })
       .mockResolvedValue(undefined);
 
-    const service = new FxService(repository, {
-      frankfurter: createProvider('frankfurter'),
-      'yahoo-finance2': createProvider('yahoo-finance2'),
-    });
+    const service = new FxService(
+      repository,
+      {
+        frankfurter: createProvider('frankfurter'),
+        'yahoo-finance2': createProvider('yahoo-finance2'),
+      },
+      ['frankfurter', 'yahoo-finance2'],
+      currencyRepository,
+    );
 
     const totals = await service.convertGroupedAmounts(
       [
@@ -297,14 +312,19 @@ describe('FxService', () => {
 
   it('rejects conversions when the target currency is unknown', async () => {
     const repository = createRepository();
-    repository.listCurrencyPrecisions.mockResolvedValue({
+    const currencyRepository = createCurrencyRepository({
       USD: 2,
     });
 
-    const service = new FxService(repository, {
-      frankfurter: createProvider('frankfurter'),
-      'yahoo-finance2': createProvider('yahoo-finance2'),
-    });
+    const service = new FxService(
+      repository,
+      {
+        frankfurter: createProvider('frankfurter'),
+        'yahoo-finance2': createProvider('yahoo-finance2'),
+      },
+      ['frankfurter', 'yahoo-finance2'],
+      currencyRepository,
+    );
 
     await expect(
       service.sumValuations(
