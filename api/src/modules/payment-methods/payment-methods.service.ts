@@ -1,4 +1,6 @@
 import type { HouseholdContext } from '@/config/permissions';
+import { currenciesRepository } from '@/modules/currencies/currencies.repository';
+import * as transactionsRepository from '@/modules/transactions/transactions.repository';
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
 import { paymentMethodsRepository } from './payment-methods.repository';
@@ -42,7 +44,7 @@ async function assertCurrencyExists(currencyCode?: string): Promise<void> {
     return;
   }
 
-  const currency = await paymentMethodsRepository.findCurrencyByCode(currencyCode);
+  const currency = await currenciesRepository.findByCode(currencyCode);
   if (!currency) {
     throw new NotFoundError('Currency');
   }
@@ -134,7 +136,7 @@ export async function deletePaymentMethod(
     throw new NotFoundError('Payment method');
   }
 
-  if (await paymentMethodsRepository.hasTransactions(paymentMethodId, context)) {
+  if (await transactionsRepository.hasPaymentMethod(context, paymentMethodId)) {
     throw new ValidationError('Payment methods used by transactions cannot be deleted');
   }
 

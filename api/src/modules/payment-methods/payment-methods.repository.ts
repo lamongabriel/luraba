@@ -1,9 +1,7 @@
 import { and, asc, eq, isNull, or, sql } from 'drizzle-orm';
 import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
-import { currenciesTable } from '@/db/schemas/currencies.schema';
 import { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
-import { transactionsTable } from '@/db/schemas/transactions.schema';
 import { now } from '@/shared/lib/date';
 import type { PaymentMethodRecord } from './payment-methods.types';
 
@@ -16,16 +14,6 @@ type CreatePaymentMethodValues = {
 };
 
 class PaymentMethodsRepository {
-  async findCurrencyByCode(currencyCode: string): Promise<{ code: string } | undefined> {
-    const rows = await db
-      .select({ code: currenciesTable.code })
-      .from(currenciesTable)
-      .where(eq(currenciesTable.code, currencyCode))
-      .limit(1);
-
-    return rows[0];
-  }
-
   async list(context: HouseholdContext, currencyCode?: string): Promise<PaymentMethodRecord[]> {
     const scopeCondition = or(
       isNull(paymentMethodsTable.householdId),
@@ -141,20 +129,6 @@ class PaymentMethodsRepository {
       .returning();
 
     return rows[0];
-  }
-
-  async hasTransactions(id: string, context: HouseholdContext): Promise<boolean> {
-    const [row] = await db
-      .select({ count: sql<number>`count(*)::integer` })
-      .from(transactionsTable)
-      .where(
-        and(
-          eq(transactionsTable.householdId, context.householdId),
-          eq(transactionsTable.paymentMethodId, id),
-        ),
-      );
-
-    return (row?.count ?? 0) > 0;
   }
 
   async findAvailableByCode(
