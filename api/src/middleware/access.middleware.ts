@@ -28,7 +28,7 @@ function authenticateRequest(req: Request): AuthenticatedUser {
   }
 
   const rawHeader = req.headers.authorization;
-  if (!rawHeader || !rawHeader.startsWith('Bearer ')) {
+  if (!rawHeader?.startsWith('Bearer ')) {
     throw new UnauthorizedError('Missing or invalid Authorization header');
   }
 

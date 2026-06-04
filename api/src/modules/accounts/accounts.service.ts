@@ -1,18 +1,16 @@
-import { and, eq, inArray } from 'drizzle-orm';
 import { ACCOUNT_TYPE_TO_CLASSIFICATION } from '@/config/accounts';
 import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
-import { accountsTable } from '@/db/schemas/accounts.schema';
-import { entriesTable } from '@/db/schemas/entries.schema';
-import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
-import { transactionsTable } from '@/db/schemas/transactions.schema';
+import { currenciesRepository } from '@/modules/currencies/currencies.repository';
 import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
 import {
   buildBrandfetchLogoUrl,
   normalizeBrandDomain,
 } from '@/modules/integrations/brandfetch/brandfetch.utils';
+import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
+import * as transactionsRepository from '@/modules/transactions/transactions.repository';
 import { ConflictError, NotFoundError } from '@/shared/errors';
-import { formatISODateTime, now } from '@/shared/lib/date';
+import { formatISODateTime } from '@/shared/lib/date';
 import { accountsRepository } from './accounts.repository';
 import type {
   Account,
@@ -54,7 +52,7 @@ export async function createAccount(
   context: HouseholdContext,
   dto: CreateAccountRequestBody,
 ): Promise<Account> {
-  const currency = await accountsRepository.findCurrencyByCode(dto.currencyCode);
+  const currency = await currenciesRepository.findByCode(dto.currencyCode);
   if (!currency) throw new NotFoundError('Currency');
 
   const existing = await accountsRepository.findByHouseholdAndName(context, dto.name);
@@ -73,31 +71,21 @@ export async function createAccount(
   }
 
   return db.transaction(async (tx) => {
-    const _now = now();
-    const createdAccountRows = await tx
-      .insert(accountsTable)
-      .values({
-        householdId: context.householdId,
-        name: dto.name,
-        institutionName: dto.institutionName,
-        institutionDomain,
-        institutionLogoUrl,
-        notes: dto.notes,
-        classification,
-        type: dto.type,
-        currencyId: dto.currencyCode,
-        createdAt: _now,
-        updatedAt: _now,
-      })
-      .returning();
+    const account = await accountsRepository.createInTransaction(tx, context, {
+      name: dto.name,
+      institutionName: dto.institutionName,
+      institutionDomain,
+      institutionLogoUrl,
+      notes: dto.notes,
+      classification,
+      type: dto.type,
+      currencyId: dto.currencyCode,
+    });
 
-    const account = createdAccountRows[0];
-
-    await tx.insert(ledgerAccountsTable).values({
+    await ledgerAccountsRepository.createForAccount(tx, {
+      accountId: account.id,
       classification: account.classification,
-      ownerType: 'account',
-      ownerId: account.id,
-      currencyId: account.currencyId,
+      currencyCode: account.currencyId,
     });
 
     return mapAccountRecord(account);
@@ -109,10 +97,10 @@ export async function listAccounts(context: HouseholdContext): Promise<AccountDe
 
   return Promise.all(
     accounts.map(async (account) => {
-      const ledger = await accountsRepository.findLedgerByAccountId(account.id);
+      const ledger = await ledgerAccountsRepository.findByOwner('account', account.id);
       if (!ledger) throw new NotFoundError('Account ledger');
 
-      const balance = await accountsRepository.getAccountBalanceByLedgerId(ledger.id);
+      const balance = await ledgerAccountsRepository.getBalance(ledger.id);
       return mapAccountDetails(account, balance);
     }),
   );
@@ -125,10 +113,10 @@ export async function getAccountDetails(
   const account = await accountsRepository.get(accountId, context);
   if (!account) throw new NotFoundError('Account');
 
-  const ledger = await accountsRepository.findLedgerByAccountId(account.id);
+  const ledger = await ledgerAccountsRepository.findByOwner('account', account.id);
   if (!ledger) throw new NotFoundError('Account ledger');
 
-  const balance = await accountsRepository.getAccountBalanceByLedgerId(ledger.id);
+  const balance = await ledgerAccountsRepository.getBalance(ledger.id);
   return mapAccountDetails(account, balance);
 }
 
@@ -187,52 +175,18 @@ export async function deleteAccount(context: HouseholdContext, accountId: string
     throw new NotFoundError('Account');
   }
 
-  const ledger = await accountsRepository.findLedgerByAccountId(account.id);
+  const ledger = await ledgerAccountsRepository.findByOwner('account', account.id);
   if (!ledger) {
     throw new NotFoundError('Account ledger');
   }
 
   await db.transaction(async (tx) => {
-    const transactionRows = await tx
-      .select({ id: entriesTable.transactionId })
-      .from(entriesTable)
-      .innerJoin(transactionsTable, eq(transactionsTable.id, entriesTable.transactionId))
-      .where(
-        and(
-          eq(entriesTable.ledgerAccountId, ledger.id),
-          eq(transactionsTable.householdId, context.householdId),
-        ),
-      );
+    await transactionsRepository.deleteByLedgerId(tx, context.householdId, ledger.id);
+    await ledgerAccountsRepository.deleteByOwner(tx, 'account', account.id);
 
-    const transactionIds = Array.from(new Set(transactionRows.map((row) => row.id)));
-    if (transactionIds.length > 0) {
-      await tx
-        .delete(transactionsTable)
-        .where(
-          and(
-            eq(transactionsTable.householdId, context.householdId),
-            inArray(transactionsTable.id, transactionIds),
-          ),
-        );
-    }
+    const deleted = await accountsRepository.deleteInTransaction(tx, context, account.id);
 
-    await tx
-      .delete(ledgerAccountsTable)
-      .where(
-        and(
-          eq(ledgerAccountsTable.ownerType, 'account'),
-          eq(ledgerAccountsTable.ownerId, account.id),
-        ),
-      );
-
-    const deletedRows = await tx
-      .delete(accountsTable)
-      .where(
-        and(eq(accountsTable.id, account.id), eq(accountsTable.householdId, context.householdId)),
-      )
-      .returning();
-
-    if (!deletedRows[0]) {
+    if (!deleted) {
       throw new NotFoundError('Account');
     }
   });

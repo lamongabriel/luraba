@@ -4,10 +4,10 @@ import { db } from '@/db';
 import { entriesTable } from '@/db/schemas/entries.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
 import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
+import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import { buildAccountInput, createBalanceEntryForAccount } from '@/test/factories';
-import { accountsRepository } from '../accounts.repository';
 import * as accountsService from '../accounts.service';
 
 describe('accounts service', () => {
@@ -33,7 +33,7 @@ describe('accounts service', () => {
     expect(account.currencyCode).toBe('BRL');
     expect(account.institutionLogoUrl).toBeNull();
 
-    const ledger = await accountsRepository.findLedgerByAccountId(account.id);
+    const ledger = await ledgerAccountsRepository.findByOwner('account', account.id);
     expect(ledger).toBeDefined();
     expect(ledger?.classification).toBe('asset');
     expect(ledger?.currencyId).toBe('BRL');
@@ -208,7 +208,9 @@ describe('accounts service', () => {
     await expect(
       accountsService.getAccountDetails(context.householdContext, account.id),
     ).rejects.toThrow(NotFoundError);
-    await expect(accountsRepository.findLedgerByAccountId(account.id)).resolves.toBeUndefined();
+    await expect(
+      ledgerAccountsRepository.findByOwner('account', account.id),
+    ).resolves.toBeUndefined();
   });
 
   it('deletes account transactions, entries, and the backing ledger when deleting an account with history', async () => {
@@ -237,7 +239,9 @@ describe('accounts service', () => {
 
     expect(transactions).toHaveLength(0);
     expect(entries).toHaveLength(0);
-    await expect(accountsRepository.findLedgerByAccountId(account.id)).resolves.toBeUndefined();
+    await expect(
+      ledgerAccountsRepository.findByOwner('account', account.id),
+    ).resolves.toBeUndefined();
     await expect(
       accountsService.getAccountDetails(context.householdContext, account.id),
     ).rejects.toThrow(NotFoundError);

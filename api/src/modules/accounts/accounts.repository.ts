@@ -1,24 +1,20 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
 import { accountsTable } from '@/db/schemas/accounts.schema';
-import { currenciesTable } from '@/db/schemas/currencies.schema';
-import { entriesTable } from '@/db/schemas/entries.schema';
-import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
+import type { TxClient } from '@/db/types';
+import { now } from '@/shared/lib/date';
 import { HouseholdScopedRepository } from '@/shared/repositories/household-scoped.repository';
 import type { AccountRecord } from './accounts.types';
+
+type CreateAccountValues = Omit<
+  typeof accountsTable.$inferInsert,
+  'id' | 'householdId' | 'createdAt' | 'updatedAt'
+>;
 
 class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
   constructor() {
     super(accountsTable, { orderBy: accountsTable.name });
-  }
-
-  async findCurrencyByCode(currencyCode: string): Promise<{ code: string } | undefined> {
-    const rows = await db
-      .select({ code: currenciesTable.code })
-      .from(currenciesTable)
-      .where(eq(currenciesTable.code, currencyCode));
-    return rows[0];
   }
 
   async findByHouseholdAndName(
@@ -32,40 +28,58 @@ class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
     return rows[0];
   }
 
-  async findLedgerByAccountId(accountId: string): Promise<
-    | {
-        id: string;
-        classification: 'asset' | 'liability';
-        currencyId: string;
-      }
-    | undefined
-  > {
-    const rows = await db
-      .select({
-        id: ledgerAccountsTable.id,
-        classification: ledgerAccountsTable.classification,
-        currencyId: ledgerAccountsTable.currencyId,
+  async createInTransaction(
+    tx: TxClient,
+    context: HouseholdContext,
+    values: CreateAccountValues,
+  ): Promise<AccountRecord> {
+    const timestamp = now();
+    const rows = await tx
+      .insert(accountsTable)
+      .values({
+        ...values,
+        householdId: context.householdId,
+        createdAt: timestamp,
+        updatedAt: timestamp,
       })
-      .from(ledgerAccountsTable)
-      .where(
-        and(
-          eq(ledgerAccountsTable.ownerType, 'account'),
-          eq(ledgerAccountsTable.ownerId, accountId),
-        ),
-      );
+      .returning();
 
     return rows[0];
   }
 
-  async getAccountBalanceByLedgerId(ledgerAccountId: string): Promise<number> {
-    const [row] = await db
-      .select({
-        balance: sql<number>`coalesce(sum(${entriesTable.amount}), 0)::integer`,
-      })
-      .from(entriesTable)
-      .where(eq(entriesTable.ledgerAccountId, ledgerAccountId));
+  async deleteInTransaction(
+    tx: TxClient,
+    context: HouseholdContext,
+    accountId: string,
+  ): Promise<AccountRecord | undefined> {
+    const rows = await tx
+      .delete(accountsTable)
+      .where(
+        and(eq(accountsTable.id, accountId), eq(accountsTable.householdId, context.householdId)),
+      )
+      .returning();
 
-    return row?.balance ?? 0;
+    return rows[0];
+  }
+
+  async updateInTransaction(
+    tx: TxClient,
+    context: HouseholdContext,
+    accountId: string,
+    values: Partial<CreateAccountValues>,
+  ): Promise<AccountRecord | undefined> {
+    const rows = await tx
+      .update(accountsTable)
+      .set({
+        ...values,
+        updatedAt: now(),
+      })
+      .where(
+        and(eq(accountsTable.id, accountId), eq(accountsTable.householdId, context.householdId)),
+      )
+      .returning();
+
+    return rows[0];
   }
 }
 
