@@ -6,6 +6,7 @@ import {
   householdsTable,
 } from '@/db/schemas/households.schema';
 import { usersTable } from '@/db/schemas/users.schema';
+import type { TxClient } from '@/db/types';
 import { now } from '@/shared/lib/date';
 import type { Currency } from '@/shared/validation/preferences';
 import { currencySchema } from '@/shared/validation/preferences';
@@ -18,7 +19,6 @@ import type {
   UpdateHouseholdRequestBody,
 } from './households.types';
 
-export type TxClient = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type HouseholdMembership = HouseholdMemberRecord & {
   householdName: HouseholdRecord['name'];
   defaultCurrencyId: Currency;
