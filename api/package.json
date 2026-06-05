@@ -17,6 +17,7 @@
     "db:seed": "tsx src/db/seed/index.ts",
     "db:configure": "npm run db:migrate && npm run db:seed",
     "test": "DOTENV_CONFIG_PATH=.env.test NODE_ENV=test RUN_DB_TESTS=1 vitest run",
+    "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:watch": "DOTENV_CONFIG_PATH=.env.test NODE_ENV=test RUN_DB_TESTS=1 vitest",
     "lint": "biome check src/",
     "lint:fix": "biome check --write src/",
