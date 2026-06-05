@@ -4,4 +4,8 @@ export const SYSTEM_LEDGER_CLASSIFICATIONS = {
   expense: 'liability',
   income: 'asset',
   adjustment: 'liability',
-} as const satisfies Record<'expense' | 'income' | 'adjustment', AccountClassification>;
+  offshoreTransfer: 'liability',
+} as const satisfies Record<
+  'expense' | 'income' | 'adjustment' | 'offshoreTransfer',
+  AccountClassification
+>;

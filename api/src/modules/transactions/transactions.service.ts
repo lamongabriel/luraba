@@ -1,174 +1,101 @@
+import type { HouseholdContext } from '@/config/permissions';
+import { SYSTEM_LEDGER_CLASSIFICATIONS } from '@/config/transactions';
 import { db } from '@/db';
+import type { TxClient } from '@/db/types';
+import { accountsRepository } from '@/modules/accounts/accounts.repository';
+import { categoriesRepository } from '@/modules/categories/categories.repository';
+import { currenciesRepository } from '@/modules/currencies/currencies.repository';
+import { entriesRepository } from '@/modules/entries/entries.repository';
+import * as entriesService from '@/modules/entries/entries.service';
+import type { EntryDraft } from '@/modules/entries/entries.types';
+import { fxService } from '@/modules/fx/fx.service';
+import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
+import { merchantsRepository } from '@/modules/merchants/merchants.repository';
+import { paymentMethodsRepository } from '@/modules/payment-methods/payment-methods.repository';
+import { tagsRepository } from '@/modules/tags/tags.repository';
 import { NotFoundError, ValidationError } from '@/shared/errors';
+import { startOfMonth as toBudgetMonth } from '@/shared/lib/date';
+import {
+  mapDetailedRows,
+  resolveTransferAmounts,
+  toRawLedgerBalance,
+} from './transactions.helpers';
 import * as txRepository from './transactions.repository';
-import { CreateTransactionDto, TransactionResponse } from './transactions.types';
+import type {
+  CreateTransactionDto,
+  TransactionResponse,
+  UpdateTransactionRequestBody,
+} from './transactions.types';
 
-type EntryDraft = {
-  ledgerAccountId: string;
-  amount: number;
-  currencyCode: string;
-  categoryId?: string;
-  budgetMonth?: Date;
-};
+// -----------------------------------------------------------------------------
+// Scoped Validation + Lookups
+// -----------------------------------------------------------------------------
 
-type DetailedTransactionRow = Awaited<ReturnType<typeof txRepository.listDetailedByUserId>>[number];
-
-const SYSTEM_LEDGER_CLASSIFICATIONS = {
-  expense: 'liability',
-  income: 'asset',
-  adjustment: 'liability',
-} as const;
-
-function absoluteAmount(value: number): number {
-  return value < 0 ? -value : value;
-}
-
-function formatDateOnly(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-function toBudgetMonth(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
-}
-
-function validateBalanced(entries: EntryDraft[]): void {
-  if (entries.length < 2) {
-    throw new ValidationError('Every transaction must create at least two entries');
+async function validateTags(
+  context: HouseholdContext,
+  tagIds: string[] | undefined,
+): Promise<string[]> {
+  const normalizedTagIds = Array.from(new Set(tagIds ?? []));
+  if (normalizedTagIds.length === 0) {
+    return [];
   }
 
-  const sumsByCurrency = new Map<string, number>();
-
-  for (const entry of entries) {
-    const current = sumsByCurrency.get(entry.currencyCode) ?? 0;
-    sumsByCurrency.set(entry.currencyCode, current + entry.amount);
+  const tags = await tagsRepository.findByIds(context, normalizedTagIds);
+  if (tags.length !== normalizedTagIds.length) {
+    throw new NotFoundError('Tag');
   }
 
-  for (const [currencyCode, total] of sumsByCurrency.entries()) {
-    if (total !== 0) {
-      throw new ValidationError(`Entries are not balanced for currency ${currencyCode}`);
-    }
-  }
+  return normalizedTagIds;
 }
 
-function normalizeBudgetInclusion(dto: CreateTransactionDto): {
-  includeInBudget: boolean;
-} {
-  return {
-    includeInBudget: dto.includeInBudget ?? true,
-  };
-}
-
-function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResponse[] {
-  const rowsByTransaction = new Map<string, DetailedTransactionRow[]>();
-
-  for (const row of rows) {
-    const grouped = rowsByTransaction.get(row.transactionId);
-    if (grouped) {
-      grouped.push(row);
-      continue;
-    }
-
-    rowsByTransaction.set(row.transactionId, [row]);
-  }
-
-  return Array.from(rowsByTransaction.values()).map((group) => {
-    const first = group[0];
-    const categoryId = first.categoryId ?? null;
-    const accountEntries = group.filter((row) => row.accountId);
-
-    if (first.type === 'transfer') {
-      const fromEntry = accountEntries.find((row) => row.entryAmount < 0) ?? accountEntries[0] ?? null;
-      const toEntry =
-        accountEntries.find((row) => row.entryAmount > 0 && row.accountId !== fromEntry?.accountId) ??
-        accountEntries.find((row) => row.accountId !== fromEntry?.accountId) ??
-        null;
-
-      return {
-        id: first.transactionId,
-        userId: first.userId,
-        type: first.type,
-        description: first.description,
-        amount: absoluteAmount(fromEntry?.entryAmount ?? toEntry?.entryAmount ?? 0),
-        currencyCode: fromEntry?.entryCurrencyCode ?? toEntry?.entryCurrencyCode ?? first.entryCurrencyCode,
-        accountId: fromEntry?.accountId ?? null,
-        accountName: fromEntry?.accountName ?? null,
-        accountClassification: fromEntry?.accountClassification ?? null,
-        toAccountId: toEntry?.accountId ?? null,
-        toAccountName: toEntry?.accountName ?? null,
-        toAccountClassification: toEntry?.accountClassification ?? null,
-        categoryId,
-        merchantId: first.merchantId ?? null,
-        paymentMethodId: first.paymentMethodId ?? null,
-        paymentMethodCode: first.paymentMethodCode ?? null,
-        paymentMethodName: first.paymentMethodName ?? null,
-        includeInBudget: first.includeInBudget,
-        purchaseDate: formatDateOnly(first.purchaseDate),
-        postedDate: formatDateOnly(first.postedDate),
-        createdAt: first.createdAt,
-        updatedAt: first.updatedAt,
-      };
-    }
-
-    const accountEntry = accountEntries[0] ?? null;
-
-    return {
-      id: first.transactionId,
-      userId: first.userId,
-      type: first.type,
-      description: first.description,
-      amount: absoluteAmount(accountEntry?.entryAmount ?? first.entryAmount),
-      currencyCode: accountEntry?.entryCurrencyCode ?? first.entryCurrencyCode,
-      accountId: accountEntry?.accountId ?? null,
-      accountName: accountEntry?.accountName ?? null,
-      accountClassification: accountEntry?.accountClassification ?? null,
-      toAccountId: null,
-      toAccountName: null,
-      toAccountClassification: null,
-      categoryId,
-      merchantId: first.merchantId ?? null,
-      paymentMethodId: first.paymentMethodId ?? null,
-      paymentMethodCode: first.paymentMethodCode ?? null,
-      paymentMethodName: first.paymentMethodName ?? null,
-      includeInBudget: first.includeInBudget,
-      purchaseDate: formatDateOnly(first.purchaseDate),
-      postedDate: formatDateOnly(first.postedDate),
-      createdAt: first.createdAt,
-      updatedAt: first.updatedAt,
-    };
-  });
-}
-
-async function validateOptionalMerchant(userId: string, merchantId?: string): Promise<void> {
+async function validateOptionalMerchant(
+  context: HouseholdContext,
+  merchantId?: string,
+): Promise<void> {
   if (!merchantId) return;
 
-  const merchant = await txRepository.findOwnedMerchant(merchantId, userId);
+  const merchant = await merchantsRepository.get(merchantId, context);
   if (!merchant) throw new NotFoundError('Merchant');
 }
 
 async function validateCategory(
-  userId: string,
+  context: HouseholdContext,
   categoryId: string,
   expectedType: 'expense' | 'income',
 ): Promise<void> {
-  const category = await txRepository.findOwnedCategory(categoryId, userId);
+  const category = await categoriesRepository.get(categoryId, context);
   if (!category) throw new NotFoundError('Category');
   if (category.type !== expectedType) {
     throw new ValidationError(`Category ${categoryId} must be of type ${expectedType}`);
   }
 }
 
-async function resolvePaymentMethod(paymentMethodCode: string, currencyCode: string) {
-  const paymentMethod = await txRepository.findPaymentMethodByCode(paymentMethodCode, currencyCode);
+async function resolvePaymentMethod(
+  context: HouseholdContext,
+  paymentMethodCode: string,
+  currencyCode: string,
+) {
+  const paymentMethod = await paymentMethodsRepository.findAvailableByCode(
+    context,
+    paymentMethodCode,
+    currencyCode,
+  );
   if (!paymentMethod) {
-    throw new ValidationError(`Payment method ${paymentMethodCode} is not available for currency ${currencyCode}`);
+    throw new ValidationError(
+      `Payment method ${paymentMethodCode} is not available for currency ${currencyCode}`,
+    );
   }
 
   return paymentMethod;
 }
 
+// -----------------------------------------------------------------------------
+// Transaction Persistence Helpers
+// -----------------------------------------------------------------------------
+
 async function createBaseTransaction(
-  tx: txRepository.TxClient,
-  userId: string,
+  tx: TxClient,
+  context: HouseholdContext,
   values: {
     type: CreateTransactionDto['type'];
     paymentMethodId?: string | null;
@@ -181,7 +108,7 @@ async function createBaseTransaction(
   },
 ): Promise<string> {
   const transaction = await txRepository.createTransaction(tx, {
-    userId,
+    householdId: context.householdId,
     type: values.type,
     paymentMethodId: values.paymentMethodId ?? null,
     categoryId: values.categoryId ?? null,
@@ -195,24 +122,21 @@ async function createBaseTransaction(
   return transaction.id;
 }
 
-async function persistEntries(tx: txRepository.TxClient, transactionId: string, entries: EntryDraft[]): Promise<void> {
-  validateBalanced(entries);
-
-  await txRepository.createEntries(
+async function persistTags(tx: TxClient, transactionId: string, tagIds: string[]): Promise<void> {
+  await txRepository.createTransactionTags(
     tx,
-    entries.map((entry) => ({
+    tagIds.map((tagId) => ({
       transactionId,
-      ledgerAccountId: entry.ledgerAccountId,
-      amount: entry.amount,
-      currencyId: entry.currencyCode,
-      categoryId: entry.categoryId,
-      budgetMonth: entry.budgetMonth,
+      tagId,
     })),
   );
 }
 
-async function loadCreatedTransaction(userId: string, transactionId: string): Promise<TransactionResponse> {
-  const rows = await txRepository.listDetailedByTransactionIds(userId, [transactionId]);
+async function loadCreatedTransaction(
+  context: HouseholdContext,
+  transactionId: string,
+): Promise<TransactionResponse> {
+  const rows = await txRepository.listDetailedByTransactionIds(context, [transactionId]);
   const [transaction] = mapDetailedRows(rows);
 
   if (!transaction) {
@@ -222,39 +146,52 @@ async function loadCreatedTransaction(userId: string, transactionId: string): Pr
   return transaction;
 }
 
-async function createExpense(userId: string, dto: Extract<CreateTransactionDto, { type: 'expense' }>): Promise<TransactionResponse> {
-  const user = await txRepository.findUserById(userId);
-  if (!user) throw new NotFoundError('User');
+// -----------------------------------------------------------------------------
+// Create Transaction Flows
+// -----------------------------------------------------------------------------
 
-  const currency = await txRepository.findCurrencyByCode(dto.currencyCode);
+// Expense: money leaves an asset/liability account and lands in the system
+// expense ledger for that currency.
+async function createExpense(
+  context: HouseholdContext,
+  dto: Extract<CreateTransactionDto, { type: 'expense' }>,
+): Promise<TransactionResponse> {
+  const currency = await currenciesRepository.findByCode(dto.currencyCode);
   if (!currency) throw new NotFoundError('Currency');
 
-  const paymentMethod = await resolvePaymentMethod(dto.paymentMethodCode, dto.currencyCode);
+  const paymentMethod = await resolvePaymentMethod(
+    context,
+    dto.paymentMethodCode,
+    dto.currencyCode,
+  );
 
-  await validateOptionalMerchant(userId, dto.merchantId);
-  await validateCategory(userId, dto.categoryId, 'expense');
+  await validateOptionalMerchant(context, dto.merchantId);
+  await validateCategory(context, dto.categoryId, 'expense');
+  const tagIds = await validateTags(context, dto.tagIds);
 
-  const account = await txRepository.findOwnedAccount(dto.accountId, userId);
+  const account = await accountsRepository.get(dto.accountId, context);
   if (!account) throw new NotFoundError('Account');
   if (account.type === 'credit_card') {
-    throw new ValidationError('Direct expense creation for credit card accounts must use the credit card purchase endpoint');
+    throw new ValidationError(
+      'Direct expense creation for credit card accounts must use the credit card purchase endpoint',
+    );
   }
   if (account.currencyId !== dto.currencyCode) {
     throw new ValidationError('Transaction currency must match account currency');
   }
 
-  const accountLedger = await txRepository.findLedgerAccountByOwner('account', account.id);
+  const accountLedger = await ledgerAccountsRepository.findByOwner('account', account.id);
   if (!accountLedger) throw new NotFoundError('Account ledger');
 
   const transactionId = await db.transaction(async (tx) => {
-    const expenseLedger = await txRepository.findOrCreateSystemLedger(
+    const expenseLedger = await ledgerAccountsRepository.findOrCreateSystem(
       tx,
       `system:expense:${dto.currencyCode}`,
       SYSTEM_LEDGER_CLASSIFICATIONS.expense,
       dto.currencyCode,
     );
 
-    const createdTransactionId = await createBaseTransaction(tx, userId, {
+    const createdTransactionId = await createBaseTransaction(tx, context, {
       type: dto.type,
       paymentMethodId: paymentMethod.id,
       categoryId: dto.categoryId,
@@ -262,10 +199,10 @@ async function createExpense(userId: string, dto: Extract<CreateTransactionDto, 
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
       merchantId: dto.merchantId,
-      ...normalizeBudgetInclusion(dto),
+      includeInBudget: dto.includeInBudget ?? true,
     });
 
-    await persistEntries(tx, createdTransactionId, [
+    await entriesService.createTransactionEntries(tx, createdTransactionId, [
       {
         ledgerAccountId: accountLedger.id,
         amount: -dto.amount,
@@ -279,46 +216,55 @@ async function createExpense(userId: string, dto: Extract<CreateTransactionDto, 
         currencyCode: dto.currencyCode,
       },
     ]);
+    await persistTags(tx, createdTransactionId, tagIds);
 
     return createdTransactionId;
   });
 
-  return loadCreatedTransaction(userId, transactionId);
+  return loadCreatedTransaction(context, transactionId);
 }
 
-async function createIncome(userId: string, dto: Extract<CreateTransactionDto, { type: 'income' }>): Promise<TransactionResponse> {
-  const user = await txRepository.findUserById(userId);
-  if (!user) throw new NotFoundError('User');
-
-  const currency = await txRepository.findCurrencyByCode(dto.currencyCode);
+// Income: money enters the account and is balanced by the system income ledger.
+async function createIncome(
+  context: HouseholdContext,
+  dto: Extract<CreateTransactionDto, { type: 'income' }>,
+): Promise<TransactionResponse> {
+  const currency = await currenciesRepository.findByCode(dto.currencyCode);
   if (!currency) throw new NotFoundError('Currency');
 
-  const paymentMethod = await resolvePaymentMethod(dto.paymentMethodCode, dto.currencyCode);
+  const paymentMethod = await resolvePaymentMethod(
+    context,
+    dto.paymentMethodCode,
+    dto.currencyCode,
+  );
 
-  await validateOptionalMerchant(userId, dto.merchantId);
-  await validateCategory(userId, dto.categoryId, 'income');
+  await validateOptionalMerchant(context, dto.merchantId);
+  await validateCategory(context, dto.categoryId, 'income');
+  const tagIds = await validateTags(context, dto.tagIds);
 
-  const account = await txRepository.findOwnedAccount(dto.accountId, userId);
+  const account = await accountsRepository.get(dto.accountId, context);
   if (!account) throw new NotFoundError('Account');
   if (account.type === 'credit_card') {
-    throw new ValidationError('Direct income creation for credit card accounts must use the credit card purchase/payment APIs');
+    throw new ValidationError(
+      'Direct income creation for credit card accounts must use the credit card purchase/payment APIs',
+    );
   }
   if (account.currencyId !== dto.currencyCode) {
     throw new ValidationError('Transaction currency must match account currency');
   }
 
-  const accountLedger = await txRepository.findLedgerAccountByOwner('account', account.id);
+  const accountLedger = await ledgerAccountsRepository.findByOwner('account', account.id);
   if (!accountLedger) throw new NotFoundError('Account ledger');
 
   const transactionId = await db.transaction(async (tx) => {
-    const incomeLedger = await txRepository.findOrCreateSystemLedger(
+    const incomeLedger = await ledgerAccountsRepository.findOrCreateSystem(
       tx,
       `system:income:${dto.currencyCode}`,
       SYSTEM_LEDGER_CLASSIFICATIONS.income,
       dto.currencyCode,
     );
 
-    const createdTransactionId = await createBaseTransaction(tx, userId, {
+    const createdTransactionId = await createBaseTransaction(tx, context, {
       type: dto.type,
       paymentMethodId: paymentMethod.id,
       categoryId: dto.categoryId,
@@ -326,10 +272,10 @@ async function createIncome(userId: string, dto: Extract<CreateTransactionDto, {
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
       merchantId: dto.merchantId,
-      ...normalizeBudgetInclusion(dto),
+      includeInBudget: dto.includeInBudget ?? true,
     });
 
-    await persistEntries(tx, createdTransactionId, [
+    await entriesService.createTransactionEntries(tx, createdTransactionId, [
       {
         ledgerAccountId: accountLedger.id,
         amount: dto.amount,
@@ -343,114 +289,163 @@ async function createIncome(userId: string, dto: Extract<CreateTransactionDto, {
         currencyCode: dto.currencyCode,
       },
     ]);
+    await persistTags(tx, createdTransactionId, tagIds);
 
     return createdTransactionId;
   });
 
-  return loadCreatedTransaction(userId, transactionId);
+  return loadCreatedTransaction(context, transactionId);
 }
 
-async function createTransfer(userId: string, dto: Extract<CreateTransactionDto, { type: 'transfer' }>): Promise<TransactionResponse> {
-  const user = await txRepository.findUserById(userId);
-  if (!user) throw new NotFoundError('User');
-
-  const currency = await txRepository.findCurrencyByCode(dto.currencyCode);
-  if (!currency) throw new NotFoundError('Currency');
-
+// Transfer: same-currency transfers use two account entries. Cross-currency
+// transfers add two offshore clearing entries so each currency balances by
+// itself while still allowing manual or FX-derived destination amounts.
+async function createTransfer(
+  context: HouseholdContext,
+  dto: Extract<CreateTransactionDto, { type: 'transfer' }>,
+): Promise<TransactionResponse> {
   if (dto.fromAccountId === dto.toAccountId) {
     throw new ValidationError('Transfer source and destination must be different accounts');
   }
 
-  const fromAccount = await txRepository.findOwnedAccount(dto.fromAccountId, userId);
+  const fromAccount = await accountsRepository.get(dto.fromAccountId, context);
   if (!fromAccount) throw new NotFoundError('Source account');
   if (fromAccount.type === 'credit_card') {
-    throw new ValidationError('Direct transfers from credit card accounts must use the credit card payment endpoint');
+    throw new ValidationError(
+      'Direct transfers from credit card accounts must use the credit card payment endpoint',
+    );
   }
 
-  const toAccount = await txRepository.findOwnedAccount(dto.toAccountId, userId);
+  const toAccount = await accountsRepository.get(dto.toAccountId, context);
   if (!toAccount) throw new NotFoundError('Destination account');
   if (toAccount.type === 'credit_card') {
-    throw new ValidationError('Direct transfers to credit card accounts must use the credit card payment endpoint');
+    throw new ValidationError(
+      'Direct transfers to credit card accounts must use the credit card payment endpoint',
+    );
   }
 
-  if (fromAccount.currencyId !== dto.currencyCode || toAccount.currencyId !== dto.currencyCode) {
-    throw new ValidationError('Transfer currency must match both account currencies');
-  }
-
-  const fromLedger = await txRepository.findLedgerAccountByOwner('account', fromAccount.id);
-  const toLedger = await txRepository.findLedgerAccountByOwner('account', toAccount.id);
+  const fromLedger = await ledgerAccountsRepository.findByOwner('account', fromAccount.id);
+  const toLedger = await ledgerAccountsRepository.findByOwner('account', toAccount.id);
   if (!fromLedger || !toLedger) throw new NotFoundError('Account ledger');
 
+  const tagIds = await validateTags(context, dto.tagIds);
+
+  const { fromAmount, toAmount } = await resolveTransferAmounts({
+    fromCurrencyCode: fromAccount.currencyId,
+    toCurrencyCode: toAccount.currencyId,
+    fromAmount: dto.fromAmount,
+    toAmount: dto.toAmount,
+    postedDate: dto.postedDate,
+    convertAmount: (input) => fxService.convertAmount(input),
+  });
+
+  const sameCurrency = fromAccount.currencyId === toAccount.currencyId;
+
   const transactionId = await db.transaction(async (tx) => {
-    const createdTransactionId = await createBaseTransaction(tx, userId, {
+    const createdTransactionId = await createBaseTransaction(tx, context, {
       type: dto.type,
       description: dto.description,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
-      ...normalizeBudgetInclusion(dto),
+      includeInBudget: dto.includeInBudget ?? true,
     });
 
-    await persistEntries(tx, createdTransactionId, [
+    const entries: EntryDraft[] = [
       {
         ledgerAccountId: fromLedger.id,
-        amount: -dto.amount,
-        currencyCode: dto.currencyCode,
+        amount: -fromAmount,
+        currencyCode: fromAccount.currencyId,
       },
       {
         ledgerAccountId: toLedger.id,
-        amount: dto.amount,
-        currencyCode: dto.currencyCode,
+        amount: toAmount,
+        currencyCode: toAccount.currencyId,
       },
-    ]);
+    ];
+
+    if (!sameCurrency) {
+      const fromTransferLedger = await ledgerAccountsRepository.findOrCreateSystem(
+        tx,
+        `system:offshore-transfer:${fromAccount.currencyId}`,
+        SYSTEM_LEDGER_CLASSIFICATIONS.offshoreTransfer,
+        fromAccount.currencyId,
+      );
+      const toTransferLedger = await ledgerAccountsRepository.findOrCreateSystem(
+        tx,
+        `system:offshore-transfer:${toAccount.currencyId}`,
+        SYSTEM_LEDGER_CLASSIFICATIONS.offshoreTransfer,
+        toAccount.currencyId,
+      );
+
+      entries.push(
+        {
+          ledgerAccountId: fromTransferLedger.id,
+          amount: fromAmount,
+          currencyCode: fromAccount.currencyId,
+        },
+        {
+          ledgerAccountId: toTransferLedger.id,
+          amount: -toAmount,
+          currencyCode: toAccount.currencyId,
+        },
+      );
+    }
+
+    await entriesService.createTransactionEntries(tx, createdTransactionId, entries);
+    await persistTags(tx, createdTransactionId, tagIds);
 
     return createdTransactionId;
   });
 
-  return loadCreatedTransaction(userId, transactionId);
+  return loadCreatedTransaction(context, transactionId);
 }
 
+// Adjustment: the request sends the target displayed balance. We compare that
+// target to the account's anchor balance at the posted date and persist only the
+// delta needed to make future balances start from the corrected value.
 async function createAdjustment(
-  userId: string,
+  context: HouseholdContext,
   dto: Extract<CreateTransactionDto, { type: 'adjustment' }>,
 ): Promise<TransactionResponse> {
-  const user = await txRepository.findUserById(userId);
-  if (!user) throw new NotFoundError('User');
-
-  const account = await txRepository.findOwnedAccount(dto.accountId, userId);
+  const account = await accountsRepository.get(dto.accountId, context);
   if (!account) throw new NotFoundError('Account');
   if (account.type === 'credit_card') {
     throw new ValidationError('Direct adjustments for credit card accounts are not supported');
   }
 
-  const accountLedger = await txRepository.findLedgerAccountByOwner('account', account.id);
+  const accountLedger = await ledgerAccountsRepository.findByOwner('account', account.id);
   if (!accountLedger) throw new NotFoundError('Account ledger');
+  const tagIds = await validateTags(context, dto.tagIds);
 
-  const accountAmount =
-    account.classification === 'asset'
-      ? dto.direction === 'increase'
-        ? dto.amount
-        : -dto.amount
-      : dto.direction === 'increase'
-        ? -dto.amount
-        : dto.amount;
+  const anchorBalance = await ledgerAccountsRepository.getAdjustmentAnchorBalance(
+    context.householdId,
+    accountLedger.id,
+    dto.postedDate,
+  );
+  const targetBalance = toRawLedgerBalance(dto.balance, account.classification);
+  const accountAmount = targetBalance - anchorBalance;
+
+  if (accountAmount === 0) {
+    throw new ValidationError('Adjustment balance already matches the account balance');
+  }
 
   const transactionId = await db.transaction(async (tx) => {
-    const adjustmentLedger = await txRepository.findOrCreateSystemLedger(
+    const adjustmentLedger = await ledgerAccountsRepository.findOrCreateSystem(
       tx,
       `system:adjustment:${account.currencyId}`,
       SYSTEM_LEDGER_CLASSIFICATIONS.adjustment,
       account.currencyId,
     );
 
-    const createdTransactionId = await createBaseTransaction(tx, userId, {
+    const createdTransactionId = await createBaseTransaction(tx, context, {
       type: dto.type,
       description: dto.description,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
-      ...normalizeBudgetInclusion(dto),
+      includeInBudget: dto.includeInBudget ?? true,
     });
 
-    await persistEntries(tx, createdTransactionId, [
+    await entriesService.createTransactionEntries(tx, createdTransactionId, [
       {
         ledgerAccountId: accountLedger.id,
         amount: accountAmount,
@@ -462,32 +457,170 @@ async function createAdjustment(
         currencyCode: account.currencyId,
       },
     ]);
+    await persistTags(tx, createdTransactionId, tagIds);
 
     return createdTransactionId;
   });
 
-  return loadCreatedTransaction(userId, transactionId);
+  return loadCreatedTransaction(context, transactionId);
 }
 
-export async function createTransaction(userId: string, dto: CreateTransactionDto): Promise<TransactionResponse> {
+// -----------------------------------------------------------------------------
+// Public Service API
+// -----------------------------------------------------------------------------
+
+export async function createTransaction(
+  context: HouseholdContext,
+  dto: CreateTransactionDto,
+): Promise<TransactionResponse> {
   switch (dto.type) {
     case 'expense':
-      return createExpense(userId, dto);
+      return createExpense(context, dto);
     case 'income':
-      return createIncome(userId, dto);
+      return createIncome(context, dto);
     case 'transfer':
-      return createTransfer(userId, dto);
+      return createTransfer(context, dto);
     case 'adjustment':
-      return createAdjustment(userId, dto);
+      return createAdjustment(context, dto);
     default:
       throw new ValidationError('Invalid transaction type');
   }
 }
 
-export async function listTransactions(userId: string): Promise<TransactionResponse[]> {
-  const user = await txRepository.findUserById(userId);
-  if (!user) throw new NotFoundError('User');
-
-  const rows = await txRepository.listDetailedByUserId(userId);
+export async function listTransactions(context: HouseholdContext): Promise<TransactionResponse[]> {
+  const rows = await txRepository.listDetailedByHouseholdId(context.householdId);
   return mapDetailedRows(rows);
+}
+
+// -----------------------------------------------------------------------------
+// Update + Delete Flows
+// -----------------------------------------------------------------------------
+
+export async function updateTransaction(
+  context: HouseholdContext,
+  transactionId: string,
+  body: UpdateTransactionRequestBody,
+): Promise<TransactionResponse> {
+  const rows = await txRepository.listDetailedByTransactionIds(context, [transactionId]);
+  const [transaction] = mapDetailedRows(rows);
+
+  if (!transaction) {
+    throw new NotFoundError('Transaction');
+  }
+
+  let paymentMethodId = transaction.paymentMethodId ?? null;
+  const nextCategoryId = body.categoryId ?? transaction.categoryId ?? null;
+
+  if (transaction.type === 'expense' || transaction.type === 'income') {
+    if (!nextCategoryId) {
+      throw new ValidationError(`Category is required for ${transaction.type} transactions`);
+    }
+
+    await validateCategory(context, nextCategoryId, transaction.type);
+
+    if (body.paymentMethodCode !== undefined) {
+      const paymentMethod = await resolvePaymentMethod(
+        context,
+        body.paymentMethodCode,
+        transaction.currencyCode,
+      );
+      paymentMethodId = paymentMethod.id;
+    }
+
+    if (!paymentMethodId) {
+      throw new ValidationError(`Payment method is required for ${transaction.type} transactions`);
+    }
+
+    if (body.merchantId !== undefined) {
+      await validateOptionalMerchant(context, body.merchantId);
+    }
+  } else {
+    if (body.categoryId !== undefined) {
+      throw new ValidationError(
+        `Category updates are not supported for ${transaction.type} transactions`,
+      );
+    }
+
+    if (body.paymentMethodCode !== undefined) {
+      throw new ValidationError(
+        `Payment method updates are not supported for ${transaction.type} transactions`,
+      );
+    }
+
+    if (body.merchantId !== undefined) {
+      throw new ValidationError(
+        `Merchant updates are not supported for ${transaction.type} transactions`,
+      );
+    }
+  }
+
+  let tagIds: string[] | undefined;
+  if (body.tagIds !== undefined) {
+    tagIds = await validateTags(context, body.tagIds);
+  }
+
+  const transactionUpdates: Partial<{
+    description: string;
+    purchaseDate: Date;
+    postedDate: Date;
+    includeInBudget: boolean;
+    categoryId: string | null;
+    merchantId: string | null;
+    paymentMethodId: string | null;
+  }> = {};
+
+  if (body.description !== undefined) transactionUpdates.description = body.description;
+  if (body.purchaseDate !== undefined) transactionUpdates.purchaseDate = body.purchaseDate;
+  if (body.postedDate !== undefined) transactionUpdates.postedDate = body.postedDate;
+  if (body.includeInBudget !== undefined) transactionUpdates.includeInBudget = body.includeInBudget;
+  if (body.categoryId !== undefined) transactionUpdates.categoryId = body.categoryId;
+  if (body.merchantId !== undefined) transactionUpdates.merchantId = body.merchantId;
+  if (body.paymentMethodCode !== undefined) transactionUpdates.paymentMethodId = paymentMethodId;
+
+  await db.transaction(async (tx) => {
+    if (Object.keys(transactionUpdates).length > 0 || body.tagIds !== undefined) {
+      const updated = await txRepository.updateTransaction(
+        tx,
+        context.householdId,
+        transactionId,
+        transactionUpdates,
+      );
+      if (!updated) {
+        throw new NotFoundError('Transaction');
+      }
+    }
+
+    if (body.postedDate !== undefined) {
+      await entriesRepository.updateBudgetMonth(tx, transactionId, toBudgetMonth(body.postedDate));
+    }
+
+    if (body.categoryId !== undefined) {
+      await entriesRepository.updateCategoryId(tx, transactionId, body.categoryId);
+    }
+
+    if (body.tagIds !== undefined) {
+      await txRepository.deleteTransactionTags(tx, transactionId);
+      if (tagIds && tagIds.length > 0) {
+        await txRepository.createTransactionTags(
+          tx,
+          tagIds.map((tagId) => ({
+            transactionId,
+            tagId,
+          })),
+        );
+      }
+    }
+  });
+
+  return loadCreatedTransaction(context, transactionId);
+}
+
+export async function deleteTransaction(
+  context: HouseholdContext,
+  transactionId: string,
+): Promise<void> {
+  const deleted = await txRepository.deleteTransaction(context.householdId, transactionId);
+  if (!deleted) {
+    throw new NotFoundError('Transaction');
+  }
 }

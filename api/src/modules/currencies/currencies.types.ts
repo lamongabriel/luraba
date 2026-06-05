@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { FX_PROVIDER_IDS } from '@/config/fx';
+import { moneyAmountSchema } from '@/shared/validation/money';
 import { currencySchema } from '@/shared/validation/preferences';
 
 export const fxProviderSchema = z.enum(FX_PROVIDER_IDS);
@@ -17,7 +18,7 @@ export const GetCurrencyRateRequestQuerySchema = z.object({
   fromCurrencyCode: currencySchema,
   toCurrencyCode: currencySchema,
   date: z.coerce.date().optional(),
-  amount: z.coerce.number().int().optional(),
+  amount: moneyAmountSchema.optional(),
   provider: fxProviderSchema.optional(),
 });
 

@@ -1,82 +1,171 @@
 import { z } from 'zod';
-import { accountsTable } from '@/db/schemas/accounts.schema';
-import { entriesTable } from '@/db/schemas/entries.schema';
-import { transactionsTable } from '@/db/schemas/transactions.schema';
+import type { entriesTable } from '@/db/schemas/entries.schema';
+import type { transactionsTable } from '@/db/schemas/transactions.schema';
+import {
+  type AccountClassification,
+  accountClassificationSchema,
+} from '@/shared/validation/accounts';
+import { moneyAmountSchema, moneyBalanceSchema } from '@/shared/validation/money';
+import { transactionTypeSchema } from '@/shared/validation/transactions';
 
 export type TransactionRecord = typeof transactionsTable.$inferSelect;
 export type EntryRecord = typeof entriesTable.$inferSelect;
-export type AccountClassification = typeof accountsTable.$inferSelect['classification'];
 export type TransactionType = TransactionRecord['type'];
 
-const currencyCodeSchema = z.string().trim().length(3).transform((value) => value.toUpperCase());
-const paymentMethodCodeSchema = z.string().trim().min(1).max(32).transform((value) => value.toLowerCase());
-const moneyAmountSchema = z.coerce.number().int().positive().max(2_147_483_647);
+export const transactionTagSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  color: z.string().nullable(),
+  icon: z.string().nullable(),
+});
 
+const tagIdsSchema = z.array(z.uuid()).max(50).optional();
+
+const currencyCodeSchema = z
+  .string()
+  .trim()
+  .length(3)
+  .transform((value) => value.toUpperCase());
+const paymentMethodCodeSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(32)
+  .transform((value) => value.toLowerCase());
 const baseFields = {
   description: z.string().min(1).max(512),
   purchaseDate: z.coerce.date(),
   postedDate: z.coerce.date(),
   includeInBudget: z.boolean().optional(),
+  tagIds: tagIdsSchema,
 };
 
 const categorizedLinkFields = {
-  categoryId: z.string().uuid(),
-  merchantId: z.string().uuid().optional(),
+  categoryId: z.uuid(),
+  merchantId: z.uuid().optional(),
 };
 
-const expenseTransactionSchema = z.object({
+const expenseTransactionSchema = z.strictObject({
   type: z.literal('expense'),
   ...baseFields,
   ...categorizedLinkFields,
   amount: moneyAmountSchema,
   currencyCode: currencyCodeSchema,
-  accountId: z.string().uuid(),
+  accountId: z.uuid(),
   paymentMethodCode: paymentMethodCodeSchema,
 });
 
-const incomeTransactionSchema = z.object({
+const incomeTransactionSchema = z.strictObject({
   type: z.literal('income'),
   ...baseFields,
   ...categorizedLinkFields,
   amount: moneyAmountSchema,
   currencyCode: currencyCodeSchema,
-  accountId: z.string().uuid(),
+  accountId: z.uuid(),
   paymentMethodCode: paymentMethodCodeSchema,
 });
 
-const transferTransactionSchema = z.object({
+const transferTransactionSchema = z.strictObject({
   type: z.literal('transfer'),
   ...baseFields,
-  amount: moneyAmountSchema,
-  currencyCode: currencyCodeSchema,
-  fromAccountId: z.string().uuid(),
-  toAccountId: z.string().uuid(),
+  fromAccountId: z.uuid(),
+  toAccountId: z.uuid(),
+  fromAmount: moneyAmountSchema.optional(),
+  toAmount: moneyAmountSchema.optional(),
 });
 
-const adjustmentTransactionSchema = z.object({
+const adjustmentTransactionSchema = z.strictObject({
   type: z.literal('adjustment'),
   ...baseFields,
-  amount: moneyAmountSchema,
-  accountId: z.string().uuid(),
-  direction: z.enum(['increase', 'decrease']),
+  balance: moneyBalanceSchema,
+  accountId: z.uuid(),
 });
 
-export const createTransactionSchema = z.discriminatedUnion('type', [
-  expenseTransactionSchema,
-  incomeTransactionSchema,
-  transferTransactionSchema,
-  adjustmentTransactionSchema,
-]);
+export const createTransactionSchema = z
+  .discriminatedUnion('type', [
+    expenseTransactionSchema,
+    incomeTransactionSchema,
+    transferTransactionSchema,
+    adjustmentTransactionSchema,
+  ])
+  .superRefine((value, ctx) => {
+    if (
+      value.type === 'transfer' &&
+      value.fromAmount === undefined &&
+      value.toAmount === undefined
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Either fromAmount or toAmount must be provided',
+        path: ['fromAmount'],
+      });
+    }
+  });
 
 export type CreateTransactionDto = z.infer<typeof createTransactionSchema>;
 
+export const UpdateTransactionRequestParamsSchema = z.object({
+  id: z.uuid(),
+});
+
+export const UpdateTransactionRequestBodySchema = z
+  .object({
+    description: z.string().min(1).max(512).optional(),
+    purchaseDate: z.coerce.date().optional(),
+    postedDate: z.coerce.date().optional(),
+    includeInBudget: z.boolean().optional(),
+    categoryId: z.uuid().optional(),
+    merchantId: z.uuid().optional(),
+    paymentMethodCode: paymentMethodCodeSchema.optional(),
+    tagIds: tagIdsSchema,
+  })
+  .refine((value) => Object.keys(value).length > 0, 'At least one field must be provided');
+
+export const DeleteTransactionRequestParamsSchema = z.object({
+  id: z.uuid(),
+});
+
+export const TransactionResponseSchema = z.object({
+  id: z.uuid(),
+  type: transactionTypeSchema,
+  description: z.string(),
+  amount: z.number().int(),
+  currencyCode: z.string(),
+  toAmount: z.number().int().nullable(),
+  toCurrencyCode: z.string().nullable(),
+  accountId: z.uuid().nullable(),
+  accountName: z.string().nullable(),
+  accountClassification: accountClassificationSchema.nullable(),
+  toAccountId: z.uuid().nullable(),
+  toAccountName: z.string().nullable(),
+  toAccountClassification: accountClassificationSchema.nullable(),
+  categoryId: z.uuid().nullable(),
+  merchantId: z.uuid().nullable(),
+  paymentMethodId: z.uuid().nullable(),
+  paymentMethodCode: z.string().nullable(),
+  paymentMethodName: z.string().nullable(),
+  paymentMethodScope: z.enum(['system', 'household']).nullable(),
+  paymentMethodTranslationKey: z.string().nullable(),
+  tags: z.array(transactionTagSchema),
+  includeInBudget: z.boolean(),
+  purchaseDate: z.string(),
+  postedDate: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export const CreateTransactionResponseSchema = TransactionResponseSchema;
+export const ListTransactionsResponseSchema = z.array(TransactionResponseSchema);
+export const UpdateTransactionResponseSchema = TransactionResponseSchema;
+
 export type TransactionResponse = {
   id: string;
-  userId: string;
   type: TransactionType;
   description: string;
   amount: number;
   currencyCode: string;
+  toAmount: number | null;
+  toCurrencyCode: string | null;
   accountId: string | null;
   accountName: string | null;
   accountClassification: AccountClassification | null;
@@ -88,9 +177,16 @@ export type TransactionResponse = {
   paymentMethodId: string | null;
   paymentMethodCode: string | null;
   paymentMethodName: string | null;
+  paymentMethodScope: 'system' | 'household' | null;
+  paymentMethodTranslationKey: string | null;
+  tags: Array<z.infer<typeof transactionTagSchema>>;
   includeInBudget: boolean;
   purchaseDate: string;
   postedDate: string;
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type UpdateTransactionRequestParams = z.infer<typeof UpdateTransactionRequestParamsSchema>;
+export type UpdateTransactionRequestBody = z.infer<typeof UpdateTransactionRequestBodySchema>;
+export type DeleteTransactionRequestParams = z.infer<typeof DeleteTransactionRequestParamsSchema>;

@@ -1,7 +1,8 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, lt, or, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { entriesTable } from '@/db/schemas/entries.schema';
 import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
+import { transactionsTable } from '@/db/schemas/transactions.schema';
 import type { TxClient } from '@/db/types';
 
 const SYSTEM_OWNER_ID = '00000000-0000-0000-0000-000000000000';
@@ -102,10 +103,38 @@ class LedgerAccountsRepository {
   async getBalance(ledgerAccountId: string): Promise<number> {
     const [row] = await db
       .select({
-        balance: sql<number>`coalesce(sum(${entriesTable.amount}), 0)::integer`,
+        balance: sql<number>`coalesce(sum(${entriesTable.amount}), 0)`.mapWith(Number),
       })
       .from(entriesTable)
       .where(eq(entriesTable.ledgerAccountId, ledgerAccountId));
+
+    return row?.balance ?? 0;
+  }
+
+  async getAdjustmentAnchorBalance(
+    householdId: string,
+    ledgerAccountId: string,
+    postedDate: Date,
+  ): Promise<number> {
+    const [row] = await db
+      .select({
+        balance: sql<number>`coalesce(sum(${entriesTable.amount}), 0)`.mapWith(Number),
+      })
+      .from(entriesTable)
+      .innerJoin(transactionsTable, eq(transactionsTable.id, entriesTable.transactionId))
+      .where(
+        and(
+          eq(entriesTable.ledgerAccountId, ledgerAccountId),
+          eq(transactionsTable.householdId, householdId),
+          or(
+            lt(transactionsTable.postedDate, postedDate),
+            and(
+              eq(transactionsTable.postedDate, postedDate),
+              eq(transactionsTable.type, 'adjustment'),
+            ),
+          ),
+        ),
+      );
 
     return row?.balance ?? 0;
   }

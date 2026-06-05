@@ -1,26 +1,37 @@
-import { NextFunction, Request, Response } from 'express';
-import { getAuthenticatedUser } from '@/middleware/auth.middleware';
-import { sendCreated, sendSuccess } from '@/shared/response';
+import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import * as transactionsService from './transactions.service';
-import { createTransactionSchema } from './transactions.types';
+import {
+  CreateTransactionResponseSchema,
+  createTransactionSchema,
+  DeleteTransactionRequestParamsSchema,
+  ListTransactionsResponseSchema,
+  UpdateTransactionRequestBodySchema,
+  UpdateTransactionRequestParamsSchema,
+  UpdateTransactionResponseSchema,
+} from './transactions.types';
 
-export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const user = getAuthenticatedUser(req);
-    const dto = createTransactionSchema.parse(req.body);
-    const result = await transactionsService.createTransaction(user.id, dto);
-    sendCreated(res, result);
-  } catch (err) {
-    next(err);
-  }
-}
+export const create = createHouseholdHandler({
+  body: createTransactionSchema,
+  response: CreateTransactionResponseSchema,
+  handle: ({ household, body }) => transactionsService.createTransaction(household, body),
+  status: 'created',
+});
 
-export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const user = getAuthenticatedUser(req);
-    const transactions = await transactionsService.listTransactions(user.id);
-    sendSuccess(res, transactions);
-  } catch (err) {
-    next(err);
-  }
-}
+export const list = createHouseholdHandler({
+  response: ListTransactionsResponseSchema,
+  handle: ({ household }) => transactionsService.listTransactions(household),
+});
+
+export const update = createHouseholdHandler({
+  params: UpdateTransactionRequestParamsSchema,
+  body: UpdateTransactionRequestBodySchema,
+  response: UpdateTransactionResponseSchema,
+  handle: ({ household, params, body }) =>
+    transactionsService.updateTransaction(household, params.id, body),
+});
+
+export const deleteTransaction = createHouseholdHandler({
+  params: DeleteTransactionRequestParamsSchema,
+  status: 'no-content',
+  handle: ({ household, params }) => transactionsService.deleteTransaction(household, params.id),
+});
