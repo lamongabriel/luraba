@@ -1,4 +1,4 @@
-import { integer, pgTable, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { bigint, integer, pgTable, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { creditCardBillingCyclesTable } from './credit-card-billing-cycles.schema';
 import { creditCardPurchasesTable } from './credit-card-purchases.schema';
 import { creditCardsTable } from './credit-cards.schema';
@@ -17,7 +17,7 @@ export const creditCardInstallmentsTable = pgTable(
       .notNull()
       .references(() => creditCardBillingCyclesTable.id, { onDelete: 'cascade' }),
     installmentNumber: integer('installment_number').notNull(),
-    amount: integer('amount').notNull(),
+    amount: bigint('amount', { mode: 'number' }).notNull(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (table) => [

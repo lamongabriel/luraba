@@ -1,4 +1,4 @@
-import { date, integer, pgTable, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { bigint, date, pgTable, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { categoriesTable } from './categories.schema';
 import { householdsTable } from './households.schema';
 
@@ -13,7 +13,7 @@ export const budgetsTable = pgTable(
     categoryId: uuid('category_id')
       .notNull()
       .references(() => categoriesTable.id, { onDelete: 'restrict' }),
-    amount: integer('amount').notNull(),
+    amount: bigint('amount', { mode: 'number' }).notNull(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

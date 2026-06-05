@@ -1,4 +1,4 @@
-import { date, index, integer, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { bigint, date, index, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { categoriesTable } from './categories.schema';
 import { creditCardInstallmentsTable } from './credit-card-installments.schema';
 import { creditCardPurchasesTable } from './credit-card-purchases.schema';
@@ -21,7 +21,7 @@ export const creditCardBudgetRecognitionsTable = pgTable(
       .notNull()
       .references(() => currenciesTable.code, { onDelete: 'restrict' }),
     budgetMonth: date('budget_month', { mode: 'date' }).notNull(),
-    amount: integer('amount').notNull(),
+    amount: bigint('amount', { mode: 'number' }).notNull(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (table) => [index('credit_card_budget_recognitions_budget_month_idx').on(table.budgetMonth)],

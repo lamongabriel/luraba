@@ -1,4 +1,12 @@
-import { integer, pgTable, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  bigint,
+  integer,
+  pgTable,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 import { accountsTable } from './accounts.schema';
 import { creditCardProductTypeEnum } from './enums.schema';
 import { householdsTable } from './households.schema';
@@ -19,7 +27,9 @@ export const creditCardsTable = pgTable(
     color: varchar({ length: 32 }),
     closingDay: integer('closing_day').notNull(),
     dueDay: integer('due_day').notNull(),
-    unappliedCreditAmount: integer('unapplied_credit_amount').notNull().default(0),
+    unappliedCreditAmount: bigint('unapplied_credit_amount', { mode: 'number' })
+      .notNull()
+      .default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

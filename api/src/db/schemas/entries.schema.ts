@@ -1,14 +1,5 @@
 import { sql } from 'drizzle-orm';
-import {
-  check,
-  date,
-  index,
-  integer,
-  pgTable,
-  timestamp,
-  uuid,
-  varchar,
-} from 'drizzle-orm/pg-core';
+import { bigint, check, date, index, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { categoriesTable } from './categories.schema';
 import { currenciesTable } from './currencies.schema';
 import { ledgerAccountsTable } from './ledger-accounts.schema';
@@ -24,7 +15,7 @@ export const entriesTable = pgTable(
     ledgerAccountId: uuid('ledger_account_id')
       .notNull()
       .references(() => ledgerAccountsTable.id, { onDelete: 'restrict' }),
-    amount: integer('amount').notNull(),
+    amount: bigint('amount', { mode: 'number' }).notNull(),
     currencyId: varchar('currency_id', { length: 3 })
       .notNull()
       .references(() => currenciesTable.code, { onDelete: 'restrict' }),
