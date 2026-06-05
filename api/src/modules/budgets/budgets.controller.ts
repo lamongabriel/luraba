@@ -1,29 +1,31 @@
-import { NextFunction, Request, Response } from 'express';
-import { getAuthenticatedUser } from '@/middleware/auth.middleware';
-import { sendSuccess } from '@/shared/response';
+import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import * as budgetsService from './budgets.service';
-import { budgetMonthParamSchema, budgetQuerySchema, parseMonthKey, replaceBudgetSchema } from './budgets.types';
+import {
+  GetMonthlyBudgetRequestParamsSchema,
+  GetMonthlyBudgetRequestQuerySchema,
+  GetMonthlyBudgetResponseSchema,
+  parseBudgetMonthKey,
+  ReplaceMonthlyBudgetRequestBodySchema,
+  ReplaceMonthlyBudgetRequestParamsSchema,
+  ReplaceMonthlyBudgetResponseSchema,
+} from './budgets.types';
 
-export async function getMonth(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const user = getAuthenticatedUser(req);
-    const { month } = budgetMonthParamSchema.parse(req.params);
-    const query = budgetQuerySchema.parse(req.query);
-    const data = await budgetsService.getMonthlyBudget(user.id, parseMonthKey(month), query.currencyCode);
-    sendSuccess(res, data);
-  } catch (err) {
-    next(err);
-  }
-}
+export const getMonth = createHouseholdHandler({
+  params: GetMonthlyBudgetRequestParamsSchema,
+  query: GetMonthlyBudgetRequestQuerySchema,
+  response: GetMonthlyBudgetResponseSchema,
+  handle: ({ household, params, query }) =>
+    budgetsService.getMonthlyBudget(
+      household,
+      parseBudgetMonthKey(params.month),
+      query.displayCurrencyCode,
+    ),
+});
 
-export async function replaceMonth(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const user = getAuthenticatedUser(req);
-    const { month } = budgetMonthParamSchema.parse(req.params);
-    const dto = replaceBudgetSchema.parse(req.body);
-    const data = await budgetsService.replaceMonthlyBudget(user.id, parseMonthKey(month), dto);
-    sendSuccess(res, data);
-  } catch (err) {
-    next(err);
-  }
-}
+export const replaceMonth = createHouseholdHandler({
+  params: ReplaceMonthlyBudgetRequestParamsSchema,
+  body: ReplaceMonthlyBudgetRequestBodySchema,
+  response: ReplaceMonthlyBudgetResponseSchema,
+  handle: ({ household, params, body }) =>
+    budgetsService.replaceMonthlyBudget(household, parseBudgetMonthKey(params.month), body),
+});

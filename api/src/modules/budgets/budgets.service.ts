@@ -1,77 +1,119 @@
+import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
+import { categoriesRepository } from '@/modules/categories/categories.repository';
+import { fxService } from '@/modules/fx/fx.service';
+import { householdsRepository } from '@/modules/households/households.repository';
 import { NotFoundError, ValidationError } from '@/shared/errors';
-import * as budgetsRepository from './budgets.repository';
-import { MonthlyBudgetResponse, ReplaceBudgetDto, formatMonthKey } from './budgets.types';
+import { budgetsRepository } from './budgets.repository';
+import {
+  formatBudgetMonthKey,
+  type MonthlyBudget,
+  type ReplaceMonthlyBudgetRequestBody,
+} from './budgets.types';
 
-function buildMonthlyBudgetResponse(params: {
+type BudgetRow = Awaited<ReturnType<typeof budgetsRepository.listMonthBudgets>>[number];
+type ActualRow = Awaited<ReturnType<typeof budgetsRepository.listMonthActuals>>[number];
+type CreditCardActualRow = Awaited<
+  ReturnType<typeof budgetsRepository.listMonthCreditCardActuals>
+>[number];
+type CategorizedActualRow = (ActualRow | CreditCardActualRow) & { categoryId: string };
+
+type BudgetCategoryItem = MonthlyBudget['categories']['income'][number];
+
+function buildCategoryGroupKey(categoryType: 'income' | 'expense', categoryId: string): string {
+  return `${categoryType}:${categoryId}`;
+}
+
+function getOrCreateCategoryBreakdown(
+  categoryMap: Record<'income' | 'expense', Map<string, BudgetCategoryItem>>,
+  row: Pick<BudgetRow, 'categoryId' | 'categoryName' | 'parentId' | 'categoryType'>,
+): BudgetCategoryItem {
+  const target = categoryMap[row.categoryType];
+  const existing = target.get(row.categoryId);
+
+  if (existing) {
+    return existing;
+  }
+
+  const created: BudgetCategoryItem = {
+    categoryId: row.categoryId,
+    categoryName: row.categoryName,
+    parentId: row.parentId ?? null,
+    budgetedAmount: 0,
+    actualAmount: 0,
+  };
+
+  target.set(row.categoryId, created);
+  return created;
+}
+
+async function buildMonthlyBudgetResponse(params: {
   month: Date;
-  currencyCode: string;
-  budgetRows: Awaited<ReturnType<typeof budgetsRepository.listMonthBudgets>>;
-  standardActualRows: Awaited<ReturnType<typeof budgetsRepository.listMonthActuals>>;
-  creditCardActualRows: Awaited<ReturnType<typeof budgetsRepository.listMonthCreditCardActuals>>;
-}): MonthlyBudgetResponse {
+  budgetCurrencyCode: string;
+  displayCurrencyCode: string;
+  budgetRows: BudgetRow[];
+  standardActualRows: ActualRow[];
+  creditCardActualRows: CreditCardActualRow[];
+}): Promise<MonthlyBudget> {
   const categories = {
-    income: new Map<
-      string,
-      {
-        categoryId: string;
-        categoryName: string;
-        parentId: string | null;
-        budgetedAmount: number;
-        actualAmount: number;
-      }
-    >(),
-    expense: new Map<
-      string,
-      {
-        categoryId: string;
-        categoryName: string;
-        parentId: string | null;
-        budgetedAmount: number;
-        actualAmount: number;
-      }
-    >(),
+    income: new Map<string, BudgetCategoryItem>(),
+    expense: new Map<string, BudgetCategoryItem>(),
   };
 
   for (const row of params.budgetRows) {
-    const target = categories[row.categoryType];
-    target.set(row.categoryId, {
-      categoryId: row.categoryId,
-      categoryName: row.categoryName,
-      parentId: row.parentId ?? null,
-      budgetedAmount: row.amount,
-      actualAmount: 0,
-    });
+    getOrCreateCategoryBreakdown(categories, row);
   }
 
-  for (const row of [...params.standardActualRows, ...params.creditCardActualRows]) {
-    if (!row.categoryId) {
-      continue;
-    }
+  const categorizedActualRows = [
+    ...params.standardActualRows,
+    ...params.creditCardActualRows,
+  ].filter((row): row is CategorizedActualRow => row.categoryId !== null);
 
-    const target = categories[row.categoryType];
-    const existing = target.get(row.categoryId);
-
-    if (existing) {
-      existing.actualAmount += row.actualAmount;
-      continue;
-    }
-
-    target.set(row.categoryId, {
-      categoryId: row.categoryId,
-      categoryName: row.categoryName,
-      parentId: row.parentId ?? null,
-      budgetedAmount: 0,
-      actualAmount: row.actualAmount,
-    });
+  for (const row of categorizedActualRows) {
+    getOrCreateCategoryBreakdown(categories, row);
   }
 
-  const income = Array.from(categories.income.values()).sort((a, b) => a.categoryName.localeCompare(b.categoryName));
-  const expense = Array.from(categories.expense.values()).sort((a, b) => a.categoryName.localeCompare(b.categoryName));
+  const budgetedAmountsByCategory = await fxService.convertGroupedAmounts(
+    params.budgetRows.map((row) => ({
+      amount: row.amount,
+      currencyCode: params.budgetCurrencyCode,
+      effectiveDate: params.month,
+      groupKey: buildCategoryGroupKey(row.categoryType, row.categoryId),
+    })),
+    params.displayCurrencyCode,
+  );
+
+  const actualAmountsByCategory = await fxService.convertGroupedAmounts(
+    categorizedActualRows.map((row) => ({
+      amount: row.actualAmount,
+      currencyCode: row.currencyCode,
+      effectiveDate: row.effectiveDate,
+      groupKey: buildCategoryGroupKey(row.categoryType, row.categoryId),
+    })),
+    params.displayCurrencyCode,
+  );
+
+  for (const [categoryType, target] of Object.entries(categories) as Array<
+    ['income' | 'expense', Map<string, BudgetCategoryItem>]
+  >) {
+    for (const [categoryId, item] of target.entries()) {
+      const groupKey = buildCategoryGroupKey(categoryType, categoryId);
+      item.budgetedAmount = budgetedAmountsByCategory[groupKey] ?? 0;
+      item.actualAmount = actualAmountsByCategory[groupKey] ?? 0;
+    }
+  }
+
+  const income = Array.from(categories.income.values()).sort((a, b) =>
+    a.categoryName.localeCompare(b.categoryName),
+  );
+  const expense = Array.from(categories.expense.values()).sort((a, b) =>
+    a.categoryName.localeCompare(b.categoryName),
+  );
 
   return {
-    month: formatMonthKey(params.month),
-    currencyCode: params.currencyCode,
+    month: formatBudgetMonthKey(params.month),
+    budgetCurrencyCode: params.budgetCurrencyCode,
+    displayCurrencyCode: params.displayCurrencyCode,
     totals: {
       incomeBudgeted: income.reduce((sum, item) => sum + item.budgetedAmount, 0),
       incomeActual: income.reduce((sum, item) => sum + item.actualAmount, 0),
@@ -85,35 +127,49 @@ function buildMonthlyBudgetResponse(params: {
   };
 }
 
-async function resolveBudgetContext(userId: string, preferredCurrencyOverride?: string): Promise<{
-  currencyCode: string;
+async function resolveBudgetContext(
+  householdId: string,
+  displayCurrencyOverride?: string,
+): Promise<{
+  budgetCurrencyCode: string;
+  displayCurrencyCode: string;
 }> {
-  const user = await budgetsRepository.findUserBudgetContext(userId);
-  if (!user) throw new NotFoundError('User');
+  const household = await householdsRepository.findHouseholdById(householdId);
+  if (!household) throw new NotFoundError('Household');
 
-  const currencyCode = preferredCurrencyOverride ?? user.preferredCurrency;
-  const currency = await budgetsRepository.findCurrencyByCode(currencyCode);
-  if (!currency) throw new NotFoundError('Currency');
+  const budgetCurrencyCode = household.defaultCurrencyId;
+  const displayCurrencyCode = (
+    displayCurrencyOverride ?? household.defaultCurrencyId
+  ).toUpperCase();
 
-  return { currencyCode };
+  await fxService.assertCurrencyExists(displayCurrencyCode);
+
+  return {
+    budgetCurrencyCode,
+    displayCurrencyCode,
+  };
 }
 
 export async function getMonthlyBudget(
-  userId: string,
+  context: HouseholdContext,
   month: Date,
-  preferredCurrencyOverride?: string,
-): Promise<MonthlyBudgetResponse> {
-  const { currencyCode } = await resolveBudgetContext(userId, preferredCurrencyOverride);
+  displayCurrencyOverride?: string,
+): Promise<MonthlyBudget> {
+  const { budgetCurrencyCode, displayCurrencyCode } = await resolveBudgetContext(
+    context.householdId,
+    displayCurrencyOverride,
+  );
 
   const [budgetRows, standardActualRows, creditCardActualRows] = await Promise.all([
-    budgetsRepository.listMonthBudgets(userId, month, currencyCode),
-    budgetsRepository.listMonthActuals(userId, month, currencyCode),
-    budgetsRepository.listMonthCreditCardActuals(userId, month, currencyCode),
+    budgetsRepository.listMonthBudgets(context.householdId, month),
+    budgetsRepository.listMonthActuals(context.householdId, month),
+    budgetsRepository.listMonthCreditCardActuals(context.householdId, month),
   ]);
 
   return buildMonthlyBudgetResponse({
     month,
-    currencyCode,
+    budgetCurrencyCode,
+    displayCurrencyCode,
     budgetRows,
     standardActualRows,
     creditCardActualRows,
@@ -121,23 +177,28 @@ export async function getMonthlyBudget(
 }
 
 export async function replaceMonthlyBudget(
-  userId: string,
+  context: HouseholdContext,
   month: Date,
-  dto: ReplaceBudgetDto,
-): Promise<MonthlyBudgetResponse> {
-  const { currencyCode } = await resolveBudgetContext(userId, dto.currencyCode);
+  dto: ReplaceMonthlyBudgetRequestBody,
+): Promise<MonthlyBudget> {
+  const { budgetCurrencyCode } = await resolveBudgetContext(context.householdId);
 
   const duplicates = new Set<string>();
-  const allCategoryIds = [...dto.income.map((item) => item.categoryId), ...dto.expense.map((item) => item.categoryId)];
+  const allCategoryIds = [
+    ...dto.income.map((item) => item.categoryId),
+    ...dto.expense.map((item) => item.categoryId),
+  ];
   for (const categoryId of allCategoryIds) {
     if (duplicates.has(categoryId)) {
-      throw new ValidationError(`Category ${categoryId} appears more than once in this budget payload`);
+      throw new ValidationError(
+        `Category ${categoryId} appears more than once in this budget payload`,
+      );
     }
 
     duplicates.add(categoryId);
   }
 
-  const categories = await budgetsRepository.findOwnedCategoriesByIds(userId, allCategoryIds);
+  const categories = await categoriesRepository.findByIds(context, allCategoryIds);
   const categoriesById = new Map(categories.map((category) => [category.id, category]));
 
   for (const item of dto.income) {
@@ -157,7 +218,7 @@ export async function replaceMonthlyBudget(
   }
 
   await db.transaction(async (tx) => {
-    await budgetsRepository.replaceMonthBudgets(tx, userId, month, currencyCode, [
+    await budgetsRepository.replaceMonthBudgets(tx, context, month, [
       ...dto.income.map((item) => ({
         categoryId: item.categoryId,
         amount: item.amount,
@@ -169,5 +230,5 @@ export async function replaceMonthlyBudget(
     ]);
   });
 
-  return getMonthlyBudget(userId, month, currencyCode);
+  return getMonthlyBudget(context, month, budgetCurrencyCode);
 }

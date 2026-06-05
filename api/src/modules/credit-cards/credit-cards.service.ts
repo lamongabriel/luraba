@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
+import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
 import { accountsTable } from '@/db/schemas/accounts.schema';
 import { creditCardBillingCyclesTable } from '@/db/schemas/credit-card-billing-cycles.schema';
@@ -8,13 +9,33 @@ import { creditCardPaymentAllocationsTable } from '@/db/schemas/credit-card-paym
 import { creditCardPaymentsTable } from '@/db/schemas/credit-card-payments.schema';
 import { creditCardPurchasesTable } from '@/db/schemas/credit-card-purchases.schema';
 import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
-import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
-import { usersTable } from '@/db/schemas/users.schema';
-import * as accountsRepository from '@/modules/accounts/accounts.repository';
+import type { TxClient } from '@/db/types';
+import { accountsRepository } from '@/modules/accounts/accounts.repository';
+import { categoriesRepository } from '@/modules/categories/categories.repository';
+import { currenciesRepository } from '@/modules/currencies/currencies.repository';
+import * as entriesService from '@/modules/entries/entries.service';
+import { householdsRepository } from '@/modules/households/households.repository';
+import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
+import { merchantsRepository } from '@/modules/merchants/merchants.repository';
+import { paymentMethodsRepository } from '@/modules/payment-methods/payment-methods.repository';
 import * as baseTxRepository from '@/modules/transactions/transactions.repository';
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
 import {
+  addMonths,
+  buildCycleForPurchaseDate,
+  buildCycleFromClosingDate,
+  formatDateOnly,
+  formatMonthKey,
+  getTodayInTimezone,
+  isAfter,
+  isBefore,
+  isEqual,
+  monthStart,
+  now,
+  parseMonthKey,
+} from '@/shared/lib/date';
+import type {
   CreateCreditCardDto,
   CreateCreditCardPaymentDto,
   CreateCreditCardPurchaseDto,
@@ -25,26 +46,13 @@ import {
   CreditCardPaymentResponse,
   CreditCardPurchaseResponse,
   CreditCardResponse,
-  UpdateCreditCardDto,
   UpdateCreditCardCycleDto,
+  UpdateCreditCardDto,
 } from './credit-cards.types';
-import {
-  addMonths,
-  buildCycleForPurchaseDate,
-  buildCycleFromClosingDate,
-  formatDateOnly,
-  formatMonthKey,
-  getTodayInTimezone,
-  monthStart,
-  parseMonthKey,
-} from './credit-cards.utils';
-
-type TxClient = baseTxRepository.TxClient;
 
 type CreditCardRow = {
   id: string;
   accountId: string;
-  userId: string;
   name: string;
   institutionName: string | null;
   institutionDomain: string | null;
@@ -63,10 +71,9 @@ type CreditCardRow = {
   updatedAt: Date;
 };
 
-type UserCreditContext = {
+type HouseholdCreditContext = {
   id: string;
-  preferredCurrency: string;
-  preferredTimezone: string;
+  timezone: string;
   creditExpenseTiming: 'spend_month' | 'payment_month';
   creditInstallmentBudgetMode: 'per_installment' | 'full_amount';
 };
@@ -74,13 +81,19 @@ type UserCreditContext = {
 type CreditCardSelectRow = {
   id: string;
   accountId: string;
-  userId: string;
   name: string;
   institutionName: string | null;
   institutionDomain: string | null;
   notes: string | null;
   classification: 'asset' | 'liability';
-  type: 'depository' | 'loan' | 'credit_card' | 'property' | 'vehicle' | 'other_asset' | 'other_liability';
+  type:
+    | 'depository'
+    | 'loan'
+    | 'credit_card'
+    | 'property'
+    | 'vehicle'
+    | 'other_asset'
+    | 'other_liability';
   currencyCode: string;
   brand: string;
   productType: 'credit';
@@ -96,7 +109,6 @@ type CreditCardSelectRow = {
 const creditCardSelect = {
   id: creditCardsTable.id,
   accountId: creditCardsTable.accountId,
-  userId: creditCardsTable.userId,
   name: accountsTable.name,
   institutionName: accountsTable.institutionName,
   institutionDomain: accountsTable.institutionDomain,
@@ -135,7 +147,9 @@ function toCreditCardRow(row: CreditCardSelectRow): CreditCardRow {
   };
 }
 
-function mapCycleRow(row: typeof creditCardBillingCyclesTable.$inferSelect): CreditCardCycleSummary {
+function mapCycleRow(
+  row: typeof creditCardBillingCyclesTable.$inferSelect,
+): CreditCardCycleSummary {
   return {
     id: row.id,
     creditCardId: row.creditCardId,
@@ -157,50 +171,50 @@ function rangesOverlap(
   return left.periodStart <= right.periodEnd && right.periodStart <= left.periodEnd;
 }
 
-async function findUserCreditContext(userId: string): Promise<UserCreditContext> {
-  const rows = await db
-    .select({
-      id: usersTable.id,
-      preferredCurrency: usersTable.preferredCurrency,
-      preferredTimezone: usersTable.preferredTimezone,
-      creditExpenseTiming: usersTable.creditExpenseTiming,
-      creditInstallmentBudgetMode: usersTable.creditInstallmentBudgetMode,
-    })
-    .from(usersTable)
-    .where(eq(usersTable.id, userId));
+async function findHouseholdCreditContext(householdId: string): Promise<HouseholdCreditContext> {
+  const household = await householdsRepository.findHouseholdById(householdId);
+  if (!household) throw new NotFoundError('Household');
 
-  const user = rows[0];
-  if (!user) throw new NotFoundError('User');
-  return user;
+  return {
+    id: household.id,
+    timezone: household.timezone,
+    creditExpenseTiming: household.creditExpenseTiming,
+    creditInstallmentBudgetMode: household.creditInstallmentBudgetMode,
+  };
 }
 
-async function findOwnedCreditCard(userId: string, creditCardId: string): Promise<CreditCardRow> {
+async function findHouseholdCreditCard(
+  householdId: string,
+  creditCardId: string,
+): Promise<CreditCardRow> {
   const rows = await db
     .select(creditCardSelect)
     .from(creditCardsTable)
     .innerJoin(accountsTable, eq(accountsTable.id, creditCardsTable.accountId))
-    .where(and(eq(creditCardsTable.id, creditCardId), eq(creditCardsTable.userId, userId)));
+    .where(
+      and(eq(creditCardsTable.id, creditCardId), eq(creditCardsTable.householdId, householdId)),
+    );
 
   const row = rows[0] as CreditCardSelectRow | undefined;
   if (!row) throw new NotFoundError('Credit card');
   return toCreditCardRow(row);
 }
 
-async function listOwnedCreditCards(userId: string): Promise<CreditCardRow[]> {
+async function listHouseholdCreditCards(householdId: string): Promise<CreditCardRow[]> {
   const rows = await db
     .select(creditCardSelect)
     .from(creditCardsTable)
     .innerJoin(accountsTable, eq(accountsTable.id, creditCardsTable.accountId))
-    .where(eq(creditCardsTable.userId, userId))
+    .where(eq(creditCardsTable.householdId, householdId))
     .orderBy(asc(accountsTable.name));
 
   return rows.map((row) => toCreditCardRow(row as CreditCardSelectRow));
 }
 
 async function computeCardBalance(accountId: string): Promise<number> {
-  const ledger = await accountsRepository.findLedgerByAccountId(accountId);
+  const ledger = await ledgerAccountsRepository.findByOwner('account', accountId);
   if (!ledger) throw new NotFoundError('Credit card ledger');
-  const balance = await accountsRepository.getAccountBalanceByLedgerId(ledger.id);
+  const balance = await ledgerAccountsRepository.getBalance(ledger.id);
   return -balance;
 }
 
@@ -212,28 +226,34 @@ async function mapCreditCard(card: CreditCardRow): Promise<CreditCardResponse> {
 }
 
 async function ensureCurrency(currencyCode: string): Promise<void> {
-  const currency = await baseTxRepository.findCurrencyByCode(currencyCode);
+  const currency = await currenciesRepository.findByCode(currencyCode);
   if (!currency) throw new NotFoundError('Currency');
 }
 
-async function ensureExpenseCategory(userId: string, categoryId: string): Promise<void> {
-  const category = await baseTxRepository.findOwnedCategory(categoryId, userId);
+async function ensureExpenseCategory(context: HouseholdContext, categoryId: string): Promise<void> {
+  const category = await categoriesRepository.get(categoryId, context);
   if (!category) throw new NotFoundError('Category');
   if (category.type !== 'expense') {
     throw new ValidationError(`Category ${categoryId} must be of type expense`);
   }
 }
 
-async function ensureMerchant(userId: string, merchantId?: string): Promise<void> {
+async function ensureMerchant(context: HouseholdContext, merchantId?: string): Promise<void> {
   if (!merchantId) return;
-  const merchant = await baseTxRepository.findOwnedMerchant(merchantId, userId);
+  const merchant = await merchantsRepository.get(merchantId, context);
   if (!merchant) throw new NotFoundError('Merchant');
 }
 
-async function resolveCreditCardPaymentMethod(currencyCode: string) {
-  const paymentMethod = await baseTxRepository.findPaymentMethodByCode('credit_card', currencyCode);
+async function resolveCreditCardPaymentMethod(context: HouseholdContext, currencyCode: string) {
+  const paymentMethod = await paymentMethodsRepository.findAvailableByCode(
+    context,
+    'credit_card',
+    currencyCode,
+  );
   if (!paymentMethod) {
-    throw new ValidationError(`Payment method credit_card is not available for currency ${currencyCode}`);
+    throw new ValidationError(
+      `Payment method credit_card is not available for currency ${currencyCode}`,
+    );
   }
   return paymentMethod;
 }
@@ -278,7 +298,7 @@ async function ensureCurrentCycle(tx: TxClient, card: CreditCardRow, timezone: s
   return ensureCycleForClosingDate(tx, card, cycleShape.closingDate);
 }
 
-async function findOwnedCycle(
+async function findCreditCardCycle(
   tx: TxClient,
   creditCardId: string,
   cycleId: string,
@@ -286,7 +306,12 @@ async function findOwnedCycle(
   const rows = await tx
     .select()
     .from(creditCardBillingCyclesTable)
-    .where(and(eq(creditCardBillingCyclesTable.id, cycleId), eq(creditCardBillingCyclesTable.creditCardId, creditCardId)));
+    .where(
+      and(
+        eq(creditCardBillingCyclesTable.id, cycleId),
+        eq(creditCardBillingCyclesTable.creditCardId, creditCardId),
+      ),
+    );
 
   const cycle = rows[0];
   if (!cycle) throw new NotFoundError('Billing cycle');
@@ -309,7 +334,12 @@ async function validateCycleWindowDoesNotOverlap(
       periodEnd: creditCardBillingCyclesTable.periodEnd,
     })
     .from(creditCardBillingCyclesTable)
-    .where(and(eq(creditCardBillingCyclesTable.creditCardId, cardId), sql`${creditCardBillingCyclesTable.id} <> ${cycleId}`));
+    .where(
+      and(
+        eq(creditCardBillingCyclesTable.creditCardId, cardId),
+        sql`${creditCardBillingCyclesTable.id} <> ${cycleId}`,
+      ),
+    );
 
   const overlappingCycle = otherCycles.find((cycle) =>
     rangesOverlap(candidate, {
@@ -319,7 +349,9 @@ async function validateCycleWindowDoesNotOverlap(
   );
 
   if (overlappingCycle) {
-    throw new ValidationError('Billing cycle dates cannot overlap with another billing cycle on this credit card');
+    throw new ValidationError(
+      'Billing cycle dates cannot overlap with another billing cycle on this credit card',
+    );
   }
 }
 
@@ -435,7 +467,11 @@ async function recreateBudgetRecognitionsForPurchase(
   }
 }
 
-async function syncCardCycles(tx: TxClient, card: CreditCardRow, timezone: string): Promise<Array<typeof creditCardBillingCyclesTable.$inferSelect>> {
+async function syncCardCycles(
+  tx: TxClient,
+  card: CreditCardRow,
+  timezone: string,
+): Promise<Array<typeof creditCardBillingCyclesTable.$inferSelect>> {
   await ensureCurrentCycle(tx, card, timezone);
 
   const [cycles, installmentSums, allocationSums] = await Promise.all([
@@ -447,7 +483,9 @@ async function syncCardCycles(tx: TxClient, card: CreditCardRow, timezone: strin
     tx
       .select({
         billingCycleId: creditCardInstallmentsTable.billingCycleId,
-        amount: sql<number>`coalesce(sum(${creditCardInstallmentsTable.amount}), 0)::integer`,
+        amount: sql<number>`coalesce(sum(${creditCardInstallmentsTable.amount}), 0)`.mapWith(
+          Number,
+        ),
       })
       .from(creditCardInstallmentsTable)
       .where(eq(creditCardInstallmentsTable.creditCardId, card.id))
@@ -455,17 +493,24 @@ async function syncCardCycles(tx: TxClient, card: CreditCardRow, timezone: strin
     tx
       .select({
         billingCycleId: creditCardPaymentAllocationsTable.billingCycleId,
-        amount: sql<number>`coalesce(sum(${creditCardPaymentAllocationsTable.amount}), 0)::integer`,
+        amount: sql<number>`coalesce(sum(${creditCardPaymentAllocationsTable.amount}), 0)`.mapWith(
+          Number,
+        ),
       })
       .from(creditCardPaymentAllocationsTable)
-      .innerJoin(creditCardPaymentsTable, eq(creditCardPaymentsTable.id, creditCardPaymentAllocationsTable.paymentId))
+      .innerJoin(
+        creditCardPaymentsTable,
+        eq(creditCardPaymentsTable.id, creditCardPaymentAllocationsTable.paymentId),
+      )
       .where(eq(creditCardPaymentsTable.creditCardId, card.id))
       .groupBy(creditCardPaymentAllocationsTable.billingCycleId),
   ]);
 
   const today = getTodayInTimezone(timezone);
   const installmentTotals = new Map(installmentSums.map((row) => [row.billingCycleId, row.amount]));
-  const paymentTotals = new Map(allocationSums.map((row) => [row.billingCycleId ?? '', row.amount]));
+  const paymentTotals = new Map(
+    allocationSums.map((row) => [row.billingCycleId ?? '', row.amount]),
+  );
   let carryCredit = card.unappliedCreditAmount;
 
   const updatedCycles: Array<typeof creditCardBillingCyclesTable.$inferSelect> = [];
@@ -481,12 +526,7 @@ async function syncCardCycles(tx: TxClient, card: CreditCardRow, timezone: strin
       carryCredit -= appliedCredit;
     }
 
-    const status =
-      cycle.closingDate < today
-        ? remainingAmount === 0
-          ? 'paid'
-          : 'closed'
-        : 'open';
+    const status = cycle.closingDate < today ? (remainingAmount === 0 ? 'paid' : 'closed') : 'open';
 
     const [updated] = await tx
       .update(creditCardBillingCyclesTable)
@@ -495,7 +535,7 @@ async function syncCardCycles(tx: TxClient, card: CreditCardRow, timezone: strin
         paidAmount,
         remainingAmount,
         status,
-        updatedAt: new Date(),
+        updatedAt: now(),
       })
       .where(eq(creditCardBillingCyclesTable.id, cycle.id))
       .returning();
@@ -506,7 +546,11 @@ async function syncCardCycles(tx: TxClient, card: CreditCardRow, timezone: strin
   return updatedCycles;
 }
 
-async function rebuildOpenAndFutureSchedules(tx: TxClient, card: CreditCardRow, timezone: string): Promise<void> {
+async function rebuildOpenAndFutureSchedules(
+  tx: TxClient,
+  card: CreditCardRow,
+  timezone: string,
+): Promise<void> {
   const today = getTodayInTimezone(timezone);
   const currentMonthStart = monthStart(today);
 
@@ -540,19 +584,36 @@ async function rebuildOpenAndFutureSchedules(tx: TxClient, card: CreditCardRow, 
   const openOrFutureCycleIds = await tx
     .select({ id: creditCardBillingCyclesTable.id })
     .from(creditCardBillingCyclesTable)
-    .where(and(eq(creditCardBillingCyclesTable.creditCardId, card.id), gte(creditCardBillingCyclesTable.closingDate, today)));
+    .where(
+      and(
+        eq(creditCardBillingCyclesTable.creditCardId, card.id),
+        gte(creditCardBillingCyclesTable.closingDate, today),
+      ),
+    );
 
   if (openOrFutureCycleIds.length > 0) {
-    await tx
-      .delete(creditCardInstallmentsTable)
-      .where(inArray(creditCardInstallmentsTable.billingCycleId, openOrFutureCycleIds.map((row) => row.id)));
+    await tx.delete(creditCardInstallmentsTable).where(
+      inArray(
+        creditCardInstallmentsTable.billingCycleId,
+        openOrFutureCycleIds.map((row) => row.id),
+      ),
+    );
 
     await tx
       .delete(creditCardBillingCyclesTable)
-      .where(and(eq(creditCardBillingCyclesTable.creditCardId, card.id), gte(creditCardBillingCyclesTable.closingDate, today)));
+      .where(
+        and(
+          eq(creditCardBillingCyclesTable.creditCardId, card.id),
+          gte(creditCardBillingCyclesTable.closingDate, today),
+        ),
+      );
   }
 
   for (const purchase of purchaseRows) {
+    if (!purchase.categoryId) {
+      throw new ValidationError('Credit card purchase category is required');
+    }
+
     const preservedInstallments = await tx
       .select({
         installmentNumber: creditCardInstallmentsTable.installmentNumber,
@@ -593,7 +654,7 @@ async function rebuildOpenAndFutureSchedules(tx: TxClient, card: CreditCardRow, 
         budgetInstallmentMode: purchase.budgetInstallmentMode,
       },
       {
-        categoryId: purchase.categoryId!,
+        categoryId: purchase.categoryId,
         currencyCode: card.currencyCode,
         purchaseDate: purchase.purchaseDate,
         currentMonthStart,
@@ -607,7 +668,7 @@ async function rebuildOpenAndFutureSchedules(tx: TxClient, card: CreditCardRow, 
 async function createUnderlyingExpenseTransaction(
   tx: TxClient,
   params: {
-    userId: string;
+    householdId: string;
     card: CreditCardRow;
     paymentMethodId: string;
     description: string;
@@ -618,10 +679,13 @@ async function createUnderlyingExpenseTransaction(
     postedDate: Date;
   },
 ) {
-  const accountLedger = await baseTxRepository.findLedgerAccountByOwner('account', params.card.accountId);
+  const accountLedger = await ledgerAccountsRepository.findByOwner(
+    'account',
+    params.card.accountId,
+  );
   if (!accountLedger) throw new NotFoundError('Credit card ledger');
 
-  const expenseLedger = await baseTxRepository.findOrCreateSystemLedger(
+  const expenseLedger = await ledgerAccountsRepository.findOrCreateSystem(
     tx,
     `system:expense:${params.card.currencyCode}`,
     'liability',
@@ -629,7 +693,7 @@ async function createUnderlyingExpenseTransaction(
   );
 
   const createdTransaction = await baseTxRepository.createTransaction(tx, {
-    userId: params.userId,
+    householdId: params.householdId,
     type: 'expense',
     paymentMethodId: params.paymentMethodId,
     categoryId: params.categoryId,
@@ -640,19 +704,17 @@ async function createUnderlyingExpenseTransaction(
     postedDate: params.postedDate,
   });
 
-  await baseTxRepository.createEntries(tx, [
+  await entriesService.createTransactionEntries(tx, createdTransaction.id, [
     {
-      transactionId: createdTransaction.id,
       ledgerAccountId: accountLedger.id,
       amount: -params.amount,
-      currencyId: params.card.currencyCode,
+      currencyCode: params.card.currencyCode,
       categoryId: params.categoryId,
     },
     {
-      transactionId: createdTransaction.id,
       ledgerAccountId: expenseLedger.id,
       amount: params.amount,
-      currencyId: params.card.currencyCode,
+      currencyCode: params.card.currencyCode,
     },
   ]);
 
@@ -662,7 +724,7 @@ async function createUnderlyingExpenseTransaction(
 async function createUnderlyingPaymentTransaction(
   tx: TxClient,
   params: {
-    userId: string;
+    householdId: string;
     card: CreditCardRow;
     fromAccountId: string;
     description: string;
@@ -671,12 +733,12 @@ async function createUnderlyingPaymentTransaction(
     postedDate: Date;
   },
 ) {
-  const fromLedger = await baseTxRepository.findLedgerAccountByOwner('account', params.fromAccountId);
-  const toLedger = await baseTxRepository.findLedgerAccountByOwner('account', params.card.accountId);
+  const fromLedger = await ledgerAccountsRepository.findByOwner('account', params.fromAccountId);
+  const toLedger = await ledgerAccountsRepository.findByOwner('account', params.card.accountId);
   if (!fromLedger || !toLedger) throw new NotFoundError('Account ledger');
 
   const createdTransaction = await baseTxRepository.createTransaction(tx, {
-    userId: params.userId,
+    householdId: params.householdId,
     type: 'transfer',
     paymentMethodId: null,
     categoryId: null,
@@ -687,18 +749,16 @@ async function createUnderlyingPaymentTransaction(
     postedDate: params.postedDate,
   });
 
-  await baseTxRepository.createEntries(tx, [
+  await entriesService.createTransactionEntries(tx, createdTransaction.id, [
     {
-      transactionId: createdTransaction.id,
       ledgerAccountId: fromLedger.id,
       amount: -params.amount,
-      currencyId: params.card.currencyCode,
+      currencyCode: params.card.currencyCode,
     },
     {
-      transactionId: createdTransaction.id,
       ledgerAccountId: toLedger.id,
       amount: params.amount,
-      currencyId: params.card.currencyCode,
+      currencyCode: params.card.currencyCode,
     },
   ]);
 
@@ -721,7 +781,10 @@ async function loadCycleItems(cardId: string, cycleId: string) {
       postedDate: transactionsTable.postedDate,
     })
     .from(creditCardInstallmentsTable)
-    .innerJoin(creditCardPurchasesTable, eq(creditCardPurchasesTable.id, creditCardInstallmentsTable.purchaseId))
+    .innerJoin(
+      creditCardPurchasesTable,
+      eq(creditCardPurchasesTable.id, creditCardInstallmentsTable.purchaseId),
+    )
     .innerJoin(transactionsTable, eq(transactionsTable.id, creditCardPurchasesTable.transactionId))
     .where(
       and(
@@ -729,54 +792,52 @@ async function loadCycleItems(cardId: string, cycleId: string) {
         eq(creditCardInstallmentsTable.billingCycleId, cycleId),
       ),
     )
-    .orderBy(asc(creditCardInstallmentsTable.installmentNumber), asc(creditCardInstallmentsTable.createdAt));
+    .orderBy(
+      asc(creditCardInstallmentsTable.installmentNumber),
+      asc(creditCardInstallmentsTable.createdAt),
+    );
 }
 
-export async function listCreditCards(userId: string): Promise<CreditCardResponse[]> {
-  await findUserCreditContext(userId);
-  const cards = await listOwnedCreditCards(userId);
+export async function listCreditCards(context: HouseholdContext): Promise<CreditCardResponse[]> {
+  await findHouseholdCreditContext(context.householdId);
+  const cards = await listHouseholdCreditCards(context.householdId);
   return Promise.all(cards.map((card) => mapCreditCard(card)));
 }
 
-export async function createCreditCard(userId: string, dto: CreateCreditCardDto): Promise<CreditCardResponse> {
-  const user = await findUserCreditContext(userId);
+export async function createCreditCard(
+  context: HouseholdContext,
+  dto: CreateCreditCardDto,
+): Promise<CreditCardResponse> {
+  const household = await findHouseholdCreditContext(context.householdId);
   await ensureCurrency(dto.currencyCode);
 
-  const existing = await db
-    .select({ id: accountsTable.id })
-    .from(accountsTable)
-    .where(and(eq(accountsTable.userId, userId), eq(accountsTable.name, dto.name)));
+  const existing = await accountsRepository.findByHouseholdAndName(context, dto.name);
 
-  if (existing[0]) {
+  if (existing) {
     throw new ConflictError('An account with this name already exists');
   }
 
   const card = await db.transaction(async (tx) => {
-    const [account] = await tx
-      .insert(accountsTable)
-      .values({
-        userId,
-        name: dto.name,
-        institutionName: dto.institutionName,
-        institutionDomain: dto.institutionDomain,
-        notes: dto.notes,
-        classification: 'liability',
-        type: 'credit_card',
-        currencyId: dto.currencyCode,
-      })
-      .returning();
-
-    await tx.insert(ledgerAccountsTable).values({
+    const account = await accountsRepository.createInTransaction(tx, context, {
+      name: dto.name,
+      institutionName: dto.institutionName,
+      institutionDomain: dto.institutionDomain,
+      notes: dto.notes,
       classification: 'liability',
-      ownerType: 'account',
-      ownerId: account.id,
-      currencyId: account.currencyId,
+      type: 'credit_card',
+      currencyId: dto.currencyCode,
+    });
+
+    await ledgerAccountsRepository.createForAccount(tx, {
+      accountId: account.id,
+      classification: 'liability',
+      currencyCode: account.currencyId,
     });
 
     const [createdCard] = await tx
       .insert(creditCardsTable)
       .values({
-        userId,
+        householdId: context.householdId,
         accountId: account.id,
         brand: dto.brand,
         productType: dto.productType,
@@ -790,7 +851,6 @@ export async function createCreditCard(userId: string, dto: CreateCreditCardDto)
     const cardRow = {
       id: createdCard.id,
       accountId: account.id,
-      userId,
       name: account.name,
       institutionName: account.institutionName ?? null,
       institutionDomain: account.institutionDomain ?? null,
@@ -809,8 +869,8 @@ export async function createCreditCard(userId: string, dto: CreateCreditCardDto)
       updatedAt: createdCard.updatedAt,
     } satisfies CreditCardRow;
 
-    await ensureCurrentCycle(tx, cardRow, user.preferredTimezone);
-    await syncCardCycles(tx, cardRow, user.preferredTimezone);
+    await ensureCurrentCycle(tx, cardRow, household.timezone);
+    await syncCardCycles(tx, cardRow, household.timezone);
 
     return cardRow;
   });
@@ -818,48 +878,49 @@ export async function createCreditCard(userId: string, dto: CreateCreditCardDto)
   return mapCreditCard(card);
 }
 
-export async function getCreditCard(userId: string, creditCardId: string): Promise<CreditCardResponse> {
-  const user = await findUserCreditContext(userId);
+export async function getCreditCard(
+  context: HouseholdContext,
+  creditCardId: string,
+): Promise<CreditCardResponse> {
+  const household = await findHouseholdCreditContext(context.householdId);
 
   await db.transaction(async (tx) => {
-    const card = await findOwnedCreditCard(userId, creditCardId);
-    await syncCardCycles(tx, card, user.preferredTimezone);
+    const card = await findHouseholdCreditCard(context.householdId, creditCardId);
+    await syncCardCycles(tx, card, household.timezone);
   });
 
-  return mapCreditCard(await findOwnedCreditCard(userId, creditCardId));
+  return mapCreditCard(await findHouseholdCreditCard(context.householdId, creditCardId));
 }
 
 export async function updateCreditCard(
-  userId: string,
+  context: HouseholdContext,
   creditCardId: string,
   dto: UpdateCreditCardDto,
 ): Promise<CreditCardResponse> {
-  const user = await findUserCreditContext(userId);
-  const existingCard = await findOwnedCreditCard(userId, creditCardId);
+  const household = await findHouseholdCreditContext(context.householdId);
+  const existingCard = await findHouseholdCreditCard(context.householdId, creditCardId);
 
   if (dto.name && dto.name !== existingCard.name) {
-    const duplicate = await db
-      .select({ id: accountsTable.id })
-      .from(accountsTable)
-      .where(and(eq(accountsTable.userId, userId), eq(accountsTable.name, dto.name)));
+    const duplicate = await accountsRepository.findByHouseholdAndName(context, dto.name);
 
-    if (duplicate[0]) {
+    if (duplicate) {
       throw new ConflictError('An account with this name already exists');
     }
   }
 
   const updated = await db.transaction(async (tx) => {
-    if (dto.name !== undefined || dto.institutionName !== undefined || dto.institutionDomain !== undefined || dto.notes !== undefined) {
-      await tx
-        .update(accountsTable)
-        .set({
-          name: dto.name,
-          institutionName: dto.institutionName === undefined ? undefined : dto.institutionName,
-          institutionDomain: dto.institutionDomain === undefined ? undefined : dto.institutionDomain,
-          notes: dto.notes === undefined ? undefined : dto.notes,
-          updatedAt: new Date(),
-        })
-        .where(eq(accountsTable.id, existingCard.accountId));
+    if (
+      dto.name !== undefined ||
+      dto.institutionName !== undefined ||
+      dto.institutionDomain !== undefined ||
+      dto.notes !== undefined
+    ) {
+      await accountsRepository.updateInTransaction(tx, context, existingCard.accountId, {
+        name: dto.name,
+        institutionName: dto.institutionName === undefined ? undefined : dto.institutionName,
+        institutionDomain: dto.institutionDomain === undefined ? undefined : dto.institutionDomain,
+        notes: dto.notes === undefined ? undefined : dto.notes,
+      });
     }
 
     await tx
@@ -871,16 +932,19 @@ export async function updateCreditCard(
         color: dto.color === undefined ? undefined : dto.color,
         closingDay: dto.closingDay,
         dueDay: dto.dueDay,
-        updatedAt: new Date(),
+        updatedAt: now(),
       })
       .where(eq(creditCardsTable.id, existingCard.id));
 
     const card: CreditCardRow = {
       ...existingCard,
       name: dto.name ?? existingCard.name,
-      institutionName: dto.institutionName === undefined ? existingCard.institutionName : dto.institutionName,
+      institutionName:
+        dto.institutionName === undefined ? existingCard.institutionName : dto.institutionName,
       institutionDomain:
-        dto.institutionDomain === undefined ? existingCard.institutionDomain : dto.institutionDomain,
+        dto.institutionDomain === undefined
+          ? existingCard.institutionDomain
+          : dto.institutionDomain,
       notes: dto.notes === undefined ? existingCard.notes : dto.notes,
       brand: dto.brand ?? existingCard.brand,
       productType: dto.productType ?? existingCard.productType,
@@ -888,13 +952,13 @@ export async function updateCreditCard(
       color: dto.color === undefined ? existingCard.color : dto.color,
       closingDay: dto.closingDay ?? existingCard.closingDay,
       dueDay: dto.dueDay ?? existingCard.dueDay,
-      updatedAt: new Date(),
+      updatedAt: now(),
     };
 
     if (dto.closingDay !== undefined || dto.dueDay !== undefined) {
-      await rebuildOpenAndFutureSchedules(tx, card, user.preferredTimezone);
+      await rebuildOpenAndFutureSchedules(tx, card, household.timezone);
     } else {
-      await syncCardCycles(tx, card, user.preferredTimezone);
+      await syncCardCycles(tx, card, household.timezone);
     }
 
     return card;
@@ -903,12 +967,15 @@ export async function updateCreditCard(
   return mapCreditCard(updated);
 }
 
-export async function listBillingCycles(userId: string, creditCardId: string): Promise<CreditCardCycleSummary[]> {
-  const user = await findUserCreditContext(userId);
-  const card = await findOwnedCreditCard(userId, creditCardId);
+export async function listBillingCycles(
+  context: HouseholdContext,
+  creditCardId: string,
+): Promise<CreditCardCycleSummary[]> {
+  const household = await findHouseholdCreditContext(context.householdId);
+  const card = await findHouseholdCreditCard(context.householdId, creditCardId);
 
   const cycles = await db.transaction(async (tx) => {
-    await syncCardCycles(tx, card, user.preferredTimezone);
+    await syncCardCycles(tx, card, household.timezone);
     return tx
       .select()
       .from(creditCardBillingCyclesTable)
@@ -920,19 +987,24 @@ export async function listBillingCycles(userId: string, creditCardId: string): P
 }
 
 export async function getBillingCycle(
-  userId: string,
+  context: HouseholdContext,
   creditCardId: string,
   cycleId: string,
 ): Promise<CreditCardCycleDetailResponse> {
-  const user = await findUserCreditContext(userId);
-  const card = await findOwnedCreditCard(userId, creditCardId);
+  const household = await findHouseholdCreditContext(context.householdId);
+  const card = await findHouseholdCreditCard(context.householdId, creditCardId);
 
   const cycle = await db.transaction(async (tx) => {
-    await syncCardCycles(tx, card, user.preferredTimezone);
+    await syncCardCycles(tx, card, household.timezone);
     const rows = await tx
       .select()
       .from(creditCardBillingCyclesTable)
-      .where(and(eq(creditCardBillingCyclesTable.id, cycleId), eq(creditCardBillingCyclesTable.creditCardId, creditCardId)));
+      .where(
+        and(
+          eq(creditCardBillingCyclesTable.id, cycleId),
+          eq(creditCardBillingCyclesTable.creditCardId, creditCardId),
+        ),
+      );
 
     const row = rows[0];
     if (!row) throw new NotFoundError('Billing cycle');
@@ -959,18 +1031,18 @@ export async function getBillingCycle(
 }
 
 export async function updateBillingCycle(
-  userId: string,
+  context: HouseholdContext,
   creditCardId: string,
   cycleId: string,
   dto: UpdateCreditCardCycleDto,
 ): Promise<CreditCardCycleDetailResponse> {
-  const user = await findUserCreditContext(userId);
-  const card = await findOwnedCreditCard(userId, creditCardId);
+  const household = await findHouseholdCreditContext(context.householdId);
+  const card = await findHouseholdCreditCard(context.householdId, creditCardId);
 
   const cycle = await db.transaction(async (tx) => {
-    await syncCardCycles(tx, card, user.preferredTimezone);
+    await syncCardCycles(tx, card, household.timezone);
 
-    const existingCycle = await findOwnedCycle(tx, creditCardId, cycleId);
+    const existingCycle = await findCreditCardCycle(tx, creditCardId, cycleId);
     const closingDate = dto.closingDate ?? dto.periodEnd ?? existingCycle.closingDate;
     const periodEnd = dto.periodEnd ?? dto.closingDate ?? existingCycle.periodEnd;
     const periodStart = dto.periodStart ?? existingCycle.periodStart;
@@ -980,7 +1052,7 @@ export async function updateBillingCycle(
       throw new ValidationError('periodStart must be on or before periodEnd');
     }
 
-    if (closingDate.getTime() !== periodEnd.getTime()) {
+    if (!isEqual(closingDate, periodEnd)) {
       throw new ValidationError('closingDate and periodEnd must be the same date');
     }
 
@@ -1000,12 +1072,12 @@ export async function updateBillingCycle(
         periodEnd,
         closingDate,
         dueDate,
-        updatedAt: new Date(),
+        updatedAt: now(),
       })
       .where(eq(creditCardBillingCyclesTable.id, cycleId))
       .returning();
 
-    await syncCardCycles(tx, card, user.preferredTimezone);
+    await syncCardCycles(tx, card, household.timezone);
 
     return updatedCycle;
   });
@@ -1030,23 +1102,23 @@ export async function updateBillingCycle(
 }
 
 export async function createPurchase(
-  userId: string,
+  context: HouseholdContext,
   creditCardId: string,
   dto: CreateCreditCardPurchaseDto,
 ): Promise<CreditCardPurchaseResponse> {
-  const user = await findUserCreditContext(userId);
-  const card = await findOwnedCreditCard(userId, creditCardId);
-  await ensureExpenseCategory(userId, dto.categoryId);
-  await ensureMerchant(userId, dto.merchantId);
+  const household = await findHouseholdCreditContext(context.householdId);
+  const card = await findHouseholdCreditCard(context.householdId, creditCardId);
+  await ensureExpenseCategory(context, dto.categoryId);
+  await ensureMerchant(context, dto.merchantId);
 
-  const paymentMethod = await resolveCreditCardPaymentMethod(card.currencyCode);
+  const paymentMethod = await resolveCreditCardPaymentMethod(context, card.currencyCode);
   const postedDate = dto.postedDate ?? dto.purchaseDate;
 
   const result = await db.transaction(async (tx) => {
-    await syncCardCycles(tx, card, user.preferredTimezone);
+    await syncCardCycles(tx, card, household.timezone);
 
     const transaction = await createUnderlyingExpenseTransaction(tx, {
-      userId,
+      householdId: context.householdId,
       card,
       paymentMethodId: paymentMethod.id,
       description: dto.description,
@@ -1064,8 +1136,8 @@ export async function createPurchase(
         transactionId: transaction.id,
         purchaseAmount: dto.amount,
         installmentCount: dto.installmentCount,
-        budgetExpenseTiming: user.creditExpenseTiming,
-        budgetInstallmentMode: user.creditInstallmentBudgetMode,
+        budgetExpenseTiming: household.creditExpenseTiming,
+        budgetInstallmentMode: household.creditInstallmentBudgetMode,
       })
       .returning();
 
@@ -1078,17 +1150,13 @@ export async function createPurchase(
       dto.installmentCount,
     );
 
-    await recreateBudgetRecognitionsForPurchase(
-      tx,
-      purchase,
-      {
-        categoryId: dto.categoryId,
-        currencyCode: card.currencyCode,
-        purchaseDate: dto.purchaseDate,
-      },
-    );
+    await recreateBudgetRecognitionsForPurchase(tx, purchase, {
+      categoryId: dto.categoryId,
+      currencyCode: card.currencyCode,
+      purchaseDate: dto.purchaseDate,
+    });
 
-    const syncedCycles = await syncCardCycles(tx, card, user.preferredTimezone);
+    const syncedCycles = await syncCardCycles(tx, card, household.timezone);
     const cyclesById = new Map(syncedCycles.map((cycle) => [cycle.id, cycle]));
 
     return {
@@ -1127,13 +1195,13 @@ export async function createPurchase(
 }
 
 export async function createPayment(
-  userId: string,
+  context: HouseholdContext,
   creditCardId: string,
   dto: CreateCreditCardPaymentDto,
 ): Promise<CreditCardPaymentResponse> {
-  const user = await findUserCreditContext(userId);
-  const card = await findOwnedCreditCard(userId, creditCardId);
-  const sourceAccount = await baseTxRepository.findOwnedAccount(dto.fromAccountId, userId);
+  const household = await findHouseholdCreditContext(context.householdId);
+  const card = await findHouseholdCreditCard(context.householdId, creditCardId);
+  const sourceAccount = await accountsRepository.get(dto.fromAccountId, context);
 
   if (!sourceAccount) throw new NotFoundError('Payment source account');
   if (sourceAccount.classification !== 'asset') {
@@ -1149,13 +1217,15 @@ export async function createPayment(
   const postedDate = dto.postedDate ?? dto.paymentDate;
 
   const result = await db.transaction(async (tx) => {
-    const syncedCycles = await syncCardCycles(tx, card, user.preferredTimezone);
+    const syncedCycles = await syncCardCycles(tx, card, household.timezone);
     const payableCycles = [...syncedCycles]
       .filter((cycle) => cycle.remainingAmount > 0)
-      .sort((left, right) => left.dueDate.getTime() - right.dueDate.getTime());
+      .sort((left, right) =>
+        isBefore(left.dueDate, right.dueDate) ? -1 : isAfter(left.dueDate, right.dueDate) ? 1 : 0,
+      );
 
     const transaction = await createUnderlyingPaymentTransaction(tx, {
-      userId,
+      householdId: context.householdId,
       card,
       fromAccountId: dto.fromAccountId,
       description: dto.description ?? `Payment to ${card.name}`,
@@ -1199,7 +1269,7 @@ export async function createPayment(
         .update(creditCardsTable)
         .set({
           unappliedCreditAmount: sql`${creditCardsTable.unappliedCreditAmount} + ${remainingAmount}`,
-          updatedAt: new Date(),
+          updatedAt: now(),
         })
         .where(eq(creditCardsTable.id, card.id))
         .returning({
@@ -1214,7 +1284,7 @@ export async function createPayment(
       card.unappliedCreditAmount = updatedCard.unappliedCreditAmount;
     }
 
-    await syncCardCycles(tx, card, user.preferredTimezone);
+    await syncCardCycles(tx, card, household.timezone);
 
     return {
       payment,
@@ -1237,17 +1307,19 @@ export async function createPayment(
 }
 
 export async function getForecast(
-  userId: string,
+  context: HouseholdContext,
   creditCardId: string,
   query: CreditCardForecastQuery,
 ): Promise<CreditCardForecastResponse> {
-  const user = await findUserCreditContext(userId);
-  const card = await findOwnedCreditCard(userId, creditCardId);
-  const forecastStart = query.fromMonth ? parseMonthKey(query.fromMonth) : monthStart(getTodayInTimezone(user.preferredTimezone));
+  const household = await findHouseholdCreditContext(context.householdId);
+  const card = await findHouseholdCreditCard(context.householdId, creditCardId);
+  const forecastStart = query.fromMonth
+    ? parseMonthKey(query.fromMonth)
+    : monthStart(getTodayInTimezone(household.timezone));
   const forecastEnd = addMonths(forecastStart, query.months - 1);
 
   await db.transaction(async (tx) => {
-    await syncCardCycles(tx, card, user.preferredTimezone);
+    await syncCardCycles(tx, card, household.timezone);
 
     let latestCycle = (
       await tx
@@ -1259,12 +1331,17 @@ export async function getForecast(
 
     while (!latestCycle || monthStart(latestCycle.dueDate) < forecastEnd) {
       const baseClosingDate =
-        latestCycle?.closingDate ?? buildCycleForPurchaseDate(getTodayInTimezone(user.preferredTimezone), card.closingDay, card.dueDay).closingDate;
+        latestCycle?.closingDate ??
+        buildCycleForPurchaseDate(
+          getTodayInTimezone(household.timezone),
+          card.closingDay,
+          card.dueDay,
+        ).closingDate;
       const nextCycle = await ensureCycleForClosingDate(tx, card, addMonths(baseClosingDate, 1));
       latestCycle = nextCycle;
     }
 
-    await syncCardCycles(tx, card, user.preferredTimezone);
+    await syncCardCycles(tx, card, household.timezone);
   });
 
   const cycles = await db
@@ -1289,7 +1366,8 @@ export async function getForecast(
     creditCardId,
     fromMonth: formatMonthKey(forecastStart),
     months: query.months,
-    unappliedCreditAmount: (await findOwnedCreditCard(userId, creditCardId)).unappliedCreditAmount,
+    unappliedCreditAmount: (await findHouseholdCreditCard(context.householdId, creditCardId))
+      .unappliedCreditAmount,
     cycles: cycleItems.map(({ cycle, items }) => ({
       ...mapCycleRow(cycle),
       items: items.map((item) => ({

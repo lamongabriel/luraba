@@ -1,19 +1,28 @@
 import { z } from 'zod';
+import { isSameDay } from '@/shared/lib/date';
+import {
+  creditCardCycleStatusSchema,
+  creditCardProductTypeSchema,
+} from '@/shared/validation/credit-cards';
+import { moneyAmountSchema } from '@/shared/validation/money';
 
-export const currencyCodeSchema = z.string().trim().length(3).transform((value) => value.toUpperCase());
-export const creditCardProductTypeSchema = z.literal('credit');
-export const creditCardCycleStatusSchema = z.enum(['open', 'closed', 'paid']);
+export { creditCardCycleStatusSchema, creditCardProductTypeSchema };
+
+export const currencyCodeSchema = z
+  .string()
+  .trim()
+  .length(3)
+  .transform((value) => value.toUpperCase());
 export const dayOfMonthSchema = z.number().int().min(1).max(31);
-export const moneyAmountSchema = z.coerce.number().int().positive().max(2_147_483_647);
 export const installmentCountSchema = z.coerce.number().int().min(1).max(60);
 
 export const creditCardIdParamSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 export const creditCardCycleIdParamSchema = z.object({
-  id: z.string().uuid(),
-  cycleId: z.string().uuid(),
+  id: z.uuid(),
+  cycleId: z.uuid(),
 });
 
 export const updateCreditCardCycleSchema = z
@@ -38,7 +47,7 @@ export const updateCreditCardCycleSchema = z
       });
     }
 
-    if (value.periodEnd && value.closingDate && value.periodEnd.getTime() !== value.closingDate.getTime()) {
+    if (value.periodEnd && value.closingDate && !isSameDay(value.periodEnd, value.closingDate)) {
       ctx.addIssue({
         code: 'custom',
         path: ['periodEnd'],
@@ -76,7 +85,10 @@ export const updateCreditCardSchema = z.object({
   notes: z.string().max(4000).nullable().optional(),
   brand: z.string().min(1).max(64).optional(),
   productType: creditCardProductTypeSchema.optional(),
-  last4: z.string().regex(/^\d{4}$/).optional(),
+  last4: z
+    .string()
+    .regex(/^\d{4}$/)
+    .optional(),
   color: z.string().min(1).max(32).nullable().optional(),
   closingDay: dayOfMonthSchema.optional(),
   dueDay: dayOfMonthSchema.optional(),
@@ -85,8 +97,8 @@ export const updateCreditCardSchema = z.object({
 export const createCreditCardPurchaseSchema = z.object({
   description: z.string().min(1).max(512),
   amount: moneyAmountSchema,
-  categoryId: z.string().uuid(),
-  merchantId: z.string().uuid().optional(),
+  categoryId: z.uuid(),
+  merchantId: z.uuid().optional(),
   purchaseDate: z.coerce.date(),
   postedDate: z.coerce.date().optional(),
   installmentCount: installmentCountSchema.default(1),
@@ -95,7 +107,7 @@ export const createCreditCardPurchaseSchema = z.object({
 export const createCreditCardPaymentSchema = z.object({
   description: z.string().min(1).max(512).optional(),
   amount: moneyAmountSchema,
-  fromAccountId: z.string().uuid(),
+  fromAccountId: z.uuid(),
   paymentDate: z.coerce.date(),
   postedDate: z.coerce.date().optional(),
 });
@@ -118,7 +130,6 @@ export type CreditCardForecastQuery = z.infer<typeof creditCardForecastQuerySche
 export type CreditCardResponse = {
   id: string;
   accountId: string;
-  userId: string;
   name: string;
   institutionName: string | null;
   institutionDomain: string | null;

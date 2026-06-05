@@ -1,67 +1,84 @@
 import { z } from 'zod';
+import type { budgetsTable } from '@/db/schemas/budgets.schema';
+import { formatMonthKey, parseMonthKey } from '@/shared/lib/date';
+import { moneyAmountSchema } from '@/shared/validation/money';
 
-export const budgetMonthParamSchema = z.object({
-  month: z
-    .string()
-    .regex(/^\d{4}-\d{2}$/, 'Month must use YYYY-MM format')
-    .refine((value) => {
-      const [year, month] = value.split('-').map(Number);
-      return Number.isInteger(year) && Number.isInteger(month) && month >= 1 && month <= 12;
-    }, 'Month must be a valid year-month'),
-});
+export type BudgetRecord = typeof budgetsTable.$inferSelect;
 
-export const currencyCodeSchema = z.string().trim().length(3).transform((value) => value.toUpperCase());
+const BudgetMonthKeySchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}$/, 'Month must use YYYY-MM format')
+  .refine((value) => {
+    const [year, month] = value.split('-').map(Number);
+    return Number.isInteger(year) && Number.isInteger(month) && month >= 1 && month <= 12;
+  }, 'Month must be a valid year-month');
 
-export const budgetQuerySchema = z.object({
-  currencyCode: currencyCodeSchema.optional(),
-});
+const BudgetCurrencyCodeSchema = z
+  .string()
+  .trim()
+  .length(3)
+  .transform((value) => value.toUpperCase());
 
-const moneyAmountSchema = z.coerce.number().int().positive().max(2_147_483_647);
-
-const budgetAllocationInputSchema = z.object({
-  categoryId: z.string().uuid(),
+const ReplaceMonthlyBudgetAllocationSchema = z.object({
+  categoryId: z.uuid(),
   amount: moneyAmountSchema,
 });
 
-export const replaceBudgetSchema = z.object({
-  currencyCode: currencyCodeSchema.optional(),
-  income: z.array(budgetAllocationInputSchema).default([]),
-  expense: z.array(budgetAllocationInputSchema).default([]),
+const MonthlyBudgetCategoryBreakdownSchema = z.object({
+  categoryId: z.uuid(),
+  categoryName: z.string(),
+  parentId: z.uuid().nullable(),
+  budgetedAmount: z.number().int(),
+  actualAmount: z.number().int(),
 });
 
-export type BudgetQuery = z.infer<typeof budgetQuerySchema>;
-export type ReplaceBudgetDto = z.infer<typeof replaceBudgetSchema>;
+const MonthlyBudgetTotalsSchema = z.object({
+  incomeBudgeted: z.number().int(),
+  incomeActual: z.number().int(),
+  expenseBudgeted: z.number().int(),
+  expenseActual: z.number().int(),
+});
 
-export type BudgetCategoryBreakdown = {
-  categoryId: string;
-  categoryName: string;
-  parentId: string | null;
-  budgetedAmount: number;
-  actualAmount: number;
-};
+const MonthlyBudgetSchema = z.object({
+  month: BudgetMonthKeySchema,
+  budgetCurrencyCode: BudgetCurrencyCodeSchema,
+  displayCurrencyCode: BudgetCurrencyCodeSchema,
+  totals: MonthlyBudgetTotalsSchema,
+  categories: z.object({
+    income: z.array(MonthlyBudgetCategoryBreakdownSchema),
+    expense: z.array(MonthlyBudgetCategoryBreakdownSchema),
+  }),
+});
 
-export type MonthlyBudgetResponse = {
-  month: string;
-  currencyCode: string;
-  totals: {
-    incomeBudgeted: number;
-    incomeActual: number;
-    expenseBudgeted: number;
-    expenseActual: number;
-  };
-  categories: {
-    income: BudgetCategoryBreakdown[];
-    expense: BudgetCategoryBreakdown[];
-  };
-};
+export const GetMonthlyBudgetRequestParamsSchema = z.object({
+  month: BudgetMonthKeySchema,
+});
 
-export function parseMonthKey(monthKey: string): Date {
-  const [year, month] = monthKey.split('-').map(Number);
-  return new Date(Date.UTC(year, month - 1, 1));
-}
+export const GetMonthlyBudgetRequestQuerySchema = z.object({
+  displayCurrencyCode: BudgetCurrencyCodeSchema.optional(),
+});
 
-export function formatMonthKey(monthDate: Date): string {
-  const year = monthDate.getUTCFullYear();
-  const month = String(monthDate.getUTCMonth() + 1).padStart(2, '0');
-  return `${year}-${month}`;
-}
+export const GetMonthlyBudgetResponseSchema = MonthlyBudgetSchema;
+
+export const ReplaceMonthlyBudgetRequestParamsSchema = z.object({
+  month: BudgetMonthKeySchema,
+});
+
+export const ReplaceMonthlyBudgetRequestBodySchema = z.object({
+  income: z.array(ReplaceMonthlyBudgetAllocationSchema).default([]),
+  expense: z.array(ReplaceMonthlyBudgetAllocationSchema).default([]),
+});
+
+export const ReplaceMonthlyBudgetResponseSchema = MonthlyBudgetSchema;
+
+export type MonthlyBudget = z.infer<typeof MonthlyBudgetSchema>;
+export type GetMonthlyBudgetRequestParams = z.infer<typeof GetMonthlyBudgetRequestParamsSchema>;
+export type GetMonthlyBudgetRequestQuery = z.infer<typeof GetMonthlyBudgetRequestQuerySchema>;
+export type GetMonthlyBudgetResponse = z.infer<typeof GetMonthlyBudgetResponseSchema>;
+export type ReplaceMonthlyBudgetRequestParams = z.infer<
+  typeof ReplaceMonthlyBudgetRequestParamsSchema
+>;
+export type ReplaceMonthlyBudgetRequestBody = z.infer<typeof ReplaceMonthlyBudgetRequestBodySchema>;
+export type ReplaceMonthlyBudgetResponse = z.infer<typeof ReplaceMonthlyBudgetResponseSchema>;
+
+export { formatMonthKey as formatBudgetMonthKey, parseMonthKey as parseBudgetMonthKey };
