@@ -1,11 +1,30 @@
 {
   "name": "luraba",
+  "version": "0.0.0",
+  "description": "Luraba — Finance Made Easy",
   "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "lamongabriel",
+    "url": "https://github.com/lamongabriel"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lamongabriel/luraba"
+  },
+  "packageManager": "pnpm@10.28.2",
   "scripts": {
+    "commitlint": "commitlint",
+    "lint:api": "pnpm run --filter \"./api\" lint",
     "pre-commit": "pnpm run --filter \"./api\" pre-commit",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:api": "pnpm run --filter \"./api\" test",
+    "test:api:unit": "pnpm run --filter \"./api\" test:unit",
+    "typecheck:api": "pnpm run --filter \"./api\" typecheck"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
     "husky": "^9.1.7"
   }
 }
