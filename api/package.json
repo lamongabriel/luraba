@@ -19,6 +19,7 @@
     "test": "DOTENV_CONFIG_PATH=.env.test NODE_ENV=test RUN_DB_TESTS=1 vitest run",
     "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:watch": "DOTENV_CONFIG_PATH=.env.test NODE_ENV=test RUN_DB_TESTS=1 vitest",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
     "lint": "biome check src/",
     "lint:fix": "biome check --write src/",
     "format": "biome format --write src/",
