@@ -1,9 +1,15 @@
 import request from 'supertest';
 import { vi } from 'vitest';
 import app from '@/app';
+import * as accountsService from '@/modules/accounts/accounts.service';
+import * as categoriesService from '@/modules/categories/categories.service';
+import * as creditCardsService from '@/modules/credit-cards/credit-cards.service';
+import * as transactionsService from '@/modules/transactions/transactions.service';
 import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
 import {
   buildAccountInput,
+  buildCategoryInput,
+  buildCreditCardInput,
   createBalanceEntryForAccount,
   createHousehold,
   createHouseholdMembership,
@@ -172,6 +178,88 @@ describe('accounts routes', () => {
     expect(response.status).toBe(404);
     expect(response.body.success).toBe(false);
     expect(response.body.error.code).toBe('NOT_FOUND');
+  });
+
+  it('GET /api/v1/accounts/:id/transactions requires authentication', async () => {
+    const response = await request(app).get(
+      '/api/v1/accounts/1456d4ee-2f8d-4cec-92be-a780d54312c2/transactions',
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('GET /api/v1/accounts/:id/transactions lists only transactions for the requested account', async () => {
+    const context = await createAuthenticatedContext();
+    const checking = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+    );
+    const savings = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Savings', type: 'depository', currencyCode: 'BRL' }),
+    );
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Groceries', type: 'expense' }),
+    );
+
+    await transactionsService.createTransaction(context.householdContext, {
+      type: 'expense',
+      description: 'Market',
+      amount: 8_000,
+      currencyCode: 'BRL',
+      paymentMethodCode: 'pix',
+      accountId: checking.id,
+      categoryId: category.id,
+      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
+      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+    });
+    await transactionsService.createTransaction(context.householdContext, {
+      type: 'transfer',
+      description: 'Savings transfer',
+      fromAmount: 10_000,
+      fromAccountId: checking.id,
+      toAccountId: savings.id,
+      purchaseDate: new Date('2026-03-25T00:00:00.000Z'),
+      postedDate: new Date('2026-03-25T00:00:00.000Z'),
+    });
+
+    const response = await request(app)
+      .get(`/api/v1/accounts/${checking.id}/transactions`)
+      .set(createAuthHeaders(context.token, context.household.id));
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toEqual([
+      expect.objectContaining({
+        type: 'transfer',
+        accountId: checking.id,
+        toAccountId: savings.id,
+      }),
+      expect.objectContaining({
+        type: 'expense',
+        description: 'Market',
+        accountId: checking.id,
+      }),
+    ]);
+  });
+
+  it('GET /api/v1/accounts/:id/transactions rejects credit card accounts', async () => {
+    const context = await createAuthenticatedContext();
+    const creditCard = await creditCardsService.createCreditCard(
+      context.householdContext,
+      buildCreditCardInput({ name: 'HTTP Nubank', closingDay: 25, dueDay: 5 }),
+    );
+
+    const response = await request(app)
+      .get(`/api/v1/accounts/${creditCard.accountId}/transactions`)
+      .set(createAuthHeaders(context.token, context.household.id));
+
+    expect(response.status).toBe(422);
+    expect(response.body.success).toBe(false);
+    expect(response.body.error.code).toBe('VALIDATION_ERROR');
   });
 
   it('PATCH /api/v1/accounts/:id updates account details', async () => {

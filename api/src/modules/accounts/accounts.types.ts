@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { accountsTable } from '@/db/schemas/accounts.schema';
+import { ListTransactionsResponseSchema } from '@/modules/transactions/transactions.types';
 import {
   type AccountClassification,
   type AccountType,
@@ -56,6 +57,12 @@ export const GetAccountDetailsRequestParamsSchema = z.object({
 
 export const GetAccountDetailsResponseSchema = accountDetailsSchema;
 
+export const ListAccountTransactionsRequestParamsSchema = z.object({
+  id: z.uuid(),
+});
+
+export const ListAccountTransactionsResponseSchema = ListTransactionsResponseSchema;
+
 export const UpdateAccountRequestParamsSchema = z.object({
   id: z.uuid(),
 });
@@ -82,6 +89,10 @@ export type CreateAccountResponse = z.infer<typeof CreateAccountResponseSchema>;
 export type ListAccountsResponse = z.infer<typeof ListAccountsResponseSchema>;
 export type GetAccountDetailsRequestParams = z.infer<typeof GetAccountDetailsRequestParamsSchema>;
 export type GetAccountDetailsResponse = z.infer<typeof GetAccountDetailsResponseSchema>;
+export type ListAccountTransactionsRequestParams = z.infer<
+  typeof ListAccountTransactionsRequestParamsSchema
+>;
+export type ListAccountTransactionsResponse = z.infer<typeof ListAccountTransactionsResponseSchema>;
 export type UpdateAccountRequestParams = z.infer<typeof UpdateAccountRequestParamsSchema>;
 export type UpdateAccountRequestBody = z.infer<typeof UpdateAccountRequestBodySchema>;
 export type UpdateAccountResponse = z.infer<typeof UpdateAccountResponseSchema>;

@@ -7,6 +7,8 @@ import {
   GetAccountDetailsRequestParamsSchema,
   GetAccountDetailsResponseSchema,
   ListAccountsResponseSchema,
+  ListAccountTransactionsRequestParamsSchema,
+  ListAccountTransactionsResponseSchema,
   UpdateAccountRequestBodySchema,
   UpdateAccountRequestParamsSchema,
   UpdateAccountResponseSchema,
@@ -28,6 +30,12 @@ export const details = createHouseholdHandler({
   params: GetAccountDetailsRequestParamsSchema,
   response: GetAccountDetailsResponseSchema,
   handle: ({ household, params }) => accountsService.getAccountDetails(household, params.id),
+});
+
+export const listTransactions = createHouseholdHandler({
+  params: ListAccountTransactionsRequestParamsSchema,
+  response: ListAccountTransactionsResponseSchema,
+  handle: ({ household, params }) => accountsService.listAccountTransactions(household, params.id),
 });
 
 export const update = createHouseholdHandler({

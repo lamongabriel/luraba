@@ -8,8 +8,13 @@ import {
   normalizeBrandDomain,
 } from '@/modules/integrations/brandfetch/brandfetch.utils';
 import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
+import {
+  mapDetailedRows,
+  mapTransactionResponsesToFeedRows,
+} from '@/modules/transactions/transactions.helpers';
 import * as transactionsRepository from '@/modules/transactions/transactions.repository';
-import { ConflictError, NotFoundError } from '@/shared/errors';
+import type { TransactionFeedRow } from '@/modules/transactions/transactions.types';
+import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
 import { accountsRepository } from './accounts.repository';
 import type {
@@ -118,6 +123,22 @@ export async function getAccountDetails(
 
   const balance = await ledgerAccountsRepository.getBalance(ledger.id);
   return mapAccountDetails(account, balance);
+}
+
+export async function listAccountTransactions(
+  context: HouseholdContext,
+  accountId: string,
+): Promise<TransactionFeedRow[]> {
+  const account = await accountsRepository.get(accountId, context);
+  if (!account) throw new NotFoundError('Account');
+  if (account.type === 'credit_card') {
+    throw new ValidationError(
+      'Credit card account transactions must be viewed through credit card billing cycles',
+    );
+  }
+
+  const rows = await transactionsRepository.listDetailedByAccountId(context, account.id);
+  return mapTransactionResponsesToFeedRows(mapDetailedRows(rows));
 }
 
 export async function updateAccount(

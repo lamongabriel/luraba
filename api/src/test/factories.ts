@@ -11,6 +11,7 @@ import { usersTable } from '@/db/schemas/users.schema';
 import type { CreateAccountRequestBody } from '@/modules/accounts/accounts.types';
 import type { RegisterRequestBody } from '@/modules/auth/auth.types';
 import type { CreateCategoryRequestBody } from '@/modules/categories/categories.types';
+import type { CreateCreditCardRequestBody } from '@/modules/credit-cards/credit-cards.types';
 import type { CreateMerchantRequestBody } from '@/modules/merchants/merchants.types';
 import type { CreatePaymentMethodRequestBody } from '@/modules/payment-methods/payment-methods.types';
 import type { CreateTagRequestBody } from '@/modules/tags/tags.types';
@@ -121,6 +122,20 @@ export function buildMerchantInput(
   return {
     name: `Merchant ${randomSuffix()}`,
     domain: `${randomSuffix()}.example.com`,
+    ...overrides,
+  };
+}
+
+export function buildCreditCardInput(
+  overrides: Partial<CreateCreditCardRequestBody> = {},
+): CreateCreditCardRequestBody {
+  return {
+    name: `Card ${randomSuffix()}`,
+    currencyCode: 'BRL',
+    brand: 'Visa',
+    last4: '4242',
+    closingDay: 25,
+    dueDay: 5,
     ...overrides,
   };
 }

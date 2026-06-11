@@ -3,11 +3,19 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/db';
 import { entriesTable } from '@/db/schemas/entries.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
+import * as categoriesService from '@/modules/categories/categories.service';
+import * as creditCardsService from '@/modules/credit-cards/credit-cards.service';
 import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
 import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
-import { ConflictError, NotFoundError } from '@/shared/errors';
+import * as transactionsService from '@/modules/transactions/transactions.service';
+import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
-import { buildAccountInput, createBalanceEntryForAccount } from '@/test/factories';
+import {
+  buildAccountInput,
+  buildCategoryInput,
+  buildCreditCardInput,
+  createBalanceEntryForAccount,
+} from '@/test/factories';
 import * as accountsService from '../accounts.service';
 
 describe('accounts service', () => {
@@ -169,6 +177,76 @@ describe('accounts service', () => {
     expect(details.id).toBe(account.id);
     expect(details.balance).toBe(-9_999);
     expect(details.classification).toBe('liability');
+  });
+
+  it('lists transactions for a single non-credit-card account only', async () => {
+    const context = await createAuthenticatedContext();
+
+    const checking = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+    );
+    const savings = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Savings', type: 'depository', currencyCode: 'BRL' }),
+    );
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Food', type: 'expense' }),
+    );
+
+    const expense = await transactionsService.createTransaction(context.householdContext, {
+      type: 'expense',
+      description: 'Lunch',
+      amount: 4_500,
+      currencyCode: 'BRL',
+      paymentMethodCode: 'pix',
+      accountId: checking.id,
+      categoryId: category.id,
+      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
+      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+    });
+
+    const transfer = await transactionsService.createTransaction(context.householdContext, {
+      type: 'transfer',
+      description: 'Move money',
+      fromAmount: 10_000,
+      fromAccountId: checking.id,
+      toAccountId: savings.id,
+      purchaseDate: new Date('2026-03-25T00:00:00.000Z'),
+      postedDate: new Date('2026-03-25T00:00:00.000Z'),
+    });
+
+    const transactions = await accountsService.listAccountTransactions(
+      context.householdContext,
+      checking.id,
+    );
+
+    expect(transactions).toEqual([
+      expect.objectContaining({
+        id: transfer.id,
+        type: 'transfer',
+        accountId: checking.id,
+        toAccountId: savings.id,
+      }),
+      expect.objectContaining({
+        id: expense.id,
+        description: 'Lunch',
+        accountId: checking.id,
+      }),
+    ]);
+  });
+
+  it('rejects listing transactions for a credit card account', async () => {
+    const context = await createAuthenticatedContext();
+    const creditCard = await creditCardsService.createCreditCard(
+      context.householdContext,
+      buildCreditCardInput({ name: 'Nubank', closingDay: 25, dueDay: 5 }),
+    );
+
+    await expect(
+      accountsService.listAccountTransactions(context.householdContext, creditCard.accountId),
+    ).rejects.toThrow(ValidationError);
   });
 
   it('updates account details and clears institution branding', async () => {
