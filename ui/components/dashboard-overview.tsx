@@ -1,16 +1,12 @@
-"use client";
-
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
-import { useTransactionsQuery } from "@/queries/use-transactions.query";
+import { transactionFeed } from "@/lib/mock-data";
 
 export function DashboardOverview() {
-  const { data = [] } = useTransactionsQuery();
-
-  const income = data.filter((tx) => tx.type === "income").length;
-  const expenses = data.filter((tx) => tx.type === "expense").length;
-  const transfers = data.filter((tx) => tx.type === "transfer").length;
-  const adjustments = data.filter((tx) => tx.type === "adjustment").length;
+  const income = transactionFeed.filter((tx) => tx.amount > 0).length;
+  const expenses = transactionFeed.filter((tx) => tx.amount < 0).length;
+  const transfers = transactionFeed.filter((tx) => tx.category === "Transfer").length;
+  const adjustments = transactionFeed.filter((tx) => tx.status === "Pending").length;
 
   const cards = [
     { label: "Income Tx", value: income.toString() },

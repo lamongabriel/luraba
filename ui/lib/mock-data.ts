@@ -1,70 +1,527 @@
-export type Account = {
-  id: string
-  name: string
-  type: "asset" | "debt"
-  balance: string
-  monthDelta: string
-}
+import type { AuthLoginData } from "@/interfaces/auth";
+import type { HouseholdSummary } from "@/interfaces/household";
 
-export type Transaction = {
-  id: string
-  title: string
-  account: string
-  category: string
-  date: string
-  amount: string
-  kind: "income" | "expense" | "transfer"
-}
+export const showcaseAuthSession: AuthLoginData = {
+  user: {
+    id: "fb4ca378-4258-4ff2-84c1-8b7de75e91b0",
+    name: "Gabriel",
+    email: "gabriel@gabriel.com",
+    defaultHouseholdId: "4e0b9cc7-8161-4726-a724-e4e0e185b90c",
+    preferences: {
+      language: "en",
+      currency: "BRL",
+      timezone: "America/Sao_Paulo",
+      dateFormat: "DD/MM/YYYY",
+      preferredPeriod: "current_month",
+      preferredTheme: "system",
+    },
+    createdAt: "2026-06-11T01:38:36.593Z",
+    updatedAt: "2026-06-11T01:38:36.607Z",
+  },
+  household: {
+    id: "4e0b9cc7-8161-4726-a724-e4e0e185b90c",
+    name: "Gabriel's Household",
+    role: "owner",
+    permissions: [
+      "household.read",
+      "household.update",
+      "household.members.read",
+      "household.members.manage",
+      "household.invites.manage",
+      "accounts.read",
+      "accounts.create",
+      "accounts.update",
+      "accounts.delete",
+      "transactions.read",
+      "transactions.create",
+      "transactions.update",
+      "transactions.delete",
+      "categories.read",
+      "categories.create",
+      "categories.update",
+      "categories.delete",
+      "tags.read",
+      "tags.create",
+      "tags.update",
+      "tags.delete",
+      "paymentMethods.read",
+      "paymentMethods.create",
+      "paymentMethods.update",
+      "paymentMethods.delete",
+      "merchants.read",
+      "merchants.create",
+      "merchants.update",
+      "merchants.delete",
+      "integrations.read",
+      "integrations.update",
+      "integrations.delete",
+      "budgets.read",
+      "budgets.update",
+      "creditCards.read",
+      "creditCards.create",
+      "creditCards.update",
+      "creditCards.delete",
+    ],
+    settings: {
+      defaultCurrencyId: "BRL",
+      countryCode: "BR",
+      timezone: "America/Sao_Paulo",
+      budgetMonthStartsOn: 1,
+      creditExpenseTiming: "spend_month",
+      creditInstallmentBudgetMode: "per_installment",
+    },
+  },
+  accessToken: "preview-access-token",
+};
 
-export const accounts: Account[] = [
-  { id: "a1", name: "Cash", type: "asset", balance: "R$5.899,26", monthDelta: "+188.7%" },
-  { id: "a2", name: "Investment", type: "asset", balance: "R$5.104,20", monthDelta: "-15.0%" },
-  { id: "a3", name: "Credit Card", type: "debt", balance: "R$784,54", monthDelta: "-88.0%" },
-  { id: "a4", name: "Loan", type: "debt", balance: "R$53.750,00", monthDelta: "-2.3%" },
-]
-
-export const transactions: Transaction[] = [
+export const showcaseHouseholds: HouseholdSummary[] = [
   {
-    id: "t1",
-    title: "Payment to Credit Card - XP Infinite",
-    account: "Transfer • Checking - XP Brazil",
-    category: "Payment",
-    date: "Mar 03, 2026",
-    amount: "+/- R$865,97",
-    kind: "transfer",
+    id: "4e0b9cc7-8161-4726-a724-e4e0e185b90c",
+    name: "Gabriel's Household",
+    description: "Primary family finances, monthly planning, and long-term net worth tracking.",
+    defaultCurrencyId: "BRL",
+    countryCode: "BR",
+    timezone: "America/Sao_Paulo",
+    budgetMonthStartsOn: 1,
+    creditExpenseTiming: "spend_month",
+    creditInstallmentBudgetMode: "per_installment",
+    role: "owner",
+    createdByUserId: "fb4ca378-4258-4ff2-84c1-8b7de75e91b0",
+    createdAt: "2026-06-11T01:38:36.604Z",
+    updatedAt: "2026-06-11T01:38:36.604Z",
   },
   {
-    id: "t2",
-    title: "FNF - Freelance",
-    account: "Checking - Inter Brazil",
+    id: "b3e7f32b-6b91-4a84-bb26-0a95a1fd1d11",
+    name: "Studio Ops",
+    description: "Shared operating workspace for retainers, subscriptions, and contractor expenses.",
+    defaultCurrencyId: "USD",
+    countryCode: "US",
+    timezone: "America/New_York",
+    budgetMonthStartsOn: 1,
+    creditExpenseTiming: "due_month",
+    creditInstallmentBudgetMode: "full_purchase_month",
+    role: "admin",
+    createdByUserId: "fb4ca378-4258-4ff2-84c1-8b7de75e91b0",
+    createdAt: "2026-06-08T14:20:00.000Z",
+    updatedAt: "2026-06-14T08:10:00.000Z",
+  },
+  {
+    id: "0dd2dc36-154f-42ed-8795-91725d1a58f1",
+    name: "Travel Planning",
+    description: "A dedicated household for flights, bookings, split costs, and seasonal trip budgets.",
+    defaultCurrencyId: "EUR",
+    countryCode: "PT",
+    timezone: "Europe/Lisbon",
+    budgetMonthStartsOn: 5,
+    creditExpenseTiming: "spend_month",
+    creditInstallmentBudgetMode: "per_installment",
+    role: "member",
+    createdByUserId: "fb4ca378-4258-4ff2-84c1-8b7de75e91b0",
+    createdAt: "2026-06-05T09:00:00.000Z",
+    updatedAt: "2026-06-13T18:30:00.000Z",
+  },
+];
+
+export const showcaseUser = {
+  name: "Gabriel Lamonga",
+  email: "gabriel@luraba.app",
+  role: "Founder and design lead",
+  currencyCode: "BRL",
+  language: "en",
+} as const;
+
+export const dashboardMetrics = [
+  {
+    label: "Net worth",
+    amount: 4312840,
+    hint: "Across 6 active accounts",
+    accent: "brand" as const,
+  },
+  {
+    label: "Cash reserves",
+    amount: 1264430,
+    hint: "Available for the next 90 days",
+    accent: "positive" as const,
+  },
+  {
+    label: "Planned spending",
+    amount: 582900,
+    hint: "Committed across cards and subscriptions",
+    accent: "negative" as const,
+  },
+  {
+    label: "Monthly runway",
+    value: "7.4 months",
+    hint: "At the current pace",
+    accent: "neutral" as const,
+  },
+];
+
+export const dashboardAllocation = [
+  { label: "Cash", value: 1264430, color: "#14b8a6" },
+  { label: "Investments", value: 2148160, color: "#38bdf8" },
+  { label: "Credit", value: 421900, color: "#f97316" },
+  { label: "Loans", value: 478250, color: "#a855f7" },
+];
+
+export const budgetSnapshot = {
+  month: "2026-06",
+  incomeActual: 2025590,
+  incomeBudgeted: 2250000,
+  expenseActual: 1187420,
+  expenseBudgeted: 1350000,
+  categories: [
+    {
+      name: "Living",
+      actualAmount: 428400,
+      budgetedAmount: 470000,
+      color: "#38bdf8",
+      tone: "positive" as const,
+    },
+    {
+      name: "Studio",
+      actualAmount: 312600,
+      budgetedAmount: 280000,
+      color: "#f97316",
+      tone: "negative" as const,
+    },
+    {
+      name: "Travel",
+      actualAmount: 191200,
+      budgetedAmount: 240000,
+      color: "#a855f7",
+      tone: "positive" as const,
+    },
+    {
+      name: "Health",
+      actualAmount: 118900,
+      budgetedAmount: 125000,
+      color: "#22c55e",
+      tone: "positive" as const,
+    },
+  ],
+};
+
+export const showcaseCreditCards = [
+  {
+    id: "xp-infinite",
+    accountId: "xp-checking",
+    brand: "Visa Infinite",
+    name: "XP Infinite",
+    last4: "4821",
+    color: "navy",
+    closingDay: 7,
+    dueDay: 14,
+    balance: 348220,
+    availableCredit: 2150000,
+    statementStatus: "Open statement",
+    accent: "positive" as const,
+  },
+  {
+    id: "itau-mastercard",
+    accountId: "itau-black",
+    brand: "Mastercard Black",
+    name: "Itau Black",
+    last4: "0314",
+    color: "gold",
+    closingDay: 11,
+    dueDay: 18,
+    balance: 234680,
+    availableCredit: 980000,
+    statementStatus: "Due in 5 days",
+    accent: "negative" as const,
+  },
+];
+
+export const recentTransactions = [
+  {
+    id: "tx-1",
+    title: "Client retainer",
+    merchant: "North Studio",
+    account: "XP Checking",
     category: "Income",
-    date: "Mar 01, 2026",
-    amount: "R$1.250,00",
-    kind: "income",
+    date: "Jun 14",
+    amount: 650000,
+    tone: "positive" as const,
+    detail: "Monthly product design retainer",
   },
   {
-    id: "t3",
-    title: "Shopee - Office Desk",
-    account: "Credit Card - XP Infinite Brazil",
-    category: "Office & Computing",
-    date: "Mar 01, 2026",
-    amount: "-R$69,08",
-    kind: "expense",
+    id: "tx-2",
+    title: "Team offsite flights",
+    merchant: "LATAM",
+    account: "XP Infinite",
+    category: "Travel",
+    date: "Jun 13",
+    amount: -188340,
+    tone: "negative" as const,
+    detail: "3 tickets for Sao Paulo",
   },
-]
+  {
+    id: "tx-3",
+    title: "Workspace rent",
+    merchant: "Nomad Hub",
+    account: "Inter Reserve",
+    category: "Studio",
+    date: "Jun 11",
+    amount: -72500,
+    tone: "negative" as const,
+    detail: "June lease",
+  },
+  {
+    id: "tx-4",
+    title: "Cash sweep",
+    merchant: "Internal transfer",
+    account: "XP Checking",
+    category: "Transfer",
+    date: "Jun 10",
+    amount: 95000,
+    tone: "neutral" as const,
+    detail: "Checking to emergency fund",
+  },
+];
 
-export const budgetCategories = [
-  { name: "Travel", spent: "R$1.414,00", budgeted: "R$0,00", status: "Over Budget" },
-  { name: "Gaming & Hobbies", spent: "R$443,58", budgeted: "R$0,00", status: "Over Budget" },
-  { name: "Office & Computing", spent: "R$69,08", budgeted: "R$0,00", status: "Over Budget" },
-  { name: "Uncategorized", spent: "R$0,00", budgeted: "R$5.000,00", status: "On Track" },
-]
+export const accountDirectory = [
+  {
+    id: "xp-checking",
+    name: "XP Checking",
+    institution: "XP Investimentos",
+    type: "Depository",
+    classification: "Asset",
+    balance: 764340,
+    change: "+12.4%",
+    note: "Main operating account for salary and studio inflows.",
+  },
+  {
+    id: "inter-reserve",
+    name: "Inter Reserve",
+    institution: "Banco Inter",
+    type: "Depository",
+    classification: "Asset",
+    balance: 500090,
+    change: "+4.2%",
+    note: "Cash reserve and short-term savings buffer.",
+  },
+  {
+    id: "wealth-pool",
+    name: "Wealth Pool",
+    institution: "Avenue",
+    type: "Investment",
+    classification: "Asset",
+    balance: 2148160,
+    change: "+8.9%",
+    note: "Long-term portfolio split between ETFs and fixed income.",
+  },
+  {
+    id: "itau-black",
+    name: "Itau Black",
+    institution: "Itau",
+    type: "Credit Card",
+    classification: "Liability",
+    balance: 234680,
+    change: "-3.1%",
+    note: "Travel and subscriptions card with lounge benefits.",
+  },
+  {
+    id: "xp-infinite-account",
+    name: "XP Infinite Statement",
+    institution: "XP Investimentos",
+    type: "Credit Card",
+    classification: "Liability",
+    balance: 348220,
+    change: "+6.5%",
+    note: "Current open statement for operating spend.",
+  },
+  {
+    id: "home-loan",
+    name: "Home Loan",
+    institution: "Caixa",
+    type: "Loan",
+    classification: "Liability",
+    balance: 478250,
+    change: "-1.4%",
+    note: "Apartment financing with fixed monthly amortization.",
+  },
+];
 
-export async function getDashboardSnapshot() {
-  return {
-    income: "R$15.255,90",
-    expenses: "R$6.226,00",
-    net: "R$9.029,90",
-    transactionCount: 459,
-  }
-}
+export const accountDetailSnapshots = {
+  "xp-checking": {
+    eyebrow: "Operating account",
+    summary:
+      "A flexible depository account used for salary, transfers, and the day-to-day design studio rhythm.",
+    highlights: [
+      { label: "Available balance", amount: 764340 },
+      { label: "Pending outgoing", amount: -52400 },
+      { label: "Average inflow", amount: 312550 },
+    ],
+    activity: [
+      { label: "Client retainer", date: "Jun 14", amount: 650000, tone: "positive" as const },
+      { label: "Workspace rent", date: "Jun 11", amount: -72500, tone: "negative" as const },
+      { label: "Cash sweep", date: "Jun 10", amount: -95000, tone: "neutral" as const },
+    ],
+  },
+  "inter-reserve": {
+    eyebrow: "Safety net",
+    summary:
+      "A quieter reserve account that holds short-term runway and leaves the main account visually calm.",
+    highlights: [
+      { label: "Reserve balance", amount: 500090 },
+      { label: "Auto transfer", amount: 95000 },
+      { label: "Last interest credit", amount: 3820 },
+    ],
+    activity: [
+      { label: "Transfer from XP", date: "Jun 10", amount: 95000, tone: "positive" as const },
+      { label: "Interest credit", date: "Jun 01", amount: 3820, tone: "positive" as const },
+      { label: "Insurance debit", date: "May 29", amount: -12450, tone: "negative" as const },
+    ],
+  },
+  "wealth-pool": {
+    eyebrow: "Long-term capital",
+    summary:
+      "A composed investment view focused on deliberate growth rather than daily movement or operational noise.",
+    highlights: [
+      { label: "Portfolio value", amount: 2148160 },
+      { label: "Month performance", amount: 127240 },
+      { label: "Dividend cash", amount: 18410 },
+    ],
+    activity: [
+      { label: "ETF allocation", date: "Jun 08", amount: 120000, tone: "positive" as const },
+      { label: "Bond maturity", date: "Jun 02", amount: 38400, tone: "positive" as const },
+      { label: "Management fee", date: "May 30", amount: -4120, tone: "negative" as const },
+    ],
+  },
+} as const;
+
+export const transactionFeed = [
+  {
+    id: "feed-1",
+    title: "Client retainer",
+    merchant: "North Studio",
+    account: "XP Checking",
+    category: "Income",
+    amount: 650000,
+    status: "Cleared",
+    tone: "positive" as const,
+    date: "2026-06-14",
+  },
+  {
+    id: "feed-2",
+    title: "Team offsite flights",
+    merchant: "LATAM",
+    account: "XP Infinite",
+    category: "Travel",
+    amount: -188340,
+    status: "Booked",
+    tone: "negative" as const,
+    date: "2026-06-13",
+  },
+  {
+    id: "feed-3",
+    title: "Workspace rent",
+    merchant: "Nomad Hub",
+    account: "Inter Reserve",
+    category: "Studio",
+    amount: -72500,
+    status: "Cleared",
+    tone: "negative" as const,
+    date: "2026-06-11",
+  },
+  {
+    id: "feed-4",
+    title: "Cash sweep",
+    merchant: "Internal transfer",
+    account: "XP Checking",
+    category: "Transfer",
+    amount: -95000,
+    status: "Internal",
+    tone: "neutral" as const,
+    date: "2026-06-10",
+  },
+  {
+    id: "feed-5",
+    title: "Cloud software",
+    merchant: "Vercel",
+    account: "Itau Black",
+    category: "Studio",
+    amount: -12990,
+    status: "Pending",
+    tone: "negative" as const,
+    date: "2026-06-09",
+  },
+  {
+    id: "feed-6",
+    title: "Dividend cash",
+    merchant: "Avenue",
+    account: "Wealth Pool",
+    category: "Investments",
+    amount: 18410,
+    status: "Settled",
+    tone: "positive" as const,
+    date: "2026-06-02",
+  },
+];
+
+export const categoryGroups = {
+  income: [
+    { name: "Client retainers", detail: "Monthly cashflow from recurring design partnerships." },
+    { name: "Consulting", detail: "Short advisory sprints and workshops." },
+    { name: "Investment income", detail: "Dividends, coupons, and yield from idle cash." },
+  ],
+  expense: [
+    { name: "Living", detail: "Housing, groceries, and local transportation." },
+    { name: "Studio", detail: "Tools, software, space, and contractor costs." },
+    { name: "Travel", detail: "Flights, stays, and conference movement." },
+    { name: "Health", detail: "Insurance, appointments, and wellbeing." },
+    { name: "Experiments", detail: "Courses, prototypes, and side-project materials." },
+  ],
+};
+
+export const reportHighlights = [
+  {
+    label: "Income retention",
+    value: "58%",
+    hint: "What remained after planned spend",
+  },
+  {
+    label: "Largest category",
+    value: "Living",
+    hint: "36% of monthly outflow",
+  },
+  {
+    label: "Card utilization",
+    value: "21%",
+    hint: "Across both active cards",
+  },
+];
+
+export const settingsShowcase = [
+  {
+    title: "Regional defaults",
+    description: "Preferred language, locale, and money formatting for every surface.",
+    items: [
+      { label: "Language", value: "English" },
+      { label: "Currency", value: "Brazilian Real" },
+      { label: "Timezone", value: "America/Sao_Paulo" },
+      { label: "Date format", value: "DD/MM/YYYY" },
+    ],
+  },
+  {
+    title: "Budget behavior",
+    description: "A preview of how monthly planning can be explained without any live form plumbing.",
+    items: [
+      { label: "Budget starts", value: "1st of each month" },
+      { label: "Credit expense timing", value: "Spend month" },
+      { label: "Installment budgeting", value: "Per installment" },
+      { label: "Default period", value: "Current month" },
+    ],
+  },
+  {
+    title: "Display preferences",
+    description: "Static settings cards are enough for layout and hierarchy design work.",
+    items: [
+      { label: "Theme", value: "System default" },
+      { label: "Account ordering", value: "Name (A-Z)" },
+      { label: "Command menu", value: "Enabled" },
+      { label: "Compact motion", value: "Balanced" },
+    ],
+  },
+];

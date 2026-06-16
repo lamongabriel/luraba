@@ -1,9 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Logout03Icon, MoreVerticalIcon } from "@hugeicons/core-free-icons"
+import { MoreVerticalIcon, SparklesIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { motion } from "framer-motion"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -16,26 +16,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { userMenuLinks } from "@/lib/navigation"
-import { queryClient } from "@/lib/query-client"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
 import { Typography } from "@/components/ui/typography"
-import { useAuthStore } from "@/stores/auth.store"
-import type { User } from "@/interfaces/users"
 
 interface NavUserProps {
-  user: User | null
+  user: {
+    name: string
+    email: string
+    role?: string
+  } | null
 }
 
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar()
-  const router = useRouter()
-  const logoutStore = useAuthStore((state) => state.logout)
-
-  const handleLogout = () => {
-    queryClient.clear()
-    logoutStore()
-    router.replace("/login")
-  }
 
   if (!user) return null
 
@@ -53,31 +46,33 @@ export function NavUser({ user }: NavUserProps) {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size="lg" className="rounded-xl px-3 py-2.5">
-              <Avatar className="size-8 rounded-lg">
-                <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
-              </Avatar>
+            <motion.div whileHover={{ y: -1, scale: 1.01 }} whileTap={{ scale: 0.985 }}>
+              <SidebarMenuButton size="lg" className="rounded-xl px-3 py-2.5">
+                <Avatar className="size-8 rounded-lg">
+                  <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
+                </Avatar>
 
-              <div className="grid min-w-0 flex-1 gap-0.5 text-left leading-tight">
-                <Typography
-                  as="span"
-                  truncate
-                  variant="small"
-                  className="text-[0.78rem] font-medium normal-case tracking-normal text-sidebar-foreground"
-                >
-                  {user.name}
-                </Typography>
-                <Typography
-                  as="span"
-                  truncate
-                  variant="small-muted"
-                  className="text-[0.7rem] normal-case tracking-normal text-sidebar-foreground/60"
-                >
-                  {user.email}
-                </Typography>
-              </div>
-              <HugeiconsIcon icon={MoreVerticalIcon} strokeWidth={2} className="ml-auto size-4 text-sidebar-foreground/45" />
-            </SidebarMenuButton>
+                <div className="grid min-w-0 flex-1 gap-0.5 text-left leading-tight">
+                  <Typography
+                    as="span"
+                    truncate
+                    variant="small"
+                    className="text-[0.78rem] font-medium normal-case tracking-normal text-sidebar-foreground"
+                  >
+                    {user.name}
+                  </Typography>
+                  <Typography
+                    as="span"
+                    truncate
+                    variant="small-muted"
+                    className="text-[0.7rem] normal-case tracking-normal text-sidebar-foreground/60"
+                  >
+                    {user.email}
+                  </Typography>
+                </div>
+                <HugeiconsIcon icon={MoreVerticalIcon} strokeWidth={2} className="ml-auto size-4 text-sidebar-foreground/45" />
+              </SidebarMenuButton>
+            </motion.div>
           </DropdownMenuTrigger>
 
           <DropdownMenuContent side={isMobile ? "bottom" : "right"} align="end" sideOffset={8}>
@@ -122,9 +117,11 @@ export function NavUser({ user }: NavUserProps) {
             
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem onClick={handleLogout}>
-              <HugeiconsIcon icon={Logout03Icon} strokeWidth={2} />
-              Log out
+            <DropdownMenuItem asChild>
+              <Link href="/login">
+                <HugeiconsIcon icon={SparklesIcon} strokeWidth={2} />
+                Switch entry screen
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

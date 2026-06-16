@@ -1,35 +1,6 @@
-import type {
-  AccountClassification,
-  AccountHttp,
-  AccountType,
-} from "@/interfaces/http/accounts";
-import type { TransactionType } from "@/interfaces/http/transactions";
-
 const LANGUAGE_TO_LOCALE: Record<string, string> = {
   en: "en-US",
   "pt-BR": "pt-BR",
-};
-
-export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
-  depository: "Depository",
-  loan: "Loan",
-  credit_card: "Credit Card",
-  property: "Property",
-  vehicle: "Vehicle",
-  other_asset: "Other Asset",
-  other_liability: "Other Liability",
-};
-
-export const CLASSIFICATION_LABELS: Record<AccountClassification, string> = {
-  asset: "Assets",
-  liability: "Liabilities",
-};
-
-export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
-  expense: "Expense",
-  income: "Income",
-  transfer: "Transfer",
-  adjustment: "Adjustment",
 };
 
 export function getLocale(language = "en") {
@@ -87,44 +58,10 @@ export function getCurrentMonthKey() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-export function isCreditCardAccount(account: Pick<AccountHttp, "type">) {
-  return account.type === "credit_card";
-}
-
 export function maskCardNumber(last4: string) {
   return `•••• •••• •••• ${last4}`;
 }
 
-export function getTransactionTone(type: TransactionType) {
-  if (type === "income") return "positive";
-  if (type === "expense") return "negative";
-  return "neutral";
-}
-
-export function groupAccounts(accounts: AccountHttp[]) {
-  return {
-    asset: accounts.filter((account) => account.classification === "asset"),
-    liability: accounts.filter((account) => account.classification === "liability"),
-  };
-}
-
 export function sumAmounts(items: Array<{ amount: number }>) {
   return items.reduce((total, item) => total + item.amount, 0);
-}
-
-export function sumAccountBalances(
-  accounts: AccountHttp[],
-  classification: AccountClassification,
-) {
-  return accounts
-    .filter((account) => account.classification === classification)
-    .reduce((total, account) => total + account.balance, 0);
-}
-
-export function sortByDateDescending<T extends { postedDate?: string; createdAt?: string }>(items: T[]) {
-  return [...items].sort((left, right) => {
-    const leftDate = left.postedDate ?? left.createdAt ?? "";
-    const rightDate = right.postedDate ?? right.createdAt ?? "";
-    return rightDate.localeCompare(leftDate);
-  });
 }

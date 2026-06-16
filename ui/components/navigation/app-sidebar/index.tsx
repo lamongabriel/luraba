@@ -3,10 +3,11 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { motion } from "framer-motion"
 
 import { mainNav } from "@/lib/navigation"
+import { HouseholdSwitcher } from "@/components/navigation/app-sidebar/household-switcher"
 import { NavUser } from "@/components/navigation/app-sidebar/nav-user"
-import { Logo } from "@/components/logo"
 import {
   Sidebar,
   SidebarContent,
@@ -16,19 +17,33 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { Typography } from "@/components/ui/typography"
-import { useAuthStore } from "@/stores/auth.store"
+import { showcaseAuthSession, showcaseHouseholds, showcaseUser } from "@/lib/mock-data"
+
+const sidebarItemTransition = {
+  damping: 22,
+  stiffness: 320,
+  type: "spring" as const,
+}
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const user = useAuthStore((state) => state.user)
 
   return (
     <Sidebar variant="sidebar">
-      <SidebarHeader className="px-4 pt-4 pb-6">
-        <Logo />
+      <SidebarHeader className="px-4 pt-4 pb-3">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.28, ease: "easeOut" }}
+        >
+          <HouseholdSwitcher
+            user={showcaseAuthSession.user}
+            initialHousehold={showcaseAuthSession.household}
+            households={showcaseHouseholds}
+          />
+        </motion.div>
       </SidebarHeader>
       
       <SidebarContent>
@@ -39,14 +54,36 @@ export function AppSidebar() {
 
               return (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
-                    <Link href={item.href}>
-                      <HugeiconsIcon icon={item.icon} strokeWidth={2} />
-                      <Typography as="span" variant="sidebar-title">
-                        {item.title}
-                      </Typography>
-                    </Link>
-                  </SidebarMenuButton>
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.04 * (mainNav.indexOf(item) + 1), duration: 0.24, ease: "easeOut" }}
+                    whileHover={{ x: 3 }}
+                    whileTap={{ scale: 0.985 }}
+                  >
+                    <SidebarMenuButton
+                      asChild
+                      isActive={active}
+                      tooltip={item.title}
+                      className="relative overflow-hidden bg-transparent shadow-none hover:bg-sidebar-accent/55"
+                    >
+                      <Link href={item.href}>
+                        {active ? (
+                          <motion.span
+                            layoutId="sidebar-active-item"
+                            className="absolute inset-0 rounded-[calc(var(--radius-sm)+2px)] bg-sidebar-accent/80"
+                            transition={sidebarItemTransition}
+                          />
+                        ) : null}
+                        <span className="relative z-10 flex items-center gap-2">
+                          <HugeiconsIcon icon={item.icon} strokeWidth={2} />
+                          <Typography as="span" variant="sidebar-title">
+                            {item.title}
+                          </Typography>
+                        </span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </motion.div>
                 </SidebarMenuItem>
               )
             })}
@@ -55,7 +92,13 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <NavUser user={user} />
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18, duration: 0.26, ease: "easeOut" }}
+        >
+          <NavUser user={showcaseUser} />
+        </motion.div>
       </SidebarFooter>
     </Sidebar>
   )
