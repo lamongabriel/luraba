@@ -130,6 +130,21 @@ export const showcaseUser = {
   language: "en",
 } as const;
 
+export const netWorthHistory = [
+  { month: "2025-07", amount: 3421180 },
+  { month: "2025-08", amount: 3514460 },
+  { month: "2025-09", amount: 3479920 },
+  { month: "2025-10", amount: 3632840 },
+  { month: "2025-11", amount: 3711180 },
+  { month: "2025-12", amount: 3824450 },
+  { month: "2026-01", amount: 3893200 },
+  { month: "2026-02", amount: 4017740 },
+  { month: "2026-03", amount: 3956620 },
+  { month: "2026-04", amount: 4129080 },
+  { month: "2026-05", amount: 4237710 },
+  { month: "2026-06", amount: 4312840 },
+] as const;
+
 export const dashboardMetrics = [
   {
     label: "Net worth",

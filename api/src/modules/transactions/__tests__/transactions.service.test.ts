@@ -5,6 +5,7 @@ import { entriesTable } from '@/db/schemas/entries.schema';
 import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
 import * as accountsService from '@/modules/accounts/accounts.service';
 import * as categoriesService from '@/modules/categories/categories.service';
+import * as creditCardsService from '@/modules/credit-cards/credit-cards.service';
 import { fxService } from '@/modules/fx/fx.service';
 import * as merchantsService from '@/modules/merchants/merchants.service';
 import * as paymentMethodsService from '@/modules/payment-methods/payment-methods.service';
@@ -14,8 +15,10 @@ import { createAuthenticatedContext } from '@/test/auth';
 import {
   buildAccountInput,
   buildCategoryInput,
+  buildCreditCardInput,
   buildMerchantInput,
   buildTagInput,
+  createBalanceEntryForAccount,
 } from '@/test/factories';
 import * as transactionsService from '../transactions.service';
 
@@ -370,8 +373,92 @@ describe('transactions service', () => {
     });
 
     await expect(transactionsService.listTransactions(context.householdContext)).resolves.toEqual([
-      expect.objectContaining({ id: transaction.id, description: 'Lunch' }),
+      expect.objectContaining({
+        id: transaction.id,
+        rowId: transaction.id,
+        rowKind: 'transaction',
+        description: 'Lunch',
+      }),
     ]);
+  });
+
+  it('projects credit card purchases as installment feed rows and keeps payments as transfers', async () => {
+    const context = await createAuthenticatedContext();
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Electronics', type: 'expense' }),
+    );
+    const sourceAccount = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+    );
+    await createBalanceEntryForAccount({
+      householdId: context.household.id,
+      accountId: sourceAccount.id,
+      amount: 500_000,
+    });
+
+    const card = await creditCardsService.createCreditCard(
+      context.householdContext,
+      buildCreditCardInput({ name: 'Visa Gold', closingDay: 25, dueDay: 5 }),
+    );
+
+    const purchase = await creditCardsService.createPurchase(context.householdContext, card.id, {
+      description: 'TV',
+      amount: 120_000,
+      categoryId: category.id,
+      purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
+      postedDate: new Date('2026-04-29T00:00:00.000Z'),
+      installmentCount: 3,
+    });
+    const payment = await creditCardsService.createPayment(context.householdContext, card.id, {
+      amount: 40_000,
+      fromAccountId: sourceAccount.id,
+      paymentDate: new Date('2026-06-01T00:00:00.000Z'),
+      postedDate: new Date('2026-06-01T00:00:00.000Z'),
+      description: 'Visa payment',
+    });
+
+    const feed = await transactionsService.listTransactions(context.householdContext);
+
+    expect(feed).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: payment.transactionId,
+          rowId: payment.transactionId,
+          rowKind: 'transaction',
+          originType: 'transfer',
+          creditCardId: card.id,
+          excludedFromSpending: true,
+        }),
+        expect.objectContaining({
+          id: purchase.transactionId,
+          rowId: purchase.installments[0].installmentId,
+          rowKind: 'credit_card_installment',
+          originType: 'credit_card_installment',
+          creditCardId: card.id,
+          installmentNumber: 1,
+          installmentCount: 3,
+          postedDate: '2026-05-25',
+          excludedFromSpending: false,
+        }),
+        expect.objectContaining({
+          rowId: purchase.installments[1].installmentId,
+          rowKind: 'credit_card_installment',
+          installmentNumber: 2,
+          postedDate: '2026-06-25',
+        }),
+        expect.objectContaining({
+          rowId: purchase.installments[2].installmentId,
+          rowKind: 'credit_card_installment',
+          installmentNumber: 3,
+          postedDate: '2026-07-25',
+        }),
+      ]),
+    );
+    expect(
+      feed.find((row) => row.id === purchase.transactionId && row.rowKind === 'transaction'),
+    ).toBeUndefined();
   });
 
   it('creates adjustment transactions by setting the balance at the start of the posted date', async () => {

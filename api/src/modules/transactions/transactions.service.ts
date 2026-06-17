@@ -16,13 +16,16 @@ import { tagsRepository } from '@/modules/tags/tags.repository';
 import { NotFoundError, ValidationError } from '@/shared/errors';
 import { startOfMonth as toBudgetMonth } from '@/shared/lib/date';
 import {
+  mapCreditCardInstallmentRowsToFeedRows,
   mapDetailedRows,
+  mapTransactionResponsesToFeedRows,
   resolveTransferAmounts,
   toRawLedgerBalance,
 } from './transactions.helpers';
 import * as txRepository from './transactions.repository';
 import type {
   CreateTransactionDto,
+  TransactionFeedRow,
   TransactionResponse,
   UpdateTransactionRequestBody,
 } from './transactions.types';
@@ -487,9 +490,49 @@ export async function createTransaction(
   }
 }
 
-export async function listTransactions(context: HouseholdContext): Promise<TransactionResponse[]> {
-  const rows = await txRepository.listDetailedByHouseholdId(context.householdId);
-  return mapDetailedRows(rows);
+function sortFeedRows(rows: TransactionFeedRow[]): TransactionFeedRow[] {
+  return [...rows].sort((left, right) => {
+    if (left.postedDate !== right.postedDate) {
+      return right.postedDate.localeCompare(left.postedDate);
+    }
+
+    const createdAtDiff = right.createdAt.getTime() - left.createdAt.getTime();
+    if (createdAtDiff !== 0) {
+      return createdAtDiff;
+    }
+
+    return right.rowId.localeCompare(left.rowId);
+  });
+}
+
+export async function listTransactions(context: HouseholdContext): Promise<TransactionFeedRow[]> {
+  const [standardRows, installmentRows] = await Promise.all([
+    txRepository.listDetailedByHouseholdId(context.householdId),
+    txRepository.listCreditCardInstallmentFeedRows(context.householdId),
+  ]);
+
+  const standardTransactions = mapDetailedRows(standardRows);
+  const accountIds = Array.from(
+    new Set(
+      standardTransactions.flatMap((transaction) =>
+        [transaction.accountId, transaction.toAccountId].filter((accountId): accountId is string =>
+          Boolean(accountId),
+        ),
+      ),
+    ),
+  );
+  const creditCardMappings = await txRepository.listCreditCardIdsByAccountIds(
+    context.householdId,
+    accountIds,
+  );
+  const creditCardIdsByAccountId = new Map(
+    creditCardMappings.map((mapping) => [mapping.accountId, mapping.creditCardId]),
+  );
+
+  return sortFeedRows([
+    ...mapTransactionResponsesToFeedRows(standardTransactions, creditCardIdsByAccountId),
+    ...mapCreditCardInstallmentRowsToFeedRows(installmentRows),
+  ]);
 }
 
 // -----------------------------------------------------------------------------

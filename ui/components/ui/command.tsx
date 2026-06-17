@@ -105,7 +105,7 @@ function CommandGroup({
   return (
     <div data-slot="command-group" className={cn("px-1 pb-2", className)} {...props}>
       {heading ? (
-        <div className={cn("px-2 pb-2 pt-1", typographyVariants({ variant: "label" }))}>
+        <div className={cn("px-2 pb-2 pt-3", typographyVariants({ variant: "label" }))}>
           {heading}
         </div>
       ) : null}

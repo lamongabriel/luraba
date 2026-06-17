@@ -22,6 +22,7 @@ import type {
   AccountClassification,
   AccountDetails,
   AccountRecord,
+  AccountType,
   CreateAccountRequestBody,
   UpdateAccountRequestBody,
 } from './accounts.types';
@@ -53,6 +54,107 @@ function mapAccountDetails(account: AccountRecord, balance: number): AccountDeta
   };
 }
 
+type CreateAccountRecordInput = {
+  name: string;
+  institutionName?: string;
+  institutionDomain?: string;
+  notes?: string;
+  classification: AccountClassification;
+  type: AccountType;
+  currencyId: string;
+};
+
+type UpdateAccountRecordInput = {
+  name?: string;
+  institutionName?: string | null;
+  institutionDomain?: string | null;
+  notes?: string | null;
+};
+
+async function resolveInstitutionBranding(
+  context: HouseholdContext,
+  institutionDomain: string | undefined,
+): Promise<{ institutionDomain: string | undefined; institutionLogoUrl: string | undefined }> {
+  const normalizedInstitutionDomain = institutionDomain
+    ? normalizeBrandDomain(institutionDomain)
+    : undefined;
+
+  let institutionLogoUrl: string | undefined;
+  if (normalizedInstitutionDomain) {
+    const brandfetchClientId = await brandfetchService.getBrandfetchClientId(context);
+    if (brandfetchClientId) {
+      institutionLogoUrl = buildBrandfetchLogoUrl(normalizedInstitutionDomain, brandfetchClientId);
+    }
+  }
+
+  return {
+    institutionDomain: normalizedInstitutionDomain,
+    institutionLogoUrl,
+  };
+}
+
+async function resolveUpdatedInstitutionBranding(
+  context: HouseholdContext,
+  institutionDomain: string | null | undefined,
+): Promise<{
+  institutionDomain: string | null | undefined;
+  institutionLogoUrl: string | null | undefined;
+}> {
+  if (institutionDomain === null) {
+    return {
+      institutionDomain: null,
+      institutionLogoUrl: null,
+    };
+  }
+
+  const resolved = await resolveInstitutionBranding(context, institutionDomain);
+  return {
+    institutionDomain: resolved.institutionDomain,
+    institutionLogoUrl: institutionDomain ? (resolved.institutionLogoUrl ?? null) : undefined,
+  };
+}
+
+async function buildUpdatedAccountValues(
+  context: HouseholdContext,
+  values: UpdateAccountRecordInput,
+): Promise<UpdateAccountRecordInput & { institutionLogoUrl?: string | null }> {
+  const institution = await resolveUpdatedInstitutionBranding(context, values.institutionDomain);
+
+  return {
+    ...values,
+    institutionDomain: institution.institutionDomain,
+    institutionLogoUrl: institution.institutionLogoUrl,
+  };
+}
+
+export async function createAccountRecordInTransaction(
+  tx: Parameters<typeof accountsRepository.createInTransaction>[0],
+  context: HouseholdContext,
+  values: CreateAccountRecordInput,
+): Promise<AccountRecord> {
+  const institution = await resolveInstitutionBranding(context, values.institutionDomain);
+
+  return accountsRepository.createInTransaction(tx, context, {
+    ...values,
+    institutionDomain: institution.institutionDomain,
+    institutionLogoUrl: institution.institutionLogoUrl,
+  });
+}
+
+export async function updateAccountRecordInTransaction(
+  tx: Parameters<typeof accountsRepository.updateInTransaction>[0],
+  context: HouseholdContext,
+  accountId: string,
+  values: UpdateAccountRecordInput,
+): Promise<AccountRecord | undefined> {
+  return accountsRepository.updateInTransaction(
+    tx,
+    context,
+    accountId,
+    await buildUpdatedAccountValues(context, values),
+  );
+}
+
 export async function createAccount(
   context: HouseholdContext,
   dto: CreateAccountRequestBody,
@@ -63,24 +165,12 @@ export async function createAccount(
   const existing = await accountsRepository.findByHouseholdAndName(context, dto.name);
   if (existing) throw new ConflictError('An account with this name already exists');
   const classification = ACCOUNT_TYPE_TO_CLASSIFICATION[dto.type];
-  const institutionDomain = dto.institutionDomain
-    ? normalizeBrandDomain(dto.institutionDomain)
-    : undefined;
-
-  let institutionLogoUrl: string | undefined;
-  if (institutionDomain) {
-    const brandfetchClientId = await brandfetchService.getBrandfetchClientId(context);
-    if (brandfetchClientId) {
-      institutionLogoUrl = buildBrandfetchLogoUrl(institutionDomain, brandfetchClientId);
-    }
-  }
 
   return db.transaction(async (tx) => {
-    const account = await accountsRepository.createInTransaction(tx, context, {
+    const account = await createAccountRecordInTransaction(tx, context, {
       name: dto.name,
       institutionName: dto.institutionName,
-      institutionDomain,
-      institutionLogoUrl,
+      institutionDomain: dto.institutionDomain,
       notes: dto.notes,
       classification,
       type: dto.type,
@@ -158,30 +248,16 @@ export async function updateAccount(
     }
   }
 
-  const institutionDomain =
-    dto.institutionDomain === null
-      ? null
-      : dto.institutionDomain
-        ? normalizeBrandDomain(dto.institutionDomain)
-        : undefined;
-
-  let institutionLogoUrl: string | null | undefined;
-  if (institutionDomain === null) {
-    institutionLogoUrl = null;
-  } else if (institutionDomain) {
-    const brandfetchClientId = await brandfetchService.getBrandfetchClientId(context);
-    institutionLogoUrl = brandfetchClientId
-      ? buildBrandfetchLogoUrl(institutionDomain, brandfetchClientId)
-      : null;
-  }
-
-  const updated = await accountsRepository.update(accountId, context, {
-    name: dto.name,
-    institutionName: dto.institutionName,
-    institutionDomain,
-    institutionLogoUrl,
-    notes: dto.notes,
-  });
+  const updated = await accountsRepository.update(
+    accountId,
+    context,
+    await buildUpdatedAccountValues(context, {
+      name: dto.name,
+      institutionName: dto.institutionName,
+      institutionDomain: dto.institutionDomain,
+      notes: dto.notes,
+    }),
+  );
 
   if (!updated) {
     throw new NotFoundError('Account');

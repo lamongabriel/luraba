@@ -19,17 +19,21 @@ body:json {
     "name": "Primary Credit Card",
     "currencyCode": "{{currencyCode}}",
     "brand": "{{creditCardBrand}}",
-    "productType": "credit",
     "last4": "{{creditCardLast4}}",
     "color": "{{creditCardColor}}",
     "closingDay": {{creditCardClosingDay}},
-    "dueDay": {{creditCardDueDay}}
+    "dueDay": {{creditCardDueDay}},
+    "creditLimitAmount": {{creditCardLimitAmount}}
   }
 }
 
 tests {
   test("credit card returns 201", function() {
     expect(res.status).to.equal(201);
+  });
+
+  test("credit card stores the configured limit", function() {
+    expect(res.body?.data?.creditLimitAmount).to.equal(Number(bru.getEnvVar("creditCardLimitAmount")));
   });
 }
 

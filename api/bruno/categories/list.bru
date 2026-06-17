@@ -1,11 +1,13 @@
 meta {
   name: list categories
   type: http
-  seq: 2
+  seq: 1
 }
 
 get {
   url: {{baseUrl}}/api/v1/categories
+  body: none
+  auth: none
 }
 
 headers {
@@ -17,13 +19,13 @@ script:post-response {
   if (!Array.isArray(categories)) {
     return;
   }
-
+  
   const expense = categories.find((category) => category.type === "expense");
   if (expense?.id) {
     bru.setEnvVar("categoryId", expense.id);
     bru.setEnvVar("expenseCategoryId", expense.id);
   }
-
+  
   const income = categories.find((category) => category.type === "income");
   if (income?.id) {
     bru.setEnvVar("incomeCategoryId", income.id);

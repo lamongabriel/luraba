@@ -1,4 +1,9 @@
 import type { HouseholdRole } from '@/shared/validation/households';
+import type {
+  CreditExpenseTiming,
+  CreditInstallmentBudgetMode,
+  Timezone,
+} from '@/shared/validation/preferences';
 
 export type { HouseholdRole };
 
@@ -82,6 +87,9 @@ export type HouseholdContext = {
   userId: string;
   role: HouseholdRole;
   permissions: HouseholdPermission[];
+  timezone: Timezone;
+  creditExpenseTiming: CreditExpenseTiming;
+  creditInstallmentBudgetMode: CreditInstallmentBudgetMode;
 };
 
 export function getPermissionsForRole(role: HouseholdRole): HouseholdPermission[] {

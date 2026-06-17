@@ -3,15 +3,17 @@ import { describe, expect, it } from 'vitest';
 import app from '@/app';
 import * as accountsService from '@/modules/accounts/accounts.service';
 import * as categoriesService from '@/modules/categories/categories.service';
+import * as creditCardsService from '@/modules/credit-cards/credit-cards.service';
 import * as tagsService from '@/modules/tags/tags.service';
 import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
 import {
   buildAccountInput,
   buildCategoryInput,
+  buildCreditCardInput,
   buildTagInput,
-  createHousehold,
-  createHouseholdMembership,
+  createBalanceEntryForAccount,
 } from '@/test/factories';
+import * as transactionsService from '../transactions.service';
 
 describe('transactions routes', () => {
   it('GET /api/v1/transactions requires authentication', async () => {
@@ -20,6 +22,220 @@ describe('transactions routes', () => {
     expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
     expect(response.body.error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('GET /api/v1/transactions returns tags on listed transactions', async () => {
+    const context = await createAuthenticatedContext();
+
+    const account = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({
+        name: 'Tagged Checking',
+        type: 'depository',
+        currencyCode: 'BRL',
+      }),
+    );
+
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({
+        name: 'Travel',
+        type: 'expense',
+      }),
+    );
+
+    const tripTag = await tagsService.createTag(
+      context.householdContext,
+      buildTagInput({ name: 'Trip', color: '#16A34A', icon: 'Ticket01Icon' }),
+    );
+
+    await request(app)
+      .post('/api/v1/transactions')
+      .set(createAuthHeaders(context.token, context.household.id))
+      .send({
+        type: 'expense',
+        description: 'Bus ticket',
+        amount: 25_000,
+        currencyCode: 'BRL',
+        paymentMethodCode: 'pix',
+        accountId: account.id,
+        categoryId: category.id,
+        tagIds: [tripTag.id],
+        purchaseDate: '2026-03-24',
+        postedDate: '2026-03-24',
+      });
+
+    const response = await request(app)
+      .get('/api/v1/transactions')
+      .set(createAuthHeaders(context.token, context.household.id));
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual([
+      expect.objectContaining({
+        rowKind: 'transaction',
+        originType: 'expense',
+        tags: [expect.objectContaining({ name: 'Trip' })],
+      }),
+    ]);
+  });
+
+  it('GET /api/v1/transactions projects credit card installments and payments', async () => {
+    const context = await createAuthenticatedContext();
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Electronics', type: 'expense' }),
+    );
+    const sourceAccount = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({
+        name: 'Main Checking',
+        type: 'depository',
+        currencyCode: 'BRL',
+      }),
+    );
+    await createBalanceEntryForAccount({
+      householdId: context.household.id,
+      accountId: sourceAccount.id,
+      amount: 500_000,
+    });
+
+    const card = await creditCardsService.createCreditCard(
+      context.householdContext,
+      buildCreditCardInput({
+        name: 'Nubank',
+        closingDay: 25,
+        dueDay: 5,
+      }),
+    );
+
+    const purchase = await creditCardsService.createPurchase(context.householdContext, card.id, {
+      description: 'TV',
+      amount: 120_000,
+      categoryId: category.id,
+      purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
+      postedDate: new Date('2026-04-29T00:00:00.000Z'),
+      installmentCount: 3,
+    });
+
+    const payment = await creditCardsService.createPayment(context.householdContext, card.id, {
+      amount: 40_000,
+      fromAccountId: sourceAccount.id,
+      paymentDate: new Date('2026-06-01T00:00:00.000Z'),
+      postedDate: new Date('2026-06-01T00:00:00.000Z'),
+      description: 'Nubank payment',
+    });
+
+    const response = await request(app)
+      .get('/api/v1/transactions')
+      .set(createAuthHeaders(context.token, context.household.id));
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: payment.transactionId,
+          rowId: payment.transactionId,
+          rowKind: 'transaction',
+          originType: 'transfer',
+          creditCardId: card.id,
+          excludedFromSpending: true,
+          description: 'Nubank payment',
+          toAccountId: card.accountId,
+        }),
+        expect.objectContaining({
+          id: purchase.transactionId,
+          rowId: purchase.installments[0].installmentId,
+          rowKind: 'credit_card_installment',
+          originType: 'credit_card_installment',
+          creditCardId: card.id,
+          purchaseId: purchase.purchaseId,
+          installmentId: purchase.installments[0].installmentId,
+          installmentNumber: 1,
+          installmentCount: 3,
+          amount: 40_000,
+          postedDate: '2026-05-25',
+          accountId: card.accountId,
+          excludedFromSpending: false,
+        }),
+        expect.objectContaining({
+          id: purchase.transactionId,
+          rowId: purchase.installments[1].installmentId,
+          rowKind: 'credit_card_installment',
+          installmentNumber: 2,
+          installmentCount: 3,
+          amount: 40_000,
+          postedDate: '2026-06-25',
+        }),
+        expect.objectContaining({
+          id: purchase.transactionId,
+          rowId: purchase.installments[2].installmentId,
+          rowKind: 'credit_card_installment',
+          installmentNumber: 3,
+          installmentCount: 3,
+          amount: 40_000,
+          postedDate: '2026-07-25',
+        }),
+      ]),
+    );
+    expect(
+      response.body.data.find(
+        (row: { id: string; rowKind: string }) =>
+          row.id === purchase.transactionId && row.rowKind === 'transaction',
+      ),
+    ).toBeUndefined();
+  });
+
+  it('GET /api/v1/transactions returns only transactions from the active household', async () => {
+    const context = await createAuthenticatedContext();
+    const otherContext = await createAuthenticatedContext();
+
+    const account = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+    );
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Food', type: 'expense' }),
+    );
+    const otherAccount = await accountsService.createAccount(
+      otherContext.householdContext,
+      buildAccountInput({ name: 'Other Checking', type: 'depository', currencyCode: 'BRL' }),
+    );
+    const otherCategory = await categoriesService.createCategory(
+      otherContext.householdContext,
+      buildCategoryInput({ name: 'Other Food', type: 'expense' }),
+    );
+
+    await transactionsService.createTransaction(context.householdContext, {
+      type: 'expense',
+      description: 'Lunch',
+      amount: 4_500,
+      currencyCode: 'BRL',
+      paymentMethodCode: 'pix',
+      accountId: account.id,
+      categoryId: category.id,
+      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
+      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+    });
+    await transactionsService.createTransaction(otherContext.householdContext, {
+      type: 'expense',
+      description: 'Other lunch',
+      amount: 9_000,
+      currencyCode: 'BRL',
+      paymentMethodCode: 'pix',
+      accountId: otherAccount.id,
+      categoryId: otherCategory.id,
+      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
+      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+    });
+
+    const response = await request(app)
+      .get('/api/v1/transactions')
+      .set(createAuthHeaders(context.token, context.household.id));
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual([expect.objectContaining({ description: 'Lunch' })]);
   });
 
   it('POST /api/v1/transactions creates an expense with multiple tags', async () => {
@@ -223,156 +439,6 @@ describe('transactions routes', () => {
     expect(response.body.success).toBe(false);
   });
 
-  it('GET /api/v1/transactions returns tags on listed transactions', async () => {
-    const context = await createAuthenticatedContext();
-
-    const account = await accountsService.createAccount(
-      context.householdContext,
-      buildAccountInput({
-        name: 'Checking',
-        type: 'depository',
-        currencyCode: 'BRL',
-      }),
-    );
-
-    const category = await categoriesService.createCategory(
-      context.householdContext,
-      buildCategoryInput({
-        name: 'Travel',
-        type: 'expense',
-      }),
-    );
-
-    const tripTag = await tagsService.createTag(
-      context.householdContext,
-      buildTagInput({ name: 'Gramado Trip', color: '#16A34A', icon: 'Ticket01Icon' }),
-    );
-    const familyTag = await tagsService.createTag(
-      context.householdContext,
-      buildTagInput({ name: 'Family', color: '#F97316', icon: 'UserGroupIcon' }),
-    );
-
-    await request(app)
-      .post('/api/v1/transactions')
-      .set(createAuthHeaders(context.token, context.household.id))
-      .send({
-        type: 'expense',
-        description: 'Bus ticket to Gramado',
-        amount: 25_000,
-        currencyCode: 'BRL',
-        paymentMethodCode: 'pix',
-        accountId: account.id,
-        categoryId: category.id,
-        tagIds: [tripTag.id, familyTag.id],
-        purchaseDate: '2026-03-24',
-        postedDate: '2026-03-24',
-      });
-
-    const response = await request(app)
-      .get('/api/v1/transactions')
-      .set(createAuthHeaders(context.token, context.household.id));
-
-    expect(response.status).toBe(200);
-    expect(response.body.success).toBe(true);
-    expect(response.body.data[0].tags).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ name: 'Gramado Trip', color: '#16A34A', icon: 'Ticket01Icon' }),
-        expect.objectContaining({ name: 'Family', color: '#F97316', icon: 'UserGroupIcon' }),
-      ]),
-    );
-  });
-
-  it('GET /api/v1/transactions returns only transactions from the active household', async () => {
-    const context = await createAuthenticatedContext();
-    const secondHousehold = await createHousehold(context.user.id, {
-      name: 'Second Household',
-      createdByUserId: context.user.id,
-    });
-    await createHouseholdMembership(secondHousehold.id, context.user.id, 'owner');
-
-    const primaryAccount = await accountsService.createAccount(
-      context.householdContext,
-      buildAccountInput({
-        name: 'Primary Checking',
-        type: 'depository',
-        currencyCode: 'BRL',
-      }),
-    );
-    const primaryCategory = await categoriesService.createCategory(
-      context.householdContext,
-      buildCategoryInput({
-        name: 'Primary Food',
-        type: 'expense',
-      }),
-    );
-
-    const secondHouseholdContext = {
-      ...context.householdContext,
-      householdId: secondHousehold.id,
-    };
-    const secondaryAccount = await accountsService.createAccount(
-      secondHouseholdContext,
-      buildAccountInput({
-        name: 'Secondary Checking',
-        type: 'depository',
-        currencyCode: 'BRL',
-      }),
-    );
-    const secondaryCategory = await categoriesService.createCategory(
-      secondHouseholdContext,
-      buildCategoryInput({
-        name: 'Secondary Food',
-        type: 'expense',
-      }),
-    );
-
-    await request(app)
-      .post('/api/v1/transactions')
-      .set(createAuthHeaders(context.token, context.household.id))
-      .send({
-        type: 'expense',
-        description: 'Primary lunch',
-        amount: 2_500,
-        currencyCode: 'BRL',
-        paymentMethodCode: 'pix',
-        accountId: primaryAccount.id,
-        categoryId: primaryCategory.id,
-        purchaseDate: '2026-03-24',
-        postedDate: '2026-03-24',
-      });
-
-    await request(app)
-      .post('/api/v1/transactions')
-      .set(createAuthHeaders(context.token, secondHousehold.id))
-      .send({
-        type: 'expense',
-        description: 'Secondary lunch',
-        amount: 4_500,
-        currencyCode: 'BRL',
-        paymentMethodCode: 'pix',
-        accountId: secondaryAccount.id,
-        categoryId: secondaryCategory.id,
-        purchaseDate: '2026-03-24',
-        postedDate: '2026-03-24',
-      });
-
-    const primaryResponse = await request(app)
-      .get('/api/v1/transactions')
-      .set(createAuthHeaders(context.token, context.household.id));
-
-    expect(primaryResponse.status).toBe(200);
-    expect(primaryResponse.body.data).toHaveLength(1);
-    expect(primaryResponse.body.data[0].description).toBe('Primary lunch');
-
-    const secondaryResponse = await request(app)
-      .get('/api/v1/transactions')
-      .set(createAuthHeaders(context.token, secondHousehold.id));
-
-    expect(secondaryResponse.status).toBe(200);
-    expect(secondaryResponse.body.data).toHaveLength(1);
-    expect(secondaryResponse.body.data[0].description).toBe('Secondary lunch');
-  });
-
   it('PATCH /api/v1/transactions/:id updates metadata', async () => {
     const context = await createAuthenticatedContext();
 
@@ -523,7 +589,7 @@ describe('transactions routes', () => {
     expect(deleteResponse.status).toBe(204);
 
     const listResponse = await request(app)
-      .get('/api/v1/transactions')
+      .get(`/api/v1/accounts/${account.id}/transactions`)
       .set(createAuthHeaders(context.token, context.household.id));
 
     expect(listResponse.status).toBe(200);

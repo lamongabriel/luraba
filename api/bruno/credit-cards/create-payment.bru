@@ -29,3 +29,9 @@ tests {
     expect(res.status).to.equal(201);
   });
 }
+
+script:post-response {
+  if (res.body?.data?.paymentId) {
+    bru.setEnvVar("creditCardPaymentId", res.body.data.paymentId);
+  }
+}

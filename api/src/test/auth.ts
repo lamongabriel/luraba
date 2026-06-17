@@ -38,6 +38,9 @@ export async function createAuthenticatedContext(
     userId: user.id,
     role,
     permissions: getPermissionsForRole(role),
+    timezone: household.timezone,
+    creditExpenseTiming: household.creditExpenseTiming,
+    creditInstallmentBudgetMode: household.creditInstallmentBudgetMode,
   });
 
   return {

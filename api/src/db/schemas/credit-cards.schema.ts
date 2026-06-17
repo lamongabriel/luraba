@@ -27,9 +27,7 @@ export const creditCardsTable = pgTable(
     color: varchar({ length: 32 }),
     closingDay: integer('closing_day').notNull(),
     dueDay: integer('due_day').notNull(),
-    unappliedCreditAmount: bigint('unapplied_credit_amount', { mode: 'number' })
-      .notNull()
-      .default(0),
+    creditLimitAmount: bigint('credit_limit_amount', { mode: 'number' }).notNull().default(-1),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

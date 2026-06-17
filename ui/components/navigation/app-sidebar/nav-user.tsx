@@ -46,33 +46,31 @@ export function NavUser({ user }: NavUserProps) {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <motion.div whileHover={{ y: -1, scale: 1.01 }} whileTap={{ scale: 0.985 }}>
-              <SidebarMenuButton size="lg" className="rounded-xl px-3 py-2.5">
-                <Avatar className="size-8 rounded-lg">
-                  <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
-                </Avatar>
+            <SidebarMenuButton size="lg" className="rounded-xl px-3 py-2.5">
+              <Avatar className="size-8 rounded-lg">
+                <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
+              </Avatar>
 
-                <div className="grid min-w-0 flex-1 gap-0.5 text-left leading-tight">
-                  <Typography
-                    as="span"
-                    truncate
-                    variant="small"
-                    className="text-[0.78rem] font-medium normal-case tracking-normal text-sidebar-foreground"
-                  >
-                    {user.name}
-                  </Typography>
-                  <Typography
-                    as="span"
-                    truncate
-                    variant="small-muted"
-                    className="text-[0.7rem] normal-case tracking-normal text-sidebar-foreground/60"
-                  >
-                    {user.email}
-                  </Typography>
-                </div>
-                <HugeiconsIcon icon={MoreVerticalIcon} strokeWidth={2} className="ml-auto size-4 text-sidebar-foreground/45" />
-              </SidebarMenuButton>
-            </motion.div>
+              <div className="grid min-w-0 flex-1 gap-0.5 text-left leading-tight">
+                <Typography
+                  as="span"
+                  truncate
+                  variant="small"
+                  className="text-[0.78rem] font-medium normal-case tracking-normal text-sidebar-foreground"
+                >
+                  {user.name}
+                </Typography>
+                <Typography
+                  as="span"
+                  truncate
+                  variant="small-muted"
+                  className="text-[0.7rem] normal-case tracking-normal text-sidebar-foreground/60"
+                >
+                  {user.email}
+                </Typography>
+              </div>
+              <HugeiconsIcon icon={MoreVerticalIcon} strokeWidth={2} className="ml-auto size-4 text-sidebar-foreground/45" />
+            </SidebarMenuButton>
           </DropdownMenuTrigger>
 
           <DropdownMenuContent side={isMobile ? "bottom" : "right"} align="end" sideOffset={8}>
@@ -114,9 +112,9 @@ export function NavUser({ user }: NavUserProps) {
                 </DropdownMenuItem>
               ))}
             </DropdownMenuGroup>
-            
+
             <DropdownMenuSeparator />
-            
+
             <DropdownMenuItem asChild>
               <Link href="/login">
                 <HugeiconsIcon icon={SparklesIcon} strokeWidth={2} />

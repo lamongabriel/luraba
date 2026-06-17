@@ -6,7 +6,7 @@ import {
   hasHouseholdPermission,
 } from '@/config/permissions';
 import { db } from '@/db';
-import { householdMembersTable } from '@/db/schemas/households.schema';
+import { householdMembersTable, householdsTable } from '@/db/schemas/households.schema';
 import * as householdsService from '@/modules/households/households.service';
 import { verifyAccessToken } from '@/shared/auth';
 import { ForbiddenError, UnauthorizedError } from '@/shared/errors';
@@ -77,8 +77,14 @@ async function resolveHousehold(
     requestedHouseholdId ?? (await householdsService.createDefaultHouseholdForUser(user.id));
 
   const rows = await db
-    .select({ role: householdMembersTable.role })
+    .select({
+      role: householdMembersTable.role,
+      timezone: householdsTable.timezone,
+      creditExpenseTiming: householdsTable.creditExpenseTiming,
+      creditInstallmentBudgetMode: householdsTable.creditInstallmentBudgetMode,
+    })
     .from(householdMembersTable)
+    .innerJoin(householdsTable, eq(householdsTable.id, householdMembersTable.householdId))
     .where(
       and(
         eq(householdMembersTable.householdId, householdId),
@@ -96,6 +102,9 @@ async function resolveHousehold(
     userId: user.id,
     role: membership.role,
     permissions: getPermissionsForRole(membership.role),
+    timezone: membership.timezone,
+    creditExpenseTiming: membership.creditExpenseTiming,
+    creditInstallmentBudgetMode: membership.creditInstallmentBudgetMode,
   };
 
   return req.household;

@@ -30,3 +30,9 @@ tests {
     expect(res.status).to.equal(201);
   });
 }
+
+script:post-response {
+  if (res.body?.data?.purchaseId) {
+    bru.setEnvVar("creditCardPurchaseId", res.body.data.purchaseId);
+  }
+}

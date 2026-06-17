@@ -33,19 +33,13 @@ export function AppSidebar() {
   return (
     <Sidebar variant="sidebar">
       <SidebarHeader className="px-4 pt-4 pb-3">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, ease: "easeOut" }}
-        >
-          <HouseholdSwitcher
-            user={showcaseAuthSession.user}
-            initialHousehold={showcaseAuthSession.household}
-            households={showcaseHouseholds}
-          />
-        </motion.div>
+        <HouseholdSwitcher
+          user={showcaseAuthSession.user}
+          initialHousehold={showcaseAuthSession.household}
+          households={showcaseHouseholds}
+        />
       </SidebarHeader>
-      
+
       <SidebarContent>
         <SidebarGroup className="px-4">
           <SidebarMenu className="gap-2">
@@ -92,13 +86,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.18, duration: 0.26, ease: "easeOut" }}
-        >
-          <NavUser user={showcaseUser} />
-        </motion.div>
+        <NavUser user={showcaseUser} />
       </SidebarFooter>
     </Sidebar>
   )

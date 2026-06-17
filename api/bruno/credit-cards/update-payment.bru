@@ -1,0 +1,31 @@
+meta {
+  name: update payment
+  type: http
+  seq: 16
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/credit-cards/{{creditCardId}}/payments/{{creditCardPaymentId}}
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "description": "Updated credit card payment",
+    "amount": 25000,
+    "fromAccountId": "{{accountId}}",
+    "paymentDate": "2026-03-29",
+    "postedDate": "2026-03-29"
+  }
+}
+
+tests {
+  test("credit card payment update returns 200", function() {
+    expect(res.status).to.equal(200);
+  });
+}

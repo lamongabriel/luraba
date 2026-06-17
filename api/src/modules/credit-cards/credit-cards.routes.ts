@@ -16,6 +16,11 @@ router.patch(
   requireAccess({ permission: 'creditCards.update' }),
   creditCardsController.update,
 );
+router.delete(
+  '/:id',
+  requireAccess({ permission: 'creditCards.delete' }),
+  creditCardsController.deleteCreditCard,
+);
 router.get(
   '/:id/cycles',
   requireAccess({ permission: 'creditCards.read' }),
@@ -36,10 +41,40 @@ router.post(
   requireAccess({ permission: 'transactions.create' }),
   creditCardsController.createPurchase,
 );
+router.get(
+  '/:id/purchases/:purchaseId',
+  requireAccess({ permission: 'creditCards.read' }),
+  creditCardsController.getPurchase,
+);
+router.patch(
+  '/:id/purchases/:purchaseId',
+  requireAccess({ permission: 'transactions.update' }),
+  creditCardsController.updatePurchase,
+);
+router.delete(
+  '/:id/purchases/:purchaseId',
+  requireAccess({ permission: 'transactions.delete' }),
+  creditCardsController.deletePurchase,
+);
 router.post(
   '/:id/payments',
   requireAccess({ permission: 'transactions.create' }),
   creditCardsController.createPayment,
+);
+router.get(
+  '/:id/payments/:paymentId',
+  requireAccess({ permission: 'creditCards.read' }),
+  creditCardsController.getPayment,
+);
+router.patch(
+  '/:id/payments/:paymentId',
+  requireAccess({ permission: 'transactions.update' }),
+  creditCardsController.updatePayment,
+);
+router.delete(
+  '/:id/payments/:paymentId',
+  requireAccess({ permission: 'transactions.delete' }),
+  creditCardsController.deletePayment,
 );
 router.get(
   '/:id/forecast',

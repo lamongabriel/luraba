@@ -18,12 +18,17 @@ body:json {
   {
     "color": "graphite",
     "closingDay": {{creditCardClosingDay}},
-    "dueDay": {{creditCardDueDay}}
+    "dueDay": {{creditCardDueDay}},
+    "creditLimitAmount": {{creditCardLimitAmount}}
   }
 }
 
 tests {
   test("credit card update returns 200", function() {
     expect(res.status).to.equal(200);
+  });
+
+  test("credit card update keeps the configured limit", function() {
+    expect(res.body?.data?.creditLimitAmount).to.equal(Number(bru.getEnvVar("creditCardLimitAmount")));
   });
 }

@@ -32,6 +32,10 @@ class EntriesRepository {
         and(eq(entriesTable.transactionId, transactionId), isNotNull(entriesTable.categoryId)),
       );
   }
+
+  async deleteByTransactionId(tx: TxClient, transactionId: string): Promise<void> {
+    await tx.delete(entriesTable).where(eq(entriesTable.transactionId, transactionId));
+  }
 }
 
 export const entriesRepository = new EntriesRepository();

@@ -1,11 +1,13 @@
 meta {
   name: delete category
   type: http
-  seq: 6
+  seq: 5
 }
 
 delete {
   url: {{baseUrl}}/api/v1/categories/{{categoryId}}
+  body: none
+  auth: none
 }
 
 headers {

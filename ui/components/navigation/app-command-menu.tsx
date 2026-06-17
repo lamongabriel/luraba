@@ -139,6 +139,7 @@ export function AppCommandMenu({ className }: { className?: string }) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={handleInputKeyDown}
+            aria-autocomplete="none"
           />
           <CommandList>
             {filteredEntries.length === 0 ? <CommandEmpty>No results found.</CommandEmpty> : null}

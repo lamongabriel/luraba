@@ -1,0 +1,19 @@
+meta {
+  name: delete purchase
+  type: http
+  seq: 14
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/credit-cards/{{creditCardId}}/purchases/{{creditCardPurchaseId}}
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+tests {
+  test("credit card purchase delete returns 204", function() {
+    expect(res.status).to.equal(204);
+  });
+}

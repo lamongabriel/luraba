@@ -10,16 +10,16 @@ import {
   UpdateTransactionResponseSchema,
 } from './transactions.types';
 
+export const list = createHouseholdHandler({
+  response: ListTransactionsResponseSchema,
+  handle: ({ household }) => transactionsService.listTransactions(household),
+});
+
 export const create = createHouseholdHandler({
   body: createTransactionSchema,
   response: CreateTransactionResponseSchema,
   handle: ({ household, body }) => transactionsService.createTransaction(household, body),
   status: 'created',
-});
-
-export const list = createHouseholdHandler({
-  response: ListTransactionsResponseSchema,
-  handle: ({ household }) => transactionsService.listTransactions(household),
 });
 
 export const update = createHouseholdHandler({

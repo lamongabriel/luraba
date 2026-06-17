@@ -155,8 +155,27 @@ export const TransactionResponseSchema = z.object({
 });
 
 export const CreateTransactionResponseSchema = TransactionResponseSchema;
-export const ListTransactionsResponseSchema = z.array(TransactionResponseSchema);
 export const UpdateTransactionResponseSchema = TransactionResponseSchema;
+
+export const transactionFeedRowKindSchema = z.enum(['transaction', 'credit_card_installment']);
+export const transactionFeedOriginTypeSchema = z.union([
+  transactionTypeSchema,
+  z.literal('credit_card_installment'),
+]);
+
+export const TransactionFeedRowSchema = TransactionResponseSchema.extend({
+  rowId: z.uuid(),
+  rowKind: transactionFeedRowKindSchema,
+  originType: transactionFeedOriginTypeSchema,
+  excludedFromSpending: z.boolean(),
+  creditCardId: z.uuid().nullable(),
+  purchaseId: z.uuid().nullable(),
+  installmentId: z.uuid().nullable(),
+  installmentNumber: z.number().int().nullable(),
+  installmentCount: z.number().int().nullable(),
+});
+
+export const ListTransactionsResponseSchema = z.array(TransactionFeedRowSchema);
 
 export type TransactionResponse = {
   id: string;
@@ -185,6 +204,20 @@ export type TransactionResponse = {
   postedDate: string;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type TransactionFeedRowKind = z.infer<typeof transactionFeedRowKindSchema>;
+export type TransactionFeedOriginType = z.infer<typeof transactionFeedOriginTypeSchema>;
+export type TransactionFeedRow = TransactionResponse & {
+  rowId: string;
+  rowKind: TransactionFeedRowKind;
+  originType: TransactionFeedOriginType;
+  excludedFromSpending: boolean;
+  creditCardId: string | null;
+  purchaseId: string | null;
+  installmentId: string | null;
+  installmentNumber: number | null;
+  installmentCount: number | null;
 };
 
 export type UpdateTransactionRequestParams = z.infer<typeof UpdateTransactionRequestParamsSchema>;

@@ -189,30 +189,28 @@ export function HouseholdSwitcher({
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <motion.div whileHover={{ y: -1, scale: 1.01 }} whileTap={{ scale: 0.985 }}>
-              <SidebarMenuButton
-                size="lg"
-                className="h-11 rounded-xl border border-sidebar-border/70 bg-card/80 px-2.5 py-2 shadow-sm hover:bg-accent/60"
-              >
-                <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                  <Typography as="span" variant="small" className="text-[0.62rem] font-semibold text-primary-foreground">
-                    {initials}
-                  </Typography>
-                </div>
+            <SidebarMenuButton
+              size="lg"
+              className="h-11 rounded-xl border border-sidebar-border/70 bg-card/80 px-2.5 py-2 shadow-sm hover:bg-accent/60"
+            >
+              <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+                <Typography as="span" variant="small" className="text-[0.62rem] font-semibold text-primary-foreground">
+                  {initials}
+                </Typography>
+              </div>
 
-                <div className="min-w-0 flex-1 text-left">
-                  <Typography as="span" variant="sidebar-title" truncate className="block text-[0.86rem] font-medium text-foreground">
-                    {selectedHousehold.name}
-                  </Typography>
-                </div>
+              <div className="min-w-0 flex-1 text-left">
+                <Typography as="span" variant="sidebar-title" truncate className="block text-[0.86rem] font-medium text-foreground">
+                  {selectedHousehold.name}
+                </Typography>
+              </div>
 
-                <HugeiconsIcon
-                  icon={ArrowRight01Icon}
-                  strokeWidth={2}
-                  className="ml-auto size-3.5 rotate-90 text-muted-foreground"
-                />
-              </SidebarMenuButton>
-            </motion.div>
+              <HugeiconsIcon
+                icon={ArrowRight01Icon}
+                strokeWidth={2}
+                className="ml-auto size-3.5 rotate-90 text-muted-foreground"
+              />
+            </SidebarMenuButton>
           </DropdownMenuTrigger>
 
           <DropdownMenuContent
@@ -222,8 +220,8 @@ export function HouseholdSwitcher({
             className="w-64 rounded-[1.15rem] border-border/70 bg-card/95 p-0 shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
           >
             <DropdownMenuLabel className="border-b border-border/60 px-3 py-2.5 font-normal">
-              <Typography as="span" variant="small-muted" className="block text-[0.72rem] text-foreground/68">
-                {user.email}
+              <Typography as="span" variant="body" className="block text-[0.72rem] text-foreground/68">
+                Households
               </Typography>
             </DropdownMenuLabel>
 

@@ -120,6 +120,13 @@
       "when": 1781035200000,
       "tag": "0016_bigint_money_amounts",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1781467200000,
+      "tag": "0017_credit_card_limits",
+      "breakpoints": true
     }
   ]
 }

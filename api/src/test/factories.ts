@@ -231,6 +231,9 @@ export function buildHouseholdContext(input: {
   userId: string;
   role?: HouseholdContext['role'];
   permissions?: HouseholdContext['permissions'];
+  timezone?: HouseholdContext['timezone'];
+  creditExpenseTiming?: HouseholdContext['creditExpenseTiming'];
+  creditInstallmentBudgetMode?: HouseholdContext['creditInstallmentBudgetMode'];
 }): HouseholdContext {
   const role = input.role ?? 'owner';
 
@@ -239,6 +242,9 @@ export function buildHouseholdContext(input: {
     userId: input.userId,
     role,
     permissions: input.permissions ?? getPermissionsForRole(role),
+    timezone: input.timezone ?? 'America/Sao_Paulo',
+    creditExpenseTiming: input.creditExpenseTiming ?? 'spend_month',
+    creditInstallmentBudgetMode: input.creditInstallmentBudgetMode ?? 'per_installment',
   };
 }
 

@@ -1,12 +1,13 @@
 meta {
   name: update category
   type: http
-  seq: 5
+  seq: 4
 }
 
 patch {
   url: {{baseUrl}}/api/v1/categories/{{categoryId}}
   body: json
+  auth: none
 }
 
 headers {
@@ -25,7 +26,7 @@ tests {
   test("category update returns 200", function() {
     expect(res.status).to.equal(200);
   });
-
+  
   test("category update returns updated display fields", function() {
     expect(res.body?.data?.id).to.equal(bru.getEnvVar("categoryId"));
     expect(res.body?.data?.color).to.equal("#F97316");
