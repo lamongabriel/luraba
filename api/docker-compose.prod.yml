@@ -4,8 +4,8 @@ name: luraba-api-prod
 services:
   api:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: api/Dockerfile
       target: runner
     restart: always
     env_file: .env

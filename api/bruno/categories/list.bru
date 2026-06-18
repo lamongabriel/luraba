@@ -11,7 +11,7 @@ get {
 }
 
 headers {
-  Authorization: Bearer {{accessToken}}
+  Cookie: {{authCookie}}
 }
 
 script:post-response {

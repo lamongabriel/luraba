@@ -31,11 +31,3 @@ export async function seedCurrencies() {
 
   logger.info({ codes: currencies.map((c) => c.code) }, 'Currencies seeded');
 }
-
-// Only run if executed directly
-if (require.main === module) {
-  seedCurrencies().catch((err) => {
-    logger.error({ err }, 'Failed to seed currencies');
-    process.exit(1);
-  });
-}

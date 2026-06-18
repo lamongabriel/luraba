@@ -6,12 +6,16 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-COPY package.json ./
-COPY pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --ignore-scripts
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY api/package.json ./api/package.json
+RUN pnpm install --filter ./api... --frozen-lockfile --ignore-scripts
 
-COPY tsconfig.json ./
-COPY src/ ./src/
+WORKDIR /app/api
+
+COPY api/tsconfig.json ./tsconfig.json
+COPY api/tsconfig.build.json ./tsconfig.build.json
+COPY api/auth.ts ./auth.ts
+COPY api/src/ ./src/
 
 RUN pnpm run build
 
@@ -24,12 +28,14 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 ENV NODE_ENV=production
 
-COPY package.json ./
-COPY pnpm-lock.yaml ./
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts && pnpm store prune
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY api/package.json ./api/package.json
+RUN pnpm install --filter ./api --prod --frozen-lockfile --ignore-scripts && pnpm store prune
 
-COPY --from=builder /app/dist ./dist
+WORKDIR /app/api
+
+COPY --from=builder /app/api/dist ./dist
 
 EXPOSE 8080
 
-CMD ["node", "dist/app.js"]
+CMD ["node", "dist/server.js"]

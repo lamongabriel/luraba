@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "Node16",
+    "module": "ESNext",
     "lib": ["ES2022"],
     "outDir": "./dist",
     "rootDir": "./src",
@@ -17,11 +17,15 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "node16",
+    "moduleResolution": "bundler",
     "types": ["node", "vitest/globals"],
     "paths": {
       "@/*": ["./src/*"]
     }
+  },
+  "tsc-alias": {
+    "resolveFullPaths": true,
+    "resolveFullExtension": ".js"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "drizzle"]

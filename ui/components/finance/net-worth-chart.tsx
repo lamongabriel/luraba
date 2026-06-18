@@ -52,7 +52,7 @@ export function NetWorthChart({ data }: { data: readonly NetWorthPoint[] }) {
 
   return (
     <section className="flex flex-col">
-      <div>
+      <div className="py-6 px-8">
         <Typography variant="eyebrow">Net worth</Typography>
 
         <MoneyValue
@@ -60,7 +60,6 @@ export function NetWorthChart({ data }: { data: readonly NetWorthPoint[] }) {
           currencyCode={showcaseUser.currencyCode}
           className="mt-3 block text-4xl font-semibold tracking-[-0.05em] text-foreground md:text-6xl"
         />
-
         <ValueChange
           value={percentageChange}
           label="over this period"

@@ -21,8 +21,8 @@ services:
 
   api:
     build:
-      context: .
-      dockerfile: Dockerfile.dev
+      context: ..
+      dockerfile: api/Dockerfile.dev
     restart: unless-stopped
     env_file: .env
     environment:
@@ -30,7 +30,7 @@ services:
     ports:
       - "${PORT:-8080}:8080"
     volumes:
-      - ./src:/app/src
+      - ./src:/app/api/src
     depends_on:
       postgres:
         condition: service_healthy

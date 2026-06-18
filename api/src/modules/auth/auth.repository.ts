@@ -4,27 +4,9 @@ import { usersTable } from '@/db/schemas/users.schema';
 import { Repository } from '@/shared/repositories/repository';
 import type { UpdateMyPreferencesRequestBody, UserPreferences, UserRecord } from './auth.types';
 
-type CreateAuthUserValues = Pick<
-  typeof usersTable.$inferInsert,
-  | 'name'
-  | 'email'
-  | 'passwordHash'
-  | 'preferredLanguage'
-  | 'preferredCurrency'
-  | 'preferredTimezone'
-  | 'preferredDateFormat'
-  | 'preferredPeriod'
-  | 'preferredTheme'
->;
-
-class AuthRepository extends Repository<UserRecord, CreateAuthUserValues> {
+class AuthRepository extends Repository<UserRecord> {
   constructor() {
     super(usersTable, { orderBy: usersTable.name });
-  }
-
-  async findByEmail(email: string): Promise<UserRecord | undefined> {
-    const rows = await db.select().from(usersTable).where(eq(usersTable.email, email));
-    return rows[0];
   }
 
   async findById(id: string): Promise<UserRecord | undefined> {

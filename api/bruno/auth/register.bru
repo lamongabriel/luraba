@@ -5,39 +5,21 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/v1/auth/register
+  url: {{baseUrl}}/api/auth/sign-up/email
   body: json
   auth: none
 }
 
 headers {
   Content-Type: application/json
+  Origin: {{origin}}
 }
 
 body:json {
   {
     "name": "{{userName}}",
     "email": "{{userEmail}}",
-    "password": "{{userPassword}}",
-    "preferences": {
-      "language": "en",
-      "currency": "{{currencyCode}}",
-      "timezone": "America/Sao_Paulo",
-      "dateFormat": "DD/MM/YYYY",
-      "preferredPeriod": "current_month",
-      "preferredTheme": "system"
-    },
-    "household": {
-      "name": "{{userName}}'s Household",
-      "settings": {
-        "defaultCurrencyId": "{{currencyCode}}",
-        "countryCode": "BR",
-        "timezone": "America/Sao_Paulo",
-        "budgetMonthStartsOn": 1,
-        "creditExpenseTiming": "spend_month",
-        "creditInstallmentBudgetMode": "per_installment"
-      }
-    }
+    "password": "{{userPassword}}"
   }
 }
 
@@ -46,24 +28,24 @@ vars:pre-request {
   userEmail: gabriel@gabriel.com
   userPassword: 123123123
   baseUrl: http://localhost:8080
+  origin: http://localhost:3000
 }
 
 script:post-response {
-  if (res.body?.data?.accessToken) {
-    bru.setEnvVar("accessToken", res.body.data.accessToken);
-  }
+  const cookies = res.headers?.["set-cookie"] ?? res.headers?.["Set-Cookie"];
+  const firstCookie = Array.isArray(cookies) ? cookies[0] : cookies;
 
-  if (res.body?.data?.household?.id) {
-    bru.setEnvVar("householdId", res.body.data.household.id);
+  if (firstCookie) {
+    bru.setEnvVar("authCookie", firstCookie.split(";")[0]);
   }
 }
 
 tests {
-  test("register returns 201", function() {
-    expect(res.status).to.equal(201);
+  test("register returns 200", function() {
+    expect(res.status).to.equal(200);
   });
 
-  test("register returns active household name", function() {
-    expect(res.body.data.household.name).to.be.a("string");
+  test("register returns the created user", function() {
+    expect(res.body.user.email).to.equal(bru.getEnvVar("userEmail"));
   });
 }

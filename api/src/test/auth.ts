@@ -1,5 +1,6 @@
+import { makeSignature } from 'better-auth/crypto';
 import { getPermissionsForRole, type HouseholdContext } from '@/config/permissions';
-import { signAccessToken } from '@/shared/auth';
+import { auth } from '@/shared/lib/auth';
 import {
   buildHouseholdContext,
   createHousehold,
@@ -8,13 +9,21 @@ import {
   setDefaultHousehold,
 } from './factories';
 
-export function createAccessTokenForUser(user: { id: string; email: string }) {
-  return signAccessToken(user.id, user.email);
+async function createSessionCookieValue(userId: string): Promise<string> {
+  const context = await auth.$context;
+  const session = await context.internalAdapter.createSession(userId);
+  const signedToken = `${session.token}.${await makeSignature(session.token, context.secret)}`;
+
+  return `${context.authCookies.sessionToken.name}=${signedToken}`;
 }
 
-export function createAuthHeaders(token: string, householdId?: string) {
+export async function createAccessTokenForUser(user: { id: string; email: string }) {
+  return createSessionCookieValue(user.id);
+}
+
+export function createAuthHeaders(cookie: string, householdId?: string) {
   return {
-    Authorization: `Bearer ${token}`,
+    Cookie: cookie,
     ...(householdId ? { 'X-Household-Id': householdId } : {}),
   };
 }
@@ -31,7 +40,7 @@ export async function createAuthenticatedContext(
     await setDefaultHousehold(user.id, household.id);
   }
 
-  const token = createAccessTokenForUser(user);
+  const token = await createAccessTokenForUser(user);
 
   const householdContext = buildHouseholdContext({
     householdId: household.id,

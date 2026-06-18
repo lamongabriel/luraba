@@ -89,7 +89,7 @@ describe('households routes', () => {
   it('POST /api/v1/households/invites/:id/accept returns 204 for the invited user', async () => {
     const owner = await createAuthenticatedContext();
     const invitedUser = await createUser({ email: 'household-http-invite@example.com' });
-    const invitedToken = createAccessTokenForUser(invitedUser);
+    const invitedToken = await createAccessTokenForUser(invitedUser);
 
     const createdInvite = await request(app)
       .post(`/api/v1/households/${owner.household.id}/invites`)

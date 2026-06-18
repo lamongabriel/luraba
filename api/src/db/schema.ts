@@ -1,4 +1,10 @@
 export * from './schemas/accounts.schema';
+export * from './schemas/auth-accounts.schema';
+export { authAccountsTable as authAccounts } from './schemas/auth-accounts.schema';
+export * from './schemas/auth-sessions.schema';
+export { authSessionsTable as authSessions } from './schemas/auth-sessions.schema';
+export * from './schemas/auth-verifications.schema';
+export { authVerificationsTable as authVerifications } from './schemas/auth-verifications.schema';
 export * from './schemas/budgets.schema';
 export * from './schemas/categories.schema';
 export * from './schemas/credit-card-billing-cycles.schema';
@@ -20,3 +26,4 @@ export * from './schemas/tags.schema';
 export * from './schemas/transaction-tags.schema';
 export * from './schemas/transactions.schema';
 export * from './schemas/users.schema';
+export { usersTable as users } from './schemas/users.schema';

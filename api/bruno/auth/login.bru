@@ -5,12 +5,13 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/v1/auth/login
+  url: {{baseUrl}}/api/auth/sign-in/email
   body: json
 }
 
 headers {
   Content-Type: application/json
+  Origin: {{origin}}
 }
 
 body:json {
@@ -25,17 +26,16 @@ tests {
     expect(res.status).to.equal(200);
   });
 
-  test("login returns active household name", function() {
-    expect(res.body.data.household.name).to.be.a("string");
+  test("login returns the signed-in user", function() {
+    expect(res.body.user.email).to.equal(bru.getEnvVar("userEmail"));
   });
 }
 
 script:post-response {
-  if (res.body?.data?.accessToken) {
-    bru.setEnvVar("accessToken", res.body.data.accessToken);
-  }
+  const cookies = res.headers?.["set-cookie"] ?? res.headers?.["Set-Cookie"];
+  const firstCookie = Array.isArray(cookies) ? cookies[0] : cookies;
 
-  if (res.body?.data?.household?.id) {
-    bru.setEnvVar("householdId", res.body.data.household.id);
+  if (firstCookie) {
+    bru.setEnvVar("authCookie", firstCookie.split(";")[0]);
   }
 }

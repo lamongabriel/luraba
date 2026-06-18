@@ -1,3 +1,4 @@
+import { fromNodeHeaders } from 'better-auth/node';
 import { and, eq } from 'drizzle-orm';
 import type { NextFunction, Request, Response } from 'express';
 import {
@@ -8,10 +9,10 @@ import {
 import { db } from '@/db';
 import { householdMembersTable, householdsTable } from '@/db/schemas/households.schema';
 import * as householdsService from '@/modules/households/households.service';
-import { verifyAccessToken } from '@/shared/auth';
 import { ForbiddenError, UnauthorizedError } from '@/shared/errors';
+import { auth } from '@/shared/lib/auth';
 
-type AuthenticatedUser = {
+export type AuthenticatedUser = {
   id: string;
   email: string;
 };
@@ -22,22 +23,21 @@ type AccessOptions = {
   householdParam?: string;
 };
 
-function authenticateRequest(req: Request): AuthenticatedUser {
+async function authenticateRequest(req: Request): Promise<AuthenticatedUser> {
   if (req.user) {
     return req.user;
   }
 
-  const rawHeader = req.headers.authorization;
-  if (!rawHeader?.startsWith('Bearer ')) {
-    throw new UnauthorizedError('Missing or invalid Authorization header');
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(req.headers),
+  });
+  if (!session) {
+    throw new UnauthorizedError('Authentication required');
   }
 
-  const token = rawHeader.slice('Bearer '.length);
-  const payload = verifyAccessToken(token);
-
   req.user = {
-    id: payload.sub,
-    email: payload.email,
+    id: session.user.id,
+    email: session.user.email,
   };
 
   return req.user;
@@ -62,7 +62,7 @@ async function resolveHousehold(
   req: Request,
   options: AccessOptions,
 ): Promise<NonNullable<Request['household']>> {
-  const user = authenticateRequest(req);
+  const user = await authenticateRequest(req);
   const requestedHouseholdId =
     getHouseholdIdFromHeader(req) ?? getHouseholdIdFromRoute(req, options.householdParam);
 
@@ -113,7 +113,7 @@ async function resolveHousehold(
 export function requireAccess(options: AccessOptions = {}) {
   return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
-      authenticateRequest(req);
+      await authenticateRequest(req);
 
       const needsHousehold = options.household || options.permission;
       if (needsHousehold) {

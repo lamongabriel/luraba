@@ -9,7 +9,6 @@ import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
 import { usersTable } from '@/db/schemas/users.schema';
 import type { CreateAccountRequestBody } from '@/modules/accounts/accounts.types';
-import type { RegisterRequestBody } from '@/modules/auth/auth.types';
 import type { CreateCategoryRequestBody } from '@/modules/categories/categories.types';
 import type { CreateCreditCardRequestBody } from '@/modules/credit-cards/credit-cards.types';
 import type { CreateMerchantRequestBody } from '@/modules/merchants/merchants.types';
@@ -27,7 +26,6 @@ export async function createUser(overrides: Partial<typeof usersTable.$inferInse
     .values({
       name: `Test User ${randomSuffix()}`,
       email: `user-${randomSuffix()}@example.com`,
-      passwordHash: 'test-password-hash',
       preferredCurrency: 'BRL',
       preferredLanguage: 'en',
       preferredTimezone: 'America/Sao_Paulo',
@@ -97,21 +95,6 @@ export function buildAccountInput(
     name: `Account ${randomSuffix()}`,
     type: 'depository',
     currencyCode: 'BRL',
-    ...overrides,
-  };
-}
-
-export function buildRegisterInput(
-  overrides: Partial<RegisterRequestBody> = {},
-): RegisterRequestBody {
-  return {
-    name: `User ${randomSuffix()}`,
-    email: `register-${randomSuffix()}@example.com`,
-    password: '123123123',
-    preferences: {},
-    household: {
-      settings: {},
-    },
     ...overrides,
   };
 }

@@ -127,6 +127,20 @@
       "when": 1781467200000,
       "tag": "0017_credit_card_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1781784000000,
+      "tag": "0018_drop_legacy_auth_password",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1781787600000,
+      "tag": "0019_better_auth_schema",
+      "breakpoints": true
     }
   ]
 }
