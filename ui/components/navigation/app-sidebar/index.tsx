@@ -1,13 +1,18 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { motion } from "framer-motion"
 
 import { mainNav } from "@/lib/navigation"
+import { queryClient } from "@/lib/query-client"
+import { logout } from "@/lib/auth/logout"
 import { HouseholdSwitcher } from "@/components/navigation/app-sidebar/household-switcher"
 import { NavUser } from "@/components/navigation/app-sidebar/nav-user"
+import { authQueryKeys } from "@/queries/auth/use-auth-providers-query"
+import { useAuthSessionStore } from "@/stores/auth-session-store"
 import {
   Sidebar,
   SidebarContent,
@@ -19,7 +24,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Typography } from "@/components/ui/typography"
-import { showcaseAuthSession, showcaseHouseholds, showcaseUser } from "@/lib/mock-data"
 
 const sidebarItemTransition = {
   damping: 22,
@@ -29,14 +33,35 @@ const sidebarItemTransition = {
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const household = useAuthSessionStore((state) => state.household)
+  const households = useAuthSessionStore((state) => state.households)
+  const setActiveHouseholdId = useAuthSessionStore((state) => state.setActiveHouseholdId)
+  const user = useAuthSessionStore((state) => state.user)
+
+  const handleHouseholdChange = React.useCallback(
+    (householdId: string) => {
+      setActiveHouseholdId(householdId)
+      void queryClient.invalidateQueries({ queryKey: authQueryKeys.session })
+    },
+    [setActiveHouseholdId],
+  )
+
+  const handleSignOut = React.useCallback(() => {
+    void logout()
+  }, [])
+
+  if (!user || !household) {
+    return null
+  }
 
   return (
     <Sidebar variant="sidebar">
       <SidebarHeader className="px-4 pt-4 pb-3">
         <HouseholdSwitcher
-          user={showcaseAuthSession.user}
-          initialHousehold={showcaseAuthSession.household}
-          households={showcaseHouseholds}
+          user={user}
+          initialHousehold={household}
+          households={households}
+          onHouseholdChange={handleHouseholdChange}
         />
       </SidebarHeader>
 
@@ -86,7 +111,13 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <NavUser user={showcaseUser} />
+        <NavUser
+          user={{
+            email: user.email,
+            name: user.name,
+          }}
+          onSignOut={handleSignOut}
+        />
       </SidebarFooter>
     </Sidebar>
   )

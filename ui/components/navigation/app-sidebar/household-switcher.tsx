@@ -1,25 +1,23 @@
 "use client"
 
 import * as React from "react"
-import { ArrowRight01Icon, SparklesIcon } from "@hugeicons/core-free-icons"
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { motion } from "framer-motion"
 
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
 import { Typography } from "@/components/ui/typography"
-import type { AuthUser } from "@/interfaces/auth"
+import { STORAGE_KEYS } from "@/config/storage"
 import type { HouseholdContext, HouseholdSummary } from "@/interfaces/household"
-import { readStorage, STORAGE_KEYS, writeStorage } from "@/lib/local-storage"
+import type { User } from "@/interfaces/user"
+import { readStorage, writeStorage } from "@/lib/local-storage"
 
 const HOUSEHOLD_CHANGED_EVENT = "luraba:household-change"
 
@@ -28,9 +26,10 @@ type HouseholdWorkspace = HouseholdSummary & {
 }
 
 interface HouseholdSwitcherProps {
-  user: AuthUser
+  user: User
   initialHousehold: HouseholdContext
   households: HouseholdSummary[]
+  onHouseholdChange?: (householdId: string) => void
 }
 
 function getInitials(name: string) {
@@ -84,60 +83,19 @@ export function HouseholdSwitcher({
   user,
   initialHousehold,
   households: initialHouseholds,
+  onHouseholdChange,
 }: HouseholdSwitcherProps) {
   const { isMobile } = useSidebar()
-  const seedHouseholds = React.useMemo(
+  const households = React.useMemo(
     () => mergeHouseholds(initialHousehold, initialHouseholds),
     [initialHousehold, initialHouseholds],
   )
-  const [households, setHouseholds] = React.useState<HouseholdWorkspace[]>(seedHouseholds)
   const [selectedHouseholdId, setSelectedHouseholdId] = React.useState(
-    initialHousehold.id,
-  )
-
-  React.useEffect(() => {
-    setHouseholds(seedHouseholds)
-    setSelectedHouseholdId((current) => current || initialHousehold.id)
-  }, [initialHousehold.id, seedHouseholds])
-
-  React.useEffect(() => {
-    const storedHouseholds = readStorage(STORAGE_KEYS.households)
-    const storedSelectedId =
+    () =>
       readStorage(STORAGE_KEYS.activeHouseholdId) ||
       user.defaultHouseholdId ||
-      initialHousehold.id
-
-    const merged = mergeHouseholds(initialHousehold, [
-      ...initialHouseholds,
-      ...storedHouseholds,
-    ])
-
-    setHouseholds(merged)
-    setSelectedHouseholdId(storedSelectedId)
-  }, [initialHousehold, initialHouseholds, user.defaultHouseholdId])
-
-  React.useEffect(() => {
-    if (typeof window === "undefined" || households.length === 0 || !selectedHouseholdId) {
-      return
-    }
-
-    const activeHousehold =
-      households.find((household) => household.id === selectedHouseholdId) ?? households[0]
-
-    writeStorage(STORAGE_KEYS.households, households)
-    writeStorage(STORAGE_KEYS.activeHouseholdId, activeHousehold.id)
-
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent(HOUSEHOLD_CHANGED_EVENT, {
-          detail: {
-            householdId: activeHousehold.id,
-            household: activeHousehold,
-          },
-        }),
-      )
-    }
-  }, [households, selectedHouseholdId])
+      initialHousehold.id,
+  )
 
   const selectedHousehold = React.useMemo(() => {
     return (
@@ -147,36 +105,24 @@ export function HouseholdSwitcher({
     )
   }, [households, selectedHouseholdId, user.defaultHouseholdId])
 
-  const handleCreateHousehold = React.useCallback(() => {
-    const now = new Date().toISOString()
-    const sequence = households.filter((household) =>
-      household.name.startsWith("New Household"),
-    ).length + 1
-    const baseHousehold = selectedHousehold ?? households[0]
-
-    const nextHousehold: HouseholdWorkspace = {
-      id: typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `household-${Date.now()}`,
-      name: `New Household ${sequence}`,
-      description: "A fresh shared workspace for another budgeting setup.",
-      defaultCurrencyId: baseHousehold?.defaultCurrencyId ?? user.preferences.currency,
-      countryCode: baseHousehold?.countryCode ?? "BR",
-      timezone: baseHousehold?.timezone ?? user.preferences.timezone,
-      budgetMonthStartsOn: baseHousehold?.budgetMonthStartsOn ?? 1,
-      creditExpenseTiming: baseHousehold?.creditExpenseTiming ?? "spend_month",
-      creditInstallmentBudgetMode:
-        baseHousehold?.creditInstallmentBudgetMode ?? "per_installment",
-      role: "owner",
-      createdByUserId: user.id,
-      createdAt: now,
-      updatedAt: now,
-      permissions: [],
+  React.useEffect(() => {
+    if (typeof window === "undefined" || households.length === 0 || !selectedHousehold) {
+      return
     }
 
-    setHouseholds((current) => [nextHousehold, ...current])
-    setSelectedHouseholdId(nextHousehold.id)
-  }, [households, selectedHousehold, user.id, user.preferences.currency, user.preferences.timezone])
+    writeStorage(STORAGE_KEYS.activeHouseholdId, selectedHousehold.id)
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent(HOUSEHOLD_CHANGED_EVENT, {
+          detail: {
+            householdId: selectedHousehold.id,
+            household: selectedHousehold,
+          },
+        }),
+      )
+    }
+  }, [households, selectedHousehold])
 
   if (!selectedHousehold) {
     return null
@@ -225,7 +171,13 @@ export function HouseholdSwitcher({
               </Typography>
             </DropdownMenuLabel>
 
-            <DropdownMenuRadioGroup value={selectedHousehold.id} onValueChange={setSelectedHouseholdId}>
+            <DropdownMenuRadioGroup
+              value={selectedHousehold.id}
+              onValueChange={(householdId) => {
+                setSelectedHouseholdId(householdId)
+                onHouseholdChange?.(householdId)
+              }}
+            >
               {households.map((household) => (
                 <DropdownMenuRadioItem
                   key={household.id}
@@ -249,13 +201,6 @@ export function HouseholdSwitcher({
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>
-
-            <DropdownMenuSeparator className="my-0" />
-
-            <DropdownMenuItem onSelect={handleCreateHousehold} className="rounded-none px-3 py-3 text-[0.82rem] text-muted-foreground">
-              <HugeiconsIcon icon={SparklesIcon} strokeWidth={2} className="size-3.5" />
-              New household
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

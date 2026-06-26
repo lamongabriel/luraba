@@ -4,6 +4,22 @@ import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
 import { createHousehold, createHouseholdMembership } from '@/test/factories';
 
 describe('auth routes', () => {
+  it('GET /api/v1/auth/providers returns enabled auth providers', async () => {
+    const response = await request(app).get('/api/v1/auth/providers');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      success: true,
+      data: {
+        emailPassword: true,
+        socialProviders: {
+          google: false,
+          github: false,
+        },
+      },
+    });
+  });
+
   it('GET /api/auth/ok confirms Better Auth is mounted', async () => {
     const response = await request(app).get('/api/auth/ok');
 
@@ -75,11 +91,8 @@ describe('auth routes', () => {
 
     expect(duplicateResponse.status).toBe(422);
     expect(duplicateResponse.body).toEqual({
-      success: false,
-      error: {
-        code: 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL',
-        message: 'User already exists. Use another email.',
-      },
+      code: 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL',
+      message: 'User already exists. Use another email.',
     });
   });
 
@@ -97,11 +110,8 @@ describe('auth routes', () => {
 
     expect(signInResponse.status).toBe(401);
     expect(signInResponse.body).toEqual({
-      success: false,
-      error: {
-        code: 'INVALID_EMAIL_OR_PASSWORD',
-        message: 'Invalid email or password',
-      },
+      code: 'INVALID_EMAIL_OR_PASSWORD',
+      message: 'Invalid email or password',
     });
   });
 

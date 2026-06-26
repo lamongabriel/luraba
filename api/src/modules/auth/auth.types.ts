@@ -50,7 +50,16 @@ export const authSessionSchema = z.object({
   household: authHouseholdSchema,
 });
 
+export const authProvidersSchema = z.object({
+  emailPassword: z.boolean(),
+  socialProviders: z.object({
+    google: z.boolean(),
+    github: z.boolean(),
+  }),
+});
+
 export const GetMeResponseSchema = authSessionSchema;
+export const GetAuthProvidersResponseSchema = authProvidersSchema;
 
 export const GetMyPreferencesResponseSchema = userPreferencesSchema;
 
@@ -63,7 +72,9 @@ export type SessionUser = z.infer<typeof sessionUserSchema>;
 export type HouseholdSettings = z.infer<typeof householdSettingsSchema>;
 export type AuthHousehold = z.infer<typeof authHouseholdSchema>;
 export type AuthSession = z.infer<typeof authSessionSchema>;
+export type AuthProviders = z.infer<typeof authProvidersSchema>;
 export type GetMeResponse = z.infer<typeof GetMeResponseSchema>;
+export type GetAuthProvidersResponse = z.infer<typeof GetAuthProvidersResponseSchema>;
 export type GetMyPreferencesResponse = z.infer<typeof GetMyPreferencesResponseSchema>;
 export type UpdateMyPreferencesRequestBody = z.infer<typeof UpdateMyPreferencesRequestBodySchema>;
 export type UpdateMyPreferencesResponse = z.infer<typeof UpdateMyPreferencesResponseSchema>;

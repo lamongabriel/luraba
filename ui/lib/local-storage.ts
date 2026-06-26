@@ -1,121 +1,102 @@
-import type { HouseholdSummary } from "@/interfaces/household";
+import type { ZodType } from "zod"
 
 export type StorageDefinition<T> = {
-  fallback: T;
-  key: string;
-  validate?: (value: unknown) => value is T;
-};
-
-function defineStorage<T>(definition: StorageDefinition<T>) {
-  return definition;
+  fallback: T
+  key: string
+  schema?: ZodType<T>
+  validate?: (value: unknown) => value is T
 }
 
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === "string" && value.length > 0;
-}
-
-function isHouseholdSummary(value: unknown): value is HouseholdSummary {
-  if (!value || typeof value !== "object") {
-    return false;
+function isValidStorageValue<T>(
+  definition: StorageDefinition<T>,
+  value: unknown,
+): value is T {
+  if (definition.schema) {
+    return definition.schema.safeParse(value).success
   }
 
-  const household = value as Partial<HouseholdSummary>;
+  if (definition.validate) {
+    return definition.validate(value)
+  }
 
-  return (
-    typeof household.id === "string" &&
-    typeof household.name === "string" &&
-    typeof household.defaultCurrencyId === "string" &&
-    typeof household.countryCode === "string" &&
-    typeof household.timezone === "string" &&
-    typeof household.role === "string"
-  );
+  return true
 }
-
-export const STORAGE_KEYS = {
-  activeHouseholdId: defineStorage<string>({
-    key: "luraba.active-household-id",
-    fallback: "",
-    validate: isNonEmptyString,
-  }),
-  households: defineStorage<HouseholdSummary[]>({
-    key: "luraba.households",
-    fallback: [],
-    validate: (value): value is HouseholdSummary[] =>
-      Array.isArray(value) && value.every(isHouseholdSummary),
-  }),
-} as const;
 
 function getStorage() {
   if (typeof window === "undefined") {
-    return null;
+    return null
   }
 
   try {
-    return window.localStorage;
+    return window.localStorage
   } catch {
-    return null;
+    return null
   }
 }
 
 export function readStorage<T>(definition: StorageDefinition<T>): T {
-  const storage = getStorage();
+  const storage = getStorage()
 
   if (!storage) {
-    return definition.fallback;
+    return definition.fallback
   }
 
   try {
-    const rawValue = storage.getItem(definition.key);
+    const rawValue = storage.getItem(definition.key)
 
     if (rawValue === null) {
-      return definition.fallback;
+      return definition.fallback
     }
 
-    const parsedValue = JSON.parse(rawValue) as unknown;
+    const parsedValue = JSON.parse(rawValue) as unknown
 
-    if (definition.validate && !definition.validate(parsedValue)) {
-      storage.removeItem(definition.key);
-      return definition.fallback;
+    if (!isValidStorageValue(definition, parsedValue)) {
+      storage.removeItem(definition.key)
+      return definition.fallback
     }
 
-    return (parsedValue as T) ?? definition.fallback;
+    return (parsedValue as T) ?? definition.fallback
   } catch {
     try {
-      storage.removeItem(definition.key);
+      storage.removeItem(definition.key)
     } catch {
       // Ignore cleanup failures and use the fallback instead.
     }
 
-    return definition.fallback;
+    return definition.fallback
   }
 }
 
 export function writeStorage<T>(definition: StorageDefinition<T>, value: T) {
-  const storage = getStorage();
+  const storage = getStorage()
 
   if (!storage) {
-    return false;
+    return false
+  }
+
+  if (!isValidStorageValue(definition, value)) {
+    return false
   }
 
   try {
-    storage.setItem(definition.key, JSON.stringify(value));
-    return true;
+    storage.setItem(definition.key, JSON.stringify(value))
+    return true
   } catch {
-    return false;
+    return false
   }
 }
 
 export function removeStorage(definition: StorageDefinition<unknown>) {
-  const storage = getStorage();
+  const storage = getStorage()
 
   if (!storage) {
-    return false;
+    return false
   }
 
   try {
-    storage.removeItem(definition.key);
-    return true;
+    storage.removeItem(definition.key)
+    return true
   } catch {
-    return false;
+    return false
   }
 }

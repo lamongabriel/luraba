@@ -1,12 +1,19 @@
 import { createAuthenticatedHandler } from '@/shared/controllers/authenticated.controller';
+import { createHandler } from '@/shared/controllers/controller';
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import * as authService from './auth.service';
 import {
+  GetAuthProvidersResponseSchema,
   GetMeResponseSchema,
   GetMyPreferencesResponseSchema,
   UpdateMyPreferencesRequestBodySchema,
   UpdateMyPreferencesResponseSchema,
 } from './auth.types';
+
+export const getProviders = createHandler({
+  response: GetAuthProvidersResponseSchema,
+  handle: async () => authService.getProviders(),
+});
 
 export const me = createHouseholdHandler({
   response: GetMeResponseSchema,

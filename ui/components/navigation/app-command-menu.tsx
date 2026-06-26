@@ -56,11 +56,12 @@ export function AppCommandMenu({ className }: { className?: string }) {
 
   const [open, setOpen] = React.useState(false)
   const [query, setQuery] = React.useState("")
-  const [modifierKey, setModifierKey] = React.useState("⌘")
+  const modifierKey = React.useMemo(() => {
+    if (typeof window === "undefined") {
+      return "⌘"
+    }
 
-  React.useEffect(() => {
-    const platform = window.navigator.platform.toLowerCase()
-    setModifierKey(platform.includes("mac") ? "⌘" : "Ctrl")
+    return window.navigator.platform.toLowerCase().includes("mac") ? "⌘" : "Ctrl"
   }, [])
 
   React.useEffect(() => {
@@ -74,11 +75,6 @@ export function AppCommandMenu({ className }: { className?: string }) {
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [])
-
-  React.useEffect(() => {
-    setOpen(false)
-    setQuery("")
-  }, [pathname])
 
   const filteredEntries = React.useMemo(() => {
     const value = query.trim().toLowerCase()

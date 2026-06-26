@@ -1,9 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { MoreVerticalIcon, SparklesIcon } from "@hugeicons/core-free-icons"
+import { MoreVerticalIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { motion } from "framer-motion"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -25,9 +24,10 @@ interface NavUserProps {
     email: string
     role?: string
   } | null
+  onSignOut?: () => void
 }
 
-export function NavUser({ user }: NavUserProps) {
+export function NavUser({ user, onSignOut }: NavUserProps) {
   const { isMobile } = useSidebar()
 
   if (!user) return null
@@ -115,11 +115,13 @@ export function NavUser({ user }: NavUserProps) {
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem asChild>
-              <Link href="/login">
-                <HugeiconsIcon icon={SparklesIcon} strokeWidth={2} />
-                Switch entry screen
-              </Link>
+            <DropdownMenuItem
+              onSelect={(event) => {
+                event.preventDefault()
+                onSignOut?.()
+              }}
+            >
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

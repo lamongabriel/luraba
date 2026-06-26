@@ -1,7 +1,7 @@
-import type { AuthLoginData } from "@/interfaces/auth";
-import type { HouseholdSummary } from "@/interfaces/household";
+import type { AuthSession } from "@/interfaces/auth"
+import type { HouseholdSummary } from "@/interfaces/household"
 
-export const showcaseAuthSession: AuthLoginData = {
+export const showcaseAuthSession: AuthSession = {
   user: {
     id: "fb4ca378-4258-4ff2-84c1-8b7de75e91b0",
     name: "Gabriel",
@@ -71,8 +71,7 @@ export const showcaseAuthSession: AuthLoginData = {
       creditInstallmentBudgetMode: "per_installment",
     },
   },
-  accessToken: "preview-access-token",
-};
+}
 
 export const showcaseHouseholds: HouseholdSummary[] = [
   {
@@ -120,7 +119,7 @@ export const showcaseHouseholds: HouseholdSummary[] = [
     createdAt: "2026-06-05T09:00:00.000Z",
     updatedAt: "2026-06-13T18:30:00.000Z",
   },
-];
+]
 
 export const showcaseUser = {
   name: "Gabriel Lamonga",

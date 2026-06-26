@@ -1,3 +1,4 @@
+import { env } from '@/config/env';
 import { getPermissionsForRole } from '@/config/permissions';
 import { currenciesRepository } from '@/modules/currencies/currencies.repository';
 import { householdsRepository } from '@/modules/households/households.repository';
@@ -6,6 +7,7 @@ import { NotFoundError } from '@/shared/errors';
 import { authRepository } from './auth.repository';
 import type {
   AuthHousehold,
+  AuthProviders,
   AuthSession,
   SessionUser,
   UpdateMyPreferencesRequestBody,
@@ -72,6 +74,16 @@ async function buildSession(userId: string, householdId?: string): Promise<AuthS
 
 export async function getMe(userId: string, householdId: string): Promise<AuthSession> {
   return buildSession(userId, householdId);
+}
+
+export function getProviders(): AuthProviders {
+  return {
+    emailPassword: true,
+    socialProviders: {
+      google: env.authProviders.google.enabled,
+      github: env.authProviders.github.enabled,
+    },
+  };
 }
 
 export async function getMyPreferences(userId: string): Promise<UserPreferences> {
