@@ -1,22 +1,13 @@
 "use client"
 
 import axios from "axios"
+import type { AxiosInstance } from "axios"
 
 import { apiConfig } from "@/config/api"
 import { STORAGE_KEYS } from "@/config/storage"
 import { logout } from "@/lib/auth/logout"
 import { readStorage } from "@/lib/local-storage"
 import { toAppClientError } from "@/services/error-client"
-
-declare module "axios" {
-  interface AxiosRequestConfig {
-    skipAuthRedirect?: boolean
-  }
-
-  interface InternalAxiosRequestConfig {
-    skipAuthRedirect?: boolean
-  }
-}
 
 function getActiveHouseholdId() {
   return readStorage(STORAGE_KEYS.activeHouseholdId)
@@ -26,32 +17,48 @@ export function toLurabaApiError(error: unknown) {
   return toAppClientError(error)
 }
 
-export const lurabaApiClient = axios.create({
-  baseURL: apiConfig.restBaseUrl,
-  withCredentials: true,
-})
+function createApiClient({
+  logoutOnUnauthorized,
+}: {
+  logoutOnUnauthorized: boolean
+}) {
+  const client = axios.create({
+    baseURL: apiConfig.restBaseUrl,
+    withCredentials: true,
+  })
 
-lurabaApiClient.interceptors.request.use((config) => {
-  const activeHouseholdId = getActiveHouseholdId()
+  client.interceptors.request.use((config) => {
+    const activeHouseholdId = getActiveHouseholdId()
 
-  if (activeHouseholdId) {
-    config.headers.set("X-Household-Id", activeHouseholdId)
-  }
-
-  return config
-})
-
-lurabaApiClient.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (
-      axios.isAxiosError(error) &&
-      error.response?.status === 401 &&
-      !error.config?.skipAuthRedirect
-    ) {
-      await logout()
+    if (activeHouseholdId) {
+      config.headers.set("X-Household-Id", activeHouseholdId)
     }
 
-    throw toLurabaApiError(error)
-  },
-)
+    return config
+  })
+
+  client.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      if (
+        logoutOnUnauthorized &&
+        axios.isAxiosError(error) &&
+        error.response?.status === 401
+      ) {
+        await logout()
+      }
+
+      throw toLurabaApiError(error)
+    },
+  )
+
+  return client
+}
+
+export const lurabaApiClient: AxiosInstance = createApiClient({
+  logoutOnUnauthorized: true,
+})
+
+export const lurabaApiPassiveClient: AxiosInstance = createApiClient({
+  logoutOnUnauthorized: false,
+})
