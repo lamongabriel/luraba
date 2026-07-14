@@ -9,11 +9,11 @@ import { readStorage } from "@/lib/local-storage"
 import { toAppClientError } from "@/services/error-client"
 
 declare module "axios" {
-  interface AxiosRequestConfig<D = any> {
+  interface AxiosRequestConfig {
     skipAuthRedirect?: boolean
   }
 
-  interface InternalAxiosRequestConfig<D = any> {
+  interface InternalAxiosRequestConfig {
     skipAuthRedirect?: boolean
   }
 }
