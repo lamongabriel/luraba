@@ -5,8 +5,14 @@ import { useRouter } from "next/navigation"
 
 import { Loader } from "@/components/ui/loader"
 import { logout } from "@/lib/auth/logout"
-import { useCurrentUserQuery } from "@/queries/auth/use-current-user-query"
-import { useHouseholdsQuery } from "@/queries/households/use-households-query"
+import {
+  useCurrentUserQuery,
+  useProbeCurrentUserQuery,
+} from "@/queries/auth/use-current-user-query"
+import {
+  useHouseholdsQuery,
+  useProbeHouseholdsQuery,
+} from "@/queries/households/use-households-query"
 import { useAuthSessionStore } from "@/stores/auth-session-store"
 
 interface AuthGateProps {
@@ -20,8 +26,17 @@ export function AuthGate({ children, mode = "protected" }: AuthGateProps) {
   const clear = useAuthSessionStore((state) => state.clear)
   const setBootstrapStatus = useAuthSessionStore((state) => state.setBootstrapStatus)
 
-  const sessionQuery = useCurrentUserQuery(mode === "guest")
-  const householdsQuery = useHouseholdsQuery(Boolean(sessionQuery.data), mode === "guest")
+  const protectedSessionQuery = useCurrentUserQuery(mode !== "guest")
+  const guestSessionQuery = useProbeCurrentUserQuery(mode === "guest")
+  const sessionQuery = mode === "guest" ? guestSessionQuery : protectedSessionQuery
+
+  const protectedHouseholdsQuery = useHouseholdsQuery(
+    mode !== "guest" && Boolean(protectedSessionQuery.data),
+  )
+  const guestHouseholdsQuery = useProbeHouseholdsQuery(
+    mode === "guest" && Boolean(guestSessionQuery.data),
+  )
+  const householdsQuery = mode === "guest" ? guestHouseholdsQuery : protectedHouseholdsQuery
 
   const isPending =
     sessionQuery.isPending || (Boolean(sessionQuery.data) && householdsQuery.isPending)

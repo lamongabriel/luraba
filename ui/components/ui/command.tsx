@@ -47,28 +47,41 @@ function CommandDialog({
   )
 }
 
-function CommandInput({ className, ...props }: React.ComponentProps<"input">) {
-  return (
-    <div
-      data-slot="command-input-wrapper"
-      className="flex items-center gap-3 border-b border-border/70 px-4 py-3"
-    >
-      <HugeiconsIcon
-        icon={Search01Icon}
-        strokeWidth={2}
-        className="size-4 text-muted-foreground"
-      />
-      <input
-        data-slot="command-input"
+const CommandInput = React.forwardRef<
+  HTMLInputElement,
+  React.ComponentProps<"input"> & {
+    iconClassName?: string
+    wrapperClassName?: string
+  }
+>(({ className, iconClassName, wrapperClassName, ...props }, ref) => {
+    return (
+      <div
+        data-slot="command-input-wrapper"
         className={cn(
-          "h-9 w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground",
-          className
+          "flex items-center gap-3 border-b border-border/70 px-4 py-3",
+          wrapperClassName
         )}
-        {...props}
-      />
-    </div>
-  )
-}
+      >
+        <HugeiconsIcon
+          icon={Search01Icon}
+          strokeWidth={2}
+          className={cn("size-4 text-muted-foreground", iconClassName)}
+        />
+        <input
+          ref={ref}
+          data-slot="command-input"
+          className={cn(
+            "h-9 w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground",
+            className
+          )}
+          {...props}
+        />
+      </div>
+    )
+  }
+)
+
+CommandInput.displayName = "CommandInput"
 
 function CommandList({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -124,22 +137,24 @@ function CommandSeparator({ className, ...props }: React.ComponentProps<"div">) 
   )
 }
 
-function CommandItem({
-  className,
-  ...props
-}: React.ComponentProps<"button">) {
-  return (
-    <button
-      type="button"
-      data-slot="command-item"
-      className={cn(
-        "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-white/[0.045] focus-visible:bg-white/[0.045] focus-visible:outline-none",
-        className
-      )}
-      {...props}
-    />
-  )
-}
+const CommandItem = React.forwardRef<HTMLButtonElement, React.ComponentProps<"button">>(
+  ({ className, ...props }, ref) => {
+    return (
+      <button
+        ref={ref}
+        type="button"
+        data-slot="command-item"
+        className={cn(
+          "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-white/[0.045] focus-visible:bg-white/[0.045] focus-visible:outline-none",
+          className
+        )}
+        {...props}
+      />
+    )
+  }
+)
+
+CommandItem.displayName = "CommandItem"
 
 function CommandShortcut({
   className,

@@ -2,6 +2,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
+import { Loader } from "@/components/ui/loader"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -40,27 +41,46 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
+const Button = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<"button"> &
+    VariantProps<typeof buttonVariants> & {
+      asChild?: boolean
+      loading?: boolean
+      loadingText?: React.ReactNode
+    }
+>(({ className, variant = "default", size = "default", asChild = false, loading = false, loadingText, children, disabled, ...props }, ref) => {
   const Comp = asChild ? Slot.Root : "button"
+  const loaderSize = size === "lg" ? "xs" : size === "sm" || size === "xs" ? "xs" : "xs"
 
   return (
     <Comp
+      ref={ref}
       data-slot="button"
       data-variant={variant}
       data-size={size}
+      aria-busy={loading}
       className={cn(buttonVariants({ variant, size, className }))}
+      disabled={disabled || loading}
       {...props}
-    />
+    >
+      {loading ? (
+        <span className="inline-flex items-center gap-2">
+          <Loader
+            size={loaderSize}
+            label={typeof loadingText === "string" ? loadingText : "Loading"}
+            className="border-current/30 border-t-current"
+            containerClassName="text-current"
+          />
+          <span>{loadingText ?? children}</span>
+        </span>
+      ) : (
+        children
+      )}
+    </Comp>
   )
-}
+})
+
+Button.displayName = "Button"
 
 export { Button, buttonVariants }

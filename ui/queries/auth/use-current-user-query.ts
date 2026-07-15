@@ -5,16 +5,33 @@ import {
   useQuery,
 } from "@tanstack/react-query"
 
-import { getCurrentUser } from "@/services/auth.service"
+import { getCurrentUser, probeCurrentUser } from "@/services/auth.service"
 import { authQueryKeys } from "@/queries/auth/use-auth-providers-query"
 
-export function getCurrentUserQueryOptions(skipAuthRedirect = false) {
+export function getCurrentUserQueryOptions() {
   return queryOptions({
     queryKey: authQueryKeys.session,
-    queryFn: () => getCurrentUser(skipAuthRedirect),
+    queryFn: () => getCurrentUser(),
   })
 }
 
-export function useCurrentUserQuery(skipAuthRedirect = false) {
-  return useQuery(getCurrentUserQueryOptions(skipAuthRedirect))
+export function getProbeCurrentUserQueryOptions() {
+  return queryOptions({
+    queryKey: [...authQueryKeys.session, "probe"] as const,
+    queryFn: () => probeCurrentUser(),
+  })
+}
+
+export function useCurrentUserQuery(enabled = true) {
+  return useQuery({
+    ...getCurrentUserQueryOptions(),
+    enabled,
+  })
+}
+
+export function useProbeCurrentUserQuery(enabled = true) {
+  return useQuery({
+    ...getProbeCurrentUserQueryOptions(),
+    enabled,
+  })
 }
