@@ -1,3 +1,7 @@
+import { addMonths } from "date-fns";
+
+import { formatDate as formatAppDate, parseDateValue } from "@/lib/format";
+
 const LANGUAGE_TO_LOCALE: Record<string, string> = {
   en: "en-US",
   "pt-BR": "pt-BR",
@@ -5,6 +9,10 @@ const LANGUAGE_TO_LOCALE: Record<string, string> = {
 
 export function getLocale(language = "en") {
   return LANGUAGE_TO_LOCALE[language] ?? "en-US";
+}
+
+function resolveDateLanguage(language = "en") {
+  return language === "pt-BR" ? "pt-BR" : "en";
 }
 
 export function formatCurrency(
@@ -31,31 +39,30 @@ export function formatSignedCurrency(
 }
 
 export function formatDate(value: string | Date, language = "en") {
-  const date = typeof value === "string" ? new Date(`${value}T12:00:00`) : value;
-  return new Intl.DateTimeFormat(getLocale(language), {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
+  return formatAppDate(value, {
+    language: resolveDateLanguage(language),
+    formatString: "dd MMM yyyy",
+  });
 }
 
 export function formatMonthLabel(monthKey: string, language = "en") {
-  const [year, month] = monthKey.split("-").map(Number);
-  return new Intl.DateTimeFormat(getLocale(language), {
-    month: "long",
-    year: "numeric",
-  }).format(new Date(Date.UTC(year, month - 1, 1)));
+  return formatAppDate(`${monthKey}-01`, {
+    language: resolveDateLanguage(language),
+    formatString: "MMMM yyyy",
+  });
 }
 
 export function shiftMonthKey(monthKey: string, offset: number) {
-  const [year, month] = monthKey.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1 + offset, 1));
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+  const date = parseDateValue(`${monthKey}-01T12:00:00`);
+
+  if (!date) return monthKey;
+
+  const shiftedDate = addMonths(date, offset);
+  return formatAppDate(shiftedDate, { formatString: "yyyy-MM" });
 }
 
 export function getCurrentMonthKey() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  return formatAppDate(new Date(), { formatString: "yyyy-MM" });
 }
 
 export function maskCardNumber(last4: string) {
