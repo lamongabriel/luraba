@@ -8,7 +8,11 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { typographyVariants } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
 
-function Command({ className, ...props }: React.ComponentProps<"div">) {
+interface CommandProps extends React.ComponentProps<"div"> {
+  loop?: boolean
+}
+
+function Command({ className, loop: _loop, ...props }: CommandProps) {
   return (
     <div
       data-slot="command"
@@ -52,8 +56,28 @@ const CommandInput = React.forwardRef<
   React.ComponentProps<"input"> & {
     iconClassName?: string
     wrapperClassName?: string
+    onValueChange?: (value: string) => void
   }
->(({ className, iconClassName, wrapperClassName, ...props }, ref) => {
+>(
+  (
+    {
+      className,
+      iconClassName,
+      wrapperClassName,
+      onChange,
+      onValueChange,
+      ...props
+    },
+    ref
+  ) => {
+    const handleChange = React.useCallback(
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        onChange?.(event)
+        onValueChange?.(event.target.value)
+      },
+      [onChange, onValueChange]
+    )
+
     return (
       <div
         data-slot="command-input-wrapper"
@@ -74,6 +98,7 @@ const CommandInput = React.forwardRef<
             "h-9 w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground",
             className
           )}
+          onChange={handleChange}
           {...props}
         />
       </div>
@@ -137,17 +162,36 @@ function CommandSeparator({ className, ...props }: React.ComponentProps<"div">) 
   )
 }
 
-const CommandItem = React.forwardRef<HTMLButtonElement, React.ComponentProps<"button">>(
-  ({ className, ...props }, ref) => {
+interface CommandItemProps
+  extends Omit<React.ComponentProps<"button">, "value" | "onSelect"> {
+  value?: string
+  onSelect?: (value: string) => void
+}
+
+const CommandItem = React.forwardRef<HTMLButtonElement, CommandItemProps>(
+  ({ className, onClick, onSelect, value, ...props }, ref) => {
+    const handleClick = React.useCallback(
+      (event: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(event)
+
+        if (!event.defaultPrevented && value !== undefined) {
+          onSelect?.(value)
+        }
+      },
+      [onClick, onSelect, value]
+    )
+
     return (
       <button
         ref={ref}
         type="button"
         data-slot="command-item"
+        data-value={value}
         className={cn(
           "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-white/[0.045] focus-visible:bg-white/[0.045] focus-visible:outline-none",
           className
         )}
+        onClick={handleClick}
         {...props}
       />
     )
