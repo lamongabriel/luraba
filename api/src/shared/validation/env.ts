@@ -57,7 +57,7 @@ export function hexSecretEnvSchema(key: string, length: number) {
   });
 }
 
-export const booleanEnvSchema = z.preprocess((value) => {
+function parseBooleanEnvValue(value: unknown) {
   if (typeof value === 'boolean') {
     return value;
   }
@@ -81,7 +81,11 @@ export const booleanEnvSchema = z.preprocess((value) => {
   }
 
   return value;
-}, z.boolean());
+}
+
+export const booleanEnvSchema = z.preprocess(parseBooleanEnvValue, z.boolean());
+
+export const optionalBooleanEnvSchema = z.preprocess(parseBooleanEnvValue, z.boolean().optional());
 
 type OptionalCredentialPairPrefix = string;
 
