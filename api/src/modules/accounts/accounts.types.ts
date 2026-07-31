@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { accountsTable } from '@/db/schemas/accounts.schema';
-import { ListTransactionsResponseSchema } from '@/modules/transactions/transactions.types';
+import { TransactionFeedRowSchema } from '@/modules/transactions/transactions.types';
 import {
   type AccountClassification,
   type AccountType,
@@ -61,7 +61,7 @@ export const ListAccountTransactionsRequestParamsSchema = z.object({
   id: z.uuid(),
 });
 
-export const ListAccountTransactionsResponseSchema = ListTransactionsResponseSchema;
+export const ListAccountTransactionsResponseSchema = z.array(TransactionFeedRowSchema);
 
 export const UpdateAccountRequestParamsSchema = z.object({
   id: z.uuid(),

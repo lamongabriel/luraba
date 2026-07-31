@@ -10,6 +10,10 @@ import {
   buildCreditCardInput,
   createBalanceEntryForAccount,
 } from '@/test/factories';
+import {
+  ListCreditCardCyclesRequestQuerySchema,
+  ListCreditCardsRequestQuerySchema,
+} from '../credit-cards.query';
 import * as creditCardsService from '../credit-cards.service';
 
 describe('credit cards service', () => {
@@ -17,6 +21,10 @@ describe('credit cards service', () => {
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
+
+  function buildCyclesQuery(scope: 'default' | 'all' = 'default') {
+    return ListCreditCardCyclesRequestQuerySchema.parse({ scope });
+  }
 
   it('creates a card with normalized institution branding from the account flow', async () => {
     const context = await createAuthenticatedContext();
@@ -55,19 +63,21 @@ describe('credit cards service', () => {
       }),
     );
 
-    const cycles = await creditCardsService.listBillingCycles(context.householdContext, card.id, {
-      scope: 'default',
-    });
+    const cycles = await creditCardsService.listBillingCycles(
+      context.householdContext,
+      card.id,
+      buildCyclesQuery(),
+    );
 
-    expect(cycles).toHaveLength(2);
-    expect(cycles[0]).toEqual(
+    expect(cycles.data).toHaveLength(2);
+    expect(cycles.data[0]).toEqual(
       expect.objectContaining({
         displayStatus: 'upcoming',
         isNext: true,
         hasActivity: false,
       }),
     );
-    expect(cycles[1]).toEqual(
+    expect(cycles.data[1]).toEqual(
       expect.objectContaining({
         displayStatus: 'current',
         isCurrent: true,
@@ -110,11 +120,13 @@ describe('credit cards service', () => {
       }),
     );
 
-    const cycles = await creditCardsService.listBillingCycles(context.householdContext, card.id, {
-      scope: 'all',
-    });
+    const cycles = await creditCardsService.listBillingCycles(
+      context.householdContext,
+      card.id,
+      buildCyclesQuery('all'),
+    );
 
-    expect(cycles).toEqual(
+    expect(cycles.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           closingDate: '2026-05-25',
@@ -165,10 +177,12 @@ describe('credit cards service', () => {
       installmentCount: 1,
     });
 
-    let cycles = await creditCardsService.listBillingCycles(context.householdContext, card.id, {
-      scope: 'all',
-    });
-    const dueCycle = cycles.find((cycle) => cycle.closingDate === '2026-04-25');
+    let cycles = await creditCardsService.listBillingCycles(
+      context.householdContext,
+      card.id,
+      buildCyclesQuery('all'),
+    );
+    const dueCycle = cycles.data.find((cycle) => cycle.closingDate === '2026-04-25');
 
     expect(dueCycle).toEqual(
       expect.objectContaining({
@@ -183,10 +197,12 @@ describe('credit cards service', () => {
       paymentDate: new Date('2026-04-30T00:00:00.000Z'),
     });
 
-    cycles = await creditCardsService.listBillingCycles(context.householdContext, card.id, {
-      scope: 'all',
-    });
-    const paidCycle = cycles.find((cycle) => cycle.closingDate === '2026-04-25');
+    cycles = await creditCardsService.listBillingCycles(
+      context.householdContext,
+      card.id,
+      buildCyclesQuery('all'),
+    );
+    const paidCycle = cycles.data.find((cycle) => cycle.closingDate === '2026-04-25');
 
     expect(paidCycle).toEqual(
       expect.objectContaining({
@@ -314,10 +330,12 @@ describe('credit cards service', () => {
       createdPurchase.purchaseId,
     );
 
-    const cycles = await creditCardsService.listBillingCycles(context.householdContext, card.id, {
-      scope: 'all',
-    });
-    const closingDayCycle = cycles.find((cycle) => cycle.closingDate === '2026-04-25');
+    const cycles = await creditCardsService.listBillingCycles(
+      context.householdContext,
+      card.id,
+      buildCyclesQuery('all'),
+    );
+    const closingDayCycle = cycles.data.find((cycle) => cycle.closingDate === '2026-04-25');
 
     expect(closingDayCycle).toEqual(
       expect.objectContaining({
@@ -417,10 +435,12 @@ describe('credit cards service', () => {
       }),
     );
 
-    let cycles = await creditCardsService.listBillingCycles(context.householdContext, card.id, {
-      scope: 'all',
-    });
-    let dueCycle = cycles.find((cycle) => cycle.closingDate === '2026-04-25');
+    let cycles = await creditCardsService.listBillingCycles(
+      context.householdContext,
+      card.id,
+      buildCyclesQuery('all'),
+    );
+    let dueCycle = cycles.data.find((cycle) => cycle.closingDate === '2026-04-25');
     expect(dueCycle).toEqual(expect.objectContaining({ remainingAmount: 2_000 }));
 
     await creditCardsService.deletePayment(
@@ -429,10 +449,12 @@ describe('credit cards service', () => {
       createdPayment.paymentId,
     );
 
-    cycles = await creditCardsService.listBillingCycles(context.householdContext, card.id, {
-      scope: 'all',
-    });
-    dueCycle = cycles.find((cycle) => cycle.closingDate === '2026-04-25');
+    cycles = await creditCardsService.listBillingCycles(
+      context.householdContext,
+      card.id,
+      buildCyclesQuery('all'),
+    );
+    dueCycle = cycles.data.find((cycle) => cycle.closingDate === '2026-04-25');
     expect(dueCycle).toEqual(expect.objectContaining({ remainingAmount: 10_000 }));
   });
 
@@ -521,5 +543,97 @@ describe('credit cards service', () => {
         installmentCount: 1,
       }),
     ).rejects.toThrow(ValidationError);
+  });
+});
+
+describe('credit card DB list filters', () => {
+  it('filters card rows and computed cycle amounts before pagination', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-20T12:00:00.000Z'));
+
+    const context = await createAuthenticatedContext();
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Card Query Category', type: 'expense' }),
+    );
+    const card = await creditCardsService.createCreditCard(
+      context.householdContext,
+      buildCreditCardInput({
+        name: 'Card Query Target',
+        institutionName: 'Query Bank',
+        brand: 'Visa',
+        closingDay: 25,
+        dueDay: 5,
+        creditLimitAmount: 50_000,
+      }),
+    );
+    await creditCardsService.createPurchase(context.householdContext, card.id, {
+      description: 'Card Query Purchase',
+      amount: 10_000,
+      categoryId: category.id,
+      purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
+      postedDate: new Date('2026-04-20T00:00:00.000Z'),
+      installmentCount: 1,
+    });
+
+    const cards = await creditCardsService.listCreditCards(
+      context.householdContext,
+      ListCreditCardsRequestQuerySchema.parse({
+        search: 'Query Target',
+        brands: 'Visa,Mastercard',
+        currencyCodes: 'BRL',
+        accountIds: card.accountId,
+        closingDays: '25',
+        dueDays: '5',
+        balanceMin: 10_000,
+        balanceMax: 10_000,
+        creditLimitMin: 50_000,
+        creditLimitMax: 50_000,
+        hasCreditLimit: true,
+        createdAtFrom: '2020-01-01',
+        createdAtTo: '2030-01-01',
+        updatedAtFrom: '2020-01-01',
+        updatedAtTo: '2030-01-01',
+        sort: 'balance',
+        perPage: 1,
+      }),
+    );
+    expect(cards.data).toEqual([expect.objectContaining({ id: card.id, balance: 10_000 })]);
+
+    const allCycles = await creditCardsService.listBillingCycles(
+      context.householdContext,
+      card.id,
+      ListCreditCardCyclesRequestQuerySchema.parse({ scope: 'all' }),
+    );
+    const activeCycle = allCycles.data.find((cycle) => cycle.statementAmount === 10_000);
+    expect(activeCycle).toBeDefined();
+
+    const filteredCycles = await creditCardsService.listBillingCycles(
+      context.householdContext,
+      card.id,
+      ListCreditCardCyclesRequestQuerySchema.parse({
+        scope: 'all',
+        search: activeCycle?.status,
+        statuses: activeCycle?.status,
+        displayStatuses: activeCycle?.displayStatus,
+        closingDateFrom: activeCycle?.closingDate,
+        closingDateTo: activeCycle?.closingDate,
+        dueDateFrom: activeCycle?.dueDate,
+        dueDateTo: activeCycle?.dueDate,
+        statementAmountMin: 10_000,
+        statementAmountMax: 10_000,
+        paidAmountMin: 0,
+        paidAmountMax: 0,
+        remainingAmountMin: 10_000,
+        remainingAmountMax: 10_000,
+        sort: 'closingDate',
+        perPage: 1,
+      }),
+    );
+
+    expect(filteredCycles.data).toEqual([
+      expect.objectContaining({ id: activeCycle?.id, statementAmount: 10_000 }),
+    ]);
+    expect(filteredCycles.meta.pagination.totalCount).toBe(1);
   });
 });

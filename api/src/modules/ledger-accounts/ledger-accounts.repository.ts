@@ -17,6 +17,19 @@ export type LedgerAccountSummary = {
   systemKey: string | null;
 };
 
+export function buildAccountBalanceSubquery(alias = 'account_balances') {
+  return db
+    .select({
+      accountId: ledgerAccountsTable.ownerId,
+      balance: sql<number>`coalesce(sum(${entriesTable.amount}), 0)::integer`.as('balance'),
+    })
+    .from(ledgerAccountsTable)
+    .leftJoin(entriesTable, eq(entriesTable.ledgerAccountId, ledgerAccountsTable.id))
+    .where(eq(ledgerAccountsTable.ownerType, 'account'))
+    .groupBy(ledgerAccountsTable.ownerId)
+    .as(alias);
+}
+
 class LedgerAccountsRepository {
   async findByOwner(
     ownerType: LedgerOwnerType,

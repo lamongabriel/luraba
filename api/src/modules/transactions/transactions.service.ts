@@ -15,6 +15,7 @@ import { paymentMethodsRepository } from '@/modules/payment-methods/payment-meth
 import { tagsRepository } from '@/modules/tags/tags.repository';
 import { NotFoundError, ValidationError } from '@/shared/errors';
 import { startOfMonth as toBudgetMonth } from '@/shared/lib/date';
+import { createListMeta, type ListResult } from '@/shared/list';
 import {
   mapCreditCardInstallmentRowsToFeedRows,
   mapDetailedRows,
@@ -22,6 +23,7 @@ import {
   resolveTransferAmounts,
   toRawLedgerBalance,
 } from './transactions.helpers';
+import type { ListTransactionsRequestQuery } from './transactions.query';
 import * as txRepository from './transactions.repository';
 import type {
   CreateTransactionDto,
@@ -53,7 +55,7 @@ async function validateTags(
 
 async function validateOptionalMerchant(
   context: HouseholdContext,
-  merchantId?: string,
+  merchantId?: string | null,
 ): Promise<void> {
   if (!merchantId) return;
 
@@ -468,6 +470,110 @@ async function createAdjustment(
   return loadCreatedTransaction(context, transactionId);
 }
 
+async function createExpenseOrIncomeEntries(
+  tx: TxClient,
+  input: {
+    transactionId: string;
+    type: 'expense' | 'income';
+    accountId: string;
+    amount: number;
+    currencyCode: string;
+    categoryId: string;
+    postedDate: Date;
+  },
+): Promise<void> {
+  const accountLedger = await ledgerAccountsRepository.findByOwner('account', input.accountId);
+  if (!accountLedger) throw new NotFoundError('Account ledger');
+
+  const systemLedger = await ledgerAccountsRepository.findOrCreateSystem(
+    tx,
+    `system:${input.type}:${input.currencyCode}`,
+    input.type === 'expense'
+      ? SYSTEM_LEDGER_CLASSIFICATIONS.expense
+      : SYSTEM_LEDGER_CLASSIFICATIONS.income,
+    input.currencyCode,
+  );
+
+  const accountAmount = input.type === 'expense' ? -input.amount : input.amount;
+  const systemAmount = input.type === 'expense' ? input.amount : -input.amount;
+
+  await entriesService.createTransactionEntries(tx, input.transactionId, [
+    {
+      ledgerAccountId: accountLedger.id,
+      amount: accountAmount,
+      currencyCode: input.currencyCode,
+      categoryId: input.categoryId,
+      budgetMonth: toBudgetMonth(input.postedDate),
+    },
+    {
+      ledgerAccountId: systemLedger.id,
+      amount: systemAmount,
+      currencyCode: input.currencyCode,
+    },
+  ]);
+}
+
+async function createTransferEntries(
+  tx: TxClient,
+  input: {
+    transactionId: string;
+    fromAccountId: string;
+    toAccountId: string;
+    fromAmount: number;
+    toAmount: number;
+    fromCurrencyCode: string;
+    toCurrencyCode: string;
+  },
+): Promise<void> {
+  const fromLedger = await ledgerAccountsRepository.findByOwner('account', input.fromAccountId);
+  const toLedger = await ledgerAccountsRepository.findByOwner('account', input.toAccountId);
+  if (!fromLedger || !toLedger) throw new NotFoundError('Account ledger');
+
+  const sameCurrency = input.fromCurrencyCode === input.toCurrencyCode;
+  const entries: EntryDraft[] = [
+    {
+      ledgerAccountId: fromLedger.id,
+      amount: -input.fromAmount,
+      currencyCode: input.fromCurrencyCode,
+    },
+    {
+      ledgerAccountId: toLedger.id,
+      amount: input.toAmount,
+      currencyCode: input.toCurrencyCode,
+    },
+  ];
+
+  if (!sameCurrency) {
+    const fromTransferLedger = await ledgerAccountsRepository.findOrCreateSystem(
+      tx,
+      `system:offshore-transfer:${input.fromCurrencyCode}`,
+      SYSTEM_LEDGER_CLASSIFICATIONS.offshoreTransfer,
+      input.fromCurrencyCode,
+    );
+    const toTransferLedger = await ledgerAccountsRepository.findOrCreateSystem(
+      tx,
+      `system:offshore-transfer:${input.toCurrencyCode}`,
+      SYSTEM_LEDGER_CLASSIFICATIONS.offshoreTransfer,
+      input.toCurrencyCode,
+    );
+
+    entries.push(
+      {
+        ledgerAccountId: fromTransferLedger.id,
+        amount: input.fromAmount,
+        currencyCode: input.fromCurrencyCode,
+      },
+      {
+        ledgerAccountId: toTransferLedger.id,
+        amount: -input.toAmount,
+        currencyCode: input.toCurrencyCode,
+      },
+    );
+  }
+
+  await entriesService.createTransactionEntries(tx, input.transactionId, entries);
+}
+
 // -----------------------------------------------------------------------------
 // Public Service API
 // -----------------------------------------------------------------------------
@@ -490,49 +596,93 @@ export async function createTransaction(
   }
 }
 
-function sortFeedRows(rows: TransactionFeedRow[]): TransactionFeedRow[] {
-  return [...rows].sort((left, right) => {
-    if (left.postedDate !== right.postedDate) {
-      return right.postedDate.localeCompare(left.postedDate);
-    }
-
-    const createdAtDiff = right.createdAt.getTime() - left.createdAt.getTime();
-    if (createdAtDiff !== 0) {
-      return createdAtDiff;
-    }
-
-    return right.rowId.localeCompare(left.rowId);
-  });
+function getFeedRowHydrationKey(row: Pick<TransactionFeedRow, 'rowKind' | 'rowId'>): string {
+  return `${row.rowKind}:${row.rowId}`;
 }
 
-export async function listTransactions(context: HouseholdContext): Promise<TransactionFeedRow[]> {
-  const [standardRows, installmentRows] = await Promise.all([
-    txRepository.listDetailedByHouseholdId(context.householdId),
-    txRepository.listCreditCardInstallmentFeedRows(context.householdId),
-  ]);
+async function hydrateTransactionFeedPage(
+  context: HouseholdContext,
+  page: Awaited<ReturnType<typeof txRepository.listTransactionFeedPageKeys>>,
+): Promise<TransactionFeedRow[]> {
+  const transactionIds = new Set<string>();
+  const installmentIds = new Set<string>();
 
-  const standardTransactions = mapDetailedRows(standardRows);
-  const accountIds = Array.from(
-    new Set(
-      standardTransactions.flatMap((transaction) =>
-        [transaction.accountId, transaction.toAccountId].filter((accountId): accountId is string =>
-          Boolean(accountId),
-        ),
-      ),
+  for (const key of page.rows) {
+    if (key.transactionId && key.rowKind !== 'credit_card_installment') {
+      transactionIds.add(key.transactionId);
+    }
+
+    if (key.installmentId) {
+      installmentIds.add(key.installmentId);
+    }
+  }
+
+  const [standardRows, installmentRows] = await Promise.all([
+    txRepository.listDetailedByTransactionIds(context, Array.from(transactionIds)),
+    txRepository.listCreditCardInstallmentFeedRowsByIds(
+      context.householdId,
+      Array.from(installmentIds),
     ),
-  );
+  ]);
+  const standardTransactions = mapDetailedRows(standardRows);
+  const accountIds = new Set<string>();
+
+  for (const transaction of standardTransactions) {
+    if (transaction.accountId) {
+      accountIds.add(transaction.accountId);
+    }
+    if (transaction.toAccountId) {
+      accountIds.add(transaction.toAccountId);
+    }
+  }
+
   const creditCardMappings = await txRepository.listCreditCardIdsByAccountIds(
     context.householdId,
-    accountIds,
+    Array.from(accountIds),
   );
   const creditCardIdsByAccountId = new Map(
     creditCardMappings.map((mapping) => [mapping.accountId, mapping.creditCardId]),
   );
-
-  return sortFeedRows([
-    ...mapTransactionResponsesToFeedRows(standardTransactions, creditCardIdsByAccountId),
+  const paymentMappings = await txRepository.listCreditCardPaymentMappingsByTransactionIds(
+    context.householdId,
+    Array.from(transactionIds),
+  );
+  const creditCardPaymentsByTransactionId = new Map(
+    paymentMappings.map((mapping) => [
+      mapping.transactionId,
+      { creditCardId: mapping.creditCardId, paymentId: mapping.paymentId },
+    ]),
+  );
+  const hydratedRows = [
+    ...mapTransactionResponsesToFeedRows(
+      standardTransactions,
+      creditCardIdsByAccountId,
+      creditCardPaymentsByTransactionId,
+    ),
     ...mapCreditCardInstallmentRowsToFeedRows(installmentRows),
-  ]);
+  ];
+  const rowsByKey = new Map(hydratedRows.map((row) => [getFeedRowHydrationKey(row), row]));
+
+  return page.rows.map((key) => {
+    const row = rowsByKey.get(getFeedRowHydrationKey(key));
+    if (!row) {
+      throw new NotFoundError('Transaction');
+    }
+
+    return row;
+  });
+}
+
+export async function listTransactions(
+  context: HouseholdContext,
+  query: ListTransactionsRequestQuery,
+): Promise<ListResult<TransactionFeedRow>> {
+  const page = await txRepository.listTransactionFeedPageKeys(context.householdId, query);
+
+  return {
+    data: await hydrateTransactionFeedPage(context, page),
+    meta: createListMeta(query, page.totalCount, page.summary),
+  };
 }
 
 // -----------------------------------------------------------------------------
@@ -551,52 +701,6 @@ export async function updateTransaction(
     throw new NotFoundError('Transaction');
   }
 
-  let paymentMethodId = transaction.paymentMethodId ?? null;
-  const nextCategoryId = body.categoryId ?? transaction.categoryId ?? null;
-
-  if (transaction.type === 'expense' || transaction.type === 'income') {
-    if (!nextCategoryId) {
-      throw new ValidationError(`Category is required for ${transaction.type} transactions`);
-    }
-
-    await validateCategory(context, nextCategoryId, transaction.type);
-
-    if (body.paymentMethodCode !== undefined) {
-      const paymentMethod = await resolvePaymentMethod(
-        context,
-        body.paymentMethodCode,
-        transaction.currencyCode,
-      );
-      paymentMethodId = paymentMethod.id;
-    }
-
-    if (!paymentMethodId) {
-      throw new ValidationError(`Payment method is required for ${transaction.type} transactions`);
-    }
-
-    if (body.merchantId !== undefined) {
-      await validateOptionalMerchant(context, body.merchantId);
-    }
-  } else {
-    if (body.categoryId !== undefined) {
-      throw new ValidationError(
-        `Category updates are not supported for ${transaction.type} transactions`,
-      );
-    }
-
-    if (body.paymentMethodCode !== undefined) {
-      throw new ValidationError(
-        `Payment method updates are not supported for ${transaction.type} transactions`,
-      );
-    }
-
-    if (body.merchantId !== undefined) {
-      throw new ValidationError(
-        `Merchant updates are not supported for ${transaction.type} transactions`,
-      );
-    }
-  }
-
   let tagIds: string[] | undefined;
   if (body.tagIds !== undefined) {
     tagIds = await validateTags(context, body.tagIds);
@@ -611,34 +715,232 @@ export async function updateTransaction(
     merchantId: string | null;
     paymentMethodId: string | null;
   }> = {};
+  let rebuildEntries:
+    | {
+        type: 'expense' | 'income';
+        accountId: string;
+        amount: number;
+        currencyCode: string;
+        categoryId: string;
+        postedDate: Date;
+      }
+    | {
+        type: 'transfer';
+        fromAccountId: string;
+        toAccountId: string;
+        fromAmount: number;
+        toAmount: number;
+        fromCurrencyCode: string;
+        toCurrencyCode: string;
+      }
+    | null = null;
 
   if (body.description !== undefined) transactionUpdates.description = body.description;
   if (body.purchaseDate !== undefined) transactionUpdates.purchaseDate = body.purchaseDate;
   if (body.postedDate !== undefined) transactionUpdates.postedDate = body.postedDate;
   if (body.includeInBudget !== undefined) transactionUpdates.includeInBudget = body.includeInBudget;
-  if (body.categoryId !== undefined) transactionUpdates.categoryId = body.categoryId;
-  if (body.merchantId !== undefined) transactionUpdates.merchantId = body.merchantId;
-  if (body.paymentMethodCode !== undefined) transactionUpdates.paymentMethodId = paymentMethodId;
+
+  if (transaction.type === 'expense' || transaction.type === 'income') {
+    if (body.fromAccountId !== undefined || body.toAccountId !== undefined) {
+      throw new ValidationError(
+        `Transfer account updates are not supported for ${transaction.type} transactions`,
+      );
+    }
+    if (body.fromAmount !== undefined || body.toAmount !== undefined) {
+      throw new ValidationError(
+        `Transfer amount updates are not supported for ${transaction.type} transactions`,
+      );
+    }
+
+    const nextAccountId = body.accountId ?? transaction.accountId;
+    if (!nextAccountId) {
+      throw new ValidationError(`Account is required for ${transaction.type} transactions`);
+    }
+
+    const account = await accountsRepository.get(nextAccountId, context);
+    if (!account) throw new NotFoundError('Account');
+    if (account.type === 'credit_card') {
+      throw new ValidationError(
+        `Direct ${transaction.type} updates for credit card accounts must use the credit card APIs`,
+      );
+    }
+
+    const nextCurrencyCode = body.currencyCode ?? account.currencyId;
+    if (account.currencyId !== nextCurrencyCode) {
+      throw new ValidationError('Transaction currency must match account currency');
+    }
+
+    const nextCategoryId = body.categoryId ?? transaction.categoryId;
+    if (!nextCategoryId) {
+      throw new ValidationError(`Category is required for ${transaction.type} transactions`);
+    }
+    await validateCategory(context, nextCategoryId, transaction.type);
+
+    if (body.merchantId !== undefined) {
+      await validateOptionalMerchant(context, body.merchantId);
+      transactionUpdates.merchantId = body.merchantId;
+    }
+
+    const paymentMethodCode = body.paymentMethodCode ?? transaction.paymentMethodCode;
+    if (!paymentMethodCode) {
+      throw new ValidationError(`Payment method is required for ${transaction.type} transactions`);
+    }
+
+    const paymentMethod = await resolvePaymentMethod(context, paymentMethodCode, nextCurrencyCode);
+    const nextPostedDate = body.postedDate ?? new Date(`${transaction.postedDate}T00:00:00.000Z`);
+    const nextAmount = body.amount ?? transaction.amount;
+
+    if (body.categoryId !== undefined) transactionUpdates.categoryId = nextCategoryId;
+    if (body.paymentMethodCode !== undefined || paymentMethod.id !== transaction.paymentMethodId) {
+      transactionUpdates.paymentMethodId = paymentMethod.id;
+    }
+
+    const shouldRebuildEntries =
+      body.amount !== undefined ||
+      body.accountId !== undefined ||
+      body.currencyCode !== undefined ||
+      body.categoryId !== undefined ||
+      body.postedDate !== undefined;
+
+    if (shouldRebuildEntries) {
+      rebuildEntries = {
+        type: transaction.type,
+        accountId: nextAccountId,
+        amount: nextAmount,
+        currencyCode: nextCurrencyCode,
+        categoryId: nextCategoryId,
+        postedDate: nextPostedDate,
+      };
+    }
+  } else if (transaction.type === 'transfer') {
+    if (body.categoryId !== undefined) {
+      throw new ValidationError('Category updates are not supported for transfer transactions');
+    }
+    if (body.paymentMethodCode !== undefined) {
+      throw new ValidationError(
+        'Payment method updates are not supported for transfer transactions',
+      );
+    }
+    if (body.merchantId !== undefined) {
+      throw new ValidationError('Merchant updates are not supported for transfer transactions');
+    }
+    if (
+      body.accountId !== undefined ||
+      body.amount !== undefined ||
+      body.currencyCode !== undefined
+    ) {
+      throw new ValidationError(
+        'Use fromAccountId, toAccountId, fromAmount, and toAmount to update transfer transactions',
+      );
+    }
+
+    const fromAccountId = body.fromAccountId ?? transaction.accountId;
+    const toAccountId = body.toAccountId ?? transaction.toAccountId;
+    if (!fromAccountId || !toAccountId) {
+      throw new ValidationError('Transfer source and destination accounts are required');
+    }
+    if (fromAccountId === toAccountId) {
+      throw new ValidationError('Transfer source and destination must be different accounts');
+    }
+
+    const fromAccount = await accountsRepository.get(fromAccountId, context);
+    if (!fromAccount) throw new NotFoundError('Source account');
+    if (fromAccount.type === 'credit_card') {
+      throw new ValidationError(
+        'Direct transfers from credit card accounts must use the credit card payment endpoint',
+      );
+    }
+
+    const toAccount = await accountsRepository.get(toAccountId, context);
+    if (!toAccount) throw new NotFoundError('Destination account');
+    if (toAccount.type === 'credit_card') {
+      throw new ValidationError(
+        'Direct transfers to credit card accounts must use the credit card payment endpoint',
+      );
+    }
+
+    const amountChanged = body.fromAmount !== undefined || body.toAmount !== undefined;
+    const nextPostedDate = body.postedDate ?? new Date(`${transaction.postedDate}T00:00:00.000Z`);
+    const { fromAmount, toAmount } = await resolveTransferAmounts({
+      fromCurrencyCode: fromAccount.currencyId,
+      toCurrencyCode: toAccount.currencyId,
+      fromAmount: amountChanged ? body.fromAmount : transaction.amount,
+      toAmount: amountChanged ? body.toAmount : (transaction.toAmount ?? transaction.amount),
+      postedDate: nextPostedDate,
+      convertAmount: (input) => fxService.convertAmount(input),
+    });
+
+    const shouldRebuildEntries =
+      body.fromAccountId !== undefined ||
+      body.toAccountId !== undefined ||
+      body.fromAmount !== undefined ||
+      body.toAmount !== undefined;
+
+    if (shouldRebuildEntries) {
+      rebuildEntries = {
+        type: 'transfer',
+        fromAccountId,
+        toAccountId,
+        fromAmount,
+        toAmount,
+        fromCurrencyCode: fromAccount.currencyId,
+        toCurrencyCode: toAccount.currencyId,
+      };
+    }
+  } else {
+    if (
+      body.categoryId !== undefined ||
+      body.paymentMethodCode !== undefined ||
+      body.merchantId !== undefined ||
+      body.accountId !== undefined ||
+      body.amount !== undefined ||
+      body.currencyCode !== undefined ||
+      body.fromAccountId !== undefined ||
+      body.toAccountId !== undefined ||
+      body.fromAmount !== undefined ||
+      body.toAmount !== undefined
+    ) {
+      throw new ValidationError(
+        `Only metadata updates are supported for ${transaction.type} transactions`,
+      );
+    }
+  }
 
   await db.transaction(async (tx) => {
-    if (Object.keys(transactionUpdates).length > 0 || body.tagIds !== undefined) {
-      const updated = await txRepository.updateTransaction(
-        tx,
-        context.householdId,
-        transactionId,
-        transactionUpdates,
-      );
-      if (!updated) {
-        throw new NotFoundError('Transaction');
+    const updated = await txRepository.updateTransaction(
+      tx,
+      context.householdId,
+      transactionId,
+      transactionUpdates,
+    );
+    if (!updated) {
+      throw new NotFoundError('Transaction');
+    }
+
+    if (rebuildEntries) {
+      await entriesRepository.deleteByTransactionId(tx, transactionId);
+
+      if (rebuildEntries.type === 'transfer') {
+        await createTransferEntries(tx, {
+          transactionId,
+          fromAccountId: rebuildEntries.fromAccountId,
+          toAccountId: rebuildEntries.toAccountId,
+          fromAmount: rebuildEntries.fromAmount,
+          toAmount: rebuildEntries.toAmount,
+          fromCurrencyCode: rebuildEntries.fromCurrencyCode,
+          toCurrencyCode: rebuildEntries.toCurrencyCode,
+        });
+      } else {
+        await createExpenseOrIncomeEntries(tx, {
+          transactionId,
+          type: rebuildEntries.type,
+          accountId: rebuildEntries.accountId,
+          amount: rebuildEntries.amount,
+          currencyCode: rebuildEntries.currencyCode,
+          categoryId: rebuildEntries.categoryId,
+          postedDate: rebuildEntries.postedDate,
+        });
       }
-    }
-
-    if (body.postedDate !== undefined) {
-      await entriesRepository.updateBudgetMonth(tx, transactionId, toBudgetMonth(body.postedDate));
-    }
-
-    if (body.categoryId !== undefined) {
-      await entriesRepository.updateCategoryId(tx, transactionId, body.categoryId);
     }
 
     if (body.tagIds !== undefined) {

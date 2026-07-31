@@ -3,10 +3,10 @@ import type { HouseholdContext } from '@/config/permissions';
 import { getHouseholdContext } from '@/middleware/access.middleware';
 import {
   type ControllerArgs,
+  type ControllerOutput,
   type ControllerSchema,
   type ControllerStatus,
   createHandler,
-  type ParsedResponse,
 } from '@/shared/controllers/controller';
 
 type Schema = z.ZodTypeAny;
@@ -25,7 +25,7 @@ export function createHouseholdHandler<
         response: TResponse;
         handle: (
           input: ControllerArgs<TBody, TParams, TQuery> & { household: HouseholdContext },
-        ) => Promise<ParsedResponse<TResponse>>;
+        ) => Promise<ControllerOutput<TResponse>>;
         status?: Exclude<ControllerStatus, 'no-content'>;
       }
     | {

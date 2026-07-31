@@ -3,11 +3,12 @@ import { currenciesRepository } from '@/modules/currencies/currencies.repository
 import * as transactionsRepository from '@/modules/transactions/transactions.repository';
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
+import { createListMeta, type ListResult } from '@/shared/list';
+import type { ListPaymentMethodsRequestQuery } from './payment-methods.query';
 import { paymentMethodsRepository } from './payment-methods.repository';
 import type {
   CreatePaymentMethodRequestBody,
   CreatePaymentMethodResponse,
-  ListPaymentMethodsRequestQuery,
   ListPaymentMethodsResponse,
   PaymentMethod,
   PaymentMethodRecord,
@@ -53,11 +54,15 @@ async function assertCurrencyExists(currencyCode?: string): Promise<void> {
 export async function listPaymentMethods(
   context: HouseholdContext,
   query: ListPaymentMethodsRequestQuery,
-): Promise<ListPaymentMethodsResponse> {
+): Promise<ListResult<ListPaymentMethodsResponse[number]>> {
   await assertCurrencyExists(query.currencyCode);
 
-  const methods = await paymentMethodsRepository.list(context, query.currencyCode);
-  return methods.map(mapPaymentMethodRecord);
+  const page = await paymentMethodsRepository.listPage(context, query);
+
+  return {
+    data: page.rows.map(mapPaymentMethodRecord),
+    meta: createListMeta(query, page.totalCount),
+  };
 }
 
 export async function createPaymentMethod(

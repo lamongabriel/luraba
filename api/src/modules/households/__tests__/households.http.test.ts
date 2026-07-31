@@ -14,12 +14,24 @@ describe('households routes', () => {
 
     const response = await request(app)
       .get('/api/v1/households')
-      .set(createAuthHeaders(context.token, context.household.id));
+      .set(createAuthHeaders(context.token, context.household.id))
+      .query({
+        page: 1,
+        perPage: 1,
+        search: context.household.name,
+        sort: 'name',
+        roles: 'owner',
+      });
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
     expect(response.body.data).toHaveLength(1);
     expect(response.body.data[0].id).toBe(context.household.id);
+    expect(response.body.meta.pagination).toMatchObject({
+      page: 1,
+      perPage: 1,
+      totalCount: 1,
+    });
   });
 
   it('POST /api/v1/households returns 201 for a valid payload', async () => {
@@ -105,5 +117,24 @@ describe('households routes', () => {
 
     expect(response.status).toBe(204);
     expect(response.text).toBe('');
+  });
+
+  it('returns 403 for inaccessible household member and invite path IDs', async () => {
+    const owner = await createAuthenticatedContext();
+    const outsider = await createAuthenticatedContext();
+    const headers = createAuthHeaders(outsider.token, outsider.household.id);
+
+    const [members, invites, createInvite] = await Promise.all([
+      request(app).get(`/api/v1/households/${owner.household.id}/members`).set(headers),
+      request(app).get(`/api/v1/households/${owner.household.id}/invites`).set(headers),
+      request(app)
+        .post(`/api/v1/households/${owner.household.id}/invites`)
+        .set(headers)
+        .send({ email: 'blocked@example.com', role: 'member' }),
+    ]);
+
+    expect(members.status).toBe(403);
+    expect(invites.status).toBe(403);
+    expect(createInvite.status).toBe(403);
   });
 });

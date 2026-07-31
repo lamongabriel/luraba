@@ -1,6 +1,8 @@
 import type { HouseholdContext } from '@/config/permissions';
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
+import { createListMeta, type ListResult } from '@/shared/list';
+import type { ListTagsRequestQuery } from './tags.query';
 import { tagsRepository } from './tags.repository';
 import type { CreateTagRequestBody, Tag, TagRecord, UpdateTagRequestBody } from './tags.types';
 
@@ -33,9 +35,16 @@ export async function createTag(
   return mapTagRecord(created);
 }
 
-export async function listTags(context: HouseholdContext): Promise<Tag[]> {
-  const tags = await tagsRepository.list(context);
-  return tags.map(mapTagRecord);
+export async function listTags(
+  context: HouseholdContext,
+  query: ListTagsRequestQuery,
+): Promise<ListResult<Tag>> {
+  const page = await tagsRepository.listPage(context, query);
+
+  return {
+    data: page.rows.map(mapTagRecord),
+    meta: createListMeta(query, page.totalCount),
+  };
 }
 
 export async function updateTag(

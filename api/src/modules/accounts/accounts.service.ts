@@ -8,14 +8,17 @@ import {
   normalizeBrandDomain,
 } from '@/modules/integrations/brandfetch/brandfetch.utils';
 import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
-import {
-  mapDetailedRows,
-  mapTransactionResponsesToFeedRows,
-} from '@/modules/transactions/transactions.helpers';
+import type { ListTransactionsRequestQuery } from '@/modules/transactions/transactions.query';
 import * as transactionsRepository from '@/modules/transactions/transactions.repository';
+import { listTransactions as listTransactionFeed } from '@/modules/transactions/transactions.service';
 import type { TransactionFeedRow } from '@/modules/transactions/transactions.types';
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
+import { createListMeta, type ListResult } from '@/shared/list';
+import type {
+  ListAccountsRequestQuery,
+  ListAccountTransactionsRequestQuery,
+} from './accounts.query';
 import { accountsRepository } from './accounts.repository';
 import type {
   Account,
@@ -187,18 +190,16 @@ export async function createAccount(
   });
 }
 
-export async function listAccounts(context: HouseholdContext): Promise<AccountDetails[]> {
-  const accounts = await accountsRepository.list(context);
+export async function listAccounts(
+  context: HouseholdContext,
+  query: ListAccountsRequestQuery,
+): Promise<ListResult<AccountDetails>> {
+  const page = await accountsRepository.listPage(context, query);
 
-  return Promise.all(
-    accounts.map(async (account) => {
-      const ledger = await ledgerAccountsRepository.findByOwner('account', account.id);
-      if (!ledger) throw new NotFoundError('Account ledger');
-
-      const balance = await ledgerAccountsRepository.getBalance(ledger.id);
-      return mapAccountDetails(account, balance);
-    }),
-  );
+  return {
+    data: page.rows.map((account) => mapAccountDetails(account, account.balance)),
+    meta: createListMeta(query, page.totalCount),
+  };
 }
 
 export async function getAccountDetails(
@@ -218,7 +219,8 @@ export async function getAccountDetails(
 export async function listAccountTransactions(
   context: HouseholdContext,
   accountId: string,
-): Promise<TransactionFeedRow[]> {
+  query: ListAccountTransactionsRequestQuery,
+): Promise<ListResult<TransactionFeedRow>> {
   const account = await accountsRepository.get(accountId, context);
   if (!account) throw new NotFoundError('Account');
   if (account.type === 'credit_card') {
@@ -227,8 +229,13 @@ export async function listAccountTransactions(
     );
   }
 
-  const rows = await transactionsRepository.listDetailedByAccountId(context, account.id);
-  return mapTransactionResponsesToFeedRows(mapDetailedRows(rows));
+  const transactionsQuery: ListTransactionsRequestQuery = {
+    ...query,
+    accountIds: [account.id],
+    creditCardIds: [],
+  };
+
+  return listTransactionFeed(context, transactionsQuery);
 }
 
 export async function updateAccount(

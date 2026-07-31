@@ -2,10 +2,9 @@ import { z } from 'zod';
 import type { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
 import { hexColorSchema, iconNameSchema } from '@/shared/validation/categories';
 import { currencySchema } from '@/shared/validation/preferences';
+import { paymentMethodScopeSchema } from './payment-methods.query';
 
 export type PaymentMethodRecord = typeof paymentMethodsTable.$inferSelect;
-
-export const paymentMethodScopeSchema = z.enum(['system', 'household']);
 
 export const paymentMethodSchema = z.object({
   id: z.uuid(),
@@ -18,10 +17,6 @@ export const paymentMethodSchema = z.object({
   icon: iconNameSchema.nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
-});
-
-export const ListPaymentMethodsRequestQuerySchema = z.object({
-  currencyCode: currencySchema.optional(),
 });
 
 export const ListPaymentMethodsResponseSchema = z.array(paymentMethodSchema);
@@ -57,7 +52,6 @@ export const DeletePaymentMethodRequestParamsSchema = z.object({
 });
 
 export type PaymentMethod = z.infer<typeof paymentMethodSchema>;
-export type ListPaymentMethodsRequestQuery = z.infer<typeof ListPaymentMethodsRequestQuerySchema>;
 export type ListPaymentMethodsResponse = z.infer<typeof ListPaymentMethodsResponseSchema>;
 export type CreatePaymentMethodRequestBody = z.infer<typeof CreatePaymentMethodRequestBodySchema>;
 export type CreatePaymentMethodResponse = z.infer<typeof CreatePaymentMethodResponseSchema>;

@@ -211,24 +211,34 @@ export function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResp
 export function mapTransactionResponsesToFeedRows(
   transactions: TransactionResponse[],
   creditCardIdsByAccountId: Map<string, string> = new Map(),
+  creditCardPaymentsByTransactionId: Map<
+    string,
+    { creditCardId: string; paymentId: string }
+  > = new Map(),
 ): TransactionFeedRow[] {
-  return transactions.map((transaction) => ({
-    ...transaction,
-    rowId: transaction.id,
-    rowKind: 'transaction',
-    originType: transaction.type,
-    excludedFromSpending: transaction.type !== 'expense' || !transaction.includeInBudget,
-    creditCardId:
-      (transaction.accountId ? creditCardIdsByAccountId.get(transaction.accountId) : undefined) ??
-      (transaction.toAccountId
-        ? creditCardIdsByAccountId.get(transaction.toAccountId)
-        : undefined) ??
-      null,
-    purchaseId: null,
-    installmentId: null,
-    installmentNumber: null,
-    installmentCount: null,
-  }));
+  return transactions.map((transaction) => {
+    const payment = creditCardPaymentsByTransactionId.get(transaction.id);
+
+    return {
+      ...transaction,
+      rowId: transaction.id,
+      rowKind: payment ? 'credit_card_payment' : 'transaction',
+      originType: payment ? 'credit_card_payment' : transaction.type,
+      excludedFromSpending: transaction.type !== 'expense' || !transaction.includeInBudget,
+      creditCardId:
+        payment?.creditCardId ??
+        (transaction.accountId ? creditCardIdsByAccountId.get(transaction.accountId) : undefined) ??
+        (transaction.toAccountId
+          ? creditCardIdsByAccountId.get(transaction.toAccountId)
+          : undefined) ??
+        null,
+      purchaseId: null,
+      paymentId: payment?.paymentId ?? null,
+      installmentId: null,
+      installmentNumber: null,
+      installmentCount: null,
+    };
+  });
 }
 
 export function mapCreditCardInstallmentRowsToFeedRows(
@@ -301,6 +311,7 @@ export function mapCreditCardInstallmentRowsToFeedRows(
       excludedFromSpending: false,
       creditCardId: first.creditCardId,
       purchaseId: first.purchaseId,
+      paymentId: null,
       installmentId: first.installmentId,
       installmentNumber: first.installmentNumber,
       installmentCount: first.installmentCount,

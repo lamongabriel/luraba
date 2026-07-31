@@ -1,5 +1,7 @@
 import type { Response } from 'express';
 
+export type ApiResponseMeta = object;
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -7,14 +9,38 @@ export interface ApiResponse<T> {
     code: string;
     message: string;
   };
-  meta?: Record<string, unknown>;
+  meta?: ApiResponseMeta;
+}
+
+const API_RESPONSE_PAYLOAD = Symbol('api-response-payload');
+
+export interface ApiResponsePayload<T> {
+  readonly [API_RESPONSE_PAYLOAD]: true;
+  data: T;
+  meta?: ApiResponseMeta;
+}
+
+export function withApiMeta<T>(data: T, meta?: ApiResponseMeta): ApiResponsePayload<T> {
+  return {
+    [API_RESPONSE_PAYLOAD]: true,
+    data,
+    meta,
+  };
+}
+
+export function isApiResponsePayload(value: unknown): value is ApiResponsePayload<unknown> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as Partial<ApiResponsePayload<unknown>>)[API_RESPONSE_PAYLOAD] === true
+  );
 }
 
 export function sendSuccess<T>(
   res: Response,
   data: T,
   statusCode = 200,
-  meta?: Record<string, unknown>,
+  meta?: ApiResponseMeta,
 ): void {
   const body: ApiResponse<T> = { success: true, data };
   if (meta) body.meta = meta;

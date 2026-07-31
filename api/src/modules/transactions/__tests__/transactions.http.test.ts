@@ -136,9 +136,10 @@ describe('transactions routes', () => {
         expect.objectContaining({
           id: payment.transactionId,
           rowId: payment.transactionId,
-          rowKind: 'transaction',
-          originType: 'transfer',
+          rowKind: 'credit_card_payment',
+          originType: 'credit_card_payment',
           creditCardId: card.id,
+          paymentId: payment.paymentId,
           excludedFromSpending: true,
           description: 'Nubank payment',
           toAccountId: card.accountId,
@@ -178,6 +179,19 @@ describe('transactions routes', () => {
         }),
       ]),
     );
+    expect(response.body.meta).toMatchObject({
+      pagination: {
+        page: 1,
+        perPage: 20,
+        totalCount: 5,
+        totalPages: 1,
+      },
+      summary: {
+        expenseAmount: 120_000,
+        incomeAmount: 0,
+        totalCount: 5,
+      },
+    });
     expect(
       response.body.data.find(
         (row: { id: string; rowKind: string }) =>
@@ -236,6 +250,72 @@ describe('transactions routes', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.data).toEqual([expect.objectContaining({ description: 'Lunch' })]);
+  });
+
+  it('GET /api/v1/transactions rejects an inaccessible household header', async () => {
+    const owner = await createAuthenticatedContext();
+    const outsider = await createAuthenticatedContext();
+
+    const response = await request(app)
+      .get('/api/v1/transactions')
+      .set(createAuthHeaders(outsider.token, owner.household.id));
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe('FORBIDDEN');
+  });
+
+  it('GET /api/v1/transactions serializes combined filters and pagination metadata', async () => {
+    const context = await createAuthenticatedContext();
+    const account = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'HTTP Query Account', type: 'depository' }),
+    );
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'HTTP Query Income', type: 'income' }),
+    );
+    const transaction = await transactionsService.createTransaction(context.householdContext, {
+      type: 'income',
+      description: 'HTTP Query Salary',
+      amount: 100_000,
+      currencyCode: 'BRL',
+      paymentMethodCode: 'pix',
+      accountId: account.id,
+      categoryId: category.id,
+      purchaseDate: new Date('2025-06-15T00:00:00.000Z'),
+      postedDate: new Date('2025-06-15T00:00:00.000Z'),
+    });
+
+    const response = await request(app)
+      .get('/api/v1/transactions')
+      .set(createAuthHeaders(context.token, context.household.id))
+      .query({
+        page: 1,
+        perPage: 1,
+        search: 'Salary',
+        sort: 'postedDate',
+        sortDirection: 'desc',
+        originTypes: 'income',
+        dateFrom: '2025-01-01',
+        dateTo: '2025-12-31',
+        accountIds: account.id,
+        currencyCodes: 'BRL',
+        amountMin: 100_000,
+        amountMax: 100_000,
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual([expect.objectContaining({ id: transaction.id })]);
+    expect(response.body.meta.pagination).toEqual({
+      page: 1,
+      perPage: 1,
+      totalCount: 1,
+      totalPages: 1,
+    });
+    expect(response.body.meta.summary).toMatchObject({
+      totalCount: 1,
+      incomeAmount: 100_000,
+    });
   });
 
   it('POST /api/v1/transactions creates an expense with multiple tags', async () => {

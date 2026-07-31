@@ -1,4 +1,6 @@
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
+import { withApiMeta } from '@/shared/response';
+import { ListCategoriesRequestQuerySchema } from './categories.query';
 import * as categoriesService from './categories.service';
 import {
   CreateCategoryRequestBodySchema,
@@ -18,8 +20,12 @@ export const create = createHouseholdHandler({
 });
 
 export const list = createHouseholdHandler({
+  query: ListCategoriesRequestQuerySchema,
   response: ListCategoriesResponseSchema,
-  handle: ({ household }) => categoriesService.listCategories(household),
+  handle: async ({ household, query }) => {
+    const result = await categoriesService.listCategories(household, query);
+    return withApiMeta(result.data, result.meta);
+  },
 });
 
 export const update = createHouseholdHandler({

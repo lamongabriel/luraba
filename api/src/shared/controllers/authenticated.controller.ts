@@ -2,10 +2,10 @@ import type { z } from 'zod';
 import { getAuthenticatedUser } from '@/middleware/access.middleware';
 import {
   type ControllerArgs,
+  type ControllerOutput,
   type ControllerSchema,
   type ControllerStatus,
   createHandler,
-  type ParsedResponse,
 } from '@/shared/controllers/controller';
 
 type Schema = z.ZodTypeAny;
@@ -25,7 +25,7 @@ export function createAuthenticatedHandler<
         response: TResponse;
         handle: (
           input: ControllerArgs<TBody, TParams, TQuery> & { user: AuthenticatedUser },
-        ) => Promise<ParsedResponse<TResponse>>;
+        ) => Promise<ControllerOutput<TResponse>>;
         status?: Exclude<ControllerStatus, 'no-content'>;
       }
     | {

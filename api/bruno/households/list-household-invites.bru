@@ -8,6 +8,20 @@ get {
   url: {{baseUrl}}/api/v1/households/{{householdId}}/invites
 }
 
+params:query {
+  page: 1
+  perPage: 20
+  ~search: invitee@example.com
+  sort: createdAt
+  sortDirection: desc
+  ~roles: admin,member,viewer
+  ~statuses: pending,accepted,revoked
+  ~createdAtFrom: 2025-01-01
+  ~createdAtTo: 2025-12-31
+  ~updatedAtFrom: 2025-01-01
+  ~updatedAtTo: 2025-12-31
+}
+
 headers {
   Cookie: {{authCookie}}
 }

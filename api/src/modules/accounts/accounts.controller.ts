@@ -1,4 +1,9 @@
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
+import { withApiMeta } from '@/shared/response';
+import {
+  ListAccountsRequestQuerySchema,
+  ListAccountTransactionsRequestQuerySchema,
+} from './accounts.query';
 import * as accountsService from './accounts.service';
 import {
   CreateAccountRequestBodySchema,
@@ -22,8 +27,12 @@ export const create = createHouseholdHandler({
 });
 
 export const list = createHouseholdHandler({
+  query: ListAccountsRequestQuerySchema,
   response: ListAccountsResponseSchema,
-  handle: ({ household }) => accountsService.listAccounts(household),
+  handle: async ({ household, query }) => {
+    const result = await accountsService.listAccounts(household, query);
+    return withApiMeta(result.data, result.meta);
+  },
 });
 
 export const details = createHouseholdHandler({
@@ -34,8 +43,12 @@ export const details = createHouseholdHandler({
 
 export const listTransactions = createHouseholdHandler({
   params: ListAccountTransactionsRequestParamsSchema,
+  query: ListAccountTransactionsRequestQuerySchema,
   response: ListAccountTransactionsResponseSchema,
-  handle: ({ household, params }) => accountsService.listAccountTransactions(household, params.id),
+  handle: async ({ household, params, query }) => {
+    const result = await accountsService.listAccountTransactions(household, params.id, query);
+    return withApiMeta(result.data, result.meta);
+  },
 });
 
 export const update = createHouseholdHandler({

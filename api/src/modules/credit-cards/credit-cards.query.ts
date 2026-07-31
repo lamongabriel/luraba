@@ -1,0 +1,269 @@
+import { eq, type SQL, sql } from 'drizzle-orm';
+import { z } from 'zod';
+import { accountsTable } from '@/db/schemas/accounts.schema';
+import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
+import {
+  booleanQuerySchema,
+  buildIlikeSearch,
+  buildOrderBy,
+  combineConditions,
+  commaSeparatedArraySchema,
+  createListQuerySchema,
+  dateQuerySchema,
+  inArrayIfAny,
+  rangeConditions,
+  temporalQuerySchema,
+  validateRange,
+} from '@/shared/list';
+import { creditCardCycleStatusSchema } from '@/shared/validation/credit-cards';
+import { currencySchema } from '@/shared/validation/preferences';
+import {
+  creditCardCycleDisplayStatusSchema,
+  creditCardCycleScopeSchema,
+} from './credit-card-cycles.types';
+
+export const ListCreditCardsRequestQuerySchema = createListQuerySchema(
+  {
+    brands: commaSeparatedArraySchema(z.string().trim().min(1).max(64)),
+    currencyCodes: commaSeparatedArraySchema(currencySchema),
+    accountIds: commaSeparatedArraySchema(z.uuid()),
+    closingDays: commaSeparatedArraySchema(z.coerce.number().int().min(1).max(31)),
+    dueDays: commaSeparatedArraySchema(z.coerce.number().int().min(1).max(31)),
+    balanceMin: z.coerce.number().int().optional(),
+    balanceMax: z.coerce.number().int().optional(),
+    creditLimitMin: z.coerce.number().int().min(0).optional(),
+    creditLimitMax: z.coerce.number().int().min(0).optional(),
+    hasCreditLimit: booleanQuerySchema.optional(),
+    createdAtFrom: temporalQuerySchema.optional(),
+    createdAtTo: temporalQuerySchema.optional(),
+    updatedAtFrom: temporalQuerySchema.optional(),
+    updatedAtTo: temporalQuerySchema.optional(),
+  },
+  [
+    'name',
+    'institutionName',
+    'brand',
+    'last4',
+    'currencyCode',
+    'balance',
+    'creditLimitAmount',
+    'closingDay',
+    'dueDay',
+    'createdAt',
+    'updatedAt',
+  ],
+).superRefine((query, ctx) => {
+  validateRange(query, ctx, 'balanceMin', 'balanceMax');
+  validateRange(query, ctx, 'creditLimitMin', 'creditLimitMax');
+  validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
+  validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
+});
+
+export type ListCreditCardsRequestQuery = z.infer<typeof ListCreditCardsRequestQuerySchema>;
+
+export function buildCreditCardsListWhere(
+  householdId: string,
+  query: ListCreditCardsRequestQuery,
+  displayedBalance: SQL,
+): SQL {
+  return combineConditions(
+    eq(creditCardsTable.householdId, householdId),
+    buildIlikeSearch(query.search, [
+      sql`${accountsTable.name}`,
+      sql`${accountsTable.institutionName}`,
+      sql`${accountsTable.notes}`,
+      sql`${creditCardsTable.brand}`,
+      sql`${creditCardsTable.last4}`,
+      sql`${accountsTable.currencyId}`,
+    ]),
+    inArrayIfAny(creditCardsTable.brand, query.brands),
+    inArrayIfAny(accountsTable.currencyId, query.currencyCodes),
+    inArrayIfAny(creditCardsTable.accountId, query.accountIds),
+    inArrayIfAny(creditCardsTable.closingDay, query.closingDays),
+    inArrayIfAny(creditCardsTable.dueDay, query.dueDays),
+    ...rangeConditions(displayedBalance, query.balanceMin, query.balanceMax),
+    ...rangeConditions(
+      creditCardsTable.creditLimitAmount,
+      query.creditLimitMin,
+      query.creditLimitMax,
+    ),
+    query.hasCreditLimit === undefined
+      ? undefined
+      : query.hasCreditLimit
+        ? sql`${creditCardsTable.creditLimitAmount} >= 0`
+        : sql`${creditCardsTable.creditLimitAmount} < 0`,
+    ...rangeConditions(creditCardsTable.createdAt, query.createdAtFrom, query.createdAtTo),
+    ...rangeConditions(creditCardsTable.updatedAt, query.updatedAtFrom, query.updatedAtTo),
+  ) as SQL;
+}
+
+export function buildCreditCardsListOrder(
+  query: ListCreditCardsRequestQuery,
+  displayedBalance: SQL,
+): SQL[] {
+  return buildOrderBy(
+    query,
+    {
+      balance: displayedBalance,
+      brand: sql`${creditCardsTable.brand}`,
+      closingDay: sql`${creditCardsTable.closingDay}`,
+      createdAt: sql`${creditCardsTable.createdAt}`,
+      creditLimitAmount: sql`${creditCardsTable.creditLimitAmount}`,
+      currencyCode: sql`${accountsTable.currencyId}`,
+      dueDay: sql`${creditCardsTable.dueDay}`,
+      institutionName: sql`${accountsTable.institutionName}`,
+      last4: sql`${creditCardsTable.last4}`,
+      name: sql`${accountsTable.name}`,
+      updatedAt: sql`${creditCardsTable.updatedAt}`,
+    },
+    [sql`${accountsTable.name} asc`, sql`${creditCardsTable.id} asc`],
+  );
+}
+
+export const ListCreditCardCyclesRequestQuerySchema = createListQuerySchema(
+  {
+    scope: creditCardCycleScopeSchema.default('default'),
+    statuses: commaSeparatedArraySchema(creditCardCycleStatusSchema),
+    displayStatuses: commaSeparatedArraySchema(creditCardCycleDisplayStatusSchema),
+    closingDateFrom: dateQuerySchema.optional(),
+    closingDateTo: dateQuerySchema.optional(),
+    dueDateFrom: dateQuerySchema.optional(),
+    dueDateTo: dateQuerySchema.optional(),
+    statementAmountMin: z.coerce.number().int().optional(),
+    statementAmountMax: z.coerce.number().int().optional(),
+    paidAmountMin: z.coerce.number().int().optional(),
+    paidAmountMax: z.coerce.number().int().optional(),
+    remainingAmountMin: z.coerce.number().int().optional(),
+    remainingAmountMax: z.coerce.number().int().optional(),
+  },
+  [
+    'periodStart',
+    'periodEnd',
+    'closingDate',
+    'dueDate',
+    'status',
+    'displayStatus',
+    'statementAmount',
+    'paidAmount',
+    'remainingAmount',
+  ],
+).superRefine((query, ctx) => {
+  validateRange(query, ctx, 'closingDateFrom', 'closingDateTo');
+  validateRange(query, ctx, 'dueDateFrom', 'dueDateTo');
+  validateRange(query, ctx, 'statementAmountMin', 'statementAmountMax');
+  validateRange(query, ctx, 'paidAmountMin', 'paidAmountMax');
+  validateRange(query, ctx, 'remainingAmountMin', 'remainingAmountMax');
+});
+
+export type ListCreditCardCyclesQuery = z.infer<typeof ListCreditCardCyclesRequestQuerySchema>;
+
+export function buildCreditCardCyclesListWhere(query: ListCreditCardCyclesQuery): SQL | undefined {
+  return combineConditions(
+    query.scope === 'default' ? sql`(is_current or is_next or has_activity)` : undefined,
+    buildIlikeSearch(query.search, [sql`status`, sql`display_status`]),
+    inArrayIfAny(sql`status`, query.statuses),
+    inArrayIfAny(sql`display_status`, query.displayStatuses),
+    ...rangeConditions(sql`closing_date`, query.closingDateFrom, query.closingDateTo),
+    ...rangeConditions(sql`due_date`, query.dueDateFrom, query.dueDateTo),
+    ...rangeConditions(sql`statement_amount`, query.statementAmountMin, query.statementAmountMax),
+    ...rangeConditions(sql`paid_amount`, query.paidAmountMin, query.paidAmountMax),
+    ...rangeConditions(sql`remaining_amount`, query.remainingAmountMin, query.remainingAmountMax),
+  );
+}
+
+export function buildCreditCardCyclesListOrder(query: ListCreditCardCyclesQuery): SQL[] {
+  return buildOrderBy(
+    query,
+    {
+      closingDate: sql`closing_date`,
+      displayStatus: sql`display_status`,
+      dueDate: sql`due_date`,
+      paidAmount: sql`paid_amount`,
+      periodEnd: sql`period_end`,
+      periodStart: sql`period_start`,
+      remainingAmount: sql`remaining_amount`,
+      statementAmount: sql`statement_amount`,
+      status: sql`status`,
+    },
+    [sql`closing_date desc`, sql`id asc`],
+  );
+}
+
+export function buildCreditCardCyclesCte(
+  creditCardId: string,
+  today: Date,
+  query: ListCreditCardCyclesQuery,
+): SQL {
+  const where = buildCreditCardCyclesListWhere(query);
+  const whereClause = where ? sql`where ${where}` : sql``;
+
+  return sql`
+    with cycle_amounts as (
+      select
+        cycles.id,
+        cycles.credit_card_id,
+        cycles.period_start,
+        cycles.period_end,
+        cycles.closing_date,
+        cycles.due_date,
+        cycles.status,
+        coalesce(installments.statement_amount, 0)::integer as statement_amount,
+        coalesce(payments.paid_amount, 0)::integer as paid_amount,
+        cycles.created_at,
+        cycles.updated_at
+      from credit_card_billing_cycles cycles
+      left join (
+        select billing_cycle_id, sum(amount)::integer as statement_amount
+        from credit_card_installments
+        group by billing_cycle_id
+      ) installments on installments.billing_cycle_id = cycles.id
+      left join (
+        select
+          allocations.billing_cycle_id,
+          payments.credit_card_id,
+          sum(allocations.amount)::integer as paid_amount
+        from credit_card_payment_allocations allocations
+        inner join credit_card_payments payments on payments.id = allocations.payment_id
+        group by allocations.billing_cycle_id, payments.credit_card_id
+      ) payments
+        on payments.billing_cycle_id = cycles.id
+       and payments.credit_card_id = cycles.credit_card_id
+      where cycles.credit_card_id = ${creditCardId}
+    ),
+    computed as (
+      select
+        *,
+        greatest(statement_amount - paid_amount, 0)::integer as remaining_amount,
+        (period_start <= ${today}::date and period_end >= ${today}::date) as is_current,
+        id = (
+          select next_cycle.id
+          from credit_card_billing_cycles next_cycle
+          where next_cycle.credit_card_id = ${creditCardId}
+            and next_cycle.period_start > ${today}::date
+          order by next_cycle.period_start asc
+          limit 1
+        ) as is_next,
+        (
+          statement_amount > 0
+          or paid_amount > 0
+          or greatest(statement_amount - paid_amount, 0) > 0
+        ) as has_activity,
+        case
+          when status = 'paid' then 'paid'
+          when ${today}::date < period_start then 'upcoming'
+          when greatest(statement_amount - paid_amount, 0) <= 0 and ${today}::date >= closing_date then 'paid'
+          when period_start <= ${today}::date and period_end >= ${today}::date then 'current'
+          when greatest(statement_amount - paid_amount, 0) <= 0 then 'paid'
+          when ${today}::date > due_date then 'overdue'
+          when ${today}::date > closing_date then 'due'
+          else 'upcoming'
+        end as display_status
+      from cycle_amounts
+    ),
+    filtered as (
+      select *
+      from computed
+      ${whereClause}
+    )
+  `;
+}

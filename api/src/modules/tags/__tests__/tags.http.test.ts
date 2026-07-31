@@ -80,11 +80,23 @@ describe('tags routes', () => {
 
     const primaryResponse = await request(app)
       .get('/api/v1/tags')
-      .set(createAuthHeaders(context.token, context.household.id));
+      .set(createAuthHeaders(context.token, context.household.id))
+      .query({
+        page: 1,
+        perPage: 1,
+        search: 'Primary Household',
+        sort: 'name',
+        sortDirection: 'desc',
+      });
 
     expect(primaryResponse.status).toBe(200);
     expect(primaryResponse.body.data).toHaveLength(1);
     expect(primaryResponse.body.data[0].name).toBe('Primary Household Tag');
+    expect(primaryResponse.body.meta.pagination).toMatchObject({
+      page: 1,
+      perPage: 1,
+      totalCount: 1,
+    });
 
     const secondaryResponse = await request(app)
       .get('/api/v1/tags')
@@ -143,5 +155,30 @@ describe('tags routes', () => {
     expect(list.body.data).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ id: created.body.data.id })]),
     );
+  });
+
+  it('isolates list, update, and delete access across households', async () => {
+    const owner = await createAuthenticatedContext();
+    const outsider = await createAuthenticatedContext();
+    const created = await request(app)
+      .post('/api/v1/tags')
+      .set(createAuthHeaders(owner.token, owner.household.id))
+      .send(buildTagInput({ name: 'Isolated Tag' }));
+    const id = created.body.data.id;
+
+    const list = await request(app)
+      .get('/api/v1/tags')
+      .set(createAuthHeaders(outsider.token, owner.household.id));
+    const update = await request(app)
+      .patch(`/api/v1/tags/${id}`)
+      .set(createAuthHeaders(outsider.token, outsider.household.id))
+      .send({ name: 'Leaked' });
+    const remove = await request(app)
+      .delete(`/api/v1/tags/${id}`)
+      .set(createAuthHeaders(outsider.token, outsider.household.id));
+
+    expect(list.status).toBe(403);
+    expect(update.status).toBe(404);
+    expect(remove.status).toBe(404);
   });
 });

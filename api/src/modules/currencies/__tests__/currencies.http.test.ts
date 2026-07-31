@@ -27,6 +27,25 @@ describe('currencies routes', () => {
         expect.objectContaining({ code: 'USD', symbol: '$', precision: 2 }),
       ]),
     );
+
+    const filtered = await request(app)
+      .get('/api/v1/currencies')
+      .set(createAuthHeaders(context.token, context.household.id))
+      .query({
+        page: 1,
+        perPage: 1,
+        search: 'BRL',
+        sort: 'code',
+        sortDirection: 'desc',
+        codes: 'BRL,USD',
+        precisions: '2',
+      });
+    expect(filtered.body.data).toEqual([expect.objectContaining({ code: 'BRL' })]);
+    expect(filtered.body.meta.pagination).toMatchObject({
+      page: 1,
+      perPage: 1,
+      totalCount: 1,
+    });
   });
 
   it('GET /api/v1/currencies/rate returns a cached exact exchange-rate quote', async () => {

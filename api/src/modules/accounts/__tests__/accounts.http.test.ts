@@ -133,12 +133,26 @@ describe('accounts routes', () => {
 
     const primaryResponse = await request(app)
       .get('/api/v1/accounts')
-      .set(createAuthHeaders(context.token, context.household.id));
+      .set(createAuthHeaders(context.token, context.household.id))
+      .query({
+        page: 1,
+        perPage: 1,
+        search: 'Primary Household',
+        sort: 'name',
+        sortDirection: 'desc',
+        types: 'depository',
+      });
 
     expect(primaryResponse.status).toBe(200);
     expect(primaryResponse.body.data).toHaveLength(1);
     expect(primaryResponse.body.data[0].name).toBe('Primary Household Account');
     expect(primaryResponse.body.data[0].balance).toBe(5_500);
+    expect(primaryResponse.body.meta.pagination).toEqual({
+      page: 1,
+      perPage: 1,
+      totalCount: 1,
+      totalPages: 1,
+    });
 
     const secondaryResponse = await request(app)
       .get('/api/v1/accounts')
@@ -244,6 +258,37 @@ describe('accounts routes', () => {
         accountId: checking.id,
       }),
     ]);
+
+    const filtered = await request(app)
+      .get(`/api/v1/accounts/${checking.id}/transactions`)
+      .set(createAuthHeaders(context.token, context.household.id))
+      .query({
+        search: 'Market',
+        dateFrom: '2026-03-24',
+        dateTo: '2026-03-24',
+        purchaseDateFrom: '2026-03-24',
+        purchaseDateTo: '2026-03-24',
+        originTypes: 'expense,transfer',
+        categoryIds: category.id,
+        paymentMethodCodes: 'pix',
+        currencyCodes: 'BRL',
+        amountMin: 8_000,
+        amountMax: 8_000,
+        includeInBudget: true,
+        excludedFromSpending: false,
+        createdAtFrom: '2020-01-01',
+        createdAtTo: '2030-01-01',
+        updatedAtFrom: '2020-01-01',
+        updatedAtTo: '2030-01-01',
+        sort: 'amount',
+        perPage: 1,
+      });
+
+    expect(filtered.status).toBe(200);
+    expect(filtered.body.data).toEqual([
+      expect.objectContaining({ description: 'Market', accountId: checking.id }),
+    ]);
+    expect(filtered.body.meta.pagination.totalCount).toBe(1);
   });
 
   it('GET /api/v1/accounts/:id/transactions rejects credit card accounts', async () => {
@@ -316,5 +361,34 @@ describe('accounts routes', () => {
       .set(createAuthHeaders(context.token, context.household.id));
 
     expect(details.status).toBe(404);
+  });
+
+  it('isolates list, transaction-list, update, and delete access across households', async () => {
+    const owner = await createAuthenticatedContext();
+    const outsider = await createAuthenticatedContext();
+    const created = await request(app)
+      .post('/api/v1/accounts')
+      .set(createAuthHeaders(owner.token, owner.household.id))
+      .send(buildAccountInput({ name: 'Isolated Account' }));
+    const accountId = created.body.data.id;
+
+    const inaccessibleList = await request(app)
+      .get('/api/v1/accounts')
+      .set(createAuthHeaders(outsider.token, owner.household.id));
+    const inaccessibleTransactions = await request(app)
+      .get(`/api/v1/accounts/${accountId}/transactions`)
+      .set(createAuthHeaders(outsider.token, outsider.household.id));
+    const inaccessibleUpdate = await request(app)
+      .patch(`/api/v1/accounts/${accountId}`)
+      .set(createAuthHeaders(outsider.token, outsider.household.id))
+      .send({ name: 'Leaked' });
+    const inaccessibleDelete = await request(app)
+      .delete(`/api/v1/accounts/${accountId}`)
+      .set(createAuthHeaders(outsider.token, outsider.household.id));
+
+    expect(inaccessibleList.status).toBe(403);
+    expect(inaccessibleTransactions.status).toBe(404);
+    expect(inaccessibleUpdate.status).toBe(404);
+    expect(inaccessibleDelete.status).toBe(404);
   });
 });

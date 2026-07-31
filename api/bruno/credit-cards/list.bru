@@ -8,6 +8,28 @@ get {
   url: {{baseUrl}}/api/v1/credit-cards
 }
 
+params:query {
+  page: 1
+  perPage: 20
+  ~search: Visa
+  sort: name
+  sortDirection: asc
+  ~brands: Visa,Mastercard
+  ~currencyCodes: BRL,USD
+  ~accountIds: {{accountId}}
+  ~closingDays: 5,25
+  ~dueDays: 5,10
+  ~balanceMin: 0
+  ~balanceMax: 100000
+  ~creditLimitMin: 100000
+  ~creditLimitMax: 1000000
+  ~hasCreditLimit: true
+  ~createdAtFrom: 2025-01-01
+  ~createdAtTo: 2025-12-31
+  ~updatedAtFrom: 2025-01-01
+  ~updatedAtTo: 2025-12-31
+}
+
 headers {
   Cookie: {{authCookie}}
 }

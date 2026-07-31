@@ -7,7 +7,19 @@ import { creditCardPaymentsTable } from '@/db/schemas/credit-card-payments.schem
 import { creditCardPurchasesTable } from '@/db/schemas/credit-card-purchases.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
 import type { TxClient } from '@/db/types';
+import { type DbListPage, getPagination } from '@/shared/list';
 import type { CreditCardCycleItemRow } from './credit-cards.helpers';
+import { mapCycleRow } from './credit-cards.helpers';
+import {
+  buildCreditCardCyclesCte,
+  buildCreditCardCyclesListOrder,
+  type ListCreditCardCyclesQuery,
+} from './credit-cards.query';
+import type { CreditCardCycleSummary } from './credit-cards.types';
+
+function toDate(value: Date | string): Date {
+  return value instanceof Date ? value : new Date(`${value}T00:00:00.000Z`);
+}
 
 export async function findCycleById(tx: TxClient, creditCardId: string, cycleId: string) {
   const rows = await tx
@@ -88,6 +100,83 @@ export async function listCyclesByCardIdDesc(tx: TxClient, creditCardId: string)
     .from(creditCardBillingCyclesTable)
     .where(eq(creditCardBillingCyclesTable.creditCardId, creditCardId))
     .orderBy(desc(creditCardBillingCyclesTable.closingDate));
+}
+
+export async function listCyclesPage(
+  creditCardId: string,
+  query: ListCreditCardCyclesQuery,
+  today: Date,
+): Promise<DbListPage<CreditCardCycleSummary>> {
+  const { limit, offset } = getPagination(query);
+  const orderBy = buildCreditCardCyclesListOrder(query);
+  const cyclesCte = buildCreditCardCyclesCte(creditCardId, today, query);
+  const countResult = await db.execute<{ count: number }>(sql`
+    ${cyclesCte}
+    select count(*)::integer as count
+    from filtered
+  `);
+  const rowsResult = await db.execute<{
+    id: string;
+    creditCardId: string;
+    periodStart: Date | string;
+    periodEnd: Date | string;
+    closingDate: Date | string;
+    dueDate: Date | string;
+    status: CreditCardCycleSummary['status'];
+    statementAmount: number;
+    paidAmount: number;
+    remainingAmount: number;
+    createdAt: Date;
+    updatedAt: Date;
+    displayStatus: CreditCardCycleSummary['displayStatus'];
+    isCurrent: boolean;
+    isNext: boolean;
+    hasActivity: boolean;
+  }>(sql`
+    ${cyclesCte}
+    select
+      id,
+      credit_card_id as "creditCardId",
+      period_start as "periodStart",
+      period_end as "periodEnd",
+      closing_date as "closingDate",
+      due_date as "dueDate",
+      status,
+      statement_amount as "statementAmount",
+      paid_amount as "paidAmount",
+      remaining_amount as "remainingAmount",
+      created_at as "createdAt",
+      updated_at as "updatedAt",
+      display_status as "displayStatus",
+      is_current as "isCurrent",
+      is_next as "isNext",
+      has_activity as "hasActivity"
+    from filtered
+    order by ${sql.join(orderBy, sql`, `)}
+    limit ${limit}
+    offset ${offset}
+  `);
+
+  return {
+    rows: rowsResult.rows.map((row) => {
+      const cycleRow = {
+        ...row,
+        periodStart: toDate(row.periodStart),
+        periodEnd: toDate(row.periodEnd),
+        closingDate: toDate(row.closingDate),
+        dueDate: toDate(row.dueDate),
+      };
+
+      return {
+        ...mapCycleRow(cycleRow),
+        displayStatus: row.displayStatus,
+        isCurrent: row.isCurrent,
+        isNext: row.isNext,
+        hasActivity: row.hasActivity,
+      };
+    }),
+    totalCount: countResult.rows[0]?.count ?? 0,
+  };
 }
 
 export async function insertCycle(

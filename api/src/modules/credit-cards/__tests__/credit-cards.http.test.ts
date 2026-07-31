@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import app from '@/app';
 import * as accountsService from '@/modules/accounts/accounts.service';
 import * as categoriesService from '@/modules/categories/categories.service';
+import * as creditCardsService from '@/modules/credit-cards/credit-cards.service';
 import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
 import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
 import {
@@ -45,6 +46,47 @@ describe('credit cards routes', () => {
           'https://cdn.brandfetch.io/nubank.com.br/icon.png?c=brandfetch-client-id',
       }),
     );
+  });
+
+  it('GET /api/v1/credit-cards serializes list filters and pagination metadata', async () => {
+    const context = await createAuthenticatedContext();
+    const card = await creditCardsService.createCreditCard(
+      context.householdContext,
+      buildCreditCardInput({
+        name: 'HTTP Filter Card',
+        brand: 'Visa',
+        closingDay: 25,
+        dueDay: 5,
+        creditLimitAmount: 50_000,
+      }),
+    );
+
+    const response = await request(app)
+      .get('/api/v1/credit-cards')
+      .set(createAuthHeaders(context.token, context.household.id))
+      .query({
+        page: 1,
+        perPage: 1,
+        search: 'Filter Card',
+        sort: 'name',
+        brands: 'Visa',
+        currencyCodes: 'BRL',
+        accountIds: card.accountId,
+        closingDays: '25',
+        dueDays: '5',
+        creditLimitMin: 50_000,
+        creditLimitMax: 50_000,
+        hasCreditLimit: true,
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual([expect.objectContaining({ id: card.id })]);
+    expect(response.body.meta.pagination).toEqual({
+      page: 1,
+      perPage: 1,
+      totalCount: 1,
+      totalPages: 1,
+    });
   });
 
   it('GET /api/v1/credit-cards/:id/cycles returns enriched cycle fields', async () => {
@@ -390,5 +432,87 @@ describe('credit cards routes', () => {
     expect(secondPurchase.status).toBe(422);
     expect(secondPurchase.body.success).toBe(false);
     expect(secondPurchase.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('isolates cards, cycles, purchases, and payments across households', async () => {
+    const owner = await createAuthenticatedContext();
+    const outsider = await createAuthenticatedContext();
+    const category = await categoriesService.createCategory(
+      owner.householdContext,
+      buildCategoryInput({ name: 'Isolated Card Category', type: 'expense' }),
+    );
+    const source = await accountsService.createAccount(
+      owner.householdContext,
+      buildAccountInput({ name: 'Isolated Card Source', type: 'depository' }),
+    );
+    await createBalanceEntryForAccount({
+      householdId: owner.household.id,
+      accountId: source.id,
+      amount: 50_000,
+    });
+    const card = await request(app)
+      .post('/api/v1/credit-cards')
+      .set(createAuthHeaders(owner.token, owner.household.id))
+      .send(buildCreditCardInput({ name: 'Isolated Card' }));
+    const cardId = card.body.data.id;
+    const purchase = await request(app)
+      .post(`/api/v1/credit-cards/${cardId}/purchases`)
+      .set(createAuthHeaders(owner.token, owner.household.id))
+      .send({
+        description: 'Isolated purchase',
+        amount: 10_000,
+        categoryId: category.id,
+        purchaseDate: '2026-07-20',
+        postedDate: '2026-07-20',
+        installmentCount: 1,
+      });
+    const payment = await request(app)
+      .post(`/api/v1/credit-cards/${cardId}/payments`)
+      .set(createAuthHeaders(owner.token, owner.household.id))
+      .send({
+        amount: 5_000,
+        fromAccountId: source.id,
+        paymentDate: '2026-07-30',
+        postedDate: '2026-07-30',
+      });
+    const purchaseId = purchase.body.data.purchaseId;
+    const paymentId = payment.body.data.paymentId;
+    const outsiderHeaders = createAuthHeaders(outsider.token, outsider.household.id);
+
+    const responses = await Promise.all([
+      request(app)
+        .get('/api/v1/credit-cards')
+        .set(createAuthHeaders(outsider.token, owner.household.id)),
+      request(app).get(`/api/v1/credit-cards/${cardId}`).set(outsiderHeaders),
+      request(app).patch(`/api/v1/credit-cards/${cardId}`).set(outsiderHeaders).send({
+        name: 'Leaked',
+      }),
+      request(app).delete(`/api/v1/credit-cards/${cardId}`).set(outsiderHeaders),
+      request(app).get(`/api/v1/credit-cards/${cardId}/cycles`).set(outsiderHeaders),
+      request(app)
+        .get(`/api/v1/credit-cards/${cardId}/purchases/${purchaseId}`)
+        .set(outsiderHeaders),
+      request(app)
+        .patch(`/api/v1/credit-cards/${cardId}/purchases/${purchaseId}`)
+        .set(outsiderHeaders)
+        .send({ description: 'Leaked' }),
+      request(app)
+        .delete(`/api/v1/credit-cards/${cardId}/purchases/${purchaseId}`)
+        .set(outsiderHeaders),
+      request(app).get(`/api/v1/credit-cards/${cardId}/payments/${paymentId}`).set(outsiderHeaders),
+      request(app)
+        .patch(`/api/v1/credit-cards/${cardId}/payments/${paymentId}`)
+        .set(outsiderHeaders)
+        .send({ description: 'Leaked' }),
+      request(app)
+        .delete(`/api/v1/credit-cards/${cardId}/payments/${paymentId}`)
+        .set(outsiderHeaders),
+    ]);
+
+    expect(responses[0].status).toBe(403);
+    for (const response of responses.slice(1)) {
+      expect(response.status).toBe(404);
+      expect(response.body.error.code).toBe('NOT_FOUND');
+    }
   });
 });

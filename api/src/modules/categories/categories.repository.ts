@@ -1,8 +1,14 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
 import { categoriesTable } from '@/db/schemas/categories.schema';
+import { type DbListPage, getPagination } from '@/shared/list';
 import { HouseholdScopedRepository } from '@/shared/repositories/household-scoped.repository';
+import {
+  buildCategoriesListOrder,
+  buildCategoriesListWhere,
+  type ListCategoriesRequestQuery,
+} from './categories.query';
 import type { CategoryRecord } from './categories.types';
 
 type CreateCategoryValues = Omit<
@@ -19,8 +25,39 @@ class CategoriesRepository extends HouseholdScopedRepository<CategoryRecord, Cre
     context: HouseholdContext,
     name: string,
   ): Promise<CategoryRecord | undefined> {
-    const rows = await this.list(context);
-    return rows.find((category) => category.name === name);
+    const rows = await db
+      .select()
+      .from(categoriesTable)
+      .where(
+        and(eq(categoriesTable.householdId, context.householdId), eq(categoriesTable.name, name)),
+      )
+      .limit(1);
+
+    return rows[0];
+  }
+
+  async listPage(
+    context: HouseholdContext,
+    query: ListCategoriesRequestQuery,
+  ): Promise<DbListPage<CategoryRecord>> {
+    const where = buildCategoriesListWhere(context.householdId, query);
+    const orderBy = buildCategoriesListOrder(query);
+    const { limit, offset } = getPagination(query);
+    const [countRow, rows] = await Promise.all([
+      db.select({ count: sql<number>`count(*)::integer` }).from(categoriesTable).where(where),
+      db
+        .select()
+        .from(categoriesTable)
+        .where(where)
+        .orderBy(...orderBy)
+        .limit(limit)
+        .offset(offset),
+    ]);
+
+    return {
+      rows,
+      totalCount: countRow[0]?.count ?? 0,
+    };
   }
 
   async findByIds(context: HouseholdContext, categoryIds: string[]): Promise<CategoryRecord[]> {

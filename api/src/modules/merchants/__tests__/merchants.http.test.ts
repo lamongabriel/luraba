@@ -105,11 +105,24 @@ describe('merchants routes', () => {
 
     const primaryResponse = await request(app)
       .get('/api/v1/merchants')
-      .set(createAuthHeaders(context.token, context.household.id));
+      .set(createAuthHeaders(context.token, context.household.id))
+      .query({
+        page: 1,
+        perPage: 1,
+        search: 'Primary',
+        sort: 'name',
+        sortDirection: 'desc',
+        hasDomain: true,
+      });
 
     expect(primaryResponse.status).toBe(200);
     expect(primaryResponse.body.data).toHaveLength(1);
     expect(primaryResponse.body.data[0].name).toBe('Primary Merchant');
+    expect(primaryResponse.body.meta.pagination).toMatchObject({
+      page: 1,
+      perPage: 1,
+      totalCount: 1,
+    });
 
     const secondaryResponse = await request(app)
       .get('/api/v1/merchants')
@@ -167,5 +180,30 @@ describe('merchants routes', () => {
     expect(list.body.data).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ id: created.body.data.id })]),
     );
+  });
+
+  it('isolates list, update, and delete access across households', async () => {
+    const owner = await createAuthenticatedContext();
+    const outsider = await createAuthenticatedContext();
+    const created = await request(app)
+      .post('/api/v1/merchants')
+      .set(createAuthHeaders(owner.token, owner.household.id))
+      .send(buildMerchantInput({ name: 'Isolated Merchant' }));
+    const id = created.body.data.id;
+
+    const list = await request(app)
+      .get('/api/v1/merchants')
+      .set(createAuthHeaders(outsider.token, owner.household.id));
+    const update = await request(app)
+      .patch(`/api/v1/merchants/${id}`)
+      .set(createAuthHeaders(outsider.token, outsider.household.id))
+      .send({ name: 'Leaked' });
+    const remove = await request(app)
+      .delete(`/api/v1/merchants/${id}`)
+      .set(createAuthHeaders(outsider.token, outsider.household.id));
+
+    expect(list.status).toBe(403);
+    expect(update.status).toBe(404);
+    expect(remove.status).toBe(404);
   });
 });

@@ -7,12 +7,14 @@ import * as accountsService from '@/modules/accounts/accounts.service';
 import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
 import { ConflictError } from '@/shared/errors';
 import { now } from '@/shared/lib/date';
+import { createListMeta, type ListResult } from '@/shared/list';
 import * as cycleService from './credit-card-cycles.service';
 import * as paymentService from './credit-card-payments.service';
 import * as purchaseService from './credit-card-purchases.service';
 import type { CreditCardRow } from './credit-cards.helpers';
+import type { ListCreditCardCyclesQuery, ListCreditCardsRequestQuery } from './credit-cards.query';
 import * as creditCardsRepository from './credit-cards.repository';
-import { ensureCurrency, mapCreditCard } from './credit-cards.shared';
+import { computeRemainingCreditAmount, ensureCurrency, mapCreditCard } from './credit-cards.shared';
 import type {
   CreateCreditCardDto,
   CreateCreditCardPaymentDto,
@@ -24,16 +26,26 @@ import type {
   CreditCardPaymentResponse,
   CreditCardPurchaseResponse,
   CreditCardResponse,
-  ListCreditCardCyclesQuery,
+  ListCreditCardsResponse,
   UpdateCreditCardCycleDto,
   UpdateCreditCardDto,
   UpdateCreditCardPaymentDto,
   UpdateCreditCardPurchaseDto,
 } from './credit-cards.types';
 
-export async function listCreditCards(context: HouseholdContext): Promise<CreditCardResponse[]> {
-  const cards = await creditCardsRepository.listByHouseholdId(context.householdId);
-  return Promise.all(cards.map((card) => mapCreditCard(card)));
+export async function listCreditCards(
+  context: HouseholdContext,
+  query: ListCreditCardsRequestQuery,
+): Promise<ListResult<ListCreditCardsResponse[number]>> {
+  const page = await creditCardsRepository.listPage(context.householdId, query);
+
+  return {
+    data: page.rows.map((card) => ({
+      ...card,
+      remainingCreditAmount: computeRemainingCreditAmount(card, card.balance),
+    })),
+    meta: createListMeta(query, page.totalCount),
+  };
 }
 
 export async function createCreditCard(
@@ -231,7 +243,7 @@ export async function listBillingCycles(
   context: HouseholdContext,
   creditCardId: string,
   query: ListCreditCardCyclesQuery,
-): Promise<CreditCardCycleSummary[]> {
+): Promise<ListResult<CreditCardCycleSummary>> {
   return cycleService.listBillingCycles(context, creditCardId, query);
 }
 

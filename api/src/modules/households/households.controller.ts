@@ -1,5 +1,12 @@
 import { createAuthenticatedHandler } from '@/shared/controllers/authenticated.controller';
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
+import { withApiMeta } from '@/shared/response';
+import {
+  ListHouseholdInvitesRequestQuerySchema,
+  ListHouseholdMembersRequestQuerySchema,
+  ListHouseholdsRequestQuerySchema,
+  ListMyHouseholdInvitesRequestQuerySchema,
+} from './households.query';
 import * as householdsService from './households.service';
 import {
   AcceptHouseholdInviteRequestParamsSchema,
@@ -25,8 +32,12 @@ import {
 } from './households.types';
 
 export const list = createAuthenticatedHandler({
+  query: ListHouseholdsRequestQuerySchema,
   response: ListHouseholdsResponseSchema,
-  handle: ({ user }) => householdsService.listHouseholds(user.id),
+  handle: async ({ user, query }) => {
+    const result = await householdsService.listHouseholds(user.id, query);
+    return withApiMeta(result.data, result.meta);
+  },
 });
 
 export const create = createAuthenticatedHandler({
@@ -46,8 +57,12 @@ export const update = createHouseholdHandler({
 
 export const listMembers = createHouseholdHandler({
   params: ListHouseholdMembersRequestParamsSchema,
+  query: ListHouseholdMembersRequestQuerySchema,
   response: ListHouseholdMembersResponseSchema,
-  handle: ({ household, params }) => householdsService.listMembers(household, params.id),
+  handle: async ({ household, params, query }) => {
+    const result = await householdsService.listMembers(household, params.id, query);
+    return withApiMeta(result.data, result.meta);
+  },
 });
 
 export const updateMember = createHouseholdHandler({
@@ -76,13 +91,21 @@ export const createInvite = createHouseholdHandler({
 
 export const listHouseholdInvites = createHouseholdHandler({
   params: ListHouseholdInvitesRequestParamsSchema,
+  query: ListHouseholdInvitesRequestQuerySchema,
   response: ListHouseholdInvitesResponseSchema,
-  handle: ({ household, params }) => householdsService.listHouseholdInvites(household, params.id),
+  handle: async ({ household, params, query }) => {
+    const result = await householdsService.listHouseholdInvites(household, params.id, query);
+    return withApiMeta(result.data, result.meta);
+  },
 });
 
 export const listMyInvites = createAuthenticatedHandler({
+  query: ListMyHouseholdInvitesRequestQuerySchema,
   response: ListMyHouseholdInvitesResponseSchema,
-  handle: ({ user }) => householdsService.listMyPendingInvites(user.email),
+  handle: async ({ user, query }) => {
+    const result = await householdsService.listMyPendingInvites(user.email, query);
+    return withApiMeta(result.data, result.meta);
+  },
 });
 
 export const acceptInvite = createAuthenticatedHandler({

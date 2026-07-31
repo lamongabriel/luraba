@@ -5,6 +5,13 @@ import { currenciesRepository } from '@/modules/currencies/currencies.repository
 import { fxService } from '@/modules/fx/fx.service';
 import { ForbiddenError, NotFoundError, ValidationError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
+import { createListMeta, type ListResult } from '@/shared/list';
+import type {
+  ListHouseholdInvitesRequestQuery,
+  ListHouseholdMembersRequestQuery,
+  ListHouseholdsRequestQuery,
+  ListMyHouseholdInvitesRequestQuery,
+} from './households.query';
 import { householdsRepository } from './households.repository';
 import type {
   CreateHouseholdInviteRequestBody,
@@ -161,10 +168,17 @@ export async function acceptPendingInvitesForUser(userId: string, email: string)
   });
 }
 
-export async function listHouseholds(userId: string): Promise<Household[]> {
+export async function listHouseholds(
+  userId: string,
+  query: ListHouseholdsRequestQuery,
+): Promise<ListResult<Household>> {
   await createDefaultHouseholdForUser(userId);
-  const households = await householdsRepository.listHouseholdsForUser(userId);
-  return households.map(mapHousehold);
+  const page = await householdsRepository.listHouseholdsForUserPage(userId, query);
+
+  return {
+    data: page.rows.map(mapHousehold),
+    meta: createListMeta(query, page.totalCount),
+  };
 }
 
 export async function createHousehold(
@@ -251,10 +265,15 @@ export async function updateHousehold(
 export async function listMembers(
   context: HouseholdContext,
   householdId: string,
-): Promise<HouseholdMember[]> {
+  query: ListHouseholdMembersRequestQuery,
+): Promise<ListResult<HouseholdMember>> {
   assertCurrentHousehold(context, householdId);
-  const members = await householdsRepository.listMembers(householdId);
-  return members.map(mapHouseholdMember);
+  const page = await householdsRepository.listMembersPage(householdId, query);
+
+  return {
+    data: page.rows.map(mapHouseholdMember),
+    meta: createListMeta(query, page.totalCount),
+  };
 }
 
 export async function updateMemberRole(
@@ -344,15 +363,30 @@ export async function createInvite(
 export async function listHouseholdInvites(
   context: HouseholdContext,
   householdId: string,
-): Promise<HouseholdInvite[]> {
+  query: ListHouseholdInvitesRequestQuery,
+): Promise<ListResult<HouseholdInvite>> {
   assertCurrentHousehold(context, householdId);
-  const invites = await householdsRepository.listInvitesForHousehold(householdId);
-  return invites.map(mapHouseholdInvite);
+  const page = await householdsRepository.listInvitesForHouseholdPage(householdId, query);
+
+  return {
+    data: page.rows.map(mapHouseholdInvite),
+    meta: createListMeta(query, page.totalCount),
+  };
 }
 
-export async function listMyPendingInvites(userEmail: string): Promise<HouseholdInvite[]> {
-  const invites = await householdsRepository.listPendingInvitesForEmail(normalizeEmail(userEmail));
-  return invites.map(mapHouseholdInvite);
+export async function listMyPendingInvites(
+  userEmail: string,
+  query: ListMyHouseholdInvitesRequestQuery,
+): Promise<ListResult<HouseholdInvite>> {
+  const page = await householdsRepository.listPendingInvitesForEmailPage(
+    normalizeEmail(userEmail),
+    query,
+  );
+
+  return {
+    data: page.rows.map(mapHouseholdInvite),
+    meta: createListMeta(query, page.totalCount),
+  };
 }
 
 export async function acceptInvite(

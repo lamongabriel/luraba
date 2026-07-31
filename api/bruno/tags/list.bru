@@ -8,6 +8,22 @@ get {
   url: {{baseUrl}}/api/v1/tags
 }
 
+params:query {
+  page: 1
+  perPage: 20
+  ~search: Travel
+  sort: name
+  sortDirection: asc
+  ~colors: #16A34A,#2563EB
+  ~icons: Ticket01Icon,Calendar03Icon
+  ~hasColor: true
+  ~hasIcon: true
+  ~createdAtFrom: 2025-01-01
+  ~createdAtTo: 2025-12-31
+  ~updatedAtFrom: 2025-01-01
+  ~updatedAtTo: 2025-12-31
+}
+
 headers {
   Cookie: {{authCookie}}
 }

@@ -1,6 +1,13 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { z } from 'zod';
-import { sendCreated, sendNoContent, sendSuccess } from '@/shared/response';
+import {
+  type ApiResponseMeta,
+  type ApiResponsePayload,
+  isApiResponsePayload,
+  sendCreated,
+  sendNoContent,
+  sendSuccess,
+} from '@/shared/response';
 
 export type ControllerStatus = 'ok' | 'created' | 'no-content';
 
@@ -12,6 +19,9 @@ export type ParsedInput<TSchema extends ControllerSchema> = TSchema extends Sche
   ? z.output<TSchema>
   : EmptyInput;
 export type ParsedResponse<TSchema extends Schema> = z.output<TSchema>;
+export type ControllerOutput<TSchema extends Schema> =
+  | ParsedResponse<TSchema>
+  | ApiResponsePayload<ParsedResponse<TSchema>>;
 
 export type ControllerArgs<
   TBody extends ControllerSchema,
@@ -35,7 +45,12 @@ function parseInput<TSchema extends ControllerSchema>(
   return schema.parse(value) as ParsedInput<TSchema>;
 }
 
-function sendResponse(res: Response, data: unknown, status: ControllerStatus = 'ok'): void {
+function sendResponse(
+  res: Response,
+  data: unknown,
+  status: ControllerStatus = 'ok',
+  meta?: ApiResponseMeta,
+): void {
   if (status === 'no-content') {
     sendNoContent(res);
     return;
@@ -46,7 +61,7 @@ function sendResponse(res: Response, data: unknown, status: ControllerStatus = '
     return;
   }
 
-  sendSuccess(res, data);
+  sendSuccess(res, data, 200, meta);
 }
 
 type ResponseHandlerOptions<
@@ -59,7 +74,7 @@ type ResponseHandlerOptions<
   params?: TParams;
   query?: TQuery;
   response: TResponse;
-  handle: (input: ControllerArgs<TBody, TParams, TQuery>) => Promise<ParsedResponse<TResponse>>;
+  handle: (input: ControllerArgs<TBody, TParams, TQuery>) => Promise<ControllerOutput<TResponse>>;
   status?: Exclude<ControllerStatus, 'no-content'>;
 };
 
@@ -98,6 +113,12 @@ export function createHandler<
 
       if (options.status === 'no-content') {
         sendResponse(res, undefined, 'no-content');
+        return;
+      }
+
+      if (isApiResponsePayload(data)) {
+        const response = options.response.parse(data.data) as ParsedResponse<TResponse>;
+        sendResponse(res, response, options.status, data.meta);
         return;
       }
 

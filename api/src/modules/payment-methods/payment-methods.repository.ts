@@ -3,6 +3,12 @@ import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
 import { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
 import { now } from '@/shared/lib/date';
+import { type DbListPage, getPagination } from '@/shared/list';
+import {
+  buildPaymentMethodsListOrder,
+  buildPaymentMethodsListWhere,
+  type ListPaymentMethodsRequestQuery,
+} from './payment-methods.query';
 import type { PaymentMethodRecord } from './payment-methods.types';
 
 type CreatePaymentMethodValues = {
@@ -32,6 +38,30 @@ class PaymentMethodsRepository {
         asc(paymentMethodsTable.code),
         asc(paymentMethodsTable.currencyId),
       );
+  }
+
+  async listPage(
+    context: HouseholdContext,
+    query: ListPaymentMethodsRequestQuery,
+  ): Promise<DbListPage<PaymentMethodRecord>> {
+    const where = buildPaymentMethodsListWhere(context.householdId, query);
+    const orderBy = buildPaymentMethodsListOrder(query);
+    const { limit, offset } = getPagination(query);
+    const [countRow, rows] = await Promise.all([
+      db.select({ count: sql<number>`count(*)::integer` }).from(paymentMethodsTable).where(where),
+      db
+        .select()
+        .from(paymentMethodsTable)
+        .where(where)
+        .orderBy(...orderBy)
+        .limit(limit)
+        .offset(offset),
+    ]);
+
+    return {
+      rows,
+      totalCount: countRow[0]?.count ?? 0,
+    };
   }
 
   async findByCode(

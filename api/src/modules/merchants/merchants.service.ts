@@ -6,6 +6,8 @@ import {
 } from '@/modules/integrations/brandfetch/brandfetch.utils';
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
+import { createListMeta, type ListResult } from '@/shared/list';
+import type { ListMerchantsRequestQuery } from './merchants.query';
 import { merchantsRepository } from './merchants.repository';
 import type {
   CreateMerchantRequestBody,
@@ -54,9 +56,16 @@ export async function createMerchant(
   return mapMerchantRecord(merchant);
 }
 
-export async function listMerchants(context: HouseholdContext): Promise<ListMerchantsResponse> {
-  const merchants = await merchantsRepository.list(context);
-  return merchants.map(mapMerchantRecord);
+export async function listMerchants(
+  context: HouseholdContext,
+  query: ListMerchantsRequestQuery,
+): Promise<ListResult<ListMerchantsResponse[number]>> {
+  const page = await merchantsRepository.listPage(context, query);
+
+  return {
+    data: page.rows.map(mapMerchantRecord),
+    meta: createListMeta(query, page.totalCount),
+  };
 }
 
 export async function updateMerchant(

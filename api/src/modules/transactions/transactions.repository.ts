@@ -4,6 +4,7 @@ import { db } from '@/db';
 import { accountsTable } from '@/db/schemas/accounts.schema';
 import { creditCardBillingCyclesTable } from '@/db/schemas/credit-card-billing-cycles.schema';
 import { creditCardInstallmentsTable } from '@/db/schemas/credit-card-installments.schema';
+import { creditCardPaymentsTable } from '@/db/schemas/credit-card-payments.schema';
 import { creditCardPurchasesTable } from '@/db/schemas/credit-card-purchases.schema';
 import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
 import { entriesTable } from '@/db/schemas/entries.schema';
@@ -14,6 +15,20 @@ import { transactionTagsTable } from '@/db/schemas/transaction-tags.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
 import type { TxClient } from '@/db/types';
 import { now } from '@/shared/lib/date';
+import { type DbListPage, getPagination } from '@/shared/list';
+import {
+  buildTransactionFeedCte,
+  buildTransactionFeedOrder,
+  type ListTransactionsRequestQuery,
+} from './transactions.query';
+import type { TransactionFeedRowKind, TransactionListSummary } from './transactions.types';
+
+export type TransactionFeedPageKey = {
+  rowId: string;
+  rowKind: TransactionFeedRowKind;
+  transactionId: string | null;
+  installmentId: string | null;
+};
 
 const transactionDetailSelect = {
   transactionId: transactionsTable.id,
@@ -76,6 +91,61 @@ const creditCardInstallmentFeedSelect = {
   accountName: accountsTable.name,
   accountClassification: accountsTable.classification,
 } as const;
+
+export async function listTransactionFeedPageKeys(
+  householdId: string,
+  query: ListTransactionsRequestQuery,
+): Promise<DbListPage<TransactionFeedPageKey>> {
+  const { limit, offset } = getPagination(query);
+  const feedCte = buildTransactionFeedCte(householdId, query);
+  const orderBy = buildTransactionFeedOrder(query);
+
+  const summaryResult = await db.execute<{
+    totalCount: number;
+    incomeAmount: number;
+    expenseAmount: number;
+    transferCount: number;
+  }>(sql`
+    ${feedCte}
+    select
+      count(*)::integer as "totalCount",
+      coalesce(sum(amount) filter (where origin_type = 'income'), 0)::integer as "incomeAmount",
+      coalesce(sum(amount) filter (
+        where origin_type = 'expense' and include_in_budget
+      ), 0)::integer
+      +
+      coalesce(sum(amount) filter (
+        where origin_type = 'credit_card_installment'
+      ), 0)::integer as "expenseAmount",
+      count(*) filter (where origin_type = 'transfer')::integer as "transferCount"
+    from filtered
+  `);
+  const rowsResult = await db.execute<TransactionFeedPageKey>(sql`
+    ${feedCte}
+    select
+      row_id as "rowId",
+      row_kind as "rowKind",
+      transaction_id as "transactionId",
+      installment_id as "installmentId"
+    from filtered
+    order by ${sql.join(orderBy, sql`, `)}
+    limit ${limit}
+    offset ${offset}
+  `);
+  const summaryRow = summaryResult.rows[0];
+  const summary: TransactionListSummary = {
+    totalCount: summaryRow?.totalCount ?? 0,
+    incomeAmount: summaryRow?.incomeAmount ?? 0,
+    expenseAmount: summaryRow?.expenseAmount ?? 0,
+    transferCount: summaryRow?.transferCount ?? 0,
+  };
+
+  return {
+    rows: rowsResult.rows,
+    totalCount: summary.totalCount,
+    summary,
+  };
+}
 
 export async function createTransaction(
   tx: TxClient,
@@ -332,6 +402,44 @@ export async function listCreditCardInstallmentFeedRows(householdId: string) {
     );
 }
 
+export async function listCreditCardInstallmentFeedRowsByIds(
+  householdId: string,
+  installmentIds: string[],
+) {
+  if (installmentIds.length === 0) {
+    return [];
+  }
+
+  return db
+    .select(creditCardInstallmentFeedSelect)
+    .from(creditCardInstallmentsTable)
+    .innerJoin(
+      creditCardPurchasesTable,
+      eq(creditCardPurchasesTable.id, creditCardInstallmentsTable.purchaseId),
+    )
+    .innerJoin(creditCardsTable, eq(creditCardsTable.id, creditCardInstallmentsTable.creditCardId))
+    .innerJoin(transactionsTable, eq(transactionsTable.id, creditCardPurchasesTable.transactionId))
+    .innerJoin(
+      creditCardBillingCyclesTable,
+      eq(creditCardBillingCyclesTable.id, creditCardInstallmentsTable.billingCycleId),
+    )
+    .innerJoin(accountsTable, eq(accountsTable.id, creditCardsTable.accountId))
+    .leftJoin(paymentMethodsTable, eq(paymentMethodsTable.id, transactionsTable.paymentMethodId))
+    .leftJoin(transactionTagsTable, eq(transactionTagsTable.transactionId, transactionsTable.id))
+    .leftJoin(tagsTable, eq(tagsTable.id, transactionTagsTable.tagId))
+    .where(
+      and(
+        eq(transactionsTable.householdId, householdId),
+        inArray(creditCardInstallmentsTable.id, installmentIds),
+      ),
+    )
+    .orderBy(
+      desc(creditCardBillingCyclesTable.closingDate),
+      desc(creditCardInstallmentsTable.createdAt),
+      desc(creditCardInstallmentsTable.id),
+    );
+}
+
 export async function listCreditCardIdsByAccountIds(
   householdId: string,
   accountIds: string[],
@@ -350,6 +458,30 @@ export async function listCreditCardIdsByAccountIds(
       and(
         eq(creditCardsTable.householdId, householdId),
         inArray(creditCardsTable.accountId, accountIds),
+      ),
+    );
+}
+
+export async function listCreditCardPaymentMappingsByTransactionIds(
+  householdId: string,
+  transactionIds: string[],
+): Promise<Array<{ transactionId: string; creditCardId: string; paymentId: string }>> {
+  if (transactionIds.length === 0) {
+    return [];
+  }
+
+  return db
+    .select({
+      transactionId: creditCardPaymentsTable.transactionId,
+      creditCardId: creditCardPaymentsTable.creditCardId,
+      paymentId: creditCardPaymentsTable.id,
+    })
+    .from(creditCardPaymentsTable)
+    .innerJoin(transactionsTable, eq(transactionsTable.id, creditCardPaymentsTable.transactionId))
+    .where(
+      and(
+        eq(transactionsTable.householdId, householdId),
+        inArray(creditCardPaymentsTable.transactionId, transactionIds),
       ),
     );
 }

@@ -8,6 +8,26 @@ get {
   url: {{baseUrl}}/api/v1/households
 }
 
+params:query {
+  page: 1
+  perPage: 20
+  ~search: Family
+  sort: name
+  sortDirection: asc
+  ~roles: owner,admin,member,viewer
+  ~countryCodes: BR,US
+  ~defaultCurrencyCodes: BRL,USD
+  ~timezones: America/Sao_Paulo,UTC
+  ~budgetMonthStartsOnMin: 1
+  ~budgetMonthStartsOnMax: 31
+  ~creditExpenseTimings: spend_month,payment_month
+  ~creditInstallmentBudgetModes: per_installment,full_amount
+  ~createdAtFrom: 2025-01-01
+  ~createdAtTo: 2025-12-31
+  ~updatedAtFrom: 2025-01-01
+  ~updatedAtTo: 2025-12-31
+}
+
 headers {
   Cookie: {{authCookie}}
 }

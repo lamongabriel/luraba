@@ -1,10 +1,11 @@
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
+import { withApiMeta } from '@/shared/response';
+import { ListPaymentMethodsRequestQuerySchema } from './payment-methods.query';
 import * as paymentMethodsService from './payment-methods.service';
 import {
   CreatePaymentMethodRequestBodySchema,
   CreatePaymentMethodResponseSchema,
   DeletePaymentMethodRequestParamsSchema,
-  ListPaymentMethodsRequestQuerySchema,
   ListPaymentMethodsResponseSchema,
   UpdatePaymentMethodRequestBodySchema,
   UpdatePaymentMethodRequestParamsSchema,
@@ -14,7 +15,10 @@ import {
 export const list = createHouseholdHandler({
   query: ListPaymentMethodsRequestQuerySchema,
   response: ListPaymentMethodsResponseSchema,
-  handle: ({ household, query }) => paymentMethodsService.listPaymentMethods(household, query),
+  handle: async ({ household, query }) => {
+    const result = await paymentMethodsService.listPaymentMethods(household, query);
+    return withApiMeta(result.data, result.meta);
+  },
 });
 
 export const create = createHouseholdHandler({

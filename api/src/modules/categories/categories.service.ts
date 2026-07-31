@@ -1,6 +1,8 @@
 import type { HouseholdContext } from '@/config/permissions';
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
+import { createListMeta, type ListResult } from '@/shared/list';
+import type { ListCategoriesRequestQuery } from './categories.query';
 import { categoriesRepository } from './categories.repository';
 import type {
   Category,
@@ -53,9 +55,16 @@ export async function createCategory(
   return mapCategoryRecord(created);
 }
 
-export async function listCategories(context: HouseholdContext): Promise<Category[]> {
-  const categories = await categoriesRepository.list(context);
-  return categories.map(mapCategoryRecord);
+export async function listCategories(
+  context: HouseholdContext,
+  query: ListCategoriesRequestQuery,
+): Promise<ListResult<Category>> {
+  const page = await categoriesRepository.listPage(context, query);
+
+  return {
+    data: page.rows.map(mapCategoryRecord),
+    meta: createListMeta(query, page.totalCount),
+  };
 }
 
 export async function updateCategory(

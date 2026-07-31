@@ -5,6 +5,7 @@ import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import { buildMerchantInput } from '@/test/factories';
+import { ListMerchantsRequestQuerySchema } from '../merchants.query';
 import * as merchantsService from '../merchants.service';
 
 describe('merchants service', () => {
@@ -90,10 +91,13 @@ describe('merchants service', () => {
       buildMerchantInput({ name: 'Other Household Merchant' }),
     );
 
-    const merchants = await merchantsService.listMerchants(context.householdContext);
+    const merchants = await merchantsService.listMerchants(
+      context.householdContext,
+      ListMerchantsRequestQuerySchema.parse({}),
+    );
 
-    expect(merchants).toHaveLength(1);
-    expect(merchants[0]?.name).toBe('Household Merchant');
+    expect(merchants.data).toHaveLength(1);
+    expect(merchants.data[0]?.name).toBe('Household Merchant');
   });
 
   it('updates a merchant and can clear its domain and logo', async () => {
@@ -130,5 +134,36 @@ describe('merchants service', () => {
     await expect(
       merchantsService.deleteMerchant(context.householdContext, merchant.id),
     ).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe('merchants DB list filters', () => {
+  it('combines search and nullability filters in SQL', async () => {
+    const context = await createAuthenticatedContext();
+    const target = await merchantsService.createMerchant(
+      context.householdContext,
+      buildMerchantInput({
+        name: 'Filter Target Merchant',
+        domain: 'filter-target.example.com',
+      }),
+    );
+
+    const result = await merchantsService.listMerchants(
+      context.householdContext,
+      ListMerchantsRequestQuerySchema.parse({
+        search: 'Target',
+        hasDomain: true,
+        hasLogo: false,
+        createdAtFrom: '2020-01-01',
+        createdAtTo: '2030-01-01',
+        updatedAtFrom: '2020-01-01',
+        updatedAtTo: '2030-01-01',
+        sort: 'domain',
+        perPage: 1,
+      }),
+    );
+
+    expect(result.data).toEqual([expect.objectContaining({ id: target.id })]);
+    expect(result.meta.pagination.totalCount).toBe(1);
   });
 });

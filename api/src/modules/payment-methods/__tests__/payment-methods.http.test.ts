@@ -48,6 +48,26 @@ describe('payment methods routes', () => {
         }),
       ]),
     );
+
+    const filtered = await request(app)
+      .get('/api/v1/payment-methods')
+      .set(createAuthHeaders(context.token, context.household.id))
+      .query({
+        page: 1,
+        perPage: 1,
+        search: 'Meal Voucher',
+        sort: 'name',
+        scopes: 'household',
+        codes: 'meal_voucher',
+      });
+    expect(filtered.body.data).toEqual([
+      expect.objectContaining({ code: 'meal_voucher', scope: 'household' }),
+    ]);
+    expect(filtered.body.meta.pagination).toMatchObject({
+      page: 1,
+      perPage: 1,
+      totalCount: 1,
+    });
   });
 
   it('POST /api/v1/payment-methods creates a household method', async () => {
@@ -146,5 +166,30 @@ describe('payment methods routes', () => {
     expect(list.body.data).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ id: created.body.data.id })]),
     );
+  });
+
+  it('isolates list, update, and delete access across households', async () => {
+    const owner = await createAuthenticatedContext();
+    const outsider = await createAuthenticatedContext();
+    const created = await request(app)
+      .post('/api/v1/payment-methods')
+      .set(createAuthHeaders(owner.token, owner.household.id))
+      .send(buildPaymentMethodInput({ name: 'Isolated Method', code: 'isolated_method' }));
+    const id = created.body.data.id;
+
+    const list = await request(app)
+      .get('/api/v1/payment-methods')
+      .set(createAuthHeaders(outsider.token, owner.household.id));
+    const update = await request(app)
+      .patch(`/api/v1/payment-methods/${id}`)
+      .set(createAuthHeaders(outsider.token, outsider.household.id))
+      .send({ name: 'Leaked' });
+    const remove = await request(app)
+      .delete(`/api/v1/payment-methods/${id}`)
+      .set(createAuthHeaders(outsider.token, outsider.household.id));
+
+    expect(list.status).toBe(403);
+    expect(update.status).toBe(404);
+    expect(remove.status).toBe(404);
   });
 });

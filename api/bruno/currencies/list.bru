@@ -8,6 +8,16 @@ get {
   url: {{baseUrl}}/api/v1/currencies
 }
 
+params:query {
+  page: 1
+  perPage: 20
+  ~search: BRL
+  sort: code
+  sortDirection: asc
+  ~codes: BRL,USD
+  ~precisions: 0,2
+}
+
 headers {
   Cookie: {{authCookie}}
 }

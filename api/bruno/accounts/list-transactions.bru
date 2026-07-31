@@ -8,6 +8,32 @@ get {
   url: {{baseUrl}}/api/v1/accounts/{{accountId}}/transactions
 }
 
+params:query {
+  page: 1
+  perPage: 20
+  ~search: Groceries
+  sort: postedDate
+  sortDirection: desc
+  ~dateFrom: 2025-01-01
+  ~dateTo: 2025-12-31
+  ~purchaseDateFrom: 2025-01-01
+  ~purchaseDateTo: 2025-12-31
+  ~originTypes: expense,income,transfer,adjustment,credit_card_installment,credit_card_payment
+  ~categoryIds: {{categoryId}}
+  ~merchantIds: {{merchantId}}
+  ~tagIds: {{tagId}}
+  ~paymentMethodCodes: pix,cash
+  ~currencyCodes: BRL,USD
+  ~amountMin: 0
+  ~amountMax: 100000
+  ~includeInBudget: true
+  ~excludedFromSpending: false
+  ~createdAtFrom: 2025-01-01
+  ~createdAtTo: 2025-12-31
+  ~updatedAtFrom: 2025-01-01
+  ~updatedAtTo: 2025-12-31
+}
+
 headers {
   Cookie: {{authCookie}}
 }

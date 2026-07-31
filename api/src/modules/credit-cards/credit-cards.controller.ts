@@ -1,4 +1,9 @@
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
+import { withApiMeta } from '@/shared/response';
+import {
+  ListCreditCardCyclesRequestQuerySchema,
+  ListCreditCardsRequestQuerySchema,
+} from './credit-cards.query';
 import * as creditCardsService from './credit-cards.service';
 import {
   CreateCreditCardPaymentRequestBodySchema,
@@ -24,7 +29,6 @@ import {
   GetCreditCardRequestParamsSchema,
   GetCreditCardResponseSchema,
   ListCreditCardCyclesRequestParamsSchema,
-  ListCreditCardCyclesRequestQuerySchema,
   ListCreditCardCyclesResponseSchema,
   ListCreditCardsResponseSchema,
   UpdateCreditCardCycleRequestBodySchema,
@@ -42,8 +46,12 @@ import {
 } from './credit-cards.types';
 
 export const list = createHouseholdHandler({
+  query: ListCreditCardsRequestQuerySchema,
   response: ListCreditCardsResponseSchema,
-  handle: ({ household }) => creditCardsService.listCreditCards(household),
+  handle: async ({ household, query }) => {
+    const result = await creditCardsService.listCreditCards(household, query);
+    return withApiMeta(result.data, result.meta);
+  },
 });
 
 export const create = createHouseholdHandler({
@@ -77,8 +85,10 @@ export const listCycles = createHouseholdHandler({
   params: ListCreditCardCyclesRequestParamsSchema,
   query: ListCreditCardCyclesRequestQuerySchema,
   response: ListCreditCardCyclesResponseSchema,
-  handle: ({ household, params, query }) =>
-    creditCardsService.listBillingCycles(household, params.id, query),
+  handle: async ({ household, params, query }) => {
+    const result = await creditCardsService.listBillingCycles(household, params.id, query);
+    return withApiMeta(result.data, result.meta);
+  },
 });
 
 export const getCycle = createHouseholdHandler({

@@ -8,6 +8,19 @@ get {
   url: {{baseUrl}}/api/v1/households/{{householdId}}/members
 }
 
+params:query {
+  page: 1
+  perPage: 20
+  ~search: Gabriel
+  sort: name
+  sortDirection: asc
+  ~roles: owner,admin,member,viewer
+  ~createdAtFrom: 2025-01-01
+  ~createdAtTo: 2025-12-31
+  ~updatedAtFrom: 2025-01-01
+  ~updatedAtTo: 2025-12-31
+}
+
 headers {
   Cookie: {{authCookie}}
 }

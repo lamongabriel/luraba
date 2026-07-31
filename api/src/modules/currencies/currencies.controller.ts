@@ -1,4 +1,6 @@
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
+import { withApiMeta } from '@/shared/response';
+import { ListCurrenciesRequestQuerySchema } from './currencies.query';
 import * as currenciesService from './currencies.service';
 import {
   GetCurrencyRateRequestQuerySchema,
@@ -7,8 +9,12 @@ import {
 } from './currencies.types';
 
 export const list = createHouseholdHandler({
+  query: ListCurrenciesRequestQuerySchema,
   response: ListCurrenciesResponseSchema,
-  handle: () => currenciesService.listCurrencies(),
+  handle: async ({ query }) => {
+    const result = await currenciesService.listCurrencies(query);
+    return withApiMeta(result.data, result.meta);
+  },
 });
 
 export const rate = createHouseholdHandler({

@@ -1,4 +1,6 @@
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
+import { withApiMeta } from '@/shared/response';
+import { ListMerchantsRequestQuerySchema } from './merchants.query';
 import * as merchantsService from './merchants.service';
 import {
   CreateMerchantRequestBodySchema,
@@ -18,8 +20,12 @@ export const create = createHouseholdHandler({
 });
 
 export const list = createHouseholdHandler({
+  query: ListMerchantsRequestQuerySchema,
   response: ListMerchantsResponseSchema,
-  handle: ({ household }) => merchantsService.listMerchants(household),
+  handle: async ({ household, query }) => {
+    const result = await merchantsService.listMerchants(household, query);
+    return withApiMeta(result.data, result.meta);
+  },
 });
 
 export const update = createHouseholdHandler({

@@ -1,6 +1,12 @@
-import { asc, eq, inArray } from 'drizzle-orm';
+import { asc, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { currenciesTable } from '@/db/schemas/currencies.schema';
+import { type DbListPage, getPagination } from '@/shared/list';
+import {
+  buildCurrenciesListOrder,
+  buildCurrenciesListWhere,
+  type ListCurrenciesRequestQuery,
+} from './currencies.query';
 import type { Currency } from './currencies.types';
 
 class CurrenciesRepository {
@@ -13,6 +19,31 @@ class CurrenciesRepository {
       })
       .from(currenciesTable)
       .orderBy(asc(currenciesTable.code));
+  }
+
+  async listPage(query: ListCurrenciesRequestQuery): Promise<DbListPage<Currency>> {
+    const where = buildCurrenciesListWhere(query);
+    const orderBy = buildCurrenciesListOrder(query);
+    const { limit, offset } = getPagination(query);
+    const [countRow, rows] = await Promise.all([
+      db.select({ count: sql<number>`count(*)::integer` }).from(currenciesTable).where(where),
+      db
+        .select({
+          code: currenciesTable.code,
+          symbol: currenciesTable.symbol,
+          precision: currenciesTable.precision,
+        })
+        .from(currenciesTable)
+        .where(where)
+        .orderBy(...orderBy)
+        .limit(limit)
+        .offset(offset),
+    ]);
+
+    return {
+      rows,
+      totalCount: countRow[0]?.count ?? 0,
+    };
   }
 
   async findByCode(currencyCode: string): Promise<Currency | undefined> {

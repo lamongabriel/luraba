@@ -2,10 +2,7 @@ import { z } from 'zod';
 import { creditCardCycleStatusSchema } from '@/shared/validation/credit-cards';
 import { moneyAmountSchema } from '@/shared/validation/money';
 import { currencySchema } from '@/shared/validation/preferences';
-import {
-  creditCardCycleDisplayStatusSchema,
-  creditCardCycleScopeSchema,
-} from './credit-card-cycles.types';
+import { creditCardCycleDisplayStatusSchema } from './credit-card-cycles.types';
 
 export { creditCardCycleStatusSchema };
 
@@ -184,10 +181,6 @@ export const ListCreditCardCyclesRequestParamsSchema = z.object({
   id: z.uuid(),
 });
 
-export const ListCreditCardCyclesRequestQuerySchema = z.object({
-  scope: creditCardCycleScopeSchema.default('default'),
-});
-
 export const ListCreditCardCyclesResponseSchema = z.array(creditCardCycleSchema);
 
 export const GetCreditCardCycleRequestParamsSchema = z.object({
@@ -339,6 +332,7 @@ export type CreditCardPurchaseResponse = z.infer<typeof creditCardPurchaseSchema
 export type CreditCardPaymentResponse = z.infer<typeof creditCardPaymentSchema>;
 export type CreditCardForecastResponse = z.infer<typeof creditCardForecastSchema>;
 
+export type ListCreditCardsResponse = z.infer<typeof ListCreditCardsResponseSchema>;
 export type CreateCreditCardRequestBody = z.infer<typeof CreateCreditCardRequestBodySchema>;
 export type CreateCreditCardResponse = z.infer<typeof CreateCreditCardResponseSchema>;
 export type GetCreditCardRequestParams = z.infer<typeof GetCreditCardRequestParamsSchema>;
@@ -350,7 +344,6 @@ export type DeleteCreditCardRequestParams = z.infer<typeof DeleteCreditCardReque
 export type ListCreditCardCyclesRequestParams = z.infer<
   typeof ListCreditCardCyclesRequestParamsSchema
 >;
-export type ListCreditCardCyclesQuery = z.infer<typeof ListCreditCardCyclesRequestQuerySchema>;
 export type ListCreditCardCyclesResponse = z.infer<typeof ListCreditCardCyclesResponseSchema>;
 export type GetCreditCardCycleRequestParams = z.infer<typeof GetCreditCardCycleRequestParamsSchema>;
 export type GetCreditCardCycleResponse = z.infer<typeof GetCreditCardCycleResponseSchema>;

@@ -22,6 +22,7 @@ import {
   now,
   parseMonthKey,
 } from '@/shared/lib/date';
+import { createListMeta, type ListResult } from '@/shared/list';
 import {
   deriveCycleDisplayStatus,
   getNextCycleShapeFromPeriodStart,
@@ -29,20 +30,19 @@ import {
   hasCycleActivity,
 } from './credit-card-cycle-engine';
 import * as cycleRepository from './credit-card-cycles.repository';
-import type { CreditCardCycleScope } from './credit-card-cycles.types';
 import {
   type CreditCardRow,
   mapCycleItems,
   mapCycleRow,
   splitInstallmentAmounts,
 } from './credit-cards.helpers';
+import type { ListCreditCardCyclesQuery } from './credit-cards.query';
 import * as creditCardsRepository from './credit-cards.repository';
 import type {
   CreditCardCycleDetailResponse,
   CreditCardCycleSummary,
   CreditCardForecastQuery,
   CreditCardForecastResponse,
-  ListCreditCardCyclesQuery,
   UpdateCreditCardCycleDto,
 } from './credit-cards.types';
 
@@ -481,32 +481,28 @@ function enrichCycleSummaries(
   }));
 }
 
-function filterCycleSummariesForScope(
-  cycles: CreditCardCycleSummary[],
-  scope: CreditCardCycleScope,
-): CreditCardCycleSummary[] {
-  if (scope === 'all') {
-    return cycles;
-  }
-
-  return cycles.filter((cycle) => cycle.isCurrent || cycle.isNext || cycle.hasActivity);
-}
-
 export async function listBillingCycles(
   context: HouseholdContext,
   creditCardId: string,
   query: ListCreditCardCyclesQuery,
-): Promise<CreditCardCycleSummary[]> {
+): Promise<ListResult<CreditCardCycleSummary>> {
   const card = await creditCardsRepository.findByIdOrThrow(context.householdId, creditCardId);
 
-  const cycles = await db.transaction(async (tx) => {
+  await db.transaction(async (tx) => {
     await ensureCurrentAndNextCycle(tx, card, context.timezone);
     await syncCardCycles(tx, card, context.timezone);
-    return cycleRepository.listCyclesByCardIdDesc(tx, creditCardId);
   });
 
-  const enriched = enrichCycleSummaries(cycles, context.timezone);
-  return filterCycleSummariesForScope(enriched, query.scope);
+  const page = await cycleRepository.listCyclesPage(
+    creditCardId,
+    query,
+    getTodayInTimezone(context.timezone),
+  );
+
+  return {
+    data: page.rows,
+    meta: createListMeta(query, page.totalCount),
+  };
 }
 
 export async function getBillingCycle(

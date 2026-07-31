@@ -1,4 +1,4 @@
-import { and, asc, eq, ne, sql } from 'drizzle-orm';
+import { and, asc, eq, ne, type SQL, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import {
   householdInvitesTable,
@@ -8,8 +8,22 @@ import {
 import { usersTable } from '@/db/schemas/users.schema';
 import type { TxClient } from '@/db/types';
 import { now } from '@/shared/lib/date';
+import { type DbListPage, getPagination } from '@/shared/list';
 import type { Currency } from '@/shared/validation/preferences';
 import { currencySchema } from '@/shared/validation/preferences';
+import {
+  buildHouseholdInvitesListOrder,
+  buildHouseholdInvitesListWhere,
+  buildHouseholdMembersListOrder,
+  buildHouseholdMembersListWhere,
+  buildHouseholdsListOrder,
+  buildHouseholdsListWhere,
+  buildMyHouseholdInvitesListWhere,
+  type ListHouseholdInvitesRequestQuery,
+  type ListHouseholdMembersRequestQuery,
+  type ListHouseholdsRequestQuery,
+  type ListMyHouseholdInvitesRequestQuery,
+} from './households.query';
 import type {
   CreateHouseholdInviteRequestBody,
   CreateHouseholdRequestBody,
@@ -28,6 +42,86 @@ export type HouseholdMembership = HouseholdMemberRecord & {
   creditExpenseTiming: HouseholdRecord['creditExpenseTiming'];
   creditInstallmentBudgetMode: HouseholdRecord['creditInstallmentBudgetMode'];
 };
+
+type HouseholdForUserRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  defaultCurrencyId: Currency;
+  countryCode: HouseholdRecord['countryCode'];
+  timezone: HouseholdRecord['timezone'];
+  budgetMonthStartsOn: HouseholdRecord['budgetMonthStartsOn'];
+  creditExpenseTiming: HouseholdRecord['creditExpenseTiming'];
+  creditInstallmentBudgetMode: HouseholdRecord['creditInstallmentBudgetMode'];
+  role: HouseholdMemberRecord['role'];
+  createdByUserId: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type HouseholdMemberListRow = {
+  householdId: string;
+  userId: string;
+  name: string;
+  email: string;
+  role: HouseholdMemberRecord['role'];
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type HouseholdInviteListRow = {
+  id: string;
+  householdId: string;
+  householdName: string;
+  email: string;
+  role: HouseholdInviteRecord['role'];
+  status: HouseholdInviteRecord['status'];
+  invitedByUserId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  acceptedAt: Date | null;
+  revokedAt: Date | null;
+};
+
+const householdForUserSelect = {
+  id: householdsTable.id,
+  name: householdsTable.name,
+  description: householdsTable.description,
+  defaultCurrencyId: householdsTable.defaultCurrencyId,
+  countryCode: householdsTable.countryCode,
+  timezone: householdsTable.timezone,
+  budgetMonthStartsOn: householdsTable.budgetMonthStartsOn,
+  creditExpenseTiming: householdsTable.creditExpenseTiming,
+  creditInstallmentBudgetMode: householdsTable.creditInstallmentBudgetMode,
+  role: householdMembersTable.role,
+  createdByUserId: householdsTable.createdByUserId,
+  createdAt: householdsTable.createdAt,
+  updatedAt: householdsTable.updatedAt,
+} as const;
+
+const householdMemberListSelect = {
+  householdId: householdMembersTable.householdId,
+  userId: usersTable.id,
+  name: usersTable.name,
+  email: usersTable.email,
+  role: householdMembersTable.role,
+  createdAt: householdMembersTable.createdAt,
+  updatedAt: householdMembersTable.updatedAt,
+} as const;
+
+const householdInviteListSelect = {
+  id: householdInvitesTable.id,
+  householdId: householdInvitesTable.householdId,
+  householdName: householdsTable.name,
+  email: householdInvitesTable.email,
+  role: householdInvitesTable.role,
+  status: householdInvitesTable.status,
+  invitedByUserId: householdInvitesTable.invitedByUserId,
+  createdAt: householdInvitesTable.createdAt,
+  updatedAt: householdInvitesTable.updatedAt,
+  acceptedAt: householdInvitesTable.acceptedAt,
+  revokedAt: householdInvitesTable.revokedAt,
+} as const;
 
 class HouseholdsRepository {
   async createHousehold(
@@ -197,42 +291,81 @@ class HouseholdsRepository {
 
   async listHouseholdsForUser(userId: string) {
     return db
-      .select({
-        id: householdsTable.id,
-        name: householdsTable.name,
-        description: householdsTable.description,
-        defaultCurrencyId: householdsTable.defaultCurrencyId,
-        countryCode: householdsTable.countryCode,
-        timezone: householdsTable.timezone,
-        budgetMonthStartsOn: householdsTable.budgetMonthStartsOn,
-        creditExpenseTiming: householdsTable.creditExpenseTiming,
-        creditInstallmentBudgetMode: householdsTable.creditInstallmentBudgetMode,
-        role: householdMembersTable.role,
-        createdByUserId: householdsTable.createdByUserId,
-        createdAt: householdsTable.createdAt,
-        updatedAt: householdsTable.updatedAt,
-      })
+      .select(householdForUserSelect)
       .from(householdMembersTable)
       .innerJoin(householdsTable, eq(householdsTable.id, householdMembersTable.householdId))
       .where(eq(householdMembersTable.userId, userId))
       .orderBy(asc(householdsTable.name));
   }
 
+  async listHouseholdsForUserPage(
+    userId: string,
+    query: ListHouseholdsRequestQuery,
+  ): Promise<DbListPage<HouseholdForUserRow>> {
+    const { limit, offset } = getPagination(query);
+    const whereCondition = buildHouseholdsListWhere(userId, query);
+    const orderBy = buildHouseholdsListOrder(query);
+
+    const [countRow] = await db
+      .select({ count: sql<number>`count(*)::integer` })
+      .from(householdMembersTable)
+      .innerJoin(householdsTable, eq(householdsTable.id, householdMembersTable.householdId))
+      .where(whereCondition);
+
+    const rows = await db
+      .select(householdForUserSelect)
+      .from(householdMembersTable)
+      .innerJoin(householdsTable, eq(householdsTable.id, householdMembersTable.householdId))
+      .where(whereCondition)
+      .orderBy(...orderBy)
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      rows: rows.map((row) => ({
+        ...row,
+        defaultCurrencyId: currencySchema.parse(row.defaultCurrencyId),
+      })),
+      totalCount: countRow?.count ?? 0,
+    };
+  }
+
   async listMembers(householdId: string) {
     return db
-      .select({
-        householdId: householdMembersTable.householdId,
-        userId: usersTable.id,
-        name: usersTable.name,
-        email: usersTable.email,
-        role: householdMembersTable.role,
-        createdAt: householdMembersTable.createdAt,
-        updatedAt: householdMembersTable.updatedAt,
-      })
+      .select(householdMemberListSelect)
       .from(householdMembersTable)
       .innerJoin(usersTable, eq(usersTable.id, householdMembersTable.userId))
       .where(eq(householdMembersTable.householdId, householdId))
       .orderBy(asc(usersTable.name));
+  }
+
+  async listMembersPage(
+    householdId: string,
+    query: ListHouseholdMembersRequestQuery,
+  ): Promise<DbListPage<HouseholdMemberListRow>> {
+    const { limit, offset } = getPagination(query);
+    const whereCondition = buildHouseholdMembersListWhere(householdId, query);
+    const orderBy = buildHouseholdMembersListOrder(query);
+
+    const [countRow] = await db
+      .select({ count: sql<number>`count(*)::integer` })
+      .from(householdMembersTable)
+      .innerJoin(usersTable, eq(usersTable.id, householdMembersTable.userId))
+      .where(whereCondition);
+
+    const rows = await db
+      .select(householdMemberListSelect)
+      .from(householdMembersTable)
+      .innerJoin(usersTable, eq(usersTable.id, householdMembersTable.userId))
+      .where(whereCondition)
+      .orderBy(...orderBy)
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      rows,
+      totalCount: countRow?.count ?? 0,
+    };
   }
 
   async countOwners(householdId: string): Promise<number> {
@@ -303,48 +436,75 @@ class HouseholdsRepository {
     return rows[0];
   }
 
+  private async listInvitePage(
+    whereCondition: SQL,
+    query: ListHouseholdInvitesRequestQuery | ListMyHouseholdInvitesRequestQuery,
+    orderBy: SQL[],
+  ): Promise<DbListPage<HouseholdInviteListRow>> {
+    const { limit, offset } = getPagination(query);
+
+    const [countRow, rows] = await Promise.all([
+      db
+        .select({ count: sql<number>`count(*)::integer` })
+        .from(householdInvitesTable)
+        .innerJoin(householdsTable, eq(householdsTable.id, householdInvitesTable.householdId))
+        .where(whereCondition),
+      db
+        .select(householdInviteListSelect)
+        .from(householdInvitesTable)
+        .innerJoin(householdsTable, eq(householdsTable.id, householdInvitesTable.householdId))
+        .where(whereCondition)
+        .orderBy(...orderBy)
+        .limit(limit)
+        .offset(offset),
+    ]);
+
+    return {
+      rows,
+      totalCount: countRow[0]?.count ?? 0,
+    };
+  }
+
   async listInvitesForHousehold(householdId: string) {
     return db
-      .select({
-        id: householdInvitesTable.id,
-        householdId: householdInvitesTable.householdId,
-        householdName: householdsTable.name,
-        email: householdInvitesTable.email,
-        role: householdInvitesTable.role,
-        status: householdInvitesTable.status,
-        invitedByUserId: householdInvitesTable.invitedByUserId,
-        createdAt: householdInvitesTable.createdAt,
-        updatedAt: householdInvitesTable.updatedAt,
-        acceptedAt: householdInvitesTable.acceptedAt,
-        revokedAt: householdInvitesTable.revokedAt,
-      })
+      .select(householdInviteListSelect)
       .from(householdInvitesTable)
       .innerJoin(householdsTable, eq(householdsTable.id, householdInvitesTable.householdId))
       .where(eq(householdInvitesTable.householdId, householdId))
       .orderBy(asc(householdInvitesTable.email));
   }
 
+  async listInvitesForHouseholdPage(
+    householdId: string,
+    query: ListHouseholdInvitesRequestQuery,
+  ): Promise<DbListPage<HouseholdInviteListRow>> {
+    return this.listInvitePage(
+      buildHouseholdInvitesListWhere(householdId, query),
+      query,
+      buildHouseholdInvitesListOrder(query),
+    );
+  }
+
   async listPendingInvitesForEmail(email: string) {
     return db
-      .select({
-        id: householdInvitesTable.id,
-        householdId: householdInvitesTable.householdId,
-        householdName: householdsTable.name,
-        email: householdInvitesTable.email,
-        role: householdInvitesTable.role,
-        status: householdInvitesTable.status,
-        invitedByUserId: householdInvitesTable.invitedByUserId,
-        createdAt: householdInvitesTable.createdAt,
-        updatedAt: householdInvitesTable.updatedAt,
-        acceptedAt: householdInvitesTable.acceptedAt,
-        revokedAt: householdInvitesTable.revokedAt,
-      })
+      .select(householdInviteListSelect)
       .from(householdInvitesTable)
       .innerJoin(householdsTable, eq(householdsTable.id, householdInvitesTable.householdId))
       .where(
         and(eq(householdInvitesTable.email, email), eq(householdInvitesTable.status, 'pending')),
       )
       .orderBy(asc(householdsTable.name));
+  }
+
+  async listPendingInvitesForEmailPage(
+    email: string,
+    query: ListMyHouseholdInvitesRequestQuery,
+  ): Promise<DbListPage<HouseholdInviteListRow>> {
+    return this.listInvitePage(
+      buildMyHouseholdInvitesListWhere(email, query),
+      query,
+      buildHouseholdInvitesListOrder(query, true),
+    );
   }
 
   async findPendingInviteById(inviteId: string): Promise<HouseholdInviteRecord | undefined> {

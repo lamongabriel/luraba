@@ -32,6 +32,7 @@ const paymentMethodCodeSchema = z
   .min(1)
   .max(32)
   .transform((value) => value.toLowerCase());
+
 const baseFields = {
   description: z.string().min(1).max(512),
   purchaseDate: z.coerce.date(),
@@ -115,8 +116,15 @@ export const UpdateTransactionRequestBodySchema = z
     postedDate: z.coerce.date().optional(),
     includeInBudget: z.boolean().optional(),
     categoryId: z.uuid().optional(),
-    merchantId: z.uuid().optional(),
+    merchantId: z.uuid().nullable().optional(),
     paymentMethodCode: paymentMethodCodeSchema.optional(),
+    amount: moneyAmountSchema.optional(),
+    currencyCode: currencyCodeSchema.optional(),
+    accountId: z.uuid().optional(),
+    fromAccountId: z.uuid().optional(),
+    toAccountId: z.uuid().optional(),
+    fromAmount: moneyAmountSchema.optional(),
+    toAmount: moneyAmountSchema.optional(),
     tagIds: tagIdsSchema,
   })
   .refine((value) => Object.keys(value).length > 0, 'At least one field must be provided');
@@ -157,10 +165,15 @@ export const TransactionResponseSchema = z.object({
 export const CreateTransactionResponseSchema = TransactionResponseSchema;
 export const UpdateTransactionResponseSchema = TransactionResponseSchema;
 
-export const transactionFeedRowKindSchema = z.enum(['transaction', 'credit_card_installment']);
+export const transactionFeedRowKindSchema = z.enum([
+  'transaction',
+  'credit_card_installment',
+  'credit_card_payment',
+]);
 export const transactionFeedOriginTypeSchema = z.union([
   transactionTypeSchema,
   z.literal('credit_card_installment'),
+  z.literal('credit_card_payment'),
 ]);
 
 export const TransactionFeedRowSchema = TransactionResponseSchema.extend({
@@ -170,9 +183,17 @@ export const TransactionFeedRowSchema = TransactionResponseSchema.extend({
   excludedFromSpending: z.boolean(),
   creditCardId: z.uuid().nullable(),
   purchaseId: z.uuid().nullable(),
+  paymentId: z.uuid().nullable(),
   installmentId: z.uuid().nullable(),
   installmentNumber: z.number().int().nullable(),
   installmentCount: z.number().int().nullable(),
+});
+
+export const TransactionListSummarySchema = z.object({
+  totalCount: z.number().int(),
+  incomeAmount: z.number().int(),
+  expenseAmount: z.number().int(),
+  transferCount: z.number().int(),
 });
 
 export const ListTransactionsResponseSchema = z.array(TransactionFeedRowSchema);
@@ -215,11 +236,14 @@ export type TransactionFeedRow = TransactionResponse & {
   excludedFromSpending: boolean;
   creditCardId: string | null;
   purchaseId: string | null;
+  paymentId: string | null;
   installmentId: string | null;
   installmentNumber: number | null;
   installmentCount: number | null;
 };
 
+export type ListTransactionsResponse = z.infer<typeof ListTransactionsResponseSchema>;
+export type TransactionListSummary = z.infer<typeof TransactionListSummarySchema>;
 export type UpdateTransactionRequestParams = z.infer<typeof UpdateTransactionRequestParamsSchema>;
 export type UpdateTransactionRequestBody = z.infer<typeof UpdateTransactionRequestBodySchema>;
 export type DeleteTransactionRequestParams = z.infer<typeof DeleteTransactionRequestParamsSchema>;

@@ -16,6 +16,10 @@ import {
   buildCreditCardInput,
   createBalanceEntryForAccount,
 } from '@/test/factories';
+import {
+  ListAccountsRequestQuerySchema,
+  ListAccountTransactionsRequestQuerySchema,
+} from '../accounts.query';
 import * as accountsService from '../accounts.service';
 
 describe('accounts service', () => {
@@ -147,12 +151,15 @@ describe('accounts service', () => {
       currencyCode: 'BRL',
     });
 
-    const accounts = await accountsService.listAccounts(context.householdContext);
+    const accounts = await accountsService.listAccounts(
+      context.householdContext,
+      ListAccountsRequestQuerySchema.parse({}),
+    );
 
-    expect(accounts).toHaveLength(2);
-    expect(accounts.map((account) => account.name).sort()).toEqual(['Cash', 'Loan']);
-    expect(accounts.find((account) => account.id === asset.id)?.balance).toBe(12_500);
-    expect(accounts.find((account) => account.id === liability.id)?.balance).toBe(-4_000);
+    expect(accounts.data).toHaveLength(2);
+    expect(accounts.data.map((account) => account.name).sort()).toEqual(['Cash', 'Loan']);
+    expect(accounts.data.find((account) => account.id === asset.id)?.balance).toBe(12_500);
+    expect(accounts.data.find((account) => account.id === liability.id)?.balance).toBe(-4_000);
   });
 
   it('returns account details with the displayed balance', async () => {
@@ -220,9 +227,10 @@ describe('accounts service', () => {
     const transactions = await accountsService.listAccountTransactions(
       context.householdContext,
       checking.id,
+      ListAccountTransactionsRequestQuerySchema.parse({}),
     );
 
-    expect(transactions).toEqual([
+    expect(transactions.data).toEqual([
       expect.objectContaining({
         id: transfer.id,
         type: 'transfer',
@@ -245,7 +253,11 @@ describe('accounts service', () => {
     );
 
     await expect(
-      accountsService.listAccountTransactions(context.householdContext, creditCard.accountId),
+      accountsService.listAccountTransactions(
+        context.householdContext,
+        creditCard.accountId,
+        ListAccountTransactionsRequestQuerySchema.parse({}),
+      ),
     ).rejects.toThrow(ValidationError);
   });
 
@@ -347,5 +359,58 @@ describe('accounts service', () => {
         account.id,
       ),
     ).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe('accounts DB list filters', () => {
+  it('combines search, column filters, sorting, and pagination in the database', async () => {
+    const context = await createAuthenticatedContext();
+    const target = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({
+        name: 'Filter Target Checking',
+        institutionName: 'Filter Bank',
+        type: 'depository',
+        currencyCode: 'BRL',
+      }),
+    );
+    await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Filter Decoy Loan', type: 'loan', currencyCode: 'USD' }),
+    );
+    await createBalanceEntryForAccount({
+      householdId: context.household.id,
+      accountId: target.id,
+      amount: 12_345,
+    });
+
+    const result = await accountsService.listAccounts(
+      context.householdContext,
+      ListAccountsRequestQuerySchema.parse({
+        search: 'Target',
+        types: 'depository,loan',
+        classifications: 'asset',
+        currencyCodes: 'BRL',
+        balanceMin: 12_345,
+        balanceMax: 12_345,
+        hasInstitution: true,
+        createdAtFrom: '2020-01-01',
+        createdAtTo: '2030-01-01',
+        updatedAtFrom: '2020-01-01',
+        updatedAtTo: '2030-01-01',
+        sort: 'balance',
+        sortDirection: 'desc',
+        page: 1,
+        perPage: 1,
+      }),
+    );
+
+    expect(result.data).toEqual([expect.objectContaining({ id: target.id, balance: 12_345 })]);
+    expect(result.meta.pagination).toEqual({
+      page: 1,
+      perPage: 1,
+      totalCount: 1,
+      totalPages: 1,
+    });
   });
 });

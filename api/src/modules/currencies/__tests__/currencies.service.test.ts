@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fxService } from '@/modules/fx/fx.service';
 import { NotFoundError } from '@/shared/errors';
+import { ListCurrenciesRequestQuerySchema } from '../currencies.query';
 import * as currenciesService from '../currencies.service';
 
 describe('currencies service', () => {
@@ -9,12 +10,14 @@ describe('currencies service', () => {
   });
 
   it('lists seeded currencies ordered by code', async () => {
-    const currencies = await currenciesService.listCurrencies();
-
-    expect(currencies.map((currency) => currency.code)).toEqual(
-      [...currencies.map((currency) => currency.code)].sort(),
+    const currencies = await currenciesService.listCurrencies(
+      ListCurrenciesRequestQuerySchema.parse({}),
     );
-    expect(currencies).toEqual(
+
+    expect(currencies.data.map((currency) => currency.code)).toEqual(
+      [...currencies.data.map((currency) => currency.code)].sort(),
+    );
+    expect(currencies.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'BRL', symbol: 'R$', precision: 2 }),
         expect.objectContaining({ code: 'USD', symbol: '$', precision: 2 }),
@@ -106,5 +109,28 @@ describe('currencies service', () => {
         date: new Date('2026-05-03T00:00:00.000Z'),
       }),
     ).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe('currencies DB list filters', () => {
+  it('combines search, code, precision, sorting, and pagination in SQL', async () => {
+    const result = await currenciesService.listCurrencies(
+      ListCurrenciesRequestQuerySchema.parse({
+        search: 'R$',
+        codes: 'BRL,USD',
+        precisions: '2',
+        sort: 'code',
+        sortDirection: 'desc',
+        perPage: 1,
+      }),
+    );
+
+    expect(result.data).toEqual([expect.objectContaining({ code: 'BRL', precision: 2 })]);
+    expect(result.meta.pagination).toEqual({
+      page: 1,
+      perPage: 1,
+      totalCount: 1,
+      totalPages: 1,
+    });
   });
 });

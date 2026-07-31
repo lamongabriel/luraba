@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import { buildCategoryInput } from '@/test/factories';
+import { ListCategoriesRequestQuerySchema } from '../categories.query';
 import * as categoriesService from '../categories.service';
 
 describe('categories service', () => {
@@ -100,10 +101,13 @@ describe('categories service', () => {
       }),
     );
 
-    const categories = await categoriesService.listCategories(context.householdContext);
+    const categories = await categoriesService.listCategories(
+      context.householdContext,
+      ListCategoriesRequestQuerySchema.parse({}),
+    );
 
-    expect(categories).toHaveLength(1);
-    expect(categories[0]?.name).toBe('Household Category');
+    expect(categories.data).toHaveLength(1);
+    expect(categories.data[0]?.name).toBe('Household Category');
   });
 
   it('updates a category and can clear optional display fields and parent', async () => {
@@ -147,5 +151,46 @@ describe('categories service', () => {
     await expect(
       categoriesService.deleteCategory(context.householdContext, category.id),
     ).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe('categories DB list filters', () => {
+  it('combines search and every structured filter in SQL', async () => {
+    const context = await createAuthenticatedContext();
+    const parent = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Filter Parent', type: 'expense' }),
+    );
+    const target = await categoriesService.createCategory(context.householdContext, {
+      ...buildCategoryInput({
+        name: 'Filter Child Target',
+        type: 'expense',
+        color: '#10B981',
+        icon: 'AppleIcon',
+      }),
+      parentId: parent.id,
+    });
+
+    const result = await categoriesService.listCategories(
+      context.householdContext,
+      ListCategoriesRequestQuerySchema.parse({
+        search: 'Target',
+        types: 'expense,income',
+        parentIds: parent.id,
+        hasParent: true,
+        colors: '#10B981',
+        icons: 'AppleIcon',
+        createdAtFrom: '2020-01-01',
+        createdAtTo: '2030-01-01',
+        updatedAtFrom: '2020-01-01',
+        updatedAtTo: '2030-01-01',
+        sort: 'name',
+        page: 1,
+        perPage: 1,
+      }),
+    );
+
+    expect(result.data).toEqual([expect.objectContaining({ id: target.id })]);
+    expect(result.meta.pagination.totalCount).toBe(1);
   });
 });

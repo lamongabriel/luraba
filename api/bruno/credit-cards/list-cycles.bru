@@ -8,6 +8,27 @@ get {
   url: {{baseUrl}}/api/v1/credit-cards/{{creditCardId}}/cycles
 }
 
+params:query {
+  page: 1
+  perPage: 20
+  ~search: open
+  sort: periodStart
+  sortDirection: desc
+  scope: default
+  ~statuses: open,closed,paid
+  ~displayStatuses: current,upcoming,due,overdue,paid
+  ~closingDateFrom: 2025-01-01
+  ~closingDateTo: 2025-12-31
+  ~dueDateFrom: 2025-01-01
+  ~dueDateTo: 2025-12-31
+  ~statementAmountMin: 0
+  ~statementAmountMax: 100000
+  ~paidAmountMin: 0
+  ~paidAmountMax: 100000
+  ~remainingAmountMin: 0
+  ~remainingAmountMax: 100000
+}
+
 headers {
   Cookie: {{authCookie}}
 }

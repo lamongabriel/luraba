@@ -1,4 +1,6 @@
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
+import { withApiMeta } from '@/shared/response';
+import { ListTransactionsRequestQuerySchema } from './transactions.query';
 import * as transactionsService from './transactions.service';
 import {
   CreateTransactionResponseSchema,
@@ -11,8 +13,12 @@ import {
 } from './transactions.types';
 
 export const list = createHouseholdHandler({
+  query: ListTransactionsRequestQuerySchema,
   response: ListTransactionsResponseSchema,
-  handle: ({ household }) => transactionsService.listTransactions(household),
+  handle: async ({ household, query }) => {
+    const result = await transactionsService.listTransactions(household, query);
+    return withApiMeta(result.data, result.meta);
+  },
 });
 
 export const create = createHouseholdHandler({

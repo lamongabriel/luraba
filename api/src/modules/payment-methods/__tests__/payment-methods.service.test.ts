@@ -1,15 +1,19 @@
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import { buildPaymentMethodInput } from '@/test/factories';
+import { ListPaymentMethodsRequestQuerySchema } from '../payment-methods.query';
 import * as paymentMethodsService from '../payment-methods.service';
 
 describe('payment methods service', () => {
   it('lists seeded system payment methods with translation keys', async () => {
     const context = await createAuthenticatedContext();
 
-    const methods = await paymentMethodsService.listPaymentMethods(context.householdContext, {});
+    const methods = await paymentMethodsService.listPaymentMethods(
+      context.householdContext,
+      ListPaymentMethodsRequestQuerySchema.parse({}),
+    );
 
-    expect(methods).toEqual(
+    expect(methods.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           code: 'cash',
@@ -68,12 +72,15 @@ describe('payment methods service', () => {
       buildPaymentMethodInput({ name: 'Foreign Voucher' }),
     );
 
-    const methods = await paymentMethodsService.listPaymentMethods(context.householdContext, {});
+    const methods = await paymentMethodsService.listPaymentMethods(
+      context.householdContext,
+      ListPaymentMethodsRequestQuerySchema.parse({}),
+    );
 
-    expect(methods).toEqual(
+    expect(methods.data).toEqual(
       expect.arrayContaining([expect.objectContaining({ code: 'meal_voucher' })]),
     );
-    expect(methods).not.toEqual(
+    expect(methods.data).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ code: 'foreign_voucher' })]),
     );
   });
@@ -95,17 +102,17 @@ describe('payment methods service', () => {
     );
 
     const methods = await paymentMethodsService.listPaymentMethods(context.householdContext, {
-      currencyCode: 'BRL',
+      ...ListPaymentMethodsRequestQuerySchema.parse({ currencyCode: 'BRL' }),
     });
 
-    expect(methods).toEqual(
+    expect(methods.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: 'voucher', name: 'BRL Voucher', currencyCode: 'BRL' }),
         expect.objectContaining({ code: 'wallet', name: 'Global Wallet', currencyCode: null }),
         expect.objectContaining({ code: 'cash', currencyCode: null }),
       ]),
     );
-    expect(methods).not.toEqual(
+    expect(methods.data).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ code: 'voucher', name: 'USD Voucher' })]),
     );
   });
@@ -121,7 +128,10 @@ describe('payment methods service', () => {
     ).rejects.toThrow(NotFoundError);
 
     await expect(
-      paymentMethodsService.listPaymentMethods(context.householdContext, { currencyCode: 'ZZZ' }),
+      paymentMethodsService.listPaymentMethods(
+        context.householdContext,
+        ListPaymentMethodsRequestQuerySchema.parse({ currencyCode: 'ZZZ' }),
+      ),
     ).rejects.toThrow(NotFoundError);
   });
 
@@ -207,5 +217,39 @@ describe('payment methods service', () => {
     await expect(
       paymentMethodsService.deletePaymentMethod(context.householdContext, method.id),
     ).rejects.toThrow(NotFoundError);
+  });
+});
+
+describe('payment methods DB list filters', () => {
+  it('combines search, scope, code, currency, and nullability filters in SQL', async () => {
+    const context = await createAuthenticatedContext();
+    const target = await paymentMethodsService.createPaymentMethod(
+      context.householdContext,
+      buildPaymentMethodInput({
+        name: 'Filter Target Method',
+        code: 'filter_target_method',
+        currencyCode: 'BRL',
+      }),
+    );
+
+    const result = await paymentMethodsService.listPaymentMethods(
+      context.householdContext,
+      ListPaymentMethodsRequestQuerySchema.parse({
+        search: 'Target',
+        codes: 'filter_target_method,cash',
+        scopes: 'household',
+        currencyCode: 'BRL',
+        hasCurrency: true,
+        createdAtFrom: '2020-01-01',
+        createdAtTo: '2030-01-01',
+        updatedAtFrom: '2020-01-01',
+        updatedAtTo: '2030-01-01',
+        sort: 'code',
+        perPage: 1,
+      }),
+    );
+
+    expect(result.data).toEqual([expect.objectContaining({ id: target.id })]);
+    expect(result.meta.pagination.totalCount).toBe(1);
   });
 });
