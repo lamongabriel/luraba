@@ -19,6 +19,11 @@ export * from './schemas/entries.schema';
 export * from './schemas/enums.schema';
 export * from './schemas/exchange-rates.schema';
 export * from './schemas/households.schema';
+export {
+  householdInvitesTable as householdInvites,
+  householdMembersTable as householdMembers,
+  householdsTable as households,
+} from './schemas/households.schema';
 export * from './schemas/ledger-accounts.schema';
 export * from './schemas/merchants.schema';
 export * from './schemas/payment-methods.schema';

@@ -1,10 +1,13 @@
 import { config as loadEnv } from 'dotenv';
 import { z } from 'zod';
+import type { MailConfig } from '@/modules/mail/mail.config';
 import {
   booleanEnvSchema,
   getOptionalCredentialPair,
   hexSecretEnvSchema,
+  optionalBooleanEnvSchema,
   optionalCredentialPairEnvShape,
+  optionalStringEnvSchema,
   secretEnvSchema,
   urlEnvSchema,
   validateOptionalCredentialPairs,
@@ -16,6 +19,16 @@ const socialAuthProviderDefinitions = [
   { prefix: 'GOOGLE', providerName: 'Google' },
   { prefix: 'GITHUB', providerName: 'GitHub' },
 ] as const;
+
+const optionalPortEnvSchema = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim().length === 0 ? undefined : value),
+  z.coerce.number().int().min(1).max(65_535).optional(),
+);
+
+const optionalEmailEnvSchema = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim().length === 0 ? undefined : value),
+  z.email().optional(),
+);
 
 const envSchema = z
   .object({
@@ -37,6 +50,16 @@ const envSchema = z
     }),
     ...optionalCredentialPairEnvShape('GOOGLE'),
     ...optionalCredentialPairEnvShape('GITHUB'),
+    SMTP_PROVIDER: optionalStringEnvSchema,
+    SMTP_HOST: optionalStringEnvSchema,
+    SMTP_PORT: optionalPortEnvSchema,
+    SMTP_SECURE: optionalBooleanEnvSchema,
+    SMTP_USERNAME: optionalStringEnvSchema,
+    SMTP_PASSWORD: optionalStringEnvSchema,
+    SMTP_FROM_NAME: optionalStringEnvSchema,
+    SMTP_FROM_EMAIL: optionalEmailEnvSchema,
+    SMTP_REPLY_EMAIL: optionalEmailEnvSchema,
+    SMTP_TLS_CIPHERS: optionalStringEnvSchema,
     INTEGRATIONS_ENCRYPTION_KEY: hexSecretEnvSchema('INTEGRATIONS_ENCRYPTION_KEY', 64),
     RUN_DB_TESTS: booleanEnvSchema.default(false),
   })
@@ -56,6 +79,18 @@ if (!parsedEnv.success) {
 
 const googleAuthProvider = getOptionalCredentialPair(parsedEnv.data, 'GOOGLE');
 const githubAuthProvider = getOptionalCredentialPair(parsedEnv.data, 'GITHUB');
+const mailConfig = {
+  provider: parsedEnv.data.SMTP_PROVIDER,
+  host: parsedEnv.data.SMTP_HOST,
+  port: parsedEnv.data.SMTP_PORT,
+  secure: parsedEnv.data.SMTP_SECURE,
+  username: parsedEnv.data.SMTP_USERNAME,
+  password: parsedEnv.data.SMTP_PASSWORD,
+  fromName: parsedEnv.data.SMTP_FROM_NAME,
+  fromEmail: parsedEnv.data.SMTP_FROM_EMAIL,
+  replyEmail: parsedEnv.data.SMTP_REPLY_EMAIL,
+  tlsCiphers: parsedEnv.data.SMTP_TLS_CIPHERS,
+} satisfies MailConfig;
 
 export const env = {
   nodeEnv: parsedEnv.data.NODE_ENV,
@@ -73,6 +108,7 @@ export const env = {
     google: googleAuthProvider,
     github: githubAuthProvider,
   },
+  mail: mailConfig,
   integrationsEncryptionKey: parsedEnv.data.INTEGRATIONS_ENCRYPTION_KEY,
   runDbTests: parsedEnv.data.RUN_DB_TESTS,
 } as const;
