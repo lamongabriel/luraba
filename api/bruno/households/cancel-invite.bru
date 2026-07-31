@@ -1,5 +1,5 @@
 meta {
-  name: revoke invite
+  name: cancel invite
   type: http
   seq: 11
 }
@@ -13,7 +13,7 @@ headers {
 }
 
 tests {
-  test("invite revoke returns 204", function() {
+  test("invite cancel returns 204", function() {
     expect(res.status).to.equal(204);
   });
 }

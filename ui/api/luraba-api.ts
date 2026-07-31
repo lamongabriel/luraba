@@ -9,10 +9,6 @@ import { logout } from "@/lib/auth/logout"
 import { readStorage } from "@/lib/local-storage"
 import { toAppClientError } from "@/services/error-client"
 
-function getActiveHouseholdId() {
-  return readStorage(STORAGE_KEYS.activeHouseholdId)
-}
-
 export function toLurabaApiError(error: unknown) {
   return toAppClientError(error)
 }
@@ -28,7 +24,7 @@ function createApiClient({
   })
 
   client.interceptors.request.use((config) => {
-    const activeHouseholdId = getActiveHouseholdId()
+    const activeHouseholdId = readStorage(STORAGE_KEYS.activeHouseholdId)
 
     if (activeHouseholdId) {
       config.headers.set("X-Household-Id", activeHouseholdId)

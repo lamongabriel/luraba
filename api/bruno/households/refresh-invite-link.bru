@@ -1,0 +1,29 @@
+meta {
+  name: refresh invite link
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/v1/households/{{householdId}}/invites/{{householdInviteId}}/link
+}
+
+headers {
+  Cookie: {{authCookie}}
+}
+
+tests {
+  test("invite link returns a seven-day link", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body?.data?.url).to.be.a("string");
+    expect(res.body?.data?.expiresAt).to.be.a("string");
+  });
+}
+
+script:post-response {
+  const url = res.body?.data?.url;
+
+  if (url) {
+    bru.setEnvVar("householdInviteToken", url.split("/").pop());
+  }
+}

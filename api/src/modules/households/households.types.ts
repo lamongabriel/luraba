@@ -12,6 +12,7 @@ import {
   currencySchema,
   timezoneSchema,
 } from '@/shared/validation/preferences';
+import { householdInviteComputedStatusSchema } from './households.query';
 
 export type HouseholdRecord = typeof householdsTable.$inferSelect;
 export type HouseholdMemberRecord = typeof householdMembersTable.$inferSelect;
@@ -47,13 +48,24 @@ export const householdSchema = z.object({
 });
 
 export const householdMemberSchema = z.object({
+  id: z.uuid(),
   householdId: z.uuid(),
   userId: z.uuid(),
   name: z.string(),
   email: z.email(),
+  image: z.string().nullable(),
+  emailVerified: z.boolean(),
   role: householdRoleSchema,
+  lastActiveAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+});
+
+const householdInviteInviterSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  email: z.email(),
+  image: z.string().nullable(),
 });
 
 export const householdInviteSchema = z.object({
@@ -63,11 +75,15 @@ export const householdInviteSchema = z.object({
   email: z.email(),
   role: householdRoleSchema,
   status: householdInviteStatusSchema,
+  computedStatus: householdInviteComputedStatusSchema,
   invitedByUserId: z.uuid(),
+  inviter: householdInviteInviterSchema.nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  expiresAt: z.iso.datetime(),
   acceptedAt: z.iso.datetime().nullable(),
-  revokedAt: z.iso.datetime().nullable(),
+  rejectedAt: z.iso.datetime().nullable(),
+  canceledAt: z.iso.datetime().nullable(),
 });
 
 export const CreateHouseholdRequestBodySchema = z.object({
@@ -145,13 +161,48 @@ export const ListHouseholdInvitesResponseSchema = z.array(householdInviteSchema)
 
 export const ListMyHouseholdInvitesResponseSchema = z.array(householdInviteSchema);
 
-export const AcceptHouseholdInviteRequestParamsSchema = z.object({
-  id: z.uuid(),
-});
-
-export const RevokeHouseholdInviteRequestParamsSchema = z.object({
+export const ManageHouseholdInviteRequestParamsSchema = z.object({
   id: z.uuid(),
   inviteId: z.uuid(),
+});
+
+const householdInviteTokenSchema = z.string().min(1).max(256);
+
+export const PreviewHouseholdInviteRequestQuerySchema = z.object({
+  token: householdInviteTokenSchema,
+});
+
+export const HouseholdInviteTokenRequestBodySchema = z.object({
+  token: householdInviteTokenSchema,
+});
+
+export const AcceptHouseholdInviteResponseSchema = z.object({
+  household: z.object({
+    id: z.uuid(),
+    name: z.string(),
+    role: householdRoleSchema,
+  }),
+});
+
+export const PreviewHouseholdInviteResponseSchema = z.object({
+  email: z.email(),
+  household: z.object({
+    name: z.string(),
+  }),
+  role: householdRoleSchema,
+  inviter: z
+    .object({
+      name: z.string(),
+      image: z.string().nullable(),
+    })
+    .nullable(),
+  status: householdInviteComputedStatusSchema,
+  expiresAt: z.iso.datetime(),
+});
+
+export const HouseholdInviteLinkResponseSchema = z.object({
+  url: z.url(),
+  expiresAt: z.iso.datetime(),
 });
 
 export type Household = z.infer<typeof householdSchema>;
@@ -190,9 +241,13 @@ export type ListHouseholdInvitesRequestParams = z.infer<
 >;
 export type ListHouseholdInvitesResponse = z.infer<typeof ListHouseholdInvitesResponseSchema>;
 export type ListMyHouseholdInvitesResponse = z.infer<typeof ListMyHouseholdInvitesResponseSchema>;
-export type AcceptHouseholdInviteRequestParams = z.infer<
-  typeof AcceptHouseholdInviteRequestParamsSchema
+export type ManageHouseholdInviteRequestParams = z.infer<
+  typeof ManageHouseholdInviteRequestParamsSchema
 >;
-export type RevokeHouseholdInviteRequestParams = z.infer<
-  typeof RevokeHouseholdInviteRequestParamsSchema
+export type PreviewHouseholdInviteRequestQuery = z.infer<
+  typeof PreviewHouseholdInviteRequestQuerySchema
 >;
+export type PreviewHouseholdInviteResponse = z.infer<typeof PreviewHouseholdInviteResponseSchema>;
+export type HouseholdInviteTokenRequestBody = z.infer<typeof HouseholdInviteTokenRequestBodySchema>;
+export type AcceptHouseholdInviteResponse = z.infer<typeof AcceptHouseholdInviteResponseSchema>;
+export type HouseholdInviteLinkResponse = z.infer<typeof HouseholdInviteLinkResponseSchema>;

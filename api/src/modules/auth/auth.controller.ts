@@ -1,6 +1,6 @@
+import * as householdsService from '@/modules/households/households.service';
 import { createAuthenticatedHandler } from '@/shared/controllers/authenticated.controller';
 import { createHandler } from '@/shared/controllers/controller';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import * as authService from './auth.service';
 import {
   GetAuthProvidersResponseSchema,
@@ -15,9 +15,16 @@ export const getProviders = createHandler({
   handle: async () => authService.getProviders(),
 });
 
-export const me = createHouseholdHandler({
+export const me = createAuthenticatedHandler({
   response: GetMeResponseSchema,
-  handle: ({ household }) => authService.getMe(household.userId, household.householdId),
+  handle: async ({ req, user }) => {
+    const rawHouseholdId = req.headers['x-household-id'];
+    const selectedHouseholdId = Array.isArray(rawHouseholdId) ? rawHouseholdId[0] : rawHouseholdId;
+    const householdId =
+      selectedHouseholdId?.trim() || (await householdsService.resolveHouseholdIdForUser(user.id));
+
+    return authService.getMe(user.id, householdId);
+  },
 });
 
 export const getMyPreferences = createAuthenticatedHandler({

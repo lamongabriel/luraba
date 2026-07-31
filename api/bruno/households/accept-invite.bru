@@ -5,15 +5,24 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/api/v1/households/invites/{{householdInviteId}}/accept
+  url: {{baseUrl}}/api/v1/households/invites/accept
+  body: json
 }
 
 headers {
   Cookie: {{authCookie}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "token": "{{householdInviteToken}}"
+  }
 }
 
 tests {
-  test("invite accept returns a handled status", function() {
-    expect([204, 404]).to.include(res.status);
+  test("invite accept returns the accepted household", function() {
+    expect(res.status).to.equal(200);
+    expect(res.body?.data?.household?.id).to.be.a("string");
   });
 }

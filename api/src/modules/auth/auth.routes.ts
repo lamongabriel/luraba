@@ -5,12 +5,8 @@ import * as authController from './auth.controller';
 const router = Router();
 
 router.get('/providers', authController.getProviders);
-router.get('/me', requireAccess({ household: true }), authController.me);
-router.get('/me/preferences', requireAccess({ household: true }), authController.getMyPreferences);
-router.patch(
-  '/me/preferences',
-  requireAccess({ household: true }),
-  authController.updateMyPreferences,
-);
+router.get('/me', requireAccess(), authController.me);
+router.get('/me/preferences', requireAccess(), authController.getMyPreferences);
+router.patch('/me/preferences', requireAccess(), authController.updateMyPreferences);
 
 export default router;

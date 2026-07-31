@@ -141,6 +141,13 @@
       "when": 1781787600000,
       "tag": "0019_better_auth_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1785499200000,
+      "tag": "0020_household_invitation_lifecycle",
+      "breakpoints": true
     }
   ]
 }

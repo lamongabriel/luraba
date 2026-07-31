@@ -28,6 +28,7 @@ export const usersTable = pgTable('users', {
     .default('DD/MM/YYYY'),
   preferredPeriod: defaultPeriodEnum('preferred_period').notNull().default('current_month'),
   preferredTheme: themePreferenceEnum('preferred_theme').notNull().default('system'),
+  lastActiveAt: timestamp('last_active_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()

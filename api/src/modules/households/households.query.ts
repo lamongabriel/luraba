@@ -1,4 +1,5 @@
-import { eq, type SQL, sql } from 'drizzle-orm';
+import { eq, gt, type SQL, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import {
   householdInvitesTable,
@@ -7,6 +8,7 @@ import {
 } from '@/db/schemas/households.schema';
 import { usersTable } from '@/db/schemas/users.schema';
 import {
+  booleanQuerySchema,
   buildIlikeSearch,
   buildOrderBy,
   combineConditions,
@@ -17,7 +19,7 @@ import {
   temporalQuerySchema,
   validateRange,
 } from '@/shared/list';
-import { householdInviteStatusSchema, householdRoleSchema } from '@/shared/validation/households';
+import { householdRoleSchema } from '@/shared/validation/households';
 import {
   countryCodeSchema,
   creditExpenseTimingSchema,
@@ -25,6 +27,25 @@ import {
   currencySchema,
   timezoneSchema,
 } from '@/shared/validation/preferences';
+
+export const householdInviteInviter = alias(usersTable, 'household_invite_inviter');
+
+export const householdInviteComputedStatusSchema = z.enum([
+  'pending',
+  'expired',
+  'accepted',
+  'rejected',
+  'canceled',
+]);
+
+export const householdInviteComputedStatusSql = sql<string>`
+  case
+    when ${householdInvitesTable.status} = 'pending'
+      and ${householdInvitesTable.expiresAt} <= now()
+    then 'expired'
+    else ${householdInvitesTable.status}::text
+  end
+`;
 
 export const ListHouseholdsRequestQuerySchema = createListQuerySchema(
   {
@@ -53,13 +74,17 @@ export type ListHouseholdsRequestQuery = z.infer<typeof ListHouseholdsRequestQue
 export const ListHouseholdMembersRequestQuerySchema = createListQuerySchema(
   {
     roles: commaSeparatedArraySchema(householdRoleSchema),
+    emailVerified: booleanQuerySchema.optional(),
+    lastActiveAtFrom: temporalQuerySchema.optional(),
+    lastActiveAtTo: temporalQuerySchema.optional(),
     createdAtFrom: temporalQuerySchema.optional(),
     createdAtTo: temporalQuerySchema.optional(),
     updatedAtFrom: temporalQuerySchema.optional(),
     updatedAtTo: temporalQuerySchema.optional(),
   },
-  ['createdAt', 'email', 'name', 'role', 'updatedAt'],
+  ['createdAt', 'email', 'emailVerified', 'lastActiveAt', 'name', 'role', 'updatedAt'],
 ).superRefine((query, ctx) => {
+  validateRange(query, ctx, 'lastActiveAtFrom', 'lastActiveAtTo');
   validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
   validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
 });
@@ -70,20 +95,30 @@ export type ListHouseholdMembersRequestQuery = z.infer<
 
 const householdInviteFilterShape = {
   roles: commaSeparatedArraySchema(householdRoleSchema),
-  statuses: commaSeparatedArraySchema(householdInviteStatusSchema),
+  statuses: commaSeparatedArraySchema(householdInviteComputedStatusSchema),
   createdAtFrom: temporalQuerySchema.optional(),
   createdAtTo: temporalQuerySchema.optional(),
   updatedAtFrom: temporalQuerySchema.optional(),
   updatedAtTo: temporalQuerySchema.optional(),
+  expiresAtFrom: temporalQuerySchema.optional(),
+  expiresAtTo: temporalQuerySchema.optional(),
+  acceptedAtFrom: temporalQuerySchema.optional(),
+  acceptedAtTo: temporalQuerySchema.optional(),
+  rejectedAtFrom: temporalQuerySchema.optional(),
+  rejectedAtTo: temporalQuerySchema.optional(),
+  canceledAtFrom: temporalQuerySchema.optional(),
+  canceledAtTo: temporalQuerySchema.optional(),
 } as const;
 
 const householdInviteSortFields = [
   'acceptedAt',
   'createdAt',
   'email',
+  'expiresAt',
   'householdName',
   'role',
-  'revokedAt',
+  'rejectedAt',
+  'canceledAt',
   'status',
   'updatedAt',
 ] as const;
@@ -94,6 +129,10 @@ export const ListHouseholdInvitesRequestQuerySchema = createListQuerySchema(
 ).superRefine((query, ctx) => {
   validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
   validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
+  validateRange(query, ctx, 'expiresAtFrom', 'expiresAtTo');
+  validateRange(query, ctx, 'acceptedAtFrom', 'acceptedAtTo');
+  validateRange(query, ctx, 'rejectedAtFrom', 'rejectedAtTo');
+  validateRange(query, ctx, 'canceledAtFrom', 'canceledAtTo');
 });
 
 export type ListHouseholdInvitesRequestQuery = z.infer<
@@ -109,6 +148,10 @@ export const ListMyHouseholdInvitesRequestQuerySchema = createListQuerySchema(
 ).superRefine((query, ctx) => {
   validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
   validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
+  validateRange(query, ctx, 'expiresAtFrom', 'expiresAtTo');
+  validateRange(query, ctx, 'acceptedAtFrom', 'acceptedAtTo');
+  validateRange(query, ctx, 'rejectedAtFrom', 'rejectedAtTo');
+  validateRange(query, ctx, 'canceledAtFrom', 'canceledAtTo');
 });
 
 export type ListMyHouseholdInvitesRequestQuery = z.infer<
@@ -169,6 +212,10 @@ export function buildHouseholdMembersListWhere(
       sql`${householdMembersTable.role}`,
     ]),
     inArrayIfAny(householdMembersTable.role, query.roles),
+    query.emailVerified === undefined
+      ? undefined
+      : eq(usersTable.emailVerified, query.emailVerified),
+    ...rangeConditions(usersTable.lastActiveAt, query.lastActiveAtFrom, query.lastActiveAtTo),
     ...rangeConditions(householdMembersTable.createdAt, query.createdAtFrom, query.createdAtTo),
     ...rangeConditions(householdMembersTable.updatedAt, query.updatedAtFrom, query.updatedAtTo),
   ) as SQL;
@@ -180,6 +227,8 @@ export function buildHouseholdMembersListOrder(query: ListHouseholdMembersReques
     {
       createdAt: sql`${householdMembersTable.createdAt}`,
       email: sql`${usersTable.email}`,
+      emailVerified: sql`${usersTable.emailVerified}`,
+      lastActiveAt: sql`${usersTable.lastActiveAt}`,
       name: sql`${usersTable.name}`,
       role: sql`${householdMembersTable.role}`,
       updatedAt: sql`${householdMembersTable.updatedAt}`,
@@ -196,12 +245,18 @@ function buildInviteFilters(
       sql`${householdsTable.name}`,
       sql`${householdInvitesTable.email}`,
       sql`${householdInvitesTable.role}`,
-      sql`${householdInvitesTable.status}`,
+      householdInviteComputedStatusSql,
+      sql`${householdInviteInviter.name}`,
+      sql`${householdInviteInviter.email}`,
     ]),
     inArrayIfAny(householdInvitesTable.role, query.roles),
-    inArrayIfAny(householdInvitesTable.status, query.statuses),
+    inArrayIfAny(householdInviteComputedStatusSql, query.statuses),
     ...rangeConditions(householdInvitesTable.createdAt, query.createdAtFrom, query.createdAtTo),
     ...rangeConditions(householdInvitesTable.updatedAt, query.updatedAtFrom, query.updatedAtTo),
+    ...rangeConditions(householdInvitesTable.expiresAt, query.expiresAtFrom, query.expiresAtTo),
+    ...rangeConditions(householdInvitesTable.acceptedAt, query.acceptedAtFrom, query.acceptedAtTo),
+    ...rangeConditions(householdInvitesTable.rejectedAt, query.rejectedAtFrom, query.rejectedAtTo),
+    ...rangeConditions(householdInvitesTable.canceledAt, query.canceledAtFrom, query.canceledAtTo),
   ];
 }
 
@@ -222,6 +277,7 @@ export function buildMyHouseholdInvitesListWhere(
   return combineConditions(
     eq(householdInvitesTable.email, email),
     eq(householdInvitesTable.status, 'pending'),
+    gt(householdInvitesTable.expiresAt, sql`now()`),
     inArrayIfAny(householdInvitesTable.householdId, query.householdIds),
     ...buildInviteFilters(query),
   ) as SQL;
@@ -237,10 +293,12 @@ export function buildHouseholdInvitesListOrder(
       acceptedAt: sql`${householdInvitesTable.acceptedAt}`,
       createdAt: sql`${householdInvitesTable.createdAt}`,
       email: sql`${householdInvitesTable.email}`,
+      expiresAt: sql`${householdInvitesTable.expiresAt}`,
       householdName: sql`${householdsTable.name}`,
-      revokedAt: sql`${householdInvitesTable.revokedAt}`,
+      rejectedAt: sql`${householdInvitesTable.rejectedAt}`,
+      canceledAt: sql`${householdInvitesTable.canceledAt}`,
       role: sql`${householdInvitesTable.role}`,
-      status: sql`${householdInvitesTable.status}`,
+      status: householdInviteComputedStatusSql,
       updatedAt: sql`${householdInvitesTable.updatedAt}`,
     },
     personal

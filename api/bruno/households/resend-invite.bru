@@ -1,0 +1,19 @@
+meta {
+  name: resend invite
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/v1/households/{{householdId}}/invites/{{householdInviteId}}/resend
+}
+
+headers {
+  Cookie: {{authCookie}}
+}
+
+tests {
+  test("invite resend returns 204", function() {
+    expect(res.status).to.equal(204);
+  });
+}

@@ -69,11 +69,17 @@ export const householdInvitesTable = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
     acceptedAt: timestamp('accepted_at'),
-    revokedAt: timestamp('revoked_at'),
+    rejectedAt: timestamp('rejected_at'),
+    canceledAt: timestamp('canceled_at'),
+    expiresAt: timestamp('expires_at').notNull(),
+    tokenHash: text('token_hash'),
   },
   (table) => [
     uniqueIndex('household_invites_pending_email_unique')
       .on(table.householdId, table.email)
       .where(sql`${table.status} = 'pending'`),
+    uniqueIndex('household_invites_token_hash_unique')
+      .on(table.tokenHash)
+      .where(sql`${table.tokenHash} is not null`),
   ],
 );

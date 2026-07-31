@@ -2,8 +2,8 @@ import { env } from '@/config/env';
 import { getPermissionsForRole } from '@/config/permissions';
 import { currenciesRepository } from '@/modules/currencies/currencies.repository';
 import { householdsRepository } from '@/modules/households/households.repository';
-import * as householdsService from '@/modules/households/households.service';
 import { NotFoundError } from '@/shared/errors';
+import { logger } from '@/shared/logger';
 import { authRepository } from './auth.repository';
 import type {
   AuthHousehold,
@@ -40,14 +40,15 @@ async function findRequiredUser(userId: string): Promise<UserRecord> {
   return user;
 }
 
-async function getSessionHousehold(userId: string, householdId?: string): Promise<AuthHousehold> {
-  const resolvedHouseholdId =
-    householdId ?? (await householdsService.createDefaultHouseholdForUser(userId));
-  const membership = await householdsRepository.findMembership(resolvedHouseholdId, userId);
+async function getSessionHousehold(
+  userId: string,
+  householdId: string,
+): Promise<AuthHousehold | null> {
+  const membership = await householdsRepository.findMembership(householdId, userId);
   if (!membership) throw new NotFoundError('Household membership');
 
   return {
-    id: resolvedHouseholdId,
+    id: householdId,
     name: membership.householdName,
     role: membership.role,
     permissions: getPermissionsForRole(membership.role),
@@ -62,8 +63,8 @@ async function getSessionHousehold(userId: string, householdId?: string): Promis
   };
 }
 
-async function buildSession(userId: string, householdId?: string): Promise<AuthSession> {
-  const household = await getSessionHousehold(userId, householdId);
+async function buildSession(userId: string, householdId: string | null): Promise<AuthSession> {
+  const household = householdId ? await getSessionHousehold(userId, householdId) : null;
   const user = await findRequiredUser(userId);
 
   return {
@@ -72,8 +73,14 @@ async function buildSession(userId: string, householdId?: string): Promise<AuthS
   };
 }
 
-export async function getMe(userId: string, householdId: string): Promise<AuthSession> {
-  return buildSession(userId, householdId);
+export async function getMe(userId: string, householdId: string | null): Promise<AuthSession> {
+  const session = await buildSession(userId, householdId);
+
+  void authRepository.touchLastActive(userId).catch((error) => {
+    logger.warn({ err: error, userId }, 'Failed to update user activity');
+  });
+
+  return session;
 }
 
 export function getProviders(): AuthProviders {

@@ -50,7 +50,8 @@ export const householdRoleEnum = pgEnum('household_role', ['owner', 'admin', 'me
 export const householdInviteStatusEnum = pgEnum('household_invite_status', [
   'pending',
   'accepted',
-  'revoked',
+  'rejected',
+  'canceled',
 ]);
 
 // ─── Transaction & Category Enums ────────────────────────────────────────

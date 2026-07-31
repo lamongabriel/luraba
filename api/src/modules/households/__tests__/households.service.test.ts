@@ -12,7 +12,7 @@ import { householdsRepository } from '../households.repository';
 import * as householdsService from '../households.service';
 
 describe('households service', () => {
-  it('listHouseholds auto-creates a default household for a user with none', async () => {
+  it('listHouseholds returns an empty page for a user with no households', async () => {
     const user = await createUser();
 
     const households = await householdsService.listHouseholds(
@@ -20,11 +20,10 @@ describe('households service', () => {
       ListHouseholdsRequestQuerySchema.parse({}),
     );
 
-    expect(households.data).toHaveLength(1);
-    expect(households.data[0]?.name).toContain(user.name);
+    expect(households.data).toEqual([]);
 
     const defaults = await householdsRepository.findUserDefaults(user.id);
-    expect(defaults?.defaultHouseholdId).toBe(households.data[0]?.id);
+    expect(defaults?.defaultHouseholdId).toBeNull();
   });
 
   it('createHousehold creates an owner membership for the creator', async () => {
@@ -80,7 +79,14 @@ describe('households service', () => {
     expect(invite.email).toBe(invitedUser.email);
     expect(invite.status).toBe('pending');
 
-    await householdsService.acceptInvite(invitedUser.id, invitedUser.email, invite.id);
+    const link = await householdsService.refreshInviteLink(
+      owner.householdContext,
+      owner.household.id,
+      invite.id,
+    );
+    const token = new URL(link.url).pathname.split('/').at(-1);
+    if (!token) throw new Error('Invitation URL does not contain a token');
+    await householdsService.acceptInvite(invitedUser.id, invitedUser.email, token);
 
     const membership = await householdsRepository.findMembership(
       owner.household.id,

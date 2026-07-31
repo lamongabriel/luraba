@@ -47,7 +47,7 @@ export const authHouseholdSchema = z.object({
 
 export const authSessionSchema = z.object({
   user: sessionUserSchema,
-  household: authHouseholdSchema,
+  household: authHouseholdSchema.nullable(),
 });
 
 export const authProvidersSchema = z.object({

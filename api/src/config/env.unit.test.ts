@@ -18,6 +18,16 @@ const testEnvDefaults = {
   GOOGLE_CLIENT_SECRET: '',
   GITHUB_CLIENT_ID: '',
   GITHUB_CLIENT_SECRET: '',
+  SMTP_PROVIDER: '',
+  SMTP_HOST: '',
+  SMTP_PORT: '',
+  SMTP_SECURE: '',
+  SMTP_USERNAME: '',
+  SMTP_PASSWORD: '',
+  SMTP_FROM_NAME: '',
+  SMTP_FROM_EMAIL: '',
+  SMTP_REPLY_EMAIL: '',
+  SMTP_TLS_CIPHERS: '',
   INTEGRATIONS_ENCRYPTION_KEY: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
   RUN_DB_TESTS: '0',
 } as const;
@@ -119,5 +129,70 @@ describe('env config', () => {
         INTEGRATIONS_ENCRYPTION_KEY: 'not-a-hex-secret',
       }),
     ).rejects.toThrow('INTEGRATIONS_ENCRYPTION_KEY must be a 64-character hex string');
+  });
+
+  it('treats empty and partial SMTP settings as optional configuration', async () => {
+    const emptyMail = (await loadEnvModule()).env.mail;
+    const partialMail = (
+      await loadEnvModule({
+        SMTP_PROVIDER: 'resend',
+        SMTP_HOST: 'smtp.resend.com',
+      })
+    ).env.mail;
+
+    expect(emptyMail).toEqual({
+      provider: undefined,
+      host: undefined,
+      port: undefined,
+      secure: undefined,
+      username: undefined,
+      password: undefined,
+      fromName: undefined,
+      fromEmail: undefined,
+      replyEmail: undefined,
+      tlsCiphers: undefined,
+    });
+    expect(partialMail).toMatchObject({
+      provider: 'resend',
+      host: 'smtp.resend.com',
+      port: undefined,
+    });
+  });
+
+  it('parses a complete SMTP configuration', async () => {
+    const { env } = await loadEnvModule({
+      SMTP_PROVIDER: 'resend',
+      SMTP_HOST: 'smtp.resend.com',
+      SMTP_PORT: '465',
+      SMTP_SECURE: 'true',
+      SMTP_USERNAME: 'resend',
+      SMTP_PASSWORD: 're_test',
+      SMTP_FROM_NAME: 'Luraba',
+      SMTP_FROM_EMAIL: 'team@example.com',
+      SMTP_REPLY_EMAIL: 'reply@example.com',
+      SMTP_TLS_CIPHERS: 'TLS_AES_256_GCM_SHA384',
+    });
+
+    expect(env.mail).toEqual({
+      provider: 'resend',
+      host: 'smtp.resend.com',
+      port: 465,
+      secure: true,
+      username: 'resend',
+      password: 're_test',
+      fromName: 'Luraba',
+      fromEmail: 'team@example.com',
+      replyEmail: 'reply@example.com',
+      tlsCiphers: 'TLS_AES_256_GCM_SHA384',
+    });
+  });
+
+  it('rejects invalid supplied SMTP values', async () => {
+    await expect(loadEnvModule({ SMTP_PORT: '70000' })).rejects.toThrow('SMTP_PORT');
+    await expect(loadEnvModule({ SMTP_SECURE: 'sometimes' })).rejects.toThrow('SMTP_SECURE');
+    await expect(loadEnvModule({ SMTP_FROM_EMAIL: 'invalid' })).rejects.toThrow('SMTP_FROM_EMAIL');
+    await expect(loadEnvModule({ SMTP_REPLY_EMAIL: 'invalid' })).rejects.toThrow(
+      'SMTP_REPLY_EMAIL',
+    );
   });
 });

@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { usersTable } from '@/db/schemas/users.schema';
+import { now } from '@/shared/lib/date';
 import { Repository } from '@/shared/repositories/repository';
 import type { UpdateMyPreferencesRequestBody, UserPreferences, UserRecord } from './auth.types';
 
@@ -11,6 +12,10 @@ class AuthRepository extends Repository<UserRecord> {
 
   async findById(id: string): Promise<UserRecord | undefined> {
     return this.get(id);
+  }
+
+  async touchLastActive(id: string): Promise<void> {
+    await db.update(usersTable).set({ lastActiveAt: now() }).where(eq(usersTable.id, id));
   }
 
   async getUserPreferences(id: string): Promise<UserPreferences | undefined> {

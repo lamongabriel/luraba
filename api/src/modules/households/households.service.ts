@@ -1,42 +1,45 @@
+import { env } from '@/config/env';
 import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
 import { budgetsRepository } from '@/modules/budgets/budgets.repository';
 import { currenciesRepository } from '@/modules/currencies/currencies.repository';
 import { fxService } from '@/modules/fx/fx.service';
-import { ForbiddenError, NotFoundError, ValidationError } from '@/shared/errors';
+import { mailService } from '@/modules/mail/mail.service';
+import { renderHouseholdInvitation } from '@/modules/mail/mail.templates';
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
 import { createListMeta, type ListResult } from '@/shared/list';
+import { logger } from '@/shared/logger';
+import {
+  createHouseholdInvitationToken,
+  hashHouseholdInvitationToken,
+} from './household-invitation-token';
 import type {
   ListHouseholdInvitesRequestQuery,
   ListHouseholdMembersRequestQuery,
   ListHouseholdsRequestQuery,
   ListMyHouseholdInvitesRequestQuery,
 } from './households.query';
-import { householdsRepository } from './households.repository';
+import { householdInviteComputedStatusSchema } from './households.query';
+import { type HouseholdInviteListRow, householdsRepository } from './households.repository';
 import type {
+  AcceptHouseholdInviteResponse,
   CreateHouseholdInviteRequestBody,
   CreateHouseholdRequestBody,
   Household,
   HouseholdInvite,
+  HouseholdInviteLinkResponse,
   HouseholdMember,
+  PreviewHouseholdInviteResponse,
   UpdateHouseholdMemberRequestBody,
   UpdateHouseholdRequestBody,
 } from './households.types';
 
-type DefaultHouseholdOptions = {
-  name?: string;
-  description?: string;
-  defaultCurrencyId?: CreateHouseholdRequestBody['defaultCurrencyId'];
-  countryCode?: CreateHouseholdRequestBody['countryCode'];
-  timezone?: CreateHouseholdRequestBody['timezone'];
-  budgetMonthStartsOn?: CreateHouseholdRequestBody['budgetMonthStartsOn'];
-  creditExpenseTiming?: CreateHouseholdRequestBody['creditExpenseTiming'];
-  creditInstallmentBudgetMode?: CreateHouseholdRequestBody['creditInstallmentBudgetMode'];
-};
+const INVITATION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
 
 function assertCurrentHousehold(context: HouseholdContext, householdId: string): void {
   if (context.householdId !== householdId) {
-    throw new ForbiddenError('Active household does not match route household');
+    throw new ForbiddenError('Selected household does not match route household');
   }
 }
 
@@ -48,11 +51,15 @@ function canManageRole(
   actorRole: HouseholdContext['role'],
   targetRole: HouseholdContext['role'],
 ): boolean {
-  if (actorRole === 'owner') {
-    return true;
-  }
+  return actorRole === 'owner' || targetRole !== 'owner';
+}
 
-  return targetRole !== 'owner';
+function inviteExpiresAt(): Date {
+  return new Date(Date.now() + INVITATION_LIFETIME_MS);
+}
+
+function invitationUrl(token: string): string {
+  return `${env.frontendOrigin.replace(/\/+$/, '')}/invite/${token}`;
 }
 
 function mapHousehold(
@@ -79,21 +86,21 @@ function mapHouseholdMember(
   record: Awaited<ReturnType<typeof householdsRepository.listMembers>>[number],
 ): HouseholdMember {
   return {
+    id: record.id,
     householdId: record.householdId,
     userId: record.userId,
     name: record.name,
     email: record.email,
+    image: record.image,
+    emailVerified: record.emailVerified,
     role: record.role,
+    lastActiveAt: record.lastActiveAt ? formatISODateTime(record.lastActiveAt) : null,
     createdAt: formatISODateTime(record.createdAt),
     updatedAt: formatISODateTime(record.updatedAt),
   };
 }
 
-function mapHouseholdInvite(
-  record:
-    | Awaited<ReturnType<typeof householdsRepository.listInvitesForHousehold>>[number]
-    | Awaited<ReturnType<typeof householdsRepository.listPendingInvitesForEmail>>[number],
-): HouseholdInvite {
+function mapHouseholdInvite(record: HouseholdInviteListRow): HouseholdInvite {
   return {
     id: record.id,
     householdId: record.householdId,
@@ -101,84 +108,133 @@ function mapHouseholdInvite(
     email: record.email,
     role: record.role,
     status: record.status,
+    computedStatus: householdInviteComputedStatusSchema.parse(record.computedStatus),
     invitedByUserId: record.invitedByUserId,
+    inviter:
+      record.inviterId && record.inviterName && record.inviterEmail
+        ? {
+            id: record.inviterId,
+            name: record.inviterName,
+            email: record.inviterEmail,
+            image: record.inviterImage,
+          }
+        : null,
     createdAt: formatISODateTime(record.createdAt),
     updatedAt: formatISODateTime(record.updatedAt),
+    expiresAt: formatISODateTime(record.expiresAt),
     acceptedAt: record.acceptedAt ? formatISODateTime(record.acceptedAt) : null,
-    revokedAt: record.revokedAt ? formatISODateTime(record.revokedAt) : null,
+    rejectedAt: record.rejectedAt ? formatISODateTime(record.rejectedAt) : null,
+    canceledAt: record.canceledAt ? formatISODateTime(record.canceledAt) : null,
   };
 }
 
-export async function createDefaultHouseholdForUser(
-  userId: string,
-  options: DefaultHouseholdOptions = {},
-): Promise<string> {
+async function getMappedInvite(inviteId: string): Promise<HouseholdInvite> {
+  const invite = await householdsRepository.findInviteListRowById(inviteId);
+  if (!invite) throw new NotFoundError('Household invite');
+  return mapHouseholdInvite(invite);
+}
+
+function issueInvitationToken() {
+  const token = createHouseholdInvitationToken();
+  return {
+    token,
+    tokenHash: hashHouseholdInvitationToken(token),
+    expiresAt: inviteExpiresAt(),
+  };
+}
+
+async function sendInvitationEmail(invite: HouseholdInviteListRow, token: string): Promise<void> {
+  if (!mailService.isConfigured()) return;
+
+  try {
+    const message = renderHouseholdInvitation({
+      householdName: invite.householdName,
+      inviterName: invite.inviterName ?? undefined,
+      inviteUrl: invitationUrl(token),
+    });
+    await mailService.send({ to: invite.email, ...message });
+  } catch (error) {
+    logger.warn({ err: error, invitationId: invite.id }, 'Household invitation email failed');
+  }
+}
+
+function assertInviteRecipient(
+  invite: Awaited<ReturnType<typeof householdsRepository.findInviteByTokenHash>>,
+  email: string,
+): asserts invite is NonNullable<typeof invite> {
+  if (!invite) throw new NotFoundError('Household invite');
+  if (invite.email !== normalizeEmail(email)) {
+    throw new ForbiddenError('This invitation belongs to another email address');
+  }
+}
+
+function assertActionableInvite(
+  invite: NonNullable<Awaited<ReturnType<typeof householdsRepository.findInviteByTokenHash>>>,
+): void {
+  if (invite.status !== 'pending') {
+    throw new ConflictError(`This invitation is already ${invite.status}`);
+  }
+  if (invite.expiresAt <= new Date()) {
+    throw new ConflictError('This invitation has expired');
+  }
+}
+
+export async function resolveHouseholdIdForUser(userId: string): Promise<string | null> {
+  const user = await householdsRepository.findUserDefaults(userId);
+  if (!user) return null;
+
+  if (user.defaultHouseholdId) {
+    const membership = await householdsRepository.findMembership(user.defaultHouseholdId, userId);
+    if (membership) return user.defaultHouseholdId;
+  }
+
+  return (await householdsRepository.listHouseholdsForUser(userId))[0]?.id ?? null;
+}
+
+export async function createDefaultHouseholdForUser(userId: string): Promise<string> {
+  const existing = await resolveHouseholdIdForUser(userId);
+  if (existing) return existing;
+
   const user = await householdsRepository.findUserDefaults(userId);
   if (!user) throw new NotFoundError('User');
 
-  if (user.defaultHouseholdId) {
-    const defaultMembership = await householdsRepository.findMembership(
-      user.defaultHouseholdId,
-      userId,
-    );
-    if (defaultMembership) {
-      return user.defaultHouseholdId;
-    }
-  }
-
-  const existingHouseholds = await householdsRepository.listHouseholdsForUser(userId);
-  const existingHousehold = existingHouseholds[0];
-  if (existingHousehold) {
-    await householdsRepository.setDefaultHouseholdForUser(userId, existingHousehold.id);
-    return existingHousehold.id;
-  }
-
   return db.transaction(async (tx) => {
     const household = await householdsRepository.createHousehold(tx, userId, {
-      name: options.name ?? `${user.name}'s Household`,
-      description: options.description,
-      defaultCurrencyId: options.defaultCurrencyId ?? user.preferredCurrency,
-      countryCode: options.countryCode ?? 'BR',
-      timezone: options.timezone ?? user.preferredTimezone,
-      budgetMonthStartsOn: options.budgetMonthStartsOn ?? 1,
-      creditExpenseTiming: options.creditExpenseTiming ?? 'spend_month',
-      creditInstallmentBudgetMode: options.creditInstallmentBudgetMode ?? 'per_installment',
+      name: `${user.name}'s Household`,
+      description: 'Personal household created during onboarding.',
+      defaultCurrencyId: user.preferredCurrency,
+      countryCode: 'BR',
+      timezone: user.preferredTimezone,
+      budgetMonthStartsOn: 1,
+      creditExpenseTiming: 'spend_month',
+      creditInstallmentBudgetMode: 'per_installment',
     });
-
     await householdsRepository.createMembership(tx, household.id, userId, 'owner');
     await householdsRepository.setDefaultHousehold(tx, userId, household.id);
-
     return household.id;
   });
 }
 
-export async function acceptPendingInvitesForUser(userId: string, email: string): Promise<void> {
-  const pendingInvites = await householdsRepository.listPendingInvitesForEmail(
-    normalizeEmail(email),
-  );
-  if (pendingInvites.length === 0) {
-    return;
+export async function provisionDefaultHouseholdForUser(
+  userId: string,
+  email: string,
+): Promise<string | null> {
+  const existing = await resolveHouseholdIdForUser(userId);
+  if (existing) return existing;
+
+  if (await householdsRepository.hasActionableInviteForEmail(normalizeEmail(email))) {
+    return null;
   }
 
-  await db.transaction(async (tx) => {
-    for (const invite of pendingInvites) {
-      await householdsRepository.createMembership(tx, invite.householdId, userId, invite.role);
-      await householdsRepository.acceptInvite(tx, invite.id);
-    }
-  });
+  return createDefaultHouseholdForUser(userId);
 }
 
 export async function listHouseholds(
   userId: string,
   query: ListHouseholdsRequestQuery,
 ): Promise<ListResult<Household>> {
-  await createDefaultHouseholdForUser(userId);
   const page = await householdsRepository.listHouseholdsForUserPage(userId, query);
-
-  return {
-    data: page.rows.map(mapHousehold),
-    meta: createListMeta(query, page.totalCount),
-  };
+  return { data: page.rows.map(mapHousehold), meta: createListMeta(query, page.totalCount) };
 }
 
 export async function createHousehold(
@@ -188,9 +244,15 @@ export async function createHousehold(
   const currency = await currenciesRepository.findByCode(body.defaultCurrencyId);
   if (!currency) throw new NotFoundError('Currency');
 
+  const user = await householdsRepository.findUserDefaults(userId);
+  if (!user) throw new NotFoundError('User');
+
   const householdId = await db.transaction(async (tx) => {
     const household = await householdsRepository.createHousehold(tx, userId, body);
     await householdsRepository.createMembership(tx, household.id, userId, 'owner');
+    if (!user.defaultHouseholdId) {
+      await householdsRepository.setDefaultHousehold(tx, userId, household.id);
+    }
     return household.id;
   });
 
@@ -198,7 +260,6 @@ export async function createHousehold(
     (item) => item.id === householdId,
   );
   if (!household) throw new NotFoundError('Household');
-
   return mapHousehold(household);
 }
 
@@ -208,40 +269,34 @@ export async function updateHousehold(
   body: UpdateHouseholdRequestBody,
 ): Promise<Household> {
   assertCurrentHousehold(context, householdId);
-
-  const currentHousehold = await householdsRepository.findHouseholdById(householdId);
-  if (!currentHousehold) throw new NotFoundError('Household');
+  const current = await householdsRepository.findHouseholdById(householdId);
+  if (!current) throw new NotFoundError('Household');
 
   if (body.defaultCurrencyId) {
     const currency = await currenciesRepository.findByCode(body.defaultCurrencyId);
     if (!currency) throw new NotFoundError('Currency');
   }
 
-  if (body.defaultCurrencyId && body.defaultCurrencyId !== currentHousehold.defaultCurrencyId) {
+  if (body.defaultCurrencyId && body.defaultCurrencyId !== current.defaultCurrencyId) {
     const budgets = await budgetsRepository.listBudgetsForHousehold(householdId);
-    const convertedAmountsByBudgetId = new Map<string, number>();
-
+    const converted = new Map<string, number>();
     for (const budget of budgets) {
-      const convertedAmount = await fxService.convertAmount({
-        amount: budget.amount,
-        fromCurrencyCode: currentHousehold.defaultCurrencyId,
-        toCurrencyCode: body.defaultCurrencyId,
-        date: budget.month,
-      });
-
-      convertedAmountsByBudgetId.set(budget.id, convertedAmount);
+      converted.set(
+        budget.id,
+        await fxService.convertAmount({
+          amount: budget.amount,
+          fromCurrencyCode: current.defaultCurrencyId,
+          toCurrencyCode: body.defaultCurrencyId,
+          date: budget.month,
+        }),
+      );
     }
 
     await db.transaction(async (tx) => {
       for (const budget of budgets) {
-        const convertedAmount = convertedAmountsByBudgetId.get(budget.id);
-        if (convertedAmount === undefined) {
-          continue;
-        }
-
-        await budgetsRepository.updateBudgetAmount(tx, budget.id, convertedAmount);
+        const amount = converted.get(budget.id);
+        if (amount !== undefined) await budgetsRepository.updateBudgetAmount(tx, budget.id, amount);
       }
-
       const updated = await householdsRepository.updateHouseholdInTransaction(
         tx,
         householdId,
@@ -249,16 +304,14 @@ export async function updateHousehold(
       );
       if (!updated) throw new NotFoundError('Household');
     });
-  } else {
-    const updated = await householdsRepository.updateHousehold(householdId, body);
-    if (!updated) throw new NotFoundError('Household');
+  } else if (!(await householdsRepository.updateHousehold(householdId, body))) {
+    throw new NotFoundError('Household');
   }
 
   const household = (await householdsRepository.listHouseholdsForUser(context.userId)).find(
     (item) => item.id === householdId,
   );
   if (!household) throw new NotFoundError('Household');
-
   return mapHousehold(household);
 }
 
@@ -269,11 +322,7 @@ export async function listMembers(
 ): Promise<ListResult<HouseholdMember>> {
   assertCurrentHousehold(context, householdId);
   const page = await householdsRepository.listMembersPage(householdId, query);
-
-  return {
-    data: page.rows.map(mapHouseholdMember),
-    meta: createListMeta(query, page.totalCount),
-  };
+  return { data: page.rows.map(mapHouseholdMember), meta: createListMeta(query, page.totalCount) };
 }
 
 export async function updateMemberRole(
@@ -283,32 +332,24 @@ export async function updateMemberRole(
   body: UpdateHouseholdMemberRequestBody,
 ): Promise<HouseholdMember> {
   assertCurrentHousehold(context, householdId);
-
-  const targetMembership = await householdsRepository.findMembership(householdId, userId);
-  if (!targetMembership) throw new NotFoundError('Household member');
-
-  if (
-    !canManageRole(context.role, targetMembership.role) ||
-    !canManageRole(context.role, body.role)
-  ) {
+  const target = await householdsRepository.findMembership(householdId, userId);
+  if (!target) throw new NotFoundError('Household member');
+  if (!canManageRole(context.role, target.role) || !canManageRole(context.role, body.role)) {
     throw new ForbiddenError('You do not have permission to manage this member role');
   }
-
-  if (targetMembership.role === 'owner' && body.role !== 'owner') {
-    const ownerCount = await householdsRepository.countOwners(householdId);
-    if (ownerCount <= 1) {
+  if (target.role === 'owner' && body.role !== 'owner') {
+    if ((await householdsRepository.countOwners(householdId)) <= 1) {
       throw new ValidationError('A household must have at least one owner');
     }
   }
 
-  const updated = await householdsRepository.updateMemberRole(householdId, userId, body.role);
-  if (!updated) throw new NotFoundError('Household member');
-
+  if (!(await householdsRepository.updateMemberRole(householdId, userId, body.role))) {
+    throw new NotFoundError('Household member');
+  }
   const member = (await householdsRepository.listMembers(householdId)).find(
     (item) => item.userId === userId,
   );
   if (!member) throw new NotFoundError('Household member');
-
   return mapHouseholdMember(member);
 }
 
@@ -318,21 +359,14 @@ export async function removeMember(
   userId: string,
 ): Promise<void> {
   assertCurrentHousehold(context, householdId);
-
-  const targetMembership = await householdsRepository.findMembership(householdId, userId);
-  if (!targetMembership) throw new NotFoundError('Household member');
-
-  if (!canManageRole(context.role, targetMembership.role)) {
+  const target = await householdsRepository.findMembership(householdId, userId);
+  if (!target) throw new NotFoundError('Household member');
+  if (!canManageRole(context.role, target.role)) {
     throw new ForbiddenError('You do not have permission to remove this member');
   }
-
-  if (targetMembership.role === 'owner') {
-    const ownerCount = await householdsRepository.countOwners(householdId);
-    if (ownerCount <= 1) {
-      throw new ValidationError('A household must have at least one owner');
-    }
+  if (target.role === 'owner' && (await householdsRepository.countOwners(householdId)) <= 1) {
+    throw new ValidationError('A household must have at least one owner');
   }
-
   await householdsRepository.removeMember(householdId, userId);
 }
 
@@ -342,22 +376,45 @@ export async function createInvite(
   body: CreateHouseholdInviteRequestBody,
 ): Promise<HouseholdInvite> {
   assertCurrentHousehold(context, householdId);
-
   if (!canManageRole(context.role, body.role)) {
     throw new ForbiddenError('You do not have permission to invite users with this role');
   }
 
-  const invite = await householdsRepository.createInvite(householdId, context.userId, {
-    ...body,
-    email: normalizeEmail(body.email),
-  });
+  const email = normalizeEmail(body.email);
+  if (await householdsRepository.findMembershipByEmail(householdId, email)) {
+    throw new ConflictError('User is already a member of this household');
+  }
 
-  const created = (await householdsRepository.listInvitesForHousehold(householdId)).find(
-    (item) => item.id === invite.id,
+  const token = issueInvitationToken();
+  const pending = await householdsRepository.findPendingInviteByHouseholdAndEmail(
+    householdId,
+    email,
   );
+  if (pending && pending.expiresAt > new Date()) {
+    throw new ConflictError('An active invitation already exists for this email');
+  }
+
+  const created = pending
+    ? await householdsRepository.refreshInvite(pending.id, {
+        role: body.role,
+        invitedByUserId: context.userId,
+        tokenHash: token.tokenHash,
+        expiresAt: token.expiresAt,
+      })
+    : await householdsRepository.createInvite({
+        householdId,
+        email,
+        role: body.role,
+        invitedByUserId: context.userId,
+        tokenHash: token.tokenHash,
+        expiresAt: token.expiresAt,
+      });
   if (!created) throw new NotFoundError('Household invite');
 
-  return mapHouseholdInvite(created);
+  const invite = await householdsRepository.findInviteListRowById(created.id);
+  if (!invite) throw new NotFoundError('Household invite');
+  await sendInvitationEmail(invite, token.token);
+  return mapHouseholdInvite(invite);
 }
 
 export async function listHouseholdInvites(
@@ -367,11 +424,7 @@ export async function listHouseholdInvites(
 ): Promise<ListResult<HouseholdInvite>> {
   assertCurrentHousehold(context, householdId);
   const page = await householdsRepository.listInvitesForHouseholdPage(householdId, query);
-
-  return {
-    data: page.rows.map(mapHouseholdInvite),
-    meta: createListMeta(query, page.totalCount),
-  };
+  return { data: page.rows.map(mapHouseholdInvite), meta: createListMeta(query, page.totalCount) };
 }
 
 export async function listMyPendingInvites(
@@ -382,35 +435,118 @@ export async function listMyPendingInvites(
     normalizeEmail(userEmail),
     query,
   );
+  return { data: page.rows.map(mapHouseholdInvite), meta: createListMeta(query, page.totalCount) };
+}
+
+export async function previewInvite(token: string): Promise<PreviewHouseholdInviteResponse> {
+  const invite = await householdsRepository.findInvitePreviewByTokenHash(
+    hashHouseholdInvitationToken(token),
+  );
+  if (!invite) throw new NotFoundError('Household invite');
 
   return {
-    data: page.rows.map(mapHouseholdInvite),
-    meta: createListMeta(query, page.totalCount),
+    email: invite.email,
+    household: { name: invite.householdName },
+    role: invite.role,
+    inviter: invite.inviterName ? { name: invite.inviterName, image: invite.inviterImage } : null,
+    status: householdInviteComputedStatusSchema.parse(invite.computedStatus),
+    expiresAt: formatISODateTime(invite.expiresAt),
   };
 }
 
 export async function acceptInvite(
   userId: string,
   userEmail: string,
-  inviteId: string,
-): Promise<void> {
-  const invite = await householdsRepository.findPendingInviteById(inviteId);
-  if (!invite || invite.email !== normalizeEmail(userEmail)) {
-    throw new NotFoundError('Household invite');
+  token: string,
+): Promise<AcceptHouseholdInviteResponse> {
+  const invite = await householdsRepository.findInviteByTokenHash(
+    hashHouseholdInvitationToken(token),
+  );
+  assertInviteRecipient(invite, userEmail);
+  assertActionableInvite(invite);
+
+  if (await householdsRepository.findMembershipByEmail(invite.householdId, invite.email)) {
+    throw new ConflictError('User is already a member of this household');
   }
 
   await db.transaction(async (tx) => {
+    const accepted = await householdsRepository.acceptInvite(tx, invite.id);
+    if (!accepted) throw new ConflictError('This invitation is no longer available');
     await householdsRepository.createMembership(tx, invite.householdId, userId, invite.role);
-    await householdsRepository.acceptInvite(tx, invite.id);
+    await householdsRepository.setDefaultHousehold(tx, userId, invite.householdId);
+    await householdsRepository.verifyUserEmail(tx, userId);
   });
+
+  const membership = await householdsRepository.findMembership(invite.householdId, userId);
+  if (!membership) throw new NotFoundError('Household membership');
+
+  return {
+    household: {
+      id: invite.householdId,
+      name: membership.householdName,
+      role: membership.role,
+    },
+  };
 }
 
-export async function revokeInvite(
+export async function rejectInvite(userEmail: string, token: string): Promise<void> {
+  const invite = await householdsRepository.findInviteByTokenHash(
+    hashHouseholdInvitationToken(token),
+  );
+  assertInviteRecipient(invite, userEmail);
+  assertActionableInvite(invite);
+  if (!(await householdsRepository.rejectInvite(invite.id))) {
+    throw new ConflictError('This invitation is no longer available');
+  }
+}
+
+async function rotateManagedInvite(
+  context: HouseholdContext,
+  householdId: string,
+  inviteId: string,
+) {
+  assertCurrentHousehold(context, householdId);
+  const invite = await householdsRepository.findInviteById(inviteId);
+  if (!invite || invite.householdId !== householdId || invite.status !== 'pending') {
+    throw new NotFoundError('Household invite');
+  }
+
+  const token = issueInvitationToken();
+  const refreshed = await householdsRepository.refreshInvite(inviteId, {
+    tokenHash: token.tokenHash,
+    expiresAt: token.expiresAt,
+  });
+  if (!refreshed) throw new NotFoundError('Household invite');
+  return { invite: await getMappedInvite(inviteId), rawToken: token.token };
+}
+
+export async function refreshInviteLink(
+  context: HouseholdContext,
+  householdId: string,
+  inviteId: string,
+): Promise<HouseholdInviteLinkResponse> {
+  const { invite, rawToken } = await rotateManagedInvite(context, householdId, inviteId);
+  return { url: invitationUrl(rawToken), expiresAt: invite.expiresAt };
+}
+
+export async function resendInvite(
+  context: HouseholdContext,
+  householdId: string,
+  inviteId: string,
+): Promise<void> {
+  const { rawToken } = await rotateManagedInvite(context, householdId, inviteId);
+  const invite = await householdsRepository.findInviteListRowById(inviteId);
+  if (!invite) throw new NotFoundError('Household invite');
+  await sendInvitationEmail(invite, rawToken);
+}
+
+export async function cancelInvite(
   context: HouseholdContext,
   householdId: string,
   inviteId: string,
 ): Promise<void> {
   assertCurrentHousehold(context, householdId);
-  const invite = await householdsRepository.revokeInvite(householdId, inviteId);
-  if (!invite) throw new NotFoundError('Household invite');
+  if (!(await householdsRepository.cancelInvite(householdId, inviteId))) {
+    throw new NotFoundError('Household invite');
+  }
 }

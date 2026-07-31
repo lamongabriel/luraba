@@ -34,20 +34,32 @@ describe('households list queries', () => {
 
   it('parses member and invite filters, including personal household IDs', () => {
     const id = '1456d4ee-2f8d-4cec-92be-a780d54312c2';
-    expect(ListHouseholdMembersRequestQuerySchema.parse({ roles: 'member' }).roles).toEqual([
-      'member',
-    ]);
+    const members = ListHouseholdMembersRequestQuerySchema.parse({
+      roles: 'member',
+      emailVerified: true,
+      lastActiveAtFrom: '2025-01-01',
+      lastActiveAtTo: '2025-12-31',
+      sort: 'lastActiveAt',
+    });
+    expect(members.roles).toEqual(['member']);
+    expect(members.emailVerified).toBe(true);
     expect(
       ListHouseholdInvitesRequestQuerySchema.parse({
         roles: 'admin',
-        statuses: 'pending,revoked',
+        statuses: 'pending,expired,canceled',
         createdAtFrom: '2025-01-01',
         createdAtTo: '2025-12-31',
+        expiresAtFrom: '2025-01-01',
+        expiresAtTo: '2025-12-31',
+        sort: 'expiresAt',
       }).statuses,
-    ).toEqual(['pending', 'revoked']);
+    ).toEqual(['pending', 'expired', 'canceled']);
     expect(
       ListMyHouseholdInvitesRequestQuerySchema.parse({ householdIds: id }).householdIds,
     ).toEqual([id]);
     expect(ListHouseholdMembersRequestQuerySchema.safeParse({ unknown: true }).success).toBe(false);
+    expect(ListHouseholdInvitesRequestQuerySchema.safeParse({ statuses: 'revoked' }).success).toBe(
+      false,
+    );
   });
 });

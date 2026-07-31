@@ -1,0 +1,27 @@
+meta {
+  name: reject invite
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/v1/households/invites/reject
+  body: json
+}
+
+headers {
+  Cookie: {{authCookie}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "token": "{{householdInviteToken}}"
+  }
+}
+
+tests {
+  test("invite reject returns 204", function() {
+    expect(res.status).to.equal(204);
+  });
+}

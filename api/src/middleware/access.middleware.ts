@@ -74,7 +74,11 @@ async function resolveHousehold(
   }
 
   const householdId =
-    requestedHouseholdId ?? (await householdsService.createDefaultHouseholdForUser(user.id));
+    requestedHouseholdId ?? (await householdsService.resolveHouseholdIdForUser(user.id));
+
+  if (!householdId) {
+    throw new ForbiddenError('A household is required for this request');
+  }
 
   const rows = await db
     .select({

@@ -1,4 +1,4 @@
-import { and, asc, eq, ne, type SQL, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, type SQL, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import {
   householdInvitesTable,
@@ -19,13 +19,14 @@ import {
   buildHouseholdsListOrder,
   buildHouseholdsListWhere,
   buildMyHouseholdInvitesListWhere,
+  householdInviteComputedStatusSql,
+  householdInviteInviter,
   type ListHouseholdInvitesRequestQuery,
   type ListHouseholdMembersRequestQuery,
   type ListHouseholdsRequestQuery,
   type ListMyHouseholdInvitesRequestQuery,
 } from './households.query';
 import type {
-  CreateHouseholdInviteRequestBody,
   CreateHouseholdRequestBody,
   HouseholdInviteRecord,
   HouseholdMemberRecord,
@@ -60,27 +61,51 @@ type HouseholdForUserRow = {
 };
 
 type HouseholdMemberListRow = {
+  id: string;
   householdId: string;
   userId: string;
   name: string;
   email: string;
+  image: string | null;
+  emailVerified: boolean;
   role: HouseholdMemberRecord['role'];
+  lastActiveAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
 
-type HouseholdInviteListRow = {
+export type HouseholdInviteListRow = {
   id: string;
   householdId: string;
   householdName: string;
   email: string;
   role: HouseholdInviteRecord['role'];
   status: HouseholdInviteRecord['status'];
+  computedStatus: string;
   invitedByUserId: string;
+  inviterId: string | null;
+  inviterName: string | null;
+  inviterEmail: string | null;
+  inviterImage: string | null;
   createdAt: Date;
   updatedAt: Date;
+  expiresAt: Date;
   acceptedAt: Date | null;
-  revokedAt: Date | null;
+  rejectedAt: Date | null;
+  canceledAt: Date | null;
+};
+
+export type HouseholdInvitePreviewRow = {
+  id: string;
+  email: string;
+  role: HouseholdInviteRecord['role'];
+  status: HouseholdInviteRecord['status'];
+  computedStatus: string;
+  householdId: string;
+  householdName: string;
+  inviterName: string | null;
+  inviterImage: string | null;
+  expiresAt: Date;
 };
 
 const householdForUserSelect = {
@@ -100,11 +125,15 @@ const householdForUserSelect = {
 } as const;
 
 const householdMemberListSelect = {
+  id: householdMembersTable.id,
   householdId: householdMembersTable.householdId,
   userId: usersTable.id,
   name: usersTable.name,
   email: usersTable.email,
+  image: usersTable.image,
+  emailVerified: usersTable.emailVerified,
   role: householdMembersTable.role,
+  lastActiveAt: usersTable.lastActiveAt,
   createdAt: householdMembersTable.createdAt,
   updatedAt: householdMembersTable.updatedAt,
 } as const;
@@ -116,11 +145,31 @@ const householdInviteListSelect = {
   email: householdInvitesTable.email,
   role: householdInvitesTable.role,
   status: householdInvitesTable.status,
+  computedStatus: householdInviteComputedStatusSql,
   invitedByUserId: householdInvitesTable.invitedByUserId,
+  inviterId: householdInviteInviter.id,
+  inviterName: householdInviteInviter.name,
+  inviterEmail: householdInviteInviter.email,
+  inviterImage: householdInviteInviter.image,
   createdAt: householdInvitesTable.createdAt,
   updatedAt: householdInvitesTable.updatedAt,
+  expiresAt: householdInvitesTable.expiresAt,
   acceptedAt: householdInvitesTable.acceptedAt,
-  revokedAt: householdInvitesTable.revokedAt,
+  rejectedAt: householdInvitesTable.rejectedAt,
+  canceledAt: householdInvitesTable.canceledAt,
+} as const;
+
+const householdInvitePreviewSelect = {
+  id: householdInvitesTable.id,
+  email: householdInvitesTable.email,
+  role: householdInvitesTable.role,
+  status: householdInvitesTable.status,
+  computedStatus: householdInviteComputedStatusSql,
+  householdId: householdInvitesTable.householdId,
+  householdName: householdsTable.name,
+  inviterName: householdInviteInviter.name,
+  inviterImage: householdInviteInviter.image,
+  expiresAt: householdInvitesTable.expiresAt,
 } as const;
 
 class HouseholdsRepository {
@@ -228,6 +277,7 @@ class HouseholdsRepository {
   async findUserDefaults(userId: string): Promise<
     | {
         id: string;
+        email: string;
         name: string;
         preferredCurrency: Currency;
         preferredTimezone: 'America/Sao_Paulo' | 'UTC';
@@ -238,6 +288,7 @@ class HouseholdsRepository {
     const rows = await db
       .select({
         id: usersTable.id,
+        email: usersTable.email,
         name: usersTable.name,
         preferredCurrency: usersTable.preferredCurrency,
         preferredTimezone: usersTable.preferredTimezone,
@@ -287,6 +338,27 @@ class HouseholdsRepository {
       ...row,
       defaultCurrencyId: currencySchema.parse(row.defaultCurrencyId),
     };
+  }
+
+  async findMembershipByEmail(
+    householdId: string,
+    email: string,
+  ): Promise<HouseholdMemberRecord | undefined> {
+    const rows = await db
+      .select({
+        id: householdMembersTable.id,
+        householdId: householdMembersTable.householdId,
+        userId: householdMembersTable.userId,
+        role: householdMembersTable.role,
+        createdAt: householdMembersTable.createdAt,
+        updatedAt: householdMembersTable.updatedAt,
+      })
+      .from(householdMembersTable)
+      .innerJoin(usersTable, eq(usersTable.id, householdMembersTable.userId))
+      .where(and(eq(householdMembersTable.householdId, householdId), eq(usersTable.email, email)))
+      .limit(1);
+
+    return rows[0];
   }
 
   async listHouseholdsForUser(userId: string) {
@@ -418,19 +490,38 @@ class HouseholdsRepository {
     return rows[0];
   }
 
-  async createInvite(
-    householdId: string,
-    invitedByUserId: string,
-    values: CreateHouseholdInviteRequestBody,
-  ): Promise<HouseholdInviteRecord> {
+  async createInvite(values: {
+    householdId: string;
+    email: string;
+    role: HouseholdInviteRecord['role'];
+    invitedByUserId: string;
+    tokenHash: string;
+    expiresAt: Date;
+  }): Promise<HouseholdInviteRecord> {
+    const rows = await db.insert(householdInvitesTable).values(values).returning();
+    return rows[0];
+  }
+
+  async refreshInvite(
+    inviteId: string,
+    values: {
+      role?: HouseholdInviteRecord['role'];
+      invitedByUserId?: string;
+      tokenHash: string;
+      expiresAt: Date;
+    },
+  ): Promise<HouseholdInviteRecord | undefined> {
     const rows = await db
-      .insert(householdInvitesTable)
-      .values({
-        householdId,
-        email: values.email,
-        role: values.role,
-        invitedByUserId,
+      .update(householdInvitesTable)
+      .set({
+        ...values,
+        acceptedAt: null,
+        rejectedAt: null,
+        canceledAt: null,
+        status: 'pending',
+        updatedAt: now(),
       })
+      .where(eq(householdInvitesTable.id, inviteId))
       .returning();
 
     return rows[0];
@@ -448,11 +539,19 @@ class HouseholdsRepository {
         .select({ count: sql<number>`count(*)::integer` })
         .from(householdInvitesTable)
         .innerJoin(householdsTable, eq(householdsTable.id, householdInvitesTable.householdId))
+        .leftJoin(
+          householdInviteInviter,
+          eq(householdInviteInviter.id, householdInvitesTable.invitedByUserId),
+        )
         .where(whereCondition),
       db
         .select(householdInviteListSelect)
         .from(householdInvitesTable)
         .innerJoin(householdsTable, eq(householdsTable.id, householdInvitesTable.householdId))
+        .leftJoin(
+          householdInviteInviter,
+          eq(householdInviteInviter.id, householdInvitesTable.invitedByUserId),
+        )
         .where(whereCondition)
         .orderBy(...orderBy)
         .limit(limit)
@@ -470,6 +569,10 @@ class HouseholdsRepository {
       .select(householdInviteListSelect)
       .from(householdInvitesTable)
       .innerJoin(householdsTable, eq(householdsTable.id, householdInvitesTable.householdId))
+      .leftJoin(
+        householdInviteInviter,
+        eq(householdInviteInviter.id, householdInvitesTable.invitedByUserId),
+      )
       .where(eq(householdInvitesTable.householdId, householdId))
       .orderBy(asc(householdInvitesTable.email));
   }
@@ -485,17 +588,6 @@ class HouseholdsRepository {
     );
   }
 
-  async listPendingInvitesForEmail(email: string) {
-    return db
-      .select(householdInviteListSelect)
-      .from(householdInvitesTable)
-      .innerJoin(householdsTable, eq(householdsTable.id, householdInvitesTable.householdId))
-      .where(
-        and(eq(householdInvitesTable.email, email), eq(householdInvitesTable.status, 'pending')),
-      )
-      .orderBy(asc(householdsTable.name));
-  }
-
   async listPendingInvitesForEmailPage(
     email: string,
     query: ListMyHouseholdInvitesRequestQuery,
@@ -507,36 +599,159 @@ class HouseholdsRepository {
     );
   }
 
-  async findPendingInviteById(inviteId: string): Promise<HouseholdInviteRecord | undefined> {
+  async findInviteById(inviteId: string): Promise<HouseholdInviteRecord | undefined> {
     const rows = await db
       .select()
       .from(householdInvitesTable)
-      .where(
-        and(eq(householdInvitesTable.id, inviteId), eq(householdInvitesTable.status, 'pending')),
-      );
+      .where(eq(householdInvitesTable.id, inviteId))
+      .limit(1);
 
     return rows[0];
   }
 
-  async acceptInvite(tx: TxClient, inviteId: string): Promise<void> {
-    await tx
-      .update(householdInvitesTable)
-      .set({ status: 'accepted', acceptedAt: now(), updatedAt: now() })
-      .where(eq(householdInvitesTable.id, inviteId));
+  async findInvitePreviewByTokenHash(
+    tokenHash: string,
+  ): Promise<HouseholdInvitePreviewRow | undefined> {
+    const rows = await db
+      .select(householdInvitePreviewSelect)
+      .from(householdInvitesTable)
+      .innerJoin(householdsTable, eq(householdsTable.id, householdInvitesTable.householdId))
+      .leftJoin(
+        householdInviteInviter,
+        eq(householdInviteInviter.id, householdInvitesTable.invitedByUserId),
+      )
+      .where(eq(householdInvitesTable.tokenHash, tokenHash))
+      .limit(1);
+
+    return rows[0];
   }
 
-  async revokeInvite(
+  async findInviteListRowById(inviteId: string): Promise<HouseholdInviteListRow | undefined> {
+    const rows = await db
+      .select(householdInviteListSelect)
+      .from(householdInvitesTable)
+      .innerJoin(householdsTable, eq(householdsTable.id, householdInvitesTable.householdId))
+      .leftJoin(
+        householdInviteInviter,
+        eq(householdInviteInviter.id, householdInvitesTable.invitedByUserId),
+      )
+      .where(eq(householdInvitesTable.id, inviteId))
+      .limit(1);
+
+    return rows[0];
+  }
+
+  async findPendingInviteByHouseholdAndEmail(
+    householdId: string,
+    email: string,
+  ): Promise<HouseholdInviteRecord | undefined> {
+    const rows = await db
+      .select()
+      .from(householdInvitesTable)
+      .where(
+        and(
+          eq(householdInvitesTable.householdId, householdId),
+          eq(householdInvitesTable.email, email),
+          eq(householdInvitesTable.status, 'pending'),
+        ),
+      )
+      .limit(1);
+
+    return rows[0];
+  }
+
+  async hasActionableInviteForEmail(email: string): Promise<boolean> {
+    const rows = await db
+      .select({ id: householdInvitesTable.id })
+      .from(householdInvitesTable)
+      .where(
+        and(
+          eq(householdInvitesTable.email, email),
+          eq(householdInvitesTable.status, 'pending'),
+          gt(householdInvitesTable.expiresAt, now()),
+        ),
+      )
+      .limit(1);
+
+    return rows.length > 0;
+  }
+
+  async findInviteByTokenHash(tokenHash: string): Promise<HouseholdInviteRecord | undefined> {
+    const rows = await db
+      .select()
+      .from(householdInvitesTable)
+      .where(eq(householdInvitesTable.tokenHash, tokenHash))
+      .limit(1);
+
+    return rows[0];
+  }
+
+  async acceptInvite(tx: TxClient, inviteId: string): Promise<HouseholdInviteRecord | undefined> {
+    const timestamp = now();
+    const rows = await tx
+      .update(householdInvitesTable)
+      .set({
+        status: 'accepted',
+        acceptedAt: timestamp,
+        updatedAt: timestamp,
+      })
+      .where(
+        and(
+          eq(householdInvitesTable.id, inviteId),
+          eq(householdInvitesTable.status, 'pending'),
+          gt(householdInvitesTable.expiresAt, timestamp),
+        ),
+      )
+      .returning();
+
+    return rows[0];
+  }
+
+  async verifyUserEmail(tx: TxClient, userId: string): Promise<void> {
+    await tx
+      .update(usersTable)
+      .set({ emailVerified: true, updatedAt: now() })
+      .where(eq(usersTable.id, userId));
+  }
+
+  async rejectInvite(inviteId: string): Promise<HouseholdInviteRecord | undefined> {
+    const timestamp = now();
+    const rows = await db
+      .update(householdInvitesTable)
+      .set({
+        status: 'rejected',
+        rejectedAt: timestamp,
+        updatedAt: timestamp,
+      })
+      .where(
+        and(
+          eq(householdInvitesTable.id, inviteId),
+          eq(householdInvitesTable.status, 'pending'),
+          gt(householdInvitesTable.expiresAt, timestamp),
+        ),
+      )
+      .returning();
+
+    return rows[0];
+  }
+
+  async cancelInvite(
     householdId: string,
     inviteId: string,
   ): Promise<HouseholdInviteRecord | undefined> {
+    const timestamp = now();
     const rows = await db
       .update(householdInvitesTable)
-      .set({ status: 'revoked', revokedAt: now(), updatedAt: now() })
+      .set({
+        status: 'canceled',
+        canceledAt: timestamp,
+        updatedAt: timestamp,
+      })
       .where(
         and(
           eq(householdInvitesTable.householdId, householdId),
           eq(householdInvitesTable.id, inviteId),
-          ne(householdInvitesTable.status, 'accepted'),
+          eq(householdInvitesTable.status, 'pending'),
         ),
       )
       .returning();

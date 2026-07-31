@@ -6,8 +6,10 @@ const router = Router();
 
 router.get('/', requireAccess(), householdsController.list);
 router.post('/', requireAccess(), householdsController.create);
+router.get('/invites/preview', householdsController.previewInvite);
 router.get('/invites', requireAccess(), householdsController.listMyInvites);
-router.post('/invites/:id/accept', requireAccess(), householdsController.acceptInvite);
+router.post('/invites/accept', requireAccess(), householdsController.acceptInvite);
+router.post('/invites/reject', requireAccess(), householdsController.rejectInvite);
 
 router.patch(
   '/:id',
@@ -39,10 +41,20 @@ router.post(
   requireAccess({ permission: 'household.invites.manage', householdParam: 'id' }),
   householdsController.createInvite,
 );
+router.post(
+  '/:id/invites/:inviteId/link',
+  requireAccess({ permission: 'household.invites.manage', householdParam: 'id' }),
+  householdsController.refreshInviteLink,
+);
+router.post(
+  '/:id/invites/:inviteId/resend',
+  requireAccess({ permission: 'household.invites.manage', householdParam: 'id' }),
+  householdsController.resendInvite,
+);
 router.delete(
   '/:id/invites/:inviteId',
   requireAccess({ permission: 'household.invites.manage', householdParam: 'id' }),
-  householdsController.revokeInvite,
+  householdsController.cancelInvite,
 );
 
 export default router;

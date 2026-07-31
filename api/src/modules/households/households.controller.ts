@@ -1,4 +1,5 @@
 import { createAuthenticatedHandler } from '@/shared/controllers/authenticated.controller';
+import { createHandler } from '@/shared/controllers/controller';
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import { withApiMeta } from '@/shared/response';
 import {
@@ -9,20 +10,24 @@ import {
 } from './households.query';
 import * as householdsService from './households.service';
 import {
-  AcceptHouseholdInviteRequestParamsSchema,
+  AcceptHouseholdInviteResponseSchema,
   CreateHouseholdInviteRequestBodySchema,
   CreateHouseholdInviteRequestParamsSchema,
   CreateHouseholdInviteResponseSchema,
   CreateHouseholdRequestBodySchema,
   CreateHouseholdResponseSchema,
+  HouseholdInviteLinkResponseSchema,
+  HouseholdInviteTokenRequestBodySchema,
   ListHouseholdInvitesRequestParamsSchema,
   ListHouseholdInvitesResponseSchema,
   ListHouseholdMembersRequestParamsSchema,
   ListHouseholdMembersResponseSchema,
   ListHouseholdsResponseSchema,
   ListMyHouseholdInvitesResponseSchema,
+  ManageHouseholdInviteRequestParamsSchema,
+  PreviewHouseholdInviteRequestQuerySchema,
+  PreviewHouseholdInviteResponseSchema,
   RemoveHouseholdMemberRequestParamsSchema,
-  RevokeHouseholdInviteRequestParamsSchema,
   UpdateHouseholdMemberRequestBodySchema,
   UpdateHouseholdMemberRequestParamsSchema,
   UpdateHouseholdMemberResponseSchema,
@@ -108,15 +113,41 @@ export const listMyInvites = createAuthenticatedHandler({
   },
 });
 
+export const previewInvite = createHandler({
+  query: PreviewHouseholdInviteRequestQuerySchema,
+  response: PreviewHouseholdInviteResponseSchema,
+  handle: ({ query }) => householdsService.previewInvite(query.token),
+});
+
 export const acceptInvite = createAuthenticatedHandler({
-  params: AcceptHouseholdInviteRequestParamsSchema,
-  handle: ({ user, params }) => householdsService.acceptInvite(user.id, user.email, params.id),
+  body: HouseholdInviteTokenRequestBodySchema,
+  response: AcceptHouseholdInviteResponseSchema,
+  handle: ({ user, body }) => householdsService.acceptInvite(user.id, user.email, body.token),
+});
+
+export const rejectInvite = createAuthenticatedHandler({
+  body: HouseholdInviteTokenRequestBodySchema,
+  handle: ({ user, body }) => householdsService.rejectInvite(user.email, body.token),
   status: 'no-content',
 });
 
-export const revokeInvite = createHouseholdHandler({
-  params: RevokeHouseholdInviteRequestParamsSchema,
+export const refreshInviteLink = createHouseholdHandler({
+  params: ManageHouseholdInviteRequestParamsSchema,
+  response: HouseholdInviteLinkResponseSchema,
   handle: ({ household, params }) =>
-    householdsService.revokeInvite(household, params.id, params.inviteId),
+    householdsService.refreshInviteLink(household, params.id, params.inviteId),
+});
+
+export const resendInvite = createHouseholdHandler({
+  params: ManageHouseholdInviteRequestParamsSchema,
+  handle: ({ household, params }) =>
+    householdsService.resendInvite(household, params.id, params.inviteId),
+  status: 'no-content',
+});
+
+export const cancelInvite = createHouseholdHandler({
+  params: ManageHouseholdInviteRequestParamsSchema,
+  handle: ({ household, params }) =>
+    householdsService.cancelInvite(household, params.id, params.inviteId),
   status: 'no-content',
 });

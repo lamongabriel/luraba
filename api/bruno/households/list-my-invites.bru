@@ -16,11 +16,19 @@ params:query {
   sortDirection: desc
   ~householdIds: {{householdId}}
   ~roles: admin,member,viewer
-  ~statuses: pending,accepted,revoked
+  ~statuses: pending
   ~createdAtFrom: 2025-01-01
   ~createdAtTo: 2025-12-31
   ~updatedAtFrom: 2025-01-01
   ~updatedAtTo: 2025-12-31
+  ~expiresAtFrom: 2025-01-01
+  ~expiresAtTo: 2025-12-31
+  ~acceptedAtFrom: 2025-01-01
+  ~acceptedAtTo: 2025-12-31
+  ~rejectedAtFrom: 2025-01-01
+  ~rejectedAtTo: 2025-12-31
+  ~canceledAtFrom: 2025-01-01
+  ~canceledAtTo: 2025-12-31
 }
 
 headers {
