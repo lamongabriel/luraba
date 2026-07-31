@@ -1,7 +1,3 @@
-"use client"
-
-import * as React from "react"
-
 import { cn } from "@/lib/utils"
 
 function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {
@@ -9,7 +5,7 @@ function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {
     <kbd
       data-slot="kbd"
       className={cn(
-        "inline-flex h-5 min-w-5 items-center justify-center rounded-md border border-border/80 bg-white/[0.04] px-1.5 text-[0.64rem] font-medium tracking-normal text-muted-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]",
+        "pointer-events-none inline-flex h-5 w-fit min-w-5 items-center justify-center gap-1 rounded-xs bg-muted px-1 font-sans text-[0.625rem] font-medium text-muted-foreground select-none in-data-[slot=tooltip-content]:bg-background/20 in-data-[slot=tooltip-content]:text-background dark:in-data-[slot=tooltip-content]:bg-background/10 [&_svg:not([class*='size-'])]:size-3",
         className
       )}
       {...props}
@@ -17,9 +13,9 @@ function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {
   )
 }
 
-function KbdGroup({ className, ...props }: React.ComponentProps<"span">) {
+function KbdGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <span
+    <kbd
       data-slot="kbd-group"
       className={cn("inline-flex items-center gap-1", className)}
       {...props}

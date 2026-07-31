@@ -1,23 +1,32 @@
 "use client"
 
 import * as React from "react"
-import { Dialog as DialogPrimitive } from "radix-ui"
-import { Search01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
+import { Command as CommandPrimitive } from "cmdk"
 
-import { typographyVariants } from "@/components/ui/typography"
 import { cn } from "@/lib/utils"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  InputGroup,
+  InputGroupAddon,
+} from "@/components/ui/input-group"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { SearchIcon, Tick02Icon } from "@hugeicons/core-free-icons"
 
-interface CommandProps extends React.ComponentProps<"div"> {
-  loop?: boolean
-}
-
-function Command({ className, loop: _loop, ...props }: CommandProps) {
+function Command({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive>) {
   return (
-    <div
+    <CommandPrimitive
       data-slot="command"
       className={cn(
-        "flex w-full flex-col overflow-hidden rounded-[1.5rem] border border-border/80 bg-[var(--color-surface)]/98 text-foreground shadow-[0_32px_110px_rgba(0,0,0,0.58)] backdrop-blur-xl",
+        "flex size-full flex-col overflow-hidden rounded-xl bg-popover p-1 text-popover-foreground",
         className
       )}
       {...props}
@@ -26,105 +35,69 @@ function Command({ className, loop: _loop, ...props }: CommandProps) {
 }
 
 function CommandDialog({
+  title = "Command Palette",
+  description = "Search for a command to run...",
   children,
+  className,
+  showCloseButton = false,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+}: React.ComponentProps<typeof Dialog> & {
+  title?: string
+  description?: string
+  className?: string
+  showCloseButton?: boolean
+}) {
   return (
-    <DialogPrimitive.Root data-slot="command-dialog" {...props}>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay
-          data-slot="command-overlay"
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0"
-        />
-        <DialogPrimitive.Content
-          data-slot="command-content"
-          className="fixed left-1/2 top-[12vh] z-50 w-[calc(100vw-1.5rem)] max-w-xl -translate-x-1/2 outline-none"
-        >
-          <DialogPrimitive.Title className="sr-only">Search</DialogPrimitive.Title>
-          <DialogPrimitive.Description className="sr-only">
-            Search pages and quick actions.
-          </DialogPrimitive.Description>
-          {children}
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+    <Dialog {...props}>
+      <DialogHeader className="sr-only">
+        <DialogTitle>{title}</DialogTitle>
+        <DialogDescription>{description}</DialogDescription>
+      </DialogHeader>
+      <DialogContent
+        className={cn(
+          "top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0",
+          className
+        )}
+        showCloseButton={showCloseButton}
+      >
+        {children}
+      </DialogContent>
+    </Dialog>
   )
 }
 
-const CommandInput = React.forwardRef<
-  HTMLInputElement,
-  React.ComponentProps<"input"> & {
-    iconClassName?: string
-    wrapperClassName?: string
-    onValueChange?: (value: string) => void
-  }
->(
-  (
-    {
-      className,
-      iconClassName,
-      wrapperClassName,
-      onChange,
-      onValueChange,
-      ...props
-    },
-    ref
-  ) => {
-    const handleChange = React.useCallback(
-      (event: React.ChangeEvent<HTMLInputElement>) => {
-        onChange?.(event)
-        onValueChange?.(event.target.value)
-      },
-      [onChange, onValueChange]
-    )
-
-    return (
-      <div
-        data-slot="command-input-wrapper"
-        className={cn(
-          "flex items-center gap-3 border-b border-border/70 px-4 py-3",
-          wrapperClassName
-        )}
-      >
-        <HugeiconsIcon
-          icon={Search01Icon}
-          strokeWidth={2}
-          className={cn("size-4 text-muted-foreground", iconClassName)}
-        />
-        <input
-          ref={ref}
+function CommandInput({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Input>) {
+  return (
+    <div data-slot="command-input-wrapper" className="p-1 pb-0">
+      <InputGroup className="h-8! bg-input/20 dark:bg-input/30">
+        <CommandPrimitive.Input
           data-slot="command-input"
           className={cn(
-            "h-9 w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground",
+            "w-full text-xs/relaxed outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
-          onChange={handleChange}
           {...props}
         />
-      </div>
-    )
-  }
-)
-
-CommandInput.displayName = "CommandInput"
-
-function CommandList({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="command-list"
-      className={cn("max-h-[24rem] overflow-y-auto p-2", className)}
-      {...props}
-    />
+        <InputGroupAddon>
+          <HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-3.5 shrink-0 opacity-50" />
+        </InputGroupAddon>
+      </InputGroup>
+    </div>
   )
 }
 
-function CommandEmpty({ className, ...props }: React.ComponentProps<"div">) {
+function CommandList({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.List>) {
   return (
-    <div
-      data-slot="command-empty"
+    <CommandPrimitive.List
+      data-slot="command-list"
       className={cn(
-        "px-3 py-8 text-center",
-        typographyVariants({ variant: "body-muted" }),
+        "no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto outline-none",
         className
       )}
       {...props}
@@ -132,73 +105,67 @@ function CommandEmpty({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CommandGroup({
-  heading,
+function CommandEmpty({
   className,
-  children,
   ...props
-}: React.ComponentProps<"div"> & {
-  heading?: React.ReactNode
-}) {
+}: React.ComponentProps<typeof CommandPrimitive.Empty>) {
   return (
-    <div data-slot="command-group" className={cn("px-1 pb-2", className)} {...props}>
-      {heading ? (
-        <div className={cn("px-2 pb-2 pt-3", typographyVariants({ variant: "label" }))}>
-          {heading}
-        </div>
-      ) : null}
-      <div className="space-y-1">{children}</div>
-    </div>
-  )
-}
-
-function CommandSeparator({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="command-separator"
-      className={cn("mx-3 my-2 h-px bg-border/60", className)}
+    <CommandPrimitive.Empty
+      data-slot="command-empty"
+      className={cn("py-6 text-center text-xs/relaxed", className)}
       {...props}
     />
   )
 }
 
-interface CommandItemProps
-  extends Omit<React.ComponentProps<"button">, "value" | "onSelect"> {
-  value?: string
-  onSelect?: (value: string) => void
+function CommandGroup({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Group>) {
+  return (
+    <CommandPrimitive.Group
+      data-slot="command-group"
+      className={cn(
+        "overflow-hidden p-1 text-foreground **:[[cmdk-group-heading]]:px-2.5 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-muted-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
 }
 
-const CommandItem = React.forwardRef<HTMLButtonElement, CommandItemProps>(
-  ({ className, onClick, onSelect, value, ...props }, ref) => {
-    const handleClick = React.useCallback(
-      (event: React.MouseEvent<HTMLButtonElement>) => {
-        onClick?.(event)
+function CommandSeparator({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Separator>) {
+  return (
+    <CommandPrimitive.Separator
+      data-slot="command-separator"
+      className={cn("-mx-1 my-1 h-px bg-border/50", className)}
+      {...props}
+    />
+  )
+}
 
-        if (!event.defaultPrevented && value !== undefined) {
-          onSelect?.(value)
-        }
-      },
-      [onClick, onSelect, value]
-    )
-
-    return (
-      <button
-        ref={ref}
-        type="button"
-        data-slot="command-item"
-        data-value={value}
-        className={cn(
-          "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-white/[0.045] focus-visible:bg-white/[0.045] focus-visible:outline-none",
-          className
-        )}
-        onClick={handleClick}
-        {...props}
-      />
-    )
-  }
-)
-
-CommandItem.displayName = "CommandItem"
+function CommandItem({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Item>) {
+  return (
+    <CommandPrimitive.Item
+      data-slot="command-item"
+      className={cn(
+        "group/command-item relative flex min-h-7 cursor-default items-center gap-2 rounded-md px-2.5 py-1.5 text-xs/relaxed outline-hidden select-none in-data-[slot=dialog-content]:rounded-md data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 data-selected:bg-muted data-selected:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5 data-selected:*:[svg]:text-foreground",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <HugeiconsIcon icon={Tick02Icon} strokeWidth={2} className="ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:opacity-100" />
+    </CommandPrimitive.Item>
+  )
+}
 
 function CommandShortcut({
   className,
@@ -207,7 +174,10 @@ function CommandShortcut({
   return (
     <span
       data-slot="command-shortcut"
-      className={cn(typographyVariants({ variant: "small-muted" }), "shrink-0", className)}
+      className={cn(
+        "ml-auto text-[0.625rem] tracking-widest text-muted-foreground group-data-selected/command-item:text-foreground",
+        className
+      )}
       {...props}
     />
   )
@@ -216,11 +186,11 @@ function CommandShortcut({
 export {
   Command,
   CommandDialog,
+  CommandInput,
+  CommandList,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
-  CommandList,
-  CommandSeparator,
   CommandShortcut,
+  CommandSeparator,
 }
