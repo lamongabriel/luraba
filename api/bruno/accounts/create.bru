@@ -16,11 +16,19 @@ headers {
 
 body:json {
   {
-    "name": "Primary Depository",
+    "name": "Primary Checking",
     "institutionName": "{{accountInstitutionName}}",
     "institutionDomain": "{{accountInstitutionDomain}}",
-    "type": "depository",
-    "currencyCode": "{{currencyCode}}"
+    "type": "cash",
+    "currencyCode": "{{currencyCode}}",
+    "openingBalance": 250000,
+    "balanceAsOfDate": "2025-01-01",
+    "details": {
+      "kind": "cash",
+      "subtype": "checking",
+      "last4": "1234",
+      "annualPercentageYield": 4.2500
+    }
   }
 }
 
@@ -32,6 +40,11 @@ tests {
   test("account returns institution fields", function() {
     expect(res.body?.data?.institutionName).to.equal(bru.getEnvVar("accountInstitutionName"));
     expect(res.body?.data?.institutionDomain).to.be.a("string");
+  });
+
+  test("account returns its typed profile", function() {
+    expect(res.body?.data?.details?.kind).to.equal("cash");
+    expect(res.body?.data?.details?.subtype).to.equal("checking");
   });
 }
 

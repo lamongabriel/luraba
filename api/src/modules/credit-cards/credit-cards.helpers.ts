@@ -16,6 +16,7 @@ export type CreditCardRow = {
   type: 'credit_card';
   currencyCode: string;
   brand: string;
+  productType: 'credit';
   last4: string;
   color: string | null;
   closingDay: number;
@@ -33,17 +34,11 @@ export type CreditCardSelectRow = {
   institutionDomain: string | null;
   institutionLogoUrl: string | null;
   notes: string | null;
-  classification: 'asset' | 'liability';
-  type:
-    | 'depository'
-    | 'loan'
-    | 'credit_card'
-    | 'property'
-    | 'vehicle'
-    | 'other_asset'
-    | 'other_liability';
+  classification: 'liability';
+  type: 'credit_card';
   currencyCode: string;
   brand: string;
+  productType: 'credit';
   last4: string;
   color: string | null;
   closingDay: number;
@@ -79,6 +74,7 @@ export const creditCardSelect = {
   type: accountsTable.type,
   currencyCode: accountsTable.currencyId,
   brand: creditCardsTable.brand,
+  productType: creditCardsTable.productType,
   last4: creditCardsTable.last4,
   color: creditCardsTable.color,
   closingDay: creditCardsTable.closingDay,

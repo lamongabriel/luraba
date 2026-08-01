@@ -3,17 +3,26 @@ import type { accountsTable } from '@/db/schemas/accounts.schema';
 import { TransactionFeedRowSchema } from '@/modules/transactions/transactions.types';
 import {
   type AccountClassification,
+  type AccountSubtype,
   type AccountType,
   accountClassificationSchema,
+  accountSubtypeSchema,
   accountTypeSchema,
 } from '@/shared/validation/accounts';
+import { institutionDomainInputSchema } from '@/shared/validation/domain';
+import { moneyBalanceSchema } from '@/shared/validation/money';
+import {
+  type AccountProfile,
+  accountProfileSchema,
+  createAccountProfileSchema,
+  updateAccountProfileSchema,
+} from './accounts.profiles';
 
-export type { AccountClassification, AccountType };
-export { accountClassificationSchema, accountTypeSchema };
+export type { AccountClassification, AccountProfile, AccountSubtype, AccountType };
+export { accountClassificationSchema, accountSubtypeSchema, accountTypeSchema };
 
 export type AccountRecord = typeof accountsTable.$inferSelect;
 
-const createAccountTypeSchema = accountTypeSchema.exclude(['credit_card']);
 export const currencyCodeSchema = z
   .string()
   .trim()
@@ -34,55 +43,66 @@ export const accountSchema = z.object({
   updatedAt: z.iso.datetime(),
 });
 
+export const accountSummarySchema = accountSchema.extend({
+  subtype: accountSubtypeSchema,
+  balance: moneyBalanceSchema,
+});
+
 export const accountDetailsSchema = accountSchema.extend({
-  balance: z.number().int(),
+  balance: moneyBalanceSchema,
+  details: accountProfileSchema,
 });
 
-export const CreateAccountRequestBodySchema = z.object({
-  name: z.string().min(1).max(255),
-  institutionName: z.string().min(1).max(255).optional(),
-  institutionDomain: z.string().min(1).max(255).optional(),
-  notes: z.string().max(4000).optional(),
-  type: createAccountTypeSchema,
+const createAccountCommonSchema = z.strictObject({
+  name: z.string().trim().min(1).max(255),
+  institutionName: z.string().trim().min(1).max(255).optional(),
+  institutionDomain: institutionDomainInputSchema.optional(),
+  notes: z.string().trim().max(4000).optional(),
   currencyCode: currencyCodeSchema,
+  openingBalance: moneyBalanceSchema.optional(),
+  balanceAsOfDate: z.iso.date().optional(),
 });
 
-export const CreateAccountResponseSchema = accountSchema;
+export const CreateAccountRequestBodySchema = createAccountCommonSchema
+  .extend({
+    type: accountTypeSchema.exclude(['credit_card']),
+    details: createAccountProfileSchema,
+  })
+  .superRefine((value, ctx) => {
+    if (value.type !== value.details.kind) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['details', 'kind'],
+        message: 'Account details must match the selected account type',
+      });
+    }
+  });
 
-export const ListAccountsResponseSchema = z.array(accountDetailsSchema);
+export const CreateAccountResponseSchema = accountDetailsSchema;
+export const ListAccountsResponseSchema = z.array(accountSummarySchema);
 
-export const GetAccountDetailsRequestParamsSchema = z.object({
-  id: z.uuid(),
-});
-
+export const GetAccountDetailsRequestParamsSchema = z.object({ id: z.uuid() });
 export const GetAccountDetailsResponseSchema = accountDetailsSchema;
 
-export const ListAccountTransactionsRequestParamsSchema = z.object({
-  id: z.uuid(),
-});
-
+export const ListAccountTransactionsRequestParamsSchema = z.object({ id: z.uuid() });
 export const ListAccountTransactionsResponseSchema = z.array(TransactionFeedRowSchema);
 
-export const UpdateAccountRequestParamsSchema = z.object({
-  id: z.uuid(),
-});
-
+export const UpdateAccountRequestParamsSchema = z.object({ id: z.uuid() });
 export const UpdateAccountRequestBodySchema = z
-  .object({
-    name: z.string().min(1).max(255).optional(),
-    institutionName: z.string().min(1).max(255).nullable().optional(),
-    institutionDomain: z.string().min(1).max(255).nullable().optional(),
-    notes: z.string().max(4000).nullable().optional(),
+  .strictObject({
+    name: z.string().trim().min(1).max(255).optional(),
+    institutionName: z.string().trim().min(1).max(255).nullable().optional(),
+    institutionDomain: institutionDomainInputSchema.nullable().optional(),
+    notes: z.string().trim().max(4000).nullable().optional(),
+    details: updateAccountProfileSchema.optional(),
   })
   .refine((value) => Object.keys(value).length > 0, 'At least one field must be provided');
 
-export const UpdateAccountResponseSchema = accountSchema;
-
-export const DeleteAccountRequestParamsSchema = z.object({
-  id: z.uuid(),
-});
+export const UpdateAccountResponseSchema = accountDetailsSchema;
+export const DeleteAccountRequestParamsSchema = z.object({ id: z.uuid() });
 
 export type Account = z.infer<typeof accountSchema>;
+export type AccountSummary = z.infer<typeof accountSummarySchema>;
 export type AccountDetails = z.infer<typeof accountDetailsSchema>;
 export type CreateAccountRequestBody = z.infer<typeof CreateAccountRequestBodySchema>;
 export type CreateAccountResponse = z.infer<typeof CreateAccountResponseSchema>;

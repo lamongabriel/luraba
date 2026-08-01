@@ -5,4 +5,6 @@
 **/logs
 .DS_Store
 .env
+.pnpm-
+.kilo
 .pnpm-store

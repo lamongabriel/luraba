@@ -1,7 +1,19 @@
 import { and, eq, sql } from 'drizzle-orm';
+import { unionAll } from 'drizzle-orm/pg-core';
 import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
+import {
+  cashAccountProfilesTable,
+  cryptoAccountProfilesTable,
+  investmentAccountProfilesTable,
+  loanAccountProfilesTable,
+  otherAssetAccountProfilesTable,
+  otherLiabilityAccountProfilesTable,
+  propertyAccountProfilesTable,
+  vehicleAccountProfilesTable,
+} from '@/db/schemas/account-profiles.schema';
 import { accountsTable } from '@/db/schemas/accounts.schema';
+import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
 import type { TxClient } from '@/db/types';
 import { buildAccountBalanceSubquery } from '@/modules/ledger-accounts/ledger-accounts.repository';
 import { now } from '@/shared/lib/date';
@@ -12,13 +24,100 @@ import {
   buildAccountsListWhere,
   type ListAccountsRequestQuery,
 } from './accounts.query';
-import type { AccountRecord } from './accounts.types';
+import type { AccountRecord, AccountSubtype } from './accounts.types';
 
 type CreateAccountValues = Omit<
   typeof accountsTable.$inferInsert,
   'id' | 'householdId' | 'createdAt' | 'updatedAt'
 >;
-type AccountDetailsRecord = AccountRecord & { balance: number };
+type AccountDetailsRecord = AccountRecord & { balance: number; subtype: AccountSubtype };
+
+function buildAccountProfileSummarySubquery() {
+  return unionAll(
+    db
+      .select({
+        accountId: cashAccountProfilesTable.accountId,
+        subtype: sql<AccountSubtype>`${cashAccountProfilesTable.subtype}::text`.as('subtype'),
+        searchText: sql<string>`${cashAccountProfilesTable.subtype}::text`.as('search_text'),
+      })
+      .from(cashAccountProfilesTable),
+    db
+      .select({
+        accountId: investmentAccountProfilesTable.accountId,
+        subtype: sql<AccountSubtype>`${investmentAccountProfilesTable.subtype}::text`.as('subtype'),
+        searchText: sql<string>`${investmentAccountProfilesTable.subtype}::text`.as('search_text'),
+      })
+      .from(investmentAccountProfilesTable),
+    db
+      .select({
+        accountId: cryptoAccountProfilesTable.accountId,
+        subtype: sql<AccountSubtype>`${cryptoAccountProfilesTable.subtype}::text`.as('subtype'),
+        searchText:
+          sql<string>`concat_ws(' ', ${cryptoAccountProfilesTable.subtype}, ${cryptoAccountProfilesTable.walletAddress}, ${cryptoAccountProfilesTable.network})`.as(
+            'search_text',
+          ),
+      })
+      .from(cryptoAccountProfilesTable),
+    db
+      .select({
+        accountId: propertyAccountProfilesTable.accountId,
+        subtype: sql<AccountSubtype>`${propertyAccountProfilesTable.subtype}::text`.as('subtype'),
+        searchText:
+          sql<string>`concat_ws(' ', ${propertyAccountProfilesTable.subtype}, ${propertyAccountProfilesTable.addressLine1}, ${propertyAccountProfilesTable.addressLine2}, ${propertyAccountProfilesTable.city}, ${propertyAccountProfilesTable.region}, ${propertyAccountProfilesTable.postalCode}, ${propertyAccountProfilesTable.countryCode}, ${propertyAccountProfilesTable.yearBuilt})`.as(
+            'search_text',
+          ),
+      })
+      .from(propertyAccountProfilesTable),
+    db
+      .select({
+        accountId: vehicleAccountProfilesTable.accountId,
+        subtype: sql<AccountSubtype>`${vehicleAccountProfilesTable.subtype}::text`.as('subtype'),
+        searchText:
+          sql<string>`concat_ws(' ', ${vehicleAccountProfilesTable.subtype}, ${vehicleAccountProfilesTable.make}, ${vehicleAccountProfilesTable.model}, ${vehicleAccountProfilesTable.year}, ${vehicleAccountProfilesTable.trim}, ${vehicleAccountProfilesTable.vin}, ${vehicleAccountProfilesTable.licensePlate})`.as(
+            'search_text',
+          ),
+      })
+      .from(vehicleAccountProfilesTable),
+    db
+      .select({
+        accountId: loanAccountProfilesTable.accountId,
+        subtype: sql<AccountSubtype>`${loanAccountProfilesTable.subtype}::text`.as('subtype'),
+        searchText:
+          sql<string>`concat_ws(' ', ${loanAccountProfilesTable.subtype}, ${loanAccountProfilesTable.interestRateType}, ${loanAccountProfilesTable.paymentFrequency})`.as(
+            'search_text',
+          ),
+      })
+      .from(loanAccountProfilesTable),
+    db
+      .select({
+        accountId: otherAssetAccountProfilesTable.accountId,
+        subtype: sql<AccountSubtype>`${otherAssetAccountProfilesTable.subtype}::text`.as('subtype'),
+        searchText: sql<string>`${otherAssetAccountProfilesTable.subtype}::text`.as('search_text'),
+      })
+      .from(otherAssetAccountProfilesTable),
+    db
+      .select({
+        accountId: otherLiabilityAccountProfilesTable.accountId,
+        subtype: sql<AccountSubtype>`${otherLiabilityAccountProfilesTable.subtype}::text`.as(
+          'subtype',
+        ),
+        searchText: sql<string>`${otherLiabilityAccountProfilesTable.subtype}::text`.as(
+          'search_text',
+        ),
+      })
+      .from(otherLiabilityAccountProfilesTable),
+    db
+      .select({
+        accountId: creditCardsTable.accountId,
+        subtype: sql<AccountSubtype>`'credit'::text`.as('subtype'),
+        searchText:
+          sql<string>`concat_ws(' ', 'credit', ${creditCardsTable.brand}, ${creditCardsTable.productType}, ${creditCardsTable.last4})`.as(
+            'search_text',
+          ),
+      })
+      .from(creditCardsTable),
+  ).as('account_profile_summaries');
+}
 
 class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
   constructor() {
@@ -41,16 +140,28 @@ class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
     query: ListAccountsRequestQuery,
   ): Promise<DbListPage<AccountDetailsRecord>> {
     const accountBalances = buildAccountBalanceSubquery();
+    const accountProfiles = buildAccountProfileSummarySubquery();
     const rawBalance = sql<number>`coalesce(${accountBalances.balance}, 0)::integer`;
     const displayedBalance = sql<number>`case when ${accountsTable.classification} = 'asset' then ${rawBalance} else -${rawBalance} end`;
-    const where = buildAccountsListWhere(context.householdId, query, displayedBalance);
-    const orderBy = buildAccountsListOrder(query, displayedBalance);
+    const where = buildAccountsListWhere(
+      context.householdId,
+      query,
+      displayedBalance,
+      sql`${accountProfiles.subtype}`,
+      sql`${accountProfiles.searchText}`,
+    );
+    const orderBy = buildAccountsListOrder(
+      query,
+      displayedBalance,
+      sql`${accountProfiles.subtype}`,
+    );
     const { limit, offset } = getPagination(query);
     const [countRow, rows] = await Promise.all([
       db
         .select({ count: sql<number>`count(*)::integer` })
         .from(accountsTable)
         .leftJoin(accountBalances, eq(accountBalances.accountId, accountsTable.id))
+        .innerJoin(accountProfiles, eq(accountProfiles.accountId, accountsTable.id))
         .where(where),
       db
         .select({
@@ -67,9 +178,11 @@ class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
           createdAt: accountsTable.createdAt,
           updatedAt: accountsTable.updatedAt,
           balance: rawBalance,
+          subtype: accountProfiles.subtype,
         })
         .from(accountsTable)
         .leftJoin(accountBalances, eq(accountBalances.accountId, accountsTable.id))
+        .innerJoin(accountProfiles, eq(accountProfiles.accountId, accountsTable.id))
         .where(where)
         .orderBy(...orderBy)
         .limit(limit)

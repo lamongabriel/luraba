@@ -1,0 +1,27 @@
+meta {
+  name: create other asset account
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/accounts
+  body: json
+}
+
+headers {
+  Cookie: {{authCookie}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Watch Collection",
+    "type": "other_asset",
+    "currencyCode": "{{currencyCode}}",
+    "details": {
+      "kind": "other_asset",
+      "subtype": "collectible"
+    }
+  }
+}

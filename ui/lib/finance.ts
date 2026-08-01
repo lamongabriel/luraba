@@ -30,6 +30,14 @@ export function formatCurrency(
   }).format(amount / 100)
 }
 
+export function majorToMinorUnits(amount: number, precision: number) {
+  return Math.round(amount * 10 ** precision)
+}
+
+export function minorToMajorUnits(amount: number, precision: number) {
+  return amount / 10 ** precision
+}
+
 export function formatSignedCurrency(
   amount: number,
   currencyCode: string,

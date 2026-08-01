@@ -1,0 +1,29 @@
+meta {
+  name: create investment account
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/accounts
+  body: json
+}
+
+headers {
+  Cookie: {{authCookie}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Brokerage Portfolio",
+    "type": "investment",
+    "currencyCode": "{{currencyCode}}",
+    "details": {
+      "kind": "investment",
+      "subtype": "brokerage",
+      "last4": "9081",
+      "taxTreatment": "taxable"
+    }
+  }
+}

@@ -124,12 +124,13 @@ class LedgerAccountsRepository {
     return row?.balance ?? 0;
   }
 
-  async getAdjustmentAnchorBalance(
+  async getAdjustmentAnchorBalanceInTransaction(
+    tx: TxClient,
     householdId: string,
     ledgerAccountId: string,
     postedDate: Date,
   ): Promise<number> {
-    const [row] = await db
+    const [row] = await tx
       .select({
         balance: sql<number>`coalesce(sum(${entriesTable.amount}), 0)`.mapWith(Number),
       })

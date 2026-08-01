@@ -408,63 +408,95 @@ async function createTransfer(
 // Adjustment: the request sends the target displayed balance. We compare that
 // target to the account's anchor balance at the posted date and persist only the
 // delta needed to make future balances start from the corrected value.
-async function createAdjustment(
+export async function createBalanceAdjustmentInTransaction(
+  tx: TxClient,
   context: HouseholdContext,
-  dto: Extract<CreateTransactionDto, { type: 'adjustment' }>,
-): Promise<TransactionResponse> {
-  const account = await accountsRepository.get(dto.accountId, context);
-  if (!account) throw new NotFoundError('Account');
-  if (account.type === 'credit_card') {
+  input: {
+    account: {
+      id: string;
+      type: string;
+      classification: 'asset' | 'liability';
+      currencyId: string;
+    };
+    accountLedgerId: string;
+    balance: number;
+    description: string;
+    purchaseDate: Date;
+    postedDate: Date;
+    includeInBudget?: boolean;
+    tagIds?: string[];
+  },
+): Promise<string> {
+  if (input.account.type === 'credit_card') {
     throw new ValidationError('Direct adjustments for credit card accounts are not supported');
   }
 
-  const accountLedger = await ledgerAccountsRepository.findByOwner('account', account.id);
-  if (!accountLedger) throw new NotFoundError('Account ledger');
-  const tagIds = await validateTags(context, dto.tagIds);
-
-  const anchorBalance = await ledgerAccountsRepository.getAdjustmentAnchorBalance(
+  const anchorBalance = await ledgerAccountsRepository.getAdjustmentAnchorBalanceInTransaction(
+    tx,
     context.householdId,
-    accountLedger.id,
-    dto.postedDate,
+    input.accountLedgerId,
+    input.postedDate,
   );
-  const targetBalance = toRawLedgerBalance(dto.balance, account.classification);
+  const targetBalance = toRawLedgerBalance(input.balance, input.account.classification);
   const accountAmount = targetBalance - anchorBalance;
 
   if (accountAmount === 0) {
     throw new ValidationError('Adjustment balance already matches the account balance');
   }
 
-  const transactionId = await db.transaction(async (tx) => {
-    const adjustmentLedger = await ledgerAccountsRepository.findOrCreateSystem(
-      tx,
-      `system:adjustment:${account.currencyId}`,
-      SYSTEM_LEDGER_CLASSIFICATIONS.adjustment,
-      account.currencyId,
-    );
+  const adjustmentLedger = await ledgerAccountsRepository.findOrCreateSystem(
+    tx,
+    `system:adjustment:${input.account.currencyId}`,
+    SYSTEM_LEDGER_CLASSIFICATIONS.adjustment,
+    input.account.currencyId,
+  );
+  const createdTransactionId = await createBaseTransaction(tx, context, {
+    type: 'adjustment',
+    description: input.description,
+    purchaseDate: input.purchaseDate,
+    postedDate: input.postedDate,
+    includeInBudget: input.includeInBudget ?? true,
+  });
 
-    const createdTransactionId = await createBaseTransaction(tx, context, {
-      type: dto.type,
+  await entriesService.createTransactionEntries(tx, createdTransactionId, [
+    {
+      ledgerAccountId: input.accountLedgerId,
+      amount: accountAmount,
+      currencyCode: input.account.currencyId,
+    },
+    {
+      ledgerAccountId: adjustmentLedger.id,
+      amount: -accountAmount,
+      currencyCode: input.account.currencyId,
+    },
+  ]);
+  await persistTags(tx, createdTransactionId, input.tagIds ?? []);
+
+  return createdTransactionId;
+}
+
+async function createAdjustment(
+  context: HouseholdContext,
+  dto: Extract<CreateTransactionDto, { type: 'adjustment' }>,
+): Promise<TransactionResponse> {
+  const account = await accountsRepository.get(dto.accountId, context);
+  if (!account) throw new NotFoundError('Account');
+
+  const accountLedger = await ledgerAccountsRepository.findByOwner('account', account.id);
+  if (!accountLedger) throw new NotFoundError('Account ledger');
+  const tagIds = await validateTags(context, dto.tagIds);
+
+  const transactionId = await db.transaction(async (tx) => {
+    return createBalanceAdjustmentInTransaction(tx, context, {
+      account,
+      accountLedgerId: accountLedger.id,
+      balance: dto.balance,
       description: dto.description,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
       includeInBudget: dto.includeInBudget ?? true,
+      tagIds,
     });
-
-    await entriesService.createTransactionEntries(tx, createdTransactionId, [
-      {
-        ledgerAccountId: accountLedger.id,
-        amount: accountAmount,
-        currencyCode: account.currencyId,
-      },
-      {
-        ledgerAccountId: adjustmentLedger.id,
-        amount: -accountAmount,
-        currencyCode: account.currencyId,
-      },
-    ]);
-    await persistTags(tx, createdTransactionId, tagIds);
-
-    return createdTransactionId;
   });
 
   return loadCreatedTransaction(context, transactionId);

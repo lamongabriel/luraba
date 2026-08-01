@@ -149,7 +149,7 @@ describe('credit cards service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -358,11 +358,11 @@ describe('credit cards service', () => {
     );
     const sourceAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking A', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Checking A', type: 'cash', currencyCode: 'BRL' }),
     );
     const secondSourceAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking B', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Checking B', type: 'cash', currencyCode: 'BRL' }),
     );
     await createBalanceEntryForAccount({
       householdId: context.household.id,
@@ -469,7 +469,7 @@ describe('credit cards service', () => {
     );
     const sourceAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     await createBalanceEntryForAccount({
       householdId: context.household.id,

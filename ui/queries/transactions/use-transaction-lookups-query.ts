@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 
-import type { AccountDetails } from "@/interfaces/account"
+import type { AccountSummary } from "@/interfaces/account"
 import type { Category } from "@/interfaces/category"
 import type { CreditCard } from "@/interfaces/credit-card"
 import type { Merchant } from "@/interfaces/merchant"
@@ -21,7 +21,7 @@ export const transactionLookupQueryKeys = {
 }
 
 export interface TransactionLookups {
-  accounts: AccountDetails[]
+  accounts: AccountSummary[]
   creditCards: CreditCard[]
   categories: Category[]
   merchants: Merchant[]

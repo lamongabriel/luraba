@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { check, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { currenciesTable } from './currencies.schema';
 import { accountClassificationEnum, accountTypeEnum } from './enums.schema';
 import { householdsTable } from './households.schema';
@@ -23,5 +24,15 @@ export const accountsTable = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => [uniqueIndex('accounts_household_name_unique').on(table.householdId, table.name)],
+  (table) => [
+    uniqueIndex('accounts_household_name_unique').on(table.householdId, table.name),
+    check(
+      'accounts_type_classification_check',
+      sql`(
+        (${table.type} in ('cash', 'investment', 'crypto', 'property', 'vehicle', 'other_asset') and ${table.classification} = 'asset')
+        or
+        (${table.type} in ('loan', 'credit_card', 'other_liability') and ${table.classification} = 'liability')
+      )`,
+    ),
+  ],
 );

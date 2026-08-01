@@ -44,7 +44,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -104,7 +104,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -146,7 +146,7 @@ describe('transactions service', () => {
       otherContext.householdContext,
       buildAccountInput({
         name: 'Foreign Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -181,7 +181,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -216,7 +216,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -257,7 +257,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -300,7 +300,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -344,7 +344,7 @@ describe('transactions service', () => {
 
     const account = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
@@ -352,7 +352,7 @@ describe('transactions service', () => {
     );
     const otherAccount = await accountsService.createAccount(
       otherContext.householdContext,
-      buildAccountInput({ name: 'Other Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Other Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     const otherCategory = await categoriesService.createCategory(
       otherContext.householdContext,
@@ -410,7 +410,7 @@ describe('transactions service', () => {
     );
     const sourceAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     await createBalanceEntryForAccount({
       householdId: context.household.id,
@@ -492,7 +492,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -558,7 +558,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -614,7 +614,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'USD Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'USD',
       }),
     );
@@ -622,7 +622,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'BRL Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -691,11 +691,11 @@ describe('transactions service', () => {
 
     const fromAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     const toAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Savings', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Savings', type: 'cash', currencyCode: 'BRL' }),
     );
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
@@ -749,7 +749,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'USD Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'USD',
       }),
     );
@@ -757,7 +757,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'BRL Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -793,7 +793,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'USD Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'USD',
       }),
     );
@@ -801,7 +801,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'BRL Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -833,7 +833,7 @@ describe('transactions service', () => {
     const context = await createAuthenticatedContext();
     const account = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     const expenseCategory = await categoriesService.createCategory(
       context.householdContext,
@@ -944,11 +944,11 @@ describe('transactions service', () => {
     const context = await createAuthenticatedContext();
     const checking = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     const cash = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Cash', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Cash', type: 'cash', currencyCode: 'BRL' }),
     );
     const food = await categoriesService.createCategory(
       context.householdContext,
@@ -1000,15 +1000,15 @@ describe('transactions service', () => {
     const context = await createAuthenticatedContext();
     const checking = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     const savings = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Savings', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Savings', type: 'cash', currencyCode: 'BRL' }),
     );
     const reserve = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Reserve', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Reserve', type: 'cash', currencyCode: 'BRL' }),
     );
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
@@ -1054,7 +1054,7 @@ describe('transactions service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -1139,11 +1139,11 @@ describe('transactions service', () => {
 
     const fromAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     const toAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Savings', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Savings', type: 'cash', currencyCode: 'BRL' }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
@@ -1172,7 +1172,7 @@ describe('transactions service', () => {
 
     const account = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,

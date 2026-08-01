@@ -9,7 +9,8 @@ const id = '1456d4ee-2f8d-4cec-92be-a780d54312c2';
 describe('accounts list queries', () => {
   it('parses every account column filter and rejects invalid ranges and unknown fields', () => {
     const query = ListAccountsRequestQuerySchema.parse({
-      types: 'depository,loan',
+      types: 'cash,loan',
+      subtypes: 'checking,mortgage',
       classifications: 'asset',
       currencyCodes: 'BRL,USD',
       balanceMin: '-100',
@@ -21,7 +22,8 @@ describe('accounts list queries', () => {
       updatedAtTo: '2025-12-31',
     });
 
-    expect(query.types).toEqual(['depository', 'loan']);
+    expect(query.types).toEqual(['cash', 'loan']);
+    expect(query.subtypes).toEqual(['checking', 'mortgage']);
     expect(query.hasInstitution).toBe(true);
     expect(ListAccountsRequestQuerySchema.safeParse({ balanceMin: 2, balanceMax: 1 }).success).toBe(
       false,

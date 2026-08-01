@@ -10,11 +10,20 @@ import {
 import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
 import type { ListTransactionsRequestQuery } from '@/modules/transactions/transactions.query';
 import * as transactionsRepository from '@/modules/transactions/transactions.repository';
-import { listTransactions as listTransactionFeed } from '@/modules/transactions/transactions.service';
+import {
+  createBalanceAdjustmentInTransaction,
+  listTransactions as listTransactionFeed,
+} from '@/modules/transactions/transactions.service';
 import type { TransactionFeedRow } from '@/modules/transactions/transactions.types';
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
-import { formatISODateTime } from '@/shared/lib/date';
+import { formatISODateTime, getTodayInTimezone, parseISODate } from '@/shared/lib/date';
 import { createListMeta, type ListResult } from '@/shared/list';
+import type { CreateAccountProfile, UpdateAccountProfile } from './accounts.profiles';
+import {
+  createAccountProfile,
+  getAccountProfile,
+  updateAccountProfile,
+} from './accounts.profiles.repository';
 import type {
   ListAccountsRequestQuery,
   ListAccountTransactionsRequestQuery,
@@ -25,6 +34,7 @@ import type {
   AccountClassification,
   AccountDetails,
   AccountRecord,
+  AccountSummary,
   AccountType,
   CreateAccountRequestBody,
   UpdateAccountRequestBody,
@@ -50,10 +60,15 @@ function mapAccountRecord(account: AccountRecord): Account {
   };
 }
 
-function mapAccountDetails(account: AccountRecord, balance: number): AccountDetails {
+function mapAccountWithProfile(
+  account: AccountRecord,
+  balance: number,
+  details: AccountDetails['details'],
+): AccountDetails {
   return {
     ...mapAccountRecord(account),
     balance: toDisplayedAmount(balance, account.classification),
+    details,
   };
 }
 
@@ -130,6 +145,22 @@ async function buildUpdatedAccountValues(
   };
 }
 
+async function validateSecuredAsset(
+  context: HouseholdContext,
+  details: CreateAccountProfile | UpdateAccountProfile,
+  accountId: string | undefined,
+): Promise<void> {
+  if (details.kind !== 'loan' || !details.securedAssetAccountId) return;
+  if (details.securedAssetAccountId === accountId) {
+    throw new ValidationError('A loan cannot be secured by itself');
+  }
+
+  const securedAsset = await accountsRepository.get(details.securedAssetAccountId, context);
+  if (securedAsset?.classification !== 'asset') {
+    throw new NotFoundError('Secured asset account');
+  }
+}
+
 export async function createAccountRecordInTransaction(
   tx: Parameters<typeof accountsRepository.createInTransaction>[0],
   context: HouseholdContext,
@@ -161,7 +192,7 @@ export async function updateAccountRecordInTransaction(
 export async function createAccount(
   context: HouseholdContext,
   dto: CreateAccountRequestBody,
-): Promise<Account> {
+): Promise<AccountDetails> {
   const currency = await currenciesRepository.findByCode(dto.currencyCode);
   if (!currency) throw new NotFoundError('Currency');
 
@@ -169,7 +200,9 @@ export async function createAccount(
   if (existing) throw new ConflictError('An account with this name already exists');
   const classification = ACCOUNT_TYPE_TO_CLASSIFICATION[dto.type];
 
-  return db.transaction(async (tx) => {
+  await validateSecuredAsset(context, dto.details, undefined);
+
+  const account = await db.transaction(async (tx) => {
     const account = await createAccountRecordInTransaction(tx, context, {
       name: dto.name,
       institutionName: dto.institutionName,
@@ -180,24 +213,50 @@ export async function createAccount(
       currencyId: dto.currencyCode,
     });
 
-    await ledgerAccountsRepository.createForAccount(tx, {
+    const ledger = await ledgerAccountsRepository.createForAccount(tx, {
       accountId: account.id,
       classification: account.classification,
       currencyCode: account.currencyId,
     });
 
-    return mapAccountRecord(account);
+    await createAccountProfile(tx, account.id, dto.details);
+
+    if (dto.openingBalance !== undefined && dto.openingBalance !== 0) {
+      const postedDate = dto.balanceAsOfDate
+        ? parseISODate(dto.balanceAsOfDate)
+        : getTodayInTimezone(context.timezone);
+
+      await createBalanceAdjustmentInTransaction(tx, context, {
+        account,
+        accountLedgerId: ledger.id,
+        balance: dto.openingBalance,
+        description: 'Opening balance',
+        includeInBudget: false,
+        purchaseDate: postedDate,
+        postedDate,
+      });
+    }
+
+    return account;
   });
+
+  return getAccountDetails(context, account.id);
 }
 
 export async function listAccounts(
   context: HouseholdContext,
   query: ListAccountsRequestQuery,
-): Promise<ListResult<AccountDetails>> {
+): Promise<ListResult<AccountSummary>> {
   const page = await accountsRepository.listPage(context, query);
 
   return {
-    data: page.rows.map((account) => mapAccountDetails(account, account.balance)),
+    data: page.rows.map(
+      (account): AccountSummary => ({
+        ...mapAccountRecord(account),
+        subtype: account.subtype,
+        balance: toDisplayedAmount(account.balance, account.classification),
+      }),
+    ),
     meta: createListMeta(query, page.totalCount),
   };
 }
@@ -213,7 +272,10 @@ export async function getAccountDetails(
   if (!ledger) throw new NotFoundError('Account ledger');
 
   const balance = await ledgerAccountsRepository.getBalance(ledger.id);
-  return mapAccountDetails(account, balance);
+  const profile = await getAccountProfile(account.id, account.type);
+  if (!profile) throw new NotFoundError('Account profile');
+
+  return mapAccountWithProfile(account, balance, profile);
 }
 
 export async function listAccountTransactions(
@@ -242,7 +304,7 @@ export async function updateAccount(
   context: HouseholdContext,
   accountId: string,
   dto: UpdateAccountRequestBody,
-): Promise<Account> {
+): Promise<AccountDetails> {
   const account = await accountsRepository.get(accountId, context);
   if (!account) {
     throw new NotFoundError('Account');
@@ -255,22 +317,46 @@ export async function updateAccount(
     }
   }
 
-  const updated = await accountsRepository.update(
-    accountId,
-    context,
-    await buildUpdatedAccountValues(context, {
+  if (dto.details && dto.details.kind !== account.type) {
+    throw new ValidationError('Account details must match the existing account type');
+  }
+  if (dto.details) {
+    await validateSecuredAsset(context, dto.details, account.id);
+    if (dto.details.kind === 'loan') {
+      const currentProfile = await getAccountProfile(account.id, account.type);
+      if (currentProfile?.kind !== 'loan') throw new NotFoundError('Account profile');
+      const startDate =
+        dto.details.startDate === undefined ? currentProfile.startDate : dto.details.startDate;
+      const maturityDate =
+        dto.details.maturityDate === undefined
+          ? currentProfile.maturityDate
+          : dto.details.maturityDate;
+      if (startDate && maturityDate && startDate > maturityDate) {
+        throw new ValidationError('Maturity date must be on or after the start date');
+      }
+    }
+  }
+
+  const updated = await db.transaction(async (tx) => {
+    const nextAccount = await updateAccountRecordInTransaction(tx, context, accountId, {
       name: dto.name,
       institutionName: dto.institutionName,
       institutionDomain: dto.institutionDomain,
       notes: dto.notes,
-    }),
-  );
+    });
+
+    if (dto.details) {
+      await updateAccountProfile(tx, accountId, dto.details);
+    }
+
+    return nextAccount;
+  });
 
   if (!updated) {
     throw new NotFoundError('Account');
   }
 
-  return mapAccountRecord(updated);
+  return getAccountDetails(context, updated.id);
 }
 
 export async function deleteAccount(context: HouseholdContext, accountId: string): Promise<void> {

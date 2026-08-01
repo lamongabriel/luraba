@@ -1,0 +1,36 @@
+meta {
+  name: create vehicle account
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/accounts
+  body: json
+}
+
+headers {
+  Cookie: {{authCookie}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Daily Driver",
+    "type": "vehicle",
+    "currencyCode": "{{currencyCode}}",
+    "openingBalance": 12500000,
+    "details": {
+      "kind": "vehicle",
+      "subtype": "car",
+      "make": "Toyota",
+      "model": "Corolla",
+      "year": 2024,
+      "trim": "XEi",
+      "vin": "9BR12345678901234",
+      "licensePlate": "ABC1D23",
+      "mileage": 18000,
+      "mileageUnit": "km"
+    }
+  }
+}

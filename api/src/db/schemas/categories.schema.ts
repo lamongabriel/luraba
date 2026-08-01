@@ -1,4 +1,11 @@
-import { pgTable, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  type AnyPgColumn,
+  pgTable,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 import { categoryTypeEnum } from './enums.schema';
 import { householdsTable } from './households.schema';
 
@@ -10,7 +17,9 @@ export const categoriesTable = pgTable(
       .notNull()
       .references(() => householdsTable.id, { onDelete: 'cascade' }),
     name: varchar({ length: 255 }).notNull(),
-    parentId: uuid('parent_id'),
+    parentId: uuid('parent_id').references((): AnyPgColumn => categoriesTable.id, {
+      onDelete: 'set null',
+    }),
     type: categoryTypeEnum().notNull(),
     color: varchar({ length: 7 }),
     icon: varchar({ length: 128 }),

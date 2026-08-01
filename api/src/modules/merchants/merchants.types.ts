@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { merchantsTable } from '@/db/schemas/merchants.schema';
+import { institutionDomainInputSchema } from '@/shared/validation/domain';
 
 export type MerchantRecord = typeof merchantsTable.$inferSelect;
 
@@ -14,7 +15,7 @@ export const merchantSchema = z.object({
 
 export const CreateMerchantRequestBodySchema = z.object({
   name: z.string().min(1).max(255),
-  domain: z.string().min(1).max(255).optional(),
+  domain: institutionDomainInputSchema.optional(),
 });
 
 export const CreateMerchantResponseSchema = merchantSchema;
@@ -28,7 +29,7 @@ export const UpdateMerchantRequestParamsSchema = z.object({
 export const UpdateMerchantRequestBodySchema = z
   .object({
     name: z.string().min(1).max(255).optional(),
-    domain: z.string().min(1).max(255).nullable().optional(),
+    domain: institutionDomainInputSchema.nullable().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, 'At least one field must be provided');
 

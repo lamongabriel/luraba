@@ -82,6 +82,7 @@ export async function createCreditCard(
         householdId: context.householdId,
         accountId: account.id,
         brand: dto.brand,
+        productType: dto.productType,
         last4: dto.last4,
         color: dto.color,
         closingDay: dto.closingDay,
@@ -102,6 +103,7 @@ export async function createCreditCard(
       type: 'credit_card',
       currencyCode: account.currencyId,
       brand: createdCard.brand,
+      productType: createdCard.productType,
       last4: createdCard.last4,
       color: createdCard.color ?? null,
       closingDay: createdCard.closingDay,
@@ -194,6 +196,7 @@ export async function updateCreditCard(
       .update(creditCardsTable)
       .set({
         brand: dto.brand,
+        productType: dto.productType,
         last4: dto.last4,
         color: dto.color === undefined ? undefined : dto.color,
         closingDay: dto.closingDay,
@@ -211,6 +214,7 @@ export async function updateCreditCard(
       institutionLogoUrl: updatedAccount.institutionLogoUrl,
       notes: updatedAccount.notes,
       brand: dto.brand ?? existingCard.brand,
+      productType: dto.productType ?? existingCard.productType,
       last4: dto.last4 ?? existingCard.last4,
       color: dto.color === undefined ? existingCard.color : dto.color,
       closingDay: dto.closingDay ?? existingCard.closingDay,

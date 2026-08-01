@@ -1,6 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/db';
+import { cashAccountProfilesTable } from '@/db/schemas/account-profiles.schema';
+import { accountsTable } from '@/db/schemas/accounts.schema';
 import { entriesTable } from '@/db/schemas/entries.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
 import * as categoriesService from '@/modules/categories/categories.service';
@@ -34,14 +36,14 @@ describe('accounts service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Main Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
 
     expect(account.name).toBe('Main Checking');
     expect(account.classification).toBe('asset');
-    expect(account.type).toBe('depository');
+    expect(account.type).toBe('cash');
     expect(account.currencyCode).toBe('BRL');
     expect(account.institutionLogoUrl).toBeNull();
 
@@ -118,7 +120,7 @@ describe('accounts service', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Cash',
-        type: 'depository',
+        type: 'cash',
       }),
     );
 
@@ -191,11 +193,11 @@ describe('accounts service', () => {
 
     const checking = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     const savings = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Savings', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Savings', type: 'cash', currencyCode: 'BRL' }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
@@ -370,7 +372,7 @@ describe('accounts DB list filters', () => {
       buildAccountInput({
         name: 'Filter Target Checking',
         institutionName: 'Filter Bank',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -388,7 +390,7 @@ describe('accounts DB list filters', () => {
       context.householdContext,
       ListAccountsRequestQuerySchema.parse({
         search: 'Target',
-        types: 'depository,loan',
+        types: 'cash,loan',
         classifications: 'asset',
         currencyCodes: 'BRL',
         balanceMin: 12_345,
@@ -412,5 +414,196 @@ describe('accounts DB list filters', () => {
       totalCount: 1,
       totalPages: 1,
     });
+  });
+
+  it('filters and searches normalized profile fields in PostgreSQL', async () => {
+    const context = await createAuthenticatedContext();
+    const vehicle = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({
+        name: 'Daily Driver',
+        type: 'vehicle',
+        details: {
+          kind: 'vehicle',
+          subtype: 'car',
+          make: 'Toyota',
+          model: 'Corolla',
+          year: 2024,
+        },
+      }),
+    );
+    await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({
+        name: 'Weekend Boat',
+        type: 'vehicle',
+        details: { kind: 'vehicle', subtype: 'boat', make: 'Yamaha' },
+      }),
+    );
+
+    const result = await accountsService.listAccounts(
+      context.householdContext,
+      ListAccountsRequestQuerySchema.parse({
+        search: 'Corolla',
+        subtypes: 'car',
+        sort: 'subtype',
+        sortDirection: 'asc',
+      }),
+    );
+
+    expect(result.data).toEqual([
+      expect.objectContaining({ id: vehicle.id, subtype: 'car', type: 'vehicle' }),
+    ]);
+  });
+});
+
+describe('typed account profiles', () => {
+  it.each([
+    ['cash', { kind: 'cash', subtype: 'checking' }],
+    ['investment', { kind: 'investment', subtype: 'brokerage' }],
+    ['crypto', { kind: 'crypto', subtype: 'wallet', network: 'Ethereum' }],
+    [
+      'property',
+      { kind: 'property', subtype: 'house', city: 'Sao Paulo', area: 120, areaUnit: 'sqm' },
+    ],
+    ['vehicle', { kind: 'vehicle', subtype: 'car', make: 'Toyota', model: 'Corolla', year: 2024 }],
+    [
+      'loan',
+      {
+        kind: 'loan',
+        subtype: 'personal',
+        originalPrincipal: 100_000,
+        annualInterestRate: 9.25,
+      },
+    ],
+    ['other_asset', { kind: 'other_asset', subtype: 'collectible' }],
+    ['other_liability', { kind: 'other_liability', subtype: 'medical' }],
+  ] as const)('creates and retrieves a %s profile', async (type, details) => {
+    const context = await createAuthenticatedContext();
+    const created = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ type, details }),
+    );
+
+    expect(created.type).toBe(type);
+    expect(created.details).toEqual(expect.objectContaining(details));
+    expect(created.classification).toBe(
+      type === 'loan' || type === 'other_liability' ? 'liability' : 'asset',
+    );
+  });
+
+  it('creates opening balances atomically with positive public liability debt', async () => {
+    const context = await createAuthenticatedContext();
+    const asset = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Opening Cash', openingBalance: 25_000 }),
+    );
+    const liability = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({
+        name: 'Opening Loan',
+        type: 'loan',
+        details: { kind: 'loan', subtype: 'personal' },
+        openingBalance: 80_000,
+        balanceAsOfDate: '2025-01-15',
+      }),
+    );
+
+    expect(asset.balance).toBe(25_000);
+    expect(liability.balance).toBe(80_000);
+
+    const rows = await db
+      .select()
+      .from(transactionsTable)
+      .where(eq(transactionsTable.householdId, context.household.id));
+    expect(rows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          description: 'Opening balance',
+          includeInBudget: false,
+        }),
+      ]),
+    );
+  });
+
+  it('updates profile fields and clears optional values without changing type or currency', async () => {
+    const context = await createAuthenticatedContext();
+    const account = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({
+        type: 'vehicle',
+        details: { kind: 'vehicle', subtype: 'car', make: 'Toyota', model: 'Corolla' },
+      }),
+    );
+
+    const updated = await accountsService.updateAccount(context.householdContext, account.id, {
+      details: { kind: 'vehicle', subtype: 'truck', make: null, model: 'Tacoma' },
+    });
+
+    expect(updated.type).toBe('vehicle');
+    expect(updated.currencyCode).toBe(account.currencyCode);
+    expect(updated.details).toEqual(
+      expect.objectContaining({
+        kind: 'vehicle',
+        subtype: 'truck',
+        make: null,
+        model: 'Tacoma',
+      }),
+    );
+  });
+
+  it('rejects secured loan links to inaccessible or liability accounts', async () => {
+    const context = await createAuthenticatedContext();
+    const liability = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({
+        type: 'other_liability',
+        details: { kind: 'other_liability', subtype: 'payable' },
+      }),
+    );
+
+    await expect(
+      accountsService.createAccount(
+        context.householdContext,
+        buildAccountInput({
+          type: 'loan',
+          details: {
+            kind: 'loan',
+            subtype: 'mortgage',
+            securedAssetAccountId: liability.id,
+          },
+        }),
+      ),
+    ).rejects.toThrow(NotFoundError);
+  });
+
+  it('enforces type classification combinations in PostgreSQL', async () => {
+    const context = await createAuthenticatedContext();
+
+    await expect(
+      db.insert(accountsTable).values({
+        householdId: context.household.id,
+        name: 'Invalid asset loan',
+        classification: 'asset',
+        type: 'loan',
+        currencyId: 'BRL',
+      }),
+    ).rejects.toThrow();
+  });
+
+  it('cascades profile deletion with the account', async () => {
+    const context = await createAuthenticatedContext();
+    const account = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ details: { kind: 'cash', subtype: 'checking' } }),
+    );
+
+    await accountsService.deleteAccount(context.householdContext, account.id);
+
+    const rows = await db
+      .select()
+      .from(cashAccountProfilesTable)
+      .where(eq(cashAccountProfilesTable.accountId, account.id));
+    expect(rows).toHaveLength(0);
   });
 });

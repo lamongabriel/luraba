@@ -152,6 +152,29 @@ describe('categories service', () => {
       categoriesService.deleteCategory(context.householdContext, category.id),
     ).rejects.toThrow(NotFoundError);
   });
+
+  it('detaches children when their parent is deleted', async () => {
+    const context = await createAuthenticatedContext();
+    const parent = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Parent To Delete', type: 'expense' }),
+    );
+    const child = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Surviving Child', type: 'expense', parentId: parent.id }),
+    );
+
+    await categoriesService.deleteCategory(context.householdContext, parent.id);
+
+    const categories = await categoriesService.listCategories(
+      context.householdContext,
+      ListCategoriesRequestQuerySchema.parse({}),
+    );
+
+    const survivor = categories.data.find((category) => category.id === child.id);
+    expect(survivor).toBeDefined();
+    expect(survivor?.parentId).toBeNull();
+  });
 });
 
 describe('categories DB list filters', () => {

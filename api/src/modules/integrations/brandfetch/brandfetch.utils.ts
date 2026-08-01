@@ -1,21 +1,11 @@
 import { BRANDFETCH_CDN_URL, BRANDFETCH_VALIDATION_DOMAIN } from '@/config/integrations';
 import { DependencyUnavailableError, ValidationError } from '@/shared/errors';
-import { tryParseUrl } from '@/shared/lib/utils';
+import { INSTITUTION_DOMAIN_ERROR, normalizeDomain } from '@/shared/validation/domain';
 
 export function normalizeBrandDomain(value: string): string {
-  const normalizedValue = value.trim().toLowerCase();
-  const parsed = tryParseUrl(normalizedValue);
+  const domain = normalizeDomain(value);
 
-  const hostname = parsed?.hostname ?? normalizedValue.split('/')[0] ?? '';
-  const domain = hostname.replace(/^www\./u, '').replace(/\.$/u, '');
-
-  if (!domain || domain.includes(' ')) {
-    throw new ValidationError('domain: must be a valid domain');
-  }
-
-  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/u.test(domain)) {
-    throw new ValidationError('domain: must be a valid domain');
-  }
+  if (!domain) throw new ValidationError(INSTITUTION_DOMAIN_ERROR);
 
   return domain;
 }

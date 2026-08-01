@@ -1,0 +1,36 @@
+meta {
+  name: create property account
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/accounts
+  body: json
+}
+
+headers {
+  Cookie: {{authCookie}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Primary Home",
+    "type": "property",
+    "currencyCode": "{{currencyCode}}",
+    "openingBalance": 85000000,
+    "details": {
+      "kind": "property",
+      "subtype": "house",
+      "addressLine1": "100 Main Street",
+      "city": "Sao Paulo",
+      "region": "SP",
+      "postalCode": "01000-000",
+      "countryCode": "BR",
+      "area": 145.5,
+      "areaUnit": "sqm",
+      "yearBuilt": 2018
+    }
+  }
+}

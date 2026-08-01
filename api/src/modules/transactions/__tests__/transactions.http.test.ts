@@ -31,7 +31,7 @@ describe('transactions routes', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Tagged Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -89,7 +89,7 @@ describe('transactions routes', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Main Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -206,7 +206,7 @@ describe('transactions routes', () => {
 
     const account = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
@@ -214,7 +214,7 @@ describe('transactions routes', () => {
     );
     const otherAccount = await accountsService.createAccount(
       otherContext.householdContext,
-      buildAccountInput({ name: 'Other Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'Other Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     const otherCategory = await categoriesService.createCategory(
       otherContext.householdContext,
@@ -268,7 +268,7 @@ describe('transactions routes', () => {
     const context = await createAuthenticatedContext();
     const account = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'HTTP Query Account', type: 'depository' }),
+      buildAccountInput({ name: 'HTTP Query Account', type: 'cash' }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
@@ -325,7 +325,7 @@ describe('transactions routes', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -412,7 +412,7 @@ describe('transactions routes', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -442,7 +442,7 @@ describe('transactions routes', () => {
       context.householdContext,
       buildAccountInput({
         name: 'USD Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'USD',
       }),
     );
@@ -450,7 +450,7 @@ describe('transactions routes', () => {
       context.householdContext,
       buildAccountInput({
         name: 'BRL Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -488,7 +488,7 @@ describe('transactions routes', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -496,7 +496,7 @@ describe('transactions routes', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Savings',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -526,7 +526,7 @@ describe('transactions routes', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -590,7 +590,7 @@ describe('transactions routes', () => {
       owner.householdContext,
       buildAccountInput({
         name: 'Protected Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -634,7 +634,7 @@ describe('transactions routes', () => {
       context.householdContext,
       buildAccountInput({
         name: 'Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );
@@ -684,7 +684,7 @@ describe('transactions routes', () => {
       owner.householdContext,
       buildAccountInput({
         name: 'Delete Protected Checking',
-        type: 'depository',
+        type: 'cash',
         currencyCode: 'BRL',
       }),
     );

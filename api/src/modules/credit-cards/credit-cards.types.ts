@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { creditCardCycleStatusSchema } from '@/shared/validation/credit-cards';
+import { institutionDomainInputSchema } from '@/shared/validation/domain';
 import { moneyAmountSchema } from '@/shared/validation/money';
 import { currencySchema } from '@/shared/validation/preferences';
 import { creditCardCycleDisplayStatusSchema } from './credit-card-cycles.types';
@@ -56,6 +57,7 @@ export const creditCardSchema = z.object({
   type: z.literal('credit_card'),
   currencyCode: currencySchema,
   brand: z.string(),
+  productType: z.literal('credit'),
   last4: z.string(),
   color: z.string().nullable(),
   closingDay: z.number().int(),
@@ -132,10 +134,11 @@ export const ListCreditCardsResponseSchema = z.array(creditCardSchema);
 export const CreateCreditCardRequestBodySchema = z.object({
   name: z.string().min(1).max(255),
   institutionName: z.string().min(1).max(255).optional(),
-  institutionDomain: z.string().min(1).max(255).optional(),
+  institutionDomain: institutionDomainInputSchema.optional(),
   notes: z.string().max(4000).optional(),
   currencyCode: currencySchema,
   brand: z.string().min(1).max(64),
+  productType: z.literal('credit').optional(),
   last4: z.string().regex(/^\d{4}$/, 'Last 4 digits must be exactly 4 numeric characters'),
   color: z.string().min(1).max(32).optional(),
   closingDay: dayOfMonthSchema,
@@ -158,9 +161,10 @@ export const UpdateCreditCardRequestParamsSchema = z.object({
 export const UpdateCreditCardRequestBodySchema = z.object({
   name: z.string().min(1).max(255).optional(),
   institutionName: z.string().min(1).max(255).nullable().optional(),
-  institutionDomain: z.string().min(1).max(255).nullable().optional(),
+  institutionDomain: institutionDomainInputSchema.nullable().optional(),
   notes: z.string().max(4000).nullable().optional(),
   brand: z.string().min(1).max(64).optional(),
+  productType: z.literal('credit').optional(),
   last4: z
     .string()
     .regex(/^\d{4}$/)

@@ -18,7 +18,20 @@ body:json {
   {
     "name": "Primary Loan",
     "type": "loan",
-    "currencyCode": "{{currencyCode}}"
+    "currencyCode": "{{currencyCode}}",
+    "openingBalance": 3500000,
+    "details": {
+      "kind": "loan",
+      "subtype": "personal",
+      "originalPrincipal": 3500000,
+      "annualInterestRate": 9.7500,
+      "interestRateType": "fixed",
+      "termMonths": 36,
+      "startDate": "2025-01-01",
+      "maturityDate": "2027-12-31",
+      "paymentAmount": 112500,
+      "paymentFrequency": "monthly"
+    }
   }
 }
 

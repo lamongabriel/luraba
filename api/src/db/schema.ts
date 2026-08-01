@@ -1,3 +1,4 @@
+export * from './schemas/account-profiles.schema';
 export * from './schemas/accounts.schema';
 export * from './schemas/auth-accounts.schema';
 export { authAccountsTable as authAccounts } from './schemas/auth-accounts.schema';

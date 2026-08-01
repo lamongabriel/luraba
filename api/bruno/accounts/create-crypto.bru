@@ -1,0 +1,29 @@
+meta {
+  name: create crypto account
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/accounts
+  body: json
+}
+
+headers {
+  Cookie: {{authCookie}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Ethereum Wallet",
+    "type": "crypto",
+    "currencyCode": "{{currencyCode}}",
+    "details": {
+      "kind": "crypto",
+      "subtype": "wallet",
+      "network": "Ethereum",
+      "walletAddress": "0x1234567890abcdef"
+    }
+  }
+}

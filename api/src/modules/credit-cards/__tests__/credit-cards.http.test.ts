@@ -236,11 +236,11 @@ describe('credit cards routes', () => {
     );
     const sourceAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'HTTP Checking A', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'HTTP Checking A', type: 'cash', currencyCode: 'BRL' }),
     );
     const secondSourceAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'HTTP Checking B', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'HTTP Checking B', type: 'cash', currencyCode: 'BRL' }),
     );
     await createBalanceEntryForAccount({
       householdId: context.household.id,
@@ -337,7 +337,7 @@ describe('credit cards routes', () => {
     );
     const sourceAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'HTTP Checking', type: 'depository', currencyCode: 'BRL' }),
+      buildAccountInput({ name: 'HTTP Checking', type: 'cash', currencyCode: 'BRL' }),
     );
     await createBalanceEntryForAccount({
       householdId: context.household.id,
@@ -443,7 +443,7 @@ describe('credit cards routes', () => {
     );
     const source = await accountsService.createAccount(
       owner.householdContext,
-      buildAccountInput({ name: 'Isolated Card Source', type: 'depository' }),
+      buildAccountInput({ name: 'Isolated Card Source', type: 'cash' }),
     );
     await createBalanceEntryForAccount({
       householdId: owner.household.id,

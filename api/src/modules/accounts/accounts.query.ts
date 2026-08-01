@@ -14,7 +14,11 @@ import {
   temporalQuerySchema,
   validateRange,
 } from '@/shared/list';
-import { accountClassificationSchema, accountTypeSchema } from '@/shared/validation/accounts';
+import {
+  accountClassificationSchema,
+  accountSubtypeSchema,
+  accountTypeSchema,
+} from '@/shared/validation/accounts';
 import { currencySchema } from '@/shared/validation/preferences';
 
 export {
@@ -25,6 +29,7 @@ export {
 export const ListAccountsRequestQuerySchema = createListQuerySchema(
   {
     types: commaSeparatedArraySchema(accountTypeSchema),
+    subtypes: commaSeparatedArraySchema(accountSubtypeSchema),
     classifications: commaSeparatedArraySchema(accountClassificationSchema),
     currencyCodes: commaSeparatedArraySchema(currencySchema),
     balanceMin: z.coerce.number().int().optional(),
@@ -39,6 +44,7 @@ export const ListAccountsRequestQuerySchema = createListQuerySchema(
     'name',
     'institutionName',
     'type',
+    'subtype',
     'classification',
     'currencyCode',
     'balance',
@@ -57,6 +63,8 @@ export function buildAccountsListWhere(
   householdId: string,
   query: ListAccountsRequestQuery,
   displayedBalance: SQL,
+  profileSubtype: SQL,
+  profileSearchText: SQL,
 ): SQL {
   return combineConditions(
     eq(accountsTable.householdId, householdId),
@@ -67,8 +75,10 @@ export function buildAccountsListWhere(
       sql`${accountsTable.type}`,
       sql`${accountsTable.classification}`,
       sql`${accountsTable.currencyId}`,
+      profileSearchText,
     ]),
     inArrayIfAny(accountsTable.type, query.types),
+    inArrayIfAny(profileSubtype, query.subtypes),
     inArrayIfAny(accountsTable.classification, query.classifications),
     inArrayIfAny(accountsTable.currencyId, query.currencyCodes),
     nullabilityCondition(accountsTable.institutionName, query.hasInstitution),
@@ -81,6 +91,7 @@ export function buildAccountsListWhere(
 export function buildAccountsListOrder(
   query: ListAccountsRequestQuery,
   displayedBalance: SQL,
+  profileSubtype: SQL,
 ): SQL[] {
   return buildOrderBy(
     query,
@@ -91,6 +102,7 @@ export function buildAccountsListOrder(
       currencyCode: sql`${accountsTable.currencyId}`,
       institutionName: sql`${accountsTable.institutionName}`,
       name: sql`${accountsTable.name}`,
+      subtype: profileSubtype,
       type: sql`${accountsTable.type}`,
       updatedAt: sql`${accountsTable.updatedAt}`,
     },

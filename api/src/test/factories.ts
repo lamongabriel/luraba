@@ -91,9 +91,32 @@ export async function setDefaultHousehold(userId: string, householdId: string) {
 export function buildAccountInput(
   overrides: Partial<CreateAccountRequestBody> = {},
 ): CreateAccountRequestBody {
+  const type = overrides.type ?? 'cash';
+  const defaultDetails: CreateAccountRequestBody['details'] = (() => {
+    switch (type) {
+      case 'cash':
+        return { kind: 'cash', subtype: 'other' };
+      case 'investment':
+        return { kind: 'investment', subtype: 'other' };
+      case 'crypto':
+        return { kind: 'crypto', subtype: 'other' };
+      case 'property':
+        return { kind: 'property', subtype: 'other' };
+      case 'vehicle':
+        return { kind: 'vehicle', subtype: 'other' };
+      case 'loan':
+        return { kind: 'loan', subtype: 'other' };
+      case 'other_asset':
+        return { kind: 'other_asset', subtype: 'other' };
+      case 'other_liability':
+        return { kind: 'other_liability', subtype: 'other' };
+    }
+  })();
+
   return {
     name: `Account ${randomSuffix()}`,
-    type: 'depository',
+    type,
+    details: overrides.details ?? defaultDetails,
     currencyCode: 'BRL',
     ...overrides,
   };
