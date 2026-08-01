@@ -1,6 +1,6 @@
 {
   "name": "luraba-ui",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Luraba web app",
   "type": "module",
   "private": true,
