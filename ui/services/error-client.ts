@@ -2,7 +2,12 @@
 
 import axios from "axios"
 
-import type { ApiError, ApiFailureResponse, ApiResponse } from "@/interfaces/api"
+import type {
+  ApiError,
+  ApiFailureResponse,
+  ApiResponse,
+  ListResponse,
+} from "@/interfaces/api"
 
 export class AppClientError extends Error {
   constructor(
@@ -29,9 +34,7 @@ function isApiErrorPayload(value: unknown): value is ApiError {
 
 function isApiFailureResponse(value: unknown): value is ApiFailureResponse {
   return (
-    isRecord(value) &&
-    value.success === false &&
-    isApiErrorPayload(value.error)
+    isRecord(value) && value.success === false && isApiErrorPayload(value.error)
   )
 }
 
@@ -56,7 +59,11 @@ function extractErrorMessage(value: unknown): string | null {
     return value
   }
 
-  if (isRecord(value) && typeof value.message === "string" && value.message.trim()) {
+  if (
+    isRecord(value) &&
+    typeof value.message === "string" &&
+    value.message.trim()
+  ) {
     return value.message
   }
 
@@ -76,7 +83,11 @@ export function toAppClientError(error: unknown) {
       return new AppClientError(payload.message, status, payload.code)
     }
 
-    return new AppClientError(error.message || "Request failed", status, "REQUEST_FAILED")
+    return new AppClientError(
+      error.message || "Request failed",
+      status,
+      "REQUEST_FAILED",
+    )
   }
 
   if (error instanceof Error) {
@@ -104,7 +115,11 @@ export function toAppClientError(error: unknown) {
     return new AppClientError(message, 500, "UNKNOWN_ERROR")
   }
 
-  return new AppClientError("An unexpected error occurred", 500, "UNKNOWN_ERROR")
+  return new AppClientError(
+    "An unexpected error occurred",
+    500,
+    "UNKNOWN_ERROR",
+  )
 }
 
 export function getAppErrorDetails(error: unknown, fallbackMessage: string) {
@@ -126,4 +141,30 @@ export function getApiResponseData<TData>(response: ApiResponse<TData>) {
   }
 
   return response.data
+}
+
+export function getApiListResponse<TData, TSummary = never>(
+  response: ApiResponse<TData[]>,
+): ListResponse<TData, TSummary> {
+  if (!response.success) {
+    throw new AppClientError(response.error.message, 500, response.error.code)
+  }
+
+  if (!response.meta?.pagination) {
+    throw new AppClientError(
+      "The API returned a list without pagination metadata",
+      500,
+      "INVALID_LIST_RESPONSE",
+    )
+  }
+
+  return {
+    data: response.data,
+    meta: {
+      pagination: response.meta.pagination,
+      ...(response.meta.summary === undefined
+        ? {}
+        : { summary: response.meta.summary as TSummary }),
+    },
+  }
 }

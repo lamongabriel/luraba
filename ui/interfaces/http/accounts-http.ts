@@ -1,6 +1,47 @@
-import type { Account, AccountDetails, AccountType } from "@/interfaces/account"
+import type {
+  Account,
+  AccountClassification,
+  AccountDetails,
+  AccountType,
+} from "@/interfaces/account"
+import type { BaseListHttpQuery, ListResponse } from "@/interfaces/api"
+import type {
+  TransactionFeedRow,
+  TransactionListFilters,
+} from "@/interfaces/transaction"
 
-export type ListAccountsHttpResponse = AccountDetails[]
+export type AccountSortField =
+  | "name"
+  | "institutionName"
+  | "type"
+  | "classification"
+  | "currencyCode"
+  | "balance"
+  | "createdAt"
+  | "updatedAt"
+
+export interface ListAccountsHttpQuery
+  extends BaseListHttpQuery<AccountSortField> {
+  types?: AccountType[]
+  classifications?: AccountClassification[]
+  currencyCodes?: string[]
+  balanceMin?: number
+  balanceMax?: number
+  hasInstitution?: boolean
+  createdAtFrom?: string
+  createdAtTo?: string
+  updatedAtFrom?: string
+  updatedAtTo?: string
+}
+
+export type ListAccountsHttpResponse = ListResponse<AccountDetails>
+export type GetAccountHttpResponse = AccountDetails
+export type ListAccountTransactionsHttpQuery = Omit<
+  TransactionListFilters,
+  "accountIds" | "creditCardIds"
+>
+export type ListAccountTransactionsHttpResponse =
+  ListResponse<TransactionFeedRow>
 
 export interface CreateAccountHttpBody {
   currencyCode: string
@@ -12,3 +53,12 @@ export interface CreateAccountHttpBody {
 }
 
 export type CreateAccountHttpResponse = Account
+
+export interface UpdateAccountHttpBody {
+  name?: string
+  institutionName?: string | null
+  institutionDomain?: string | null
+  notes?: string | null
+}
+
+export type UpdateAccountHttpResponse = Account

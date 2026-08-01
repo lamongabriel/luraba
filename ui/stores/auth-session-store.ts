@@ -8,27 +8,11 @@ import type { HouseholdContext, HouseholdSummary } from "@/interfaces/household"
 import type { User } from "@/interfaces/user"
 import { readStorage, removeStorage, writeStorage } from "@/lib/local-storage"
 
-export type AuthBootstrapStatus = "idle" | "loading" | "authenticated" | "anonymous"
-
-function resolveActiveHouseholdId(
-  session: AuthSession,
-  households: HouseholdSummary[],
-) {
-  const storedHouseholdId = readStorage(STORAGE_KEYS.activeHouseholdId)
-
-  if (storedHouseholdId && households.some((household) => household.id === storedHouseholdId)) {
-    return storedHouseholdId
-  }
-
-  if (
-    session.user.defaultHouseholdId &&
-    households.some((household) => household.id === session.user.defaultHouseholdId)
-  ) {
-    return session.user.defaultHouseholdId
-  }
-
-  return session.household.id
-}
+export type AuthBootstrapStatus =
+  | "idle"
+  | "loading"
+  | "authenticated"
+  | "anonymous"
 
 type AuthSessionState = {
   activeHouseholdId: string
@@ -50,7 +34,6 @@ export const useAuthSessionStore = create<AuthSessionState>((set) => ({
   user: null,
   clear: () => {
     removeStorage(STORAGE_KEYS.activeHouseholdId)
-
     set({
       activeHouseholdId: "",
       bootstrapStatus: "anonymous",
@@ -60,9 +43,22 @@ export const useAuthSessionStore = create<AuthSessionState>((set) => ({
     })
   },
   hydrate: (session, households) => {
-    const activeHouseholdId = resolveActiveHouseholdId(session, households)
+    const storedHouseholdId = readStorage(STORAGE_KEYS.activeHouseholdId)
+    const activeHouseholdId =
+      (storedHouseholdId &&
+      households.some(({ id }) => id === storedHouseholdId)
+        ? storedHouseholdId
+        : "") ||
+      (session.user.defaultHouseholdId &&
+      households.some(({ id }) => id === session.user.defaultHouseholdId)
+        ? session.user.defaultHouseholdId
+        : "") ||
+      session.household?.id ||
+      households[0]?.id ||
+      ""
 
-    writeStorage(STORAGE_KEYS.activeHouseholdId, activeHouseholdId)
+    if (activeHouseholdId)
+      writeStorage(STORAGE_KEYS.activeHouseholdId, activeHouseholdId)
 
     set({
       activeHouseholdId,
@@ -72,12 +68,9 @@ export const useAuthSessionStore = create<AuthSessionState>((set) => ({
       user: session.user,
     })
   },
-  setActiveHouseholdId: (householdId) => {
-    writeStorage(STORAGE_KEYS.activeHouseholdId, householdId)
-
-    set({
-      activeHouseholdId: householdId,
-    })
+  setActiveHouseholdId: (activeHouseholdId) => {
+    writeStorage(STORAGE_KEYS.activeHouseholdId, activeHouseholdId)
+    set({ activeHouseholdId })
   },
   setBootstrapStatus: (bootstrapStatus) => set({ bootstrapStatus }),
 }))

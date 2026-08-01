@@ -1,40 +1,65 @@
 "use client"
 
-import {
-  queryOptions,
-  useQuery,
-} from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 
-import { listHouseholds, probeHouseholds } from "@/services/households.service"
+import type {
+  ListHouseholdMembersHttpQuery,
+  ListHouseholdMembersHttpResponse,
+  ListHouseholdsHttpQuery,
+  ListHouseholdsHttpResponse,
+} from "@/interfaces/http/households-http"
+import type { AppQueryOptions } from "@/queries/query-options"
+import {
+  listHouseholdMembers,
+  listHouseholds,
+  probeHouseholds,
+} from "@/services/households.service"
 
 export const householdQueryKeys = {
-  list: ["households"] as const,
+  all: ["households"] as const,
+  lists: () => [...householdQueryKeys.all, "list"] as const,
+  list: (query: ListHouseholdsHttpQuery = {}) =>
+    [...householdQueryKeys.lists(), query] as const,
+  probe: (query: ListHouseholdsHttpQuery = {}) =>
+    [...householdQueryKeys.list(query), "probe"] as const,
+  members: (householdId: string, query: ListHouseholdMembersHttpQuery = {}) =>
+    [...householdQueryKeys.all, householdId, "members", query] as const,
 }
 
-export function getHouseholdsQueryOptions() {
-  return queryOptions({
-    queryKey: householdQueryKeys.list,
-    queryFn: () => listHouseholds(),
-  })
-}
-
-export function getProbeHouseholdsQueryOptions() {
-  return queryOptions({
-    queryKey: [...householdQueryKeys.list, "probe"] as const,
-    queryFn: () => probeHouseholds(),
-  })
-}
-
-export function useHouseholdsQuery(enabled = true) {
+export function useHouseholdsQuery<TData = ListHouseholdsHttpResponse>(
+  query: ListHouseholdsHttpQuery = {},
+  options?: AppQueryOptions<ListHouseholdsHttpResponse, TData>,
+) {
   return useQuery({
-    ...getHouseholdsQueryOptions(),
-    enabled,
+    queryKey: householdQueryKeys.list(query),
+    queryFn: () => listHouseholds(query),
+    ...options,
   })
 }
 
-export function useProbeHouseholdsQuery(enabled = true) {
+export function useProbeHouseholdsQuery<TData = ListHouseholdsHttpResponse>(
+  query: ListHouseholdsHttpQuery = {},
+  options?: AppQueryOptions<ListHouseholdsHttpResponse, TData>,
+) {
   return useQuery({
-    ...getProbeHouseholdsQueryOptions(),
-    enabled,
+    queryKey: householdQueryKeys.probe(query),
+    queryFn: () => probeHouseholds(query),
+    ...options,
+  })
+}
+
+export function useHouseholdMembersQuery<
+  TData = ListHouseholdMembersHttpResponse,
+>(
+  householdId: string,
+  query: ListHouseholdMembersHttpQuery = {},
+  options?: AppQueryOptions<ListHouseholdMembersHttpResponse, TData>,
+) {
+  return useQuery({
+    queryKey: householdQueryKeys.members(householdId, query),
+    queryFn: () => listHouseholdMembers(householdId, query),
+    placeholderData: (previousData) => previousData,
+    ...options,
+    enabled: Boolean(householdId) && (options?.enabled ?? true),
   })
 }

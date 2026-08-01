@@ -1,26 +1,47 @@
 "use client"
 
-import {
-  queryOptions,
-  useQuery,
-} from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 
-import { listCurrencies } from "@/services/currencies.service"
+import type {
+  GetCurrencyRateHttpQuery,
+  GetCurrencyRateHttpResponse,
+  ListCurrenciesHttpQuery,
+  ListCurrenciesHttpResponse,
+} from "@/interfaces/http/currencies-http"
+import type { AppQueryOptions } from "@/queries/query-options"
+import { getCurrencyRate, listCurrencies } from "@/services/currencies.service"
 
 export const currencyQueryKeys = {
-  list: ["currencies"] as const,
+  all: ["currencies"] as const,
+  lists: () => [...currencyQueryKeys.all, "list"] as const,
+  list: (query: ListCurrenciesHttpQuery = {}) =>
+    [...currencyQueryKeys.lists(), query] as const,
+  rates: () => [...currencyQueryKeys.all, "rate"] as const,
+  rate: (query: GetCurrencyRateHttpQuery) =>
+    [...currencyQueryKeys.rates(), query] as const,
 }
 
-export function getCurrenciesQueryOptions() {
-  return queryOptions({
-    queryKey: currencyQueryKeys.list,
-    queryFn: () => listCurrencies(),
+export function useCurrenciesQuery<TData = ListCurrenciesHttpResponse>(
+  query: ListCurrenciesHttpQuery = {},
+  options?: AppQueryOptions<ListCurrenciesHttpResponse, TData>,
+) {
+  return useQuery({
+    queryKey: currencyQueryKeys.list(query),
+    queryFn: () => listCurrencies(query),
+    ...options,
   })
 }
 
-export function useCurrenciesQuery(enabled = true) {
+export function useCurrencyRateQuery<TData = GetCurrencyRateHttpResponse>(
+  query: GetCurrencyRateHttpQuery,
+  options?: AppQueryOptions<GetCurrencyRateHttpResponse, TData>,
+) {
   return useQuery({
-    ...getCurrenciesQueryOptions(),
-    enabled,
+    queryKey: currencyQueryKeys.rate(query),
+    queryFn: () => getCurrencyRate(query),
+    ...options,
+    enabled:
+      Boolean(query.fromCurrencyCode && query.toCurrencyCode) &&
+      (options?.enabled ?? true),
   })
 }

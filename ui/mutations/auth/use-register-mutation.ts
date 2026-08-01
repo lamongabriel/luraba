@@ -1,11 +1,11 @@
 "use client"
 
-import type { SignUpEmailHttpBody } from "@/interfaces/http/auth-http"
 import { lurabaAuthApiClient } from "@/api/luraba-auth-api"
+import type { SignUpEmailHttpBody } from "@/interfaces/http/auth-http"
 import {
   createAppMutationDefinition,
-  useAppMutation,
   type UseAppMutationOptions,
+  useAppMutation,
 } from "@/mutations/app-mutation"
 
 export const registerMutationDefinition = createAppMutationDefinition<

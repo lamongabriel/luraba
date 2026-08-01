@@ -3,7 +3,7 @@ import type { User } from "@/interfaces/user"
 
 export interface AuthSession {
   user: User
-  household: HouseholdContext
+  household: HouseholdContext | null
 }
 
 export interface AuthProviders {

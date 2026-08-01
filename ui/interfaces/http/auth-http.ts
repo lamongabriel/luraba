@@ -1,4 +1,5 @@
 import type { AuthProviders, AuthSession } from "@/interfaces/auth"
+import type { UserPreferences } from "@/interfaces/user"
 
 export interface SignInEmailHttpBody {
   email: string
@@ -19,3 +20,6 @@ export interface SignInSocialHttpBody {
 export type GetCurrentUserHttpResponse = AuthSession
 
 export type GetAuthProvidersHttpResponse = AuthProviders
+export type GetUserPreferencesHttpResponse = UserPreferences
+export type UpdateUserPreferencesHttpBody = Partial<UserPreferences>
+export type UpdateUserPreferencesHttpResponse = UserPreferences

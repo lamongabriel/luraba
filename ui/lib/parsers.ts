@@ -1,12 +1,12 @@
-import { createParser } from "nuqs/server";
-import { z } from "zod";
+import { createParser } from "nuqs/server"
+import { z } from "zod"
 
-import type { ExtendedColumnSort } from "@/types/data-table";
+import type { ExtendedColumnSort } from "@/types/data-table"
 
 const sortingItemSchema = z.object({
   id: z.string(),
   desc: z.boolean(),
-});
+})
 
 export const getSortingStateParser = <TData>(
   columnIds?: string[] | Set<string>,
@@ -15,23 +15,23 @@ export const getSortingStateParser = <TData>(
     ? columnIds instanceof Set
       ? columnIds
       : new Set(columnIds)
-    : null;
+    : null
 
   return createParser({
     parse: (value) => {
       try {
-        const parsed = JSON.parse(value);
-        const result = z.array(sortingItemSchema).safeParse(parsed);
+        const parsed = JSON.parse(value)
+        const result = z.array(sortingItemSchema).safeParse(parsed)
 
-        if (!result.success) return null;
+        if (!result.success) return null
 
         if (validKeys && result.data.some((item) => !validKeys.has(item.id))) {
-          return null;
+          return null
         }
 
-        return result.data as ExtendedColumnSort<TData>[];
+        return result.data as ExtendedColumnSort<TData>[]
       } catch {
-        return null;
+        return null
       }
     },
     serialize: (value) => JSON.stringify(value),
@@ -41,5 +41,5 @@ export const getSortingStateParser = <TData>(
         (item, index) =>
           item.id === b[index]?.id && item.desc === b[index]?.desc,
       ),
-  });
-};
+  })
+}

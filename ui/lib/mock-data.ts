@@ -77,7 +77,8 @@ export const showcaseHouseholds: HouseholdSummary[] = [
   {
     id: "4e0b9cc7-8161-4726-a724-e4e0e185b90c",
     name: "Gabriel's Household",
-    description: "Primary family finances, monthly planning, and long-term net worth tracking.",
+    description:
+      "Primary family finances, monthly planning, and long-term net worth tracking.",
     defaultCurrencyId: "BRL",
     countryCode: "BR",
     timezone: "America/Sao_Paulo",
@@ -92,13 +93,14 @@ export const showcaseHouseholds: HouseholdSummary[] = [
   {
     id: "b3e7f32b-6b91-4a84-bb26-0a95a1fd1d11",
     name: "Studio Ops",
-    description: "Shared operating workspace for retainers, subscriptions, and contractor expenses.",
+    description:
+      "Shared operating workspace for retainers, subscriptions, and contractor expenses.",
     defaultCurrencyId: "USD",
     countryCode: "US",
     timezone: "America/New_York",
     budgetMonthStartsOn: 1,
-    creditExpenseTiming: "due_month",
-    creditInstallmentBudgetMode: "full_purchase_month",
+    creditExpenseTiming: "payment_month",
+    creditInstallmentBudgetMode: "full_amount",
     role: "admin",
     createdByUserId: "fb4ca378-4258-4ff2-84c1-8b7de75e91b0",
     createdAt: "2026-06-08T14:20:00.000Z",
@@ -107,7 +109,8 @@ export const showcaseHouseholds: HouseholdSummary[] = [
   {
     id: "0dd2dc36-154f-42ed-8795-91725d1a58f1",
     name: "Travel Planning",
-    description: "A dedicated household for flights, bookings, split costs, and seasonal trip budgets.",
+    description:
+      "A dedicated household for flights, bookings, split costs, and seasonal trip budgets.",
     defaultCurrencyId: "EUR",
     countryCode: "PT",
     timezone: "Europe/Lisbon",
@@ -127,7 +130,7 @@ export const showcaseUser = {
   role: "Founder and design lead",
   currencyCode: "BRL",
   language: "en",
-} as const;
+} as const
 
 export const netWorthHistory = [
   { month: "2025-07", amount: 3421180 },
@@ -142,7 +145,7 @@ export const netWorthHistory = [
   { month: "2026-04", amount: 4129080 },
   { month: "2026-05", amount: 4237710 },
   { month: "2026-06", amount: 4312840 },
-] as const;
+] as const
 
 export const dashboardMetrics = [
   {
@@ -169,14 +172,14 @@ export const dashboardMetrics = [
     hint: "At the current pace",
     accent: "neutral" as const,
   },
-];
+]
 
 export const dashboardAllocation = [
   { label: "Cash", value: 1264430, color: "#14b8a6" },
   { label: "Investments", value: 2148160, color: "#38bdf8" },
   { label: "Credit", value: 421900, color: "#f97316" },
   { label: "Loans", value: 478250, color: "#a855f7" },
-];
+]
 
 export const budgetSnapshot = {
   month: "2026-06",
@@ -214,7 +217,7 @@ export const budgetSnapshot = {
       tone: "positive" as const,
     },
   ],
-};
+}
 
 export const showcaseCreditCards = [
   {
@@ -245,7 +248,7 @@ export const showcaseCreditCards = [
     statementStatus: "Due in 5 days",
     accent: "negative" as const,
   },
-];
+]
 
 export const recentTransactions = [
   {
@@ -292,7 +295,7 @@ export const recentTransactions = [
     tone: "neutral" as const,
     detail: "Checking to emergency fund",
   },
-];
+]
 
 export const accountDirectory = [
   {
@@ -355,7 +358,7 @@ export const accountDirectory = [
     change: "-1.4%",
     note: "Apartment financing with fixed monthly amortization.",
   },
-];
+]
 
 export const accountDetailSnapshots = {
   "xp-checking": {
@@ -368,9 +371,24 @@ export const accountDetailSnapshots = {
       { label: "Average inflow", amount: 312550 },
     ],
     activity: [
-      { label: "Client retainer", date: "Jun 14", amount: 650000, tone: "positive" as const },
-      { label: "Workspace rent", date: "Jun 11", amount: -72500, tone: "negative" as const },
-      { label: "Cash sweep", date: "Jun 10", amount: -95000, tone: "neutral" as const },
+      {
+        label: "Client retainer",
+        date: "Jun 14",
+        amount: 650000,
+        tone: "positive" as const,
+      },
+      {
+        label: "Workspace rent",
+        date: "Jun 11",
+        amount: -72500,
+        tone: "negative" as const,
+      },
+      {
+        label: "Cash sweep",
+        date: "Jun 10",
+        amount: -95000,
+        tone: "neutral" as const,
+      },
     ],
   },
   "inter-reserve": {
@@ -383,9 +401,24 @@ export const accountDetailSnapshots = {
       { label: "Last interest credit", amount: 3820 },
     ],
     activity: [
-      { label: "Transfer from XP", date: "Jun 10", amount: 95000, tone: "positive" as const },
-      { label: "Interest credit", date: "Jun 01", amount: 3820, tone: "positive" as const },
-      { label: "Insurance debit", date: "May 29", amount: -12450, tone: "negative" as const },
+      {
+        label: "Transfer from XP",
+        date: "Jun 10",
+        amount: 95000,
+        tone: "positive" as const,
+      },
+      {
+        label: "Interest credit",
+        date: "Jun 01",
+        amount: 3820,
+        tone: "positive" as const,
+      },
+      {
+        label: "Insurance debit",
+        date: "May 29",
+        amount: -12450,
+        tone: "negative" as const,
+      },
     ],
   },
   "wealth-pool": {
@@ -398,12 +431,27 @@ export const accountDetailSnapshots = {
       { label: "Dividend cash", amount: 18410 },
     ],
     activity: [
-      { label: "ETF allocation", date: "Jun 08", amount: 120000, tone: "positive" as const },
-      { label: "Bond maturity", date: "Jun 02", amount: 38400, tone: "positive" as const },
-      { label: "Management fee", date: "May 30", amount: -4120, tone: "negative" as const },
+      {
+        label: "ETF allocation",
+        date: "Jun 08",
+        amount: 120000,
+        tone: "positive" as const,
+      },
+      {
+        label: "Bond maturity",
+        date: "Jun 02",
+        amount: 38400,
+        tone: "positive" as const,
+      },
+      {
+        label: "Management fee",
+        date: "May 30",
+        amount: -4120,
+        tone: "negative" as const,
+      },
     ],
   },
-} as const;
+} as const
 
 export const transactionFeed = [
   {
@@ -472,22 +520,31 @@ export const transactionFeed = [
     tone: "positive" as const,
     date: "2026-06-02",
   },
-];
+]
 
 export const categoryGroups = {
   income: [
-    { name: "Client retainers", detail: "Monthly cashflow from recurring design partnerships." },
+    {
+      name: "Client retainers",
+      detail: "Monthly cashflow from recurring design partnerships.",
+    },
     { name: "Consulting", detail: "Short advisory sprints and workshops." },
-    { name: "Investment income", detail: "Dividends, coupons, and yield from idle cash." },
+    {
+      name: "Investment income",
+      detail: "Dividends, coupons, and yield from idle cash.",
+    },
   ],
   expense: [
     { name: "Living", detail: "Housing, groceries, and local transportation." },
     { name: "Studio", detail: "Tools, software, space, and contractor costs." },
     { name: "Travel", detail: "Flights, stays, and conference movement." },
     { name: "Health", detail: "Insurance, appointments, and wellbeing." },
-    { name: "Experiments", detail: "Courses, prototypes, and side-project materials." },
+    {
+      name: "Experiments",
+      detail: "Courses, prototypes, and side-project materials.",
+    },
   ],
-};
+}
 
 export const reportHighlights = [
   {
@@ -505,12 +562,13 @@ export const reportHighlights = [
     value: "21%",
     hint: "Across both active cards",
   },
-];
+]
 
 export const settingsShowcase = [
   {
     title: "Regional defaults",
-    description: "Preferred language, locale, and money formatting for every surface.",
+    description:
+      "Preferred language, locale, and money formatting for every surface.",
     items: [
       { label: "Language", value: "English" },
       { label: "Currency", value: "Brazilian Real" },
@@ -520,7 +578,8 @@ export const settingsShowcase = [
   },
   {
     title: "Budget behavior",
-    description: "A preview of how monthly planning can be explained without any live form plumbing.",
+    description:
+      "A preview of how monthly planning can be explained without any live form plumbing.",
     items: [
       { label: "Budget starts", value: "1st of each month" },
       { label: "Credit expense timing", value: "Spend month" },
@@ -530,7 +589,8 @@ export const settingsShowcase = [
   },
   {
     title: "Display preferences",
-    description: "Static settings cards are enough for layout and hierarchy design work.",
+    description:
+      "Static settings cards are enough for layout and hierarchy design work.",
     items: [
       { label: "Theme", value: "System default" },
       { label: "Account ordering", value: "Name (A-Z)" },
@@ -538,4 +598,4 @@ export const settingsShowcase = [
       { label: "Compact motion", value: "Balanced" },
     ],
   },
-];
+]

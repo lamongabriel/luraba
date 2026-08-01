@@ -1,22 +1,22 @@
-import { format as formatWithDateFns, isValid, parseISO } from "date-fns";
-import { enUS, ptBR } from "date-fns/locale";
+import { format as formatWithDateFns, isValid, parseISO } from "date-fns"
+import { enUS, ptBR } from "date-fns/locale"
 
 const DATE_LOCALES = {
   en: enUS,
   "pt-BR": ptBR,
-} as const;
+} as const
 
-type DateLanguage = keyof typeof DATE_LOCALES;
-type DateInput = Date | string | number | undefined;
+type DateLanguage = keyof typeof DATE_LOCALES
+type DateInput = Date | string | number | undefined
 
 interface FormatDateOptions {
-  formatString?: string;
-  language?: DateLanguage;
-  fallback?: string;
+  formatString?: string
+  language?: DateLanguage
+  fallback?: string
 }
 
 export function parseDateValue(value: DateInput) {
-  if (value === undefined || value === null || value === "") return undefined;
+  if (value === undefined || value === null || value === "") return undefined
 
   const date =
     value instanceof Date
@@ -25,9 +25,9 @@ export function parseDateValue(value: DateInput) {
         ? parseISO(
             /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T12:00:00` : value,
           )
-        : new Date(value);
+        : new Date(value)
 
-  return isValid(date) ? date : undefined;
+  return isValid(date) ? date : undefined
 }
 
 export function formatDate(
@@ -38,11 +38,11 @@ export function formatDate(
     fallback = "",
   }: FormatDateOptions = {},
 ) {
-  const parsedDate = parseDateValue(date);
+  const parsedDate = parseDateValue(date)
 
-  if (!parsedDate) return fallback;
+  if (!parsedDate) return fallback
 
   return formatWithDateFns(parsedDate, formatString, {
     locale: DATE_LOCALES[language],
-  });
+  })
 }

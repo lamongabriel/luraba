@@ -1,19 +1,21 @@
 "use client"
 
 import {
-  useMutation,
   type UseMutationOptions,
   type UseMutationResult,
+  useMutation,
 } from "@tanstack/react-query"
 import { toast } from "sonner"
 
 import {
-  AppClientError,
+  type AppClientError,
   getAppErrorDetails,
   toAppClientError,
 } from "@/services/error-client"
 
-type AppMutationTitleResolver<TContext> = string | ((context: TContext) => string)
+type AppMutationTitleResolver<TContext> =
+  | string
+  | ((context: TContext) => string)
 type AppMutationDescriptionResolver<TContext> =
   | string
   | ((context: TContext) => string | undefined)
@@ -40,14 +42,12 @@ export interface AppMutationDefinition<TData, TVariables> {
   errorToast?: AppMutationToastConfig<AppMutationErrorToastContext<TVariables>>
   mutationFn: (variables: TVariables) => Promise<TData>
   mutationKey?: readonly unknown[]
-  successToast?: AppMutationToastConfig<AppMutationSuccessToastContext<TData, TVariables>>
+  successToast?: AppMutationToastConfig<
+    AppMutationSuccessToastContext<TData, TVariables>
+  >
 }
 
-export type UseAppMutationOptions<
-  TData,
-  TVariables,
-  TContext = unknown,
-> = Omit<
+export type UseAppMutationOptions<TData, TVariables, TContext = unknown> = Omit<
   UseMutationOptions<TData, AppClientError, TVariables, TContext>,
   "mutationFn" | "mutationKey"
 > & {
@@ -60,11 +60,14 @@ export type UseAppMutationOptions<
   >
 }
 
-export type AppMutationResult<TData, TVariables, TContext = unknown> =
-  UseMutationResult<TData, AppClientError, TVariables, TContext> & {
-    appError: AppClientError | null
-    errorMessage: string
-  }
+export type AppMutationResult<
+  TData,
+  TVariables,
+  TContext = unknown,
+> = UseMutationResult<TData, AppClientError, TVariables, TContext> & {
+  appError: AppClientError | null
+  errorMessage: string
+}
 
 function resolveToastConfig<TConfig>(
   override: AppMutationToastOverride<TConfig>,
@@ -82,7 +85,10 @@ function resolveToastConfig<TConfig>(
 }
 
 function resolveToastValue<TContext>(
-  value: AppMutationTitleResolver<TContext> | AppMutationDescriptionResolver<TContext> | undefined,
+  value:
+    | AppMutationTitleResolver<TContext>
+    | AppMutationDescriptionResolver<TContext>
+    | undefined,
   context: TContext,
 ) {
   if (typeof value === "function") {
@@ -93,7 +99,9 @@ function resolveToastValue<TContext>(
 }
 
 function showSuccessToast<TData, TVariables>(
-  config: AppMutationToastConfig<AppMutationSuccessToastContext<TData, TVariables>>,
+  config: AppMutationToastConfig<
+    AppMutationSuccessToastContext<TData, TVariables>
+  >,
   context: AppMutationSuccessToastContext<TData, TVariables>,
 ) {
   const title = resolveToastValue(config.title, context)
@@ -112,7 +120,8 @@ function showErrorToast<TVariables>(
   config: AppMutationToastConfig<AppMutationErrorToastContext<TVariables>>,
   context: AppMutationErrorToastContext<TVariables>,
 ) {
-  const title = resolveToastValue(config.title, context) ?? context.appError.message
+  const title =
+    resolveToastValue(config.title, context) ?? context.appError.message
   const description = resolveToastValue(config.description, context)
 
   if (!title && !description) {
@@ -169,7 +178,10 @@ export function useAppMutation<TData, TVariables, TContext = unknown>(
       return onError?.(error, variables, context, mutationContext)
     },
     onSuccess: (data, variables, context, mutationContext) => {
-      const toastConfig = resolveToastConfig(successToast, definition.successToast)
+      const toastConfig = resolveToastConfig(
+        successToast,
+        definition.successToast,
+      )
 
       if (toastConfig) {
         showSuccessToast(toastConfig, {

@@ -1,14 +1,22 @@
 "use client"
 
-import type { ApiResponse } from "@/interfaces/api"
-import type { ListCurrenciesHttpResponse } from "@/interfaces/http/currencies-http"
-import { lurabaApiClient } from "@/api/luraba-api"
-import { getApiResponseData } from "@/services/error-client"
+import type {
+  GetCurrencyRateHttpQuery,
+  GetCurrencyRateHttpResponse,
+  ListCurrenciesHttpQuery,
+  ListCurrenciesHttpResponse,
+} from "@/interfaces/http/currencies-http"
+import { getApiData, getApiList } from "@/services/api-client.service"
+import { serializeHttpQuery } from "@/services/http-query"
 
-export async function listCurrencies(): Promise<ListCurrenciesHttpResponse> {
-  const { data } = await lurabaApiClient.get<ApiResponse<ListCurrenciesHttpResponse>>(
-    "/currencies",
-  )
+export function listCurrencies(
+  query: ListCurrenciesHttpQuery = {},
+): Promise<ListCurrenciesHttpResponse> {
+  return getApiList("/currencies", { params: serializeHttpQuery(query) })
+}
 
-  return getApiResponseData(data)
+export function getCurrencyRate(
+  query: GetCurrencyRateHttpQuery,
+): Promise<GetCurrencyRateHttpResponse> {
+  return getApiData("/currencies/rate", { params: serializeHttpQuery(query) })
 }

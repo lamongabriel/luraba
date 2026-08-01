@@ -1,17 +1,17 @@
-import type { Column } from "@tanstack/react-table";
+import type { Column } from "@tanstack/react-table"
 
 export function getColumnPinningStyle<TData>({
   column,
   withBorder = false,
 }: {
-  column: Column<TData>;
-  withBorder?: boolean;
+  column: Column<TData>
+  withBorder?: boolean
 }): React.CSSProperties {
-  const isPinned = column.getIsPinned();
+  const isPinned = column.getIsPinned()
   const isLastLeftPinnedColumn =
-    isPinned === "left" && column.getIsLastColumn("left");
+    isPinned === "left" && column.getIsLastColumn("left")
   const isFirstRightPinnedColumn =
-    isPinned === "right" && column.getIsFirstColumn("right");
+    isPinned === "right" && column.getIsFirstColumn("right")
 
   return {
     boxShadow: withBorder
@@ -28,5 +28,5 @@ export function getColumnPinningStyle<TData>({
     background: isPinned ? "var(--background)" : "var(--background)",
     width: column.getSize(),
     zIndex: isPinned ? 1 : undefined,
-  };
+  }
 }
