@@ -3,6 +3,7 @@ import { SYSTEM_LEDGER_CLASSIFICATIONS } from '@/config/transactions';
 import { db } from '@/db';
 import type { TxClient } from '@/db/types';
 import { accountsRepository } from '@/modules/accounts/accounts.repository';
+import type { AccountRecord } from '@/modules/accounts/accounts.types';
 import { categoriesRepository } from '@/modules/categories/categories.repository';
 import { currenciesRepository } from '@/modules/currencies/currencies.repository';
 import { entriesRepository } from '@/modules/entries/entries.repository';
@@ -412,12 +413,7 @@ export async function createBalanceAdjustmentInTransaction(
   tx: TxClient,
   context: HouseholdContext,
   input: {
-    account: {
-      id: string;
-      type: string;
-      classification: 'asset' | 'liability';
-      currencyId: string;
-    };
+    account: Pick<AccountRecord, 'id' | 'type' | 'classification' | 'currencyId'>;
     accountLedgerId: string;
     balance: number;
     description: string;
