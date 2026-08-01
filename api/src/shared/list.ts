@@ -22,7 +22,7 @@ const sortFieldSchema = optionalTrimmedString(64).refine(
 export const BaseListQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).default(1),
-    perPage: z.coerce.number().int().min(1).max(100).default(20),
+    perPage: z.coerce.number().int().min(1).max(1000).default(20),
     search: optionalTrimmedString(256),
     sort: sortFieldSchema,
     sortDirection: sortDirectionSchema.default('asc'),
