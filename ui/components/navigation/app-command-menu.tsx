@@ -1,10 +1,10 @@
 "use client"
 
-import * as React from "react"
-import { usePathname, useRouter } from "next/navigation"
 import { Home01Icon, Search01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import { usePathname, useRouter } from "next/navigation"
+import * as React from "react"
+import { type PermissionKey, useCan } from "@/components/permissions"
 import { Button } from "@/components/ui/button"
 import {
   Command,
@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/command"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { Typography } from "@/components/ui/typography"
-import { cn } from "@/lib/utils"
 import { mainNav, userMenuLinks } from "@/lib/navigation"
+import { cn } from "@/lib/utils"
 
 type CommandEntry = {
   label: string
@@ -28,10 +28,17 @@ type CommandEntry = {
   icon: typeof Home01Icon
   group: "Navigation" | "Preferences"
   keywords?: string[]
+  permission?: PermissionKey
 }
 
 const commandEntries: CommandEntry[] = [
-  { label: "Home", href: "/dashboard", icon: Home01Icon, group: "Navigation", keywords: ["dashboard"] },
+  {
+    label: "Home",
+    href: "/dashboard",
+    icon: Home01Icon,
+    group: "Navigation",
+    keywords: ["dashboard"],
+  },
   ...mainNav
     .filter((item) => item.href !== "/dashboard")
     .map((item) => ({
@@ -40,6 +47,7 @@ const commandEntries: CommandEntry[] = [
       icon: item.icon,
       group: "Navigation" as const,
       keywords: [item.title.toLowerCase()],
+      permission: item.permission,
     })),
   ...userMenuLinks.map((item) => ({
     label: item.label,
@@ -53,6 +61,7 @@ const commandEntries: CommandEntry[] = [
 export function AppCommandMenu({ className }: { className?: string }) {
   const router = useRouter()
   const pathname = usePathname()
+  const can = useCan()
 
   const [open, setOpen] = React.useState(false)
   const [query, setQuery] = React.useState("")
@@ -61,7 +70,9 @@ export function AppCommandMenu({ className }: { className?: string }) {
       return "⌘"
     }
 
-    return window.navigator.platform.toLowerCase().includes("mac") ? "⌘" : "Ctrl"
+    return window.navigator.platform.toLowerCase().includes("mac")
+      ? "⌘"
+      : "Ctrl"
   }, [])
 
   React.useEffect(() => {
@@ -78,17 +89,26 @@ export function AppCommandMenu({ className }: { className?: string }) {
 
   const filteredEntries = React.useMemo(() => {
     const value = query.trim().toLowerCase()
+    const availableEntries = commandEntries.filter(
+      ({ permission }) => !permission || can(permission),
+    )
 
-    if (!value) return commandEntries
+    if (!value) return availableEntries
 
-    return commandEntries.filter((item) => {
-      const haystack = [item.label, item.href, ...(item.keywords ?? [])].join(" ").toLowerCase()
+    return availableEntries.filter((item) => {
+      const haystack = [item.label, item.href, ...(item.keywords ?? [])]
+        .join(" ")
+        .toLowerCase()
       return haystack.includes(value)
     })
-  }, [query])
+  }, [can, query])
 
-  const navigationEntries = filteredEntries.filter((item) => item.group === "Navigation")
-  const preferenceEntries = filteredEntries.filter((item) => item.group === "Preferences")
+  const navigationEntries = filteredEntries.filter(
+    (item) => item.group === "Navigation",
+  )
+  const preferenceEntries = filteredEntries.filter(
+    (item) => item.group === "Preferences",
+  )
 
   const handleSelect = (href: string) => {
     setOpen(false)
@@ -111,13 +131,22 @@ export function AppCommandMenu({ className }: { className?: string }) {
         size="sm"
         className={cn(
           "ml-auto h-9 w-full max-w-54 justify-between rounded-xl border-border/80 px-3 text-muted-foreground sm:max-w-68",
-          className
+          className,
         )}
         onClick={() => setOpen(true)}
       >
         <span className="flex min-w-0 items-center gap-2">
-          <HugeiconsIcon icon={Search01Icon} strokeWidth={2} className="size-4 text-muted-foreground" />
-          <Typography as="span" truncate variant="small-muted" className="text-[0.78rem]">
+          <HugeiconsIcon
+            icon={Search01Icon}
+            strokeWidth={2}
+            className="size-4 text-muted-foreground"
+          />
+          <Typography
+            as="span"
+            truncate
+            variant="small-muted"
+            className="text-[0.78rem]"
+          >
             Search
           </Typography>
         </span>
@@ -133,38 +162,60 @@ export function AppCommandMenu({ className }: { className?: string }) {
             autoFocus
             placeholder="Search pages..."
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onValueChange={setQuery}
             onKeyDown={handleInputKeyDown}
             aria-autocomplete="none"
           />
           <CommandList>
-            {filteredEntries.length === 0 ? <CommandEmpty>No results found.</CommandEmpty> : null}
+            {filteredEntries.length === 0 ? (
+              <CommandEmpty>No results found.</CommandEmpty>
+            ) : null}
 
             {navigationEntries.length > 0 ? (
               <CommandGroup heading="Navigation">
                 {navigationEntries.map((item) => (
-                  <CommandItem key={item.href} onClick={() => handleSelect(item.href)}>
+                  <CommandItem
+                    key={item.href}
+                    onClick={() => handleSelect(item.href)}
+                  >
                     <span className="flex min-w-0 items-center gap-3">
-                      <HugeiconsIcon icon={item.icon} strokeWidth={2} className="size-4 text-muted-foreground" />
+                      <HugeiconsIcon
+                        icon={item.icon}
+                        strokeWidth={2}
+                        className="size-4 text-muted-foreground"
+                      />
                       <span className="truncate">{item.label}</span>
                     </span>
-                    <CommandShortcut>{pathname === item.href ? "Current" : item.href}</CommandShortcut>
+                    <CommandShortcut>
+                      {pathname === item.href ? "Current" : item.href}
+                    </CommandShortcut>
                   </CommandItem>
                 ))}
               </CommandGroup>
             ) : null}
 
-            {navigationEntries.length > 0 && preferenceEntries.length > 0 ? <CommandSeparator /> : null}
+            {navigationEntries.length > 0 && preferenceEntries.length > 0 ? (
+              <CommandSeparator />
+            ) : null}
 
             {preferenceEntries.length > 0 ? (
               <CommandGroup heading="Preferences">
                 {preferenceEntries.map((item) => (
-                  <CommandItem key={item.href} onClick={() => handleSelect(item.href)}>
+                  <CommandItem
+                    key={item.href}
+                    onClick={() => handleSelect(item.href)}
+                  >
                     <span className="flex min-w-0 items-center gap-3">
-                      <HugeiconsIcon icon={item.icon} strokeWidth={2} className="size-4 text-muted-foreground" />
+                      <HugeiconsIcon
+                        icon={item.icon}
+                        strokeWidth={2}
+                        className="size-4 text-muted-foreground"
+                      />
                       <span className="truncate">{item.label}</span>
                     </span>
-                    <CommandShortcut>{pathname === item.href ? "Current" : item.href}</CommandShortcut>
+                    <CommandShortcut>
+                      {pathname === item.href ? "Current" : item.href}
+                    </CommandShortcut>
                   </CommandItem>
                 ))}
               </CommandGroup>

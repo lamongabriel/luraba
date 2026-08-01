@@ -1,8 +1,8 @@
 "use client"
 
-import Link from "next/link"
 import { MoreVerticalIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import Link from "next/link"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -14,9 +14,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { userMenuLinks } from "@/lib/navigation"
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar"
 import { Typography } from "@/components/ui/typography"
+import { userMenuLinks } from "@/lib/navigation"
 
 interface NavUserProps {
   user: {
@@ -48,7 +53,9 @@ export function NavUser({ user, onSignOut }: NavUserProps) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg" className="rounded-xl px-3 py-2.5">
               <Avatar className="size-8 rounded-lg">
-                <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {initials}
+                </AvatarFallback>
               </Avatar>
 
               <div className="grid min-w-0 flex-1 gap-0.5 text-left leading-tight">
@@ -69,15 +76,25 @@ export function NavUser({ user, onSignOut }: NavUserProps) {
                   {user.email}
                 </Typography>
               </div>
-              <HugeiconsIcon icon={MoreVerticalIcon} strokeWidth={2} className="ml-auto size-4 text-sidebar-foreground/45" />
+              <HugeiconsIcon
+                icon={MoreVerticalIcon}
+                strokeWidth={2}
+                className="ml-auto size-4 text-sidebar-foreground/45"
+              />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent side={isMobile ? "bottom" : "right"} align="end" sideOffset={8}>
+          <DropdownMenuContent
+            side={isMobile ? "bottom" : "right"}
+            align="end"
+            sideOffset={8}
+          >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="size-8 rounded-lg">
-                  <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    {initials}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid min-w-0 flex-1 gap-0.5 text-left leading-tight">
                   <Typography
