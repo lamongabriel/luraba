@@ -254,35 +254,35 @@ describe('households routes', () => {
       .expect(409);
   });
 
-  it.each([
-    'rejected',
-    'canceled',
-  ] as const)('preserves the %s state for public preview', async (status) => {
-    const owner = await createAuthenticatedContext();
-    const invitedUser = await createUser({ email: `${status}@example.com` });
-    const invitedSession = await createAccessTokenForUser(invitedUser);
-    const created = await createInvite(owner, invitedUser.email);
-    const link = await createInviteLink(owner, created.body.data.id);
+  it.each(['rejected', 'canceled'] as const)(
+    'preserves the %s state for public preview',
+    async (status) => {
+      const owner = await createAuthenticatedContext();
+      const invitedUser = await createUser({ email: `${status}@example.com` });
+      const invitedSession = await createAccessTokenForUser(invitedUser);
+      const created = await createInvite(owner, invitedUser.email);
+      const link = await createInviteLink(owner, created.body.data.id);
 
-    if (status === 'rejected') {
-      await request(app)
-        .post('/api/v1/households/invites/reject')
-        .set(createAuthHeaders(invitedSession))
-        .send({ token: link.token })
-        .expect(204);
-    } else {
-      await request(app)
-        .delete(`/api/v1/households/${owner.household.id}/invites/${created.body.data.id}`)
-        .set(createAuthHeaders(owner.token, owner.household.id))
-        .expect(204);
-    }
+      if (status === 'rejected') {
+        await request(app)
+          .post('/api/v1/households/invites/reject')
+          .set(createAuthHeaders(invitedSession))
+          .send({ token: link.token })
+          .expect(204);
+      } else {
+        await request(app)
+          .delete(`/api/v1/households/${owner.household.id}/invites/${created.body.data.id}`)
+          .set(createAuthHeaders(owner.token, owner.household.id))
+          .expect(204);
+      }
 
-    const preview = await request(app)
-      .get('/api/v1/households/invites/preview')
-      .query({ token: link.token });
-    expect(preview.status).toBe(200);
-    expect(preview.body.data.status).toBe(status);
-  });
+      const preview = await request(app)
+        .get('/api/v1/households/invites/preview')
+        .query({ token: link.token });
+      expect(preview.status).toBe(200);
+      expect(preview.body.data.status).toBe(status);
+    },
+  );
 
   it('returns conflicts for active duplicate invitations and existing members', async () => {
     const owner = await createAuthenticatedContext();
