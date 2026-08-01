@@ -1,7 +1,7 @@
-import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority"
+import type * as React from "react"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 const typographyVariants = cva("", {
   variants: {
@@ -24,7 +24,8 @@ const typographyVariants = cva("", {
       title: "text-sm font-medium text-foreground",
       "sidebar-title": "text-sm font-medium text-sidebar-foreground",
       "sidebar-muted": "text-xs text-sidebar-foreground/55",
-      "card-title": "font-heading text-sm font-medium tracking-[-0.01em] text-foreground",
+      "card-title":
+        "font-heading text-sm font-medium tracking-[-0.01em] text-foreground",
       "section-title":
         "font-heading text-xl tracking-[-0.02em] text-foreground",
       subheading: "font-heading text-lg tracking-[-0.02em] text-foreground",
@@ -47,13 +48,13 @@ const typographyVariants = cva("", {
   defaultVariants: {
     variant: "body",
   },
-});
+})
 
 type TypographyProps<T extends React.ElementType> = {
-  as?: T;
-  className?: string;
+  as?: T
+  className?: string
 } & VariantProps<typeof typographyVariants> &
-  Omit<React.ComponentPropsWithoutRef<T>, "as" | "className">;
+  Omit<React.ComponentPropsWithoutRef<T>, "as" | "className">
 
 function Typography<T extends React.ElementType = "p">({
   as,
@@ -62,14 +63,14 @@ function Typography<T extends React.ElementType = "p">({
   truncate,
   ...props
 }: TypographyProps<T>) {
-  const Comp = as ?? "p";
+  const Comp = as ?? "p"
 
   return (
     <Comp
       className={cn(typographyVariants({ variant, truncate }), className)}
       {...props}
     />
-  );
+  )
 }
 
-export { Typography, typographyVariants };
+export { Typography, typographyVariants }
