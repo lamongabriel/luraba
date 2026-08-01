@@ -1,6 +1,6 @@
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath } from "node:url"
 
-const appRoot = fileURLToPath(new URL('..', import.meta.url))
+const appRoot = fileURLToPath(new URL("..", import.meta.url))
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

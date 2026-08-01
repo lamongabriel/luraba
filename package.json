@@ -14,17 +14,49 @@
   },
   "packageManager": "pnpm@10.28.2",
   "scripts": {
+    "build": "pnpm --recursive --if-present build",
+    "build:api": "pnpm --filter luraba-api build",
+    "build:ui": "pnpm --filter luraba-ui build",
+    "check": "biome check .",
+    "check:api": "pnpm --filter luraba-api check",
+    "check:fix": "biome check --write .",
+    "check:fix:unsafe": "biome check --write --unsafe .",
+    "check:ci": "biome ci .",
+    "check:ui": "pnpm --filter luraba-ui check",
     "commitlint": "commitlint",
-    "lint:api": "pnpm run --filter \"./api\" lint",
-    "pre-commit": "pnpm run --filter \"./api\" pre-commit",
+    "fix": "biome check --write .",
+    "fix:api": "pnpm --filter luraba-api fix",
+    "fix:ui": "pnpm --filter luraba-ui fix",
+    "format": "biome format --write .",
+    "format:api": "pnpm --filter luraba-api format",
+    "format:check": "biome format .",
+    "format:ui": "pnpm --filter luraba-ui format",
+    "lint": "biome lint .",
+    "lint:api": "pnpm --filter luraba-api lint",
+    "lint:fix": "biome lint --write .",
+    "lint:fix:unsafe": "biome lint --write --unsafe .",
+    "lint:ui": "pnpm --filter luraba-ui lint",
+    "pre-commit": "lint-staged",
     "prepare": "husky",
-    "test:api": "pnpm run --filter \"./api\" test",
-    "test:api:unit": "pnpm run --filter \"./api\" test:unit",
-    "typecheck:api": "pnpm run --filter \"./api\" typecheck"
+    "test": "pnpm --recursive --if-present test",
+    "test:api": "pnpm --filter luraba-api test",
+    "test:api:unit": "pnpm --filter luraba-api test:unit",
+    "test:ui": "pnpm --filter luraba-ui test",
+    "typecheck": "pnpm --recursive typecheck",
+    "typecheck:api": "pnpm --filter luraba-api typecheck",
+    "typecheck:ui": "pnpm --filter luraba-ui typecheck",
+    "validate": "pnpm check:ci && pnpm typecheck && pnpm test && pnpm build",
+    "validate:api": "pnpm --filter luraba-api validate",
+    "validate:ui": "pnpm --filter luraba-ui validate"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.6",
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "lint-staged": "17.0.7"
+  },
+  "lint-staged": {
+    "*.{js,jsx,mjs,cjs,ts,tsx,json,jsonc,css}": "biome check --write --no-errors-on-unmatched"
   }
 }

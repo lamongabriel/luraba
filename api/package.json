@@ -20,11 +20,19 @@
     "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:watch": "DOTENV_CONFIG_PATH=.env.test NODE_ENV=test RUN_DB_TESTS=1 vitest",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
-    "lint": "biome check src/",
-    "lint:fix": "biome check --write src/",
-    "format": "biome format --write src/",
-    "check": "biome check --write src/",
-    "pre-commit": "lint-staged"
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "check:fix:unsafe": "biome check --write --unsafe .",
+    "check:ci": "biome ci .",
+    "fix": "biome check --write .",
+    "fix:unsafe": "biome check --write --unsafe .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "lint:fix:unsafe": "biome lint --write --unsafe .",
+    "validate": "pnpm check:ci && pnpm typecheck && pnpm test && pnpm build",
+    "validate:unit": "pnpm check:ci && pnpm typecheck && pnpm test:unit && pnpm build"
   },
   "keywords": [
     "drizzle",
@@ -47,9 +55,6 @@
     "node": ">=22.0.0"
   },
   "type": "module",
-  "lint-staged": {
-    "*.{js,ts}": "biome check --write --no-errors-on-unmatched"
-  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "better-auth": "^1.6.19",
@@ -68,7 +73,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.16",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
@@ -81,7 +85,6 @@
     "@types/pino": "^7.0.4",
     "@types/supertest": "^7.2.0",
     "drizzle-kit": "^0.31.9",
-    "lint-staged": "^17.0.7",
     "supertest": "^7.2.2",
     "tsc-alias": "^1.8.17",
     "tsx": "^4.21.0",
