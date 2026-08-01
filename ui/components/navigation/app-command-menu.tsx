@@ -176,7 +176,7 @@ export function AppCommandMenu({ className }: { className?: string }) {
                 {navigationEntries.map((item) => (
                   <CommandItem
                     key={item.href}
-                    onClick={() => handleSelect(item.href)}
+                    onSelect={() => handleSelect(item.href)}
                   >
                     <span className="flex min-w-0 items-center gap-3">
                       <HugeiconsIcon
@@ -203,7 +203,7 @@ export function AppCommandMenu({ className }: { className?: string }) {
                 {preferenceEntries.map((item) => (
                   <CommandItem
                     key={item.href}
-                    onClick={() => handleSelect(item.href)}
+                    onSelect={() => handleSelect(item.href)}
                   >
                     <span className="flex min-w-0 items-center gap-3">
                       <HugeiconsIcon

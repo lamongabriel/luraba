@@ -31,11 +31,11 @@ export function FormSheet({
       <SheetContent
         side="right"
         className={cn(
-          "w-full overflow-y-auto border-l border-border/70 sm:max-w-xl",
+          "w-full overflow-y-auto border-l border-border/70 sm:max-w-xl bg-secondary/05",
           className,
         )}
       >
-        <SheetHeader className="border-b border-dashed border-border/70 pb-5">
+        <SheetHeader className="border-b border-dashed border-border pb-5">
           <SheetTitle className="text-xl">{title}</SheetTitle>
           {description ? (
             <SheetDescription>{description}</SheetDescription>

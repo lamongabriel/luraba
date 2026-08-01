@@ -260,7 +260,7 @@ export function ComboboxControl({
                   className="rounded-lg px-2.5 py-2 text-xs"
                   onFocus={() => setActiveIndex(index)}
                   onMouseEnter={() => setActiveIndex(index)}
-                  onClick={() => {
+                  onSelect={() => {
                     selectOption(option.value)
                   }}
                   onKeyDown={(event) => {
