@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.1.0](https://github.com/lamongabriel/luraba/compare/v1.0.0...v1.1.0) (2026-08-01)
+
+
+### Features
+
+* **accounts:** add transaction listing endpoint for non-credit-card accounts ([d85a756](https://github.com/lamongabriel/luraba/commit/d85a756e5f8bb959210f81781a62839cc3a5ae53))
+* add better credit card support and start front-end rework ([facdda8](https://github.com/lamongabriel/luraba/commit/facdda8c6cc178d9529eb758f1dd6a6ce2bc5ada))
+* add better-auth to the api ([5d88649](https://github.com/lamongabriel/luraba/commit/5d886498899d591e57873f9b6e0403149892b36b))
+* add pagination and filtering to list endpoints ([5c1a913](https://github.com/lamongabriel/luraba/commit/5c1a913006f95e3175194a17fa4055f36c5cafab))
+* **api:** add SMTP mail configuration to environment ([bf13377](https://github.com/lamongabriel/luraba/commit/bf13377b2d85cbf02276175cef64119f92be8e19))
+* **api:** add SMTP mail service with household invitation template ([116d629](https://github.com/lamongabriel/luraba/commit/116d629e7e07ac5c82b97b56072384f94186578d))
+* **auth:** wire up better-auth authentication flow in UI and add providers endpoint ([bef200e](https://github.com/lamongabriel/luraba/commit/bef200e9dadb9811384596abf4bfca9c2b0aa194))
+* **data-table:** implement table system with URL-synced state, column filters and pagination ([396b420](https://github.com/lamongabriel/luraba/commit/396b4207aaf891d283af35729efe93628df04e92))
+* **households:** implement token-based invite flow with resend and refresh ([cf82bf0](https://github.com/lamongabriel/luraba/commit/cf82bf04b2b161c705edf8239e388e6d406bb96c))
+* **permissions:** add permission-based UI components and gating ([4e054d4](https://github.com/lamongabriel/luraba/commit/4e054d41114676d13fd94dfd746f042c0122f8d7))
+* **ui:** add accounts management with create flow and supporting UI components ([455da59](https://github.com/lamongabriel/luraba/commit/455da599f92e28983200dc206d642370ca48a625))
+* **ui:** add calendar, dialog, faceted, input-group and slider components primitives ([1ac0635](https://github.com/lamongabriel/luraba/commit/1ac0635984cb9d24c1f1b1c2d43c63894bd48ecf))
+* **ui:** add HTTP interfaces and services for finance domain ([6626ff5](https://github.com/lamongabriel/luraba/commit/6626ff52fde54e41ef95a8e6b092772ab3d5dd91))
+* **ui:** add passive API client and extract client factory function ([4eeb3ef](https://github.com/lamongabriel/luraba/commit/4eeb3ef7246d31099a643ad24cbf9f96a68daa92))
+
+
+### Refactors
+
+* **api:** remove default any type parameter from axios config interfaces ([68bf537](https://github.com/lamongabriel/luraba/commit/68bf5374ebe7b2b4dd12eca372cec5f321eb7647))
+* **api:** simplify dev Dockerfile to standalone context ([c2b5e70](https://github.com/lamongabriel/luraba/commit/c2b5e7063d4f5202f609273f8f971302f1cf09d0))
+* **ui:** remove dark mode variant classes from components ([79e688b](https://github.com/lamongabriel/luraba/commit/79e688b5eab87f2e36a60b1c0ef7930ed3ac045a))
+* **ui:** remove route-dependent layout conditional from app layout ([e3e975f](https://github.com/lamongabriel/luraba/commit/e3e975fd4c07ac93acaadf0ddf3c01189c95e37a))
+* **ui:** replace live queries with mock data for showcase ([4dcc355](https://github.com/lamongabriel/luraba/commit/4dcc355fe032b3226fb02ae1519fa6b57066ab6d))
+* **ui:** update component styling for improved theme support ([195c1f6](https://github.com/lamongabriel/luraba/commit/195c1f6b12f7d1f53eecd566956f62c33eb5bde2))
+
+
+### Build System
+
+* **api:** restore workspace-root context in dev Dockerfile ([9a849cb](https://github.com/lamongabriel/luraba/commit/9a849cbb9740a6e0c5217c58a59244253019c8c0))
+
+
+### Continuous Integration
+
+* add GitHub Actions workflows for API build, check, and test ([3ad0f51](https://github.com/lamongabriel/luraba/commit/3ad0f5193caa3d85f1fc95f8a5ed7d76a058e13e))
+* run workflows only on pull requests to main ([15bbe68](https://github.com/lamongabriel/luraba/commit/15bbe68e33b26ed6d9f80e2ddab8f9176ca67d02))
+
 ## 1.0.0 (2026-06-05)
 
 
