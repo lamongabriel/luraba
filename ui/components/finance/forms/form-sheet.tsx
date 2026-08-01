@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import * as React from "react";
+import type * as React from "react"
 
 import {
   Sheet,
@@ -8,8 +8,8 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/sheet"
+import { cn } from "@/lib/utils"
 
 export function FormSheet({
   open,
@@ -19,22 +19,30 @@ export function FormSheet({
   children,
   className,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-  className?: string;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  title: string
+  description?: string
+  children: React.ReactNode
+  className?: string
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className={cn("w-full overflow-y-auto border-l border-border/70 sm:max-w-xl", className)}>
+      <SheetContent
+        side="right"
+        className={cn(
+          "w-full overflow-y-auto border-l border-border/70 sm:max-w-xl",
+          className,
+        )}
+      >
         <SheetHeader className="border-b border-dashed border-border/70 pb-5">
           <SheetTitle className="text-xl">{title}</SheetTitle>
-          {description ? <SheetDescription>{description}</SheetDescription> : null}
+          {description ? (
+            <SheetDescription>{description}</SheetDescription>
+          ) : null}
         </SheetHeader>
         <div className="px-6 py-6">{children}</div>
       </SheetContent>
     </Sheet>
-  );
+  )
 }

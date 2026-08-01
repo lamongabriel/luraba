@@ -1,46 +1,46 @@
-"use client";
+"use client"
 
-import {
-  CancelCircleIcon,
-  CirclePlusIcon,
-} from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import type { Column } from "@tanstack/react-table";
-import * as React from "react";
+import { CancelCircleIcon, CirclePlusIcon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import type { Column } from "@tanstack/react-table"
+import * as React from "react"
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/popover"
+import { Separator } from "@/components/ui/separator"
+import { Slider } from "@/components/ui/slider"
+import { cn } from "@/lib/utils"
 
-type RangeValue = [number, number];
+type RangeValue = [number, number]
 
 type FilterSliderProps<TData> =
   | {
-      column: Column<TData, unknown>;
-      title?: string;
-      range?: RangeValue;
-      unit?: string;
+      column: Column<TData, unknown>
+      title?: string
+      range?: RangeValue
+      unit?: string
     }
   | {
-      value?: RangeValue;
-      onValueChange?: (value: RangeValue | undefined) => void;
-      title?: string;
-      range?: RangeValue;
-      unit?: string;
-    };
+      value?: RangeValue
+      onValueChange?: (value: RangeValue | undefined) => void
+      title?: string
+      range?: RangeValue
+      unit?: string
+    }
 
 function isTableFilterProps<TData>(
   props: FilterSliderProps<TData>,
-): props is Extract<FilterSliderProps<TData>, { column: Column<TData, unknown> }> {
-  return "column" in props;
+): props is Extract<
+  FilterSliderProps<TData>,
+  { column: Column<TData, unknown> }
+> {
+  return "column" in props
 }
 
 function getIsValidRange(value: unknown): value is RangeValue {
@@ -49,7 +49,7 @@ function getIsValidRange(value: unknown): value is RangeValue {
     value.length === 2 &&
     typeof value[0] === "number" &&
     typeof value[1] === "number"
-  );
+  )
 }
 
 function parseValuesAsNumbers(value: unknown): RangeValue | undefined {
@@ -62,21 +62,25 @@ function parseValuesAsNumbers(value: unknown): RangeValue | undefined {
         !Number.isNaN(item),
     )
   ) {
-    return [Number(value[0]), Number(value[1])];
+    return [Number(value[0]), Number(value[1])]
   }
 
-  return undefined;
+  return undefined
 }
 
 export function FilterSlider<TData>(props: FilterSliderProps<TData>) {
-  const { title } = props;
-  const id = React.useId();
+  const { title } = props
+  const id = React.useId()
 
   const { value, range, unit, onValueChange } = React.useMemo(() => {
     if (isTableFilterProps(props)) {
-      const columnFilterValue = parseValuesAsNumbers(props.column.getFilterValue());
+      const columnFilterValue = parseValuesAsNumbers(
+        props.column.getFilterValue(),
+      )
       const defaultRange =
-        props.range ?? props.column.columnDef.meta?.range ?? ([0, 100] as RangeValue);
+        props.range ??
+        props.column.columnDef.meta?.range ??
+        ([0, 100] as RangeValue)
 
       return {
         value: columnFilterValue,
@@ -84,7 +88,7 @@ export function FilterSlider<TData>(props: FilterSliderProps<TData>) {
         unit: props.unit ?? props.column.columnDef.meta?.unit,
         onValueChange: (nextValue: RangeValue | undefined) =>
           props.column.setFilterValue(nextValue),
-      };
+      }
     }
 
     return {
@@ -94,107 +98,105 @@ export function FilterSlider<TData>(props: FilterSliderProps<TData>) {
         (getIsValidRange(props.value) ? props.value : ([0, 100] as RangeValue)),
       unit: props.unit,
       onValueChange: props.onValueChange,
-    };
-  }, [props]);
+    }
+  }, [props])
 
-  const [min, max] = range;
+  const [min, max] = range
 
   const step = React.useMemo(() => {
-    const rangeSize = max - min;
+    const rangeSize = max - min
 
-    if (rangeSize <= 20) return 1;
-    if (rangeSize <= 100) return Math.ceil(rangeSize / 20);
-    return Math.ceil(rangeSize / 50);
-  }, [max, min]);
+    if (rangeSize <= 20) return 1
+    if (rangeSize <= 100) return Math.ceil(rangeSize / 20)
+    return Math.ceil(rangeSize / 50)
+  }, [max, min])
 
   const resolvedValue = React.useMemo<RangeValue>(() => {
-    return value ?? [min, max];
-  }, [max, min, value]);
+    return value ?? [min, max]
+  }, [max, min, value])
 
   const formatValue = React.useCallback((item: number) => {
-    return item.toLocaleString(undefined, { maximumFractionDigits: 0 });
-  }, []);
+    return item.toLocaleString(undefined, { maximumFractionDigits: 0 })
+  }, [])
 
   const onFromInputChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const nextValue = Number(event.target.value);
+      const nextValue = Number(event.target.value)
 
       if (
         !Number.isNaN(nextValue) &&
         nextValue >= min &&
         nextValue <= resolvedValue[1]
       ) {
-        onValueChange?.([nextValue, resolvedValue[1]]);
+        onValueChange?.([nextValue, resolvedValue[1]])
       }
     },
     [min, onValueChange, resolvedValue],
-  );
+  )
 
   const onToInputChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const nextValue = Number(event.target.value);
+      const nextValue = Number(event.target.value)
 
       if (
         !Number.isNaN(nextValue) &&
         nextValue <= max &&
         nextValue >= resolvedValue[0]
       ) {
-        onValueChange?.([resolvedValue[0], nextValue]);
+        onValueChange?.([resolvedValue[0], nextValue])
       }
     },
     [max, onValueChange, resolvedValue],
-  );
+  )
 
   const onSliderValueChange = React.useCallback(
     (nextValue: number[]) => {
       if (Array.isArray(nextValue) && nextValue.length === 2) {
-        onValueChange?.([nextValue[0], nextValue[1]]);
+        onValueChange?.([nextValue[0], nextValue[1]])
       }
     },
     [onValueChange],
-  );
+  )
 
-  const onReset = React.useCallback(
-    (event: React.MouseEvent) => {
-      if (event.target instanceof HTMLDivElement) {
-        event.stopPropagation();
-      }
-
-      onValueChange?.(undefined);
-    },
-    [onValueChange],
-  );
+  const onReset = React.useCallback(() => {
+    onValueChange?.(undefined)
+  }, [onValueChange])
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className="border-dashed font-normal">
-          {value ? (
-            <div
-              role="button"
-              aria-label={`Clear ${title ?? "range"} filter`}
-              tabIndex={0}
-              className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              onClick={onReset}
-            >
-              <HugeiconsIcon icon={CancelCircleIcon} strokeWidth={2} />
-            </div>
-          ) : (
+      <div className="relative inline-flex">
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn("border-dashed font-normal", value && "pr-8")}
+          >
             <HugeiconsIcon icon={CirclePlusIcon} strokeWidth={2} />
-          )}
-          <span>{title}</span>
-          {value ? (
-            <>
-              <Separator
-                orientation="vertical"
-                className="mx-0.5 data-[orientation=vertical]:h-4"
-              />
-              {formatValue(value[0])} - {formatValue(value[1])}
-              {unit ? ` ${unit}` : ""}
-            </>
-          ) : null}
-        </Button>
-      </PopoverTrigger>
+            <span>{title}</span>
+            {value ? (
+              <>
+                <Separator
+                  orientation="vertical"
+                  className="mx-0.5 data-[orientation=vertical]:h-4"
+                />
+                {formatValue(value[0])} - {formatValue(value[1])}
+                {unit ? ` ${unit}` : ""}
+              </>
+            ) : null}
+          </Button>
+        </PopoverTrigger>
+        {value ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label={`Clear ${title ?? "range"} filter`}
+            className="absolute top-1/2 right-1 z-10 -translate-y-1/2 rounded-sm opacity-70 shadow-none hover:opacity-100"
+            onClick={onReset}
+          >
+            <HugeiconsIcon icon={CancelCircleIcon} strokeWidth={2} />
+          </Button>
+        ) : null}
+      </div>
       <PopoverContent align="start" className="flex w-auto flex-col gap-4">
         <div className="flex flex-col gap-3">
           <p className="font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -271,5 +273,5 @@ export function FilterSlider<TData>(props: FilterSliderProps<TData>) {
         </Button>
       </PopoverContent>
     </Popover>
-  );
+  )
 }

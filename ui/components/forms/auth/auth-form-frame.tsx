@@ -1,7 +1,7 @@
 "use client"
 
-import type { ReactNode } from "react"
 import { motion, useReducedMotion } from "framer-motion"
+import type { ReactNode } from "react"
 
 import { Typography } from "@/components/ui/typography"
 
@@ -10,10 +10,7 @@ type AuthFormFrameProps = {
   footer: ReactNode
 }
 
-export function AuthFormFrame({
-  children,
-  footer,
-}: AuthFormFrameProps) {
+export function AuthFormFrame({ children, footer }: AuthFormFrameProps) {
   const reduceMotion = useReducedMotion()
 
   return (
@@ -29,7 +26,7 @@ export function AuthFormFrame({
               ease: "easeOut",
             }
       }
-      className="rounded-[1.6rem] border border-white/8 bg-[var(--color-container)]/96 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.28)] shadow-black/40 ring-1 ring-white/4 md:p-7"
+      className="rounded-[1.6rem] border border-white/8 bg-[var(--color-container)] p-6 md:p-7"
     >
       <div className="space-y-6">
         {children}

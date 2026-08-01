@@ -1,18 +1,13 @@
 "use client"
 
-import * as React from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { motion } from "framer-motion"
-
-import { mainNav } from "@/lib/navigation"
-import { queryClient } from "@/lib/query-client"
-import { logout } from "@/lib/auth/logout"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import * as React from "react"
 import { HouseholdSwitcher } from "@/components/navigation/app-sidebar/household-switcher"
 import { NavUser } from "@/components/navigation/app-sidebar/nav-user"
-import { authQueryKeys } from "@/queries/auth/use-auth-providers-query"
-import { useAuthSessionStore } from "@/stores/auth-session-store"
+import { useCan } from "@/components/permissions"
 import {
   Sidebar,
   SidebarContent,
@@ -24,6 +19,11 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Typography } from "@/components/ui/typography"
+import { logout } from "@/lib/auth/logout"
+import { mainNav } from "@/lib/navigation"
+import { queryClient } from "@/lib/query-client"
+import { authQueryKeys } from "@/queries/auth/use-auth-providers-query"
+import { useAuthSessionStore } from "@/stores/auth-session-store"
 
 const sidebarItemTransition = {
   damping: 22,
@@ -33,15 +33,19 @@ const sidebarItemTransition = {
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const can = useCan()
   const household = useAuthSessionStore((state) => state.household)
   const households = useAuthSessionStore((state) => state.households)
-  const setActiveHouseholdId = useAuthSessionStore((state) => state.setActiveHouseholdId)
+  const setActiveHouseholdId = useAuthSessionStore(
+    (state) => state.setActiveHouseholdId,
+  )
   const user = useAuthSessionStore((state) => state.user)
 
   const handleHouseholdChange = React.useCallback(
     (householdId: string) => {
       setActiveHouseholdId(householdId)
       void queryClient.invalidateQueries({ queryKey: authQueryKeys.session })
+      void queryClient.invalidateQueries()
     },
     [setActiveHouseholdId],
   )
@@ -53,6 +57,10 @@ export function AppSidebar() {
   if (!user || !household) {
     return null
   }
+
+  const navigationItems = mainNav.filter(
+    ({ permission }) => !permission || can(permission),
+  )
 
   return (
     <Sidebar variant="sidebar">
@@ -68,7 +76,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup className="px-4">
           <SidebarMenu className="gap-2">
-            {mainNav.map((item) => {
+            {navigationItems.map((item, index) => {
               const active = pathname === item.href
 
               return (
@@ -76,7 +84,11 @@ export function AppSidebar() {
                   <motion.div
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.04 * (mainNav.indexOf(item) + 1), duration: 0.24, ease: "easeOut" }}
+                    transition={{
+                      delay: 0.04 * (index + 1),
+                      duration: 0.24,
+                      ease: "easeOut",
+                    }}
                     whileHover={{ x: 3 }}
                     whileTap={{ scale: 0.985 }}
                   >

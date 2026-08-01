@@ -1,10 +1,16 @@
 "use client"
 
-import * as React from "react"
+import type * as React from "react"
 import type { Control, FieldValues, Path } from "react-hook-form"
 import { Controller } from "react-hook-form"
-
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
+import type { FormComboboxOption } from "@/components/forms/form-combobox"
+import { ComboboxControl } from "@/components/forms/form-combobox"
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -14,8 +20,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import type { FormComboboxOption } from "@/components/forms/form-combobox"
-import { ComboboxControl } from "@/components/forms/form-combobox"
 
 type BaseFormItemProps<TFieldValues extends FieldValues> = {
   control: Control<TFieldValues>
@@ -30,48 +34,56 @@ type BaseFormItemProps<TFieldValues extends FieldValues> = {
   labelAdornment?: React.ReactNode
 }
 
-type InputFormItemProps<TFieldValues extends FieldValues> = BaseFormItemProps<TFieldValues> & {
-  type?: "input"
-  inputType?: "text" | "email" | "password" | "number"
-  step?: string
-  readOnly?: boolean
-  format?: (value: string) => string
-  inputClassName?: string
-}
+type InputFormItemProps<TFieldValues extends FieldValues> =
+  BaseFormItemProps<TFieldValues> & {
+    type?: "input"
+    inputType?: "text" | "email" | "password" | "number"
+    step?: string
+    readOnly?: boolean
+    format?: (value: string) => string
+    inputClassName?: string
+  }
 
 type SelectOption = {
   value: string
   label: string
 }
 
-type SelectFormItemProps<TFieldValues extends FieldValues> = BaseFormItemProps<TFieldValues> & {
-  type: "select"
-  options: readonly SelectOption[] | SelectOption[]
-  triggerClassName?: string
-}
+type SelectFormItemProps<TFieldValues extends FieldValues> =
+  BaseFormItemProps<TFieldValues> & {
+    type: "select"
+    options: readonly SelectOption[] | SelectOption[]
+    triggerClassName?: string
+  }
 
-type ComboboxFormItemProps<TFieldValues extends FieldValues> = BaseFormItemProps<TFieldValues> & {
-  type: "combobox"
-  options: FormComboboxOption[]
-  triggerClassName?: string
-  searchPlaceholder?: string
-  emptyMessage?: string
-  renderOption?: (option: FormComboboxOption, selected: boolean) => React.ReactNode
-  renderValue?: (option: FormComboboxOption | undefined) => React.ReactNode
-}
+type ComboboxFormItemProps<TFieldValues extends FieldValues> =
+  BaseFormItemProps<TFieldValues> & {
+    type: "combobox"
+    options: FormComboboxOption[]
+    triggerClassName?: string
+    searchPlaceholder?: string
+    emptyMessage?: string
+    renderOption?: (
+      option: FormComboboxOption,
+      selected: boolean,
+    ) => React.ReactNode
+    renderValue?: (option: FormComboboxOption | undefined) => React.ReactNode
+  }
 
-type TextareaFormItemProps<TFieldValues extends FieldValues> = BaseFormItemProps<TFieldValues> & {
-  type: "textarea"
-  readOnly?: boolean
-  rows?: number
-  textareaClassName?: string
-}
+type TextareaFormItemProps<TFieldValues extends FieldValues> =
+  BaseFormItemProps<TFieldValues> & {
+    type: "textarea"
+    readOnly?: boolean
+    rows?: number
+    textareaClassName?: string
+  }
 
-type IntFormItemProps<TFieldValues extends FieldValues> = BaseFormItemProps<TFieldValues> & {
-  type: "int"
-  readOnly?: boolean
-  inputClassName?: string
-}
+type IntFormItemProps<TFieldValues extends FieldValues> =
+  BaseFormItemProps<TFieldValues> & {
+    type: "int"
+    readOnly?: boolean
+    inputClassName?: string
+  }
 
 type FormItemProps<TFieldValues extends FieldValues> =
   | InputFormItemProps<TFieldValues>
@@ -80,7 +92,9 @@ type FormItemProps<TFieldValues extends FieldValues> =
   | TextareaFormItemProps<TFieldValues>
   | IntFormItemProps<TFieldValues>
 
-export function FormItem<TFieldValues extends FieldValues>(props: FormItemProps<TFieldValues>) {
+export function FormItem<TFieldValues extends FieldValues>(
+  props: FormItemProps<TFieldValues>,
+) {
   const {
     control,
     name,
@@ -117,7 +131,8 @@ export function FormItem<TFieldValues extends FieldValues>(props: FormItemProps<
                 type={props.inputType ?? "text"}
                 step={props.step}
                 value={
-                  typeof field.value === "string" || typeof field.value === "number"
+                  typeof field.value === "string" ||
+                  typeof field.value === "number"
                     ? field.value
                     : (field.value ?? "")
                 }
@@ -197,7 +212,11 @@ export function FormItem<TFieldValues extends FieldValues>(props: FormItemProps<
               <Textarea
                 {...field}
                 id={inputId}
-                value={typeof field.value === "string" ? field.value : (field.value ?? "")}
+                value={
+                  typeof field.value === "string"
+                    ? field.value
+                    : (field.value ?? "")
+                }
                 placeholder={placeholder}
                 readOnly={props.readOnly}
                 disabled={disabled}
@@ -215,7 +234,8 @@ export function FormItem<TFieldValues extends FieldValues>(props: FormItemProps<
                 step="1"
                 inputMode="numeric"
                 value={
-                  typeof field.value === "string" || typeof field.value === "number"
+                  typeof field.value === "string" ||
+                  typeof field.value === "number"
                     ? field.value
                     : (field.value ?? "")
                 }
@@ -251,8 +271,12 @@ export function FormItem<TFieldValues extends FieldValues>(props: FormItemProps<
               />
             )}
 
-            {description && !errorMessage ? <FieldDescription>{description}</FieldDescription> : null}
-            <FieldError errors={errorMessage ? [{ message: errorMessage }] : undefined} />
+            {description && !errorMessage ? (
+              <FieldDescription>{description}</FieldDescription>
+            ) : null}
+            <FieldError
+              errors={errorMessage ? [{ message: errorMessage }] : undefined}
+            />
           </Field>
         )
       }}

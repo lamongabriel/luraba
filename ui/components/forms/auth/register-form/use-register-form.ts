@@ -1,15 +1,18 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 
 import type { SignUpEmailHttpBody } from "@/interfaces/http/auth-http"
-import { hydrateAuthenticatedSession } from "@/services/auth-session.service"
 import { useRegisterMutation } from "@/mutations/auth/use-register-mutation"
+import { hydrateAuthenticatedSession } from "@/services/auth-session.service"
 import { useAuthSessionStore } from "@/stores/auth-session-store"
 
-import { registerFormSchema, type RegisterFormValues } from "./register-form-schema"
+import {
+  type RegisterFormValues,
+  registerFormSchema,
+} from "./register-form-schema"
 
 export function useRegisterForm() {
   const router = useRouter()

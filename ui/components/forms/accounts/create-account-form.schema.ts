@@ -3,10 +3,7 @@ import { z } from "zod"
 import { CREATABLE_ACCOUNT_TYPES } from "@/lib/accounts"
 
 export const createAccountFormSchema = z.object({
-  currencyCode: z
-    .string()
-    .trim()
-    .length(3, "Use a 3-letter currency code."),
+  currencyCode: z.string().trim().length(3, "Use a 3-letter currency code."),
   institutionDomain: z.string(),
   institutionName: z.string(),
   name: z

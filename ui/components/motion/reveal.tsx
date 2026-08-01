@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
 import {
-  motion,
-  useReducedMotion,
   type HTMLMotionProps,
+  motion,
   type TargetAndTransition,
   type Transition,
-} from "framer-motion";
+  useReducedMotion,
+} from "framer-motion"
 
 type RevealConfig = {
-  animate: TargetAndTransition;
-  initial: TargetAndTransition;
-  transition: Transition;
-};
+  animate: TargetAndTransition
+  initial: TargetAndTransition
+  transition: Transition
+}
 
 const REVEAL_CONFIGS = {
   item: {
@@ -30,64 +30,89 @@ const REVEAL_CONFIGS = {
     initial: { opacity: 0, y: 10 },
     transition: { duration: 0.34, ease: "easeOut" },
   },
-} satisfies Record<string, RevealConfig>;
+} satisfies Record<string, RevealConfig>
 
-type RevealDivProps = Omit<HTMLMotionProps<"div">, "animate" | "initial" | "transition"> & {
-  delay?: number;
-  transition?: Transition;
-};
+type RevealDivProps = Omit<
+  HTMLMotionProps<"div">,
+  "animate" | "initial" | "transition"
+> & {
+  delay?: number
+  transition?: Transition
+}
 
 type RevealSectionProps = Omit<
   HTMLMotionProps<"section">,
   "animate" | "initial" | "transition"
 > & {
-  delay?: number;
-  transition?: Transition;
-};
+  delay?: number
+  transition?: Transition
+}
 
-function getRevealTransition(config: RevealConfig, delay: number, transition?: Transition) {
-  const baseDelay = typeof config.transition.delay === "number" ? config.transition.delay : 0;
-  const overrideDelay = typeof transition?.delay === "number" ? transition.delay : 0;
+function getRevealTransition(
+  config: RevealConfig,
+  delay: number,
+  transition?: Transition,
+) {
+  const baseDelay =
+    typeof config.transition.delay === "number" ? config.transition.delay : 0
+  const overrideDelay =
+    typeof transition?.delay === "number" ? transition.delay : 0
 
   return {
     ...config.transition,
     ...transition,
     delay: baseDelay + overrideDelay + delay,
-  } satisfies Transition;
+  } satisfies Transition
 }
 
-function useRevealMotion(config: RevealConfig, delay: number, transition?: Transition) {
-  const reduceMotion = Boolean(useReducedMotion());
+function useRevealMotion(
+  config: RevealConfig,
+  delay: number,
+  transition?: Transition,
+) {
+  const reduceMotion = Boolean(useReducedMotion())
 
   if (reduceMotion) {
     return {
       animate: undefined,
       initial: false as const,
       transition: undefined,
-    };
+    }
   }
 
   return {
     animate: config.animate,
     initial: config.initial,
     transition: getRevealTransition(config, delay, transition),
-  };
+  }
 }
 
-export function PageReveal({ delay = 0, transition, ...props }: RevealDivProps) {
-  const animation = useRevealMotion(REVEAL_CONFIGS.page, delay, transition);
+export function PageReveal({
+  delay = 0,
+  transition,
+  ...props
+}: RevealDivProps) {
+  const animation = useRevealMotion(REVEAL_CONFIGS.page, delay, transition)
 
-  return <motion.div {...props} {...animation} />;
+  return <motion.div {...props} {...animation} />
 }
 
-export function SectionReveal({ delay = 0, transition, ...props }: RevealSectionProps) {
-  const animation = useRevealMotion(REVEAL_CONFIGS.section, delay, transition);
+export function SectionReveal({
+  delay = 0,
+  transition,
+  ...props
+}: RevealSectionProps) {
+  const animation = useRevealMotion(REVEAL_CONFIGS.section, delay, transition)
 
-  return <motion.section {...props} {...animation} />;
+  return <motion.section {...props} {...animation} />
 }
 
-export function ItemReveal({ delay = 0, transition, ...props }: RevealDivProps) {
-  const animation = useRevealMotion(REVEAL_CONFIGS.item, delay, transition);
+export function ItemReveal({
+  delay = 0,
+  transition,
+  ...props
+}: RevealDivProps) {
+  const animation = useRevealMotion(REVEAL_CONFIGS.item, delay, transition)
 
-  return <motion.div {...props} {...animation} />;
+  return <motion.div {...props} {...animation} />
 }

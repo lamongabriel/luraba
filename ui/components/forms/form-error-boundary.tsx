@@ -47,11 +47,19 @@ class FormErrorBoundaryRoot extends React.Component<
             </div>
 
             <div className="space-y-2 text-center">
-              <Typography as="h2" variant="subheading" className="text-[1.45rem]">
+              <Typography
+                as="h2"
+                variant="subheading"
+                className="text-[1.45rem]"
+              >
                 This form hit an unexpected error.
               </Typography>
-              <Typography variant="body-muted" className="leading-6 text-foreground/72">
-                Try reloading the form. If this keeps happening, refresh the page and try again.
+              <Typography
+                variant="body-muted"
+                className="leading-6 text-foreground/72"
+              >
+                Try reloading the form. If this keeps happening, refresh the
+                page and try again.
               </Typography>
             </div>
 
@@ -67,7 +75,11 @@ class FormErrorBoundaryRoot extends React.Component<
       )
     }
 
-    return <React.Fragment key={this.state.resetKey}>{this.props.children}</React.Fragment>
+    return (
+      <React.Fragment key={this.state.resetKey}>
+        {this.props.children}
+      </React.Fragment>
+    )
   }
 }
 

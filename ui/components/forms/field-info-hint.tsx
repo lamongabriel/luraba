@@ -1,16 +1,20 @@
-"use client";
+"use client"
 
-import * as React from "react";
+import type * as React from "react"
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
 export function FieldInfoHint({
   children,
   className,
 }: {
-  children: React.ReactNode;
-  className?: string;
+  children: React.ReactNode
+  className?: string
 }) {
   return (
     <Tooltip>
@@ -34,7 +38,14 @@ export function FieldInfoHint({
             fill="none"
           >
             <circle cx="6" cy="3" r="1" fill="currentColor" />
-            <rect x="5.4" y="5" width="1.2" height="4" rx="0.6" fill="currentColor" />
+            <rect
+              x="5.4"
+              y="5"
+              width="1.2"
+              height="4"
+              rx="0.6"
+              fill="currentColor"
+            />
           </svg>
         </button>
       </TooltipTrigger>
@@ -42,5 +53,5 @@ export function FieldInfoHint({
         {children}
       </TooltipContent>
     </Tooltip>
-  );
+  )
 }

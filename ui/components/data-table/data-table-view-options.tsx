@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import { Settings02Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import type { Table } from "@tanstack/react-table";
-import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { Settings02Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
+import type { Table } from "@tanstack/react-table"
+import * as React from "react"
+import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
@@ -12,18 +12,18 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from "@/components/ui/command"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 interface DataTableViewOptionsProps<TData>
   extends React.ComponentProps<typeof PopoverContent> {
-  table: Table<TData>;
-  disabled?: boolean;
+  table: Table<TData>
+  disabled?: boolean
 }
 
 export function DataTableViewOptions<TData>({
@@ -41,7 +41,7 @@ export function DataTableViewOptions<TData>({
             typeof column.accessorFn !== "undefined" && column.getCanHide(),
         ),
     [table],
-  );
+  )
 
   return (
     <Popover>
@@ -85,5 +85,5 @@ export function DataTableViewOptions<TData>({
         </Command>
       </PopoverContent>
     </Popover>
-  );
+  )
 }

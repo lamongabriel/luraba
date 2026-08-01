@@ -1,8 +1,8 @@
 "use client"
 
-import * as React from "react"
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import * as React from "react"
 
 import {
   DropdownMenu,
@@ -12,7 +12,12 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar"
 import { Typography } from "@/components/ui/typography"
 import { STORAGE_KEYS } from "@/config/storage"
 import type { HouseholdContext, HouseholdSummary } from "@/interfaces/household"
@@ -64,15 +69,18 @@ function mergeHouseholds(
     name: initialHousehold.name,
     description: existing?.description ?? "Primary household workspace.",
     role: initialHousehold.role,
-    createdByUserId: existing?.createdByUserId ?? "preview-user",
-    createdAt: existing?.createdAt ?? new Date("2026-06-11T01:38:36.604Z").toISOString(),
-    updatedAt: existing?.updatedAt ?? new Date("2026-06-11T01:38:36.604Z").toISOString(),
+    createdByUserId: existing?.createdByUserId ?? initialHousehold.id,
+    createdAt:
+      existing?.createdAt ?? new Date("2026-06-11T01:38:36.604Z").toISOString(),
+    updatedAt:
+      existing?.updatedAt ?? new Date("2026-06-11T01:38:36.604Z").toISOString(),
     defaultCurrencyId: initialHousehold.settings.defaultCurrencyId,
     countryCode: initialHousehold.settings.countryCode,
     timezone: initialHousehold.settings.timezone,
     budgetMonthStartsOn: initialHousehold.settings.budgetMonthStartsOn,
     creditExpenseTiming: initialHousehold.settings.creditExpenseTiming,
-    creditInstallmentBudgetMode: initialHousehold.settings.creditInstallmentBudgetMode,
+    creditInstallmentBudgetMode:
+      initialHousehold.settings.creditInstallmentBudgetMode,
     permissions: initialHousehold.permissions,
   })
 
@@ -100,29 +108,32 @@ export function HouseholdSwitcher({
   const selectedHousehold = React.useMemo(() => {
     return (
       households.find((household) => household.id === selectedHouseholdId) ??
-      households.find((household) => household.id === user.defaultHouseholdId) ??
+      households.find((household) => household.id === initialHousehold.id) ??
+      households.find(
+        (household) => household.id === user.defaultHouseholdId,
+      ) ??
       households[0]
     )
-  }, [households, selectedHouseholdId, user.defaultHouseholdId])
+  }, [
+    households,
+    initialHousehold.id,
+    selectedHouseholdId,
+    user.defaultHouseholdId,
+  ])
 
   React.useEffect(() => {
-    if (typeof window === "undefined" || households.length === 0 || !selectedHousehold) {
-      return
-    }
+    if (!selectedHousehold || typeof window === "undefined") return
 
     writeStorage(STORAGE_KEYS.activeHouseholdId, selectedHousehold.id)
-
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent(HOUSEHOLD_CHANGED_EVENT, {
-          detail: {
-            householdId: selectedHousehold.id,
-            household: selectedHousehold,
-          },
-        }),
-      )
-    }
-  }, [households, selectedHousehold])
+    window.dispatchEvent(
+      new CustomEvent(HOUSEHOLD_CHANGED_EVENT, {
+        detail: {
+          householdId: selectedHousehold.id,
+          household: selectedHousehold,
+        },
+      }),
+    )
+  }, [selectedHousehold])
 
   if (!selectedHousehold) {
     return null
@@ -140,13 +151,22 @@ export function HouseholdSwitcher({
               className="h-11 rounded-xl border border-sidebar-border/70 bg-card/80 px-2.5 py-2 shadow-sm hover:bg-accent/60"
             >
               <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                <Typography as="span" variant="small" className="text-[0.62rem] font-semibold text-primary-foreground">
+                <Typography
+                  as="span"
+                  variant="small"
+                  className="text-[0.62rem] font-semibold text-primary-foreground"
+                >
                   {initials}
                 </Typography>
               </div>
 
               <div className="min-w-0 flex-1 text-left">
-                <Typography as="span" variant="sidebar-title" truncate className="block text-[0.86rem] font-medium text-foreground">
+                <Typography
+                  as="span"
+                  variant="sidebar-title"
+                  truncate
+                  className="block text-[0.86rem] font-medium text-foreground"
+                >
                   {selectedHousehold.name}
                 </Typography>
               </div>
@@ -166,7 +186,11 @@ export function HouseholdSwitcher({
             className="w-64 rounded-[1.15rem] border-border/70 bg-card/95 p-0 shadow-[0_20px_50px_rgba(0,0,0,0.4)]"
           >
             <DropdownMenuLabel className="border-b border-border/60 px-3 py-2.5 font-normal">
-              <Typography as="span" variant="body" className="block text-[0.72rem] text-foreground/68">
+              <Typography
+                as="span"
+                variant="body"
+                className="block text-[0.72rem] text-foreground/68"
+              >
                 Households
               </Typography>
             </DropdownMenuLabel>
@@ -185,17 +209,30 @@ export function HouseholdSwitcher({
                   className="items-center gap-2.5 rounded-none px-3 py-3 first:mt-1"
                 >
                   <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-                    <Typography as="span" variant="small" className="text-[0.62rem] font-semibold text-primary-foreground">
+                    <Typography
+                      as="span"
+                      variant="small"
+                      className="text-[0.62rem] font-semibold text-primary-foreground"
+                    >
                       {getInitials(household.name)}
                     </Typography>
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <Typography as="span" variant="small-strong" className="block truncate text-[0.84rem] font-medium text-foreground">
+                    <Typography
+                      as="span"
+                      variant="small-strong"
+                      className="block truncate text-[0.84rem] font-medium text-foreground"
+                    >
                       {household.name}
                     </Typography>
-                    <Typography as="span" variant="small-muted" className="block truncate text-[0.68rem] text-muted-foreground/72">
-                      {household.description ?? createFallbackDescription(household)}
+                    <Typography
+                      as="span"
+                      variant="small-muted"
+                      className="block truncate text-[0.68rem] text-muted-foreground/72"
+                    >
+                      {household.description ??
+                        createFallbackDescription(household)}
                     </Typography>
                   </div>
                 </DropdownMenuRadioItem>

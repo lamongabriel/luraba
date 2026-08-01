@@ -15,11 +15,13 @@ import { accountQueryKeys } from "@/queries/accounts/use-accounts-query"
 import { useCurrenciesQuery } from "@/queries/currencies/use-currencies-query"
 
 import {
-  createAccountFormSchema,
   type CreateAccountFormValues,
+  createAccountFormSchema,
 } from "./create-account-form.schema"
 
-function getDefaultValues(defaultCurrencyCode: string): CreateAccountFormValues {
+function getDefaultValues(
+  defaultCurrencyCode: string,
+): CreateAccountFormValues {
   return {
     currencyCode: defaultCurrencyCode,
     institutionDomain: "",
@@ -47,13 +49,16 @@ export function CreateAccountForm({
 
   const createAccountMutation = useCreateAccountMutation({
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: accountQueryKeys.list })
+      await queryClient.invalidateQueries({
+        queryKey: accountQueryKeys.lists(),
+      })
       form.reset(getDefaultValues(defaultCurrencyCode))
       onSuccess()
     },
     successToast: {
       title: "Account created",
-      description: ({ variables }) => `${variables.name} is now in your accounts list.`,
+      description: ({ variables }) =>
+        `${variables.name} is now in your accounts list.`,
     },
   })
 
@@ -98,13 +103,19 @@ export function CreateAccountForm({
             control={form.control}
             name="currencyCode"
             label="Currency"
-            placeholder={currenciesQuery.isPending ? "Loading currencies..." : "Select a currency"}
+            placeholder={
+              currenciesQuery.isPending
+                ? "Loading currencies..."
+                : "Select a currency"
+            }
             searchPlaceholder="Search currencies..."
             emptyMessage="No currencies found."
-            disabled={createAccountMutation.isPending || currenciesQuery.isPending}
+            disabled={
+              createAccountMutation.isPending || currenciesQuery.isPending
+            }
             triggerClassName="h-10 rounded-xl border-transparent bg-background/40 shadow-none"
             options={
-              currenciesQuery.data?.map((currency) => ({
+              currenciesQuery.data?.data.map((currency) => ({
                 value: currency.code,
                 label: currency.code,
                 description: currency.symbol,
@@ -155,7 +166,8 @@ export function CreateAccountForm({
           inputClassName="h-10 rounded-xl border-transparent bg-background/40 shadow-none"
           labelAdornment={
             <FieldInfoHint>
-              Add the institution domain if you want us to try loading its logo automatically.
+              Add the institution domain if you want us to try loading its logo
+              automatically.
             </FieldInfoHint>
           }
         />
@@ -194,7 +206,7 @@ export function CreateAccountForm({
         </Button>
         <Button
           type="submit"
-          loading={createAccountMutation.isPending}
+          isLoading={createAccountMutation.isPending}
           loadingText="Creating account..."
           className="rounded-full border-transparent bg-primary text-primary-foreground shadow-none"
         >

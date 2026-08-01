@@ -77,7 +77,7 @@ export function RegisterForm() {
 
         <Button
           type="submit"
-          loading={registerMutation.isPending}
+          isLoading={registerMutation.isPending}
           loadingText="Creating account..."
           size="lg"
           className="h-10 w-full rounded-xl border-primary/30 bg-primary text-primary-foreground shadow-none hover:brightness-105"

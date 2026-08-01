@@ -1,8 +1,8 @@
 "use client"
 
-import * as React from "react"
 import { ArrowDown01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import * as React from "react"
 import type { Control, FieldValues, Path } from "react-hook-form"
 import { Controller } from "react-hook-form"
 
@@ -14,7 +14,11 @@ import {
   CommandItem,
 } from "@/components/ui/command"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
 export interface FormComboboxOption {
@@ -35,7 +39,10 @@ type FormComboboxProps<TFieldValues extends FieldValues> = {
   disabled?: boolean
   className?: string
   triggerClassName?: string
-  renderOption?: (option: FormComboboxOption, selected: boolean) => React.ReactNode
+  renderOption?: (
+    option: FormComboboxOption,
+    selected: boolean,
+  ) => React.ReactNode
   renderValue?: (option: FormComboboxOption | undefined) => React.ReactNode
 }
 
@@ -50,7 +57,10 @@ type ComboboxControlProps = {
   disabled?: boolean
   ariaInvalid?: boolean
   triggerClassName?: string
-  renderOption?: (option: FormComboboxOption, selected: boolean) => React.ReactNode
+  renderOption?: (
+    option: FormComboboxOption,
+    selected: boolean,
+  ) => React.ReactNode
   renderValue?: (option: FormComboboxOption | undefined) => React.ReactNode
 }
 
@@ -73,7 +83,7 @@ export function ComboboxControl({
   const [activeIndex, setActiveIndex] = React.useState(-1)
   const inputRef = React.useRef<HTMLInputElement | null>(null)
   const triggerRef = React.useRef<HTMLButtonElement | null>(null)
-  const itemRefs = React.useRef<Array<HTMLButtonElement | null>>([])
+  const itemRefs = React.useRef<Array<HTMLDivElement | null>>([])
 
   const filteredOptions = options.filter((option) => {
     const searchValue = query.trim().toLowerCase()
@@ -111,7 +121,9 @@ export function ComboboxControl({
     : selectedOption
       ? selectedOption.label
       : placeholder
-  const selectedIndex = filteredOptions.findIndex((option) => option.value === value)
+  const selectedIndex = filteredOptions.findIndex(
+    (option) => option.value === value,
+  )
 
   const selectOption = (nextValue: string) => {
     onChange(nextValue)
@@ -121,7 +133,10 @@ export function ComboboxControl({
   }
 
   const focusItemAtIndex = (index: number) => {
-    const clampedIndex = Math.max(0, Math.min(index, filteredOptions.length - 1))
+    const clampedIndex = Math.max(
+      0,
+      Math.min(index, filteredOptions.length - 1),
+    )
     setActiveIndex(clampedIndex)
     const element = itemRefs.current[clampedIndex]
     element?.focus()
@@ -159,7 +174,11 @@ export function ComboboxControl({
             triggerClassName,
           )}
           onKeyDown={(event) => {
-            if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+            if (
+              event.key === "ArrowDown" ||
+              event.key === "Enter" ||
+              event.key === " "
+            ) {
               event.preventDefault()
               setOpen(true)
             }
@@ -180,9 +199,7 @@ export function ComboboxControl({
             autoFocus
             value={query}
             placeholder={searchPlaceholder}
-            onChange={(event) => setQuery(event.target.value)}
-            wrapperClassName="gap-2 px-3 py-2"
-            iconClassName="size-3.5"
+            onValueChange={setQuery}
             className="h-6 text-[0.72rem]"
             onKeyDown={(event) => {
               if (event.key === "ArrowDown") {
@@ -193,7 +210,9 @@ export function ComboboxControl({
               if (event.key === "ArrowUp") {
                 event.preventDefault()
                 focusItemAtIndex(
-                  activeIndex >= 0 ? activeIndex - 1 : filteredOptions.length - 1,
+                  activeIndex >= 0
+                    ? activeIndex - 1
+                    : filteredOptions.length - 1,
                 )
               }
 
@@ -224,7 +243,9 @@ export function ComboboxControl({
             }}
           >
             {filteredOptions.length === 0 ? (
-              <CommandEmpty className="px-2 py-6 text-xs">{emptyMessage}</CommandEmpty>
+              <CommandEmpty className="px-2 py-6 text-xs">
+                {emptyMessage}
+              </CommandEmpty>
             ) : null}
 
             {filteredOptions.map((option, index) => {
@@ -340,7 +361,9 @@ export function FormCombobox<TFieldValues extends FieldValues>({
               renderOption={renderOption}
               renderValue={renderValue}
             />
-            <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+            <FieldError
+              errors={fieldState.error ? [fieldState.error] : undefined}
+            />
           </Field>
         )
       }}

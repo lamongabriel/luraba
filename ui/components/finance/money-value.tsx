@@ -1,6 +1,6 @@
-import { cn } from "@/lib/utils";
-import { formatCurrency, formatSignedCurrency } from "@/lib/finance";
-import { typographyVariants } from "@/components/ui/typography";
+import { typographyVariants } from "@/components/ui/typography"
+import { formatCurrency, formatSignedCurrency } from "@/lib/finance"
+import { cn } from "@/lib/utils"
 
 export function MoneyValue({
   amount,
@@ -9,15 +9,17 @@ export function MoneyValue({
   language = "en",
   className,
 }: {
-  amount: number;
-  currencyCode: string;
-  signed?: boolean;
-  language?: string;
-  className?: string;
+  amount: number
+  currencyCode: string
+  signed?: boolean
+  language?: string
+  className?: string
 }) {
   return (
     <span className={cn(typographyVariants({ variant: "mono" }), className)}>
-      {signed ? formatSignedCurrency(amount, currencyCode, language) : formatCurrency(amount, currencyCode, language)}
+      {signed
+        ? formatSignedCurrency(amount, currencyCode, language)
+        : formatCurrency(amount, currencyCode, language)}
     </span>
-  );
+  )
 }

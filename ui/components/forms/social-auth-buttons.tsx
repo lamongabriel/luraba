@@ -1,8 +1,8 @@
 "use client"
 
-import type { SignInSocialHttpBody } from "@/interfaces/http/auth-http"
 import { Button } from "@/components/ui/button"
 import { Typography } from "@/components/ui/typography"
+import type { SignInSocialHttpBody } from "@/interfaces/http/auth-http"
 import { useSocialSignInMutation } from "@/mutations/auth/use-social-sign-in-mutation"
 import { useAuthProvidersQuery } from "@/queries/auth/use-auth-providers-query"
 
@@ -62,9 +62,11 @@ export function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
     return null
   }
 
-  const availableProviders = Object.entries(providersQuery.data.socialProviders).filter(
-    ([, enabled]) => enabled,
-  ) as Array<[keyof typeof socialProviderLabels, boolean]>
+  const availableProviders = Object.entries(
+    providersQuery.data.socialProviders,
+  ).filter(([, enabled]) => enabled) as Array<
+    [keyof typeof socialProviderLabels, boolean]
+  >
 
   if (availableProviders.length === 0) {
     return null

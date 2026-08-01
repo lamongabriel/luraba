@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import * as React from "react";
+import type * as React from "react"
 
-import { PageHeader } from "@/components/finance/page-header";
-import { PageReveal } from "@/components/motion/reveal";
-import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/finance/page-header"
+import { PageReveal } from "@/components/motion/reveal"
+import { cn } from "@/lib/utils"
 
 export function InternalPageLayout({
   title,
@@ -12,15 +12,15 @@ export function InternalPageLayout({
   children,
   className,
 }: {
-  title: string;
-  actions?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
+  title: string
+  actions?: React.ReactNode
+  children: React.ReactNode
+  className?: string
 }) {
   return (
     <PageReveal className={cn("space-y-10", className)}>
       <PageHeader title={title} actions={actions} />
       {children}
     </PageReveal>
-  );
+  )
 }

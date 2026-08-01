@@ -1,7 +1,7 @@
 "use client"
 
-import axios from "axios"
 import type { AxiosInstance } from "axios"
+import axios from "axios"
 
 import { apiConfig } from "@/config/api"
 import { STORAGE_KEYS } from "@/config/storage"

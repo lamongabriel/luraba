@@ -1,8 +1,9 @@
 "use client"
 
-import * as React from "react"
 import { useRouter } from "next/navigation"
+import * as React from "react"
 
+import { NoActiveHouseholdState } from "@/components/households/no-active-household-state"
 import { Loader } from "@/components/ui/loader"
 import { logout } from "@/lib/auth/logout"
 import {
@@ -24,22 +25,33 @@ export function AuthGate({ children, mode = "protected" }: AuthGateProps) {
   const router = useRouter()
   const hydrate = useAuthSessionStore((state) => state.hydrate)
   const clear = useAuthSessionStore((state) => state.clear)
-  const setBootstrapStatus = useAuthSessionStore((state) => state.setBootstrapStatus)
+  const setBootstrapStatus = useAuthSessionStore(
+    (state) => state.setBootstrapStatus,
+  )
 
-  const protectedSessionQuery = useCurrentUserQuery(mode !== "guest")
-  const guestSessionQuery = useProbeCurrentUserQuery(mode === "guest")
-  const sessionQuery = mode === "guest" ? guestSessionQuery : protectedSessionQuery
+  const protectedSessionQuery = useCurrentUserQuery({
+    enabled: mode !== "guest",
+  })
+  const guestSessionQuery = useProbeCurrentUserQuery({
+    enabled: mode === "guest",
+  })
+  const sessionQuery =
+    mode === "guest" ? guestSessionQuery : protectedSessionQuery
 
   const protectedHouseholdsQuery = useHouseholdsQuery(
-    mode !== "guest" && Boolean(protectedSessionQuery.data),
+    {},
+    { enabled: mode !== "guest" && Boolean(protectedSessionQuery.data) },
   )
   const guestHouseholdsQuery = useProbeHouseholdsQuery(
-    mode === "guest" && Boolean(guestSessionQuery.data),
+    {},
+    { enabled: mode === "guest" && Boolean(guestSessionQuery.data) },
   )
-  const householdsQuery = mode === "guest" ? guestHouseholdsQuery : protectedHouseholdsQuery
+  const householdsQuery =
+    mode === "guest" ? guestHouseholdsQuery : protectedHouseholdsQuery
 
   const isPending =
-    sessionQuery.isPending || (Boolean(sessionQuery.data) && householdsQuery.isPending)
+    sessionQuery.isPending ||
+    (Boolean(sessionQuery.data) && householdsQuery.isPending)
 
   React.useEffect(() => {
     if (isPending) {
@@ -48,7 +60,7 @@ export function AuthGate({ children, mode = "protected" }: AuthGateProps) {
     }
 
     if (sessionQuery.data && householdsQuery.data) {
-      hydrate(sessionQuery.data, householdsQuery.data)
+      hydrate(sessionQuery.data, householdsQuery.data.data)
       return
     }
 
@@ -98,6 +110,10 @@ export function AuthGate({ children, mode = "protected" }: AuthGateProps) {
 
   if (!sessionQuery.data || !householdsQuery.data) {
     return <Loader fullPage size="lg" />
+  }
+
+  if (!sessionQuery.data.household) {
+    return <NoActiveHouseholdState />
   }
 
   return <>{children}</>
