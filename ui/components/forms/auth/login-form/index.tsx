@@ -35,7 +35,6 @@ export function LoginForm() {
           placeholder="you@example.com"
           inputType="email"
           autoComplete="email"
-          inputClassName="h-10 rounded-xl"
         />
 
         <FormItem
@@ -45,7 +44,6 @@ export function LoginForm() {
           placeholder="Enter your password"
           inputType="password"
           autoComplete="current-password"
-          inputClassName="h-10 rounded-xl"
         />
 
         {loginMutation.errorMessage ? (
@@ -59,7 +57,7 @@ export function LoginForm() {
           isLoading={loginMutation.isPending}
           loadingText="Signing in..."
           size="lg"
-          className="h-10 w-full rounded-xl border-primary/30 bg-primary text-primary-foreground shadow-none hover:brightness-105"
+          className="h-10 w-full"
         >
           Continue
         </Button>

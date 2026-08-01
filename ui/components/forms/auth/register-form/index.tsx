@@ -34,7 +34,6 @@ export function RegisterForm() {
           label="Name"
           placeholder="Your name"
           autoComplete="name"
-          inputClassName="h-10 rounded-xl"
         />
 
         <FormItem
@@ -44,7 +43,6 @@ export function RegisterForm() {
           placeholder="you@example.com"
           inputType="email"
           autoComplete="email"
-          inputClassName="h-10 rounded-xl"
         />
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -55,7 +53,6 @@ export function RegisterForm() {
             placeholder="Create a password"
             inputType="password"
             autoComplete="new-password"
-            inputClassName="h-10 rounded-xl"
           />
 
           <FormItem
@@ -65,7 +62,6 @@ export function RegisterForm() {
             placeholder="Repeat password"
             inputType="password"
             autoComplete="new-password"
-            inputClassName="h-10 rounded-xl"
           />
         </div>
 
@@ -80,7 +76,7 @@ export function RegisterForm() {
           isLoading={registerMutation.isPending}
           loadingText="Creating account..."
           size="lg"
-          className="h-10 w-full rounded-xl border-primary/30 bg-primary text-primary-foreground shadow-none hover:brightness-105"
+          className="h-10 w-full"
         >
           Create account
         </Button>
