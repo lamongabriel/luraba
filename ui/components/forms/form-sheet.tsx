@@ -31,7 +31,7 @@ export function FormSheet({
       <SheetContent
         side="right"
         className={cn(
-          "w-full overflow-y-auto border-l border-border/70 sm:max-w-xl bg-secondary/05",
+          "w-full overflow-y-auto border-l border-border/70 bg-[var(--color-container)] data-[side=right]:sm:max-w-xl",
           className,
         )}
       >

@@ -2,23 +2,21 @@
 
 import { ArrowDown01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import * as React from "react"
+import type * as React from "react"
 import type { Control, FieldValues, Path } from "react-hook-form"
 import { Controller } from "react-hook-form"
 
-import { Button } from "@/components/ui/button"
 import {
-  Command,
-  CommandEmpty,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command"
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxGroup,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxTrigger,
+} from "@/components/ui/combobox"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
 export interface FormComboboxOption {
@@ -78,234 +76,80 @@ export function ComboboxControl({
   renderOption,
   renderValue,
 }: ComboboxControlProps) {
-  const [open, setOpen] = React.useState(false)
-  const [query, setQuery] = React.useState("")
-  const [activeIndex, setActiveIndex] = React.useState(-1)
-  const inputRef = React.useRef<HTMLInputElement | null>(null)
-  const triggerRef = React.useRef<HTMLButtonElement | null>(null)
-  const itemRefs = React.useRef<Array<HTMLDivElement | null>>([])
-
-  const filteredOptions = options.filter((option) => {
-    const searchValue = query.trim().toLowerCase()
-
-    if (!searchValue) {
-      return true
-    }
-
-    const haystack = [
-      option.label,
-      option.description ?? "",
-      option.searchText ?? "",
-    ]
-      .join(" ")
-      .toLowerCase()
-
-    return haystack.includes(searchValue)
-  })
-
-  React.useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    const frame = window.requestAnimationFrame(() => {
-      inputRef.current?.focus()
-    })
-
-    return () => window.cancelAnimationFrame(frame)
-  }, [open])
-
   const selectedOption = options.find((option) => option.value === value)
-  const triggerLabel = renderValue
+  const selectedLabel = renderValue
     ? renderValue(selectedOption)
-    : selectedOption
-      ? selectedOption.label
-      : placeholder
-  const selectedIndex = filteredOptions.findIndex(
-    (option) => option.value === value,
-  )
-
-  const selectOption = (nextValue: string) => {
-    onChange(nextValue)
-    setOpen(false)
-    setQuery("")
-    triggerRef.current?.focus()
-  }
-
-  const focusItemAtIndex = (index: number) => {
-    const clampedIndex = Math.max(
-      0,
-      Math.min(index, filteredOptions.length - 1),
-    )
-    setActiveIndex(clampedIndex)
-    const element = itemRefs.current[clampedIndex]
-    element?.focus()
-    element?.scrollIntoView({ block: "nearest" })
-  }
+    : selectedOption?.label
 
   return (
-    <Popover
-      open={open}
-      onOpenChange={(nextOpen) => {
-        setOpen(nextOpen)
-
-        if (!nextOpen) {
-          setQuery("")
-          setActiveIndex(-1)
-          triggerRef.current?.focus()
-        } else {
-          setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0)
-        }
-      }}
+    <Combobox
+      data={options.map((option) => ({
+        label: option.label,
+        value: option.value,
+      }))}
+      type="option"
+      value={value}
+      onValueChange={onChange}
     >
-      <PopoverTrigger asChild>
-        <Button
-          ref={triggerRef}
-          id={id}
-          type="button"
-          variant="outline"
-          aria-invalid={ariaInvalid}
-          aria-expanded={open}
-          aria-haspopup="dialog"
-          disabled={disabled}
-          className={cn(
-            "h-10 w-full justify-between rounded-xl border-transparent bg-background/40 px-3 text-left text-xs shadow-none hover:bg-background/50",
-            !selectedOption && "text-muted-foreground",
-            triggerClassName,
-          )}
-          onKeyDown={(event) => {
-            if (
-              event.key === "ArrowDown" ||
-              event.key === "Enter" ||
-              event.key === " "
-            ) {
-              event.preventDefault()
-              setOpen(true)
-            }
-          }}
-        >
-          <span className="min-w-0 truncate">{triggerLabel}</span>
-          <HugeiconsIcon
-            icon={ArrowDown01Icon}
-            strokeWidth={2}
-            className="size-3.5 shrink-0 text-muted-foreground"
-          />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="max-h-60 overflow-hidden p-0">
-        <Command className="rounded-[1.2rem] border-0 bg-transparent text-xs shadow-none">
-          <CommandInput
-            ref={inputRef}
-            autoFocus
-            value={query}
-            placeholder={searchPlaceholder}
-            onValueChange={setQuery}
-            className="h-6 text-[0.72rem]"
-            onKeyDown={(event) => {
-              if (event.key === "ArrowDown") {
-                event.preventDefault()
-                focusItemAtIndex(activeIndex >= 0 ? activeIndex + 1 : 0)
-              }
-
-              if (event.key === "ArrowUp") {
-                event.preventDefault()
-                focusItemAtIndex(
-                  activeIndex >= 0
-                    ? activeIndex - 1
-                    : filteredOptions.length - 1,
-                )
-              }
-
-              if (event.key === "Enter" && filteredOptions.length > 0) {
-                event.preventDefault()
-                const indexToSelect =
-                  activeIndex >= 0
-                    ? activeIndex
-                    : selectedIndex >= 0
-                      ? selectedIndex
-                      : 0
-                selectOption(filteredOptions[indexToSelect].value)
-              }
-
-              if (event.key === "Escape") {
-                event.preventDefault()
-                setOpen(false)
-                setQuery("")
-                triggerRef.current?.focus()
-              }
-            }}
-          />
-          <div
-            role="listbox"
-            className="max-h-48 overflow-y-auto overscroll-contain p-1.5 pr-1"
-            onWheelCapture={(event) => {
-              event.stopPropagation()
-            }}
-          >
-            {filteredOptions.length === 0 ? (
-              <CommandEmpty className="px-2 py-6 text-xs">
-                {emptyMessage}
-              </CommandEmpty>
-            ) : null}
-
-            {filteredOptions.map((option, index) => {
+      <ComboboxTrigger
+        id={id}
+        type="button"
+        disabled={disabled}
+        aria-invalid={ariaInvalid}
+        className={cn(
+          "h-10 w-full justify-between rounded-xl border-border/90 bg-[var(--color-container-inset)] px-3 text-left text-xs font-normal shadow-none hover:bg-muted/70",
+          !selectedOption && "text-muted-foreground",
+          triggerClassName,
+        )}
+      >
+        <span className="min-w-0 truncate">{selectedLabel ?? placeholder}</span>
+        <HugeiconsIcon
+          icon={ArrowDown01Icon}
+          strokeWidth={2}
+          className="size-3.5 shrink-0 text-muted-foreground"
+        />
+      </ComboboxTrigger>
+      <ComboboxContent
+        className="max-h-[min(20rem,var(--radix-popover-content-available-height))] rounded-xl border border-border/70 p-0 shadow-none"
+        popoverOptions={{ align: "start" }}
+      >
+        <ComboboxInput
+          placeholder={searchPlaceholder}
+          className="h-9 text-xs"
+        />
+        <ComboboxList className="max-h-64 p-1.5 [scrollbar-width:thin]">
+          <ComboboxEmpty className="px-2 py-6 text-xs">
+            {emptyMessage}
+          </ComboboxEmpty>
+          <ComboboxGroup>
+            {options.map((option) => {
               const selected = option.value === value
 
               return (
-                <CommandItem
+                <ComboboxItem
                   key={option.value}
-                  ref={(element) => {
-                    itemRefs.current[index] = element
-                  }}
+                  value={option.value}
+                  keywords={[
+                    option.label,
+                    option.description ?? "",
+                    option.searchText ?? "",
+                  ]}
                   className="rounded-lg px-2.5 py-2 text-xs"
-                  onFocus={() => setActiveIndex(index)}
-                  onMouseEnter={() => setActiveIndex(index)}
-                  onSelect={() => {
-                    selectOption(option.value)
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "ArrowDown") {
-                      event.preventDefault()
-                      focusItemAtIndex(index + 1)
-                    }
-
-                    if (event.key === "ArrowUp") {
-                      event.preventDefault()
-                      if (index === 0) {
-                        inputRef.current?.focus()
-                        setActiveIndex(-1)
-                        return
-                      }
-
-                      focusItemAtIndex(index - 1)
-                    }
-
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault()
-                      selectOption(option.value)
-                    }
-
-                    if (event.key === "Escape") {
-                      event.preventDefault()
-                      setOpen(false)
-                      setQuery("")
-                      triggerRef.current?.focus()
-                    }
-                  }}
                 >
-                  {renderOption ? (
-                    renderOption(option, selected)
-                  ) : (
-                    <span className="flex min-w-0 items-center gap-3">
-                      <span className="truncate">{option.label}</span>
-                      {option.description ? (
-                        <span className="truncate text-[0.7rem] text-muted-foreground">
-                          {option.description}
-                        </span>
-                      ) : null}
-                    </span>
-                  )}
-
+                  <span className="flex min-w-0 flex-1 items-center gap-3">
+                    {renderOption ? (
+                      renderOption(option, selected)
+                    ) : (
+                      <>
+                        <span className="truncate">{option.label}</span>
+                        {option.description ? (
+                          <span className="truncate text-[0.7rem] text-muted-foreground">
+                            {option.description}
+                          </span>
+                        ) : null}
+                      </>
+                    )}
+                  </span>
                   {selected ? (
                     <HugeiconsIcon
                       icon={Tick02Icon}
@@ -313,13 +157,13 @@ export function ComboboxControl({
                       className="size-3.5 shrink-0 text-muted-foreground"
                     />
                   ) : null}
-                </CommandItem>
+                </ComboboxItem>
               )
             })}
-          </div>
-        </Command>
-      </PopoverContent>
-    </Popover>
+          </ComboboxGroup>
+        </ComboboxList>
+      </ComboboxContent>
+    </Combobox>
   )
 }
 

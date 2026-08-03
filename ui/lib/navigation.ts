@@ -2,6 +2,7 @@ import {
   ArrowLeftRightIcon,
   DashboardSquare01Icon,
   DollarCircleIcon,
+  Layers01Icon,
   PieChart02Icon,
   Settings02Icon,
   TagsIcon,
@@ -54,7 +55,7 @@ export const mainNav: NavigationItem[] = [
   {
     title: "Categories",
     href: "/categories",
-    icon: TagsIcon,
+    icon: Layers01Icon,
     permission: PERMISSIONS.CATEGORIES_READ,
   },
   {

@@ -215,7 +215,7 @@ export function FilterDate<TData>(props: FilterDateProps<TData>) {
             variant="ghost"
             size="icon-xs"
             aria-label={`Clear ${title ?? "date"} filter`}
-            className="absolute top-1/2 right-1 z-10 -translate-y-1/2 rounded-sm opacity-70 shadow-none hover:opacity-100"
+            className="absolute top-1/2 right-1 z-10 -translate-y-1/2 opacity-70 hover:opacity-100"
             onClick={onReset}
           >
             <HugeiconsIcon icon={CancelCircleIcon} strokeWidth={2} />

@@ -5,6 +5,11 @@ export interface ApiError {
 
 export type SortDirection = "asc" | "desc"
 
+/** Maximum `perPage` accepted by the API (see `api/src/shared/list.ts`). Use
+ * this when a page/picker needs to fetch effectively everything at once
+ * (e.g. flat lists like categories/tags) instead of hardcoding the number. */
+export const MAX_PER_PAGE = 1000
+
 export interface BaseListHttpQuery<TSort extends string = string> {
   page?: number
   perPage?: number

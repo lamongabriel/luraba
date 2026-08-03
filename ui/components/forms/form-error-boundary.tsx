@@ -65,7 +65,7 @@ class FormErrorBoundaryRoot extends React.Component<
 
             <Button
               type="button"
-              className="h-10 w-full rounded-xl border-primary/30 bg-primary text-primary-foreground shadow-none hover:brightness-105"
+              className="h-10 w-full"
               onClick={this.handleReset}
             >
               Reload form

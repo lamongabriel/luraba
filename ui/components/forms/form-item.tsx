@@ -3,8 +3,16 @@
 import type * as React from "react"
 import type { Control, FieldValues, Path } from "react-hook-form"
 import { Controller } from "react-hook-form"
+import { CategorySelectControl } from "@/components/forms/form-category-select"
+import {
+  ColorPickerControl,
+  type ColorPickerPreset,
+  ColorSwatchesControl,
+} from "@/components/forms/form-color-picker"
 import type { FormComboboxOption } from "@/components/forms/form-combobox"
 import { ComboboxControl } from "@/components/forms/form-combobox"
+import { IconPickerControl } from "@/components/forms/form-icon-picker"
+import { TagSelectControl } from "@/components/forms/form-tag-select"
 import {
   Field,
   FieldDescription,
@@ -20,6 +28,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import type { CategoryType } from "@/interfaces/category"
+import type { CuratedIconOption } from "@/lib/icons"
 
 type BaseFormItemProps<TFieldValues extends FieldValues> = {
   control: Control<TFieldValues>
@@ -37,7 +47,7 @@ type BaseFormItemProps<TFieldValues extends FieldValues> = {
 type InputFormItemProps<TFieldValues extends FieldValues> =
   BaseFormItemProps<TFieldValues> & {
     type?: "input"
-    inputType?: "text" | "email" | "password" | "number"
+    inputType?: "text" | "email" | "password" | "number" | "date"
     step?: string
     readOnly?: boolean
     format?: (value: string) => string
@@ -78,6 +88,29 @@ type TextareaFormItemProps<TFieldValues extends FieldValues> =
     textareaClassName?: string
   }
 
+type ColorFormItemProps<TFieldValues extends FieldValues> =
+  BaseFormItemProps<TFieldValues> & {
+    type: "color"
+    presets?: readonly ColorPickerPreset[]
+    triggerClassName?: string
+  }
+
+type ColorSwatchesFormItemProps<TFieldValues extends FieldValues> =
+  BaseFormItemProps<TFieldValues> & {
+    type: "colorSwatches"
+    /** Flat list of hex colors shown as a row of selectable swatches. */
+    presets: readonly string[]
+  }
+
+type IconFormItemProps<TFieldValues extends FieldValues> =
+  BaseFormItemProps<TFieldValues> & {
+    type: "icon"
+    /** Curated icon options shown in a searchable grid. */
+    icons: readonly CuratedIconOption[]
+    /** Tints the selected icon's glyph (e.g. the form's chosen color). */
+    tintColor?: string
+  }
+
 type IntFormItemProps<TFieldValues extends FieldValues> =
   BaseFormItemProps<TFieldValues> & {
     type: "int"
@@ -85,12 +118,36 @@ type IntFormItemProps<TFieldValues extends FieldValues> =
     inputClassName?: string
   }
 
+type CategoryFormItemProps<TFieldValues extends FieldValues> =
+  BaseFormItemProps<TFieldValues> & {
+    type: "category"
+    /** Restrict the options to a single category type. */
+    categoryType?: CategoryType
+    /** Exclude a category id (e.g. to prevent self-selection as a parent). */
+    excludeId?: string
+    /** Adds a "None" option so the field can be reset to empty. */
+    allowClear?: boolean
+    clearLabel?: string
+    triggerClassName?: string
+  }
+
+type TagFormItemProps<TFieldValues extends FieldValues> =
+  BaseFormItemProps<TFieldValues> & {
+    type: "tag"
+    triggerClassName?: string
+  }
+
 type FormItemProps<TFieldValues extends FieldValues> =
   | InputFormItemProps<TFieldValues>
   | SelectFormItemProps<TFieldValues>
   | ComboboxFormItemProps<TFieldValues>
+  | ColorFormItemProps<TFieldValues>
+  | ColorSwatchesFormItemProps<TFieldValues>
+  | IconFormItemProps<TFieldValues>
   | TextareaFormItemProps<TFieldValues>
   | IntFormItemProps<TFieldValues>
+  | CategoryFormItemProps<TFieldValues>
+  | TagFormItemProps<TFieldValues>
 
 export function FormItem<TFieldValues extends FieldValues>(
   props: FormItemProps<TFieldValues>,
@@ -205,6 +262,66 @@ export function FormItem<TFieldValues extends FieldValues>(
                 triggerClassName={props.triggerClassName}
                 renderOption={props.renderOption}
                 renderValue={props.renderValue}
+              />
+            )}
+
+            {props.type === "color" && (
+              <ColorPickerControl
+                id={inputId}
+                value={typeof field.value === "string" ? field.value : ""}
+                onChange={field.onChange}
+                placeholder={placeholder}
+                presets={props.presets}
+                disabled={disabled}
+                ariaInvalid={hasError}
+                className={props.triggerClassName}
+              />
+            )}
+
+            {props.type === "colorSwatches" && (
+              <ColorSwatchesControl
+                value={typeof field.value === "string" ? field.value : ""}
+                onChange={field.onChange}
+                presets={props.presets}
+                disabled={disabled}
+              />
+            )}
+
+            {props.type === "icon" && (
+              <IconPickerControl
+                value={typeof field.value === "string" ? field.value : ""}
+                onChange={field.onChange}
+                icons={props.icons}
+                tintColor={props.tintColor}
+                disabled={disabled}
+              />
+            )}
+
+            {props.type === "category" && (
+              <CategorySelectControl
+                id={inputId}
+                value={typeof field.value === "string" ? field.value : ""}
+                onChange={field.onChange}
+                placeholder={placeholder}
+                type={props.categoryType}
+                excludeId={props.excludeId}
+                allowClear={props.allowClear}
+                clearLabel={props.clearLabel}
+                disabled={disabled}
+                ariaInvalid={hasError}
+                triggerClassName={props.triggerClassName}
+              />
+            )}
+
+            {props.type === "tag" && (
+              <TagSelectControl
+                id={inputId}
+                value={Array.isArray(field.value) ? field.value : []}
+                onChange={field.onChange}
+                placeholder={placeholder}
+                disabled={disabled}
+                ariaInvalid={hasError}
+                triggerClassName={props.triggerClassName}
               />
             )}
 

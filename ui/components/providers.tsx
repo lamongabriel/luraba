@@ -13,7 +13,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <NuqsAdapter>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>{children}</TooltipProvider>
-        <Toaster closeButton position="top-right" richColors />
+        <Toaster position="top-right" />
       </QueryClientProvider>
     </NuqsAdapter>
   )

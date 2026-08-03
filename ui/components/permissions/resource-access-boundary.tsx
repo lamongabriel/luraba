@@ -66,7 +66,7 @@ export function ResourceUnavailable({
         </Typography>
         <Button
           variant="outline"
-          className="mt-6 shadow-none"
+          className="mt-6"
           onClick={() => router.push(backHref ?? safeBackHref)}
         >
           {backLabel}

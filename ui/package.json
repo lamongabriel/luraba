@@ -14,7 +14,8 @@
     "url": "https://github.com/lamongabriel/luraba"
   },
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --webpack",
+    "dev:turbo": "next dev --turbopack",
     "build": "next build --webpack",
     "start": "next start",
     "check": "biome check .",
