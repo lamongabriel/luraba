@@ -16,6 +16,7 @@ import {
   CreateHouseholdInviteResponseSchema,
   CreateHouseholdRequestBodySchema,
   CreateHouseholdResponseSchema,
+  HouseholdInviteIdRequestParamsSchema,
   HouseholdInviteLinkResponseSchema,
   HouseholdInviteTokenRequestBodySchema,
   ListHouseholdInvitesRequestParamsSchema,
@@ -50,6 +51,18 @@ export const create = createAuthenticatedHandler({
   response: CreateHouseholdResponseSchema,
   handle: ({ user, body }) => householdsService.createHousehold(user.id, body),
   status: 'created',
+});
+
+export const get = createHouseholdHandler({
+  params: UpdateHouseholdRequestParamsSchema,
+  response: UpdateHouseholdResponseSchema,
+  handle: ({ household, params }) => householdsService.getHousehold(household, params.id),
+});
+
+export const remove = createHouseholdHandler({
+  params: UpdateHouseholdRequestParamsSchema,
+  handle: ({ household, params }) => householdsService.deleteHousehold(household, params.id),
+  status: 'no-content',
 });
 
 export const update = createHouseholdHandler({
@@ -128,6 +141,19 @@ export const acceptInvite = createAuthenticatedHandler({
 export const rejectInvite = createAuthenticatedHandler({
   body: HouseholdInviteTokenRequestBodySchema,
   handle: ({ user, body }) => householdsService.rejectInvite(user.email, body.token),
+  status: 'no-content',
+});
+
+export const acceptInviteById = createAuthenticatedHandler({
+  params: HouseholdInviteIdRequestParamsSchema,
+  response: AcceptHouseholdInviteResponseSchema,
+  handle: ({ user, params }) =>
+    householdsService.acceptInviteById(user.id, user.email, params.inviteId),
+});
+
+export const rejectInviteById = createAuthenticatedHandler({
+  params: HouseholdInviteIdRequestParamsSchema,
+  handle: ({ user, params }) => householdsService.rejectInviteById(user.email, params.inviteId),
   status: 'no-content',
 });
 

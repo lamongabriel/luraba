@@ -10,11 +10,23 @@ router.get('/invites/preview', householdsController.previewInvite);
 router.get('/invites', requireAccess(), householdsController.listMyInvites);
 router.post('/invites/accept', requireAccess(), householdsController.acceptInvite);
 router.post('/invites/reject', requireAccess(), householdsController.rejectInvite);
+router.post('/invites/:inviteId/accept', householdsController.acceptInviteById);
+router.post('/invites/:inviteId/reject', householdsController.rejectInviteById);
 
+router.get(
+  '/:id',
+  requireAccess({ permission: 'household.read', householdParam: 'id' }),
+  householdsController.get,
+);
 router.patch(
   '/:id',
   requireAccess({ permission: 'household.update', householdParam: 'id' }),
   householdsController.update,
+);
+router.delete(
+  '/:id',
+  requireAccess({ permission: 'household.delete', householdParam: 'id' }),
+  householdsController.remove,
 );
 router.get(
   '/:id/members',

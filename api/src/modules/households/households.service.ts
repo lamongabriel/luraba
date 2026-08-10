@@ -37,12 +37,6 @@ import type {
 
 const INVITATION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
 
-function assertCurrentHousehold(context: HouseholdContext, householdId: string): void {
-  if (context.householdId !== householdId) {
-    throw new ForbiddenError('Selected household does not match route household');
-  }
-}
-
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
@@ -237,6 +231,28 @@ export async function listHouseholds(
   return { data: page.rows.map(mapHousehold), meta: createListMeta(query, page.totalCount) };
 }
 
+export async function getHousehold(
+  context: HouseholdContext,
+  householdId: string,
+): Promise<Household> {
+  const household = await householdsRepository.findHouseholdForUser(context.userId, householdId);
+  if (!household) throw new NotFoundError('Household');
+  return mapHousehold(household);
+}
+
+export async function deleteHousehold(
+  context: HouseholdContext,
+  householdId: string,
+): Promise<void> {
+  if (context.role !== 'owner') {
+    throw new ForbiddenError('Only a household owner can delete the household');
+  }
+
+  if (!(await householdsRepository.deleteHousehold(householdId))) {
+    throw new NotFoundError('Household');
+  }
+}
+
 export async function createHousehold(
   userId: string,
   body: CreateHouseholdRequestBody,
@@ -268,7 +284,6 @@ export async function updateHousehold(
   householdId: string,
   body: UpdateHouseholdRequestBody,
 ): Promise<Household> {
-  assertCurrentHousehold(context, householdId);
   const current = await householdsRepository.findHouseholdById(householdId);
   if (!current) throw new NotFoundError('Household');
 
@@ -316,11 +331,10 @@ export async function updateHousehold(
 }
 
 export async function listMembers(
-  context: HouseholdContext,
+  _context: HouseholdContext,
   householdId: string,
   query: ListHouseholdMembersRequestQuery,
 ): Promise<ListResult<HouseholdMember>> {
-  assertCurrentHousehold(context, householdId);
   const page = await householdsRepository.listMembersPage(householdId, query);
   return { data: page.rows.map(mapHouseholdMember), meta: createListMeta(query, page.totalCount) };
 }
@@ -331,7 +345,6 @@ export async function updateMemberRole(
   userId: string,
   body: UpdateHouseholdMemberRequestBody,
 ): Promise<HouseholdMember> {
-  assertCurrentHousehold(context, householdId);
   const target = await householdsRepository.findMembership(householdId, userId);
   if (!target) throw new NotFoundError('Household member');
   if (!canManageRole(context.role, target.role) || !canManageRole(context.role, body.role)) {
@@ -358,7 +371,6 @@ export async function removeMember(
   householdId: string,
   userId: string,
 ): Promise<void> {
-  assertCurrentHousehold(context, householdId);
   const target = await householdsRepository.findMembership(householdId, userId);
   if (!target) throw new NotFoundError('Household member');
   if (!canManageRole(context.role, target.role)) {
@@ -375,7 +387,6 @@ export async function createInvite(
   householdId: string,
   body: CreateHouseholdInviteRequestBody,
 ): Promise<HouseholdInvite> {
-  assertCurrentHousehold(context, householdId);
   if (!canManageRole(context.role, body.role)) {
     throw new ForbiddenError('You do not have permission to invite users with this role');
   }
@@ -418,11 +429,10 @@ export async function createInvite(
 }
 
 export async function listHouseholdInvites(
-  context: HouseholdContext,
+  _context: HouseholdContext,
   householdId: string,
   query: ListHouseholdInvitesRequestQuery,
 ): Promise<ListResult<HouseholdInvite>> {
-  assertCurrentHousehold(context, householdId);
   const page = await householdsRepository.listInvitesForHouseholdPage(householdId, query);
   return { data: page.rows.map(mapHouseholdInvite), meta: createListMeta(query, page.totalCount) };
 }
@@ -489,6 +499,46 @@ export async function acceptInvite(
   };
 }
 
+async function acceptInviteRecord(
+  userId: string,
+  userEmail: string,
+  invite: Awaited<ReturnType<typeof householdsRepository.findInviteById>>,
+): Promise<AcceptHouseholdInviteResponse> {
+  assertInviteRecipient(invite, userEmail);
+  assertActionableInvite(invite);
+
+  if (await householdsRepository.findMembershipByEmail(invite.householdId, invite.email)) {
+    throw new ConflictError('User is already a member of this household');
+  }
+
+  await db.transaction(async (tx) => {
+    const accepted = await householdsRepository.acceptInvite(tx, invite.id);
+    if (!accepted) throw new ConflictError('This invitation is no longer available');
+    await householdsRepository.createMembership(tx, invite.householdId, userId, invite.role);
+    await householdsRepository.setDefaultHousehold(tx, userId, invite.householdId);
+    await householdsRepository.verifyUserEmail(tx, userId);
+  });
+
+  const membership = await householdsRepository.findMembership(invite.householdId, userId);
+  if (!membership) throw new NotFoundError('Household membership');
+
+  return {
+    household: {
+      id: invite.householdId,
+      name: membership.householdName,
+      role: membership.role,
+    },
+  };
+}
+
+export async function acceptInviteById(
+  userId: string,
+  userEmail: string,
+  inviteId: string,
+): Promise<AcceptHouseholdInviteResponse> {
+  return acceptInviteRecord(userId, userEmail, await householdsRepository.findInviteById(inviteId));
+}
+
 export async function rejectInvite(userEmail: string, token: string): Promise<void> {
   const invite = await householdsRepository.findInviteByTokenHash(
     hashHouseholdInvitationToken(token),
@@ -500,12 +550,20 @@ export async function rejectInvite(userEmail: string, token: string): Promise<vo
   }
 }
 
+export async function rejectInviteById(userEmail: string, inviteId: string): Promise<void> {
+  const invite = await householdsRepository.findInviteById(inviteId);
+  assertInviteRecipient(invite, userEmail);
+  assertActionableInvite(invite);
+  if (!(await householdsRepository.rejectInvite(invite.id))) {
+    throw new ConflictError('This invitation is no longer available');
+  }
+}
+
 async function rotateManagedInvite(
-  context: HouseholdContext,
+  _context: HouseholdContext,
   householdId: string,
   inviteId: string,
 ) {
-  assertCurrentHousehold(context, householdId);
   const invite = await householdsRepository.findInviteById(inviteId);
   if (!invite || invite.householdId !== householdId || invite.status !== 'pending') {
     throw new NotFoundError('Household invite');
@@ -541,11 +599,10 @@ export async function resendInvite(
 }
 
 export async function cancelInvite(
-  context: HouseholdContext,
+  _context: HouseholdContext,
   householdId: string,
   inviteId: string,
 ): Promise<void> {
-  assertCurrentHousehold(context, householdId);
   if (!(await householdsRepository.cancelInvite(householdId, inviteId))) {
     throw new NotFoundError('Household invite');
   }

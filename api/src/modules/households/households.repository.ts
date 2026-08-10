@@ -9,7 +9,7 @@ import { usersTable } from '@/db/schemas/users.schema';
 import type { TxClient } from '@/db/types';
 import { now } from '@/shared/lib/date';
 import { type DbListPage, getPagination } from '@/shared/list';
-import type { Currency } from '@/shared/validation/preferences';
+import type { Currency, Timezone } from '@/shared/validation/preferences';
 import { currencySchema } from '@/shared/validation/preferences';
 import {
   buildHouseholdInvitesListOrder,
@@ -280,7 +280,7 @@ class HouseholdsRepository {
         email: string;
         name: string;
         preferredCurrency: Currency;
-        preferredTimezone: 'America/Sao_Paulo' | 'UTC';
+        preferredTimezone: Timezone;
         defaultHouseholdId: string | null;
       }
     | undefined
@@ -368,6 +368,44 @@ class HouseholdsRepository {
       .innerJoin(householdsTable, eq(householdsTable.id, householdMembersTable.householdId))
       .where(eq(householdMembersTable.userId, userId))
       .orderBy(asc(householdsTable.name));
+  }
+
+  async findHouseholdForUser(userId: string, householdId: string) {
+    const rows = await db
+      .select(householdForUserSelect)
+      .from(householdMembersTable)
+      .innerJoin(householdsTable, eq(householdsTable.id, householdMembersTable.householdId))
+      .where(
+        and(
+          eq(householdMembersTable.userId, userId),
+          eq(householdMembersTable.householdId, householdId),
+        ),
+      )
+      .limit(1);
+
+    const row = rows[0];
+    return row
+      ? {
+          ...row,
+          defaultCurrencyId: currencySchema.parse(row.defaultCurrencyId),
+        }
+      : undefined;
+  }
+
+  async deleteHousehold(householdId: string): Promise<boolean> {
+    return db.transaction(async (tx) => {
+      await tx
+        .update(usersTable)
+        .set({ defaultHouseholdId: null, updatedAt: now() })
+        .where(eq(usersTable.defaultHouseholdId, householdId));
+
+      const rows = await tx
+        .delete(householdsTable)
+        .where(eq(householdsTable.id, householdId))
+        .returning({ id: householdsTable.id });
+
+      return rows.length > 0;
+    });
   }
 
   async listHouseholdsForUserPage(

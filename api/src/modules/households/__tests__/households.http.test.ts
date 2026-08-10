@@ -93,6 +93,53 @@ describe('households routes', () => {
     expect(denied.status).toBe(403);
   });
 
+  it('loads a route household without changing the selected household context', async () => {
+    const owner = await createAuthenticatedContext();
+    const target = await createAuthenticatedContext();
+    await createHouseholdMembership(target.household.id, owner.user.id, 'member');
+
+    const response = await request(app)
+      .get(`/api/v1/households/${target.household.id}`)
+      .set(createAuthHeaders(owner.token, owner.household.id));
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toMatchObject({ id: target.household.id, role: 'member' });
+  });
+
+  it('allows only owners to permanently delete a household and isolates the route', async () => {
+    const owner = await createAuthenticatedContext();
+    const member = await createUser({ email: 'delete-member@example.com' });
+    await createHouseholdMembership(owner.household.id, member.id, 'member');
+    const memberToken = await createAccessTokenForUser(member);
+    const outsider = await createAuthenticatedContext();
+
+    await request(app)
+      .delete(`/api/v1/households/${owner.household.id}`)
+      .set(createAuthHeaders(memberToken, owner.household.id))
+      .expect(403);
+
+    await request(app)
+      .delete(`/api/v1/households/${owner.household.id}`)
+      .set(createAuthHeaders(outsider.token, owner.household.id))
+      .expect(403);
+
+    await request(app)
+      .delete(`/api/v1/households/${owner.household.id}`)
+      .set(createAuthHeaders(owner.token, owner.household.id))
+      .expect(204);
+
+    const deleted = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(eq(usersTable.id, member.id));
+    expect(deleted).toHaveLength(1);
+
+    await request(app)
+      .get(`/api/v1/households/${owner.household.id}`)
+      .set(createAuthHeaders(owner.token))
+      .expect(403);
+  });
+
   it('lists rich member fields and filters global activity in SQL', async () => {
     const context = await createAuthenticatedContext();
     const activeAt = new Date('2026-05-10T12:00:00.000Z');

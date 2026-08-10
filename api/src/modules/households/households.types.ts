@@ -176,6 +176,10 @@ export const HouseholdInviteTokenRequestBodySchema = z.object({
   token: householdInviteTokenSchema,
 });
 
+export const HouseholdInviteIdRequestParamsSchema = z.object({
+  inviteId: z.uuid(),
+});
+
 export const AcceptHouseholdInviteResponseSchema = z.object({
   household: z.object({
     id: z.uuid(),
@@ -249,5 +253,6 @@ export type PreviewHouseholdInviteRequestQuery = z.infer<
 >;
 export type PreviewHouseholdInviteResponse = z.infer<typeof PreviewHouseholdInviteResponseSchema>;
 export type HouseholdInviteTokenRequestBody = z.infer<typeof HouseholdInviteTokenRequestBodySchema>;
+export type HouseholdInviteIdRequestParams = z.infer<typeof HouseholdInviteIdRequestParamsSchema>;
 export type AcceptHouseholdInviteResponse = z.infer<typeof AcceptHouseholdInviteResponseSchema>;
 export type HouseholdInviteLinkResponse = z.infer<typeof HouseholdInviteLinkResponseSchema>;
