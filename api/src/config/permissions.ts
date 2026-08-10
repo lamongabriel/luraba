@@ -10,6 +10,7 @@ export type { HouseholdRole };
 export const HOUSEHOLD_PERMISSIONS = [
   'household.read',
   'household.update',
+  'household.delete',
   'household.members.read',
   'household.members.manage',
   'household.invites.manage',
@@ -46,6 +47,10 @@ export const HOUSEHOLD_PERMISSIONS = [
   'creditCards.create',
   'creditCards.update',
   'creditCards.delete',
+  'recurringBills.read',
+  'recurringBills.create',
+  'recurringBills.update',
+  'recurringBills.delete',
 ] as const;
 
 export type HouseholdPermission = (typeof HOUSEHOLD_PERMISSIONS)[number];
@@ -54,7 +59,11 @@ const allPermissions = new Set<HouseholdPermission>(HOUSEHOLD_PERMISSIONS);
 
 export const HOUSEHOLD_ROLE_PERMISSIONS: Record<HouseholdRole, ReadonlySet<HouseholdPermission>> = {
   owner: allPermissions,
-  admin: new Set(HOUSEHOLD_PERMISSIONS.filter((permission) => permission !== 'household.update')),
+  admin: new Set(
+    HOUSEHOLD_PERMISSIONS.filter(
+      (permission) => permission !== 'household.update' && permission !== 'household.delete',
+    ),
+  ),
   member: new Set([
     'household.read',
     'accounts.read',
@@ -68,6 +77,9 @@ export const HOUSEHOLD_ROLE_PERMISSIONS: Record<HouseholdRole, ReadonlySet<House
     'merchants.read',
     'budgets.read',
     'creditCards.read',
+    'recurringBills.read',
+    'recurringBills.update',
+    'recurringBills.delete',
   ]),
   viewer: new Set([
     'household.read',
@@ -79,6 +91,8 @@ export const HOUSEHOLD_ROLE_PERMISSIONS: Record<HouseholdRole, ReadonlySet<House
     'merchants.read',
     'budgets.read',
     'creditCards.read',
+    'recurringBills.read',
+    'recurringBills.create',
   ]),
 };
 

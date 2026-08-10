@@ -3,7 +3,43 @@ import { pgEnum } from 'drizzle-orm/pg-core';
 // ─── User Preference Enums ───────────────────────────────────────────────
 export const preferredLanguageEnum = pgEnum('preferred_language', ['en', 'pt-BR']);
 export const preferredCurrencyEnum = pgEnum('preferred_currency', ['BRL', 'USD', 'EUR']);
-export const preferredTimezoneEnum = pgEnum('preferred_timezone', ['America/Sao_Paulo', 'UTC']);
+export const preferredTimezoneEnum = pgEnum('preferred_timezone', [
+  'UTC',
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Toronto',
+  'America/Vancouver',
+  'America/Mexico_City',
+  'America/Sao_Paulo',
+  'America/Argentina/Buenos_Aires',
+  'America/Bogota',
+  'America/Lima',
+  'Pacific/Honolulu',
+  'Atlantic/Reykjavik',
+  'Europe/London',
+  'Europe/Lisbon',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Europe/Madrid',
+  'Europe/Rome',
+  'Europe/Amsterdam',
+  'Europe/Moscow',
+  'Africa/Cairo',
+  'Africa/Johannesburg',
+  'Asia/Dubai',
+  'Asia/Kolkata',
+  'Asia/Bangkok',
+  'Asia/Singapore',
+  'Asia/Hong_Kong',
+  'Asia/Shanghai',
+  'Asia/Tokyo',
+  'Asia/Seoul',
+  'Australia/Perth',
+  'Australia/Sydney',
+  'Pacific/Auckland',
+]);
 export const preferredDateFormatEnum = pgEnum('preferred_date_format', [
   'DD/MM/YYYY',
   'MM/DD/YYYY',
@@ -29,7 +65,6 @@ export const defaultAccountOrderEnum = pgEnum('default_account_order', [
   'newest',
   'oldest',
 ]);
-export const countryCodeEnum = pgEnum('country_code', ['BR', 'US']);
 export const themePreferenceEnum = pgEnum('theme_preference', ['light', 'dark', 'system']);
 
 // ─── Account & Ledger Enums ──────────────────────────────────────────────

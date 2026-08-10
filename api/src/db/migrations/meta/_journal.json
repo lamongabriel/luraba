@@ -162,6 +162,48 @@
       "when": 1785549600000,
       "tag": "0022_category_parent_fk",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1785758400000,
+      "tag": "0023_credit_card_purchase_controls",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1785762000000,
+      "tag": "0024_transaction_tag_assignment_order",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1785765600000,
+      "tag": "0025_stable_transaction_tag_order",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1785769200000,
+      "tag": "0026_recurring_bills",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1785772800000,
+      "tag": "0027_household_country_codes",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1785776400000,
+      "tag": "0028_timezone_options",
+      "breakpoints": true
     }
   ]
 }

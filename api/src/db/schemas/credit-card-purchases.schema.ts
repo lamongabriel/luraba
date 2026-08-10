@@ -1,4 +1,12 @@
-import { bigint, integer, pgTable, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  bigint,
+  boolean,
+  integer,
+  pgTable,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { creditCardsTable } from './credit-cards.schema';
 import { creditExpenseTimingEnum, creditInstallmentBudgetModeEnum } from './enums.schema';
 import { transactionsTable } from './transactions.schema';
@@ -15,6 +23,7 @@ export const creditCardPurchasesTable = pgTable(
       .references(() => transactionsTable.id, { onDelete: 'cascade' }),
     purchaseAmount: bigint('purchase_amount', { mode: 'number' }).notNull(),
     installmentCount: integer('installment_count').notNull(),
+    includeInBudget: boolean('include_in_budget').notNull().default(true),
     budgetExpenseTiming: creditExpenseTimingEnum('budget_expense_timing').notNull(),
     budgetInstallmentMode: creditInstallmentBudgetModeEnum('budget_installment_mode').notNull(),
     createdAt: timestamp('created_at').notNull().defaultNow(),

@@ -2,7 +2,6 @@ import { sql } from 'drizzle-orm';
 import { integer, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { currenciesTable } from './currencies.schema';
 import {
-  countryCodeEnum,
   creditExpenseTimingEnum,
   creditInstallmentBudgetModeEnum,
   householdInviteStatusEnum,
@@ -18,7 +17,7 @@ export const householdsTable = pgTable('households', {
   defaultCurrencyId: varchar('default_currency_id', { length: 3 })
     .notNull()
     .references(() => currenciesTable.code, { onDelete: 'restrict' }),
-  countryCode: countryCodeEnum('country_code').notNull().default('BR'),
+  countryCode: varchar('country_code', { length: 2 }).notNull().default('BR'),
   timezone: preferredTimezoneEnum('timezone').notNull().default('America/Sao_Paulo'),
   budgetMonthStartsOn: integer('budget_month_starts_on').notNull().default(1),
   creditExpenseTiming: creditExpenseTimingEnum('credit_expense_timing')
