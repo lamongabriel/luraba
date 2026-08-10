@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import {
-  COUNTRY_CODE_VALUES,
   CREDIT_EXPENSE_TIMING_VALUES,
   CREDIT_INSTALLMENT_BUDGET_MODE_VALUES,
   DATE_FORMAT_VALUES,
@@ -23,7 +22,7 @@ export const GetOnboardingOptionsResponseSchema = z.object({
   dateFormats: z.array(z.enum(DATE_FORMAT_VALUES)),
   preferredPeriods: z.array(z.enum(PREFERRED_PERIOD_VALUES)),
   preferredThemes: z.array(z.enum(PREFERRED_THEME_VALUES)),
-  countryCodes: z.array(z.enum(COUNTRY_CODE_VALUES)),
+  countryCodes: z.array(z.string().regex(/^[A-Z]{2}$/)),
   creditExpenseTimings: z.array(z.enum(CREDIT_EXPENSE_TIMING_VALUES)),
   creditInstallmentBudgetModes: z.array(z.enum(CREDIT_INSTALLMENT_BUDGET_MODE_VALUES)),
   budgetMonthStartDays: z.array(z.number().int().min(1).max(31)),
