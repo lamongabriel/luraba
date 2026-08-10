@@ -1,0 +1,110 @@
+name: luraba
+
+x-api-common: &api-common
+  build:
+    context: .
+    dockerfile: config/Dockerfile.api-dev
+  working_dir: /app
+  env_file:
+    - path: ./config/api.defaults.env
+      required: true
+    - path: ./api/.env
+      required: true
+  environment:
+    NODE_ENV: development
+    PORT: 8080
+    DB_HOST: db
+    DB_PORT: 5432
+    DB_NAME: luraba_db
+    DB_USER: luraba
+    DB_PASSWORD: luraba
+    BASE_URL: "http://localhost:${LURABA_API_PORT:-22677}"
+    FRONTEND_ORIGIN: "http://localhost:${LURABA_UI_PORT:-29670}"
+  volumes:
+    - ./api:/app
+    - api_node_modules:/app/node_modules
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: luraba_db
+      POSTGRES_USER: luraba
+      POSTGRES_PASSWORD: luraba
+    ports:
+      - "${LURABA_DB_PORT:-29762}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U luraba -d luraba_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  db-setup:
+    <<: *api-common
+    restart: "no"
+    command: ["sh", "-c", "pnpm db:migrate && pnpm db:seed"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *api-common
+    restart: unless-stopped
+    command: ["pnpm", "dev"]
+    ports:
+      - "${LURABA_API_PORT:-22677}:8080"
+    depends_on:
+      db-setup:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "/opt/luraba/check-api.mjs"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
+    stdin_open: true
+    tty: true
+
+  ui:
+    build:
+      context: .
+      dockerfile: config/Dockerfile.ui-dev
+    working_dir: /app
+    restart: unless-stopped
+    env_file:
+      - path: ./ui/.env
+        required: false
+      - path: ./ui/.env.local
+        required: false
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: "http://localhost:${LURABA_API_PORT:-22677}"
+      LURABA_UI_PORT: 3000
+      PORT: 3000
+      WATCHPACK_POLLING: "true"
+    ports:
+      - "${LURABA_UI_PORT:-29670}:3000"
+    volumes:
+      - ./ui:/app
+      - ui_node_modules:/app/node_modules
+      - ui_next_cache:/app/.next
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "/opt/luraba/check-ui.mjs"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+  api_node_modules:
+  ui_node_modules:
+  ui_next_cache:

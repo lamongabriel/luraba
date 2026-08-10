@@ -28,10 +28,10 @@ Use `feat:` for user-facing additions, `fix:` for bug fixes, and `BREAKING CHANG
 - Run the relevant checks before opening a PR.
 
 ```sh
-pnpm --filter ./api lint
-pnpm --filter ./api typecheck
-pnpm --filter ./api test:unit
-pnpm --filter ./api test
+pnpm --dir api lint
+pnpm --dir api typecheck
+pnpm --dir api test:unit
+pnpm --dir api test
 ```
 
 ## Releases

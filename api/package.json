@@ -6,8 +6,8 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "dev:docker": "docker compose -f docker-compose.yml up --build",
-    "dev:docker:down": "docker compose -f docker-compose.yml down -v",
+    "dev:docker": "docker compose -f docker-compose.dev.yml up --build",
+    "dev:docker:down": "docker compose -f docker-compose.dev.yml down -v",
     "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "start": "node dist/server.js",
     "db:push": "drizzle-kit push",
@@ -15,6 +15,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed/run.ts",
+    "db:seed:mock": "tsx src/db/seed/run-mock.ts",
     "db:configure": "npm run db:migrate && npm run db:seed",
     "test": "DOTENV_CONFIG_PATH=.env.test NODE_ENV=test RUN_DB_TESTS=1 vitest run",
     "test:unit": "vitest run --config vitest.unit.config.ts",

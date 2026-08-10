@@ -1,0 +1,4 @@
+interface:
+  display_name: "Luraba Development"
+  short_description: "Coordinate Luraba root, API, and UI work"
+  default_prompt: "Use $develop-luraba to coordinate a Luraba package change safely."

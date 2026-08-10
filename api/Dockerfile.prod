@@ -4,13 +4,11 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY api/package.json ./api/package.json
-RUN pnpm install --filter ./api... --frozen-lockfile --ignore-scripts
+RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
 
 WORKDIR /app/api
+COPY api/package.json api/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 COPY api/tsconfig.json ./tsconfig.json
 COPY api/tsconfig.build.json ./tsconfig.build.json
@@ -24,15 +22,13 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
 
 ENV NODE_ENV=production
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY api/package.json ./api/package.json
-RUN pnpm install --filter ./api --prod --frozen-lockfile --ignore-scripts && pnpm store prune
-
 WORKDIR /app/api
+COPY api/package.json api/pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts && pnpm store prune
 
 COPY --from=builder /app/api/dist ./dist
 

@@ -1,5 +1,5 @@
 name: Setup workspace
-description: Install the workspace Node.js and pnpm dependencies.
+description: Install the root, API, and UI Node.js and pnpm dependencies independently.
 
 runs:
   using: composite
@@ -14,8 +14,14 @@ runs:
       with:
         node-version-file: api/.nvmrc
         cache: pnpm
-        cache-dependency-path: pnpm-lock.yaml
+        cache-dependency-path: |
+          pnpm-lock.yaml
+          api/pnpm-lock.yaml
+          ui/pnpm-lock.yaml
 
     - name: Install dependencies
       shell: bash
-      run: pnpm install --frozen-lockfile
+      run: |
+        pnpm install --frozen-lockfile
+        pnpm --dir api install --frozen-lockfile
+        pnpm --dir ui install --frozen-lockfile

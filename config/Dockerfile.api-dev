@@ -1,0 +1,11 @@
+FROM node:22-alpine
+
+RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
+WORKDIR /app
+
+COPY api/package.json api/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --ignore-scripts
+
+COPY config/check-api.mjs /opt/luraba/check-api.mjs
+EXPOSE 8080
+CMD ["pnpm", "dev"]

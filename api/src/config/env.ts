@@ -13,7 +13,16 @@ import {
   validateOptionalCredentialPairs,
 } from '@/shared/validation/env';
 
-loadEnv({ path: process.env.DOTENV_CONFIG_PATH, override: true });
+// Process/container variables intentionally take precedence over local dotenv files.
+// This lets the root Compose stack replace host-only DB and port values safely.
+// Vitest reserves BASE_URL as "/" inside workers, so restore the test dotenv value
+// when that exact collision is present.
+const restoreVitestBaseUrl = process.env.NODE_ENV === 'test' && process.env.BASE_URL === '/';
+loadEnv({ path: process.env.DOTENV_CONFIG_PATH, override: restoreVitestBaseUrl });
+
+// Standalone local development can override the generated .env ports without editing it.
+if (process.env.LURABA_API_PORT) process.env.PORT = process.env.LURABA_API_PORT;
+if (process.env.LURABA_DB_PORT) process.env.DB_PORT = process.env.LURABA_DB_PORT;
 
 const socialAuthProviderDefinitions = [
   { prefix: 'GOOGLE', providerName: 'Google' },

@@ -5,7 +5,7 @@ services:
   api:
     build:
       context: ..
-      dockerfile: api/Dockerfile
+      dockerfile: api/Dockerfile.prod
       target: runner
     restart: always
     env_file: .env
