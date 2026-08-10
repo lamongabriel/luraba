@@ -9,6 +9,12 @@ import { transactionsTable } from '@/db/schemas/transactions.schema';
 import { entriesRepository } from '@/modules/entries/entries.repository';
 import * as entriesService from '@/modules/entries/entries.service';
 import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
+import {
+  addTransactionTags,
+  listTransactionTags,
+  replaceTransactionTags,
+  validateTagIds,
+} from '@/modules/tags/tags-associations.service';
 import { NotFoundError } from '@/shared/errors';
 import { formatDateOnly } from '@/shared/lib/date';
 import {
@@ -37,12 +43,13 @@ type PurchaseWithTransactionRow = {
   creditCardId: string;
   transactionId: string;
   description: string;
-  categoryId: string;
+  categoryId: string | null;
   merchantId: string | null;
   purchaseDate: Date;
   postedDate: Date;
   amount: number;
   installmentCount: number;
+  includeInBudget: boolean;
   budgetExpenseTiming: 'spend_month' | 'payment_month';
   budgetInstallmentMode: 'per_installment' | 'full_amount';
   createdAt: Date;
@@ -65,6 +72,7 @@ async function loadPurchase(
       postedDate: transactionsTable.postedDate,
       amount: creditCardPurchasesTable.purchaseAmount,
       installmentCount: creditCardPurchasesTable.installmentCount,
+      includeInBudget: creditCardPurchasesTable.includeInBudget,
       budgetExpenseTiming: creditCardPurchasesTable.budgetExpenseTiming,
       budgetInstallmentMode: creditCardPurchasesTable.budgetInstallmentMode,
       createdAt: creditCardPurchasesTable.createdAt,
@@ -81,13 +89,10 @@ async function loadPurchase(
     .limit(1);
 
   const purchase = rows[0];
-  if (!purchase?.categoryId) {
-    throw new NotFoundError('Credit card purchase');
-  }
+  if (!purchase) throw new NotFoundError('Credit card purchase');
 
   return {
     ...purchase,
-    categoryId: purchase.categoryId,
   };
 }
 
@@ -114,6 +119,7 @@ async function mapPurchaseResponse(
   purchase: PurchaseWithTransactionRow,
 ): Promise<CreditCardPurchaseResponse> {
   const installments = await loadPurchaseInstallments(purchase.purchaseId);
+  const tags = await listTransactionTags(purchase.transactionId);
 
   return {
     purchaseId: purchase.purchaseId,
@@ -126,6 +132,8 @@ async function mapPurchaseResponse(
     postedDate: formatDateOnly(purchase.postedDate),
     amount: purchase.amount,
     installmentCount: purchase.installmentCount,
+    tags,
+    includeInBudget: purchase.includeInBudget,
     budgetExpenseTiming: purchase.budgetExpenseTiming,
     budgetInstallmentMode: purchase.budgetInstallmentMode,
     installments: installments.map((installment) => ({
@@ -149,6 +157,7 @@ export async function createPurchase(
   await ensureExpenseCategory(context, dto.categoryId);
   await ensureMerchant(context, dto.merchantId);
   await ensureCardHasAvailableCredit(card, dto.amount);
+  const tagIds = await validateTagIds(context, dto.tagIds);
 
   const paymentMethod = await resolveCreditCardPaymentMethod(context, card.currencyCode);
   const postedDate = dto.postedDate ?? dto.purchaseDate;
@@ -162,7 +171,7 @@ export async function createPurchase(
       paymentMethodId: paymentMethod.id,
       description: dto.description,
       amount: dto.amount,
-      categoryId: dto.categoryId,
+      categoryId: dto.categoryId ?? null,
       merchantId: dto.merchantId,
       purchaseDate: dto.purchaseDate,
       postedDate,
@@ -175,6 +184,7 @@ export async function createPurchase(
         transactionId: transaction.id,
         purchaseAmount: dto.amount,
         installmentCount: dto.installmentCount,
+        includeInBudget: dto.includeInBudget,
         budgetExpenseTiming: context.creditExpenseTiming,
         budgetInstallmentMode: context.creditInstallmentBudgetMode,
       })
@@ -189,11 +199,15 @@ export async function createPurchase(
       dto.installmentCount,
     );
 
-    await recreateBudgetRecognitionsForPurchase(tx, purchase, {
-      categoryId: dto.categoryId,
-      currencyCode: card.currencyCode,
-      purchaseDate: postedDate,
-    });
+    await addTransactionTags(tx, transaction.id, tagIds);
+
+    if (dto.includeInBudget && dto.categoryId) {
+      await recreateBudgetRecognitionsForPurchase(tx, purchase, {
+        categoryId: dto.categoryId,
+        currencyCode: card.currencyCode,
+        purchaseDate: postedDate,
+      });
+    }
 
     const syncedCycles = await syncCardCycles(tx, card, context.timezone);
     const cyclesById = new Map(syncedCycles.map((cycle) => [cycle.id, cycle]));
@@ -221,12 +235,14 @@ export async function createPurchase(
     creditCardId,
     transactionId: result.transaction.id,
     description: dto.description,
-    categoryId: dto.categoryId,
+    categoryId: dto.categoryId ?? null,
     merchantId: dto.merchantId ?? null,
     purchaseDate: formatDateOnly(dto.purchaseDate),
     postedDate: formatDateOnly(postedDate),
     amount: dto.amount,
     installmentCount: dto.installmentCount,
+    tags: await listTransactionTags(result.transaction.id),
+    includeInBudget: dto.includeInBudget,
     budgetExpenseTiming: result.purchase.budgetExpenseTiming,
     budgetInstallmentMode: result.purchase.budgetInstallmentMode,
     installments: result.installments.map((installment) => ({
@@ -257,13 +273,15 @@ export async function updatePurchase(
   const card = await creditCardsRepository.findByIdOrThrow(context.householdId, creditCardId);
   const existingPurchase = await loadPurchase(context.householdId, creditCardId, purchaseId);
 
-  const categoryId = dto.categoryId ?? existingPurchase.categoryId;
+  const categoryId = dto.categoryId !== undefined ? dto.categoryId : existingPurchase.categoryId;
   const merchantId = dto.merchantId === undefined ? existingPurchase.merchantId : dto.merchantId;
   const description = dto.description ?? existingPurchase.description;
   const purchaseDate = dto.purchaseDate ?? existingPurchase.purchaseDate;
   const postedDate = dto.postedDate ?? existingPurchase.postedDate;
   const amount = dto.amount ?? existingPurchase.amount;
   const installmentCount = dto.installmentCount ?? existingPurchase.installmentCount;
+  const includeInBudget = dto.includeInBudget ?? existingPurchase.includeInBudget;
+  const tagIds = dto.tagIds === undefined ? undefined : await validateTagIds(context, dto.tagIds);
 
   await ensureExpenseCategory(context, categoryId);
   await ensureMerchant(context, merchantId ?? undefined);
@@ -285,6 +303,7 @@ export async function updatePurchase(
       .set({
         purchaseAmount: amount,
         installmentCount,
+        includeInBudget,
       })
       .where(eq(creditCardPurchasesTable.id, purchaseId));
 
@@ -305,7 +324,7 @@ export async function updatePurchase(
         ledgerAccountId: accountLedger.id,
         amount: -amount,
         currencyCode: card.currencyCode,
-        categoryId,
+        categoryId: categoryId ?? undefined,
       },
       {
         ledgerAccountId: expenseLedger.id,
@@ -324,21 +343,27 @@ export async function updatePurchase(
 
     await createInstallmentsForPurchase(tx, card, purchaseId, postedDate, amount, installmentCount);
 
-    await recreateBudgetRecognitionsForPurchase(
-      tx,
-      {
-        id: purchaseId,
-        purchaseAmount: amount,
-        installmentCount,
-        budgetExpenseTiming: existingPurchase.budgetExpenseTiming,
-        budgetInstallmentMode: existingPurchase.budgetInstallmentMode,
-      },
-      {
-        categoryId,
-        currencyCode: card.currencyCode,
-        purchaseDate,
-      },
-    );
+    if (includeInBudget && categoryId) {
+      await recreateBudgetRecognitionsForPurchase(
+        tx,
+        {
+          id: purchaseId,
+          purchaseAmount: amount,
+          installmentCount,
+          budgetExpenseTiming: existingPurchase.budgetExpenseTiming,
+          budgetInstallmentMode: existingPurchase.budgetInstallmentMode,
+        },
+        {
+          categoryId,
+          currencyCode: card.currencyCode,
+          purchaseDate,
+        },
+      );
+    }
+
+    if (tagIds !== undefined) {
+      await replaceTransactionTags(tx, existingPurchase.transactionId, tagIds);
+    }
 
     await syncCardCycles(tx, card, context.timezone);
   });

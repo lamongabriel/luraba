@@ -226,12 +226,13 @@ export async function recreateBudgetRecognitionsForPurchase(
     budgetInstallmentMode: 'per_installment' | 'full_amount';
   },
   params: {
-    categoryId: string;
+    categoryId: string | null;
     currencyCode: string;
     purchaseDate: Date;
     currentMonthStart?: Date;
   },
 ): Promise<void> {
+  if (!params.categoryId) return;
   const installments = await tx
     .select({
       id: creditCardInstallmentsTable.id,
@@ -357,6 +358,7 @@ async function rebuildSchedulesFromClosingDate(
       purchaseId: creditCardPurchasesTable.id,
       purchaseAmount: creditCardPurchasesTable.purchaseAmount,
       installmentCount: creditCardPurchasesTable.installmentCount,
+      includeInBudget: creditCardPurchasesTable.includeInBudget,
       budgetExpenseTiming: creditCardPurchasesTable.budgetExpenseTiming,
       budgetInstallmentMode: creditCardPurchasesTable.budgetInstallmentMode,
       transactionId: creditCardPurchasesTable.transactionId,
@@ -396,9 +398,7 @@ async function rebuildSchedulesFromClosingDate(
   await cycleRepository.deleteInstallmentsByCycleIds(tx, affectedCycleIds);
 
   for (const purchase of purchaseRows) {
-    if (!purchase.categoryId) {
-      throw new ValidationError('Credit card purchase category is required');
-    }
+    if (!purchase.categoryId) continue;
 
     const preservedInstallments = await tx
       .select({
@@ -430,22 +430,24 @@ async function rebuildSchedulesFromClosingDate(
       );
     }
 
-    await recreateBudgetRecognitionsForPurchase(
-      tx,
-      {
-        id: purchase.purchaseId,
-        purchaseAmount: purchase.purchaseAmount,
-        installmentCount: purchase.installmentCount,
-        budgetExpenseTiming: purchase.budgetExpenseTiming,
-        budgetInstallmentMode: purchase.budgetInstallmentMode,
-      },
-      {
-        categoryId: purchase.categoryId,
-        currencyCode: card.currencyCode,
-        purchaseDate: purchase.postedDate,
-        currentMonthStart,
-      },
-    );
+    if (purchase.includeInBudget) {
+      await recreateBudgetRecognitionsForPurchase(
+        tx,
+        {
+          id: purchase.purchaseId,
+          purchaseAmount: purchase.purchaseAmount,
+          installmentCount: purchase.installmentCount,
+          budgetExpenseTiming: purchase.budgetExpenseTiming,
+          budgetInstallmentMode: purchase.budgetInstallmentMode,
+        },
+        {
+          categoryId: purchase.categoryId,
+          currencyCode: card.currencyCode,
+          purchaseDate: purchase.postedDate,
+          currentMonthStart,
+        },
+      );
+    }
   }
 
   await syncCardCycles(tx, card, timezone);

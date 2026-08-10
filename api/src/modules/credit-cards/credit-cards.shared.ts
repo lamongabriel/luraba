@@ -66,8 +66,9 @@ export async function ensureCurrency(currencyCode: string): Promise<void> {
 
 export async function ensureExpenseCategory(
   context: HouseholdContext,
-  categoryId: string,
+  categoryId: string | null | undefined,
 ): Promise<void> {
+  if (!categoryId) return;
   const category = await categoriesRepository.get(categoryId, context);
   if (!category) throw new NotFoundError('Category');
   if (category.type !== 'expense') {
@@ -109,7 +110,7 @@ export async function createUnderlyingExpenseTransaction(
     paymentMethodId: string;
     description: string;
     amount: number;
-    categoryId: string;
+    categoryId: string | null;
     merchantId?: string;
     purchaseDate: Date;
     postedDate: Date;
@@ -132,7 +133,7 @@ export async function createUnderlyingExpenseTransaction(
     householdId: params.householdId,
     type: 'expense',
     paymentMethodId: params.paymentMethodId,
-    categoryId: params.categoryId,
+    categoryId: params.categoryId ?? undefined,
     description: params.description,
     includeInBudget: false,
     merchantId: params.merchantId,
@@ -145,7 +146,7 @@ export async function createUnderlyingExpenseTransaction(
       ledgerAccountId: accountLedger.id,
       amount: -params.amount,
       currencyCode: params.card.currencyCode,
-      categoryId: params.categoryId,
+      categoryId: params.categoryId ?? undefined,
     },
     {
       ledgerAccountId: expenseLedger.id,

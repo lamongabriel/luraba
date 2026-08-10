@@ -490,10 +490,6 @@ describe('accounts routes', () => {
         amountMax: 8_000,
         includeInBudget: true,
         excludedFromSpending: false,
-        createdAtFrom: '2020-01-01',
-        createdAtTo: '2030-01-01',
-        updatedAtFrom: '2020-01-01',
-        updatedAtTo: '2030-01-01',
         sort: 'amount',
         perPage: 1,
       });

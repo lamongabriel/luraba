@@ -1,13 +1,18 @@
+import { eq } from 'drizzle-orm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { db } from '@/db';
+import { creditCardBudgetRecognitionsTable } from '@/db/schemas/credit-card-budget-recognitions.schema';
 import * as accountsService from '@/modules/accounts/accounts.service';
 import * as categoriesService from '@/modules/categories/categories.service';
 import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
+import * as tagsService from '@/modules/tags/tags.service';
 import { ValidationError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import {
   buildAccountInput,
   buildCategoryInput,
   buildCreditCardInput,
+  buildTagInput,
   createBalanceEntryForAccount,
 } from '@/test/factories';
 import {
@@ -291,6 +296,91 @@ describe('credit cards service', () => {
         closingDate: '2026-05-25',
       }),
     );
+  });
+
+  it('updates purchase tags, budget inclusion, and the installment schedule atomically', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-04-10T12:00:00.000Z'));
+
+    const context = await createAuthenticatedContext();
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Home', type: 'expense' }),
+    );
+    const initialTag = await tagsService.createTag(
+      context.householdContext,
+      buildTagInput({ name: 'Initial purchase tag' }),
+    );
+    const updatedTag = await tagsService.createTag(
+      context.householdContext,
+      buildTagInput({ name: 'Updated purchase tag' }),
+    );
+    const card = await creditCardsService.createCreditCard(
+      context.householdContext,
+      buildCreditCardInput({ name: 'Budget Card', closingDay: 25, dueDay: 5 }),
+    );
+
+    const purchase = await creditCardsService.createPurchase(context.householdContext, card.id, {
+      description: 'Furniture',
+      amount: 90_000,
+      categoryId: category.id,
+      purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
+      postedDate: new Date('2026-04-20T00:00:00.000Z'),
+      installmentCount: 2,
+      includeInBudget: false,
+      tagIds: [initialTag.id],
+    });
+
+    expect(purchase).toMatchObject({
+      includeInBudget: false,
+      tags: [expect.objectContaining({ id: initialTag.id })],
+    });
+    await expect(
+      db
+        .select()
+        .from(creditCardBudgetRecognitionsTable)
+        .where(eq(creditCardBudgetRecognitionsTable.purchaseId, purchase.purchaseId)),
+    ).resolves.toHaveLength(0);
+
+    const included = await creditCardsService.updatePurchase(
+      context.householdContext,
+      card.id,
+      purchase.purchaseId,
+      {
+        amount: 120_000,
+        installmentCount: 3,
+        includeInBudget: true,
+        tagIds: [updatedTag.id],
+      },
+    );
+
+    expect(included).toMatchObject({
+      amount: 120_000,
+      installmentCount: 3,
+      includeInBudget: true,
+      tags: [expect.objectContaining({ id: updatedTag.id })],
+    });
+    expect(included.installments).toHaveLength(3);
+    const recognitions = await db
+      .select()
+      .from(creditCardBudgetRecognitionsTable)
+      .where(eq(creditCardBudgetRecognitionsTable.purchaseId, purchase.purchaseId));
+    expect(recognitions).toHaveLength(3);
+
+    const excluded = await creditCardsService.updatePurchase(
+      context.householdContext,
+      card.id,
+      purchase.purchaseId,
+      { includeInBudget: false },
+    );
+
+    expect(excluded.includeInBudget).toBe(false);
+    await expect(
+      db
+        .select()
+        .from(creditCardBudgetRecognitionsTable)
+        .where(eq(creditCardBudgetRecognitionsTable.purchaseId, purchase.purchaseId)),
+    ).resolves.toHaveLength(0);
   });
 
   it('marks a zeroed closing-day cycle as paid after deleting the only purchase', async () => {

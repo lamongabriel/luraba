@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { tagSummarySchema } from '@/modules/tags/tags.types';
 import { creditCardCycleStatusSchema } from '@/shared/validation/credit-cards';
 import { institutionDomainInputSchema } from '@/shared/validation/domain';
 import { moneyAmountSchema } from '@/shared/validation/money';
@@ -79,12 +80,14 @@ export const creditCardPurchaseSchema = z.object({
   creditCardId: z.uuid(),
   transactionId: z.uuid(),
   description: z.string(),
-  categoryId: z.uuid(),
+  categoryId: z.uuid().nullable(),
   merchantId: z.uuid().nullable(),
   purchaseDate: z.iso.date(),
   postedDate: z.iso.date(),
   amount: z.number().int(),
   installmentCount: z.number().int(),
+  tags: z.array(tagSummarySchema),
+  includeInBudget: z.boolean(),
   budgetExpenseTiming: z.enum(['spend_month', 'payment_month']),
   budgetInstallmentMode: z.enum(['per_installment', 'full_amount']),
   installments: z.array(
@@ -226,11 +229,13 @@ export const CreateCreditCardPurchaseRequestParamsSchema = z.object({
 export const CreateCreditCardPurchaseRequestBodySchema = z.object({
   description: z.string().min(1).max(512),
   amount: moneyAmountSchema,
-  categoryId: z.uuid(),
+  categoryId: z.uuid().nullable().optional(),
   merchantId: z.uuid().optional(),
   purchaseDate: z.coerce.date(),
   postedDate: z.coerce.date().optional(),
   installmentCount: installmentCountSchema.default(1),
+  tagIds: z.array(z.uuid()).max(50).optional(),
+  includeInBudget: z.boolean().default(true),
 });
 
 export const CreateCreditCardPurchaseResponseSchema = creditCardPurchaseSchema;
@@ -251,11 +256,13 @@ export const UpdateCreditCardPurchaseRequestBodySchema = z
   .object({
     description: z.string().min(1).max(512).optional(),
     amount: moneyAmountSchema.optional(),
-    categoryId: z.uuid().optional(),
+    categoryId: z.uuid().nullable().optional(),
     merchantId: z.uuid().nullable().optional(),
     purchaseDate: z.coerce.date().optional(),
     postedDate: z.coerce.date().optional(),
     installmentCount: installmentCountSchema.optional(),
+    tagIds: z.array(z.uuid()).max(50).optional(),
+    includeInBudget: z.boolean().optional(),
   })
   .refine((value) => Object.values(value).some((field) => field !== undefined), {
     message: 'At least one purchase field must be provided',

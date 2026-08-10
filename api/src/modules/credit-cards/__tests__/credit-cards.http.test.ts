@@ -5,11 +5,13 @@ import * as accountsService from '@/modules/accounts/accounts.service';
 import * as categoriesService from '@/modules/categories/categories.service';
 import * as creditCardsService from '@/modules/credit-cards/credit-cards.service';
 import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
+import * as tagsService from '@/modules/tags/tags.service';
 import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
 import {
   buildAccountInput,
   buildCategoryInput,
   buildCreditCardInput,
+  buildTagInput,
   createBalanceEntryForAccount,
 } from '@/test/factories';
 
@@ -155,6 +157,14 @@ describe('credit cards routes', () => {
       context.householdContext,
       buildCategoryInput({ name: 'Office', type: 'expense' }),
     );
+    const initialTag = await tagsService.createTag(
+      context.householdContext,
+      buildTagInput({ name: 'Desk setup' }),
+    );
+    const updatedTag = await tagsService.createTag(
+      context.householdContext,
+      buildTagInput({ name: 'Work equipment' }),
+    );
 
     const createdCard = await request(app)
       .post('/api/v1/credit-cards')
@@ -177,7 +187,17 @@ describe('credit cards routes', () => {
         purchaseDate: '2026-04-20',
         postedDate: '2026-04-20',
         installmentCount: 1,
+        includeInBudget: false,
+        tagIds: [initialTag.id],
       });
+
+    expect(createdPurchase.status).toBe(201);
+    expect(createdPurchase.body.data).toEqual(
+      expect.objectContaining({
+        includeInBudget: false,
+        tags: [expect.objectContaining({ id: initialTag.id })],
+      }),
+    );
 
     const getResponse = await request(app)
       .get(
@@ -204,6 +224,8 @@ describe('credit cards routes', () => {
         amount: 55_000,
         installmentCount: 2,
         postedDate: '2026-04-29',
+        includeInBudget: true,
+        tagIds: [updatedTag.id],
       });
 
     expect(patchResponse.status).toBe(200);
@@ -213,6 +235,8 @@ describe('credit cards routes', () => {
         categoryId: updatedCategory.id,
         amount: 55_000,
         installmentCount: 2,
+        includeInBudget: true,
+        tags: [expect.objectContaining({ id: updatedTag.id })],
       }),
     );
 

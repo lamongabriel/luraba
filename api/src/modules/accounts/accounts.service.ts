@@ -297,7 +297,7 @@ export async function listAccountTransactions(
     creditCardIds: [],
   };
 
-  return listTransactionFeed(context, transactionsQuery);
+  return listTransactionFeed(context, transactionsQuery, { includeAdjustments: true });
 }
 
 export async function updateAccount(
