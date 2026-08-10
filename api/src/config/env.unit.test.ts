@@ -6,7 +6,7 @@ const testEnvDefaults = {
   NODE_ENV: 'test',
   PORT: '8080',
   BASE_URL: 'http://localhost:8080',
-  FRONTEND_ORIGIN: 'http://localhost:3000',
+  FRONTEND_ORIGIN: 'http://localhost:29670',
   LOG_LEVEL: 'warn',
   DB_HOST: 'localhost',
   DB_PORT: '5432',

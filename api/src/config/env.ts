@@ -44,7 +44,7 @@ const envSchema = z
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PORT: z.coerce.number().int().positive().default(8080),
     BASE_URL: urlEnvSchema,
-    FRONTEND_ORIGIN: urlEnvSchema.default('http://localhost:3000'),
+    FRONTEND_ORIGIN: urlEnvSchema.default('http://localhost:29670'),
     LOG_LEVEL: z.string().min(1).default('info'),
     DB_HOST: z.string().min(1).default('localhost'),
     DB_PORT: z.coerce.number().int().positive().default(5432),
