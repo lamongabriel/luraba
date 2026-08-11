@@ -28,6 +28,12 @@ export const list = createHouseholdHandler({
   },
 });
 
+export const details = createHouseholdHandler({
+  params: UpdateMerchantRequestParamsSchema,
+  response: CreateMerchantResponseSchema,
+  handle: ({ household, params }) => merchantsService.getMerchant(household, params.id),
+});
+
 export const update = createHouseholdHandler({
   params: UpdateMerchantRequestParamsSchema,
   body: UpdateMerchantRequestBodySchema,

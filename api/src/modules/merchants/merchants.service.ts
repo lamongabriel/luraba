@@ -68,6 +68,18 @@ export async function listMerchants(
   };
 }
 
+export async function getMerchant(
+  context: HouseholdContext,
+  merchantId: string,
+): Promise<Merchant> {
+  const merchant = await merchantsRepository.get(merchantId, context);
+  if (!merchant) {
+    throw new NotFoundError('Merchant');
+  }
+
+  return mapMerchantRecord(merchant);
+}
+
 export async function updateMerchant(
   context: HouseholdContext,
   merchantId: string,
