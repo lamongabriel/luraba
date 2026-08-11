@@ -1,7 +1,7 @@
 {
   "name": "luraba-api",
   "version": "1.0.0",
-  "description": "Luraba — Finance Made Easy",
+  "description": "Luraba - Finance Made Easy",
   "private": true,
   "main": "dist/server.js",
   "scripts": {

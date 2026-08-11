@@ -8,7 +8,7 @@ const server = app.listen(env.port, () => {
 });
 
 async function shutdown(signal: string) {
-  logger.info(`[server] ${signal} received — shutting down gracefully`);
+  logger.info(`[server] ${signal} received - shutting down gracefully`);
   server.close(async () => {
     await pool.end();
     logger.info('[server] Database pool closed. Goodbye.');

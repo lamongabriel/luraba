@@ -36,7 +36,7 @@ export function errorMiddleware(
     return;
   }
 
-  // Unknown errors — log but don't leak internals
+  // Unknown errors - log but don't leak internals
   logger.error({ err }, '[UnhandledError] An unexpected error occurred');
   sendError(res, 500, 'INTERNAL_ERROR', 'An unexpected error occurred');
 }

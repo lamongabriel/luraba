@@ -1,4 +1,4 @@
-# Production compose — uses the multi-stage production image
+# Production compose - uses the multi-stage production image
 name: luraba-api-prod
 
 services:

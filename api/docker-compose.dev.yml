@@ -1,4 +1,4 @@
-# Development compose — runs the API with hot-reload + a local Postgres instance
+# Development compose - runs the API with hot-reload + a local Postgres instance
 name: luraba-api-dev
 
 services:

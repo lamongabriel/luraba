@@ -1,4 +1,4 @@
-# Development image — hot-reload via tsx watch
+# Development image - hot-reload via tsx watch
 FROM node:22-alpine
 
 WORKDIR /app
