@@ -13,6 +13,13 @@ export const tagSchema = z.object({
   updatedAt: z.iso.datetime(),
 });
 
+export const tagSummarySchema = tagSchema.pick({
+  id: true,
+  name: true,
+  color: true,
+  icon: true,
+});
+
 export const CreateTagRequestBodySchema = z.object({
   name: z.string().min(1).max(64),
   color: hexColorSchema.optional(),
@@ -42,6 +49,7 @@ export const DeleteTagRequestParamsSchema = z.object({
 });
 
 export type Tag = z.infer<typeof tagSchema>;
+export type TagSummary = z.infer<typeof tagSummarySchema>;
 export type CreateTagRequestBody = z.infer<typeof CreateTagRequestBodySchema>;
 export type CreateTagResponse = z.infer<typeof CreateTagResponseSchema>;
 export type ListTagsResponse = z.infer<typeof ListTagsResponseSchema>;

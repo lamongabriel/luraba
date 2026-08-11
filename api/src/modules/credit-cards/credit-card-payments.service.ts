@@ -12,7 +12,7 @@ import { entriesRepository } from '@/modules/entries/entries.repository';
 import * as entriesService from '@/modules/entries/entries.service';
 import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
 import { NotFoundError, ValidationError } from '@/shared/errors';
-import { formatDateOnly } from '@/shared/lib/date';
+import { formatISODate } from '@/shared/lib/date';
 import { listPayableCycles, syncCardCycles } from './credit-card-cycles.service';
 import type { CreditCardRow } from './credit-cards.helpers';
 import * as creditCardsRepository from './credit-cards.repository';
@@ -106,8 +106,8 @@ async function mapPaymentResponse(
     creditCardId: payment.creditCardId,
     transactionId: payment.transactionId,
     description: payment.description,
-    paymentDate: formatDateOnly(payment.paymentDate),
-    postedDate: formatDateOnly(payment.postedDate),
+    paymentDate: formatISODate(payment.paymentDate),
+    postedDate: formatISODate(payment.postedDate),
     amount: payment.amount,
     fromAccountId: payment.fromAccountId,
     allocations: allocations.flatMap((allocation) =>

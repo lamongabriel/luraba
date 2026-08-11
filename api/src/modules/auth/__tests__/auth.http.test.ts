@@ -70,6 +70,24 @@ describe('auth routes', () => {
     expect(meResponse.body.data.household.role).toBe('owner');
   });
 
+  it('keeps sign-up timezones at the API default until validated preferences are updated', async () => {
+    const agent = request.agent(app);
+
+    const signUpResponse = await agent.post('/api/auth/sign-up/email').send({
+      name: 'Timezone Register',
+      email: 'timezone-register@example.com',
+      password: '123123123',
+      preferredTimezone: 'Invalid/Timezone',
+    });
+
+    expect(signUpResponse.status).toBe(200);
+
+    const preferencesResponse = await agent.get('/api/v1/auth/me/preferences');
+
+    expect(preferencesResponse.status).toBe(200);
+    expect(preferencesResponse.body.data.timezone).toBe('America/Sao_Paulo');
+  });
+
   it('invite signup defers the personal household until token acceptance', async () => {
     const owner = await createAuthenticatedContext();
     const email = 'explicit-household-acceptance@example.com';

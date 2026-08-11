@@ -1,0 +1,3068 @@
+[
+  {
+    "value": "UTC",
+    "label": "(UTC+00:00) Coordinated Universal Time",
+    "abbreviation": "UTC",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT+12",
+    "label": "(UTC-12:00) International Date Line West",
+    "abbreviation": "DST",
+    "offset": -12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT+11",
+    "label": "(UTC-11:00) Coordinated Universal Time-11",
+    "abbreviation": "U",
+    "offset": -11,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Midway",
+    "label": "(UTC-11:00) Coordinated Universal Time-11",
+    "abbreviation": "U",
+    "offset": -11,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Niue",
+    "label": "(UTC-11:00) Coordinated Universal Time-11",
+    "abbreviation": "U",
+    "offset": -11,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Pago_Pago",
+    "label": "(UTC-11:00) Coordinated Universal Time-11",
+    "abbreviation": "U",
+    "offset": -11,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT+10",
+    "label": "(UTC-10:00) Hawaii",
+    "abbreviation": "HST",
+    "offset": -10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Honolulu",
+    "label": "(UTC-10:00) Hawaii",
+    "abbreviation": "HST",
+    "offset": -10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Johnston",
+    "label": "(UTC-10:00) Hawaii",
+    "abbreviation": "HST",
+    "offset": -10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Rarotonga",
+    "label": "(UTC-10:00) Hawaii",
+    "abbreviation": "HST",
+    "offset": -10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Tahiti",
+    "label": "(UTC-10:00) Hawaii",
+    "abbreviation": "HST",
+    "offset": -10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Anchorage",
+    "label": "(UTC-09:00) Alaska",
+    "abbreviation": "AKDT",
+    "offset": -8,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Juneau",
+    "label": "(UTC-09:00) Alaska",
+    "abbreviation": "AKDT",
+    "offset": -8,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Nome",
+    "label": "(UTC-09:00) Alaska",
+    "abbreviation": "AKDT",
+    "offset": -8,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Sitka",
+    "label": "(UTC-09:00) Alaska",
+    "abbreviation": "AKDT",
+    "offset": -8,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Yakutat",
+    "label": "(UTC-09:00) Alaska",
+    "abbreviation": "AKDT",
+    "offset": -8,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Santa_Isabel",
+    "label": "(UTC-08:00) Baja California",
+    "abbreviation": "PDT",
+    "offset": -7,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Los_Angeles",
+    "label": "(UTC-07:00) Pacific Daylight Time (US & Canada)",
+    "abbreviation": "PDT",
+    "offset": -7,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Tijuana",
+    "label": "(UTC-07:00) Pacific Daylight Time (US & Canada)",
+    "abbreviation": "PDT",
+    "offset": -7,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Vancouver",
+    "label": "(UTC-07:00) Pacific Daylight Time (US & Canada)",
+    "abbreviation": "PDT",
+    "offset": -7,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "PST8PDT",
+    "label": "(UTC-08:00) Pacific Standard Time (US & Canada)",
+    "abbreviation": "PST",
+    "offset": -8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Creston",
+    "label": "(UTC-07:00) Arizona",
+    "abbreviation": "UMST",
+    "offset": -7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Dawson",
+    "label": "(UTC-07:00) Arizona",
+    "abbreviation": "UMST",
+    "offset": -7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Dawson_Creek",
+    "label": "(UTC-07:00) Arizona",
+    "abbreviation": "UMST",
+    "offset": -7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Hermosillo",
+    "label": "(UTC-07:00) Arizona",
+    "abbreviation": "UMST",
+    "offset": -7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Phoenix",
+    "label": "(UTC-07:00) Arizona",
+    "abbreviation": "UMST",
+    "offset": -7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Whitehorse",
+    "label": "(UTC-07:00) Arizona",
+    "abbreviation": "UMST",
+    "offset": -7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT+7",
+    "label": "(UTC-07:00) Arizona",
+    "abbreviation": "UMST",
+    "offset": -7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Chihuahua",
+    "label": "(UTC-07:00) Chihuahua, La Paz, Mazatlan",
+    "abbreviation": "MDT",
+    "offset": -6,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Mazatlan",
+    "label": "(UTC-07:00) Chihuahua, La Paz, Mazatlan",
+    "abbreviation": "MDT",
+    "offset": -6,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Boise",
+    "label": "(UTC-07:00) Mountain Time (US & Canada)",
+    "abbreviation": "MDT",
+    "offset": -6,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Cambridge_Bay",
+    "label": "(UTC-07:00) Mountain Time (US & Canada)",
+    "abbreviation": "MDT",
+    "offset": -6,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Denver",
+    "label": "(UTC-07:00) Mountain Time (US & Canada)",
+    "abbreviation": "MDT",
+    "offset": -6,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Edmonton",
+    "label": "(UTC-07:00) Mountain Time (US & Canada)",
+    "abbreviation": "MDT",
+    "offset": -6,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Inuvik",
+    "label": "(UTC-07:00) Mountain Time (US & Canada)",
+    "abbreviation": "MDT",
+    "offset": -6,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Ojinaga",
+    "label": "(UTC-07:00) Mountain Time (US & Canada)",
+    "abbreviation": "MDT",
+    "offset": -6,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Yellowknife",
+    "label": "(UTC-07:00) Mountain Time (US & Canada)",
+    "abbreviation": "MDT",
+    "offset": -6,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "MST7MDT",
+    "label": "(UTC-07:00) Mountain Time (US & Canada)",
+    "abbreviation": "MDT",
+    "offset": -6,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Belize",
+    "label": "(UTC-06:00) Central America",
+    "abbreviation": "CAST",
+    "offset": -6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Costa_Rica",
+    "label": "(UTC-06:00) Central America",
+    "abbreviation": "CAST",
+    "offset": -6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/El_Salvador",
+    "label": "(UTC-06:00) Central America",
+    "abbreviation": "CAST",
+    "offset": -6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Guatemala",
+    "label": "(UTC-06:00) Central America",
+    "abbreviation": "CAST",
+    "offset": -6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Managua",
+    "label": "(UTC-06:00) Central America",
+    "abbreviation": "CAST",
+    "offset": -6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Tegucigalpa",
+    "label": "(UTC-06:00) Central America",
+    "abbreviation": "CAST",
+    "offset": -6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT+6",
+    "label": "(UTC-06:00) Central America",
+    "abbreviation": "CAST",
+    "offset": -6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Galapagos",
+    "label": "(UTC-06:00) Central America",
+    "abbreviation": "CAST",
+    "offset": -6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Chicago",
+    "label": "(UTC-06:00) Central Time (US & Canada)",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Indiana/Knox",
+    "label": "(UTC-06:00) Central Time (US & Canada)",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Indiana/Tell_City",
+    "label": "(UTC-06:00) Central Time (US & Canada)",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Matamoros",
+    "label": "(UTC-06:00) Central Time (US & Canada)",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Menominee",
+    "label": "(UTC-06:00) Central Time (US & Canada)",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/North_Dakota/Beulah",
+    "label": "(UTC-06:00) Central Time (US & Canada)",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/North_Dakota/Center",
+    "label": "(UTC-06:00) Central Time (US & Canada)",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/North_Dakota/New_Salem",
+    "label": "(UTC-06:00) Central Time (US & Canada)",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Rainy_River",
+    "label": "(UTC-06:00) Central Time (US & Canada)",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Rankin_Inlet",
+    "label": "(UTC-06:00) Central Time (US & Canada)",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Resolute",
+    "label": "(UTC-06:00) Central Time (US & Canada)",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Winnipeg",
+    "label": "(UTC-06:00) Central Time (US & Canada)",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "CST6CDT",
+    "label": "(UTC-06:00) Central Time (US & Canada)",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Bahia_Banderas",
+    "label": "(UTC-06:00) Guadalajara, Mexico City, Monterrey",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Cancun",
+    "label": "(UTC-06:00) Guadalajara, Mexico City, Monterrey",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Merida",
+    "label": "(UTC-06:00) Guadalajara, Mexico City, Monterrey",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Mexico_City",
+    "label": "(UTC-06:00) Guadalajara, Mexico City, Monterrey",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Monterrey",
+    "label": "(UTC-06:00) Guadalajara, Mexico City, Monterrey",
+    "abbreviation": "CDT",
+    "offset": -5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Regina",
+    "label": "(UTC-06:00) Saskatchewan",
+    "abbreviation": "CCST",
+    "offset": -6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Swift_Current",
+    "label": "(UTC-06:00) Saskatchewan",
+    "abbreviation": "CCST",
+    "offset": -6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Bogota",
+    "label": "(UTC-05:00) Bogota, Lima, Quito",
+    "abbreviation": "SPST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Cayman",
+    "label": "(UTC-05:00) Bogota, Lima, Quito",
+    "abbreviation": "SPST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Coral_Harbour",
+    "label": "(UTC-05:00) Bogota, Lima, Quito",
+    "abbreviation": "SPST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Eirunepe",
+    "label": "(UTC-05:00) Bogota, Lima, Quito",
+    "abbreviation": "SPST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Guayaquil",
+    "label": "(UTC-05:00) Bogota, Lima, Quito",
+    "abbreviation": "SPST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Jamaica",
+    "label": "(UTC-05:00) Bogota, Lima, Quito",
+    "abbreviation": "SPST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Lima",
+    "label": "(UTC-05:00) Bogota, Lima, Quito",
+    "abbreviation": "SPST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Panama",
+    "label": "(UTC-05:00) Bogota, Lima, Quito",
+    "abbreviation": "SPST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Rio_Branco",
+    "label": "(UTC-05:00) Bogota, Lima, Quito",
+    "abbreviation": "SPST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT+5",
+    "label": "(UTC-05:00) Bogota, Lima, Quito",
+    "abbreviation": "SPST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Detroit",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Havana",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Indiana/Petersburg",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Indiana/Vincennes",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Indiana/Winamac",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Iqaluit",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Kentucky/Monticello",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Louisville",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Montreal",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Nassau",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/New_York",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Nipigon",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Pangnirtung",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Port-au-Prince",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Thunder_Bay",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Toronto",
+    "label": "(UTC-05:00) Eastern Time (US & Canada)",
+    "abbreviation": "EST",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Indiana/Marengo",
+    "label": "(UTC-05:00) Indiana (East)",
+    "abbreviation": "UEDT",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Indiana/Vevay",
+    "label": "(UTC-05:00) Indiana (East)",
+    "abbreviation": "UEDT",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Indianapolis",
+    "label": "(UTC-05:00) Indiana (East)",
+    "abbreviation": "UEDT",
+    "offset": -5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Caracas",
+    "label": "(UTC-04:30) Caracas",
+    "abbreviation": "VST",
+    "offset": -4.5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Asuncion",
+    "label": "(UTC-04:00) Asuncion",
+    "abbreviation": "PYT",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Glace_Bay",
+    "label": "(UTC-04:00) Atlantic Time (Canada)",
+    "abbreviation": "ADT",
+    "offset": -3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Goose_Bay",
+    "label": "(UTC-04:00) Atlantic Time (Canada)",
+    "abbreviation": "ADT",
+    "offset": -3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Halifax",
+    "label": "(UTC-04:00) Atlantic Time (Canada)",
+    "abbreviation": "ADT",
+    "offset": -3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Moncton",
+    "label": "(UTC-04:00) Atlantic Time (Canada)",
+    "abbreviation": "ADT",
+    "offset": -3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Thule",
+    "label": "(UTC-04:00) Atlantic Time (Canada)",
+    "abbreviation": "ADT",
+    "offset": -3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Atlantic/Bermuda",
+    "label": "(UTC-04:00) Atlantic Time (Canada)",
+    "abbreviation": "ADT",
+    "offset": -3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Campo_Grande",
+    "label": "(UTC-04:00) Cuiaba",
+    "abbreviation": "CBST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Cuiaba",
+    "label": "(UTC-04:00) Cuiaba",
+    "abbreviation": "CBST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Anguilla",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Antigua",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Aruba",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Barbados",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Blanc-Sablon",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Boa_Vista",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Curacao",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Dominica",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Grand_Turk",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Grenada",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Guadeloupe",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Guyana",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Kralendijk",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/La_Paz",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Lower_Princes",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Manaus",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Marigot",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Martinique",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Montserrat",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Port_of_Spain",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Porto_Velho",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Puerto_Rico",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Santo_Domingo",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/St_Barthelemy",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/St_Kitts",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/St_Lucia",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/St_Thomas",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/St_Vincent",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Tortola",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT+4",
+    "label": "(UTC-04:00) Georgetown, La Paz, Manaus, San Juan",
+    "abbreviation": "SWST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Santiago",
+    "label": "(UTC-04:00) Santiago",
+    "abbreviation": "PSST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Antarctica/Palmer",
+    "label": "(UTC-04:00) Santiago",
+    "abbreviation": "PSST",
+    "offset": -4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/St_Johns",
+    "label": "(UTC-03:30) Newfoundland",
+    "abbreviation": "NDT",
+    "offset": -2.5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Sao_Paulo",
+    "label": "(UTC-03:00) Brasilia",
+    "abbreviation": "ESAST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Argentina/Buenos_Aires",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Argentina/Catamarca",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Argentina/Cordoba",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Argentina/Jujuy",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Argentina/La_Rioja",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Argentina/Mendoza",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Argentina/Rio_Gallegos",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Argentina/Salta",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Argentina/San_Juan",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Argentina/San_Luis",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Argentina/Tucuman",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Argentina/Ushuaia",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Buenos_Aires",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Catamarca",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Cordoba",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Jujuy",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Mendoza",
+    "label": "(UTC-03:00) Buenos Aires",
+    "abbreviation": "AST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Araguaina",
+    "label": "(UTC-03:00) Cayenne, Fortaleza",
+    "abbreviation": "SEST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Belem",
+    "label": "(UTC-03:00) Cayenne, Fortaleza",
+    "abbreviation": "SEST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Cayenne",
+    "label": "(UTC-03:00) Cayenne, Fortaleza",
+    "abbreviation": "SEST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Fortaleza",
+    "label": "(UTC-03:00) Cayenne, Fortaleza",
+    "abbreviation": "SEST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Maceio",
+    "label": "(UTC-03:00) Cayenne, Fortaleza",
+    "abbreviation": "SEST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Paramaribo",
+    "label": "(UTC-03:00) Cayenne, Fortaleza",
+    "abbreviation": "SEST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Recife",
+    "label": "(UTC-03:00) Cayenne, Fortaleza",
+    "abbreviation": "SEST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Santarem",
+    "label": "(UTC-03:00) Cayenne, Fortaleza",
+    "abbreviation": "SEST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Antarctica/Rothera",
+    "label": "(UTC-03:00) Cayenne, Fortaleza",
+    "abbreviation": "SEST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Atlantic/Stanley",
+    "label": "(UTC-03:00) Cayenne, Fortaleza",
+    "abbreviation": "SEST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT+3",
+    "label": "(UTC-03:00) Cayenne, Fortaleza",
+    "abbreviation": "SEST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Godthab",
+    "label": "(UTC-03:00) Greenland",
+    "abbreviation": "GDT",
+    "offset": -3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Montevideo",
+    "label": "(UTC-03:00) Montevideo",
+    "abbreviation": "MST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Bahia",
+    "label": "(UTC-03:00) Salvador",
+    "abbreviation": "BST",
+    "offset": -3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Noronha",
+    "label": "(UTC-02:00) Coordinated Universal Time-02",
+    "abbreviation": "U",
+    "offset": -2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Atlantic/South_Georgia",
+    "label": "(UTC-02:00) Coordinated Universal Time-02",
+    "abbreviation": "U",
+    "offset": -2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT+2",
+    "label": "(UTC-02:00) Coordinated Universal Time-02",
+    "abbreviation": "U",
+    "offset": -2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "America/Scoresbysund",
+    "label": "(UTC-01:00) Azores",
+    "abbreviation": "ADT",
+    "offset": 0,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Atlantic/Azores",
+    "label": "(UTC-01:00) Azores",
+    "abbreviation": "ADT",
+    "offset": 0,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Atlantic/Cape_Verde",
+    "label": "(UTC-01:00) Cape Verde Is.",
+    "abbreviation": "CVST",
+    "offset": -1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT+1",
+    "label": "(UTC-01:00) Cape Verde Is.",
+    "abbreviation": "CVST",
+    "offset": -1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Casablanca",
+    "label": "(UTC) Casablanca",
+    "abbreviation": "MDT",
+    "offset": 1,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Africa/El_Aaiun",
+    "label": "(UTC) Casablanca",
+    "abbreviation": "MDT",
+    "offset": 1,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "America/Danmarkshavn",
+    "label": "(UTC) Coordinated Universal Time",
+    "abbreviation": "UTC",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT",
+    "label": "(UTC) Coordinated Universal Time",
+    "abbreviation": "UTC",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Isle_of_Man",
+    "label": "(UTC) Edinburgh, London",
+    "abbreviation": "GMT",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Guernsey",
+    "label": "(UTC) Edinburgh, London",
+    "abbreviation": "GMT",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Jersey",
+    "label": "(UTC) Edinburgh, London",
+    "abbreviation": "GMT",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/London",
+    "label": "(UTC) Edinburgh, London",
+    "abbreviation": "GMT",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Atlantic/Canary",
+    "label": "(UTC) Dublin, Lisbon",
+    "abbreviation": "GDT",
+    "offset": 1,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Atlantic/Faeroe",
+    "label": "(UTC) Dublin, Lisbon",
+    "abbreviation": "GDT",
+    "offset": 1,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Atlantic/Madeira",
+    "label": "(UTC) Dublin, Lisbon",
+    "abbreviation": "GDT",
+    "offset": 1,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Dublin",
+    "label": "(UTC) Dublin, Lisbon",
+    "abbreviation": "GDT",
+    "offset": 1,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Lisbon",
+    "label": "(UTC) Dublin, Lisbon",
+    "abbreviation": "GDT",
+    "offset": 1,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Africa/Abidjan",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Accra",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Bamako",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Banjul",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Bissau",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Conakry",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Dakar",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Freetown",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Lome",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Monrovia",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Nouakchott",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Ouagadougou",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Sao_Tome",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Atlantic/Reykjavik",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Atlantic/St_Helena",
+    "label": "(UTC) Monrovia, Reykjavik",
+    "abbreviation": "GST",
+    "offset": 0,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Arctic/Longyearbyen",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Amsterdam",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Andorra",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Berlin",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Busingen",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Gibraltar",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Luxembourg",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Malta",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Monaco",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Oslo",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Rome",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/San_Marino",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Stockholm",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Vaduz",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Vatican",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Vienna",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Zurich",
+    "label": "(UTC+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
+    "abbreviation": "WEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Belgrade",
+    "label": "(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague",
+    "abbreviation": "CEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Bratislava",
+    "label": "(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague",
+    "abbreviation": "CEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Budapest",
+    "label": "(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague",
+    "abbreviation": "CEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Ljubljana",
+    "label": "(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague",
+    "abbreviation": "CEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Podgorica",
+    "label": "(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague",
+    "abbreviation": "CEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Prague",
+    "label": "(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague",
+    "abbreviation": "CEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Tirane",
+    "label": "(UTC+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague",
+    "abbreviation": "CEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Africa/Ceuta",
+    "label": "(UTC+01:00) Brussels, Copenhagen, Madrid, Paris",
+    "abbreviation": "RDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Brussels",
+    "label": "(UTC+01:00) Brussels, Copenhagen, Madrid, Paris",
+    "abbreviation": "RDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Copenhagen",
+    "label": "(UTC+01:00) Brussels, Copenhagen, Madrid, Paris",
+    "abbreviation": "RDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Madrid",
+    "label": "(UTC+01:00) Brussels, Copenhagen, Madrid, Paris",
+    "abbreviation": "RDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Paris",
+    "label": "(UTC+01:00) Brussels, Copenhagen, Madrid, Paris",
+    "abbreviation": "RDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Sarajevo",
+    "label": "(UTC+01:00) Sarajevo, Skopje, Warsaw, Zagreb",
+    "abbreviation": "CEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Skopje",
+    "label": "(UTC+01:00) Sarajevo, Skopje, Warsaw, Zagreb",
+    "abbreviation": "CEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Warsaw",
+    "label": "(UTC+01:00) Sarajevo, Skopje, Warsaw, Zagreb",
+    "abbreviation": "CEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Zagreb",
+    "label": "(UTC+01:00) Sarajevo, Skopje, Warsaw, Zagreb",
+    "abbreviation": "CEDT",
+    "offset": 2,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Africa/Algiers",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Bangui",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Brazzaville",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Douala",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Kinshasa",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Lagos",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Libreville",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Luanda",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Malabo",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Ndjamena",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Niamey",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Porto-Novo",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Tunis",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT-1",
+    "label": "(UTC+01:00) West Central Africa",
+    "abbreviation": "WCAST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Windhoek",
+    "label": "(UTC+01:00) Windhoek",
+    "abbreviation": "NST",
+    "offset": 1,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Nicosia",
+    "label": "(UTC+02:00) Athens, Bucharest",
+    "abbreviation": "GDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Athens",
+    "label": "(UTC+02:00) Athens, Bucharest",
+    "abbreviation": "GDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Bucharest",
+    "label": "(UTC+02:00) Athens, Bucharest",
+    "abbreviation": "GDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Chisinau",
+    "label": "(UTC+02:00) Athens, Bucharest",
+    "abbreviation": "GDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Asia/Beirut",
+    "label": "(UTC+02:00) Beirut",
+    "abbreviation": "MEDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Africa/Cairo",
+    "label": "(UTC+02:00) Cairo",
+    "abbreviation": "EST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Damascus",
+    "label": "(UTC+02:00) Damascus",
+    "abbreviation": "SDT",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Helsinki",
+    "label": "(UTC+02:00) E. Europe",
+    "abbreviation": "EEDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Kyiv",
+    "label": "(UTC+02:00) E. Europe",
+    "abbreviation": "EEDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Mariehamn",
+    "label": "(UTC+02:00) E. Europe",
+    "abbreviation": "EEDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Nicosia",
+    "label": "(UTC+02:00) E. Europe",
+    "abbreviation": "EEDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Riga",
+    "label": "(UTC+02:00) E. Europe",
+    "abbreviation": "EEDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Sofia",
+    "label": "(UTC+02:00) E. Europe",
+    "abbreviation": "EEDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Tallinn",
+    "label": "(UTC+02:00) E. Europe",
+    "abbreviation": "EEDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Europe/Vilnius",
+    "label": "(UTC+02:00) E. Europe",
+    "abbreviation": "EEDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Africa/Blantyre",
+    "label": "(UTC+02:00) Harare, Pretoria",
+    "abbreviation": "SAST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Bujumbura",
+    "label": "(UTC+02:00) Harare, Pretoria",
+    "abbreviation": "SAST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Gaborone",
+    "label": "(UTC+02:00) Harare, Pretoria",
+    "abbreviation": "SAST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Harare",
+    "label": "(UTC+02:00) Harare, Pretoria",
+    "abbreviation": "SAST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Johannesburg",
+    "label": "(UTC+02:00) Harare, Pretoria",
+    "abbreviation": "SAST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Kigali",
+    "label": "(UTC+02:00) Harare, Pretoria",
+    "abbreviation": "SAST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Lubumbashi",
+    "label": "(UTC+02:00) Harare, Pretoria",
+    "abbreviation": "SAST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Lusaka",
+    "label": "(UTC+02:00) Harare, Pretoria",
+    "abbreviation": "SAST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Maputo",
+    "label": "(UTC+02:00) Harare, Pretoria",
+    "abbreviation": "SAST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Maseru",
+    "label": "(UTC+02:00) Harare, Pretoria",
+    "abbreviation": "SAST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Mbabane",
+    "label": "(UTC+02:00) Harare, Pretoria",
+    "abbreviation": "SAST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT-2",
+    "label": "(UTC+02:00) Harare, Pretoria",
+    "abbreviation": "SAST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Istanbul",
+    "label": "(UTC+03:00) Istanbul",
+    "abbreviation": "TDT",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Jerusalem",
+    "label": "(UTC+02:00) Jerusalem",
+    "abbreviation": "JDT",
+    "offset": 3,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Africa/Tripoli",
+    "label": "(UTC+02:00) Tripoli",
+    "abbreviation": "LST",
+    "offset": 2,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Amman",
+    "label": "(UTC+03:00) Amman",
+    "abbreviation": "JST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Baghdad",
+    "label": "(UTC+03:00) Baghdad",
+    "abbreviation": "AST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Kaliningrad",
+    "label": "(UTC+02:00) Kaliningrad",
+    "abbreviation": "KST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Aden",
+    "label": "(UTC+03:00) Kuwait, Riyadh",
+    "abbreviation": "AST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Bahrain",
+    "label": "(UTC+03:00) Kuwait, Riyadh",
+    "abbreviation": "AST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Kuwait",
+    "label": "(UTC+03:00) Kuwait, Riyadh",
+    "abbreviation": "AST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Qatar",
+    "label": "(UTC+03:00) Kuwait, Riyadh",
+    "abbreviation": "AST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Riyadh",
+    "label": "(UTC+03:00) Kuwait, Riyadh",
+    "abbreviation": "AST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Addis_Ababa",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Asmera",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Dar_es_Salaam",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Djibouti",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Juba",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Kampala",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Khartoum",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Mogadishu",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Africa/Nairobi",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Antarctica/Syowa",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT-3",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Indian/Antananarivo",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Indian/Comoro",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Indian/Mayotte",
+    "label": "(UTC+03:00) Nairobi",
+    "abbreviation": "EAST",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Kirov",
+    "label": "(UTC+03:00) Moscow, St. Petersburg, Volgograd, Minsk",
+    "abbreviation": "MSK",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Moscow",
+    "label": "(UTC+03:00) Moscow, St. Petersburg, Volgograd, Minsk",
+    "abbreviation": "MSK",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Simferopol",
+    "label": "(UTC+03:00) Moscow, St. Petersburg, Volgograd, Minsk",
+    "abbreviation": "MSK",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Volgograd",
+    "label": "(UTC+03:00) Moscow, St. Petersburg, Volgograd, Minsk",
+    "abbreviation": "MSK",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Minsk",
+    "label": "(UTC+03:00) Moscow, St. Petersburg, Volgograd, Minsk",
+    "abbreviation": "MSK",
+    "offset": 3,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Astrakhan",
+    "label": "(UTC+04:00) Samara, Ulyanovsk, Saratov",
+    "abbreviation": "SAMT",
+    "offset": 4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Samara",
+    "label": "(UTC+04:00) Samara, Ulyanovsk, Saratov",
+    "abbreviation": "SAMT",
+    "offset": 4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Europe/Ulyanovsk",
+    "label": "(UTC+04:00) Samara, Ulyanovsk, Saratov",
+    "abbreviation": "SAMT",
+    "offset": 4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Tehran",
+    "label": "(UTC+03:30) Tehran",
+    "abbreviation": "IDT",
+    "offset": 4.5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Asia/Dubai",
+    "label": "(UTC+04:00) Abu Dhabi, Muscat",
+    "abbreviation": "AST",
+    "offset": 4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Muscat",
+    "label": "(UTC+04:00) Abu Dhabi, Muscat",
+    "abbreviation": "AST",
+    "offset": 4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT-4",
+    "label": "(UTC+04:00) Abu Dhabi, Muscat",
+    "abbreviation": "AST",
+    "offset": 4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Baku",
+    "label": "(UTC+04:00) Baku",
+    "abbreviation": "ADT",
+    "offset": 5,
+    "isDaylightSaving": true
+  },
+  {
+    "value": "Indian/Mahe",
+    "label": "(UTC+04:00) Port Louis",
+    "abbreviation": "MST",
+    "offset": 4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Indian/Mauritius",
+    "label": "(UTC+04:00) Port Louis",
+    "abbreviation": "MST",
+    "offset": 4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Indian/Reunion",
+    "label": "(UTC+04:00) Port Louis",
+    "abbreviation": "MST",
+    "offset": 4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Tbilisi",
+    "label": "(UTC+04:00) Tbilisi",
+    "abbreviation": "GET",
+    "offset": 4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Yerevan",
+    "label": "(UTC+04:00) Yerevan",
+    "abbreviation": "CST",
+    "offset": 4,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Kabul",
+    "label": "(UTC+04:30) Kabul",
+    "abbreviation": "AST",
+    "offset": 4.5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Antarctica/Mawson",
+    "label": "(UTC+05:00) Ashgabat, Tashkent",
+    "abbreviation": "WAST",
+    "offset": 5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Aqtau",
+    "label": "(UTC+05:00) Ashgabat, Tashkent",
+    "abbreviation": "WAST",
+    "offset": 5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Aqtobe",
+    "label": "(UTC+05:00) Ashgabat, Tashkent",
+    "abbreviation": "WAST",
+    "offset": 5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Ashgabat",
+    "label": "(UTC+05:00) Ashgabat, Tashkent",
+    "abbreviation": "WAST",
+    "offset": 5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Dushanbe",
+    "label": "(UTC+05:00) Ashgabat, Tashkent",
+    "abbreviation": "WAST",
+    "offset": 5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Oral",
+    "label": "(UTC+05:00) Ashgabat, Tashkent",
+    "abbreviation": "WAST",
+    "offset": 5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Samarkand",
+    "label": "(UTC+05:00) Ashgabat, Tashkent",
+    "abbreviation": "WAST",
+    "offset": 5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Tashkent",
+    "label": "(UTC+05:00) Ashgabat, Tashkent",
+    "abbreviation": "WAST",
+    "offset": 5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT-5",
+    "label": "(UTC+05:00) Ashgabat, Tashkent",
+    "abbreviation": "WAST",
+    "offset": 5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Indian/Kerguelen",
+    "label": "(UTC+05:00) Ashgabat, Tashkent",
+    "abbreviation": "WAST",
+    "offset": 5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Indian/Maldives",
+    "label": "(UTC+05:00) Ashgabat, Tashkent",
+    "abbreviation": "WAST",
+    "offset": 5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Yekaterinburg",
+    "label": "(UTC+05:00) Yekaterinburg",
+    "abbreviation": "YEKT",
+    "offset": 5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Karachi",
+    "label": "(UTC+05:00) Islamabad, Karachi",
+    "abbreviation": "PKT",
+    "offset": 5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Kolkata",
+    "label": "(UTC+05:30) Chennai, Kolkata, Mumbai, New Delhi",
+    "abbreviation": "IST",
+    "offset": 5.5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Calcutta",
+    "label": "(UTC+05:30) Chennai, Kolkata, Mumbai, New Delhi",
+    "abbreviation": "IST",
+    "offset": 5.5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Colombo",
+    "label": "(UTC+05:30) Sri Jayawardenepura",
+    "abbreviation": "SLST",
+    "offset": 5.5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Kathmandu",
+    "label": "(UTC+05:45) Kathmandu",
+    "abbreviation": "NST",
+    "offset": 5.75,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Antarctica/Vostok",
+    "label": "(UTC+06:00) Nur-Sultan (Astana)",
+    "abbreviation": "CAST",
+    "offset": 6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Almaty",
+    "label": "(UTC+06:00) Nur-Sultan (Astana)",
+    "abbreviation": "CAST",
+    "offset": 6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Bishkek",
+    "label": "(UTC+06:00) Nur-Sultan (Astana)",
+    "abbreviation": "CAST",
+    "offset": 6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Qyzylorda",
+    "label": "(UTC+06:00) Nur-Sultan (Astana)",
+    "abbreviation": "CAST",
+    "offset": 6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Urumqi",
+    "label": "(UTC+06:00) Nur-Sultan (Astana)",
+    "abbreviation": "CAST",
+    "offset": 6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT-6",
+    "label": "(UTC+06:00) Nur-Sultan (Astana)",
+    "abbreviation": "CAST",
+    "offset": 6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Indian/Chagos",
+    "label": "(UTC+06:00) Nur-Sultan (Astana)",
+    "abbreviation": "CAST",
+    "offset": 6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Dhaka",
+    "label": "(UTC+06:00) Dhaka",
+    "abbreviation": "BST",
+    "offset": 6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Thimphu",
+    "label": "(UTC+06:00) Dhaka",
+    "abbreviation": "BST",
+    "offset": 6,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Rangoon",
+    "label": "(UTC+06:30) Yangon (Rangoon)",
+    "abbreviation": "MST",
+    "offset": 6.5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Indian/Cocos",
+    "label": "(UTC+06:30) Yangon (Rangoon)",
+    "abbreviation": "MST",
+    "offset": 6.5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Antarctica/Davis",
+    "label": "(UTC+07:00) Bangkok, Hanoi, Jakarta",
+    "abbreviation": "SAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Bangkok",
+    "label": "(UTC+07:00) Bangkok, Hanoi, Jakarta",
+    "abbreviation": "SAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Hovd",
+    "label": "(UTC+07:00) Bangkok, Hanoi, Jakarta",
+    "abbreviation": "SAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Jakarta",
+    "label": "(UTC+07:00) Bangkok, Hanoi, Jakarta",
+    "abbreviation": "SAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Phnom_Penh",
+    "label": "(UTC+07:00) Bangkok, Hanoi, Jakarta",
+    "abbreviation": "SAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Pontianak",
+    "label": "(UTC+07:00) Bangkok, Hanoi, Jakarta",
+    "abbreviation": "SAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Saigon",
+    "label": "(UTC+07:00) Bangkok, Hanoi, Jakarta",
+    "abbreviation": "SAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Vientiane",
+    "label": "(UTC+07:00) Bangkok, Hanoi, Jakarta",
+    "abbreviation": "SAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT-7",
+    "label": "(UTC+07:00) Bangkok, Hanoi, Jakarta",
+    "abbreviation": "SAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Indian/Christmas",
+    "label": "(UTC+07:00) Bangkok, Hanoi, Jakarta",
+    "abbreviation": "SAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Novokuznetsk",
+    "label": "(UTC+07:00) Novosibirsk",
+    "abbreviation": "NCAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Novosibirsk",
+    "label": "(UTC+07:00) Novosibirsk",
+    "abbreviation": "NCAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Omsk",
+    "label": "(UTC+07:00) Novosibirsk",
+    "abbreviation": "NCAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Tomsk",
+    "label": "(UTC+07:00) Novosibirsk",
+    "abbreviation": "NCAST",
+    "offset": 7,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Hong_Kong",
+    "label": "(UTC+08:00) Beijing, Chongqing, Hong Kong, Urumqi",
+    "abbreviation": "CST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Macau",
+    "label": "(UTC+08:00) Beijing, Chongqing, Hong Kong, Urumqi",
+    "abbreviation": "CST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Shanghai",
+    "label": "(UTC+08:00) Beijing, Chongqing, Hong Kong, Urumqi",
+    "abbreviation": "CST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Krasnoyarsk",
+    "label": "(UTC+08:00) Krasnoyarsk",
+    "abbreviation": "NAST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Brunei",
+    "label": "(UTC+08:00) Kuala Lumpur, Singapore",
+    "abbreviation": "MPST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Kuala_Lumpur",
+    "label": "(UTC+08:00) Kuala Lumpur, Singapore",
+    "abbreviation": "MPST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Kuching",
+    "label": "(UTC+08:00) Kuala Lumpur, Singapore",
+    "abbreviation": "MPST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Makassar",
+    "label": "(UTC+08:00) Kuala Lumpur, Singapore",
+    "abbreviation": "MPST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Manila",
+    "label": "(UTC+08:00) Kuala Lumpur, Singapore",
+    "abbreviation": "MPST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Singapore",
+    "label": "(UTC+08:00) Kuala Lumpur, Singapore",
+    "abbreviation": "MPST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT-8",
+    "label": "(UTC+08:00) Kuala Lumpur, Singapore",
+    "abbreviation": "MPST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Antarctica/Casey",
+    "label": "(UTC+08:00) Perth",
+    "abbreviation": "WAST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Australia/Perth",
+    "label": "(UTC+08:00) Perth",
+    "abbreviation": "WAST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Taipei",
+    "label": "(UTC+08:00) Taipei",
+    "abbreviation": "TST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Choibalsan",
+    "label": "(UTC+08:00) Ulaanbaatar",
+    "abbreviation": "UST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Ulaanbaatar",
+    "label": "(UTC+08:00) Ulaanbaatar",
+    "abbreviation": "UST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Irkutsk",
+    "label": "(UTC+08:00) Irkutsk",
+    "abbreviation": "NAEST",
+    "offset": 8,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Dili",
+    "label": "(UTC+09:00) Osaka, Sapporo, Tokyo",
+    "abbreviation": "JST",
+    "offset": 9,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Jayapura",
+    "label": "(UTC+09:00) Osaka, Sapporo, Tokyo",
+    "abbreviation": "JST",
+    "offset": 9,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Tokyo",
+    "label": "(UTC+09:00) Osaka, Sapporo, Tokyo",
+    "abbreviation": "JST",
+    "offset": 9,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT-9",
+    "label": "(UTC+09:00) Osaka, Sapporo, Tokyo",
+    "abbreviation": "JST",
+    "offset": 9,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Palau",
+    "label": "(UTC+09:00) Osaka, Sapporo, Tokyo",
+    "abbreviation": "JST",
+    "offset": 9,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Pyongyang",
+    "label": "(UTC+09:00) Seoul",
+    "abbreviation": "KST",
+    "offset": 9,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Seoul",
+    "label": "(UTC+09:00) Seoul",
+    "abbreviation": "KST",
+    "offset": 9,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Australia/Adelaide",
+    "label": "(UTC+09:30) Adelaide",
+    "abbreviation": "CAST",
+    "offset": 9.5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Australia/Broken_Hill",
+    "label": "(UTC+09:30) Adelaide",
+    "abbreviation": "CAST",
+    "offset": 9.5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Australia/Darwin",
+    "label": "(UTC+09:30) Darwin",
+    "abbreviation": "ACST",
+    "offset": 9.5,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Australia/Brisbane",
+    "label": "(UTC+10:00) Brisbane",
+    "abbreviation": "EAST",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Australia/Lindeman",
+    "label": "(UTC+10:00) Brisbane",
+    "abbreviation": "EAST",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Australia/Melbourne",
+    "label": "(UTC+10:00) Canberra, Melbourne, Sydney",
+    "abbreviation": "AEST",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Australia/Sydney",
+    "label": "(UTC+10:00) Canberra, Melbourne, Sydney",
+    "abbreviation": "AEST",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Antarctica/DumontDUrville",
+    "label": "(UTC+10:00) Guam, Port Moresby",
+    "abbreviation": "WPST",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT-10",
+    "label": "(UTC+10:00) Guam, Port Moresby",
+    "abbreviation": "WPST",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Guam",
+    "label": "(UTC+10:00) Guam, Port Moresby",
+    "abbreviation": "WPST",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Port_Moresby",
+    "label": "(UTC+10:00) Guam, Port Moresby",
+    "abbreviation": "WPST",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Saipan",
+    "label": "(UTC+10:00) Guam, Port Moresby",
+    "abbreviation": "WPST",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Truk",
+    "label": "(UTC+10:00) Guam, Port Moresby",
+    "abbreviation": "WPST",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Australia/Currie",
+    "label": "(UTC+10:00) Hobart",
+    "abbreviation": "TST",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Australia/Hobart",
+    "label": "(UTC+10:00) Hobart",
+    "abbreviation": "TST",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Chita",
+    "label": "(UTC+09:00) Yakutsk",
+    "abbreviation": "YST",
+    "offset": 9,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Khandyga",
+    "label": "(UTC+09:00) Yakutsk",
+    "abbreviation": "YST",
+    "offset": 9,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Yakutsk",
+    "label": "(UTC+09:00) Yakutsk",
+    "abbreviation": "YST",
+    "offset": 9,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Antarctica/Macquarie",
+    "label": "(UTC+11:00) Solomon Is., New Caledonia",
+    "abbreviation": "CPST",
+    "offset": 11,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT-11",
+    "label": "(UTC+11:00) Solomon Is., New Caledonia",
+    "abbreviation": "CPST",
+    "offset": 11,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Efate",
+    "label": "(UTC+11:00) Solomon Is., New Caledonia",
+    "abbreviation": "CPST",
+    "offset": 11,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Guadalcanal",
+    "label": "(UTC+11:00) Solomon Is., New Caledonia",
+    "abbreviation": "CPST",
+    "offset": 11,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Kosrae",
+    "label": "(UTC+11:00) Solomon Is., New Caledonia",
+    "abbreviation": "CPST",
+    "offset": 11,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Noumea",
+    "label": "(UTC+11:00) Solomon Is., New Caledonia",
+    "abbreviation": "CPST",
+    "offset": 11,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Ponape",
+    "label": "(UTC+11:00) Solomon Is., New Caledonia",
+    "abbreviation": "CPST",
+    "offset": 11,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Ust-Nera",
+    "label": "(UTC+10:00) Vladivostok",
+    "abbreviation": "VLAT",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Vladivostok",
+    "label": "(UTC+10:00) Vladivostok",
+    "abbreviation": "VLAT",
+    "offset": 10,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Sakhalin",
+    "label": "(UTC+11:00) Sakhalin",
+    "abbreviation": "SAKT",
+    "offset": 11,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Antarctica/McMurdo",
+    "label": "(UTC+12:00) Auckland, Wellington",
+    "abbreviation": "NZST",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Auckland",
+    "label": "(UTC+12:00) Auckland, Wellington",
+    "abbreviation": "NZST",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT-12",
+    "label": "(UTC+12:00) Coordinated Universal Time+12",
+    "abbreviation": "U",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Funafuti",
+    "label": "(UTC+12:00) Coordinated Universal Time+12",
+    "abbreviation": "U",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Kwajalein",
+    "label": "(UTC+12:00) Coordinated Universal Time+12",
+    "abbreviation": "U",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Majuro",
+    "label": "(UTC+12:00) Coordinated Universal Time+12",
+    "abbreviation": "U",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Nauru",
+    "label": "(UTC+12:00) Coordinated Universal Time+12",
+    "abbreviation": "U",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Tarawa",
+    "label": "(UTC+12:00) Coordinated Universal Time+12",
+    "abbreviation": "U",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Wake",
+    "label": "(UTC+12:00) Coordinated Universal Time+12",
+    "abbreviation": "U",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Wallis",
+    "label": "(UTC+12:00) Coordinated Universal Time+12",
+    "abbreviation": "U",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Fiji",
+    "label": "(UTC+12:00) Fiji",
+    "abbreviation": "FST",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Anadyr",
+    "label": "(UTC+12:00) Magadan",
+    "abbreviation": "MST",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Kamchatka",
+    "label": "(UTC+12:00) Magadan",
+    "abbreviation": "MST",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Magadan",
+    "label": "(UTC+12:00) Magadan",
+    "abbreviation": "MST",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Asia/Srednekolymsk",
+    "label": "(UTC+12:00) Magadan",
+    "abbreviation": "MST",
+    "offset": 12,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Etc/GMT-13",
+    "label": "(UTC+13:00) Nuku'alofa",
+    "abbreviation": "TST",
+    "offset": 13,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Enderbury",
+    "label": "(UTC+13:00) Nuku'alofa",
+    "abbreviation": "TST",
+    "offset": 13,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Fakaofo",
+    "label": "(UTC+13:00) Nuku'alofa",
+    "abbreviation": "TST",
+    "offset": 13,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Tongatapu",
+    "label": "(UTC+13:00) Nuku'alofa",
+    "abbreviation": "TST",
+    "offset": 13,
+    "isDaylightSaving": false
+  },
+  {
+    "value": "Pacific/Apia",
+    "label": "(UTC+13:00) Samoa",
+    "abbreviation": "SST",
+    "offset": 13,
+    "isDaylightSaving": false
+  }
+]

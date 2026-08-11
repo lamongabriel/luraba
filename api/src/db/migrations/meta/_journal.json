@@ -204,6 +204,13 @@
       "when": 1785776400000,
       "tag": "0028_timezone_options",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1785780000000,
+      "tag": "0029_location_data_timezones",
+      "breakpoints": true
     }
   ]
 }

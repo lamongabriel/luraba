@@ -18,9 +18,9 @@ import {
   formatMonthKey,
   getTodayInTimezone,
   isAfter,
-  monthStart,
   now,
   parseMonthKey,
+  startOfMonth,
 } from '@/shared/lib/date';
 import { createListMeta, type ListResult } from '@/shared/list';
 import {
@@ -258,8 +258,8 @@ export async function recreateBudgetRecognitionsForPurchase(
     for (const installment of installments) {
       const budgetMonth =
         purchase.budgetExpenseTiming === 'spend_month'
-          ? monthStart(installment.closingDate)
-          : monthStart(installment.dueDate);
+          ? startOfMonth(installment.closingDate)
+          : startOfMonth(installment.dueDate);
 
       if (!shouldIncludeMonth(budgetMonth)) continue;
 
@@ -276,8 +276,8 @@ export async function recreateBudgetRecognitionsForPurchase(
     const firstInstallment = installments[0];
     const budgetMonth =
       purchase.budgetExpenseTiming === 'spend_month'
-        ? monthStart(params.purchaseDate)
-        : monthStart(firstInstallment?.dueDate ?? params.purchaseDate);
+        ? startOfMonth(params.purchaseDate)
+        : startOfMonth(firstInstallment?.dueDate ?? params.purchaseDate);
 
     if (shouldIncludeMonth(budgetMonth)) {
       rows.push({
@@ -351,7 +351,7 @@ async function rebuildSchedulesFromClosingDate(
   fromClosingDate: Date,
 ): Promise<void> {
   const today = getTodayInTimezone(timezone);
-  const currentMonthStart = monthStart(today);
+  const currentMonthStart = startOfMonth(today);
 
   const purchaseRows = await tx
     .select({
@@ -619,7 +619,7 @@ export async function getForecast(
   const card = await creditCardsRepository.findByIdOrThrow(context.householdId, creditCardId);
   const forecastStart = query.fromMonth
     ? parseMonthKey(query.fromMonth)
-    : monthStart(getTodayInTimezone(context.timezone));
+    : startOfMonth(getTodayInTimezone(context.timezone));
   const forecastEnd = addMonths(forecastStart, query.months - 1);
 
   await db.transaction(async (tx) => {
@@ -632,7 +632,7 @@ export async function getForecast(
       latestCycle = await ensureCurrentCycle(tx, card, context.timezone);
     }
 
-    while (monthStart(latestCycle.dueDate) < forecastEnd) {
+    while (startOfMonth(latestCycle.dueDate) < forecastEnd) {
       latestCycle = await ensureNextCycleAfter(tx, card, latestCycle);
     }
 
@@ -646,7 +646,7 @@ export async function getForecast(
     .orderBy(asc(creditCardBillingCyclesTable.dueDate));
 
   const filteredCycles = cycles.filter((cycle) => {
-    const dueMonth = monthStart(cycle.dueDate);
+    const dueMonth = startOfMonth(cycle.dueDate);
     return dueMonth >= forecastStart && dueMonth <= forecastEnd;
   });
 

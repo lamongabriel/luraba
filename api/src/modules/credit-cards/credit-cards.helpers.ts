@@ -1,7 +1,7 @@
 import { accountsTable } from '@/db/schemas/accounts.schema';
 import type { creditCardBillingCyclesTable } from '@/db/schemas/credit-card-billing-cycles.schema';
 import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
-import { formatDateOnly } from '@/shared/lib/date';
+import { formatISODate } from '@/shared/lib/date';
 import type { BaseCreditCardCycleSummary, CreditCardCycleItem } from './credit-cards.types';
 
 export type CreditCardRow = {
@@ -111,10 +111,10 @@ export function mapCycleRow(
   return {
     id: row.id,
     creditCardId: row.creditCardId,
-    periodStart: formatDateOnly(row.periodStart),
-    periodEnd: formatDateOnly(row.periodEnd),
-    closingDate: formatDateOnly(row.closingDate),
-    dueDate: formatDateOnly(row.dueDate),
+    periodStart: formatISODate(row.periodStart),
+    periodEnd: formatISODate(row.periodEnd),
+    closingDate: formatISODate(row.closingDate),
+    dueDate: formatISODate(row.dueDate),
     status: row.status,
     statementAmount: row.statementAmount,
     paidAmount: row.paidAmount,
@@ -133,8 +133,8 @@ export function mapCycleItemRow(row: CreditCardCycleItemRow): CreditCardCycleIte
     installmentNumber: row.installmentNumber,
     installmentCount: row.installmentCount,
     amount: row.amount,
-    purchaseDate: formatDateOnly(row.purchaseDate),
-    postedDate: formatDateOnly(row.postedDate),
+    purchaseDate: formatISODate(row.purchaseDate),
+    postedDate: formatISODate(row.postedDate),
   };
 }
 

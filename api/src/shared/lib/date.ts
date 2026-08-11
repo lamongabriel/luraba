@@ -9,7 +9,7 @@ import {
 } from 'date-fns';
 
 // ---------------------------------------------------------------------------
-// Primitives — thin wrappers around date-fns + ISO formatting/parsing
+// Primitives - thin wrappers around date-fns + ISO formatting/parsing
 // ---------------------------------------------------------------------------
 
 /** Returns the current date/time. Centralizes all `new Date()` calls. */
@@ -21,12 +21,6 @@ export function now(): Date {
 export function formatISODate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
-
-/** Alias for `formatISODate` — formats a Date as `"YYYY-MM-DD"`. */
-export const formatDateOnly = formatISODate;
-
-/** Alias for `formatISODate` — used in FX contexts. */
-export const formatFxDate = formatISODate;
 
 /** Formats a Date as a full ISO datetime string: `"YYYY-MM-DDTHH:mm:ss.sssZ"`. */
 export function formatISODateTime(date: Date): string {
@@ -65,9 +59,6 @@ export function subDays(date: Date, days: number): Date {
 export function startOfMonth(date: Date): Date {
   return dfnsStartOfMonth(date);
 }
-
-/** Alias for `startOfMonth` — used in budget/cycle contexts. */
-export const monthStart = startOfMonth;
 
 /** Returns `true` if `date` is before `compare`. */
 export function isBefore(date: Date, compare: Date): boolean {
@@ -129,7 +120,7 @@ export function getTodayInTimezone(timezone: string): Date {
 }
 
 // ---------------------------------------------------------------------------
-// Domain helpers — business logic relocated from per-module utils
+// Domain helpers - business logic relocated from per-module utils
 // ---------------------------------------------------------------------------
 
 /** Clamps a day-of-month so it doesn't exceed the last day of the given month. */

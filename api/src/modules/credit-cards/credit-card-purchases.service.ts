@@ -16,7 +16,7 @@ import {
   validateTagIds,
 } from '@/modules/tags/tags-associations.service';
 import { NotFoundError } from '@/shared/errors';
-import { formatDateOnly } from '@/shared/lib/date';
+import { formatISODate } from '@/shared/lib/date';
 import {
   createInstallmentsForPurchase,
   recreateBudgetRecognitionsForPurchase,
@@ -128,8 +128,8 @@ async function mapPurchaseResponse(
     description: purchase.description,
     categoryId: purchase.categoryId,
     merchantId: purchase.merchantId,
-    purchaseDate: formatDateOnly(purchase.purchaseDate),
-    postedDate: formatDateOnly(purchase.postedDate),
+    purchaseDate: formatISODate(purchase.purchaseDate),
+    postedDate: formatISODate(purchase.postedDate),
     amount: purchase.amount,
     installmentCount: purchase.installmentCount,
     tags,
@@ -141,8 +141,8 @@ async function mapPurchaseResponse(
       installmentNumber: installment.installmentNumber,
       amount: installment.amount,
       billingCycleId: installment.billingCycleId,
-      closingDate: formatDateOnly(installment.closingDate),
-      dueDate: formatDateOnly(installment.dueDate),
+      closingDate: formatISODate(installment.closingDate),
+      dueDate: formatISODate(installment.dueDate),
     })),
     createdAt: purchase.createdAt,
   };
@@ -237,8 +237,8 @@ export async function createPurchase(
     description: dto.description,
     categoryId: dto.categoryId ?? null,
     merchantId: dto.merchantId ?? null,
-    purchaseDate: formatDateOnly(dto.purchaseDate),
-    postedDate: formatDateOnly(postedDate),
+    purchaseDate: formatISODate(dto.purchaseDate),
+    postedDate: formatISODate(postedDate),
     amount: dto.amount,
     installmentCount: dto.installmentCount,
     tags: await listTransactionTags(result.transaction.id),
@@ -247,8 +247,8 @@ export async function createPurchase(
     budgetInstallmentMode: result.purchase.budgetInstallmentMode,
     installments: result.installments.map((installment) => ({
       ...installment,
-      closingDate: formatDateOnly(installment.closingDate),
-      dueDate: formatDateOnly(installment.dueDate),
+      closingDate: formatISODate(installment.closingDate),
+      dueDate: formatISODate(installment.dueDate),
     })),
     createdAt: result.purchase.createdAt,
   };

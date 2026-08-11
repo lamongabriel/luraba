@@ -4,7 +4,6 @@ import {
   defaultPeriodEnum,
   preferredDateFormatEnum,
   preferredLanguageEnum,
-  preferredTimezoneEnum,
   themePreferenceEnum,
 } from './enums.schema';
 
@@ -20,7 +19,7 @@ export const usersTable = pgTable('users', {
     .notNull()
     .default('BRL')
     .references(() => currenciesTable.code, { onDelete: 'restrict' }),
-  preferredTimezone: preferredTimezoneEnum('preferred_timezone')
+  preferredTimezone: varchar('preferred_timezone', { length: 64 })
     .notNull()
     .default('America/Sao_Paulo'),
   preferredDateFormat: preferredDateFormatEnum('preferred_date_format')

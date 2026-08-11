@@ -14,18 +14,13 @@ import {
   vehicleMileageUnitSchema,
 } from '@/shared/validation/accounts';
 import { moneyAmountSchema } from '@/shared/validation/money';
+import { countryCodeSchema } from '@/shared/validation/preferences';
 
 const optionalText = (max: number) => z.string().trim().min(1).max(max).optional();
 const nullableText = (max: number) => z.string().trim().min(1).max(max).nullable().optional();
 const last4Schema = z.string().regex(/^\d{4}$/, 'Must contain exactly four digits');
 const percentageSchema = z.coerce.number().min(0).max(100);
 const nextCalendarYear = new Date().getUTCFullYear() + 1;
-const countryCodeSchema = z
-  .string()
-  .trim()
-  .regex(/^[A-Za-z]{2}$/)
-  .transform((value) => value.toUpperCase());
-
 export const cashAccountDetailsSchema = z.strictObject({
   kind: z.literal('cash'),
   subtype: cashAccountSubtypeSchema,

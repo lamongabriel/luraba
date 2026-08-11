@@ -6,7 +6,6 @@ import {
   LANGUAGE_VALUES,
   PREFERRED_PERIOD_VALUES,
   PREFERRED_THEME_VALUES,
-  TIMEZONE_VALUES,
 } from '@/shared/validation/preferences';
 
 export const OnboardingCurrencyOptionSchema = z.object({
@@ -18,7 +17,7 @@ export const OnboardingCurrencyOptionSchema = z.object({
 export const GetOnboardingOptionsResponseSchema = z.object({
   languages: z.array(z.enum(LANGUAGE_VALUES)),
   currencies: z.array(OnboardingCurrencyOptionSchema),
-  timezones: z.array(z.enum(TIMEZONE_VALUES)),
+  timezones: z.array(z.string().min(1)),
   dateFormats: z.array(z.enum(DATE_FORMAT_VALUES)),
   preferredPeriods: z.array(z.enum(PREFERRED_PERIOD_VALUES)),
   preferredThemes: z.array(z.enum(PREFERRED_THEME_VALUES)),

@@ -6,7 +6,6 @@ import {
   creditInstallmentBudgetModeEnum,
   householdInviteStatusEnum,
   householdRoleEnum,
-  preferredTimezoneEnum,
 } from './enums.schema';
 import { usersTable } from './users.schema';
 
@@ -18,7 +17,7 @@ export const householdsTable = pgTable('households', {
     .notNull()
     .references(() => currenciesTable.code, { onDelete: 'restrict' }),
   countryCode: varchar('country_code', { length: 2 }).notNull().default('BR'),
-  timezone: preferredTimezoneEnum('timezone').notNull().default('America/Sao_Paulo'),
+  timezone: varchar({ length: 64 }).notNull().default('America/Sao_Paulo'),
   budgetMonthStartsOn: integer('budget_month_starts_on').notNull().default(1),
   creditExpenseTiming: creditExpenseTimingEnum('credit_expense_timing')
     .notNull()

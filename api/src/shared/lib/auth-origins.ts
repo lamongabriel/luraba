@@ -1,6 +1,8 @@
 import { env } from '@/config/env';
 
 const localDevelopmentOrigins = [
+  'http://localhost:29670',
+  'http://127.0.0.1:29670',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
   'http://localhost:4173',
