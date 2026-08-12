@@ -320,7 +320,7 @@ export const ColorPickerOutput = ({
 
   return (
     <Select onValueChange={setMode} value={mode}>
-      <SelectTrigger className="h-8 w-20 shrink-0 text-xs" {...props}>
+      <SelectTrigger className="h-7 w-20 shrink-0 text-xs" {...props}>
         <SelectValue placeholder="Mode" />
       </SelectTrigger>
       <SelectContent>
@@ -344,7 +344,7 @@ const PercentageInput = ({ className, ...props }: PercentageInputProps) => {
         type="text"
         {...props}
         className={cn(
-          "h-8 w-[3.25rem] rounded-l-none bg-secondary px-2 text-xs shadow-none",
+          "h-7 w-[3.25rem] rounded-l-none bg-secondary px-2 text-xs shadow-none",
           className,
         )}
       />
@@ -376,7 +376,7 @@ export const ColorPickerFormat = ({
         {...props}
       >
         <Input
-          className="h-8 rounded-r-none bg-secondary px-2 text-xs shadow-none"
+          className="h-7 rounded-r-none bg-secondary px-2 text-xs shadow-none"
           readOnly
           type="text"
           value={hex}
@@ -405,7 +405,7 @@ export const ColorPickerFormat = ({
         {channels.map((channel, index) => (
           <Input
             className={cn(
-              "h-8 rounded-r-none bg-secondary px-2 text-xs shadow-none",
+              "h-7 rounded-r-none bg-secondary px-2 text-xs shadow-none",
               index && "rounded-l-none",
               className,
             )}
@@ -429,7 +429,7 @@ export const ColorPickerFormat = ({
     return (
       <div className={cn("w-full rounded-md", className)} {...props}>
         <Input
-          className="h-8 w-full bg-secondary px-2 text-xs shadow-none"
+          className="h-7 w-full bg-secondary px-2 text-xs shadow-none"
           readOnly
           type="text"
           value={`rgba(${rgb.join(", ")}, ${alpha}%)`}
@@ -458,7 +458,7 @@ export const ColorPickerFormat = ({
         {channels.map((channel, index) => (
           <Input
             className={cn(
-              "h-8 rounded-r-none bg-secondary px-2 text-xs shadow-none",
+              "h-7 rounded-r-none bg-secondary px-2 text-xs shadow-none",
               index && "rounded-l-none",
               className,
             )}

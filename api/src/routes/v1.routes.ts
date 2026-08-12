@@ -9,8 +9,11 @@ import currenciesRouter from '@/modules/currencies/currencies.routes';
 import householdsRouter from '@/modules/households/households.routes';
 import integrationsRouter from '@/modules/integrations/integrations.routes';
 import merchantsRouter from '@/modules/merchants/merchants.routes';
+import networthRouter from '@/modules/networth/networth.routes';
 import onboardingRouter from '@/modules/onboarding/onboarding.routes';
 import paymentMethodsRouter from '@/modules/payment-methods/payment-methods.routes';
+import recurringBillsRouter from '@/modules/recurring-bills/recurring-bills.routes';
+import referenceDataRouter from '@/modules/reference-data/reference-data.routes';
 import tagsRouter from '@/modules/tags/tags.routes';
 import transactionsRouter from '@/modules/transactions/transactions.routes';
 
@@ -25,8 +28,11 @@ router.use('/budgets', budgetsRouter);
 router.use('/categories', categoriesRouter);
 router.use('/credit-cards', creditCardsRouter);
 router.use('/merchants', merchantsRouter);
+router.use('/networth', networthRouter);
 router.use('/onboarding', onboardingRouter);
 router.use('/payment-methods', paymentMethodsRouter);
+router.use('/reference-data', referenceDataRouter);
+router.use('/recurring-bills', recurringBillsRouter);
 router.use('/tags', tagsRouter);
 router.use('/transactions', transactionsRouter);
 

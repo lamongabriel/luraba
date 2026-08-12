@@ -1,19 +1,19 @@
 "use client"
 
 /**
- * Modal system — built on top of the existing Dialog primitives.
+ * Modal system - built on top of the existing Dialog primitives.
  *
  * Exports:
- *   Modal            — root (Dialog wrapper)
- *   ModalTrigger     — trigger
- *   ModalClose       — close
- *   ModalContent     — opinionated content shell (icon, header, body, footer)
- *   ModalHeader      — title + description area
- *   ModalBody        — content area
- *   ModalFooter      — footer with built-in cancel/confirm slots
- *   ModalTitle       — title
- *   ModalDescription — subtitle / description
- *   ModalIcon        — coloured icon container
+ *   Modal            - root (Dialog wrapper)
+ *   ModalTrigger     - trigger
+ *   ModalClose       - close
+ *   ModalContent     - opinionated content shell (icon, header, body, footer)
+ *   ModalHeader      - title + description area
+ *   ModalBody        - content area
+ *   ModalFooter      - footer with built-in cancel/confirm slots
+ *   ModalTitle       - title
+ *   ModalDescription - subtitle / description
+ *   ModalIcon        - coloured icon container
  *
  * Usage:
  *
@@ -234,9 +234,9 @@ interface ModalContentProps
   icon?: React.ReactNode
   /** Variant that colours the icon background. */
   variant?: ModalVariant
-  /** Shorthand title — equivalent to <ModalTitle> inside <ModalHeader>. */
+  /** Shorthand title - equivalent to <ModalTitle> inside <ModalHeader>. */
   title?: string
-  /** Shorthand description — equivalent to <ModalDescription> inside <ModalHeader>. */
+  /** Shorthand description - equivalent to <ModalDescription> inside <ModalHeader>. */
   description?: string
   /** Blocks closing while something is loading. */
   isLoading?: boolean

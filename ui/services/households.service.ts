@@ -1,6 +1,7 @@
 "use client"
 
 import { lurabaApiPassiveClient } from "@/api/luraba-api"
+import type { HouseholdSummary } from "@/interfaces/household"
 import type {
   AcceptHouseholdInviteHttpResponse,
   CreateHouseholdInviteHttpBody,
@@ -54,6 +55,14 @@ export function createHousehold(
   body: CreateHouseholdHttpBody,
 ): Promise<CreateHouseholdHttpResponse> {
   return postApiData("/households", body)
+}
+
+export function getHousehold(householdId: string): Promise<HouseholdSummary> {
+  return getApiData(`/households/${householdId}`)
+}
+
+export function deleteHousehold(householdId: string): Promise<void> {
+  return deleteApiResource(`/households/${householdId}`)
 }
 
 export function updateHousehold({
@@ -142,6 +151,16 @@ export function acceptHouseholdInvite(
 
 export function rejectHouseholdInvite(token: string): Promise<void> {
   return postApiResource("/households/invites/reject", { token })
+}
+
+export function acceptHouseholdInviteById(
+  inviteId: string,
+): Promise<AcceptHouseholdInviteHttpResponse> {
+  return postApiData(`/households/invites/${inviteId}/accept`)
+}
+
+export function rejectHouseholdInviteById(inviteId: string): Promise<void> {
+  return postApiResource(`/households/invites/${inviteId}/reject`)
 }
 
 export function refreshHouseholdInviteLink({

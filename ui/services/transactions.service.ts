@@ -5,6 +5,10 @@ import type {
   CreateTransactionHttpResponse,
   ListTransactionsHttpQuery,
   ListTransactionsHttpResponse,
+  TransactionAnalyticsHttpQuery,
+  TransactionAnalyticsHttpResponse,
+  UpcomingTransactionsHttpQuery,
+  UpcomingTransactionsHttpResponse,
   UpdateTransactionHttpBody,
   UpdateTransactionHttpResponse,
 } from "@/interfaces/http/transactions-http"
@@ -14,6 +18,7 @@ import type {
 } from "@/interfaces/transaction"
 import {
   deleteApiResource,
+  getApiData,
   getApiList,
   patchApiData,
   postApiData,
@@ -29,6 +34,22 @@ export function listTransactions(
       params: serializeHttpQuery(query),
     },
   )
+}
+
+export function getTransactionAnalytics(
+  query: TransactionAnalyticsHttpQuery = {},
+): Promise<TransactionAnalyticsHttpResponse> {
+  return getApiData("/transactions/analytics", {
+    params: serializeHttpQuery(query),
+  })
+}
+
+export function listUpcomingTransactions(
+  query: UpcomingTransactionsHttpQuery = {},
+): Promise<UpcomingTransactionsHttpResponse> {
+  return getApiList("/transactions/upcoming", {
+    params: serializeHttpQuery(query),
+  })
 }
 
 export function createTransaction(

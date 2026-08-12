@@ -6,6 +6,7 @@ import {
   createContext,
   type HTMLAttributes,
   type KeyboardEvent,
+  type MouseEvent,
   type ReactNode,
   useContext,
   useEffect,
@@ -50,15 +51,19 @@ export type CreditCardFlipperProps = ButtonHTMLAttributes<HTMLButtonElement>
 export const CreditCardFlipper = ({
   className,
   children,
+  onClick: onClickProp,
+  onKeyDown: onKeyDownProp,
   ...props
 }: CreditCardFlipperProps & { children?: ReactNode }) => {
   const supportsHover = useSupportsHover()
   const [isFlipped, setIsFlipped] = useState(false)
 
-  const handleClick = () => {
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (!supportsHover) {
       setIsFlipped((prev) => !prev)
     }
+
+    onClickProp?.(event)
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
@@ -66,6 +71,8 @@ export const CreditCardFlipper = ({
       event.preventDefault()
       setIsFlipped((previous) => !previous)
     }
+
+    onKeyDownProp?.(event)
   }
 
   return (

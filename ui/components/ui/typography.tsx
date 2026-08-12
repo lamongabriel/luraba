@@ -30,7 +30,7 @@ const typographyVariants = cva("", {
         "font-heading text-xl tracking-[-0.02em] text-foreground",
       subheading: "font-heading text-lg tracking-[-0.02em] text-foreground",
       "page-title":
-        "font-heading text-3xl tracking-[-0.03em] text-foreground md:text-[2.7rem] md:leading-[1.02]",
+        "font-heading text-2xl tracking-[-0.03em] text-foreground md:text-3xl md:leading-tight",
       "hero-title":
         "font-heading text-4xl tracking-[-0.04em] text-foreground md:text-[4.2rem] md:leading-[0.95]",
       metric: "text-2xl font-semibold tracking-tight text-foreground",

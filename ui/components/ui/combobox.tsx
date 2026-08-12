@@ -165,12 +165,14 @@ export const ComboboxTrigger = ({
 
 export type ComboboxContentProps = ComponentProps<typeof Command> & {
   commandClassName?: string
+  contentWidth?: string | number
   popoverOptions?: ComponentProps<typeof PopoverContent>
 }
 
 export const ComboboxContent = ({
   className,
   commandClassName,
+  contentWidth,
   popoverOptions,
   ...props
 }: ComboboxContentProps) => {
@@ -178,9 +180,12 @@ export const ComboboxContent = ({
 
   return (
     <PopoverContent
-      className={cn("overflow-hidden p-0", className)}
-      style={{ width }}
+      className={cn(
+        "w-max max-w-[calc(100vw-1rem)] overflow-hidden p-0",
+        className,
+      )}
       {...popoverOptions}
+      style={{ ...popoverOptions?.style, width: contentWidth ?? width }}
     >
       <Command
         className={cn("h-auto min-h-0 max-h-full", commandClassName)}

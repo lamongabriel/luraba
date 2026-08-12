@@ -3,6 +3,7 @@
 import type {
   CreateMerchantHttpBody,
   CreateMerchantHttpResponse,
+  GetMerchantHttpResponse,
   ListMerchantsHttpQuery,
   ListMerchantsHttpResponse,
   UpdateMerchantHttpBody,
@@ -10,6 +11,7 @@ import type {
 } from "@/interfaces/http/merchants-http"
 import {
   deleteApiResource,
+  getApiData,
   getApiList,
   patchApiData,
   postApiData,
@@ -20,6 +22,10 @@ export function listMerchants(
   query: ListMerchantsHttpQuery = {},
 ): Promise<ListMerchantsHttpResponse> {
   return getApiList("/merchants", { params: serializeHttpQuery(query) })
+}
+
+export function getMerchant(id: string): Promise<GetMerchantHttpResponse> {
+  return getApiData(`/merchants/${id}`)
 }
 
 export function createMerchant(

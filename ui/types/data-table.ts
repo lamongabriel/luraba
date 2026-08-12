@@ -2,7 +2,7 @@ import type { ColumnSort, Row, RowData } from "@tanstack/react-table"
 
 declare module "@tanstack/react-table" {
   interface TableMeta<TData extends RowData> {
-    queryKeys?: QueryKeys
+    totalCount?: number
   }
 
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -14,12 +14,6 @@ declare module "@tanstack/react-table" {
     unit?: string
     icon?: React.ComponentType<React.ComponentProps<"svg">>
   }
-}
-
-export interface QueryKeys {
-  page: string
-  perPage: string
-  sort: string
 }
 
 export interface Option {

@@ -14,7 +14,6 @@ import {
   LANGUAGE_VALUES,
   PREFERRED_PERIOD_VALUES,
   PREFERRED_THEME_VALUES,
-  TIMEZONE_VALUES,
 } from '@/shared/validation/preferences';
 
 const authPayloadPaths = new Set(['/sign-up/email', '/sign-in/email']);
@@ -24,7 +23,8 @@ const additionalUserFields = {
   preferredLanguage: { type: LANGUAGE_VALUES, required: false, defaultValue: 'en' },
   preferredCurrency: { type: 'string', required: false, defaultValue: 'BRL' },
   preferredTimezone: {
-    type: TIMEZONE_VALUES,
+    type: 'string',
+    input: false,
     required: false,
     defaultValue: 'America/Sao_Paulo',
   },

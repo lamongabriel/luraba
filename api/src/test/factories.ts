@@ -8,6 +8,7 @@ import { householdMembersTable, householdsTable } from '@/db/schemas/households.
 import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
 import { usersTable } from '@/db/schemas/users.schema';
+import * as accountsService from '@/modules/accounts/accounts.service';
 import type { CreateAccountRequestBody } from '@/modules/accounts/accounts.types';
 import type { CreateCategoryRequestBody } from '@/modules/categories/categories.types';
 import type { CreateCreditCardRequestBody } from '@/modules/credit-cards/credit-cards.types';
@@ -137,13 +138,37 @@ export function buildCreditCardInput(
 ): CreateCreditCardRequestBody {
   return {
     name: `Card ${randomSuffix()}`,
-    currencyCode: 'BRL',
+    ownerAccountId: overrides.ownerAccountId ?? '00000000-0000-0000-0000-000000000000',
     brand: 'Visa',
     last4: '4242',
     closingDay: 25,
     dueDay: 5,
     ...overrides,
   };
+}
+
+export async function createCreditCardOwner(
+  context: Pick<
+    HouseholdContext,
+    | 'householdId'
+    | 'userId'
+    | 'role'
+    | 'permissions'
+    | 'timezone'
+    | 'creditExpenseTiming'
+    | 'creditInstallmentBudgetMode'
+  >,
+  overrides: Partial<CreateAccountRequestBody> = {},
+) {
+  return accountsService.createAccount(
+    context,
+    buildAccountInput({
+      name: `Card owner ${randomSuffix()}`,
+      type: 'cash',
+      currencyCode: 'BRL',
+      ...overrides,
+    }),
+  );
 }
 
 export function buildCategoryInput(
