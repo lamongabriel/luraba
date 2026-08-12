@@ -1,6 +1,11 @@
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
+import { getTodayInTimezone } from '@/shared/lib/date';
 import { withApiMeta } from '@/shared/response';
-import { ListTransactionsRequestQuerySchema } from './transactions.query';
+import * as analyticsService from './transactions.analytics.service';
+import {
+  ListTransactionsRequestQuerySchema,
+  TransactionFilterQuerySchema,
+} from './transactions.query';
 import * as transactionsService from './transactions.service';
 import {
   CreateTransactionResponseSchema,
@@ -11,12 +16,30 @@ import {
   UpdateTransactionRequestParamsSchema,
   UpdateTransactionResponseSchema,
 } from './transactions.types';
+import * as upcomingService from './transactions.upcoming.service';
 
 export const list = createHouseholdHandler({
   query: ListTransactionsRequestQuerySchema,
   response: ListTransactionsResponseSchema,
   handle: async ({ household, query }) => {
-    const result = await transactionsService.listTransactions(household, query);
+    const result = await transactionsService.listTransactions(household, query, {
+      maxPostedDate: getTodayInTimezone(household.timezone).toISOString().slice(0, 10),
+    });
+    return withApiMeta(result.data, result.meta);
+  },
+});
+
+export const analytics = createHouseholdHandler({
+  query: TransactionFilterQuerySchema,
+  response: analyticsService.transactionAnalyticsResponseSchema,
+  handle: ({ household, query }) => analyticsService.getAnalytics(household, query),
+});
+
+export const upcoming = createHouseholdHandler({
+  query: upcomingService.upcomingTransactionsQuerySchema,
+  response: upcomingService.upcomingTransactionSchema.array(),
+  handle: async ({ household, query }) => {
+    const result = await upcomingService.listUpcomingTransactions(household, query);
     return withApiMeta(result.data, result.meta);
   },
 });

@@ -13,7 +13,11 @@ import { fxService } from '@/modules/fx/fx.service';
 import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
 import { merchantsRepository } from '@/modules/merchants/merchants.repository';
 import { paymentMethodsRepository } from '@/modules/payment-methods/payment-methods.repository';
-import { tagsRepository } from '@/modules/tags/tags.repository';
+import {
+  addTransactionTags,
+  replaceTransactionTags,
+  validateTagIds,
+} from '@/modules/tags/tags-associations.service';
 import { NotFoundError, ValidationError } from '@/shared/errors';
 import { startOfMonth as toBudgetMonth } from '@/shared/lib/date';
 import { createListMeta, type ListResult } from '@/shared/list';
@@ -37,23 +41,6 @@ import type {
 // Scoped Validation + Lookups
 // -----------------------------------------------------------------------------
 
-async function validateTags(
-  context: HouseholdContext,
-  tagIds: string[] | undefined,
-): Promise<string[]> {
-  const normalizedTagIds = Array.from(new Set(tagIds ?? []));
-  if (normalizedTagIds.length === 0) {
-    return [];
-  }
-
-  const tags = await tagsRepository.findByIds(context, normalizedTagIds);
-  if (tags.length !== normalizedTagIds.length) {
-    throw new NotFoundError('Tag');
-  }
-
-  return normalizedTagIds;
-}
-
 async function validateOptionalMerchant(
   context: HouseholdContext,
   merchantId?: string | null,
@@ -66,9 +53,10 @@ async function validateOptionalMerchant(
 
 async function validateCategory(
   context: HouseholdContext,
-  categoryId: string,
+  categoryId: string | null | undefined,
   expectedType: 'expense' | 'income',
 ): Promise<void> {
+  if (!categoryId) return;
   const category = await categoriesRepository.get(categoryId, context);
   if (!category) throw new NotFoundError('Category');
   if (category.type !== expectedType) {
@@ -81,6 +69,12 @@ async function resolvePaymentMethod(
   paymentMethodCode: string,
   currencyCode: string,
 ) {
+  if (paymentMethodCode === 'credit_card') {
+    throw new ValidationError(
+      'Credit card payments must use the dedicated credit card purchase endpoint',
+    );
+  }
+
   const paymentMethod = await paymentMethodsRepository.findAvailableByCode(
     context,
     paymentMethodCode,
@@ -128,16 +122,6 @@ async function createBaseTransaction(
   return transaction.id;
 }
 
-async function persistTags(tx: TxClient, transactionId: string, tagIds: string[]): Promise<void> {
-  await txRepository.createTransactionTags(
-    tx,
-    tagIds.map((tagId) => ({
-      transactionId,
-      tagId,
-    })),
-  );
-}
-
 async function loadCreatedTransaction(
   context: HouseholdContext,
   transactionId: string,
@@ -156,11 +140,9 @@ async function loadCreatedTransaction(
 // Create Transaction Flows
 // -----------------------------------------------------------------------------
 
-// Expense: money leaves an asset/liability account and lands in the system
-// expense ledger for that currency.
-async function createExpense(
+async function createExpenseOrIncome(
   context: HouseholdContext,
-  dto: Extract<CreateTransactionDto, { type: 'expense' }>,
+  dto: Extract<CreateTransactionDto, { type: 'expense' | 'income' }>,
 ): Promise<TransactionResponse> {
   const currency = await currenciesRepository.findByCode(dto.currencyCode);
   if (!currency) throw new NotFoundError('Currency');
@@ -172,31 +154,23 @@ async function createExpense(
   );
 
   await validateOptionalMerchant(context, dto.merchantId);
-  await validateCategory(context, dto.categoryId, 'expense');
-  const tagIds = await validateTags(context, dto.tagIds);
+  await validateCategory(context, dto.categoryId, dto.type);
+  const tagIds = await validateTagIds(context, dto.tagIds);
 
   const account = await accountsRepository.get(dto.accountId, context);
   if (!account) throw new NotFoundError('Account');
   if (account.type === 'credit_card') {
     throw new ValidationError(
-      'Direct expense creation for credit card accounts must use the credit card purchase endpoint',
+      dto.type === 'expense'
+        ? 'Direct expense creation for credit card accounts must use the credit card purchase endpoint'
+        : 'Direct income creation for credit card accounts must use the credit card purchase/payment APIs',
     );
   }
   if (account.currencyId !== dto.currencyCode) {
     throw new ValidationError('Transaction currency must match account currency');
   }
 
-  const accountLedger = await ledgerAccountsRepository.findByOwner('account', account.id);
-  if (!accountLedger) throw new NotFoundError('Account ledger');
-
   const transactionId = await db.transaction(async (tx) => {
-    const expenseLedger = await ledgerAccountsRepository.findOrCreateSystem(
-      tx,
-      `system:expense:${dto.currencyCode}`,
-      SYSTEM_LEDGER_CLASSIFICATIONS.expense,
-      dto.currencyCode,
-    );
-
     const createdTransactionId = await createBaseTransaction(tx, context, {
       type: dto.type,
       paymentMethodId: paymentMethod.id,
@@ -208,94 +182,16 @@ async function createExpense(
       includeInBudget: dto.includeInBudget ?? true,
     });
 
-    await entriesService.createTransactionEntries(tx, createdTransactionId, [
-      {
-        ledgerAccountId: accountLedger.id,
-        amount: -dto.amount,
-        currencyCode: dto.currencyCode,
-        categoryId: dto.categoryId,
-        budgetMonth: toBudgetMonth(dto.postedDate),
-      },
-      {
-        ledgerAccountId: expenseLedger.id,
-        amount: dto.amount,
-        currencyCode: dto.currencyCode,
-      },
-    ]);
-    await persistTags(tx, createdTransactionId, tagIds);
-
-    return createdTransactionId;
-  });
-
-  return loadCreatedTransaction(context, transactionId);
-}
-
-// Income: money enters the account and is balanced by the system income ledger.
-async function createIncome(
-  context: HouseholdContext,
-  dto: Extract<CreateTransactionDto, { type: 'income' }>,
-): Promise<TransactionResponse> {
-  const currency = await currenciesRepository.findByCode(dto.currencyCode);
-  if (!currency) throw new NotFoundError('Currency');
-
-  const paymentMethod = await resolvePaymentMethod(
-    context,
-    dto.paymentMethodCode,
-    dto.currencyCode,
-  );
-
-  await validateOptionalMerchant(context, dto.merchantId);
-  await validateCategory(context, dto.categoryId, 'income');
-  const tagIds = await validateTags(context, dto.tagIds);
-
-  const account = await accountsRepository.get(dto.accountId, context);
-  if (!account) throw new NotFoundError('Account');
-  if (account.type === 'credit_card') {
-    throw new ValidationError(
-      'Direct income creation for credit card accounts must use the credit card purchase/payment APIs',
-    );
-  }
-  if (account.currencyId !== dto.currencyCode) {
-    throw new ValidationError('Transaction currency must match account currency');
-  }
-
-  const accountLedger = await ledgerAccountsRepository.findByOwner('account', account.id);
-  if (!accountLedger) throw new NotFoundError('Account ledger');
-
-  const transactionId = await db.transaction(async (tx) => {
-    const incomeLedger = await ledgerAccountsRepository.findOrCreateSystem(
-      tx,
-      `system:income:${dto.currencyCode}`,
-      SYSTEM_LEDGER_CLASSIFICATIONS.income,
-      dto.currencyCode,
-    );
-
-    const createdTransactionId = await createBaseTransaction(tx, context, {
+    await createExpenseOrIncomeEntries(tx, {
+      transactionId: createdTransactionId,
       type: dto.type,
-      paymentMethodId: paymentMethod.id,
-      categoryId: dto.categoryId,
-      description: dto.description,
-      purchaseDate: dto.purchaseDate,
+      accountId: account.id,
+      amount: dto.amount,
+      currencyCode: dto.currencyCode,
+      categoryId: dto.categoryId ?? null,
       postedDate: dto.postedDate,
-      merchantId: dto.merchantId,
-      includeInBudget: dto.includeInBudget ?? true,
     });
-
-    await entriesService.createTransactionEntries(tx, createdTransactionId, [
-      {
-        ledgerAccountId: accountLedger.id,
-        amount: dto.amount,
-        currencyCode: dto.currencyCode,
-        categoryId: dto.categoryId,
-        budgetMonth: toBudgetMonth(dto.postedDate),
-      },
-      {
-        ledgerAccountId: incomeLedger.id,
-        amount: -dto.amount,
-        currencyCode: dto.currencyCode,
-      },
-    ]);
-    await persistTags(tx, createdTransactionId, tagIds);
+    await addTransactionTags(tx, createdTransactionId, tagIds);
 
     return createdTransactionId;
   });
@@ -330,11 +226,7 @@ async function createTransfer(
     );
   }
 
-  const fromLedger = await ledgerAccountsRepository.findByOwner('account', fromAccount.id);
-  const toLedger = await ledgerAccountsRepository.findByOwner('account', toAccount.id);
-  if (!fromLedger || !toLedger) throw new NotFoundError('Account ledger');
-
-  const tagIds = await validateTags(context, dto.tagIds);
+  const tagIds = await validateTagIds(context, dto.tagIds);
 
   const { fromAmount, toAmount } = await resolveTransferAmounts({
     fromCurrencyCode: fromAccount.currencyId,
@@ -345,8 +237,6 @@ async function createTransfer(
     convertAmount: (input) => fxService.convertAmount(input),
   });
 
-  const sameCurrency = fromAccount.currencyId === toAccount.currencyId;
-
   const transactionId = await db.transaction(async (tx) => {
     const createdTransactionId = await createBaseTransaction(tx, context, {
       type: dto.type,
@@ -356,49 +246,16 @@ async function createTransfer(
       includeInBudget: dto.includeInBudget ?? true,
     });
 
-    const entries: EntryDraft[] = [
-      {
-        ledgerAccountId: fromLedger.id,
-        amount: -fromAmount,
-        currencyCode: fromAccount.currencyId,
-      },
-      {
-        ledgerAccountId: toLedger.id,
-        amount: toAmount,
-        currencyCode: toAccount.currencyId,
-      },
-    ];
-
-    if (!sameCurrency) {
-      const fromTransferLedger = await ledgerAccountsRepository.findOrCreateSystem(
-        tx,
-        `system:offshore-transfer:${fromAccount.currencyId}`,
-        SYSTEM_LEDGER_CLASSIFICATIONS.offshoreTransfer,
-        fromAccount.currencyId,
-      );
-      const toTransferLedger = await ledgerAccountsRepository.findOrCreateSystem(
-        tx,
-        `system:offshore-transfer:${toAccount.currencyId}`,
-        SYSTEM_LEDGER_CLASSIFICATIONS.offshoreTransfer,
-        toAccount.currencyId,
-      );
-
-      entries.push(
-        {
-          ledgerAccountId: fromTransferLedger.id,
-          amount: fromAmount,
-          currencyCode: fromAccount.currencyId,
-        },
-        {
-          ledgerAccountId: toTransferLedger.id,
-          amount: -toAmount,
-          currencyCode: toAccount.currencyId,
-        },
-      );
-    }
-
-    await entriesService.createTransactionEntries(tx, createdTransactionId, entries);
-    await persistTags(tx, createdTransactionId, tagIds);
+    await createTransferEntries(tx, {
+      transactionId: createdTransactionId,
+      fromAccountId: fromAccount.id,
+      toAccountId: toAccount.id,
+      fromAmount,
+      toAmount,
+      fromCurrencyCode: fromAccount.currencyId,
+      toCurrencyCode: toAccount.currencyId,
+    });
+    await addTransactionTags(tx, createdTransactionId, tagIds);
 
     return createdTransactionId;
   });
@@ -466,7 +323,7 @@ export async function createBalanceAdjustmentInTransaction(
       currencyCode: input.account.currencyId,
     },
   ]);
-  await persistTags(tx, createdTransactionId, input.tagIds ?? []);
+  await addTransactionTags(tx, createdTransactionId, input.tagIds ?? []);
 
   return createdTransactionId;
 }
@@ -480,7 +337,7 @@ async function createAdjustment(
 
   const accountLedger = await ledgerAccountsRepository.findByOwner('account', account.id);
   if (!accountLedger) throw new NotFoundError('Account ledger');
-  const tagIds = await validateTags(context, dto.tagIds);
+  const tagIds = await validateTagIds(context, dto.tagIds);
 
   const transactionId = await db.transaction(async (tx) => {
     return createBalanceAdjustmentInTransaction(tx, context, {
@@ -506,7 +363,7 @@ async function createExpenseOrIncomeEntries(
     accountId: string;
     amount: number;
     currencyCode: string;
-    categoryId: string;
+    categoryId: string | null;
     postedDate: Date;
   },
 ): Promise<void> {
@@ -530,7 +387,7 @@ async function createExpenseOrIncomeEntries(
       ledgerAccountId: accountLedger.id,
       amount: accountAmount,
       currencyCode: input.currencyCode,
-      categoryId: input.categoryId,
+      categoryId: input.categoryId ?? undefined,
       budgetMonth: toBudgetMonth(input.postedDate),
     },
     {
@@ -612,9 +469,8 @@ export async function createTransaction(
 ): Promise<TransactionResponse> {
   switch (dto.type) {
     case 'expense':
-      return createExpense(context, dto);
     case 'income':
-      return createIncome(context, dto);
+      return createExpenseOrIncome(context, dto);
     case 'transfer':
       return createTransfer(context, dto);
     case 'adjustment':
@@ -704,8 +560,9 @@ async function hydrateTransactionFeedPage(
 export async function listTransactions(
   context: HouseholdContext,
   query: ListTransactionsRequestQuery,
+  options: { includeAdjustments?: boolean; maxPostedDate?: string } = {},
 ): Promise<ListResult<TransactionFeedRow>> {
-  const page = await txRepository.listTransactionFeedPageKeys(context.householdId, query);
+  const page = await txRepository.listTransactionFeedPageKeys(context.householdId, query, options);
 
   return {
     data: await hydrateTransactionFeedPage(context, page),
@@ -731,7 +588,7 @@ export async function updateTransaction(
 
   let tagIds: string[] | undefined;
   if (body.tagIds !== undefined) {
-    tagIds = await validateTags(context, body.tagIds);
+    tagIds = await validateTagIds(context, body.tagIds);
   }
 
   const transactionUpdates: Partial<{
@@ -749,7 +606,7 @@ export async function updateTransaction(
         accountId: string;
         amount: number;
         currencyCode: string;
-        categoryId: string;
+        categoryId: string | null;
         postedDate: Date;
       }
     | {
@@ -798,10 +655,7 @@ export async function updateTransaction(
       throw new ValidationError('Transaction currency must match account currency');
     }
 
-    const nextCategoryId = body.categoryId ?? transaction.categoryId;
-    if (!nextCategoryId) {
-      throw new ValidationError(`Category is required for ${transaction.type} transactions`);
-    }
+    const nextCategoryId = body.categoryId !== undefined ? body.categoryId : transaction.categoryId;
     await validateCategory(context, nextCategoryId, transaction.type);
 
     if (body.merchantId !== undefined) {
@@ -972,16 +826,7 @@ export async function updateTransaction(
     }
 
     if (body.tagIds !== undefined) {
-      await txRepository.deleteTransactionTags(tx, transactionId);
-      if (tagIds && tagIds.length > 0) {
-        await txRepository.createTransactionTags(
-          tx,
-          tagIds.map((tagId) => ({
-            transactionId,
-            tagId,
-          })),
-        );
-      }
+      await replaceTransactionTags(tx, transactionId, tagIds ?? []);
     }
   });
 

@@ -15,6 +15,7 @@ import { tagsTable } from '@/db/schemas/tags.schema';
 import { transactionTagsTable } from '@/db/schemas/transaction-tags.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
 import {
+  BaseListQuerySchema,
   booleanQuerySchema,
   buildIlikeSearch,
   buildOrderBy,
@@ -23,7 +24,6 @@ import {
   createListQuerySchema,
   dateQuerySchema,
   rangeConditions,
-  temporalQuerySchema,
   validateRange,
 } from '@/shared/list';
 import { currencySchema } from '@/shared/validation/preferences';
@@ -43,6 +43,7 @@ const commonTransactionFilterShape = {
   purchaseDateTo: dateQuerySchema.optional(),
   originTypes: commaSeparatedArraySchema(transactionFeedOriginTypeSchema),
   categoryIds: commaSeparatedArraySchema(z.uuid()),
+  uncategorized: booleanQuerySchema.optional(),
   merchantIds: commaSeparatedArraySchema(z.uuid()),
   tagIds: commaSeparatedArraySchema(z.uuid()),
   paymentMethodCodes: commaSeparatedArraySchema(paymentMethodCodeSchema),
@@ -50,11 +51,12 @@ const commonTransactionFilterShape = {
   amountMin: z.coerce.number().int().min(0).optional(),
   amountMax: z.coerce.number().int().min(0).optional(),
   includeInBudget: booleanQuerySchema.optional(),
-  excludedFromSpending: booleanQuerySchema.optional(),
-  createdAtFrom: temporalQuerySchema.optional(),
-  createdAtTo: temporalQuerySchema.optional(),
-  updatedAtFrom: temporalQuerySchema.optional(),
-  updatedAtTo: temporalQuerySchema.optional(),
+} as const;
+
+const transactionFilterShape = {
+  ...commonTransactionFilterShape,
+  accountIds: commaSeparatedArraySchema(z.uuid()),
+  creditCardIds: commaSeparatedArraySchema(z.uuid()),
 } as const;
 
 const transactionSortFields = [
@@ -64,27 +66,27 @@ const transactionSortFields = [
   'originType',
   'postedDate',
   'purchaseDate',
-  'updatedAt',
 ] as const;
 
 function validateTransactionRanges(query: Record<string, unknown>, ctx: z.RefinementCtx) {
   validateRange(query, ctx, 'dateFrom', 'dateTo');
   validateRange(query, ctx, 'purchaseDateFrom', 'purchaseDateTo');
   validateRange(query, ctx, 'amountMin', 'amountMax');
-  validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
-  validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
 }
 
 export const ListTransactionsRequestQuerySchema = createListQuerySchema(
-  {
-    ...commonTransactionFilterShape,
-    accountIds: commaSeparatedArraySchema(z.uuid()),
-    creditCardIds: commaSeparatedArraySchema(z.uuid()),
-  },
+  transactionFilterShape,
   transactionSortFields,
 ).superRefine(validateTransactionRanges);
 
 export type ListTransactionsRequestQuery = z.infer<typeof ListTransactionsRequestQuerySchema>;
+
+export const TransactionFilterQuerySchema = BaseListQuerySchema.pick({ search: true })
+  .extend(transactionFilterShape)
+  .strict()
+  .superRefine(validateTransactionRanges);
+
+export type TransactionFilterQuery = z.infer<typeof TransactionFilterQuerySchema>;
 
 export const ListAccountTransactionsRequestQuerySchema = createListQuerySchema(
   commonTransactionFilterShape,
@@ -102,11 +104,15 @@ function sqlArray(values: string[], cast: 'text' | 'uuid'): SQL {
   )}]::${sql.raw(cast)}[]`;
 }
 
-export function buildTransactionFeedWhere(query: ListTransactionsRequestQuery): SQL | undefined {
-  return combineConditions(
-    buildIlikeSearch(query.search, [sql`search_blob`]),
+export function buildTransactionFeedWhere(query: TransactionFilterQuery): SQL | undefined {
+  const postedDateConditions = combineConditions(
     query.dateFrom ? sql`posted_date >= ${query.dateFrom}::date` : undefined,
     query.dateTo ? sql`posted_date <= ${query.dateTo}::date` : undefined,
+  );
+
+  return combineConditions(
+    buildIlikeSearch(query.search, [sql`search_blob`]),
+    postedDateConditions,
     query.purchaseDateFrom ? sql`purchase_date >= ${query.purchaseDateFrom}::date` : undefined,
     query.purchaseDateTo ? sql`purchase_date <= ${query.purchaseDateTo}::date` : undefined,
     query.originTypes.length > 0
@@ -118,8 +124,15 @@ export function buildTransactionFeedWhere(query: ListTransactionsRequestQuery): 
     query.creditCardIds.length > 0
       ? sql`credit_card_id = any(${sqlArray(query.creditCardIds, 'uuid')})`
       : undefined,
-    query.categoryIds.length > 0
-      ? sql`category_id = any(${sqlArray(query.categoryIds, 'uuid')})`
+    query.categoryIds.length > 0 || query.uncategorized === true
+      ? sql`origin_type in ('expense', 'income', 'credit_card_installment') and (
+          ${
+            query.categoryIds.length > 0
+              ? sql`category_id = any(${sqlArray(query.categoryIds, 'uuid')})`
+              : sql`false`
+          }
+          or ${query.uncategorized === true ? sql`category_id is null` : sql`false`}
+        )`
       : undefined,
     query.merchantIds.length > 0
       ? sql`merchant_id = any(${sqlArray(query.merchantIds, 'uuid')})`
@@ -135,11 +148,6 @@ export function buildTransactionFeedWhere(query: ListTransactionsRequestQuery): 
     query.includeInBudget === undefined
       ? undefined
       : sql`include_in_budget = ${query.includeInBudget}`,
-    query.excludedFromSpending === undefined
-      ? undefined
-      : sql`excluded_from_spending = ${query.excludedFromSpending}`,
-    ...rangeConditions(sql`created_at`, query.createdAtFrom, query.createdAtTo),
-    ...rangeConditions(sql`updated_at`, query.updatedAtFrom, query.updatedAtTo),
   );
 }
 
@@ -153,7 +161,6 @@ export function buildTransactionFeedOrder(query: ListTransactionsRequestQuery): 
       originType: sql`origin_type`,
       postedDate: sql`posted_date`,
       purchaseDate: sql`purchase_date`,
-      updatedAt: sql`updated_at`,
     },
     [sql`posted_date desc`, sql`created_at desc`, sql`row_id desc`],
   );
@@ -161,9 +168,16 @@ export function buildTransactionFeedOrder(query: ListTransactionsRequestQuery): 
 
 export function buildTransactionFeedCte(
   householdId: string,
-  query: ListTransactionsRequestQuery,
+  query: TransactionFilterQuery,
+  options: { includeAdjustments?: boolean; maxPostedDate?: string } = {},
 ): SQL {
-  const where = buildTransactionFeedWhere(query);
+  const adjustmentCondition = options.includeAdjustments
+    ? sql``
+    : sql`and ${transactionsTable.type} <> 'adjustment'`;
+  const where = combineConditions(
+    buildTransactionFeedWhere(query),
+    options.maxPostedDate ? sql`posted_date <= ${options.maxPostedDate}::date` : undefined,
+  );
   const whereClause = where ? sql`where ${where}` : sql``;
 
   return sql`
@@ -211,8 +225,14 @@ export function buildTransactionFeedCte(
     tag_rollup as (
       select
         ${transactionTagsTable.transactionId} as transaction_id,
-        array_agg(${transactionTagsTable.tagId}) as tag_ids,
-        string_agg(${tagsTable.name}, ' ') as tag_names
+        array_agg(
+          ${transactionTagsTable.tagId}
+          order by ${transactionTagsTable.position} asc, ${transactionTagsTable.tagId} asc
+        ) as tag_ids,
+        string_agg(
+          ${tagsTable.name},
+          ' ' order by ${transactionTagsTable.position} asc, ${transactionTagsTable.tagId} asc
+        ) as tag_names
       from ${transactionTagsTable}
       inner join ${tagsTable}
         on ${tagsTable.id} = ${transactionTagsTable.tagId}
@@ -227,7 +247,10 @@ export function buildTransactionFeedCte(
           else 'transaction'
         end as row_kind,
         ${transactionsTable.id} as transaction_id,
+        null::uuid as purchase_id,
         null::uuid as installment_id,
+        null::integer as installment_number,
+        null::integer as installment_count,
         case
           when ${creditCardPaymentsTable.id} is not null then 'credit_card_payment'
           else ${transactionsTable.type}::text
@@ -239,11 +262,6 @@ export function buildTransactionFeedCte(
         ${transactionsTable.updatedAt} as updated_at,
         entry_rollup.display_amount as amount,
         ${transactionsTable.includeInBudget} as include_in_budget,
-        case
-          when ${creditCardPaymentsTable.id} is not null then true
-          when ${transactionsTable.type} = 'expense' then not ${transactionsTable.includeInBudget}
-          else true
-        end as excluded_from_spending,
         ${transactionsTable.categoryId} as category_id,
         ${transactionsTable.merchantId} as merchant_id,
         ${paymentMethodsTable.code} as payment_method_code,
@@ -278,6 +296,7 @@ export function buildTransactionFeedCte(
       left join tag_rollup
         on tag_rollup.transaction_id = ${transactionsTable.id}
       where ${transactionsTable.householdId} = ${householdId}
+        ${adjustmentCondition}
         and ${creditCardPurchasesTable.id} is null
     ),
     credit_card_installments as (
@@ -285,7 +304,10 @@ export function buildTransactionFeedCte(
         ${creditCardInstallmentsTable.id} as row_id,
         'credit_card_installment' as row_kind,
         ${transactionsTable.id} as transaction_id,
+        ${creditCardPurchasesTable.id} as purchase_id,
         ${creditCardInstallmentsTable.id} as installment_id,
+        ${creditCardInstallmentsTable.installmentNumber} as installment_number,
+        ${creditCardPurchasesTable.installmentCount} as installment_count,
         'credit_card_installment' as origin_type,
         ${transactionsTable.description} as description,
         ${transactionsTable.purchaseDate} as purchase_date,
@@ -293,13 +315,12 @@ export function buildTransactionFeedCte(
         ${creditCardInstallmentsTable.createdAt} as created_at,
         ${transactionsTable.updatedAt} as updated_at,
         ${creditCardInstallmentsTable.amount}::integer as amount,
-        ${transactionsTable.includeInBudget} as include_in_budget,
-        false as excluded_from_spending,
+        ${creditCardPurchasesTable.includeInBudget} as include_in_budget,
         ${transactionsTable.categoryId} as category_id,
         ${transactionsTable.merchantId} as merchant_id,
         ${paymentMethodsTable.code} as payment_method_code,
         ${creditCardsTable.id} as credit_card_id,
-        array[${creditCardsTable.accountId}]::uuid[] as account_ids,
+        array[${creditCardsTable.ledgerAccountId}]::uuid[] as account_ids,
         array[${accountsTable.currencyId}]::text[] as currency_codes,
         coalesce(tag_rollup.tag_ids, array[]::uuid[]) as tag_ids,
         concat_ws(
@@ -324,7 +345,7 @@ export function buildTransactionFeedCte(
       inner join ${creditCardBillingCyclesTable}
         on ${creditCardBillingCyclesTable.id} = ${creditCardInstallmentsTable.billingCycleId}
       inner join ${accountsTable}
-        on ${accountsTable.id} = ${creditCardsTable.accountId}
+        on ${accountsTable.id} = ${creditCardsTable.ledgerAccountId}
       left join ${paymentMethodsTable}
         on ${paymentMethodsTable.id} = ${transactionsTable.paymentMethodId}
       left join ${categoriesTable}

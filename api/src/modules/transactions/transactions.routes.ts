@@ -4,6 +4,16 @@ import * as transactionsController from './transactions.controller';
 
 const router = Router();
 
+router.get(
+  '/analytics',
+  requireAccess({ permission: 'transactions.read' }),
+  transactionsController.analytics,
+);
+router.get(
+  '/upcoming',
+  requireAccess({ permission: 'transactions.read' }),
+  transactionsController.upcoming,
+);
 router.get('/', requireAccess({ permission: 'transactions.read' }), transactionsController.list);
 router.post(
   '/',

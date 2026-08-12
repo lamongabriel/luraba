@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { entriesTable } from '@/db/schemas/entries.schema';
 import type { transactionsTable } from '@/db/schemas/transactions.schema';
+import { tagSummarySchema } from '@/modules/tags/tags.types';
 import {
   type AccountClassification,
   accountClassificationSchema,
@@ -12,12 +13,9 @@ export type TransactionRecord = typeof transactionsTable.$inferSelect;
 export type EntryRecord = typeof entriesTable.$inferSelect;
 export type TransactionType = TransactionRecord['type'];
 
-export const transactionTagSchema = z.object({
-  id: z.uuid(),
-  name: z.string(),
-  color: z.string().nullable(),
-  icon: z.string().nullable(),
-});
+export const transactionTagSchema = tagSummarySchema;
+
+export type TransactionTag = z.infer<typeof transactionTagSchema>;
 
 const tagIdsSchema = z.array(z.uuid()).max(50).optional();
 
@@ -42,7 +40,7 @@ const baseFields = {
 };
 
 const categorizedLinkFields = {
-  categoryId: z.uuid(),
+  categoryId: z.uuid().nullable().optional(),
   merchantId: z.uuid().optional(),
 };
 
@@ -115,7 +113,7 @@ export const UpdateTransactionRequestBodySchema = z
     purchaseDate: z.coerce.date().optional(),
     postedDate: z.coerce.date().optional(),
     includeInBudget: z.boolean().optional(),
-    categoryId: z.uuid().optional(),
+    categoryId: z.uuid().nullable().optional(),
     merchantId: z.uuid().nullable().optional(),
     paymentMethodCode: paymentMethodCodeSchema.optional(),
     amount: moneyAmountSchema.optional(),
@@ -180,7 +178,6 @@ export const TransactionFeedRowSchema = TransactionResponseSchema.extend({
   rowId: z.uuid(),
   rowKind: transactionFeedRowKindSchema,
   originType: transactionFeedOriginTypeSchema,
-  excludedFromSpending: z.boolean(),
   creditCardId: z.uuid().nullable(),
   purchaseId: z.uuid().nullable(),
   paymentId: z.uuid().nullable(),
@@ -233,7 +230,6 @@ export type TransactionFeedRow = TransactionResponse & {
   rowId: string;
   rowKind: TransactionFeedRowKind;
   originType: TransactionFeedOriginType;
-  excludedFromSpending: boolean;
   creditCardId: string | null;
   purchaseId: string | null;
   paymentId: string | null;
@@ -247,3 +243,62 @@ export type TransactionListSummary = z.infer<typeof TransactionListSummarySchema
 export type UpdateTransactionRequestParams = z.infer<typeof UpdateTransactionRequestParamsSchema>;
 export type UpdateTransactionRequestBody = z.infer<typeof UpdateTransactionRequestBodySchema>;
 export type DeleteTransactionRequestParams = z.infer<typeof DeleteTransactionRequestParamsSchema>;
+
+const analyticsMetricSchema = z.object({
+  value: z.number().int(),
+  previousValue: z.number().int().nullable(),
+  changePercent: z.number().nullable(),
+  trend: z.array(z.object({ date: z.string(), value: z.number().int() })),
+});
+
+export const transactionAnalyticsResponseSchema = z.object({
+  currencyCode: currencyCodeSchema,
+  dateFrom: z.string().nullable(),
+  dateTo: z.string().nullable(),
+  metrics: z.object({
+    moneyIn: analyticsMetricSchema,
+    moneyOut: analyticsMetricSchema,
+    net: analyticsMetricSchema,
+  }),
+  expenseBreakdown: z.object({
+    items: z.array(
+      z.object({
+        id: z.uuid().nullable(),
+        name: z.string(),
+        icon: z.string().nullable(),
+        color: z.string().nullable(),
+        amount: z.number().int(),
+        percentage: z.number(),
+      }),
+    ),
+  }),
+});
+
+export const upcomingTransactionSourceSchema = z.enum([
+  'credit_card_installment',
+  'recurring_bill',
+]);
+
+export const upcomingTransactionSchema = z.object({
+  sourceType: upcomingTransactionSourceSchema,
+  sourceId: z.uuid(),
+  parentId: z.uuid(),
+  description: z.string(),
+  effectiveDate: z.string(),
+  amount: z.number().int(),
+  currencyCode: currencyCodeSchema,
+  accountId: z.uuid().nullable(),
+  accountName: z.string().nullable(),
+  creditCardId: z.uuid().nullable(),
+  creditCardName: z.string().nullable(),
+  categoryId: z.uuid().nullable(),
+  categoryName: z.string().nullable(),
+  merchantId: z.uuid().nullable(),
+  merchantName: z.string().nullable(),
+  installmentNumber: z.number().int().nullable(),
+  installmentCount: z.number().int().nullable(),
+  recurringFrequency: z.string().nullable(),
+});
+
+export type TransactionAnalyticsResponse = z.infer<typeof transactionAnalyticsResponseSchema>;
+export type UpcomingTransaction = z.infer<typeof upcomingTransactionSchema>;

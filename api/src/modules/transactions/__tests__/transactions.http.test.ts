@@ -102,6 +102,7 @@ describe('transactions routes', () => {
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
+        ownerAccountId: sourceAccount.id,
         name: 'Nubank',
         closingDay: 25,
         dueDay: 5,
@@ -140,9 +141,8 @@ describe('transactions routes', () => {
           originType: 'credit_card_payment',
           creditCardId: card.id,
           paymentId: payment.paymentId,
-          excludedFromSpending: true,
           description: 'Nubank payment',
-          toAccountId: card.accountId,
+          toAccountId: card.ledgerAccountId,
         }),
         expect.objectContaining({
           id: purchase.transactionId,
@@ -156,8 +156,7 @@ describe('transactions routes', () => {
           installmentCount: 3,
           amount: 40_000,
           postedDate: '2026-05-25',
-          accountId: card.accountId,
-          excludedFromSpending: false,
+          accountId: card.ledgerAccountId,
         }),
         expect.objectContaining({
           id: purchase.transactionId,
@@ -183,13 +182,13 @@ describe('transactions routes', () => {
       pagination: {
         page: 1,
         perPage: 20,
-        totalCount: 5,
+        totalCount: 4,
         totalPages: 1,
       },
       summary: {
         expenseAmount: 120_000,
         incomeAmount: 0,
-        totalCount: 5,
+        totalCount: 4,
       },
     });
     expect(

@@ -21,16 +21,13 @@ describe('transactions list query', () => {
       amountMin: 1,
       amountMax: 100000,
       includeInBudget: 'true',
-      excludedFromSpending: 'false',
-      createdAtFrom: '2025-01-01',
-      createdAtTo: '2025-12-31',
-      updatedAtFrom: '2025-01-01',
-      updatedAtTo: '2025-12-31',
+      uncategorized: 'true',
     });
 
     expect(query.search).toBe('Salary');
     expect(query.originTypes).toEqual(['income', 'transfer']);
     expect(query.includeInBudget).toBe(true);
+    expect(query.uncategorized).toBe(true);
   });
 
   it('rejects invalid ranges, booleans, enums, and unknown fields', () => {
@@ -43,6 +40,12 @@ describe('transactions list query', () => {
     expect(ListTransactionsRequestQuerySchema.safeParse({ originTypes: 'refund' }).success).toBe(
       false,
     );
+    expect(
+      ListTransactionsRequestQuerySchema.safeParse({ excludedFromSpending: 'false' }).success,
+    ).toBe(false);
+    expect(
+      ListTransactionsRequestQuerySchema.safeParse({ updatedAtFrom: '2025-01-01' }).success,
+    ).toBe(false);
     expect(ListTransactionsRequestQuerySchema.safeParse({ unknown: true }).success).toBe(false);
   });
 });

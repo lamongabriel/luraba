@@ -1,7 +1,7 @@
 import { ValidationError } from '@/shared/errors';
-import { formatDateOnly } from '@/shared/lib/date';
+import { formatISODate } from '@/shared/lib/date';
 import type * as txRepository from './transactions.repository';
-import type { TransactionFeedRow, TransactionResponse } from './transactions.types';
+import type { TransactionFeedRow, TransactionResponse, TransactionTag } from './transactions.types';
 
 export type DetailedTransactionRow = Awaited<
   ReturnType<typeof txRepository.listDetailedByHouseholdId>
@@ -16,6 +16,61 @@ type ConvertTransferAmount = (input: {
   toCurrencyCode: string;
   date: Date;
 }) => Promise<number>;
+
+type TagRow = {
+  tagId: string | null;
+  tagName: string | null;
+  tagColor: string | null;
+  tagIcon: string | null;
+};
+
+type PaymentMethodRow = {
+  paymentMethodId: string | null;
+  paymentMethodCode: string | null;
+  paymentMethodName: string | null;
+  paymentMethodScope: string | null;
+  paymentMethodTranslationKey: string | null;
+};
+
+function mapTags(rows: TagRow[]): TransactionTag[] {
+  const tags = new Map<string, TransactionTag>();
+
+  for (const row of rows) {
+    if (!row.tagId || !row.tagName || tags.has(row.tagId)) continue;
+
+    tags.set(row.tagId, {
+      id: row.tagId,
+      name: row.tagName,
+      color: row.tagColor,
+      icon: row.tagIcon,
+    });
+  }
+
+  return Array.from(tags.values());
+}
+
+function mapPaymentMethod(
+  row: PaymentMethodRow,
+): Pick<
+  TransactionResponse,
+  | 'paymentMethodId'
+  | 'paymentMethodCode'
+  | 'paymentMethodName'
+  | 'paymentMethodScope'
+  | 'paymentMethodTranslationKey'
+> {
+  return {
+    paymentMethodId: row.paymentMethodId,
+    paymentMethodCode: row.paymentMethodCode,
+    paymentMethodName: row.paymentMethodName,
+    paymentMethodScope: row.paymentMethodId
+      ? row.paymentMethodScope
+        ? 'household'
+        : 'system'
+      : null,
+    paymentMethodTranslationKey: row.paymentMethodTranslationKey,
+  };
+}
 
 export function absoluteAmount(value: number): number {
   return value < 0 ? -value : value;
@@ -109,21 +164,7 @@ export function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResp
   return Array.from(rowsByTransaction.values()).map((group) => {
     const first = group[0];
     const categoryId = first.categoryId ?? null;
-    const tags = Array.from(
-      new Map(
-        group
-          .filter((row) => row.tagId && row.tagName)
-          .map((row) => [
-            row.tagId as string,
-            {
-              id: row.tagId as string,
-              name: row.tagName as string,
-              color: row.tagColor ?? null,
-              icon: row.tagIcon ?? null,
-            },
-          ]),
-      ).values(),
-    );
+    const tags = mapTags(group);
     const accountEntries = group.filter((row) => row.accountId);
 
     if (first.type === 'transfer') {
@@ -153,19 +194,11 @@ export function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResp
         toAccountClassification: toEntry?.accountClassification ?? null,
         categoryId,
         merchantId: first.merchantId ?? null,
-        paymentMethodId: first.paymentMethodId ?? null,
-        paymentMethodCode: first.paymentMethodCode ?? null,
-        paymentMethodName: first.paymentMethodName ?? null,
-        paymentMethodScope: first.paymentMethodId
-          ? first.paymentMethodScope
-            ? 'household'
-            : 'system'
-          : null,
-        paymentMethodTranslationKey: first.paymentMethodTranslationKey ?? null,
+        ...mapPaymentMethod(first),
         tags,
         includeInBudget: first.includeInBudget,
-        purchaseDate: formatDateOnly(first.purchaseDate),
-        postedDate: formatDateOnly(first.postedDate),
+        purchaseDate: formatISODate(first.purchaseDate),
+        postedDate: formatISODate(first.postedDate),
         createdAt: first.createdAt,
         updatedAt: first.updatedAt,
       };
@@ -189,19 +222,11 @@ export function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResp
       toAccountClassification: null,
       categoryId,
       merchantId: first.merchantId ?? null,
-      paymentMethodId: first.paymentMethodId ?? null,
-      paymentMethodCode: first.paymentMethodCode ?? null,
-      paymentMethodName: first.paymentMethodName ?? null,
-      paymentMethodScope: first.paymentMethodId
-        ? first.paymentMethodScope
-          ? 'household'
-          : 'system'
-        : null,
-      paymentMethodTranslationKey: first.paymentMethodTranslationKey ?? null,
+      ...mapPaymentMethod(first),
       tags,
       includeInBudget: first.includeInBudget,
-      purchaseDate: formatDateOnly(first.purchaseDate),
-      postedDate: formatDateOnly(first.postedDate),
+      purchaseDate: formatISODate(first.purchaseDate),
+      postedDate: formatISODate(first.postedDate),
       createdAt: first.createdAt,
       updatedAt: first.updatedAt,
     };
@@ -224,7 +249,6 @@ export function mapTransactionResponsesToFeedRows(
       rowId: transaction.id,
       rowKind: payment ? 'credit_card_payment' : 'transaction',
       originType: payment ? 'credit_card_payment' : transaction.type,
-      excludedFromSpending: transaction.type !== 'expense' || !transaction.includeInBudget,
       creditCardId:
         payment?.creditCardId ??
         (transaction.accountId ? creditCardIdsByAccountId.get(transaction.accountId) : undefined) ??
@@ -258,21 +282,7 @@ export function mapCreditCardInstallmentRowsToFeedRows(
 
   return Array.from(rowsByInstallment.values()).map((group) => {
     const first = group[0];
-    const tags = Array.from(
-      new Map(
-        group
-          .filter((row) => row.tagId && row.tagName)
-          .map((row) => [
-            row.tagId as string,
-            {
-              id: row.tagId as string,
-              name: row.tagName as string,
-              color: row.tagColor ?? null,
-              icon: row.tagIcon ?? null,
-            },
-          ]),
-      ).values(),
-    );
+    const tags = mapTags(group);
 
     return {
       id: first.transactionId,
@@ -290,25 +300,16 @@ export function mapCreditCardInstallmentRowsToFeedRows(
       toAccountClassification: null,
       categoryId: first.categoryId,
       merchantId: first.merchantId ?? null,
-      paymentMethodId: first.paymentMethodId ?? null,
-      paymentMethodCode: first.paymentMethodCode ?? null,
-      paymentMethodName: first.paymentMethodName ?? null,
-      paymentMethodScope: first.paymentMethodId
-        ? first.paymentMethodScope
-          ? 'household'
-          : 'system'
-        : null,
-      paymentMethodTranslationKey: first.paymentMethodTranslationKey ?? null,
+      ...mapPaymentMethod(first),
       tags,
       includeInBudget: first.includeInBudget,
-      purchaseDate: formatDateOnly(first.purchaseDate),
-      postedDate: formatDateOnly(first.postedDate),
+      purchaseDate: formatISODate(first.purchaseDate),
+      postedDate: formatISODate(first.postedDate),
       createdAt: first.createdAt,
       updatedAt: first.updatedAt,
       rowId: first.installmentId,
       rowKind: 'credit_card_installment',
       originType: 'credit_card_installment',
-      excludedFromSpending: false,
       creditCardId: first.creditCardId,
       purchaseId: first.purchaseId,
       paymentId: null,

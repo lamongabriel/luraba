@@ -21,6 +21,7 @@ import {
   createBalanceEntryForAccount,
 } from '@/test/factories';
 import {
+  ListAccountTransactionsRequestQuerySchema,
   type ListTransactionsRequestQuery,
   ListTransactionsRequestQuerySchema,
 } from '../transactions.query';
@@ -94,6 +95,118 @@ describe('transactions service', () => {
         expect.objectContaining({ name: 'Family', color: '#F97316', icon: 'UserGroupIcon' }),
       ]),
     );
+
+    const reordered = await transactionsService.updateTransaction(
+      context.householdContext,
+      transaction.id,
+      { tagIds: [familyTag.id, tripTag.id] },
+    );
+
+    expect(reordered.tags.map((tag) => tag.id)).toEqual([tripTag.id, familyTag.id]);
+
+    const appended = await transactionsService.updateTransaction(
+      context.householdContext,
+      transaction.id,
+      { tagIds: [familyTag.id, annualTag.id, tripTag.id] },
+    );
+
+    expect(appended.tags.map((tag) => tag.id)).toEqual([tripTag.id, familyTag.id, annualTag.id]);
+  });
+
+  it('hides adjustments from the global feed but keeps them in account history', async () => {
+    const context = await createAuthenticatedContext();
+    const account = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Opening Balance Account', type: 'cash' }),
+    );
+
+    const adjustment = await transactionsService.createTransaction(context.householdContext, {
+      type: 'adjustment',
+      description: 'Opening balance',
+      balance: 50_000,
+      accountId: account.id,
+      purchaseDate: new Date('2026-08-01T00:00:00.000Z'),
+      postedDate: new Date('2026-08-01T00:00:00.000Z'),
+    });
+
+    const globalFeed = await transactionsService.listTransactions(
+      context.householdContext,
+      buildListQuery(),
+    );
+    expect(globalFeed.data.some((row) => row.id === adjustment.id)).toBe(false);
+
+    const accountFeed = await accountsService.listAccountTransactions(
+      context.householdContext,
+      account.id,
+      ListAccountTransactionsRequestQuerySchema.parse({}),
+    );
+    expect(accountFeed.data).toEqual([
+      expect.objectContaining({ id: adjustment.id, originType: 'adjustment' }),
+    ]);
+  });
+
+  it('treats uncategorized as an expense and income category filter, never a transfer filter', async () => {
+    const context = await createAuthenticatedContext();
+    const checking = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Category Filter Checking', type: 'cash' }),
+    );
+    const savings = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Category Filter Savings', type: 'cash' }),
+    );
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: 'Categorized Food', type: 'expense' }),
+    );
+
+    const categorized = await transactionsService.createTransaction(context.householdContext, {
+      type: 'expense',
+      description: 'Categorized expense',
+      amount: 2_000,
+      currencyCode: 'BRL',
+      paymentMethodCode: 'pix',
+      accountId: checking.id,
+      categoryId: category.id,
+      purchaseDate: new Date('2026-08-02T00:00:00.000Z'),
+      postedDate: new Date('2026-08-02T00:00:00.000Z'),
+    });
+    const uncategorized = await transactionsService.createTransaction(context.householdContext, {
+      type: 'expense',
+      description: 'Uncategorized expense',
+      amount: 3_000,
+      currencyCode: 'BRL',
+      paymentMethodCode: 'pix',
+      accountId: checking.id,
+      purchaseDate: new Date('2026-08-03T00:00:00.000Z'),
+      postedDate: new Date('2026-08-03T00:00:00.000Z'),
+    });
+    const transfer = await transactionsService.createTransaction(context.householdContext, {
+      type: 'transfer',
+      description: 'Uncategorized transfer',
+      fromAccountId: checking.id,
+      toAccountId: savings.id,
+      fromAmount: 4_000,
+      toAmount: 4_000,
+      purchaseDate: new Date('2026-08-04T00:00:00.000Z'),
+      postedDate: new Date('2026-08-04T00:00:00.000Z'),
+    });
+
+    const filtered = await transactionsService.listTransactions(
+      context.householdContext,
+      buildListQuery({
+        categoryIds: [category.id],
+        uncategorized: true,
+        dateFrom: '2026-08-01',
+        dateTo: '2026-08-31',
+      }),
+    );
+
+    expect(filtered.data.map((row) => row.id)).toEqual(
+      expect.arrayContaining([categorized.id, uncategorized.id]),
+    );
+    expect(filtered.data.some((row) => row.id === transfer.id)).toBe(false);
+    expect(filtered.data).toHaveLength(2);
   });
 
   it('rejects tag ids outside the active household', async () => {
@@ -420,7 +533,16 @@ describe('transactions service', () => {
 
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
-      buildCreditCardInput({ name: 'Visa Gold', closingDay: 25, dueDay: 5 }),
+      buildCreditCardInput({
+        name: 'Visa Gold',
+        closingDay: 25,
+        dueDay: 5,
+        ownerAccountId: sourceAccount.id,
+      }),
+    );
+    const tag = await tagsService.createTag(
+      context.householdContext,
+      buildTagInput({ name: 'Living room' }),
     );
 
     const purchase = await creditCardsService.createPurchase(context.householdContext, card.id, {
@@ -430,6 +552,7 @@ describe('transactions service', () => {
       purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
       postedDate: new Date('2026-04-29T00:00:00.000Z'),
       installmentCount: 3,
+      tagIds: [tag.id],
     });
     const payment = await creditCardsService.createPayment(context.householdContext, card.id, {
       amount: 40_000,
@@ -453,7 +576,6 @@ describe('transactions service', () => {
           originType: 'credit_card_payment',
           creditCardId: card.id,
           paymentId: payment.paymentId,
-          excludedFromSpending: true,
         }),
         expect.objectContaining({
           id: purchase.transactionId,
@@ -464,7 +586,8 @@ describe('transactions service', () => {
           installmentNumber: 1,
           installmentCount: 3,
           postedDate: '2026-05-25',
-          excludedFromSpending: false,
+          includeInBudget: true,
+          tags: [expect.objectContaining({ id: tag.id })],
         }),
         expect.objectContaining({
           rowId: purchase.installments[1].installmentId,
@@ -483,6 +606,58 @@ describe('transactions service', () => {
     expect(
       feed.data.find((row) => row.id === purchase.transactionId && row.rowKind === 'transaction'),
     ).toBeUndefined();
+
+    const filteredFeed = await transactionsService.listTransactions(
+      context.householdContext,
+      buildListQuery({
+        originTypes: ['credit_card_installment'],
+        creditCardIds: [card.id],
+        tagIds: [tag.id],
+        includeInBudget: true,
+      }),
+    );
+
+    expect(filteredFeed.data).toHaveLength(3);
+    expect(filteredFeed.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          purchaseId: purchase.purchaseId,
+          tags: [expect.objectContaining({ id: tag.id })],
+        }),
+      ]),
+    );
+  });
+
+  it('filters credit card installments by posted billing date, not creation date', async () => {
+    const context = await createAuthenticatedContext();
+    const ownerAccount = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Date Filter Owner', type: 'cash', currencyCode: 'BRL' }),
+    );
+    const card = await creditCardsService.createCreditCard(
+      context.householdContext,
+      buildCreditCardInput({
+        name: 'Date Filter Card',
+        closingDay: 25,
+        dueDay: 5,
+        ownerAccountId: ownerAccount.id,
+      }),
+    );
+
+    await creditCardsService.createPurchase(context.householdContext, card.id, {
+      description: 'Future installments',
+      amount: 500,
+      purchaseDate: new Date('2026-08-05T00:00:00.000Z'),
+      postedDate: new Date('2026-08-05T00:00:00.000Z'),
+      installmentCount: 5,
+    });
+
+    const filteredFeed = await transactionsService.listTransactions(
+      context.householdContext,
+      buildListQuery({ dateFrom: '2026-08-01', dateTo: '2026-08-05' }),
+    );
+
+    expect(filteredFeed.data).toEqual([]);
   });
 
   it('creates adjustment transactions by setting the balance at the start of the posted date', async () => {
@@ -919,11 +1094,6 @@ describe('transactions service', () => {
         amountMin: 4_500,
         amountMax: 4_500,
         includeInBudget: true,
-        excludedFromSpending: false,
-        createdAtFrom: '2020-01-01',
-        createdAtTo: '2030-01-01',
-        updatedAtFrom: '2020-01-01',
-        updatedAtTo: '2030-01-01',
       }),
     );
 
@@ -1126,12 +1296,7 @@ describe('transactions service', () => {
     expect(updated.purchaseDate).toBe('2026-04-01');
     expect(updated.postedDate).toBe('2026-04-02');
     expect(updated.tags).toHaveLength(2);
-    expect(updated.tags).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ id: updatedTagOne.id }),
-        expect.objectContaining({ id: updatedTagTwo.id }),
-      ]),
-    );
+    expect(updated.tags.map((tag) => tag.id)).toEqual([updatedTagOne.id, updatedTagTwo.id]);
   });
 
   it('rejects metadata updates not supported for transfer transactions', async () => {

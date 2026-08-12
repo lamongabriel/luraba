@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
 import { accountsTable } from '@/db/schemas/accounts.schema';
@@ -69,7 +69,7 @@ const creditCardInstallmentFeedSelect = {
   installmentNumber: creditCardInstallmentsTable.installmentNumber,
   installmentCount: creditCardPurchasesTable.installmentCount,
   description: transactionsTable.description,
-  includeInBudget: transactionsTable.includeInBudget,
+  includeInBudget: creditCardPurchasesTable.includeInBudget,
   merchantId: transactionsTable.merchantId,
   purchaseDate: transactionsTable.purchaseDate,
   postedDate: creditCardBillingCyclesTable.closingDate,
@@ -95,9 +95,10 @@ const creditCardInstallmentFeedSelect = {
 export async function listTransactionFeedPageKeys(
   householdId: string,
   query: ListTransactionsRequestQuery,
+  options: { includeAdjustments?: boolean; maxPostedDate?: string } = {},
 ): Promise<DbListPage<TransactionFeedPageKey>> {
   const { limit, offset } = getPagination(query);
-  const feedCte = buildTransactionFeedCte(householdId, query);
+  const feedCte = buildTransactionFeedCte(householdId, query, options);
   const orderBy = buildTransactionFeedOrder(query);
 
   const summaryResult = await db.execute<{
@@ -115,7 +116,7 @@ export async function listTransactionFeedPageKeys(
       ), 0)::integer
       +
       coalesce(sum(amount) filter (
-        where origin_type = 'credit_card_installment'
+        where origin_type = 'credit_card_installment' and include_in_budget
       ), 0)::integer as "expenseAmount",
       count(*) filter (where origin_type = 'transfer')::integer as "transferCount"
     from filtered
@@ -153,23 +154,6 @@ export async function createTransaction(
 ): Promise<typeof transactionsTable.$inferSelect> {
   const rows = await tx.insert(transactionsTable).values(values).returning();
   return rows[0];
-}
-
-export async function createTransactionTags(
-  tx: TxClient,
-  values: Array<typeof transactionTagsTable.$inferInsert>,
-): Promise<Array<typeof transactionTagsTable.$inferSelect>> {
-  if (values.length === 0) {
-    return [];
-  }
-
-  return tx.insert(transactionTagsTable).values(values).returning();
-}
-
-export async function deleteTransactionTags(tx: TxClient, transactionId: string): Promise<void> {
-  await tx
-    .delete(transactionTagsTable)
-    .where(eq(transactionTagsTable.transactionId, transactionId));
 }
 
 export async function updateTransaction(
@@ -306,6 +290,8 @@ export async function listDetailedByHouseholdId(householdId: string) {
       desc(transactionsTable.createdAt),
       desc(transactionsTable.id),
       desc(entriesTable.id),
+      asc(transactionTagsTable.position),
+      asc(transactionTagsTable.tagId),
     );
 }
 
@@ -343,6 +329,8 @@ export async function listDetailedByTransactionIds(
       desc(transactionsTable.createdAt),
       desc(transactionsTable.id),
       desc(entriesTable.id),
+      asc(transactionTagsTable.position),
+      asc(transactionTagsTable.tagId),
     );
 }
 
@@ -390,7 +378,7 @@ export async function listCreditCardInstallmentFeedRows(householdId: string) {
       creditCardBillingCyclesTable,
       eq(creditCardBillingCyclesTable.id, creditCardInstallmentsTable.billingCycleId),
     )
-    .innerJoin(accountsTable, eq(accountsTable.id, creditCardsTable.accountId))
+    .innerJoin(accountsTable, eq(accountsTable.id, creditCardsTable.ledgerAccountId))
     .leftJoin(paymentMethodsTable, eq(paymentMethodsTable.id, transactionsTable.paymentMethodId))
     .leftJoin(transactionTagsTable, eq(transactionTagsTable.transactionId, transactionsTable.id))
     .leftJoin(tagsTable, eq(tagsTable.id, transactionTagsTable.tagId))
@@ -399,6 +387,8 @@ export async function listCreditCardInstallmentFeedRows(householdId: string) {
       desc(creditCardBillingCyclesTable.closingDate),
       desc(creditCardInstallmentsTable.createdAt),
       desc(creditCardInstallmentsTable.id),
+      asc(transactionTagsTable.position),
+      asc(transactionTagsTable.tagId),
     );
 }
 
@@ -423,7 +413,7 @@ export async function listCreditCardInstallmentFeedRowsByIds(
       creditCardBillingCyclesTable,
       eq(creditCardBillingCyclesTable.id, creditCardInstallmentsTable.billingCycleId),
     )
-    .innerJoin(accountsTable, eq(accountsTable.id, creditCardsTable.accountId))
+    .innerJoin(accountsTable, eq(accountsTable.id, creditCardsTable.ledgerAccountId))
     .leftJoin(paymentMethodsTable, eq(paymentMethodsTable.id, transactionsTable.paymentMethodId))
     .leftJoin(transactionTagsTable, eq(transactionTagsTable.transactionId, transactionsTable.id))
     .leftJoin(tagsTable, eq(tagsTable.id, transactionTagsTable.tagId))
@@ -437,6 +427,8 @@ export async function listCreditCardInstallmentFeedRowsByIds(
       desc(creditCardBillingCyclesTable.closingDate),
       desc(creditCardInstallmentsTable.createdAt),
       desc(creditCardInstallmentsTable.id),
+      asc(transactionTagsTable.position),
+      asc(transactionTagsTable.tagId),
     );
 }
 
@@ -450,14 +442,14 @@ export async function listCreditCardIdsByAccountIds(
 
   return db
     .select({
-      accountId: creditCardsTable.accountId,
+      accountId: creditCardsTable.ledgerAccountId,
       creditCardId: creditCardsTable.id,
     })
     .from(creditCardsTable)
     .where(
       and(
         eq(creditCardsTable.householdId, householdId),
-        inArray(creditCardsTable.accountId, accountIds),
+        inArray(creditCardsTable.ledgerAccountId, accountIds),
       ),
     );
 }
