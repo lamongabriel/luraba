@@ -10,7 +10,6 @@ import {
   propertyAccountProfilesTable,
   vehicleAccountProfilesTable,
 } from '@/db/schemas/account-profiles.schema';
-import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
 import type { TxClient } from '@/db/types';
 import type {
   AccountProfile,
@@ -240,25 +239,7 @@ export async function getAccountProfile(
         .where(eq(otherLiabilityAccountProfilesTable.accountId, accountId));
       return row ? { kind: 'other_liability', subtype: row.subtype } : undefined;
     }
-    case 'credit_card': {
-      const [row] = await db
-        .select()
-        .from(creditCardsTable)
-        .where(eq(creditCardsTable.accountId, accountId));
-      return row
-        ? {
-            kind: 'credit_card',
-            creditCardId: row.id,
-            subtype: 'credit',
-            brand: row.brand,
-            productType: row.productType,
-            last4: row.last4,
-            color: nullable(row.color),
-            closingDay: row.closingDay,
-            dueDay: row.dueDay,
-            creditLimitAmount: row.creditLimitAmount < 0 ? null : row.creditLimitAmount,
-          }
-        : undefined;
-    }
   }
+
+  return undefined;
 }

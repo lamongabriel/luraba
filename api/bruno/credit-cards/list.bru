@@ -16,7 +16,7 @@ params:query {
   sortDirection: asc
   ~brands: Visa,Mastercard
   ~currencyCodes: BRL,USD
-  ~accountIds: {{accountId}}
+  ~ownerAccountIds: {{ownerAccountId}}
   ~closingDays: 5,25
   ~dueDays: 5,10
   ~balanceMin: 0
@@ -47,7 +47,11 @@ script:post-response {
     bru.setEnvVar("creditCardId", first.id);
   }
 
-  if (first?.accountId) {
-    bru.setEnvVar("creditCardAccountId", first.accountId);
+  if (first?.ownerAccountId) {
+    bru.setEnvVar("creditCardOwnerAccountId", first.ownerAccountId);
+  }
+
+  if (first?.ledgerAccountId) {
+    bru.setEnvVar("creditCardLedgerAccountId", first.ledgerAccountId);
   }
 }

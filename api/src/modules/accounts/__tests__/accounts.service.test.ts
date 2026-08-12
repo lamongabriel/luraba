@@ -10,7 +10,7 @@ import * as creditCardsService from '@/modules/credit-cards/credit-cards.service
 import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
 import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
 import * as transactionsService from '@/modules/transactions/transactions.service';
-import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
+import { ConflictError, NotFoundError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import {
   buildAccountInput,
@@ -249,18 +249,27 @@ describe('accounts service', () => {
 
   it('rejects listing transactions for a credit card account', async () => {
     const context = await createAuthenticatedContext();
+    const ownerAccount = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'Credit Card Owner', type: 'cash', currencyCode: 'BRL' }),
+    );
     const creditCard = await creditCardsService.createCreditCard(
       context.householdContext,
-      buildCreditCardInput({ name: 'Nubank', closingDay: 25, dueDay: 5 }),
+      buildCreditCardInput({
+        name: 'Nubank',
+        closingDay: 25,
+        dueDay: 5,
+        ownerAccountId: ownerAccount.id,
+      }),
     );
 
     await expect(
       accountsService.listAccountTransactions(
         context.householdContext,
-        creditCard.accountId,
+        creditCard.ledgerAccountId,
         ListAccountTransactionsRequestQuerySchema.parse({}),
       ),
-    ).rejects.toThrow(ValidationError);
+    ).rejects.toThrow(NotFoundError);
   });
 
   it('updates account details and clears institution branding', async () => {

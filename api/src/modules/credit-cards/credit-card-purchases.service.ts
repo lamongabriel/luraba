@@ -309,7 +309,10 @@ export async function updatePurchase(
 
     await entriesRepository.deleteByTransactionId(tx, existingPurchase.transactionId);
 
-    const accountLedger = await ledgerAccountsRepository.findByOwner('account', card.accountId);
+    const accountLedger = await ledgerAccountsRepository.findByOwner(
+      'account',
+      card.ledgerAccountId,
+    );
     if (!accountLedger) throw new NotFoundError('Credit card ledger');
 
     const expenseLedger = await ledgerAccountsRepository.findOrCreateSystem(

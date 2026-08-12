@@ -13,7 +13,6 @@ import {
   vehicleAccountProfilesTable,
 } from '@/db/schemas/account-profiles.schema';
 import { accountsTable } from '@/db/schemas/accounts.schema';
-import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
 import type { TxClient } from '@/db/types';
 import { buildAccountBalanceSubquery } from '@/modules/ledger-accounts/ledger-accounts.repository';
 import { now } from '@/shared/lib/date';
@@ -106,16 +105,6 @@ function buildAccountProfileSummarySubquery() {
         ),
       })
       .from(otherLiabilityAccountProfilesTable),
-    db
-      .select({
-        accountId: creditCardsTable.accountId,
-        subtype: sql<AccountSubtype>`'credit'::text`.as('subtype'),
-        searchText:
-          sql<string>`concat_ws(' ', 'credit', ${creditCardsTable.brand}, ${creditCardsTable.productType}, ${creditCardsTable.last4})`.as(
-            'search_text',
-          ),
-      })
-      .from(creditCardsTable),
   ).as('account_profile_summaries');
 }
 

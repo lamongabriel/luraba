@@ -489,7 +489,6 @@ describe('accounts routes', () => {
         amountMin: 8_000,
         amountMax: 8_000,
         includeInBudget: true,
-        excludedFromSpending: false,
         sort: 'amount',
         perPage: 1,
       });
@@ -503,18 +502,27 @@ describe('accounts routes', () => {
 
   it('GET /api/v1/accounts/:id/transactions rejects credit card accounts', async () => {
     const context = await createAuthenticatedContext();
+    const ownerAccount = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: 'HTTP Credit Card Owner', type: 'cash', currencyCode: 'BRL' }),
+    );
     const creditCard = await creditCardsService.createCreditCard(
       context.householdContext,
-      buildCreditCardInput({ name: 'HTTP Nubank', closingDay: 25, dueDay: 5 }),
+      buildCreditCardInput({
+        name: 'HTTP Nubank',
+        closingDay: 25,
+        dueDay: 5,
+        ownerAccountId: ownerAccount.id,
+      }),
     );
 
     const response = await request(app)
-      .get(`/api/v1/accounts/${creditCard.accountId}/transactions`)
+      .get(`/api/v1/accounts/${creditCard.ledgerAccountId}/transactions`)
       .set(createAuthHeaders(context.token, context.household.id));
 
-    expect(response.status).toBe(422);
+    expect(response.status).toBe(404);
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    expect(response.body.error.code).toBe('NOT_FOUND');
   });
 
   it('PATCH /api/v1/accounts/:id updates account details', async () => {

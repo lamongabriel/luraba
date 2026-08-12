@@ -14,6 +14,7 @@ import {
   buildCreditCardInput,
   buildTagInput,
   createBalanceEntryForAccount,
+  createCreditCardOwner,
 } from '@/test/factories';
 import {
   ListCreditCardCyclesRequestQuerySchema,
@@ -33,6 +34,7 @@ describe('credit cards service', () => {
 
   it('creates a card with normalized institution branding from the account flow', async () => {
     const context = await createAuthenticatedContext();
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
     vi.spyOn(global, 'fetch').mockResolvedValue(new Response('ok', { status: 200 }));
 
     await brandfetchService.updateBrandfetchIntegration(context.householdContext, {
@@ -42,6 +44,7 @@ describe('credit cards service', () => {
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
+        ownerAccountId: ownerAccount.id,
         name: 'Nu Card',
         institutionName: 'Nubank',
         institutionDomain: 'https://www.nubank.com.br/cartao',
@@ -59,9 +62,11 @@ describe('credit cards service', () => {
     vi.setSystemTime(new Date('2026-04-10T12:00:00.000Z'));
 
     const context = await createAuthenticatedContext();
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
+        ownerAccountId: ownerAccount.id,
         name: 'Nubank',
         closingDay: 25,
         dueDay: 5,
@@ -99,9 +104,11 @@ describe('credit cards service', () => {
       context.householdContext,
       buildCategoryInput({ name: 'Electronics', type: 'expense' }),
     );
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
+        ownerAccountId: ownerAccount.id,
         name: 'Mastercard',
         closingDay: 25,
         dueDay: 5,
@@ -167,6 +174,7 @@ describe('credit cards service', () => {
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
+        ownerAccountId: sourceAccount.id,
         name: 'Visa Gold',
         closingDay: 25,
         dueDay: 5,
@@ -231,9 +239,11 @@ describe('credit cards service', () => {
       context.householdContext,
       buildCategoryInput({ name: 'Home Office', type: 'expense' }),
     );
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
+        ownerAccountId: ownerAccount.id,
         name: 'Amex',
         closingDay: 25,
         dueDay: 5,
@@ -315,9 +325,15 @@ describe('credit cards service', () => {
       context.householdContext,
       buildTagInput({ name: 'Updated purchase tag' }),
     );
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
-      buildCreditCardInput({ name: 'Budget Card', closingDay: 25, dueDay: 5 }),
+      buildCreditCardInput({
+        name: 'Budget Card',
+        closingDay: 25,
+        dueDay: 5,
+        ownerAccountId: ownerAccount.id,
+      }),
     );
 
     const purchase = await creditCardsService.createPurchase(context.householdContext, card.id, {
@@ -392,9 +408,11 @@ describe('credit cards service', () => {
       context.householdContext,
       buildCategoryInput({ name: 'Subscriptions', type: 'expense' }),
     );
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
+        ownerAccountId: ownerAccount.id,
         name: 'Delete Card',
         closingDay: 25,
         dueDay: 5,
@@ -467,7 +485,12 @@ describe('credit cards service', () => {
 
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
-      buildCreditCardInput({ name: 'Payment Card', closingDay: 25, dueDay: 5 }),
+      buildCreditCardInput({
+        name: 'Payment Card',
+        closingDay: 25,
+        dueDay: 5,
+        ownerAccountId: sourceAccount.id,
+      }),
     );
 
     await creditCardsService.createPurchase(context.householdContext, card.id, {
@@ -569,7 +592,12 @@ describe('credit cards service', () => {
 
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
-      buildCreditCardInput({ name: 'Payment Limit Card', closingDay: 25, dueDay: 5 }),
+      buildCreditCardInput({
+        name: 'Payment Limit Card',
+        closingDay: 25,
+        dueDay: 5,
+        ownerAccountId: sourceAccount.id,
+      }),
     );
 
     await creditCardsService.createPurchase(context.householdContext, card.id, {
@@ -596,9 +624,11 @@ describe('credit cards service', () => {
       context.householdContext,
       buildCategoryInput({ name: 'Electronics', type: 'expense' }),
     );
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
+        ownerAccountId: ownerAccount.id,
         name: 'Limit Card',
         closingDay: 25,
         dueDay: 5,
@@ -646,9 +676,11 @@ describe('credit card DB list filters', () => {
       context.householdContext,
       buildCategoryInput({ name: 'Card Query Category', type: 'expense' }),
     );
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
+        ownerAccountId: ownerAccount.id,
         name: 'Card Query Target',
         institutionName: 'Query Bank',
         brand: 'Visa',
@@ -672,7 +704,7 @@ describe('credit card DB list filters', () => {
         search: 'Query Target',
         brands: 'Visa,Mastercard',
         currencyCodes: 'BRL',
-        accountIds: card.accountId,
+        ownerAccountIds: card.ownerAccountId,
         closingDays: '25',
         dueDays: '5',
         balanceMin: 10_000,

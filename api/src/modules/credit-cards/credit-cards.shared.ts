@@ -2,7 +2,6 @@ import type { HouseholdContext } from '@/config/permissions';
 import type { TxClient } from '@/db/types';
 import { accountsRepository } from '@/modules/accounts/accounts.repository';
 import { categoriesRepository } from '@/modules/categories/categories.repository';
-import { currenciesRepository } from '@/modules/currencies/currencies.repository';
 import * as entriesService from '@/modules/entries/entries.service';
 import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
 import { merchantsRepository } from '@/modules/merchants/merchants.repository';
@@ -12,8 +11,8 @@ import { NotFoundError, ValidationError } from '@/shared/errors';
 import type { CreditCardRow } from './credit-cards.helpers';
 import type { CreditCardResponse } from './credit-cards.types';
 
-export async function computeCardBalance(accountId: string): Promise<number> {
-  const ledger = await ledgerAccountsRepository.findByOwner('account', accountId);
+export async function computeCardBalance(ledgerAccountId: string): Promise<number> {
+  const ledger = await ledgerAccountsRepository.findByOwner('account', ledgerAccountId);
   if (!ledger) throw new NotFoundError('Credit card ledger');
   const balance = await ledgerAccountsRepository.getBalance(ledger.id);
   return -balance;
@@ -39,7 +38,7 @@ export async function ensureCardHasAvailableCredit(
     return;
   }
 
-  const usedAmount = await computeCardBalance(card.accountId);
+  const usedAmount = await computeCardBalance(card.ledgerAccountId);
   const availableCreditAmount = Math.max(
     card.creditLimitAmount - usedAmount + additionalAvailableAmount,
     0,
@@ -51,17 +50,12 @@ export async function ensureCardHasAvailableCredit(
 }
 
 export async function mapCreditCard(card: CreditCardRow): Promise<CreditCardResponse> {
-  const balance = await computeCardBalance(card.accountId);
+  const balance = await computeCardBalance(card.ledgerAccountId);
   return {
     ...card,
     balance,
     remainingCreditAmount: computeRemainingCreditAmount(card, balance),
   };
-}
-
-export async function ensureCurrency(currencyCode: string): Promise<void> {
-  const currency = await currenciesRepository.findByCode(currencyCode);
-  if (!currency) throw new NotFoundError('Currency');
 }
 
 export async function ensureExpenseCategory(
@@ -118,7 +112,7 @@ export async function createUnderlyingExpenseTransaction(
 ) {
   const accountLedger = await ledgerAccountsRepository.findByOwner(
     'account',
-    params.card.accountId,
+    params.card.ledgerAccountId,
   );
   if (!accountLedger) throw new NotFoundError('Credit card ledger');
 
@@ -171,7 +165,10 @@ export async function createUnderlyingPaymentTransaction(
   },
 ) {
   const fromLedger = await ledgerAccountsRepository.findByOwner('account', params.fromAccountId);
-  const toLedger = await ledgerAccountsRepository.findByOwner('account', params.card.accountId);
+  const toLedger = await ledgerAccountsRepository.findByOwner(
+    'account',
+    params.card.ledgerAccountId,
+  );
   if (!fromLedger || !toLedger) throw new NotFoundError('Account ledger');
 
   const createdTransaction = await baseTxRepository.createTransaction(tx, {

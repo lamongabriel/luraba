@@ -1,6 +1,7 @@
 import { ACCOUNT_TYPE_TO_CLASSIFICATION } from '@/config/accounts';
 import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
+import * as creditCardsRepository from '@/modules/credit-cards/credit-cards.repository';
 import { currenciesRepository } from '@/modules/currencies/currencies.repository';
 import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
 import {
@@ -89,7 +90,7 @@ type UpdateAccountRecordInput = {
   notes?: string | null;
 };
 
-async function resolveInstitutionBranding(
+export async function resolveInstitutionBranding(
   context: HouseholdContext,
   institutionDomain: string | undefined,
 ): Promise<{ institutionDomain: string | undefined; institutionLogoUrl: string | undefined }> {
@@ -111,7 +112,7 @@ async function resolveInstitutionBranding(
   };
 }
 
-async function resolveUpdatedInstitutionBranding(
+export async function resolveUpdatedInstitutionBranding(
   context: HouseholdContext,
   institutionDomain: string | null | undefined,
 ): Promise<{
@@ -267,6 +268,7 @@ export async function getAccountDetails(
 ): Promise<AccountDetails> {
   const account = await accountsRepository.get(accountId, context);
   if (!account) throw new NotFoundError('Account');
+  if (account.type === 'credit_card') throw new NotFoundError('Account');
 
   const ledger = await ledgerAccountsRepository.findByOwner('account', account.id);
   if (!ledger) throw new NotFoundError('Account ledger');
@@ -286,9 +288,7 @@ export async function listAccountTransactions(
   const account = await accountsRepository.get(accountId, context);
   if (!account) throw new NotFoundError('Account');
   if (account.type === 'credit_card') {
-    throw new ValidationError(
-      'Credit card account transactions must be viewed through credit card billing cycles',
-    );
+    throw new NotFoundError('Account');
   }
 
   const transactionsQuery: ListTransactionsRequestQuery = {
@@ -370,9 +370,23 @@ export async function deleteAccount(context: HouseholdContext, accountId: string
     throw new NotFoundError('Account ledger');
   }
 
+  const ownedCardLedgerIds =
+    account.type === 'cash'
+      ? await creditCardsRepository.findLedgerAccountIdsByOwnerAccountId(
+          context.householdId,
+          account.id,
+        )
+      : [];
+
   await db.transaction(async (tx) => {
     await transactionsRepository.deleteByLedgerId(tx, context.householdId, ledger.id);
     await ledgerAccountsRepository.deleteByOwner(tx, 'account', account.id);
+
+    for (const cardLedgerAccountId of ownedCardLedgerIds) {
+      await transactionsRepository.deleteByLedgerId(tx, context.householdId, cardLedgerAccountId);
+      await ledgerAccountsRepository.deleteByOwner(tx, 'account', cardLedgerAccountId);
+      await accountsRepository.deleteInTransaction(tx, context, cardLedgerAccountId);
+    }
 
     const deleted = await accountsRepository.deleteInTransaction(tx, context, account.id);
 

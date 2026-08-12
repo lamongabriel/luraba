@@ -48,7 +48,6 @@ describe('accounts list queries', () => {
         amountMin: 1,
         amountMax: 100,
         includeInBudget: 'true',
-        excludedFromSpending: 'false',
       }).originTypes,
     ).toEqual(['income', 'transfer']);
     expect(ListAccountTransactionsRequestQuerySchema.safeParse({ accountIds: id }).success).toBe(

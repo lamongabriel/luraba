@@ -211,6 +211,13 @@
       "when": 1785780000000,
       "tag": "0029_location_data_timezones",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1785783600000,
+      "tag": "0030_credit_card_ownership",
+      "breakpoints": true
     }
   ]
 }

@@ -48,12 +48,22 @@ const creditCardCycleItemSchema = z.object({
 
 export const creditCardSchema = z.object({
   id: z.uuid(),
-  accountId: z.uuid(),
+  ownerAccountId: z.uuid(),
+  ledgerAccountId: z.uuid(),
   name: z.string(),
   institutionName: z.string().nullable(),
   institutionDomain: z.string().nullable(),
   institutionLogoUrl: z.string().nullable(),
   notes: z.string().nullable(),
+  ownerAccount: z.object({
+    id: z.uuid(),
+    name: z.string(),
+    institutionName: z.string().nullable(),
+    institutionLogoUrl: z.string().nullable(),
+    type: z.literal('cash'),
+    classification: z.literal('asset'),
+    currencyCode: currencySchema,
+  }),
   classification: z.literal('liability'),
   type: z.literal('credit_card'),
   currencyCode: currencySchema,
@@ -136,10 +146,10 @@ export const ListCreditCardsResponseSchema = z.array(creditCardSchema);
 
 export const CreateCreditCardRequestBodySchema = z.object({
   name: z.string().min(1).max(255),
+  ownerAccountId: z.uuid(),
   institutionName: z.string().min(1).max(255).optional(),
   institutionDomain: institutionDomainInputSchema.optional(),
   notes: z.string().max(4000).optional(),
-  currencyCode: currencySchema,
   brand: z.string().min(1).max(64),
   productType: z.literal('credit').optional(),
   last4: z.string().regex(/^\d{4}$/, 'Last 4 digits must be exactly 4 numeric characters'),

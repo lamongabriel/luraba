@@ -5,7 +5,7 @@ import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
 import { accountsRepository } from '@/modules/accounts/accounts.repository';
 import * as accountsService from '@/modules/accounts/accounts.service';
 import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
-import { ConflictError } from '@/shared/errors';
+import { ConflictError, ValidationError } from '@/shared/errors';
 import { now } from '@/shared/lib/date';
 import { createListMeta, type ListResult } from '@/shared/list';
 import * as cycleService from './credit-card-cycles.service';
@@ -14,7 +14,7 @@ import * as purchaseService from './credit-card-purchases.service';
 import type { CreditCardRow } from './credit-cards.helpers';
 import type { ListCreditCardCyclesQuery, ListCreditCardsRequestQuery } from './credit-cards.query';
 import * as creditCardsRepository from './credit-cards.repository';
-import { computeRemainingCreditAmount, ensureCurrency, mapCreditCard } from './credit-cards.shared';
+import { computeRemainingCreditAmount, mapCreditCard } from './credit-cards.shared';
 import type {
   CreateCreditCardDto,
   CreateCreditCardPaymentDto,
@@ -52,22 +52,31 @@ export async function createCreditCard(
   context: HouseholdContext,
   dto: CreateCreditCardDto,
 ): Promise<CreditCardResponse> {
-  await ensureCurrency(dto.currencyCode);
-
-  const existing = await accountsRepository.findByHouseholdAndName(context, dto.name);
-  if (existing) {
-    throw new ConflictError('An account with this name already exists');
+  const ownerAccount = await accountsRepository.get(dto.ownerAccountId, context);
+  if (!ownerAccount) throw new ValidationError('Owner account must belong to this household');
+  if (ownerAccount.type !== 'cash' || ownerAccount.classification !== 'asset') {
+    throw new ValidationError('Credit cards can only belong to cash asset accounts');
   }
+
+  const existing = await creditCardsRepository.findByHouseholdAndName(
+    context.householdId,
+    dto.name,
+  );
+  if (existing) {
+    throw new ConflictError('A credit card with this name already exists');
+  }
+
+  const institution = await accountsService.resolveInstitutionBranding(
+    context,
+    dto.institutionDomain,
+  );
 
   const card = await db.transaction(async (tx) => {
     const account = await accountsService.createAccountRecordInTransaction(tx, context, {
-      name: dto.name,
-      institutionName: dto.institutionName,
-      institutionDomain: dto.institutionDomain,
-      notes: dto.notes,
+      name: `Credit card ledger: ${dto.name}`,
       classification: 'liability',
       type: 'credit_card',
-      currencyId: dto.currencyCode,
+      currencyId: ownerAccount.currencyId,
     });
 
     await ledgerAccountsRepository.createForAccount(tx, {
@@ -80,7 +89,13 @@ export async function createCreditCard(
       .insert(creditCardsTable)
       .values({
         householdId: context.householdId,
-        accountId: account.id,
+        name: dto.name,
+        institutionName: dto.institutionName ?? null,
+        institutionDomain: institution.institutionDomain ?? null,
+        institutionLogoUrl: institution.institutionLogoUrl ?? null,
+        notes: dto.notes ?? null,
+        ledgerAccountId: account.id,
+        ownerAccountId: ownerAccount.id,
         brand: dto.brand,
         productType: dto.productType,
         last4: dto.last4,
@@ -93,15 +108,25 @@ export async function createCreditCard(
 
     const cardRow = {
       id: createdCard.id,
-      accountId: account.id,
-      name: account.name,
-      institutionName: account.institutionName ?? null,
-      institutionDomain: account.institutionDomain ?? null,
-      institutionLogoUrl: account.institutionLogoUrl ?? null,
-      notes: account.notes ?? null,
+      ownerAccountId: ownerAccount.id,
+      ledgerAccountId: account.id,
+      name: createdCard.name,
+      institutionName: createdCard.institutionName,
+      institutionDomain: createdCard.institutionDomain,
+      institutionLogoUrl: createdCard.institutionLogoUrl,
+      notes: createdCard.notes,
+      ownerAccount: {
+        id: ownerAccount.id,
+        name: ownerAccount.name,
+        institutionName: ownerAccount.institutionName ?? null,
+        institutionLogoUrl: ownerAccount.institutionLogoUrl ?? null,
+        type: 'cash',
+        classification: 'asset',
+        currencyCode: ownerAccount.currencyId,
+      },
       classification: 'liability',
       type: 'credit_card',
-      currencyCode: account.currencyId,
+      currencyCode: ownerAccount.currencyId,
       brand: createdCard.brand,
       productType: createdCard.productType,
       last4: createdCard.last4,
@@ -147,54 +172,38 @@ export async function updateCreditCard(
   );
 
   if (dto.name && dto.name !== existingCard.name) {
-    const duplicate = await accountsRepository.findByHouseholdAndName(context, dto.name);
+    const duplicate = await creditCardsRepository.findByHouseholdAndName(
+      context.householdId,
+      dto.name,
+    );
     if (duplicate) {
-      throw new ConflictError('An account with this name already exists');
+      throw new ConflictError('A credit card with this name already exists');
     }
   }
 
   const updated = await db.transaction(async (tx) => {
-    let updatedAccount = {
-      name: existingCard.name,
-      institutionName: existingCard.institutionName,
-      institutionDomain: existingCard.institutionDomain,
-      institutionLogoUrl: existingCard.institutionLogoUrl,
-      notes: existingCard.notes,
-    };
-
-    if (
-      dto.name !== undefined ||
-      dto.institutionName !== undefined ||
-      dto.institutionDomain !== undefined ||
-      dto.notes !== undefined
-    ) {
-      const account = await accountsService.updateAccountRecordInTransaction(
-        tx,
-        context,
-        existingCard.accountId,
-        {
-          name: dto.name,
-          institutionName: dto.institutionName === undefined ? undefined : dto.institutionName,
-          institutionDomain:
-            dto.institutionDomain === undefined ? undefined : dto.institutionDomain,
-          notes: dto.notes === undefined ? undefined : dto.notes,
-        },
-      );
-
-      if (account) {
-        updatedAccount = {
-          name: account.name,
-          institutionName: account.institutionName ?? null,
-          institutionDomain: account.institutionDomain ?? null,
-          institutionLogoUrl: account.institutionLogoUrl ?? null,
-          notes: account.notes ?? null,
-        };
-      }
-    }
+    const institution = await accountsService.resolveUpdatedInstitutionBranding(
+      context,
+      dto.institutionDomain,
+    );
+    const updatedAt = now();
+    const nextInstitutionDomain =
+      dto.institutionDomain === undefined
+        ? existingCard.institutionDomain
+        : institution.institutionDomain;
+    const nextInstitutionLogoUrl =
+      dto.institutionDomain === undefined
+        ? existingCard.institutionLogoUrl
+        : institution.institutionLogoUrl;
 
     await tx
       .update(creditCardsTable)
       .set({
+        name: dto.name,
+        institutionName: dto.institutionName,
+        institutionDomain: nextInstitutionDomain,
+        institutionLogoUrl: nextInstitutionLogoUrl,
+        notes: dto.notes,
         brand: dto.brand,
         productType: dto.productType,
         last4: dto.last4,
@@ -202,17 +211,18 @@ export async function updateCreditCard(
         closingDay: dto.closingDay,
         dueDay: dto.dueDay,
         creditLimitAmount: dto.creditLimitAmount,
-        updatedAt: now(),
+        updatedAt,
       })
       .where(eq(creditCardsTable.id, existingCard.id));
 
     const card: CreditCardRow = {
       ...existingCard,
-      name: updatedAccount.name,
-      institutionName: updatedAccount.institutionName,
-      institutionDomain: updatedAccount.institutionDomain,
-      institutionLogoUrl: updatedAccount.institutionLogoUrl,
-      notes: updatedAccount.notes,
+      name: dto.name ?? existingCard.name,
+      institutionName:
+        dto.institutionName === undefined ? existingCard.institutionName : dto.institutionName,
+      institutionDomain: nextInstitutionDomain ?? null,
+      institutionLogoUrl: nextInstitutionLogoUrl ?? null,
+      notes: dto.notes === undefined ? existingCard.notes : dto.notes,
       brand: dto.brand ?? existingCard.brand,
       productType: dto.productType ?? existingCard.productType,
       last4: dto.last4 ?? existingCard.last4,
@@ -220,7 +230,7 @@ export async function updateCreditCard(
       closingDay: dto.closingDay ?? existingCard.closingDay,
       dueDay: dto.dueDay ?? existingCard.dueDay,
       creditLimitAmount: dto.creditLimitAmount ?? existingCard.creditLimitAmount,
-      updatedAt: now(),
+      updatedAt,
     };
 
     if (dto.closingDay !== undefined || dto.dueDay !== undefined) {
@@ -240,7 +250,7 @@ export async function deleteCreditCard(
   creditCardId: string,
 ): Promise<void> {
   const card = await creditCardsRepository.findByIdOrThrow(context.householdId, creditCardId);
-  await accountsService.deleteAccount(context, card.accountId);
+  await accountsService.deleteAccount(context, card.ledgerAccountId);
 }
 
 export async function listBillingCycles(

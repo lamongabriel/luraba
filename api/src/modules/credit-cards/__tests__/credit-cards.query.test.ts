@@ -9,7 +9,7 @@ describe('credit card list queries', () => {
     const query = ListCreditCardsRequestQuerySchema.parse({
       brands: 'Visa,Mastercard',
       currencyCodes: 'BRL,USD',
-      accountIds: '1456d4ee-2f8d-4cec-92be-a780d54312c2',
+      ownerAccountIds: '1456d4ee-2f8d-4cec-92be-a780d54312c2',
       closingDays: '5,25',
       dueDays: '10,31',
       balanceMin: 0,

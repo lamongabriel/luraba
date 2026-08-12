@@ -229,9 +229,9 @@ export async function seedMock(): Promise<void> {
 
   const card = await creditCardsService.createCreditCard(context, {
     name: 'Northstar Rewards',
+    ownerAccountId: checking.id,
     institutionName: 'Northstar Bank',
     institutionDomain: 'northstar.example.com',
-    currencyCode: 'USD',
     brand: 'Mastercard',
     productType: 'credit',
     last4: '4242',

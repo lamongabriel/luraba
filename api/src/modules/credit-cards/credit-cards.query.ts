@@ -1,6 +1,5 @@
 import { eq, type SQL, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { accountsTable } from '@/db/schemas/accounts.schema';
 import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
 import {
   booleanQuerySchema,
@@ -21,12 +20,13 @@ import {
   creditCardCycleDisplayStatusSchema,
   creditCardCycleScopeSchema,
 } from './credit-card-cycles.types';
+import { creditCardOwnerAccountsTable } from './credit-cards.helpers';
 
 export const ListCreditCardsRequestQuerySchema = createListQuerySchema(
   {
     brands: commaSeparatedArraySchema(z.string().trim().min(1).max(64)),
     currencyCodes: commaSeparatedArraySchema(currencySchema),
-    accountIds: commaSeparatedArraySchema(z.uuid()),
+    ownerAccountIds: commaSeparatedArraySchema(z.uuid()),
     closingDays: commaSeparatedArraySchema(z.coerce.number().int().min(1).max(31)),
     dueDays: commaSeparatedArraySchema(z.coerce.number().int().min(1).max(31)),
     balanceMin: z.coerce.number().int().optional(),
@@ -69,16 +69,18 @@ export function buildCreditCardsListWhere(
   return combineConditions(
     eq(creditCardsTable.householdId, householdId),
     buildIlikeSearch(query.search, [
-      sql`${accountsTable.name}`,
-      sql`${accountsTable.institutionName}`,
-      sql`${accountsTable.notes}`,
+      sql`${creditCardsTable.name}`,
+      sql`${creditCardsTable.institutionName}`,
+      sql`${creditCardsTable.notes}`,
+      sql`${creditCardOwnerAccountsTable.name}`,
+      sql`${creditCardOwnerAccountsTable.institutionName}`,
       sql`${creditCardsTable.brand}`,
       sql`${creditCardsTable.last4}`,
-      sql`${accountsTable.currencyId}`,
+      sql`${creditCardOwnerAccountsTable.currencyId}`,
     ]),
     inArrayIfAny(creditCardsTable.brand, query.brands),
-    inArrayIfAny(accountsTable.currencyId, query.currencyCodes),
-    inArrayIfAny(creditCardsTable.accountId, query.accountIds),
+    inArrayIfAny(creditCardOwnerAccountsTable.currencyId, query.currencyCodes),
+    inArrayIfAny(creditCardsTable.ownerAccountId, query.ownerAccountIds),
     inArrayIfAny(creditCardsTable.closingDay, query.closingDays),
     inArrayIfAny(creditCardsTable.dueDay, query.dueDays),
     ...rangeConditions(displayedBalance, query.balanceMin, query.balanceMax),
@@ -109,14 +111,14 @@ export function buildCreditCardsListOrder(
       closingDay: sql`${creditCardsTable.closingDay}`,
       createdAt: sql`${creditCardsTable.createdAt}`,
       creditLimitAmount: sql`${creditCardsTable.creditLimitAmount}`,
-      currencyCode: sql`${accountsTable.currencyId}`,
+      currencyCode: sql`${creditCardOwnerAccountsTable.currencyId}`,
       dueDay: sql`${creditCardsTable.dueDay}`,
-      institutionName: sql`${accountsTable.institutionName}`,
+      institutionName: sql`${creditCardsTable.institutionName}`,
       last4: sql`${creditCardsTable.last4}`,
-      name: sql`${accountsTable.name}`,
+      name: sql`${creditCardsTable.name}`,
       updatedAt: sql`${creditCardsTable.updatedAt}`,
     },
-    [sql`${accountsTable.name} asc`, sql`${creditCardsTable.id} asc`],
+    [sql`${creditCardsTable.name} asc`, sql`${creditCardsTable.id} asc`],
   );
 }
 

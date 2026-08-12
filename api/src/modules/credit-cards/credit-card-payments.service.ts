@@ -132,7 +132,7 @@ async function createTransferEntriesForPayment(
   amount: number,
 ) {
   const fromLedger = await ledgerAccountsRepository.findByOwner('account', fromAccountId);
-  const toLedger = await ledgerAccountsRepository.findByOwner('account', card.accountId);
+  const toLedger = await ledgerAccountsRepository.findByOwner('account', card.ledgerAccountId);
   if (!fromLedger || !toLedger) throw new NotFoundError('Account ledger');
 
   await entriesService.createTransactionEntries(tx, transactionId, [
@@ -206,7 +206,7 @@ async function ensurePaymentAmountWithinUsedLimit(
   amount: number,
   additionalAllowedAmount = 0,
 ) {
-  const usedAmount = await computeCardBalance(card.accountId);
+  const usedAmount = await computeCardBalance(card.ledgerAccountId);
   const maxPayableAmount = usedAmount + additionalAllowedAmount;
 
   if (amount > maxPayableAmount) {

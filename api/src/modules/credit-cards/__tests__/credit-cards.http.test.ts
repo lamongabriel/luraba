@@ -13,6 +13,7 @@ import {
   buildCreditCardInput,
   buildTagInput,
   createBalanceEntryForAccount,
+  createCreditCardOwner,
 } from '@/test/factories';
 
 describe('credit cards routes', () => {
@@ -23,6 +24,7 @@ describe('credit cards routes', () => {
 
   it('POST /api/v1/credit-cards reuses account institution branding logic', async () => {
     const context = await createAuthenticatedContext();
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
     vi.spyOn(global, 'fetch').mockResolvedValue(new Response('ok', { status: 200 }));
 
     await brandfetchService.updateBrandfetchIntegration(context.householdContext, {
@@ -34,6 +36,7 @@ describe('credit cards routes', () => {
       .set(createAuthHeaders(context.token, context.household.id))
       .send(
         buildCreditCardInput({
+          ownerAccountId: ownerAccount.id,
           name: 'HTTP Nu Card',
           institutionName: 'Nubank',
           institutionDomain: 'https://www.nubank.com.br/cartao',
@@ -52,9 +55,11 @@ describe('credit cards routes', () => {
 
   it('GET /api/v1/credit-cards serializes list filters and pagination metadata', async () => {
     const context = await createAuthenticatedContext();
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
+        ownerAccountId: ownerAccount.id,
         name: 'HTTP Filter Card',
         brand: 'Visa',
         closingDay: 25,
@@ -73,7 +78,7 @@ describe('credit cards routes', () => {
         sort: 'name',
         brands: 'Visa',
         currencyCodes: 'BRL',
-        accountIds: card.accountId,
+        ownerAccountIds: card.ownerAccountId,
         closingDays: '25',
         dueDays: '5',
         creditLimitMin: 50_000,
@@ -100,12 +105,14 @@ describe('credit cards routes', () => {
       context.householdContext,
       buildCategoryInput({ name: 'Shopping', type: 'expense' }),
     );
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
 
     const createdCard = await request(app)
       .post('/api/v1/credit-cards')
       .set(createAuthHeaders(context.token, context.household.id))
       .send(
         buildCreditCardInput({
+          ownerAccountId: ownerAccount.id,
           name: 'HTTP Card',
           closingDay: 25,
           dueDay: 5,
@@ -165,12 +172,14 @@ describe('credit cards routes', () => {
       context.householdContext,
       buildTagInput({ name: 'Work equipment' }),
     );
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
 
     const createdCard = await request(app)
       .post('/api/v1/credit-cards')
       .set(createAuthHeaders(context.token, context.household.id))
       .send(
         buildCreditCardInput({
+          ownerAccountId: ownerAccount.id,
           name: 'HTTP Purchase Card',
           closingDay: 25,
           dueDay: 5,
@@ -280,7 +289,14 @@ describe('credit cards routes', () => {
     const createdCard = await request(app)
       .post('/api/v1/credit-cards')
       .set(createAuthHeaders(context.token, context.household.id))
-      .send(buildCreditCardInput({ name: 'HTTP Payment Card', closingDay: 25, dueDay: 5 }));
+      .send(
+        buildCreditCardInput({
+          name: 'HTTP Payment Card',
+          closingDay: 25,
+          dueDay: 5,
+          ownerAccountId: sourceAccount.id,
+        }),
+      );
 
     await request(app)
       .post(`/api/v1/credit-cards/${createdCard.body.data.id}/purchases`)
@@ -372,7 +388,14 @@ describe('credit cards routes', () => {
     const createdCard = await request(app)
       .post('/api/v1/credit-cards')
       .set(createAuthHeaders(context.token, context.household.id))
-      .send(buildCreditCardInput({ name: 'HTTP Payment Limit Card', closingDay: 25, dueDay: 5 }));
+      .send(
+        buildCreditCardInput({
+          name: 'HTTP Payment Limit Card',
+          closingDay: 25,
+          dueDay: 5,
+          ownerAccountId: sourceAccount.id,
+        }),
+      );
 
     await request(app)
       .post(`/api/v1/credit-cards/${createdCard.body.data.id}/purchases`)
@@ -407,12 +430,14 @@ describe('credit cards routes', () => {
       context.householdContext,
       buildCategoryInput({ name: 'Tech', type: 'expense' }),
     );
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
 
     const createdCard = await request(app)
       .post('/api/v1/credit-cards')
       .set(createAuthHeaders(context.token, context.household.id))
       .send(
         buildCreditCardInput({
+          ownerAccountId: ownerAccount.id,
           name: 'HTTP Limit Card',
           closingDay: 25,
           dueDay: 5,
@@ -474,10 +499,11 @@ describe('credit cards routes', () => {
       accountId: source.id,
       amount: 50_000,
     });
+    const ownerAccount = source;
     const card = await request(app)
       .post('/api/v1/credit-cards')
       .set(createAuthHeaders(owner.token, owner.household.id))
-      .send(buildCreditCardInput({ name: 'Isolated Card' }));
+      .send(buildCreditCardInput({ name: 'Isolated Card', ownerAccountId: ownerAccount.id }));
     const cardId = card.body.data.id;
     const purchase = await request(app)
       .post(`/api/v1/credit-cards/${cardId}/purchases`)

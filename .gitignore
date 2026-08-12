@@ -8,3 +8,5 @@
 .pnpm-
 .kilo
 .pnpm-store
+.cyboflow/worktrees/
+worktrees/

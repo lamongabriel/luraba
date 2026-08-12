@@ -1,17 +1,31 @@
+import { aliasedTable, sql } from 'drizzle-orm';
 import { accountsTable } from '@/db/schemas/accounts.schema';
 import type { creditCardBillingCyclesTable } from '@/db/schemas/credit-card-billing-cycles.schema';
 import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
 import { formatISODate } from '@/shared/lib/date';
 import type { BaseCreditCardCycleSummary, CreditCardCycleItem } from './credit-cards.types';
 
+export const creditCardLedgerAccountsTable = aliasedTable(accountsTable, 'credit_card_ledgers');
+export const creditCardOwnerAccountsTable = aliasedTable(accountsTable, 'credit_card_owners');
+
 export type CreditCardRow = {
   id: string;
-  accountId: string;
+  ownerAccountId: string;
+  ledgerAccountId: string;
   name: string;
   institutionName: string | null;
   institutionDomain: string | null;
   institutionLogoUrl: string | null;
   notes: string | null;
+  ownerAccount: {
+    id: string;
+    name: string;
+    institutionName: string | null;
+    institutionLogoUrl: string | null;
+    type: 'cash';
+    classification: 'asset';
+    currencyCode: string;
+  };
   classification: 'liability';
   type: 'credit_card';
   currencyCode: string;
@@ -28,12 +42,19 @@ export type CreditCardRow = {
 
 export type CreditCardSelectRow = {
   id: string;
-  accountId: string;
+  ownerAccountId: string;
+  ledgerAccountId: string;
   name: string;
   institutionName: string | null;
   institutionDomain: string | null;
   institutionLogoUrl: string | null;
   notes: string | null;
+  ownerAccountName: string;
+  ownerAccountInstitutionName: string | null;
+  ownerAccountInstitutionLogoUrl: string | null;
+  ownerAccountType: 'cash';
+  ownerAccountClassification: 'asset';
+  ownerAccountCurrencyCode: string;
   classification: 'liability';
   type: 'credit_card';
   currencyCode: string;
@@ -64,15 +85,32 @@ export type CreditCardCycleItemRow = {
 
 export const creditCardSelect = {
   id: creditCardsTable.id,
-  accountId: creditCardsTable.accountId,
-  name: accountsTable.name,
-  institutionName: accountsTable.institutionName,
-  institutionDomain: accountsTable.institutionDomain,
-  institutionLogoUrl: accountsTable.institutionLogoUrl,
-  notes: accountsTable.notes,
-  classification: accountsTable.classification,
-  type: accountsTable.type,
-  currencyCode: accountsTable.currencyId,
+  ownerAccountId: creditCardsTable.ownerAccountId,
+  ledgerAccountId: creditCardsTable.ledgerAccountId,
+  name: creditCardsTable.name,
+  institutionName: creditCardsTable.institutionName,
+  institutionDomain: creditCardsTable.institutionDomain,
+  institutionLogoUrl: creditCardsTable.institutionLogoUrl,
+  notes: creditCardsTable.notes,
+  ownerAccountName: sql<string>`${creditCardOwnerAccountsTable.name}`.as('owner_account_name'),
+  ownerAccountInstitutionName: sql<
+    string | null
+  >`${creditCardOwnerAccountsTable.institutionName}`.as('owner_account_institution_name'),
+  ownerAccountInstitutionLogoUrl: sql<
+    string | null
+  >`${creditCardOwnerAccountsTable.institutionLogoUrl}`.as('owner_account_institution_logo_url'),
+  ownerAccountType: sql<'cash'>`${creditCardOwnerAccountsTable.type}`.as('owner_account_type'),
+  ownerAccountClassification: sql<'asset'>`${creditCardOwnerAccountsTable.classification}`.as(
+    'owner_account_classification',
+  ),
+  ownerAccountCurrencyCode: sql<string>`${creditCardOwnerAccountsTable.currencyId}`.as(
+    'owner_account_currency_code',
+  ),
+  classification: sql<'liability'>`${creditCardLedgerAccountsTable.classification}`.as(
+    'classification',
+  ),
+  type: sql<'credit_card'>`${creditCardLedgerAccountsTable.type}`.as('type'),
+  currencyCode: sql<string>`${creditCardOwnerAccountsTable.currencyId}`.as('currency_code'),
   brand: creditCardsTable.brand,
   productType: creditCardsTable.productType,
   last4: creditCardsTable.last4,
@@ -94,14 +132,35 @@ export function splitInstallmentAmounts(totalAmount: number, installmentCount: n
 
 export function toCreditCardRow(row: CreditCardSelectRow): CreditCardRow {
   return {
-    ...row,
-    classification: 'liability',
-    type: 'credit_card',
+    id: row.id,
+    ownerAccountId: row.ownerAccountId,
+    ledgerAccountId: row.ledgerAccountId,
+    name: row.name,
     institutionName: row.institutionName ?? null,
     institutionDomain: row.institutionDomain ?? null,
     institutionLogoUrl: row.institutionLogoUrl ?? null,
     notes: row.notes ?? null,
+    ownerAccount: {
+      id: row.ownerAccountId,
+      name: row.ownerAccountName,
+      institutionName: row.ownerAccountInstitutionName ?? null,
+      institutionLogoUrl: row.ownerAccountInstitutionLogoUrl ?? null,
+      type: 'cash',
+      classification: 'asset',
+      currencyCode: row.ownerAccountCurrencyCode,
+    },
+    classification: 'liability',
+    type: 'credit_card',
+    currencyCode: row.ownerAccountCurrencyCode,
+    brand: row.brand,
+    productType: row.productType,
+    last4: row.last4,
     color: row.color ?? null,
+    closingDay: row.closingDay,
+    dueDay: row.dueDay,
+    creditLimitAmount: row.creditLimitAmount,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   };
 }
 

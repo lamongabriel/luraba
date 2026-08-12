@@ -1,12 +1,4 @@
-import {
-  bigint,
-  integer,
-  pgTable,
-  timestamp,
-  uniqueIndex,
-  uuid,
-  varchar,
-} from 'drizzle-orm/pg-core';
+import { bigint, index, integer, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { accountsTable } from './accounts.schema';
 import { creditCardProductTypeEnum } from './enums.schema';
 import { householdsTable } from './households.schema';
@@ -18,7 +10,15 @@ export const creditCardsTable = pgTable(
     householdId: uuid('household_id')
       .notNull()
       .references(() => householdsTable.id, { onDelete: 'cascade' }),
-    accountId: uuid('account_id')
+    name: varchar({ length: 255 }).notNull(),
+    institutionName: varchar('institution_name', { length: 255 }),
+    institutionDomain: varchar('institution_domain', { length: 255 }),
+    institutionLogoUrl: varchar('institution_logo_url', { length: 1024 }),
+    notes: varchar({ length: 4000 }),
+    ledgerAccountId: uuid('ledger_account_id')
+      .notNull()
+      .references(() => accountsTable.id, { onDelete: 'cascade' }),
+    ownerAccountId: uuid('owner_account_id')
       .notNull()
       .references(() => accountsTable.id, { onDelete: 'cascade' }),
     brand: varchar({ length: 64 }).notNull(),
@@ -31,5 +31,9 @@ export const creditCardsTable = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => [uniqueIndex('credit_cards_account_id_unique').on(table.accountId)],
+  (table) => [
+    index('credit_cards_owner_account_id_idx').on(table.ownerAccountId),
+    index('credit_cards_ledger_account_id_idx').on(table.ledgerAccountId),
+    index('credit_cards_household_name_idx').on(table.householdId, table.name),
+  ],
 );

@@ -1,4 +1,4 @@
-import { eq, type SQL, sql } from 'drizzle-orm';
+import { eq, ne, type SQL, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { accountsTable } from '@/db/schemas/accounts.schema';
 import {
@@ -68,6 +68,7 @@ export function buildAccountsListWhere(
 ): SQL {
   return combineConditions(
     eq(accountsTable.householdId, householdId),
+    ne(accountsTable.type, 'credit_card'),
     buildIlikeSearch(query.search, [
       sql`${accountsTable.name}`,
       sql`${accountsTable.institutionName}`,
