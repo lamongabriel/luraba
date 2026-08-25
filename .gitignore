@@ -3,6 +3,7 @@
 **/build
 **/coverage
 **/logs
+.turbo
 .DS_Store
 .env
 .pnpm-

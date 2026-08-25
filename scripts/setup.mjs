@@ -85,19 +85,24 @@ LURABA_UI_PORT=${defaults.LURABA_UI_PORT}
 `;
 }
 
-console.log("Preparing Luraba's independent root, API, and UI projects...");
+console.log("Preparing Luraba's pnpm workspace...");
 writeIfMissing(join(root, ".env"), rootEnv());
-writeIfMissing(join(root, "api", ".env"), apiEnv());
-if (!existsSync(join(root, "ui", ".env.local")) && !existsSync(join(root, "ui", ".env"))) {
-  writeIfMissing(join(root, "ui", ".env.local"), uiEnv());
+writeIfMissing(join(root, "apps/api", ".env"), apiEnv());
+if (
+  !existsSync(join(root, "apps/web", ".env.local")) &&
+  !existsSync(join(root, "apps/web", ".env"))
+) {
+  writeIfMissing(join(root, "apps/web", ".env.local"), uiEnv());
 } else {
-  console.log("Preserved ui/.env.local or ui/.env");
+  console.log("Preserved apps/web/.env.local or apps/web/.env");
 }
 
 for (const [directory, label] of [
   [".", "root"],
-  ["api", "API"],
-  ["ui", "UI"],
+  ["apps/api", "API"],
+  ["apps/web", "UI"],
+  ["packages/contracts", "contracts"],
+  ["packages/domain", "domain"],
 ]) {
   if (!existsSync(join(root, directory, "package.json"))) {
     throw new Error(`Missing ${label} package.json`);
@@ -105,8 +110,6 @@ for (const [directory, label] of [
 }
 
 run("pnpm", ["install", "--frozen-lockfile"]);
-run("pnpm", ["--dir", "api", "install", "--frozen-lockfile"]);
-run("pnpm", ["--dir", "ui", "install", "--frozen-lockfile"]);
 
 console.log("\nOptional integrations remain disabled unless credentials are supplied:");
 console.log("Google/GitHub OAuth, SMTP, Brandfetch, and external FX providers.");

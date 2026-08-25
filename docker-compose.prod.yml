@@ -1,0 +1,91 @@
+name: luraba-prod
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-luraba_db}
+      POSTGRES_USER: ${DB_USER:-luraba}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-luraba}
+    ports:
+      - "127.0.0.1:${LURABA_DB_PORT:-29762}:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-luraba} -d ${DB_NAME:-luraba_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db-setup:
+    build:
+      context: .
+      dockerfile: config/Dockerfile.api-prod
+      target: db-setup
+    restart: "no"
+    command: ["sh", "-c", "pnpm db:migrate && pnpm db:seed"]
+    env_file:
+      - ./apps/api/.env
+    environment:
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-luraba_db}
+      DB_USER: ${DB_USER:-luraba}
+      DB_PASSWORD: ${DB_PASSWORD:-luraba}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: config/Dockerfile.api-prod
+      target: runner
+    restart: always
+    env_file:
+      - ./apps/api/.env
+    environment:
+      NODE_ENV: production
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-luraba_db}
+      DB_USER: ${DB_USER:-luraba}
+      DB_PASSWORD: ${DB_PASSWORD:-luraba}
+    ports:
+      - "${LURABA_API_PORT:-22677}:8080"
+    depends_on:
+      db-setup:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  web:
+    build:
+      context: .
+      dockerfile: config/Dockerfile.web-prod
+      target: runner
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 29670
+      NEXT_PUBLIC_API_URL: "http://localhost:${LURABA_API_PORT:-22677}"
+    ports:
+      - "${LURABA_UI_PORT:-29670}:29670"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:29670/login || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  postgres_prod_data:

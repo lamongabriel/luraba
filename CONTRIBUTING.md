@@ -28,11 +28,15 @@ Use `feat:` for user-facing additions, `fix:` for bug fixes, and `BREAKING CHANG
 - Run the relevant checks before opening a PR.
 
 ```sh
-pnpm --dir api lint
-pnpm --dir api typecheck
-pnpm --dir api test:unit
-pnpm --dir api test
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
 ```
+
+The default test command runs fast unit suites through Turbo. API integration and
+database tests require a ready Postgres instance and are run explicitly with
+`pnpm test:api:integration`.
 
 ## Releases
 

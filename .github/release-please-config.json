@@ -19,19 +19,7 @@
     ".": {
       "package-name": "luraba",
       "release-type": "node",
-      "changelog-path": "CHANGELOG.md",
-      "extra-files": [
-        {
-          "type": "json",
-          "path": "api/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "ui/package.json",
-          "jsonpath": "$.version"
-        }
-      ]
+      "changelog-path": "CHANGELOG.md"
     }
   }
 }

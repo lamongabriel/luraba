@@ -16,6 +16,12 @@ jobs:
     name: Vitest and Supertest
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_NAME: luraba_db_test
+      DB_USER: luraba
+      DB_PASSWORD: luraba
 
     services:
       postgres:
@@ -40,4 +46,4 @@ jobs:
         uses: ./.github/actions/setup-workspace
 
       - name: Test
-        run: pnpm test:api
+        run: pnpm test:api:integration

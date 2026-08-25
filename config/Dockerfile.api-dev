@@ -3,9 +3,14 @@ FROM node:22-alpine
 RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
 WORKDIR /app
 
-COPY api/package.json api/pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps/api/package.json ./apps/api/package.json
+COPY apps/web/package.json ./apps/web/package.json
+COPY packages/contracts/package.json ./packages/contracts/package.json
+COPY packages/domain/package.json ./packages/domain/package.json
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 COPY config/check-api.mjs /opt/luraba/check-api.mjs
 EXPOSE 8080
+WORKDIR /app/apps/api
 CMD ["pnpm", "dev"]

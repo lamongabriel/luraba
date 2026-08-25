@@ -1,5 +1,5 @@
 name: Setup workspace
-description: Install the root, API, and UI Node.js and pnpm dependencies independently.
+description: Install the Luraba pnpm workspace dependencies.
 
 runs:
   using: composite
@@ -12,16 +12,10 @@ runs:
     - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
-        node-version-file: api/.nvmrc
+        node-version-file: .nvmrc
         cache: pnpm
-        cache-dependency-path: |
-          pnpm-lock.yaml
-          api/pnpm-lock.yaml
-          ui/pnpm-lock.yaml
+        cache-dependency-path: pnpm-lock.yaml
 
     - name: Install dependencies
       shell: bash
-      run: |
-        pnpm install --frozen-lockfile
-        pnpm --dir api install --frozen-lockfile
-        pnpm --dir ui install --frozen-lockfile
+      run: pnpm install --frozen-lockfile
