@@ -1,14 +1,13 @@
 "use client"
 
+import type { AccountDetails } from "@luraba/contracts"
 import { format } from "date-fns"
 import * as React from "react"
-
 import { FormSheet } from "@/components/forms/form-sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Typography } from "@/components/ui/typography"
-import type { AccountDetails } from "@/interfaces/account"
 import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance"
 import { queryClient } from "@/lib/query-client"
 import { useCreateTransactionMutation } from "@/mutations/transactions/use-transaction-mutations"

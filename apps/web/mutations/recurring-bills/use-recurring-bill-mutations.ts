@@ -1,11 +1,5 @@
 "use client"
 
-import type {
-  CreateRecurringBillHttpBody,
-  CreateRecurringBillHttpResponse,
-  UpdateRecurringBillHttpBody,
-  UpdateRecurringBillHttpResponse,
-} from "@/interfaces/http/recurring-bills-http"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
@@ -20,10 +14,22 @@ import {
   updateRecurringBill,
 } from "@/services/recurring-bills.service"
 
+type CreateRecurringBillBody = Parameters<typeof createRecurringBill>[0]
+type CreateRecurringBillResponse = Awaited<
+  ReturnType<typeof createRecurringBill>
+>
+type UpdateVariables = {
+  id: string
+  body: Parameters<typeof updateRecurringBill>[1]
+}
+type UpdateRecurringBillResponse = Awaited<
+  ReturnType<typeof updateRecurringBill>
+>
+
 export const createRecurringBillMutationDefinition =
   createAppMutationDefinition<
-    CreateRecurringBillHttpResponse,
-    CreateRecurringBillHttpBody
+    CreateRecurringBillResponse,
+    CreateRecurringBillBody
   >({
     defaultErrorMessage: "We couldn't create this recurring rule.",
     mutationFn: createRecurringBill,
@@ -31,25 +37,22 @@ export const createRecurringBillMutationDefinition =
   })
 export function useCreateRecurringBillMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    CreateRecurringBillHttpResponse,
-    CreateRecurringBillHttpBody,
+    CreateRecurringBillResponse,
+    CreateRecurringBillBody,
     TContext
   >,
 ) {
   return useAppMutation(createRecurringBillMutationDefinition, options)
 }
-type UpdateVariables = { id: string; body: UpdateRecurringBillHttpBody }
 export const updateRecurringBillMutationDefinition =
-  createAppMutationDefinition<UpdateRecurringBillHttpResponse, UpdateVariables>(
-    {
-      defaultErrorMessage: "We couldn't update this recurring rule.",
-      mutationFn: updateRecurringBill,
-      mutationKey: ["recurring-bills", "update"],
-    },
-  )
+  createAppMutationDefinition<UpdateRecurringBillResponse, UpdateVariables>({
+    defaultErrorMessage: "We couldn't update this recurring rule.",
+    mutationFn: ({ id, body }) => updateRecurringBill(id, body),
+    mutationKey: ["recurring-bills", "update"],
+  })
 export function useUpdateRecurringBillMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateRecurringBillHttpResponse,
+    UpdateRecurringBillResponse,
     UpdateVariables,
     TContext
   >,
@@ -71,7 +74,7 @@ type OccurrenceVariables = { id: string; date: string }
 export const skipRecurringOccurrenceMutationDefinition =
   createAppMutationDefinition<void, OccurrenceVariables>({
     defaultErrorMessage: "We couldn't skip this occurrence.",
-    mutationFn: skipRecurringOccurrence,
+    mutationFn: ({ id, date }) => skipRecurringOccurrence(id, date),
     mutationKey: ["recurring-bills", "occurrence", "skip"],
   })
 export function useSkipRecurringOccurrenceMutation<TContext = unknown>(
@@ -85,7 +88,8 @@ export const rescheduleRecurringOccurrenceMutationDefinition =
     { id: string; date: string; nextDate: string }
   >({
     defaultErrorMessage: "We couldn't reschedule this occurrence.",
-    mutationFn: rescheduleRecurringOccurrence,
+    mutationFn: ({ id, date, nextDate }) =>
+      rescheduleRecurringOccurrence(id, date, { date: nextDate }),
     mutationKey: ["recurring-bills", "occurrence", "reschedule"],
   })
 export function useRescheduleRecurringOccurrenceMutation<TContext = unknown>(
@@ -103,7 +107,7 @@ export function useRescheduleRecurringOccurrenceMutation<TContext = unknown>(
 export const createRecurringOccurrenceMutationDefinition =
   createAppMutationDefinition<unknown, OccurrenceVariables>({
     defaultErrorMessage: "We couldn't create this transaction.",
-    mutationFn: createRecurringOccurrence,
+    mutationFn: ({ id, date }) => createRecurringOccurrence(id, date),
     mutationKey: ["recurring-bills", "occurrence", "create"],
   })
 export function useCreateRecurringOccurrenceMutation<TContext = unknown>(

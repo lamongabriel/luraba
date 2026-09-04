@@ -1,9 +1,8 @@
 "use client"
 
+import type { Category, Tag } from "@luraba/contracts"
 import { Badge } from "@/components/ui/badge"
 import { Icon } from "@/components/ui/icon"
-import type { Category } from "@/interfaces/category"
-import type { Tag } from "@/interfaces/tag"
 import { cn } from "@/lib/utils"
 
 type LabelEntity =

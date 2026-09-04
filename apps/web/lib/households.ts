@@ -1,13 +1,11 @@
 import type {
+  HouseholdInviteStatus,
+  HouseholdInviteStatusMetadata,
   HouseholdPermission,
   HouseholdPermissionMetadata,
   HouseholdRole,
   HouseholdRoleMetadata,
-} from "@/interfaces/household"
-import type {
-  HouseholdInviteStatus,
-  HouseholdInviteStatusMetadata,
-} from "@/interfaces/household-invite"
+} from "@luraba/contracts"
 
 export function getHouseholdRoleMetadata(
   role: HouseholdRole,

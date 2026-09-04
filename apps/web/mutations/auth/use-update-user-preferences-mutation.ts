@@ -1,9 +1,5 @@
 "use client"
 
-import type {
-  UpdateUserPreferencesHttpBody,
-  UpdateUserPreferencesHttpResponse,
-} from "@/interfaces/http/auth-http"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
@@ -11,10 +7,15 @@ import {
 } from "@/mutations/app-mutation"
 import { updateUserPreferences } from "@/services/auth.service"
 
+type UpdateUserPreferencesBody = Parameters<typeof updateUserPreferences>[0]
+type UpdateUserPreferencesResponse = Awaited<
+  ReturnType<typeof updateUserPreferences>
+>
+
 export const updateUserPreferencesMutationDefinition =
   createAppMutationDefinition<
-    UpdateUserPreferencesHttpResponse,
-    UpdateUserPreferencesHttpBody
+    UpdateUserPreferencesResponse,
+    UpdateUserPreferencesBody
   >({
     defaultErrorMessage:
       "We couldn't update your preferences. Please try again.",
@@ -23,8 +24,8 @@ export const updateUserPreferencesMutationDefinition =
   })
 export function useUpdateUserPreferencesMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateUserPreferencesHttpResponse,
-    UpdateUserPreferencesHttpBody,
+    UpdateUserPreferencesResponse,
+    UpdateUserPreferencesBody,
     TContext
   >,
 ) {

@@ -1,76 +1,64 @@
-import { z } from 'zod';
+import { recurringBillsEndpoints } from '@luraba/contracts/recurring-bills';
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import { withApiMeta } from '@/shared/response';
 import * as service from './recurring-bills.service';
-import {
-  createRecurringBillBodySchema,
-  listRecurringBillsQuerySchema,
-  occurrenceParamsSchema,
-  recurringBillParamsSchema,
-  recurringBillSchema,
-  recurringOccurrenceSchema,
-  rescheduleOccurrenceBodySchema,
-  updateRecurringBillBodySchema,
-} from './recurring-bills.types';
 
 export const list = createHouseholdHandler({
-  query: listRecurringBillsQuerySchema,
-  response: recurringBillSchema.array(),
+  query: recurringBillsEndpoints.list.query,
+  response: recurringBillsEndpoints.list.response,
+  meta: recurringBillsEndpoints.list.meta,
   handle: async ({ household, query }) => {
     const result = await service.list(household, query);
     return withApiMeta(result.data, result.meta);
   },
 });
 export const get = createHouseholdHandler({
-  params: recurringBillParamsSchema,
-  response: recurringBillSchema,
+  params: recurringBillsEndpoints.get.params,
+  response: recurringBillsEndpoints.get.response,
   handle: ({ household, params }) => service.get(household, params.id),
 });
 export const create = createHouseholdHandler({
-  body: createRecurringBillBodySchema,
-  response: recurringBillSchema,
+  body: recurringBillsEndpoints.create.body,
+  response: recurringBillsEndpoints.create.response,
   status: 'created',
   handle: ({ household, body }) => service.create(household, body),
 });
 export const update = createHouseholdHandler({
-  params: recurringBillParamsSchema,
-  body: updateRecurringBillBodySchema,
-  response: recurringBillSchema,
+  params: recurringBillsEndpoints.update.params,
+  body: recurringBillsEndpoints.update.body,
+  response: recurringBillsEndpoints.update.response,
   handle: ({ household, params, body }) => service.update(household, params.id, body),
 });
 export const remove = createHouseholdHandler({
-  params: recurringBillParamsSchema,
+  params: recurringBillsEndpoints.delete.params,
   status: 'no-content',
   handle: ({ household, params }) => service.remove(household, params.id),
 });
 export const occurrences = createHouseholdHandler({
-  params: recurringBillParamsSchema,
-  query: listRecurringBillsQuerySchema.pick({ search: true }).extend({
-    from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  }),
-  response: recurringOccurrenceSchema.array(),
+  params: recurringBillsEndpoints.occurrences.params,
+  query: recurringBillsEndpoints.occurrences.query,
+  response: recurringBillsEndpoints.occurrences.response,
   handle: ({ household, params, query }) =>
     service.listOccurrences(household, params.id, query.from, query.to),
 });
 export const skip = createHouseholdHandler({
-  params: occurrenceParamsSchema,
+  params: recurringBillsEndpoints.skip.params,
   status: 'no-content',
   handle: ({ household, params }) => service.skipOccurrence(household, params.id, params.date),
 });
 export const reschedule = createHouseholdHandler({
-  params: occurrenceParamsSchema,
-  body: rescheduleOccurrenceBodySchema,
+  params: recurringBillsEndpoints.reschedule.params,
+  body: recurringBillsEndpoints.reschedule.body,
   status: 'no-content',
   handle: ({ household, params, body }) =>
     service.rescheduleOccurrence(household, params.id, params.date, body.date),
 });
 export const createOccurrence = createHouseholdHandler({
-  params: occurrenceParamsSchema,
-  response: recurringOccurrenceSchema,
+  params: recurringBillsEndpoints.createOccurrence.params,
+  response: recurringBillsEndpoints.createOccurrence.response,
   handle: async ({ household, params }) => {
     const transaction = await service.createOccurrence(household, params.id, params.date);
-    return recurringOccurrenceSchema.parse({
+    return recurringBillsEndpoints.createOccurrence.response.parse({
       id: `${params.id}:${params.date}`,
       recurringBillId: params.id,
       occurrenceDate: params.date,

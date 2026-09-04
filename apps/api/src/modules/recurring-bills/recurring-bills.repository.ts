@@ -1,4 +1,10 @@
+import type {
+  createRecurringBillBodySchema,
+  listRecurringBillsQuerySchema,
+  updateRecurringBillBodySchema,
+} from '@luraba/contracts/recurring-bills';
 import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
+import type { z } from 'zod';
 import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
 import { accountsTable } from '@/db/schemas/accounts.schema';
@@ -10,11 +16,10 @@ import {
   recurringBillsTable,
 } from '@/db/schemas/recurring-bills.schema';
 import type { TransactionFilterQuery } from '@/modules/transactions/transactions.query';
-import type {
-  CreateRecurringBillBody,
-  ListRecurringBillsQuery,
-  UpdateRecurringBillBody,
-} from './recurring-bills.types';
+
+type CreateRecurringBillValues = z.output<typeof createRecurringBillBodySchema>;
+type UpdateRecurringBillValues = z.output<typeof updateRecurringBillBodySchema>;
+type ListRecurringBillsQuery = z.output<typeof listRecurringBillsQuerySchema>;
 
 const sortFields = {
   name: recurringBillsTable.name,
@@ -127,7 +132,7 @@ export async function get(context: HouseholdContext, id: string) {
 
 export async function create(
   context: HouseholdContext,
-  body: CreateRecurringBillBody,
+  body: CreateRecurringBillValues,
   paymentMethodId: string | null,
 ) {
   return (
@@ -158,7 +163,7 @@ export async function create(
 export async function update(
   context: HouseholdContext,
   id: string,
-  body: UpdateRecurringBillBody,
+  body: UpdateRecurringBillValues,
   paymentMethodId?: string | null,
 ) {
   const values = {

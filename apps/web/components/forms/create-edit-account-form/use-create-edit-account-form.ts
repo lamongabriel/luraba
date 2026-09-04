@@ -1,10 +1,9 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { AccountDetails } from "@luraba/contracts"
 import * as React from "react"
 import { useForm, useWatch } from "react-hook-form"
-
-import type { AccountDetails } from "@/interfaces/account"
 import { ACCOUNT_TYPE_OPTIONS } from "@/lib/accounts"
 import { queryClient } from "@/lib/query-client"
 import {

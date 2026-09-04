@@ -1,9 +1,9 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { Category, CategoryType } from "@luraba/contracts"
 import * as React from "react"
 import { useForm } from "react-hook-form"
-import type { Category, CategoryType } from "@/interfaces/category"
 import { DEFAULT_CATEGORY_COLOR, DEFAULT_CATEGORY_ICON } from "@/lib/categories"
 import { queryClient } from "@/lib/query-client"
 import {

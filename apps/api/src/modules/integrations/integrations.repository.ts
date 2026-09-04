@@ -1,3 +1,4 @@
+import type { Integration } from '@luraba/contracts/integrations';
 import { sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { type DbListPage, getPagination } from '@/shared/list';
@@ -5,17 +6,16 @@ import {
   buildIntegrationRowsCte,
   buildIntegrationsListOrder,
   buildIntegrationsListWhere,
-  type ListIntegrationsRequestQuery,
+  type ListIntegrationsQuery,
 } from './integrations.query';
-import type { IntegrationSummary } from './integrations.types';
 
-type IntegrationListRow = Omit<IntegrationSummary, 'lastCheckedAt'> & {
+type IntegrationListRow = Omit<Integration, 'lastCheckedAt'> & {
   lastCheckedAt: Date | string | null;
 };
 
 export async function listPage(
   householdId: string,
-  query: ListIntegrationsRequestQuery,
+  query: ListIntegrationsQuery,
 ): Promise<DbListPage<IntegrationListRow>> {
   const { limit, offset } = getPagination(query);
   const integrationRowsCte = buildIntegrationRowsCte(householdId);

@@ -1,15 +1,15 @@
+import type {
+  Category,
+  CreateCategoryInput,
+  UpdateCategoryInput,
+} from '@luraba/contracts/categories';
 import type { HouseholdContext } from '@/config/permissions';
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
 import { createListMeta, type ListResult } from '@/shared/list';
-import type { ListCategoriesRequestQuery } from './categories.query';
+import type { ListCategoriesQuery } from './categories.query';
 import { categoriesRepository } from './categories.repository';
-import type {
-  Category,
-  CategoryRecord,
-  CreateCategoryRequestBody,
-  UpdateCategoryRequestBody,
-} from './categories.types';
+import type { CategoryRecord } from './categories.types';
 
 function mapCategoryRecord(category: CategoryRecord): Category {
   return {
@@ -26,7 +26,7 @@ function mapCategoryRecord(category: CategoryRecord): Category {
 
 export async function createCategory(
   context: HouseholdContext,
-  body: CreateCategoryRequestBody,
+  body: CreateCategoryInput,
 ): Promise<Category> {
   const existing = await categoriesRepository.findByHouseholdAndName(context, body.name);
   if (existing) {
@@ -57,7 +57,7 @@ export async function createCategory(
 
 export async function listCategories(
   context: HouseholdContext,
-  query: ListCategoriesRequestQuery,
+  query: ListCategoriesQuery,
 ): Promise<ListResult<Category>> {
   const page = await categoriesRepository.listPage(context, query);
 
@@ -70,7 +70,7 @@ export async function listCategories(
 export async function updateCategory(
   context: HouseholdContext,
   categoryId: string,
-  body: UpdateCategoryRequestBody,
+  body: UpdateCategoryInput,
 ): Promise<Category> {
   const category = await categoriesRepository.get(categoryId, context);
   if (!category) {

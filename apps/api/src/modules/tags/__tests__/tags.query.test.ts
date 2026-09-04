@@ -1,9 +1,9 @@
+import { listTagsQuerySchema } from '@luraba/contracts/tags';
 import { describe, expect, it } from 'vitest';
-import { ListTagsRequestQuerySchema } from '../tags.query';
 
 describe('tags list query', () => {
   it('parses every column filter and rejects invalid input', () => {
-    const query = ListTagsRequestQuerySchema.parse({
+    const query = listTagsQuerySchema.parse({
       colors: '#16A34A',
       icons: 'Ticket01Icon',
       hasColor: 'true',
@@ -16,7 +16,7 @@ describe('tags list query', () => {
 
     expect(query.colors).toEqual(['#16A34A']);
     expect(query.hasIcon).toBe(true);
-    expect(ListTagsRequestQuerySchema.safeParse({ hasColor: '1' }).success).toBe(false);
-    expect(ListTagsRequestQuerySchema.safeParse({ unknown: true }).success).toBe(false);
+    expect(listTagsQuerySchema.safeParse({ hasColor: '1' }).success).toBe(false);
+    expect(listTagsQuerySchema.safeParse({ unknown: true }).success).toBe(false);
   });
 });

@@ -1,10 +1,10 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { CreditCard } from "@luraba/contracts"
+import { MAX_PER_PAGE } from "@luraba/contracts"
 import * as React from "react"
 import { useForm, useWatch } from "react-hook-form"
-import { MAX_PER_PAGE } from "@/interfaces/api"
-import type { CreditCard } from "@/interfaces/credit-card"
 import { queryClient } from "@/lib/query-client"
 import {
   useCreateCreditCardMutation,

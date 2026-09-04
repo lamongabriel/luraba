@@ -1,23 +1,19 @@
-import { z } from 'zod';
+import {
+  transactionAnalyticsQuerySchema,
+  upcomingTransactionSchema,
+  type upcomingTransactionsQuerySchema,
+} from '@luraba/contracts/transactions';
+import type { z } from 'zod';
 import type { HouseholdContext } from '@/config/permissions';
 import * as recurringBillsRepository from '@/modules/recurring-bills/recurring-bills.repository';
 import { getOccurrenceDates } from '@/modules/recurring-bills/recurring-bills.service';
 import { addDays, formatISODate, getTodayInTimezone } from '@/shared/lib/date';
 import { createListMeta } from '@/shared/list';
 import * as repository from './transactions.analytics.repository';
-import { type TransactionFilterQuery, TransactionFilterQuerySchema } from './transactions.query';
-import { type UpcomingTransaction, upcomingTransactionSchema } from './transactions.types';
+import type { TransactionFilterQuery } from './transactions.query';
+import type { UpcomingTransaction } from './transactions.types';
 
-export const upcomingTransactionsQuerySchema = TransactionFilterQuerySchema.extend({
-  page: z.coerce.number().int().min(1).default(1),
-  perPage: z.coerce.number().int().min(1).max(100).default(20),
-  sort: z.enum(['effectiveDate']).default('effectiveDate'),
-  sortDirection: z.enum(['asc', 'desc']).default('asc'),
-});
-
-export { upcomingTransactionSchema } from './transactions.types';
-
-type UpcomingQuery = z.infer<typeof upcomingTransactionsQuerySchema>;
+type UpcomingQuery = z.output<typeof upcomingTransactionsQuerySchema>;
 
 function toFilterQuery(query: UpcomingQuery): TransactionFilterQuery {
   const {
@@ -27,7 +23,7 @@ function toFilterQuery(query: UpcomingQuery): TransactionFilterQuery {
     sortDirection: _sortDirection,
     ...filters
   } = query;
-  return TransactionFilterQuerySchema.parse(filters);
+  return transactionAnalyticsQuerySchema.parse(filters);
 }
 
 export async function listUpcomingTransactions(context: HouseholdContext, query: UpcomingQuery) {

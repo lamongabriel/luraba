@@ -1,14 +1,13 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
-
 import type {
-  GetAccountHttpResponse,
-  ListAccountsHttpQuery,
-  ListAccountsHttpResponse,
-  ListAccountTransactionsHttpQuery,
-  ListAccountTransactionsHttpResponse,
-} from "@/interfaces/http/accounts-http"
+  GetAccountResult,
+  ListAccountsQuery,
+  ListAccountsResult,
+  ListAccountTransactionsQuery,
+  ListAccountTransactionsResult,
+} from "@luraba/contracts"
+import { useQuery } from "@tanstack/react-query"
 import type { AppQueryOptions } from "@/queries/query-options"
 import {
   getAccount,
@@ -19,17 +18,17 @@ import {
 export const accountQueryKeys = {
   all: ["accounts"] as const,
   lists: () => [...accountQueryKeys.all, "list"] as const,
-  list: (query: ListAccountsHttpQuery = {}) =>
+  list: (query: ListAccountsQuery = {}) =>
     [...accountQueryKeys.lists(), query] as const,
   details: () => [...accountQueryKeys.all, "detail"] as const,
   detail: (id: string) => [...accountQueryKeys.details(), id] as const,
-  transactions: (id: string, query: ListAccountTransactionsHttpQuery = {}) =>
+  transactions: (id: string, query: ListAccountTransactionsQuery = {}) =>
     [...accountQueryKeys.detail(id), "transactions", query] as const,
 }
 
-export function useAccountsQuery<TData = ListAccountsHttpResponse>(
-  query: ListAccountsHttpQuery = {},
-  options?: AppQueryOptions<ListAccountsHttpResponse, TData>,
+export function useAccountsQuery<TData = ListAccountsResult>(
+  query: ListAccountsQuery = {},
+  options?: AppQueryOptions<ListAccountsResult, TData>,
 ) {
   return useQuery({
     queryKey: accountQueryKeys.list(query),
@@ -38,9 +37,9 @@ export function useAccountsQuery<TData = ListAccountsHttpResponse>(
   })
 }
 
-export function useAccountQuery<TData = GetAccountHttpResponse>(
+export function useAccountQuery<TData = GetAccountResult>(
   id: string,
-  options?: AppQueryOptions<GetAccountHttpResponse, TData>,
+  options?: AppQueryOptions<GetAccountResult, TData>,
 ) {
   return useQuery({
     queryKey: accountQueryKeys.detail(id),
@@ -51,11 +50,11 @@ export function useAccountQuery<TData = GetAccountHttpResponse>(
 }
 
 export function useAccountTransactionsQuery<
-  TData = ListAccountTransactionsHttpResponse,
+  TData = ListAccountTransactionsResult,
 >(
   id: string,
-  query: ListAccountTransactionsHttpQuery = {},
-  options?: AppQueryOptions<ListAccountTransactionsHttpResponse, TData>,
+  query: ListAccountTransactionsQuery = {},
+  options?: AppQueryOptions<ListAccountTransactionsResult, TData>,
 ) {
   return useQuery({
     queryKey: accountQueryKeys.transactions(id, query),

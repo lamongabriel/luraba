@@ -1,13 +1,7 @@
 "use client"
 
+import type { ApiError, ApiFailureResponse } from "@luraba/contracts"
 import axios from "axios"
-
-import type {
-  ApiError,
-  ApiFailureResponse,
-  ApiResponse,
-  ListResponse,
-} from "@/interfaces/api"
 
 export class AppClientError extends Error {
   constructor(
@@ -133,38 +127,4 @@ export function getAppErrorDetails(error: unknown, fallbackMessage: string) {
 
 export function getAppErrorMessage(error: unknown, fallbackMessage: string) {
   return getAppErrorDetails(error, fallbackMessage).errorMessage
-}
-
-export function getApiResponseData<TData>(response: ApiResponse<TData>) {
-  if (!response.success) {
-    throw new AppClientError(response.error.message, 500, response.error.code)
-  }
-
-  return response.data
-}
-
-export function getApiListResponse<TData, TSummary = never>(
-  response: ApiResponse<TData[]>,
-): ListResponse<TData, TSummary> {
-  if (!response.success) {
-    throw new AppClientError(response.error.message, 500, response.error.code)
-  }
-
-  if (!response.meta?.pagination) {
-    throw new AppClientError(
-      "The API returned a list without pagination metadata",
-      500,
-      "INVALID_LIST_RESPONSE",
-    )
-  }
-
-  return {
-    data: response.data,
-    meta: {
-      pagination: response.meta.pagination,
-      ...(response.meta.summary === undefined
-        ? {}
-        : { summary: response.meta.summary as TSummary }),
-    },
-  }
 }

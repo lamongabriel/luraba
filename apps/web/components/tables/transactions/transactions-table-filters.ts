@@ -1,4 +1,4 @@
-import type { TransactionFeedOriginType } from "@/interfaces/transaction"
+import type { TransactionFeedOriginType } from "@luraba/contracts"
 
 export interface TransactionTableFilters {
   dateFrom: string

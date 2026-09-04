@@ -1,16 +1,16 @@
 "use client"
 
 import { lurabaAuthApiClient } from "@/api/luraba-auth-api"
-import type { SignInSocialHttpBody } from "@/interfaces/http/auth-http"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
   useAppMutation,
 } from "@/mutations/app-mutation"
+import type { SignInSocialInput } from "@/services/auth-sdk.types"
 
 export const socialSignInMutationDefinition = createAppMutationDefinition<
   void,
-  SignInSocialHttpBody
+  SignInSocialInput
 >({
   defaultErrorMessage: "We couldn't start that sign-in flow. Please try again.",
   mutationFn: async (body) => {
@@ -23,7 +23,7 @@ export const socialSignInMutationDefinition = createAppMutationDefinition<
 })
 
 export function useSocialSignInMutation<TContext = unknown>(
-  options?: UseAppMutationOptions<void, SignInSocialHttpBody, TContext>,
+  options?: UseAppMutationOptions<void, SignInSocialInput, TContext>,
 ) {
   return useAppMutation(socialSignInMutationDefinition, options)
 }

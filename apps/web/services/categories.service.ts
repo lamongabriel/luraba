@@ -1,43 +1,39 @@
 "use client"
 
-import type {
-  CreateCategoryHttpBody,
-  CreateCategoryHttpResponse,
-  ListCategoriesHttpQuery,
-  ListCategoriesHttpResponse,
-  UpdateCategoryHttpBody,
-  UpdateCategoryHttpResponse,
-} from "@/interfaces/http/categories-http"
 import {
-  deleteApiResource,
-  getApiList,
-  patchApiData,
-  postApiData,
-} from "@/services/api-client.service"
-import { serializeHttpQuery } from "@/services/http-query"
+  type CreateCategoryInput,
+  type CreateCategoryResult,
+  categoriesEndpoints,
+  type DeleteCategoryResult,
+  type ListCategoriesQuery,
+  type ListCategoriesResult,
+  type UpdateCategoryInput,
+  type UpdateCategoryResult,
+} from "@luraba/contracts"
+import { requestContract } from "@/services/contract-client.service"
 
 export function listCategories(
-  query: ListCategoriesHttpQuery = {},
-): Promise<ListCategoriesHttpResponse> {
-  return getApiList("/categories", { params: serializeHttpQuery(query) })
+  query: ListCategoriesQuery = {},
+): Promise<ListCategoriesResult> {
+  return requestContract(categoriesEndpoints.list, { query })
 }
 
 export function createCategory(
-  body: CreateCategoryHttpBody,
-): Promise<CreateCategoryHttpResponse> {
-  return postApiData("/categories", body)
+  input: CreateCategoryInput,
+): Promise<CreateCategoryResult> {
+  return requestContract(categoriesEndpoints.create, { body: input })
 }
 
-export function updateCategory({
-  id,
-  body,
-}: {
-  id: string
-  body: UpdateCategoryHttpBody
-}): Promise<UpdateCategoryHttpResponse> {
-  return patchApiData(`/categories/${id}`, body)
+export function updateCategory(
+  id: string,
+  input: UpdateCategoryInput,
+): Promise<UpdateCategoryResult> {
+  return requestContract(categoriesEndpoints.update, {
+    params: { id },
+    body: input,
+  })
 }
 
-export function deleteCategory(id: string): Promise<void> {
-  return deleteApiResource(`/categories/${id}`)
+export function deleteCategory(id: string): Promise<DeleteCategoryResult> {
+  return requestContract(categoriesEndpoints.delete, { params: { id } })
 }

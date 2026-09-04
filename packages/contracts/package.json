@@ -15,9 +15,93 @@
       "types": "./dist/permissions.d.ts",
       "import": "./dist/permissions.js"
     },
+    "./common": {
+      "types": "./dist/common.d.ts",
+      "import": "./dist/common.js"
+    },
+    "./registry": {
+      "types": "./dist/registry.d.ts",
+      "import": "./dist/registry.js"
+    },
+    "./accounts": {
+      "types": "./dist/accounts/index.d.ts",
+      "import": "./dist/accounts/index.js"
+    },
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "import": "./dist/auth/index.js"
+    },
+    "./budgets": {
+      "types": "./dist/budgets/index.d.ts",
+      "import": "./dist/budgets/index.js"
+    },
+    "./categories": {
+      "types": "./dist/categories/index.d.ts",
+      "import": "./dist/categories/index.js"
+    },
+    "./credit-cards": {
+      "types": "./dist/credit-cards/index.d.ts",
+      "import": "./dist/credit-cards/index.js"
+    },
+    "./currencies": {
+      "types": "./dist/currencies/index.d.ts",
+      "import": "./dist/currencies/index.js"
+    },
     "./households": {
-      "types": "./dist/households.d.ts",
-      "import": "./dist/households.js"
+      "types": "./dist/households/index.d.ts",
+      "import": "./dist/households/index.js"
+    },
+    "./api": {
+      "types": "./dist/api.d.ts",
+      "import": "./dist/api.js"
+    },
+    "./health": {
+      "types": "./dist/health/index.d.ts",
+      "import": "./dist/health/index.js"
+    },
+    "./integrations": {
+      "types": "./dist/integrations/index.d.ts",
+      "import": "./dist/integrations/index.js"
+    },
+    "./list": {
+      "types": "./dist/list.d.ts",
+      "import": "./dist/list.js"
+    },
+    "./onboarding": {
+      "types": "./dist/onboarding/index.d.ts",
+      "import": "./dist/onboarding/index.js"
+    },
+    "./merchants": {
+      "types": "./dist/merchants/index.d.ts",
+      "import": "./dist/merchants/index.js"
+    },
+    "./networth": {
+      "types": "./dist/networth/index.d.ts",
+      "import": "./dist/networth/index.js"
+    },
+    "./payment-methods": {
+      "types": "./dist/payment-methods/index.d.ts",
+      "import": "./dist/payment-methods/index.js"
+    },
+    "./preferences": {
+      "types": "./dist/preferences.d.ts",
+      "import": "./dist/preferences.js"
+    },
+    "./reference-data": {
+      "types": "./dist/reference-data/index.d.ts",
+      "import": "./dist/reference-data/index.js"
+    },
+    "./recurring-bills": {
+      "types": "./dist/recurring-bills/index.d.ts",
+      "import": "./dist/recurring-bills/index.js"
+    },
+    "./tags": {
+      "types": "./dist/tags/index.d.ts",
+      "import": "./dist/tags/index.js"
+    },
+    "./transactions": {
+      "types": "./dist/transactions/index.d.ts",
+      "import": "./dist/transactions/index.js"
     }
   },
   "files": [

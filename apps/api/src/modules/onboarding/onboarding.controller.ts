@@ -1,8 +1,8 @@
+import { onboardingEndpoints } from '@luraba/contracts/onboarding';
 import { createHandler } from '@/shared/controllers/controller';
 import * as onboardingService from './onboarding.service';
-import { GetOnboardingOptionsResponseSchema } from './onboarding.types';
 
 export const getOptions = createHandler({
-  response: GetOnboardingOptionsResponseSchema,
+  response: onboardingEndpoints.getOptions.response,
   handle: () => onboardingService.getOptions(),
 });

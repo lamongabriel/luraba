@@ -1,34 +1,16 @@
+import type { listIntegrationsQuerySchema } from '@luraba/contracts/integrations';
 import { eq, type SQL, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 import { brandfetchIntegrationsTable } from '@/db/schemas/brandfetch-integrations.schema';
 import {
-  booleanQuerySchema,
   buildIlikeSearch,
   buildOrderBy,
   combineConditions,
-  commaSeparatedArraySchema,
-  createListQuerySchema,
   inArrayIfAny,
   rangeConditions,
-  temporalQuerySchema,
-  validateRange,
 } from '@/shared/list';
-import { integrationProviderSchema, integrationStatusSchema } from './integrations.types';
 
-export const ListIntegrationsRequestQuerySchema = createListQuerySchema(
-  {
-    providers: commaSeparatedArraySchema(integrationProviderSchema),
-    statuses: commaSeparatedArraySchema(integrationStatusSchema),
-    configured: booleanQuerySchema.optional(),
-    lastCheckedAtFrom: temporalQuerySchema.optional(),
-    lastCheckedAtTo: temporalQuerySchema.optional(),
-  },
-  ['configured', 'lastCheckedAt', 'provider', 'status'],
-).superRefine((query, ctx) => {
-  validateRange(query, ctx, 'lastCheckedAtFrom', 'lastCheckedAtTo');
-});
-
-export type ListIntegrationsRequestQuery = z.infer<typeof ListIntegrationsRequestQuerySchema>;
+export type ListIntegrationsQuery = z.output<typeof listIntegrationsQuerySchema>;
 
 export function buildIntegrationRowsCte(householdId: string): SQL {
   return sql`
@@ -49,7 +31,7 @@ export function buildIntegrationRowsCte(householdId: string): SQL {
   `;
 }
 
-export function buildIntegrationsListWhere(query: ListIntegrationsRequestQuery): SQL | undefined {
+export function buildIntegrationsListWhere(query: ListIntegrationsQuery): SQL | undefined {
   return combineConditions(
     buildIlikeSearch(query.search, [sql`provider`, sql`status`]),
     inArrayIfAny(sql`provider`, query.providers),
@@ -59,7 +41,7 @@ export function buildIntegrationsListWhere(query: ListIntegrationsRequestQuery):
   );
 }
 
-export function buildIntegrationsListOrder(query: ListIntegrationsRequestQuery): SQL[] {
+export function buildIntegrationsListOrder(query: ListIntegrationsQuery): SQL[] {
   return buildOrderBy(
     query,
     {

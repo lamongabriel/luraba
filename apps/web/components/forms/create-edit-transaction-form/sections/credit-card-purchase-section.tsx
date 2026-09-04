@@ -1,11 +1,9 @@
 import { CreditCardIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { CreditCard, Merchant } from "@luraba/contracts"
 import type { Control } from "react-hook-form"
-
 import { FormItem } from "@/components/forms/form-item"
 import { Typography } from "@/components/ui/typography"
-import type { CreditCard } from "@/interfaces/credit-card"
-import type { Merchant } from "@/interfaces/merchant"
 
 import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema"
 import { OptionalMerchantField } from "./optional-merchant-field"

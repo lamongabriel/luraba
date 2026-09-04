@@ -1,4 +1,4 @@
-import type { CreditCard, CreditCardCycle } from "@/interfaces/credit-card"
+import type { CreditCard, CreditCardCycle } from "@luraba/contracts"
 
 export function getCreditCardUtilization(card: CreditCard) {
   if (card.creditLimitAmount <= 0) return null

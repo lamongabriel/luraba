@@ -1,84 +1,94 @@
+import { creditCardsEndpoints, getEndpointRouterPath } from '@luraba/contracts';
 import { Router } from 'express';
+import { PERMISSIONS } from '@/config/permissions';
 import { requireAccess } from '@/middleware/access.middleware';
 import * as creditCardsController from './credit-cards.controller';
 
 const router = Router();
 
-router.get('/', requireAccess({ permission: 'creditCards.read' }), creditCardsController.list);
-router.post('/', requireAccess({ permission: 'creditCards.create' }), creditCardsController.create);
 router.get(
-  '/:id',
-  requireAccess({ permission: 'creditCards.read' }),
+  getEndpointRouterPath(creditCardsEndpoints.list),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
+  creditCardsController.list,
+);
+router.post(
+  getEndpointRouterPath(creditCardsEndpoints.create),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_CREATE }),
+  creditCardsController.create,
+);
+router.get(
+  getEndpointRouterPath(creditCardsEndpoints.get),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
   creditCardsController.getById,
 );
 router.patch(
-  '/:id',
-  requireAccess({ permission: 'creditCards.update' }),
+  getEndpointRouterPath(creditCardsEndpoints.update),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_UPDATE }),
   creditCardsController.update,
 );
 router.delete(
-  '/:id',
-  requireAccess({ permission: 'creditCards.delete' }),
+  getEndpointRouterPath(creditCardsEndpoints.delete),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_DELETE }),
   creditCardsController.deleteCreditCard,
 );
 router.get(
-  '/:id/cycles',
-  requireAccess({ permission: 'creditCards.read' }),
+  getEndpointRouterPath(creditCardsEndpoints.cycles),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
   creditCardsController.listCycles,
 );
 router.get(
-  '/:id/cycles/:cycleId',
-  requireAccess({ permission: 'creditCards.read' }),
+  getEndpointRouterPath(creditCardsEndpoints.getCycle),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
   creditCardsController.getCycle,
 );
 router.patch(
-  '/:id/cycles/:cycleId',
-  requireAccess({ permission: 'creditCards.update' }),
+  getEndpointRouterPath(creditCardsEndpoints.updateCycle),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_UPDATE }),
   creditCardsController.updateCycle,
 );
 router.post(
-  '/:id/purchases',
-  requireAccess({ permission: 'transactions.create' }),
+  getEndpointRouterPath(creditCardsEndpoints.createPurchase),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_CREATE }),
   creditCardsController.createPurchase,
 );
 router.get(
-  '/:id/purchases/:purchaseId',
-  requireAccess({ permission: 'creditCards.read' }),
+  getEndpointRouterPath(creditCardsEndpoints.getPurchase),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
   creditCardsController.getPurchase,
 );
 router.patch(
-  '/:id/purchases/:purchaseId',
-  requireAccess({ permission: 'transactions.update' }),
+  getEndpointRouterPath(creditCardsEndpoints.updatePurchase),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_UPDATE }),
   creditCardsController.updatePurchase,
 );
 router.delete(
-  '/:id/purchases/:purchaseId',
-  requireAccess({ permission: 'transactions.delete' }),
+  getEndpointRouterPath(creditCardsEndpoints.deletePurchase),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_DELETE }),
   creditCardsController.deletePurchase,
 );
 router.post(
-  '/:id/payments',
-  requireAccess({ permission: 'transactions.create' }),
+  getEndpointRouterPath(creditCardsEndpoints.createPayment),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_CREATE }),
   creditCardsController.createPayment,
 );
 router.get(
-  '/:id/payments/:paymentId',
-  requireAccess({ permission: 'creditCards.read' }),
+  getEndpointRouterPath(creditCardsEndpoints.getPayment),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
   creditCardsController.getPayment,
 );
 router.patch(
-  '/:id/payments/:paymentId',
-  requireAccess({ permission: 'transactions.update' }),
+  getEndpointRouterPath(creditCardsEndpoints.updatePayment),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_UPDATE }),
   creditCardsController.updatePayment,
 );
 router.delete(
-  '/:id/payments/:paymentId',
-  requireAccess({ permission: 'transactions.delete' }),
+  getEndpointRouterPath(creditCardsEndpoints.deletePayment),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_DELETE }),
   creditCardsController.deletePayment,
 );
 router.get(
-  '/:id/forecast',
-  requireAccess({ permission: 'creditCards.read' }),
+  getEndpointRouterPath(creditCardsEndpoints.forecast),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
   creditCardsController.getForecast,
 );
 

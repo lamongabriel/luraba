@@ -1,27 +1,22 @@
+import type { Integration, UpdateBrandfetchIntegrationInput } from '@luraba/contracts/integrations';
 import type { HouseholdContext } from '@/config/permissions';
 import { now } from '@/shared/lib/date';
 import { decryptIntegrationSecret, encryptIntegrationSecret } from '../integration-crypto';
-import type { IntegrationSummary } from '../integrations.types';
 import { buildIntegrationSummary } from '../integrations.utils';
 import { brandfetchRepository } from './brandfetch.repository';
-import type {
-  DeleteBrandfetchIntegrationResponse,
-  UpdateBrandfetchIntegrationRequestBody,
-  UpdateBrandfetchIntegrationResponse,
-} from './brandfetch.types';
 import { validateBrandfetchClientId } from './brandfetch.utils';
 
 export async function getBrandfetchIntegrationSummary(
   context: HouseholdContext,
-): Promise<IntegrationSummary> {
+): Promise<Integration> {
   const record = await brandfetchRepository.findByHousehold(context);
   return buildIntegrationSummary('brandfetch', record);
 }
 
 export async function updateBrandfetchIntegration(
   context: HouseholdContext,
-  body: UpdateBrandfetchIntegrationRequestBody,
-): Promise<UpdateBrandfetchIntegrationResponse> {
+  body: UpdateBrandfetchIntegrationInput,
+): Promise<Integration> {
   const normalizedClientId = body.clientId.trim();
   await validateBrandfetchClientId(normalizedClientId);
 
@@ -33,9 +28,7 @@ export async function updateBrandfetchIntegration(
   return buildIntegrationSummary('brandfetch', record);
 }
 
-export async function deleteBrandfetchIntegration(
-  context: HouseholdContext,
-): Promise<DeleteBrandfetchIntegrationResponse> {
+export async function deleteBrandfetchIntegration(context: HouseholdContext): Promise<Integration> {
   await brandfetchRepository.deleteByHousehold(context);
   return buildIntegrationSummary('brandfetch');
 }

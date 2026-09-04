@@ -1,8 +1,6 @@
+import type { AccountSummary, CreditCard } from "@luraba/contracts"
 import type { Control } from "react-hook-form"
-
 import { FormItem } from "@/components/forms/form-item"
-import type { AccountSummary } from "@/interfaces/account"
-import type { CreditCard } from "@/interfaces/credit-card"
 
 import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema"
 import { TransactionFormSection } from "./transaction-form-section"

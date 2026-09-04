@@ -1,13 +1,13 @@
 "use client"
 
 import type {
-  CreateCreditCardHttpBody,
-  CreateCreditCardHttpResponse,
-  UpdateCreditCardCycleHttpBody,
-  UpdateCreditCardCycleHttpResponse,
-  UpdateCreditCardHttpBody,
-  UpdateCreditCardHttpResponse,
-} from "@/interfaces/http/credit-cards-http"
+  CreateCreditCardInput,
+  CreateCreditCardResult,
+  UpdateCreditCardCycleInput,
+  UpdateCreditCardCycleResult,
+  UpdateCreditCardInput,
+  UpdateCreditCardResult,
+} from "@luraba/contracts"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
@@ -21,8 +21,8 @@ import {
 } from "@/services/credit-cards.service"
 
 export const createCreditCardMutationDefinition = createAppMutationDefinition<
-  CreateCreditCardHttpResponse,
-  CreateCreditCardHttpBody
+  CreateCreditCardResult,
+  CreateCreditCardInput
 >({
   defaultErrorMessage: "We couldn't create this credit card. Please try again.",
   mutationFn: createCreditCard,
@@ -31,8 +31,8 @@ export const createCreditCardMutationDefinition = createAppMutationDefinition<
 
 export function useCreateCreditCardMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    CreateCreditCardHttpResponse,
-    CreateCreditCardHttpBody,
+    CreateCreditCardResult,
+    CreateCreditCardInput,
     TContext
   >,
 ) {
@@ -41,20 +41,20 @@ export function useCreateCreditCardMutation<TContext = unknown>(
 
 type UpdateCreditCardVariables = {
   creditCardId: string
-  body: UpdateCreditCardHttpBody
+  body: UpdateCreditCardInput
 }
 export const updateCreditCardMutationDefinition = createAppMutationDefinition<
-  UpdateCreditCardHttpResponse,
+  UpdateCreditCardResult,
   UpdateCreditCardVariables
 >({
   defaultErrorMessage: "We couldn't update this credit card. Please try again.",
-  mutationFn: updateCreditCard,
+  mutationFn: ({ creditCardId, body }) => updateCreditCard(creditCardId, body),
   mutationKey: ["credit-cards", "update"],
 })
 
 export function useUpdateCreditCardMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateCreditCardHttpResponse,
+    UpdateCreditCardResult,
     UpdateCreditCardVariables,
     TContext
   >,
@@ -80,22 +80,23 @@ export function useDeleteCreditCardMutation<TContext = unknown>(
 type UpdateCreditCardCycleVariables = {
   creditCardId: string
   cycleId: string
-  body: UpdateCreditCardCycleHttpBody
+  body: UpdateCreditCardCycleInput
 }
 export const updateCreditCardCycleMutationDefinition =
   createAppMutationDefinition<
-    UpdateCreditCardCycleHttpResponse,
+    UpdateCreditCardCycleResult,
     UpdateCreditCardCycleVariables
   >({
     defaultErrorMessage:
       "We couldn't update this billing cycle. Please try again.",
-    mutationFn: updateCreditCardCycle,
+    mutationFn: ({ creditCardId, cycleId, body }) =>
+      updateCreditCardCycle(creditCardId, cycleId, body),
     mutationKey: ["credit-cards", "cycles", "update"],
   })
 
 export function useUpdateCreditCardCycleMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateCreditCardCycleHttpResponse,
+    UpdateCreditCardCycleResult,
     UpdateCreditCardCycleVariables,
     TContext
   >,

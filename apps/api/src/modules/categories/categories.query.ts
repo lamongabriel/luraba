@@ -1,49 +1,19 @@
+import type { listCategoriesQuerySchema } from '@luraba/contracts/categories';
 import { eq, type SQL, sql } from 'drizzle-orm';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { categoriesTable } from '@/db/schemas/categories.schema';
 import {
-  booleanQuerySchema,
   buildIlikeSearch,
   buildOrderBy,
   combineConditions,
-  commaSeparatedArraySchema,
-  createListQuerySchema,
   inArrayIfAny,
   nullabilityCondition,
   rangeConditions,
-  temporalQuerySchema,
-  validateRange,
 } from '@/shared/list';
-import {
-  categoryColorSchema,
-  categoryIconSchema,
-  categoryTypeSchema,
-} from '@/shared/validation/categories';
 
-export const ListCategoriesRequestQuerySchema = createListQuerySchema(
-  {
-    types: commaSeparatedArraySchema(categoryTypeSchema),
-    parentIds: commaSeparatedArraySchema(z.uuid()),
-    hasParent: booleanQuerySchema.optional(),
-    colors: commaSeparatedArraySchema(categoryColorSchema),
-    icons: commaSeparatedArraySchema(categoryIconSchema),
-    createdAtFrom: temporalQuerySchema.optional(),
-    createdAtTo: temporalQuerySchema.optional(),
-    updatedAtFrom: temporalQuerySchema.optional(),
-    updatedAtTo: temporalQuerySchema.optional(),
-  },
-  ['name', 'type', 'createdAt', 'updatedAt'],
-).superRefine((query, ctx) => {
-  validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
-  validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
-});
+export type ListCategoriesQuery = z.output<typeof listCategoriesQuerySchema>;
 
-export type ListCategoriesRequestQuery = z.infer<typeof ListCategoriesRequestQuerySchema>;
-
-export function buildCategoriesListWhere(
-  householdId: string,
-  query: ListCategoriesRequestQuery,
-): SQL {
+export function buildCategoriesListWhere(householdId: string, query: ListCategoriesQuery): SQL {
   return combineConditions(
     eq(categoriesTable.householdId, householdId),
     buildIlikeSearch(query.search, [sql`${categoriesTable.name}`, sql`${categoriesTable.type}`]),
@@ -57,7 +27,7 @@ export function buildCategoriesListWhere(
   ) as SQL;
 }
 
-export function buildCategoriesListOrder(query: ListCategoriesRequestQuery): SQL[] {
+export function buildCategoriesListOrder(query: ListCategoriesQuery): SQL[] {
   return buildOrderBy(
     query,
     {

@@ -2,8 +2,14 @@
 
 import { Store01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type {
+  AccountDetails,
+  AccountType,
+  CreditCard,
+  Merchant,
+  TransactionFeedRow,
+} from "@luraba/contracts"
 import * as React from "react"
-
 import { CreditCardBrandMark } from "@/components/credit-cards/credit-card-brand"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -13,10 +19,6 @@ import {
 } from "@/components/ui/hover-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Typography } from "@/components/ui/typography"
-import type { AccountDetails, AccountType } from "@/interfaces/account"
-import type { CreditCard } from "@/interfaces/credit-card"
-import type { Merchant } from "@/interfaces/merchant"
-import type { TransactionFeedRow } from "@/interfaces/transaction"
 import { formatAccountTypeLabel, getAccountTypeIcon } from "@/lib/accounts"
 import { cn } from "@/lib/utils"
 import { useAccountQuery } from "@/queries/accounts/use-accounts-query"

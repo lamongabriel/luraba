@@ -1,20 +1,12 @@
+import { paymentMethodsEndpoints } from '@luraba/contracts/payment-methods';
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import { withApiMeta } from '@/shared/response';
-import { ListPaymentMethodsRequestQuerySchema } from './payment-methods.query';
 import * as paymentMethodsService from './payment-methods.service';
-import {
-  CreatePaymentMethodRequestBodySchema,
-  CreatePaymentMethodResponseSchema,
-  DeletePaymentMethodRequestParamsSchema,
-  ListPaymentMethodsResponseSchema,
-  UpdatePaymentMethodRequestBodySchema,
-  UpdatePaymentMethodRequestParamsSchema,
-  UpdatePaymentMethodResponseSchema,
-} from './payment-methods.types';
 
 export const list = createHouseholdHandler({
-  query: ListPaymentMethodsRequestQuerySchema,
-  response: ListPaymentMethodsResponseSchema,
+  query: paymentMethodsEndpoints.list.query,
+  response: paymentMethodsEndpoints.list.response,
+  meta: paymentMethodsEndpoints.list.meta,
   handle: async ({ household, query }) => {
     const result = await paymentMethodsService.listPaymentMethods(household, query);
     return withApiMeta(result.data, result.meta);
@@ -22,22 +14,22 @@ export const list = createHouseholdHandler({
 });
 
 export const create = createHouseholdHandler({
-  body: CreatePaymentMethodRequestBodySchema,
-  response: CreatePaymentMethodResponseSchema,
+  body: paymentMethodsEndpoints.create.body,
+  response: paymentMethodsEndpoints.create.response,
   handle: ({ household, body }) => paymentMethodsService.createPaymentMethod(household, body),
   status: 'created',
 });
 
 export const update = createHouseholdHandler({
-  params: UpdatePaymentMethodRequestParamsSchema,
-  body: UpdatePaymentMethodRequestBodySchema,
-  response: UpdatePaymentMethodResponseSchema,
+  params: paymentMethodsEndpoints.update.params,
+  body: paymentMethodsEndpoints.update.body,
+  response: paymentMethodsEndpoints.update.response,
   handle: ({ household, params, body }) =>
     paymentMethodsService.updatePaymentMethod(household, params.id, body),
 });
 
 export const deletePaymentMethod = createHouseholdHandler({
-  params: DeletePaymentMethodRequestParamsSchema,
+  params: paymentMethodsEndpoints.delete.params,
   status: 'no-content',
   handle: ({ household, params }) =>
     paymentMethodsService.deletePaymentMethod(household, params.id),

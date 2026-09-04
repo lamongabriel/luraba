@@ -1,7 +1,7 @@
+import { listCurrenciesQuerySchema } from '@luraba/contracts/currencies';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fxService } from '@/modules/fx/fx.service';
 import { NotFoundError } from '@/shared/errors';
-import { ListCurrenciesRequestQuerySchema } from '../currencies.query';
 import * as currenciesService from '../currencies.service';
 
 describe('currencies service', () => {
@@ -10,9 +10,7 @@ describe('currencies service', () => {
   });
 
   it('lists seeded currencies ordered by code', async () => {
-    const currencies = await currenciesService.listCurrencies(
-      ListCurrenciesRequestQuerySchema.parse({}),
-    );
+    const currencies = await currenciesService.listCurrencies(listCurrenciesQuerySchema.parse({}));
 
     expect(currencies.data.map((currency) => currency.code)).toEqual(
       [...currencies.data.map((currency) => currency.code)].sort(),
@@ -115,7 +113,7 @@ describe('currencies service', () => {
 describe('currencies DB list filters', () => {
   it('combines search, code, precision, sorting, and pagination in SQL', async () => {
     const result = await currenciesService.listCurrencies(
-      ListCurrenciesRequestQuerySchema.parse({
+      listCurrenciesQuerySchema.parse({
         search: 'R$',
         codes: 'BRL,USD',
         precisions: '2',

@@ -1,7 +1,7 @@
+import { listPaymentMethodsQuerySchema } from '@luraba/contracts/payment-methods';
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import { buildPaymentMethodInput } from '@/test/factories';
-import { ListPaymentMethodsRequestQuerySchema } from '../payment-methods.query';
 import * as paymentMethodsService from '../payment-methods.service';
 
 describe('payment methods service', () => {
@@ -10,7 +10,7 @@ describe('payment methods service', () => {
 
     const methods = await paymentMethodsService.listPaymentMethods(
       context.householdContext,
-      ListPaymentMethodsRequestQuerySchema.parse({}),
+      listPaymentMethodsQuerySchema.parse({}),
     );
 
     expect(methods.data).toEqual(
@@ -74,7 +74,7 @@ describe('payment methods service', () => {
 
     const methods = await paymentMethodsService.listPaymentMethods(
       context.householdContext,
-      ListPaymentMethodsRequestQuerySchema.parse({}),
+      listPaymentMethodsQuerySchema.parse({}),
     );
 
     expect(methods.data).toEqual(
@@ -102,7 +102,7 @@ describe('payment methods service', () => {
     );
 
     const methods = await paymentMethodsService.listPaymentMethods(context.householdContext, {
-      ...ListPaymentMethodsRequestQuerySchema.parse({ currencyCode: 'BRL' }),
+      ...listPaymentMethodsQuerySchema.parse({ currencyCode: 'BRL' }),
     });
 
     expect(methods.data).toEqual(
@@ -130,7 +130,7 @@ describe('payment methods service', () => {
     await expect(
       paymentMethodsService.listPaymentMethods(
         context.householdContext,
-        ListPaymentMethodsRequestQuerySchema.parse({ currencyCode: 'ZZZ' }),
+        listPaymentMethodsQuerySchema.parse({ currencyCode: 'ZZZ' }),
       ),
     ).rejects.toThrow(NotFoundError);
   });
@@ -234,7 +234,7 @@ describe('payment methods DB list filters', () => {
 
     const result = await paymentMethodsService.listPaymentMethods(
       context.householdContext,
-      ListPaymentMethodsRequestQuerySchema.parse({
+      listPaymentMethodsQuerySchema.parse({
         search: 'Target',
         codes: 'filter_target_method,cash',
         scopes: 'household',

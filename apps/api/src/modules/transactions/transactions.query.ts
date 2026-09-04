@@ -1,5 +1,10 @@
+import type {
+  listAccountTransactionsQuerySchema,
+  listTransactionsQuerySchema,
+  transactionAnalyticsQuerySchema,
+} from '@luraba/contracts/transactions';
 import { type SQL, sql } from 'drizzle-orm';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { accountsTable } from '@/db/schemas/accounts.schema';
 import { categoriesTable } from '@/db/schemas/categories.schema';
 import { creditCardBillingCyclesTable } from '@/db/schemas/credit-card-billing-cycles.schema';
@@ -14,88 +19,11 @@ import { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
 import { tagsTable } from '@/db/schemas/tags.schema';
 import { transactionTagsTable } from '@/db/schemas/transaction-tags.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
-import {
-  BaseListQuerySchema,
-  booleanQuerySchema,
-  buildIlikeSearch,
-  buildOrderBy,
-  combineConditions,
-  commaSeparatedArraySchema,
-  createListQuerySchema,
-  dateQuerySchema,
-  rangeConditions,
-  validateRange,
-} from '@/shared/list';
-import { currencySchema } from '@/shared/validation/preferences';
-import { transactionFeedOriginTypeSchema } from './transactions.types';
+import { buildIlikeSearch, buildOrderBy, combineConditions, rangeConditions } from '@/shared/list';
 
-const paymentMethodCodeSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .max(32)
-  .transform((value) => value.toLowerCase());
-
-const commonTransactionFilterShape = {
-  dateFrom: dateQuerySchema.optional(),
-  dateTo: dateQuerySchema.optional(),
-  purchaseDateFrom: dateQuerySchema.optional(),
-  purchaseDateTo: dateQuerySchema.optional(),
-  originTypes: commaSeparatedArraySchema(transactionFeedOriginTypeSchema),
-  categoryIds: commaSeparatedArraySchema(z.uuid()),
-  uncategorized: booleanQuerySchema.optional(),
-  merchantIds: commaSeparatedArraySchema(z.uuid()),
-  tagIds: commaSeparatedArraySchema(z.uuid()),
-  paymentMethodCodes: commaSeparatedArraySchema(paymentMethodCodeSchema),
-  currencyCodes: commaSeparatedArraySchema(currencySchema),
-  amountMin: z.coerce.number().int().min(0).optional(),
-  amountMax: z.coerce.number().int().min(0).optional(),
-  includeInBudget: booleanQuerySchema.optional(),
-} as const;
-
-const transactionFilterShape = {
-  ...commonTransactionFilterShape,
-  accountIds: commaSeparatedArraySchema(z.uuid()),
-  creditCardIds: commaSeparatedArraySchema(z.uuid()),
-} as const;
-
-const transactionSortFields = [
-  'amount',
-  'createdAt',
-  'description',
-  'originType',
-  'postedDate',
-  'purchaseDate',
-] as const;
-
-function validateTransactionRanges(query: Record<string, unknown>, ctx: z.RefinementCtx) {
-  validateRange(query, ctx, 'dateFrom', 'dateTo');
-  validateRange(query, ctx, 'purchaseDateFrom', 'purchaseDateTo');
-  validateRange(query, ctx, 'amountMin', 'amountMax');
-}
-
-export const ListTransactionsRequestQuerySchema = createListQuerySchema(
-  transactionFilterShape,
-  transactionSortFields,
-).superRefine(validateTransactionRanges);
-
-export type ListTransactionsRequestQuery = z.infer<typeof ListTransactionsRequestQuerySchema>;
-
-export const TransactionFilterQuerySchema = BaseListQuerySchema.pick({ search: true })
-  .extend(transactionFilterShape)
-  .strict()
-  .superRefine(validateTransactionRanges);
-
-export type TransactionFilterQuery = z.infer<typeof TransactionFilterQuerySchema>;
-
-export const ListAccountTransactionsRequestQuerySchema = createListQuerySchema(
-  commonTransactionFilterShape,
-  transactionSortFields,
-).superRefine(validateTransactionRanges);
-
-export type ListAccountTransactionsRequestQuery = z.infer<
-  typeof ListAccountTransactionsRequestQuerySchema
->;
+export type ListTransactionsQuery = z.output<typeof listTransactionsQuerySchema>;
+export type TransactionFilterQuery = z.output<typeof transactionAnalyticsQuerySchema>;
+export type ListAccountTransactionsQuery = z.output<typeof listAccountTransactionsQuerySchema>;
 
 function sqlArray(values: string[], cast: 'text' | 'uuid'): SQL {
   return sql`array[${sql.join(
@@ -151,7 +79,7 @@ export function buildTransactionFeedWhere(query: TransactionFilterQuery): SQL | 
   );
 }
 
-export function buildTransactionFeedOrder(query: ListTransactionsRequestQuery): SQL[] {
+export function buildTransactionFeedOrder(query: ListTransactionsQuery): SQL[] {
   return buildOrderBy(
     query,
     {

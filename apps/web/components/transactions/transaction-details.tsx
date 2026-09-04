@@ -2,6 +2,11 @@
 
 import { Delete02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type {
+  CreditCardPayment,
+  CreditCardPurchase,
+  TransactionFeedRow,
+} from "@luraba/contracts"
 import * as React from "react"
 import { MoneyValue } from "@/components/finance/money-value"
 import { ComboboxControl } from "@/components/forms/form-combobox"
@@ -20,11 +25,6 @@ import {
 import { useTransactionInlineUpdates } from "@/components/transactions/use-transaction-inline-updates"
 import { Switch } from "@/components/ui/switch"
 import { Typography } from "@/components/ui/typography"
-import type {
-  CreditCardPayment,
-  CreditCardPurchase,
-} from "@/interfaces/credit-card"
-import type { TransactionFeedRow } from "@/interfaces/transaction"
 import { formatShortDate } from "@/lib/format"
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query"
 import { useAuthSessionStore } from "@/stores/auth-session-store"

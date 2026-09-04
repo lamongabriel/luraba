@@ -7,6 +7,11 @@ import {
   Refresh01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type {
+  HouseholdInvite,
+  HouseholdRole,
+  ListHouseholdInvitesQuery,
+} from "@luraba/contracts"
 import { useQueryClient } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
 import * as React from "react"
@@ -30,9 +35,6 @@ import {
 import { UserDisplay } from "@/components/users/user-display"
 import { useApiParams } from "@/hooks/use-api-params"
 import { useDataTable } from "@/hooks/use-data-table"
-import type { HouseholdRole } from "@/interfaces/household"
-import type { HouseholdInvite } from "@/interfaces/household-invite"
-import type { ListHouseholdInvitesHttpQuery } from "@/interfaces/http/household-invites-http"
 import { formatDate } from "@/lib/format"
 import {
   canManageHousehold,
@@ -80,7 +82,7 @@ export function HouseholdInvitationsTable({
   })
   const query = useHouseholdInvitesQuery(
     householdId,
-    params.apiParams as ListHouseholdInvitesHttpQuery,
+    params.apiParams as ListHouseholdInvitesQuery,
   )
   const rolesQuery = useHouseholdRolesQuery()
   const statusesQuery = useHouseholdInviteStatusesQuery()

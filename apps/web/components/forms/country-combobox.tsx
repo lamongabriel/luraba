@@ -1,13 +1,12 @@
 "use client"
 
+import type { LocationCountryOption } from "@luraba/contracts"
 import type * as React from "react"
 import type { Control, FieldValues, Path } from "react-hook-form"
-
 import {
   FormCombobox,
   type FormComboboxOption,
 } from "@/components/forms/form-combobox"
-import type { LocationCountryOption } from "@/interfaces/reference-data"
 
 export function CountryCombobox<TFieldValues extends FieldValues>({
   control,

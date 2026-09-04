@@ -4,7 +4,7 @@ import { db } from '@/db';
 import { tagsTable } from '@/db/schemas/tags.schema';
 import { type DbListPage, getPagination } from '@/shared/list';
 import { HouseholdScopedRepository } from '@/shared/repositories/household-scoped.repository';
-import { buildTagsListOrder, buildTagsListWhere, type ListTagsRequestQuery } from './tags.query';
+import { buildTagsListOrder, buildTagsListWhere, type ListTagsQuery } from './tags.query';
 import type { TagRecord } from './tags.types';
 
 type CreateTagValues = Omit<
@@ -30,10 +30,7 @@ class TagsRepository extends HouseholdScopedRepository<TagRecord, CreateTagValue
     return rows[0];
   }
 
-  async listPage(
-    context: HouseholdContext,
-    query: ListTagsRequestQuery,
-  ): Promise<DbListPage<TagRecord>> {
+  async listPage(context: HouseholdContext, query: ListTagsQuery): Promise<DbListPage<TagRecord>> {
     const where = buildTagsListWhere(context.householdId, query);
     const orderBy = buildTagsListOrder(query);
     const { limit, offset } = getPagination(query);

@@ -1,20 +1,17 @@
+import type {
+  CreatePaymentMethodInput,
+  PaymentMethod,
+  UpdatePaymentMethodInput,
+} from '@luraba/contracts/payment-methods';
 import type { HouseholdContext } from '@/config/permissions';
 import { currenciesRepository } from '@/modules/currencies/currencies.repository';
 import * as transactionsRepository from '@/modules/transactions/transactions.repository';
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
 import { createListMeta, type ListResult } from '@/shared/list';
-import type { ListPaymentMethodsRequestQuery } from './payment-methods.query';
+import type { ListPaymentMethodsQuery } from './payment-methods.query';
 import { paymentMethodsRepository } from './payment-methods.repository';
-import type {
-  CreatePaymentMethodRequestBody,
-  CreatePaymentMethodResponse,
-  ListPaymentMethodsResponse,
-  PaymentMethod,
-  PaymentMethodRecord,
-  UpdatePaymentMethodRequestBody,
-  UpdatePaymentMethodResponse,
-} from './payment-methods.types';
+import type { PaymentMethodRecord } from './payment-methods.types';
 
 function toPaymentMethodCode(value: string): string {
   return value
@@ -53,8 +50,8 @@ async function assertCurrencyExists(currencyCode?: string): Promise<void> {
 
 export async function listPaymentMethods(
   context: HouseholdContext,
-  query: ListPaymentMethodsRequestQuery,
-): Promise<ListResult<ListPaymentMethodsResponse[number]>> {
+  query: ListPaymentMethodsQuery,
+): Promise<ListResult<PaymentMethod>> {
   await assertCurrencyExists(query.currencyCode);
 
   const page = await paymentMethodsRepository.listPage(context, query);
@@ -67,8 +64,8 @@ export async function listPaymentMethods(
 
 export async function createPaymentMethod(
   context: HouseholdContext,
-  dto: CreatePaymentMethodRequestBody,
-): Promise<CreatePaymentMethodResponse> {
+  dto: CreatePaymentMethodInput,
+): Promise<PaymentMethod> {
   await assertCurrencyExists(dto.currencyCode);
 
   const code = toPaymentMethodCode(dto.code ?? dto.name);
@@ -95,8 +92,8 @@ export async function createPaymentMethod(
 export async function updatePaymentMethod(
   context: HouseholdContext,
   paymentMethodId: string,
-  dto: UpdatePaymentMethodRequestBody,
-): Promise<UpdatePaymentMethodResponse> {
+  dto: UpdatePaymentMethodInput,
+): Promise<PaymentMethod> {
   const method = await paymentMethodsRepository.get(paymentMethodId, context);
   if (!method) {
     throw new NotFoundError('Payment method');

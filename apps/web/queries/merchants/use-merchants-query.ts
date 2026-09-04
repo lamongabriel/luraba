@@ -2,26 +2,25 @@
 
 import { useQuery } from "@tanstack/react-query"
 
-import type {
-  GetMerchantHttpResponse,
-  ListMerchantsHttpQuery,
-  ListMerchantsHttpResponse,
-} from "@/interfaces/http/merchants-http"
 import type { AppQueryOptions } from "@/queries/query-options"
 import { getMerchant, listMerchants } from "@/services/merchants.service"
+
+type GetMerchantResponse = Awaited<ReturnType<typeof getMerchant>>
+type ListMerchantsQuery = NonNullable<Parameters<typeof listMerchants>[0]>
+type ListMerchantsResponse = Awaited<ReturnType<typeof listMerchants>>
 
 export const merchantQueryKeys = {
   all: ["merchants"] as const,
   lists: () => [...merchantQueryKeys.all, "list"] as const,
-  list: (query: ListMerchantsHttpQuery = {}) =>
+  list: (query: ListMerchantsQuery = {}) =>
     [...merchantQueryKeys.lists(), query] as const,
   details: () => [...merchantQueryKeys.all, "detail"] as const,
   detail: (id: string) => [...merchantQueryKeys.details(), id] as const,
 }
 
-export function useMerchantQuery<TData = GetMerchantHttpResponse>(
+export function useMerchantQuery<TData = GetMerchantResponse>(
   id: string,
-  options?: AppQueryOptions<GetMerchantHttpResponse, TData>,
+  options?: AppQueryOptions<GetMerchantResponse, TData>,
 ) {
   return useQuery({
     queryKey: merchantQueryKeys.detail(id),
@@ -31,9 +30,9 @@ export function useMerchantQuery<TData = GetMerchantHttpResponse>(
   })
 }
 
-export function useMerchantsQuery<TData = ListMerchantsHttpResponse>(
-  query: ListMerchantsHttpQuery = {},
-  options?: AppQueryOptions<ListMerchantsHttpResponse, TData>,
+export function useMerchantsQuery<TData = ListMerchantsResponse>(
+  query: ListMerchantsQuery = {},
+  options?: AppQueryOptions<ListMerchantsResponse, TData>,
 ) {
   return useQuery({
     queryKey: merchantQueryKeys.list(query),

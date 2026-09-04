@@ -1,3 +1,7 @@
+import {
+  listAccountTransactionsQuerySchema,
+  listTransactionsQuerySchema,
+} from '@luraba/contracts/transactions';
 import { eq } from 'drizzle-orm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/db';
@@ -20,11 +24,7 @@ import {
   buildTagInput,
   createBalanceEntryForAccount,
 } from '@/test/factories';
-import {
-  ListAccountTransactionsRequestQuerySchema,
-  type ListTransactionsRequestQuery,
-  ListTransactionsRequestQuerySchema,
-} from '../transactions.query';
+import type { ListTransactionsQuery } from '../transactions.query';
 import * as transactionsService from '../transactions.service';
 
 describe('transactions service', () => {
@@ -32,10 +32,8 @@ describe('transactions service', () => {
     vi.restoreAllMocks();
   });
 
-  function buildListQuery(
-    overrides: Partial<ListTransactionsRequestQuery> = {},
-  ): ListTransactionsRequestQuery {
-    return ListTransactionsRequestQuerySchema.parse(overrides);
+  function buildListQuery(overrides: Partial<ListTransactionsQuery> = {}): ListTransactionsQuery {
+    return listTransactionsQuerySchema.parse(overrides);
   }
 
   it('creates an expense transaction with multiple tags', async () => {
@@ -138,7 +136,7 @@ describe('transactions service', () => {
     const accountFeed = await accountsService.listAccountTransactions(
       context.householdContext,
       account.id,
-      ListAccountTransactionsRequestQuerySchema.parse({}),
+      listAccountTransactionsQuerySchema.parse({}),
     );
     expect(accountFeed.data).toEqual([
       expect.objectContaining({ id: adjustment.id, originType: 'adjustment' }),

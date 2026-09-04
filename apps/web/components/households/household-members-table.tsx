@@ -2,6 +2,11 @@
 
 import { Delete02Icon, UserGroupIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type {
+  HouseholdMember,
+  HouseholdRole,
+  ListHouseholdMembersQuery,
+} from "@luraba/contracts"
 import { useQueryClient } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
 import * as React from "react"
@@ -26,8 +31,6 @@ import {
 } from "@/components/users/user-display"
 import { useApiParams } from "@/hooks/use-api-params"
 import { useDataTable } from "@/hooks/use-data-table"
-import type { HouseholdMember, HouseholdRole } from "@/interfaces/household"
-import type { ListHouseholdMembersHttpQuery } from "@/interfaces/http/households-http"
 import { formatDate } from "@/lib/format"
 import { canManageHousehold } from "@/lib/households"
 import {
@@ -65,7 +68,7 @@ export function HouseholdMembersTable({
   })
   const query = useHouseholdMembersQuery(
     householdId,
-    params.apiParams as ListHouseholdMembersHttpQuery,
+    params.apiParams as ListHouseholdMembersQuery,
   )
   const rolesQuery = useHouseholdRolesQuery()
   const roles = rolesQuery.data ?? []

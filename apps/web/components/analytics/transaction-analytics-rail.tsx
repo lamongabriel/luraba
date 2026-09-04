@@ -1,16 +1,15 @@
 "use client"
 
+import type {
+  ListResponse,
+  TransactionAnalytics,
+  UpcomingTransaction,
+} from "@luraba/contracts"
 import type { UseQueryResult } from "@tanstack/react-query"
-
 import { ExpenseBreakdownPanel } from "@/components/analytics/expense-breakdown-panel"
 import { UpcomingTransactionsPanel } from "@/components/analytics/upcoming-transactions-panel"
 import { ErrorState } from "@/components/error-state"
 import { Skeleton } from "@/components/ui/skeleton"
-import type { ListResponse } from "@/interfaces/api"
-import type {
-  TransactionAnalytics,
-  UpcomingTransaction,
-} from "@/interfaces/transaction"
 import type { AppClientError } from "@/services/error-client"
 
 type AnalyticsQuery = UseQueryResult<TransactionAnalytics, AppClientError>

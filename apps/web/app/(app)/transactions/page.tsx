@@ -2,8 +2,12 @@
 
 import { Add01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type {
+  TransactionAnalyticsQuery,
+  TransactionFeedRow,
+  UpcomingTransaction,
+} from "@luraba/contracts"
 import * as React from "react"
-
 import { TransactionsError } from "@/app/(app)/transactions/_error"
 import { TransactionsLoading } from "@/app/(app)/transactions/_loading"
 import { TransactionAnalyticsRail } from "@/components/analytics/transaction-analytics-rail"
@@ -17,11 +21,6 @@ import {
   type TransactionSheetMode,
 } from "@/components/transactions/transaction-sheet"
 import { useTransactionParams } from "@/hooks/use-transaction-params"
-import type { TransactionAnalyticsHttpQuery } from "@/interfaces/http/transactions-http"
-import type {
-  TransactionFeedRow,
-  UpcomingTransaction,
-} from "@/interfaces/transaction"
 import {
   useTransactionAnalyticsQuery,
   useUpcomingTransactionsQuery,
@@ -43,7 +42,7 @@ export default function TransactionsPage() {
       sortDirection: _sortDirection,
       ...filters
     } = params.apiParams
-    return filters as TransactionAnalyticsHttpQuery
+    return filters as TransactionAnalyticsQuery
   }, [params.apiParams])
   const upcomingFilters = React.useMemo(() => {
     const {

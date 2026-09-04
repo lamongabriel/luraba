@@ -8,13 +8,13 @@ import {
   PlayIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { RecurringBill } from "@luraba/contracts"
+import { PERMISSIONS } from "@luraba/contracts"
 import { useQueryClient } from "@tanstack/react-query"
 import { endOfMonth, format, startOfMonth } from "date-fns"
 import { useEffect, useState } from "react"
-
 import { EmptyState } from "@/components/empty-state"
 import { ErrorState } from "@/components/error-state"
-import { PERMISSIONS } from "@/components/permissions/permissions.constants"
 import { useCan } from "@/components/permissions/use-can"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -35,7 +35,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { RecurringBill } from "@/interfaces/recurring-bill"
 import {
   useCreateRecurringBillMutation,
   useCreateRecurringOccurrenceMutation,

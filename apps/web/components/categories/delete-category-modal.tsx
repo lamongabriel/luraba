@@ -2,8 +2,8 @@
 
 import { Alert02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { Category } from "@luraba/contracts"
 import * as React from "react"
-
 import {
   Modal,
   ModalBody,
@@ -11,7 +11,6 @@ import {
   ModalFooter,
 } from "@/components/ui/modal"
 import { Typography } from "@/components/ui/typography"
-import type { Category } from "@/interfaces/category"
 import { queryClient } from "@/lib/query-client"
 import { useDeleteCategoryMutation } from "@/mutations/categories/use-category-mutations"
 import { categoryQueryKeys } from "@/queries/categories/use-categories-query"

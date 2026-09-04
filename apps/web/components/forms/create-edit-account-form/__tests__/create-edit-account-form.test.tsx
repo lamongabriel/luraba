@@ -1,3 +1,4 @@
+import type { AccountDetails } from "@luraba/contracts"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
@@ -7,7 +8,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { CreateEditAccountForm } from "@/components/forms/create-edit-account-form/create-edit-account-form"
 import { PERMISSIONS } from "@/components/permissions"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import type { AccountDetails } from "@/interfaces/account"
 import { queryClient } from "@/lib/query-client"
 import { server } from "@/test/msw/server"
 
@@ -54,7 +54,7 @@ function buildAccount(
   overrides: Partial<AccountDetails> = {},
 ): AccountDetails {
   return {
-    id: "account-1",
+    id: "00000000-0000-4000-8000-000000000001",
     balance: 0,
     classification:
       details.kind === "loan" || details.kind === "other_liability"
@@ -131,6 +131,9 @@ describe("CreateEditAccountForm", () => {
         apiList([{ code: "USD", symbol: "$", precision: 2 }]),
       ),
       http.get(`${apiUrl}/accounts`, () => apiList([])),
+      http.get(`${apiUrl}/reference-data/locations`, () =>
+        apiSuccess({ countries: [], timezones: [] }),
+      ),
     )
   })
 

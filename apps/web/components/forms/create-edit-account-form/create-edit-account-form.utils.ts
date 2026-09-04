@@ -1,12 +1,10 @@
 import type {
   AccountDetails,
   CreatableNonCardAccountType,
+  CreateAccountInput,
+  UpdateAccountInput,
   UpdateAccountProfile,
-} from "@/interfaces/account"
-import type {
-  CreateAccountHttpBody,
-  UpdateAccountHttpBody,
-} from "@/interfaces/http/accounts-http"
+} from "@luraba/contracts"
 import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance"
 
 import type { CreateEditAccountFormValues } from "./create-edit-account-form.schema"
@@ -122,7 +120,7 @@ function buildCommonPayload(values: CreateEditAccountFormValues) {
 
 function buildCommonUpdatePayload(
   values: CreateEditAccountFormValues,
-): Omit<UpdateAccountHttpBody, "details"> {
+): Omit<UpdateAccountInput, "details"> {
   return {
     institutionDomain: nullableAccountText(values.institutionDomain),
     institutionName: nullableAccountText(values.institutionName),
@@ -134,7 +132,7 @@ function buildCommonUpdatePayload(
 export function buildCreateAccountPayload(
   values: CreateEditAccountFormValues,
   precision: number,
-): CreateAccountHttpBody {
+): CreateAccountInput {
   const openingBalance = optionalAccountNumber(values.openingBalance)
 
   switch (values.type) {
@@ -290,7 +288,7 @@ export function buildCreateAccountPayload(
 export function buildUpdateAccountPayload(
   values: CreateEditAccountFormValues,
   precision: number,
-): UpdateAccountHttpBody {
+): UpdateAccountInput {
   return {
     ...buildCommonUpdatePayload(values),
     details: buildUpdateAccountDetailsPayload(values, precision),

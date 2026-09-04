@@ -1,53 +1,62 @@
 "use client"
+import {
+  type GetNetWorthAccountsResult,
+  type GetNetWorthCashFlowResult,
+  type GetNetWorthCreditCardsResult,
+  type GetNetWorthHistoryResult,
+  type GetNetWorthIncomeBreakdownResult,
+  type GetNetWorthRecentActivityResult,
+  type GetNetWorthSpendingBreakdownResult,
+  type GetNetWorthSummaryResult,
+  type NetWorthQuery,
+  netWorthEndpoints,
+} from "@luraba/contracts"
+import { requestContract } from "@/services/contract-client.service"
 
-import type {
-  GetNetWorthAccountsHttpResponse,
-  GetNetWorthBreakdownHttpResponse,
-  GetNetWorthCashFlowHttpResponse,
-  GetNetWorthCreditCardsHttpResponse,
-  GetNetWorthHistoryHttpResponse,
-  GetNetWorthRecentActivityHttpResponse,
-  GetNetWorthSummaryHttpResponse,
-  NetWorthHttpQuery,
-} from "@/interfaces/http/networth-http"
-import { getApiData } from "@/services/api-client.service"
-import { serializeHttpQuery } from "@/services/http-query"
-
-function params(query: NetWorthHttpQuery) {
-  return { params: serializeHttpQuery(query) }
+export function getNetWorthSummary(
+  query: NetWorthQuery = {},
+): Promise<GetNetWorthSummaryResult> {
+  return requestContract(netWorthEndpoints.summary, { query })
 }
 
-export const getNetWorthSummary = (query: NetWorthHttpQuery = {}) =>
-  getApiData<GetNetWorthSummaryHttpResponse>("/networth/summary", params(query))
-export const getNetWorthHistory = (query: NetWorthHttpQuery = {}) =>
-  getApiData<GetNetWorthHistoryHttpResponse>("/networth/history", params(query))
-export const getNetWorthAccounts = (query: NetWorthHttpQuery = {}) =>
-  getApiData<GetNetWorthAccountsHttpResponse>(
-    "/networth/accounts",
-    params(query),
-  )
-export const getNetWorthCashFlow = (query: NetWorthHttpQuery = {}) =>
-  getApiData<GetNetWorthCashFlowHttpResponse>(
-    "/networth/cash-flow",
-    params(query),
-  )
-export const getNetWorthSpendingBreakdown = (query: NetWorthHttpQuery = {}) =>
-  getApiData<GetNetWorthBreakdownHttpResponse>(
-    "/networth/spending-breakdown",
-    params(query),
-  )
-export const getNetWorthIncomeBreakdown = (query: NetWorthHttpQuery = {}) =>
-  getApiData<GetNetWorthBreakdownHttpResponse>(
-    "/networth/income-breakdown",
-    params(query),
-  )
-export const getNetWorthRecentActivity = (query: NetWorthHttpQuery = {}) =>
-  getApiData<GetNetWorthRecentActivityHttpResponse>(
-    "/networth/recent-activity",
-    params(query),
-  )
-export const getNetWorthCreditCards = (query: NetWorthHttpQuery = {}) =>
-  getApiData<GetNetWorthCreditCardsHttpResponse>(
-    "/networth/credit-cards",
-    params(query),
-  )
+export function getNetWorthHistory(
+  query: NetWorthQuery = {},
+): Promise<GetNetWorthHistoryResult> {
+  return requestContract(netWorthEndpoints.history, { query })
+}
+
+export function getNetWorthAccounts(
+  query: NetWorthQuery = {},
+): Promise<GetNetWorthAccountsResult> {
+  return requestContract(netWorthEndpoints.accounts, { query })
+}
+
+export function getNetWorthCashFlow(
+  query: NetWorthQuery = {},
+): Promise<GetNetWorthCashFlowResult> {
+  return requestContract(netWorthEndpoints.cashFlow, { query })
+}
+
+export function getNetWorthSpendingBreakdown(
+  query: NetWorthQuery = {},
+): Promise<GetNetWorthSpendingBreakdownResult> {
+  return requestContract(netWorthEndpoints.spendingBreakdown, { query })
+}
+
+export function getNetWorthIncomeBreakdown(
+  query: NetWorthQuery = {},
+): Promise<GetNetWorthIncomeBreakdownResult> {
+  return requestContract(netWorthEndpoints.incomeBreakdown, { query })
+}
+
+export function getNetWorthRecentActivity(
+  query: NetWorthQuery = {},
+): Promise<GetNetWorthRecentActivityResult> {
+  return requestContract(netWorthEndpoints.recentActivity, { query })
+}
+
+export function getNetWorthCreditCards(
+  query: NetWorthQuery = {},
+): Promise<GetNetWorthCreditCardsResult> {
+  return requestContract(netWorthEndpoints.creditCards, { query })
+}

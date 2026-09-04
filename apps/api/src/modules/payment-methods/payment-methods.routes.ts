@@ -1,27 +1,29 @@
+import { getEndpointRouterPath, paymentMethodsEndpoints } from '@luraba/contracts';
 import { Router } from 'express';
+import { PERMISSIONS } from '@/config/permissions';
 import { requireAccess } from '@/middleware/access.middleware';
 import * as paymentMethodsController from './payment-methods.controller';
 
 const router = Router();
 
 router.get(
-  '/',
-  requireAccess({ permission: 'paymentMethods.read' }),
+  getEndpointRouterPath(paymentMethodsEndpoints.list),
+  requireAccess({ permission: PERMISSIONS.PAYMENT_METHODS_READ }),
   paymentMethodsController.list,
 );
 router.post(
-  '/',
-  requireAccess({ permission: 'paymentMethods.create' }),
+  getEndpointRouterPath(paymentMethodsEndpoints.create),
+  requireAccess({ permission: PERMISSIONS.PAYMENT_METHODS_CREATE }),
   paymentMethodsController.create,
 );
 router.patch(
-  '/:id',
-  requireAccess({ permission: 'paymentMethods.update' }),
+  getEndpointRouterPath(paymentMethodsEndpoints.update),
+  requireAccess({ permission: PERMISSIONS.PAYMENT_METHODS_UPDATE }),
   paymentMethodsController.update,
 );
 router.delete(
-  '/:id',
-  requireAccess({ permission: 'paymentMethods.delete' }),
+  getEndpointRouterPath(paymentMethodsEndpoints.delete),
+  requireAccess({ permission: PERMISSIONS.PAYMENT_METHODS_DELETE }),
   paymentMethodsController.deletePaymentMethod,
 );
 

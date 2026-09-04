@@ -1,10 +1,5 @@
 "use client"
 
-import type {
-  DeleteBrandfetchIntegrationHttpResponse,
-  UpdateBrandfetchIntegrationHttpBody,
-  UpdateBrandfetchIntegrationHttpResponse,
-} from "@/interfaces/http/integrations-http"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
@@ -15,10 +10,20 @@ import {
   updateBrandfetchIntegration,
 } from "@/services/integrations.service"
 
+type UpdateBrandfetchIntegrationBody = Parameters<
+  typeof updateBrandfetchIntegration
+>[0]
+type UpdateBrandfetchIntegrationResponse = Awaited<
+  ReturnType<typeof updateBrandfetchIntegration>
+>
+type DeleteBrandfetchIntegrationResponse = Awaited<
+  ReturnType<typeof deleteBrandfetchIntegration>
+>
+
 export const updateBrandfetchIntegrationMutationDefinition =
   createAppMutationDefinition<
-    UpdateBrandfetchIntegrationHttpResponse,
-    UpdateBrandfetchIntegrationHttpBody
+    UpdateBrandfetchIntegrationResponse,
+    UpdateBrandfetchIntegrationBody
   >({
     defaultErrorMessage:
       "We couldn't connect Brandfetch. Please verify the client ID and try again.",
@@ -27,8 +32,8 @@ export const updateBrandfetchIntegrationMutationDefinition =
   })
 export function useUpdateBrandfetchIntegrationMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateBrandfetchIntegrationHttpResponse,
-    UpdateBrandfetchIntegrationHttpBody,
+    UpdateBrandfetchIntegrationResponse,
+    UpdateBrandfetchIntegrationBody,
     TContext
   >,
 ) {
@@ -36,14 +41,14 @@ export function useUpdateBrandfetchIntegrationMutation<TContext = unknown>(
 }
 
 export const deleteBrandfetchIntegrationMutationDefinition =
-  createAppMutationDefinition<DeleteBrandfetchIntegrationHttpResponse, void>({
+  createAppMutationDefinition<DeleteBrandfetchIntegrationResponse, void>({
     defaultErrorMessage: "We couldn't disconnect Brandfetch. Please try again.",
     mutationFn: deleteBrandfetchIntegration,
     mutationKey: ["integrations", "brandfetch", "delete"],
   })
 export function useDeleteBrandfetchIntegrationMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    DeleteBrandfetchIntegrationHttpResponse,
+    DeleteBrandfetchIntegrationResponse,
     void,
     TContext
   >,

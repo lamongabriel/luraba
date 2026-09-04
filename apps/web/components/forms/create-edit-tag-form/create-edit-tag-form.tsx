@@ -1,10 +1,10 @@
 "use client"
 
+import type { Tag } from "@luraba/contracts"
 import { FormItem } from "@/components/forms/form-item"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
 import { Typography } from "@/components/ui/typography"
-import type { Tag } from "@/interfaces/tag"
 import { TAG_COLOR_PRESETS, TAG_ICONS } from "@/lib/tags"
 
 import { useCreateEditTagForm } from "./use-create-edit-tag-form"

@@ -2,7 +2,7 @@
 
 import { Alert02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import type { TransactionFeedRow } from "@luraba/contracts"
 import {
   Modal,
   ModalBody,
@@ -10,7 +10,6 @@ import {
   ModalFooter,
 } from "@/components/ui/modal"
 import { Typography } from "@/components/ui/typography"
-import type { TransactionFeedRow } from "@/interfaces/transaction"
 import { queryClient } from "@/lib/query-client"
 import {
   useDeleteCreditCardPaymentMutation,

@@ -1,9 +1,13 @@
 "use client"
-
+import {
+  type GetOnboardingOptionsResult,
+  onboardingEndpoints,
+} from "@luraba/contracts"
 import { lurabaApiPassiveClient } from "@/api/luraba-api"
-import type { GetOnboardingOptionsHttpResponse } from "@/interfaces/http/onboarding-http"
-import { getApiData } from "@/services/api-client.service"
+import { requestContract } from "@/services/contract-client.service"
 
-export function getOnboardingOptions(): Promise<GetOnboardingOptionsHttpResponse> {
-  return getApiData("/onboarding/options", undefined, lurabaApiPassiveClient)
+export function getOnboardingOptions(): Promise<GetOnboardingOptionsResult> {
+  return requestContract(onboardingEndpoints.getOptions, {
+    client: lurabaApiPassiveClient,
+  })
 }

@@ -1,15 +1,16 @@
 "use client"
 
+import type {
+  AccountSummary,
+  Category,
+  CreditCard,
+  Currency,
+  Merchant,
+  PaymentMethod,
+  Tag,
+} from "@luraba/contracts"
+import { MAX_PER_PAGE } from "@luraba/contracts"
 import { useQuery } from "@tanstack/react-query"
-
-import type { AccountSummary } from "@/interfaces/account"
-import { MAX_PER_PAGE } from "@/interfaces/api"
-import type { Category } from "@/interfaces/category"
-import type { CreditCard } from "@/interfaces/credit-card"
-import type { Currency } from "@/interfaces/currency"
-import type { Merchant } from "@/interfaces/merchant"
-import type { PaymentMethod } from "@/interfaces/payment-method"
-import type { Tag } from "@/interfaces/tag"
 import type { AppQueryOptions } from "@/queries/query-options"
 import { listAccounts } from "@/services/accounts.service"
 import { listCategories } from "@/services/categories.service"

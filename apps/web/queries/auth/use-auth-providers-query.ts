@@ -2,17 +2,18 @@
 
 import { useQuery } from "@tanstack/react-query"
 
-import type { GetAuthProvidersHttpResponse } from "@/interfaces/http/auth-http"
 import type { AppQueryOptions } from "@/queries/query-options"
 import { getAuthProviders } from "@/services/auth.service"
+
+type AuthProvidersResponse = Awaited<ReturnType<typeof getAuthProviders>>
 
 export const authQueryKeys = {
   providers: ["auth", "providers"] as const,
   session: ["auth", "session"] as const,
 }
 
-export function useAuthProvidersQuery<TData = GetAuthProvidersHttpResponse>(
-  options?: AppQueryOptions<GetAuthProvidersHttpResponse, TData>,
+export function useAuthProvidersQuery<TData = AuthProvidersResponse>(
+  options?: AppQueryOptions<AuthProvidersResponse, TData>,
 ) {
   return useQuery({
     queryKey: authQueryKeys.providers,

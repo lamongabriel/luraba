@@ -1,3 +1,5 @@
+import { listAccountsQuerySchema } from '@luraba/contracts/accounts';
+import { listAccountTransactionsQuerySchema } from '@luraba/contracts/transactions';
 import { eq } from 'drizzle-orm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/db';
@@ -18,10 +20,6 @@ import {
   buildCreditCardInput,
   createBalanceEntryForAccount,
 } from '@/test/factories';
-import {
-  ListAccountsRequestQuerySchema,
-  ListAccountTransactionsRequestQuerySchema,
-} from '../accounts.query';
 import * as accountsService from '../accounts.service';
 
 describe('accounts service', () => {
@@ -155,7 +153,7 @@ describe('accounts service', () => {
 
     const accounts = await accountsService.listAccounts(
       context.householdContext,
-      ListAccountsRequestQuerySchema.parse({}),
+      listAccountsQuerySchema.parse({}),
     );
 
     expect(accounts.data).toHaveLength(2);
@@ -229,7 +227,7 @@ describe('accounts service', () => {
     const transactions = await accountsService.listAccountTransactions(
       context.householdContext,
       checking.id,
-      ListAccountTransactionsRequestQuerySchema.parse({}),
+      listAccountTransactionsQuerySchema.parse({}),
     );
 
     expect(transactions.data).toEqual([
@@ -267,7 +265,7 @@ describe('accounts service', () => {
       accountsService.listAccountTransactions(
         context.householdContext,
         creditCard.ledgerAccountId,
-        ListAccountTransactionsRequestQuerySchema.parse({}),
+        listAccountTransactionsQuerySchema.parse({}),
       ),
     ).rejects.toThrow(NotFoundError);
   });
@@ -397,7 +395,7 @@ describe('accounts DB list filters', () => {
 
     const result = await accountsService.listAccounts(
       context.householdContext,
-      ListAccountsRequestQuerySchema.parse({
+      listAccountsQuerySchema.parse({
         search: 'Target',
         types: 'cash,loan',
         classifications: 'asset',
@@ -452,7 +450,7 @@ describe('accounts DB list filters', () => {
 
     const result = await accountsService.listAccounts(
       context.householdContext,
-      ListAccountsRequestQuerySchema.parse({
+      listAccountsQuerySchema.parse({
         search: 'Corolla',
         subtypes: 'car',
         sort: 'subtype',

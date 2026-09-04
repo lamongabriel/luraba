@@ -1,11 +1,5 @@
 "use client"
 
-import type {
-  CreateTagHttpBody,
-  CreateTagHttpResponse,
-  UpdateTagHttpBody,
-  UpdateTagHttpResponse,
-} from "@/interfaces/http/tags-http"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
@@ -13,36 +7,39 @@ import {
 } from "@/mutations/app-mutation"
 import { createTag, deleteTag, updateTag } from "@/services/tags.service"
 
+type CreateTagBody = Parameters<typeof createTag>[0]
+type CreateTagResponse = Awaited<ReturnType<typeof createTag>>
+type UpdateTagVariables = {
+  id: string
+  body: Parameters<typeof updateTag>[1]
+}
+type UpdateTagResponse = Awaited<ReturnType<typeof updateTag>>
+
 export const createTagMutationDefinition = createAppMutationDefinition<
-  CreateTagHttpResponse,
-  CreateTagHttpBody
+  CreateTagResponse,
+  CreateTagBody
 >({
   defaultErrorMessage: "We couldn't create this tag. Please try again.",
   mutationFn: createTag,
   mutationKey: ["tags", "create"],
 })
 export function useCreateTagMutation<TContext = unknown>(
-  options?: UseAppMutationOptions<
-    CreateTagHttpResponse,
-    CreateTagHttpBody,
-    TContext
-  >,
+  options?: UseAppMutationOptions<CreateTagResponse, CreateTagBody, TContext>,
 ) {
   return useAppMutation(createTagMutationDefinition, options)
 }
 
-type UpdateTagVariables = { id: string; body: UpdateTagHttpBody }
 export const updateTagMutationDefinition = createAppMutationDefinition<
-  UpdateTagHttpResponse,
+  UpdateTagResponse,
   UpdateTagVariables
 >({
   defaultErrorMessage: "We couldn't update this tag. Please try again.",
-  mutationFn: updateTag,
+  mutationFn: ({ id, body }) => updateTag(id, body),
   mutationKey: ["tags", "update"],
 })
 export function useUpdateTagMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateTagHttpResponse,
+    UpdateTagResponse,
     UpdateTagVariables,
     TContext
   >,

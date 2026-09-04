@@ -1,84 +1,88 @@
 "use client"
-
-import type {
-  CreateRecurringBillHttpBody,
-  CreateRecurringBillHttpResponse,
-  ListRecurringBillsHttpQuery,
-  ListRecurringBillsHttpResponse,
-  ListRecurringOccurrencesHttpQuery,
-  ListRecurringOccurrencesHttpResponse,
-  UpdateRecurringBillHttpBody,
-  UpdateRecurringBillHttpResponse,
-} from "@/interfaces/http/recurring-bills-http"
 import {
-  deleteApiResource,
-  getApiData,
-  getApiList,
-  patchApiData,
-  postApiData,
-  postApiResource,
-} from "@/services/api-client.service"
-import { serializeHttpQuery } from "@/services/http-query"
+  type CreateRecurringBillInput,
+  type CreateRecurringBillResult,
+  type CreateRecurringOccurrenceResult,
+  type DeleteRecurringBillResult,
+  type GetRecurringBillResult,
+  type ListRecurringBillsQuery,
+  type ListRecurringBillsResult,
+  type ListRecurringOccurrencesQuery,
+  type ListRecurringOccurrencesResult,
+  type RescheduleOccurrenceInput,
+  type RescheduleOccurrenceResult,
+  recurringBillsEndpoints,
+  type SkipOccurrenceResult,
+  type UpdateRecurringBillInput,
+  type UpdateRecurringBillResult,
+} from "@luraba/contracts"
+import { requestContract } from "@/services/contract-client.service"
 
 export function listRecurringBills(
-  query: ListRecurringBillsHttpQuery = {},
-): Promise<ListRecurringBillsHttpResponse> {
-  return getApiList("/recurring-bills", { params: serializeHttpQuery(query) })
+  query: ListRecurringBillsQuery = {},
+): Promise<ListRecurringBillsResult> {
+  return requestContract(recurringBillsEndpoints.list, { query })
 }
+
 export function createRecurringBill(
-  body: CreateRecurringBillHttpBody,
-): Promise<CreateRecurringBillHttpResponse> {
-  return postApiData("/recurring-bills", body)
+  input: CreateRecurringBillInput,
+): Promise<CreateRecurringBillResult> {
+  return requestContract(recurringBillsEndpoints.create, { body: input })
 }
-export function updateRecurringBill({
-  id,
-  body,
-}: {
-  id: string
-  body: UpdateRecurringBillHttpBody
-}): Promise<UpdateRecurringBillHttpResponse> {
-  return patchApiData(`/recurring-bills/${id}`, body)
+
+export function getRecurringBill(id: string): Promise<GetRecurringBillResult> {
+  return requestContract(recurringBillsEndpoints.get, { params: { id } })
 }
-export function deleteRecurringBill(id: string): Promise<void> {
-  return deleteApiResource(`/recurring-bills/${id}`)
-}
-export function listRecurringOccurrences(
+
+export function updateRecurringBill(
   id: string,
-  query: ListRecurringOccurrencesHttpQuery,
-): Promise<ListRecurringOccurrencesHttpResponse> {
-  return getApiData(`/recurring-bills/${id}/occurrences`, {
-    params: serializeHttpQuery(query),
+  input: UpdateRecurringBillInput,
+): Promise<UpdateRecurringBillResult> {
+  return requestContract(recurringBillsEndpoints.update, {
+    params: { id },
+    body: input,
   })
 }
-export function skipRecurringOccurrence({
-  id,
-  date,
-}: {
-  id: string
-  date: string
-}): Promise<void> {
-  return postApiResource(`/recurring-bills/${id}/occurrences/${date}/skip`)
+
+export function deleteRecurringBill(
+  id: string,
+): Promise<DeleteRecurringBillResult> {
+  return requestContract(recurringBillsEndpoints.delete, { params: { id } })
 }
-export function rescheduleRecurringOccurrence({
-  id,
-  date,
-  nextDate,
-}: {
-  id: string
-  date: string
-  nextDate: string
-}): Promise<void> {
-  return postApiResource(
-    `/recurring-bills/${id}/occurrences/${date}/reschedule`,
-    { date: nextDate },
-  )
+
+export function listRecurringOccurrences(
+  id: string,
+  query: ListRecurringOccurrencesQuery,
+): Promise<ListRecurringOccurrencesResult> {
+  return requestContract(recurringBillsEndpoints.occurrences, {
+    params: { id },
+    query,
+  })
 }
-export function createRecurringOccurrence({
-  id,
-  date,
-}: {
-  id: string
-  date: string
-}) {
-  return postApiData(`/recurring-bills/${id}/occurrences/${date}/create`)
+
+export function skipRecurringOccurrence(
+  id: string,
+  date: string,
+): Promise<SkipOccurrenceResult> {
+  return requestContract(recurringBillsEndpoints.skip, { params: { id, date } })
+}
+
+export function rescheduleRecurringOccurrence(
+  id: string,
+  date: string,
+  input: RescheduleOccurrenceInput,
+): Promise<RescheduleOccurrenceResult> {
+  return requestContract(recurringBillsEndpoints.reschedule, {
+    params: { id, date },
+    body: input,
+  })
+}
+
+export function createRecurringOccurrence(
+  id: string,
+  date: string,
+): Promise<CreateRecurringOccurrenceResult> {
+  return requestContract(recurringBillsEndpoints.createOccurrence, {
+    params: { id, date },
+  })
 }

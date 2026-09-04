@@ -1,10 +1,10 @@
 "use client"
 
+import type { AccountDetails } from "@luraba/contracts"
 import { FormItem } from "@/components/forms/form-item"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
 import { Typography } from "@/components/ui/typography"
-import type { AccountDetails } from "@/interfaces/account"
 import { CreateAccountStartingBalanceSection } from "./sections/create-account-starting-balance-section"
 import { CreateEditAccountCommonSection } from "./sections/create-edit-account-common-section"
 import { CreateEditAccountDetailsSection } from "./sections/create-edit-account-details-section"

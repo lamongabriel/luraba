@@ -1,27 +1,19 @@
+import { categoriesEndpoints } from '@luraba/contracts/categories';
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import { withApiMeta } from '@/shared/response';
-import { ListCategoriesRequestQuerySchema } from './categories.query';
 import * as categoriesService from './categories.service';
-import {
-  CreateCategoryRequestBodySchema,
-  CreateCategoryResponseSchema,
-  DeleteCategoryRequestParamsSchema,
-  ListCategoriesResponseSchema,
-  UpdateCategoryRequestBodySchema,
-  UpdateCategoryRequestParamsSchema,
-  UpdateCategoryResponseSchema,
-} from './categories.types';
 
 export const create = createHouseholdHandler({
-  body: CreateCategoryRequestBodySchema,
-  response: CreateCategoryResponseSchema,
+  body: categoriesEndpoints.create.body,
+  response: categoriesEndpoints.create.response,
   handle: ({ household, body }) => categoriesService.createCategory(household, body),
   status: 'created',
 });
 
 export const list = createHouseholdHandler({
-  query: ListCategoriesRequestQuerySchema,
-  response: ListCategoriesResponseSchema,
+  query: categoriesEndpoints.list.query,
+  response: categoriesEndpoints.list.response,
+  meta: categoriesEndpoints.list.meta,
   handle: async ({ household, query }) => {
     const result = await categoriesService.listCategories(household, query);
     return withApiMeta(result.data, result.meta);
@@ -29,15 +21,15 @@ export const list = createHouseholdHandler({
 });
 
 export const update = createHouseholdHandler({
-  params: UpdateCategoryRequestParamsSchema,
-  body: UpdateCategoryRequestBodySchema,
-  response: UpdateCategoryResponseSchema,
+  params: categoriesEndpoints.update.params,
+  body: categoriesEndpoints.update.body,
+  response: categoriesEndpoints.update.response,
   handle: ({ household, params, body }) =>
     categoriesService.updateCategory(household, params.id, body),
 });
 
 export const deleteCategory = createHouseholdHandler({
-  params: DeleteCategoryRequestParamsSchema,
+  params: categoriesEndpoints.delete.params,
   status: 'no-content',
   handle: ({ household, params }) => categoriesService.deleteCategory(household, params.id),
 });

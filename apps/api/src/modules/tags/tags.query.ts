@@ -1,41 +1,19 @@
+import type { listTagsQuerySchema } from '@luraba/contracts/tags';
 import { eq, type SQL, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 import { tagsTable } from '@/db/schemas/tags.schema';
 import {
-  booleanQuerySchema,
   buildIlikeSearch,
   buildOrderBy,
   combineConditions,
-  commaSeparatedArraySchema,
-  createListQuerySchema,
   inArrayIfAny,
   nullabilityCondition,
   rangeConditions,
-  temporalQuerySchema,
-  validateRange,
 } from '@/shared/list';
-import { hexColorSchema, iconNameSchema } from '@/shared/validation/categories';
 
-export const ListTagsRequestQuerySchema = createListQuerySchema(
-  {
-    colors: commaSeparatedArraySchema(hexColorSchema),
-    icons: commaSeparatedArraySchema(iconNameSchema),
-    hasColor: booleanQuerySchema.optional(),
-    hasIcon: booleanQuerySchema.optional(),
-    createdAtFrom: temporalQuerySchema.optional(),
-    createdAtTo: temporalQuerySchema.optional(),
-    updatedAtFrom: temporalQuerySchema.optional(),
-    updatedAtTo: temporalQuerySchema.optional(),
-  },
-  ['name', 'color', 'icon', 'createdAt', 'updatedAt'],
-).superRefine((query, ctx) => {
-  validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
-  validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
-});
+export type ListTagsQuery = z.output<typeof listTagsQuerySchema>;
 
-export type ListTagsRequestQuery = z.infer<typeof ListTagsRequestQuerySchema>;
-
-export function buildTagsListWhere(householdId: string, query: ListTagsRequestQuery): SQL {
+export function buildTagsListWhere(householdId: string, query: ListTagsQuery): SQL {
   return combineConditions(
     eq(tagsTable.householdId, householdId),
     buildIlikeSearch(query.search, [
@@ -52,7 +30,7 @@ export function buildTagsListWhere(householdId: string, query: ListTagsRequestQu
   ) as SQL;
 }
 
-export function buildTagsListOrder(query: ListTagsRequestQuery): SQL[] {
+export function buildTagsListOrder(query: ListTagsQuery): SQL[] {
   return buildOrderBy(
     query,
     {

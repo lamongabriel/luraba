@@ -7,11 +7,16 @@ import {
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type {
+  CreateHouseholdInput,
+  HouseholdSummary,
+  ListHouseholdsQuery,
+} from "@luraba/contracts"
+import { PERMISSIONS } from "@luraba/contracts"
 import { useQueryClient } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
 import Link from "next/link"
 import * as React from "react"
-
 import { DataTable } from "@/components/data-table/data-table"
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header"
 import { EmptyState } from "@/components/empty-state"
@@ -20,17 +25,11 @@ import { PageHeader } from "@/components/finance/page-header"
 import { HouseholdSettingsSheet } from "@/components/households/household-settings-sheet"
 import { HouseholdTableToolbar } from "@/components/households/household-table-toolbar"
 import { PageReveal } from "@/components/motion/reveal"
-import { PERMISSIONS } from "@/components/permissions/permissions.constants"
 import { useCan } from "@/components/permissions/use-can"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useApiParams } from "@/hooks/use-api-params"
 import { useDataTable } from "@/hooks/use-data-table"
-import type { HouseholdSummary } from "@/interfaces/household"
-import type {
-  CreateHouseholdHttpBody,
-  ListHouseholdsHttpQuery,
-} from "@/interfaces/http/households-http"
 import { formatDate } from "@/lib/format"
 import { getHouseholdRoleLabel } from "@/lib/households"
 import { formatTimezoneLabel } from "@/lib/timezones"
@@ -87,7 +86,7 @@ export function HouseholdsDirectory() {
     },
     filters: { roles: { type: "stringArray" } },
   })
-  const query = useHouseholdsQuery(params.apiParams as ListHouseholdsHttpQuery)
+  const query = useHouseholdsQuery(params.apiParams as ListHouseholdsQuery)
   const rolesQuery = useHouseholdRolesQuery()
   const roles = rolesQuery.data ?? []
   const [settingsOpen, setSettingsOpen] = React.useState(false)
@@ -219,7 +218,7 @@ export function HouseholdsDirectory() {
     getRowId: (row) => row.id,
   })
 
-  function saveHousehold(body: CreateHouseholdHttpBody) {
+  function saveHousehold(body: CreateHouseholdInput) {
     if (settingsMode === "create") createMutation.mutate(body)
     else if (editing) updateMutation.mutate({ householdId: editing.id, body })
   }

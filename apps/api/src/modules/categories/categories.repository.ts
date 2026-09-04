@@ -7,7 +7,7 @@ import { HouseholdScopedRepository } from '@/shared/repositories/household-scope
 import {
   buildCategoriesListOrder,
   buildCategoriesListWhere,
-  type ListCategoriesRequestQuery,
+  type ListCategoriesQuery,
 } from './categories.query';
 import type { CategoryRecord } from './categories.types';
 
@@ -38,7 +38,7 @@ class CategoriesRepository extends HouseholdScopedRepository<CategoryRecord, Cre
 
   async listPage(
     context: HouseholdContext,
-    query: ListCategoriesRequestQuery,
+    query: ListCategoriesQuery,
   ): Promise<DbListPage<CategoryRecord>> {
     const where = buildCategoriesListWhere(context.householdId, query);
     const orderBy = buildCategoriesListOrder(query);

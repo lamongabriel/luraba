@@ -1,53 +1,19 @@
+import { householdsEndpoints } from '@luraba/contracts/households';
 import { createAuthenticatedHandler } from '@/shared/controllers/authenticated.controller';
 import { createHandler } from '@/shared/controllers/controller';
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import { withApiMeta } from '@/shared/response';
 import {
-  ListHouseholdInviteStatusesResponseSchema,
-  ListHouseholdPermissionsResponseSchema,
-  ListHouseholdRolesResponseSchema,
   listHouseholdInviteStatuses,
   listHouseholdPermissions,
   listHouseholdRoles,
 } from './households.access';
-import {
-  ListHouseholdInvitesRequestQuerySchema,
-  ListHouseholdMembersRequestQuerySchema,
-  ListHouseholdsRequestQuerySchema,
-  ListMyHouseholdInvitesRequestQuerySchema,
-} from './households.query';
 import * as householdsService from './households.service';
-import {
-  AcceptHouseholdInviteResponseSchema,
-  CreateHouseholdInviteRequestBodySchema,
-  CreateHouseholdInviteRequestParamsSchema,
-  CreateHouseholdInviteResponseSchema,
-  CreateHouseholdRequestBodySchema,
-  CreateHouseholdResponseSchema,
-  HouseholdInviteIdRequestParamsSchema,
-  HouseholdInviteLinkResponseSchema,
-  HouseholdInviteTokenRequestBodySchema,
-  ListHouseholdInvitesRequestParamsSchema,
-  ListHouseholdInvitesResponseSchema,
-  ListHouseholdMembersRequestParamsSchema,
-  ListHouseholdMembersResponseSchema,
-  ListHouseholdsResponseSchema,
-  ListMyHouseholdInvitesResponseSchema,
-  ManageHouseholdInviteRequestParamsSchema,
-  PreviewHouseholdInviteRequestQuerySchema,
-  PreviewHouseholdInviteResponseSchema,
-  RemoveHouseholdMemberRequestParamsSchema,
-  UpdateHouseholdMemberRequestBodySchema,
-  UpdateHouseholdMemberRequestParamsSchema,
-  UpdateHouseholdMemberResponseSchema,
-  UpdateHouseholdRequestBodySchema,
-  UpdateHouseholdRequestParamsSchema,
-  UpdateHouseholdResponseSchema,
-} from './households.types';
 
 export const list = createAuthenticatedHandler({
-  query: ListHouseholdsRequestQuerySchema,
-  response: ListHouseholdsResponseSchema,
+  query: householdsEndpoints.list.query,
+  response: householdsEndpoints.list.response,
+  meta: householdsEndpoints.list.meta,
   handle: async ({ user, query }) => {
     const result = await householdsService.listHouseholds(user.id, query);
     return withApiMeta(result.data, result.meta);
@@ -55,51 +21,52 @@ export const list = createAuthenticatedHandler({
 });
 
 export const create = createAuthenticatedHandler({
-  body: CreateHouseholdRequestBodySchema,
-  response: CreateHouseholdResponseSchema,
+  body: householdsEndpoints.create.body,
+  response: householdsEndpoints.create.response,
   handle: ({ user, body }) => householdsService.createHousehold(user.id, body),
   status: 'created',
 });
 
 export const listRoles = createAuthenticatedHandler({
-  response: ListHouseholdRolesResponseSchema,
+  response: householdsEndpoints.roles.response,
   handle: async () => listHouseholdRoles(),
 });
 
 export const listPermissions = createAuthenticatedHandler({
-  response: ListHouseholdPermissionsResponseSchema,
+  response: householdsEndpoints.permissions.response,
   handle: async () => listHouseholdPermissions(),
 });
 
 export const listInviteStatuses = createAuthenticatedHandler({
-  response: ListHouseholdInviteStatusesResponseSchema,
+  response: householdsEndpoints.inviteStatuses.response,
   handle: async () => listHouseholdInviteStatuses(),
 });
 
 export const get = createHouseholdHandler({
-  params: UpdateHouseholdRequestParamsSchema,
-  response: UpdateHouseholdResponseSchema,
+  params: householdsEndpoints.get.params,
+  response: householdsEndpoints.get.response,
   handle: ({ household, params }) => householdsService.getHousehold(household, params.id),
 });
 
 export const remove = createHouseholdHandler({
-  params: UpdateHouseholdRequestParamsSchema,
+  params: householdsEndpoints.delete.params,
   handle: ({ household, params }) => householdsService.deleteHousehold(household, params.id),
   status: 'no-content',
 });
 
 export const update = createHouseholdHandler({
-  params: UpdateHouseholdRequestParamsSchema,
-  body: UpdateHouseholdRequestBodySchema,
-  response: UpdateHouseholdResponseSchema,
+  params: householdsEndpoints.update.params,
+  body: householdsEndpoints.update.body,
+  response: householdsEndpoints.update.response,
   handle: ({ household, params, body }) =>
     householdsService.updateHousehold(household, params.id, body),
 });
 
 export const listMembers = createHouseholdHandler({
-  params: ListHouseholdMembersRequestParamsSchema,
-  query: ListHouseholdMembersRequestQuerySchema,
-  response: ListHouseholdMembersResponseSchema,
+  params: householdsEndpoints.members.params,
+  query: householdsEndpoints.members.query,
+  response: householdsEndpoints.members.response,
+  meta: householdsEndpoints.members.meta,
   handle: async ({ household, params, query }) => {
     const result = await householdsService.listMembers(household, params.id, query);
     return withApiMeta(result.data, result.meta);
@@ -107,33 +74,34 @@ export const listMembers = createHouseholdHandler({
 });
 
 export const updateMember = createHouseholdHandler({
-  params: UpdateHouseholdMemberRequestParamsSchema,
-  body: UpdateHouseholdMemberRequestBodySchema,
-  response: UpdateHouseholdMemberResponseSchema,
+  params: householdsEndpoints.updateMember.params,
+  body: householdsEndpoints.updateMember.body,
+  response: householdsEndpoints.updateMember.response,
   handle: ({ household, params, body }) =>
     householdsService.updateMemberRole(household, params.id, params.userId, body),
 });
 
 export const removeMember = createHouseholdHandler({
-  params: RemoveHouseholdMemberRequestParamsSchema,
+  params: householdsEndpoints.removeMember.params,
   handle: ({ household, params }) =>
     householdsService.removeMember(household, params.id, params.userId),
   status: 'no-content',
 });
 
 export const createInvite = createHouseholdHandler({
-  params: CreateHouseholdInviteRequestParamsSchema,
-  body: CreateHouseholdInviteRequestBodySchema,
-  response: CreateHouseholdInviteResponseSchema,
+  params: householdsEndpoints.createInvite.params,
+  body: householdsEndpoints.createInvite.body,
+  response: householdsEndpoints.createInvite.response,
   handle: ({ household, params, body }) =>
     householdsService.createInvite(household, params.id, body),
   status: 'created',
 });
 
 export const listHouseholdInvites = createHouseholdHandler({
-  params: ListHouseholdInvitesRequestParamsSchema,
-  query: ListHouseholdInvitesRequestQuerySchema,
-  response: ListHouseholdInvitesResponseSchema,
+  params: householdsEndpoints.invites.params,
+  query: householdsEndpoints.invites.query,
+  response: householdsEndpoints.invites.response,
+  meta: householdsEndpoints.invites.meta,
   handle: async ({ household, params, query }) => {
     const result = await householdsService.listHouseholdInvites(household, params.id, query);
     return withApiMeta(result.data, result.meta);
@@ -141,8 +109,9 @@ export const listHouseholdInvites = createHouseholdHandler({
 });
 
 export const listMyInvites = createAuthenticatedHandler({
-  query: ListMyHouseholdInvitesRequestQuerySchema,
-  response: ListMyHouseholdInvitesResponseSchema,
+  query: householdsEndpoints.myInvites.query,
+  response: householdsEndpoints.myInvites.response,
+  meta: householdsEndpoints.myInvites.meta,
   handle: async ({ user, query }) => {
     const result = await householdsService.listMyPendingInvites(user.email, query);
     return withApiMeta(result.data, result.meta);
@@ -150,52 +119,52 @@ export const listMyInvites = createAuthenticatedHandler({
 });
 
 export const previewInvite = createHandler({
-  query: PreviewHouseholdInviteRequestQuerySchema,
-  response: PreviewHouseholdInviteResponseSchema,
+  query: householdsEndpoints.previewInvite.query,
+  response: householdsEndpoints.previewInvite.response,
   handle: ({ query }) => householdsService.previewInvite(query.token),
 });
 
 export const acceptInvite = createAuthenticatedHandler({
-  body: HouseholdInviteTokenRequestBodySchema,
-  response: AcceptHouseholdInviteResponseSchema,
+  body: householdsEndpoints.acceptInvite.body,
+  response: householdsEndpoints.acceptInvite.response,
   handle: ({ user, body }) => householdsService.acceptInvite(user.id, user.email, body.token),
 });
 
 export const rejectInvite = createAuthenticatedHandler({
-  body: HouseholdInviteTokenRequestBodySchema,
+  body: householdsEndpoints.rejectInvite.body,
   handle: ({ user, body }) => householdsService.rejectInvite(user.email, body.token),
   status: 'no-content',
 });
 
 export const acceptInviteById = createAuthenticatedHandler({
-  params: HouseholdInviteIdRequestParamsSchema,
-  response: AcceptHouseholdInviteResponseSchema,
+  params: householdsEndpoints.acceptInviteById.params,
+  response: householdsEndpoints.acceptInviteById.response,
   handle: ({ user, params }) =>
     householdsService.acceptInviteById(user.id, user.email, params.inviteId),
 });
 
 export const rejectInviteById = createAuthenticatedHandler({
-  params: HouseholdInviteIdRequestParamsSchema,
+  params: householdsEndpoints.rejectInviteById.params,
   handle: ({ user, params }) => householdsService.rejectInviteById(user.email, params.inviteId),
   status: 'no-content',
 });
 
 export const refreshInviteLink = createHouseholdHandler({
-  params: ManageHouseholdInviteRequestParamsSchema,
-  response: HouseholdInviteLinkResponseSchema,
+  params: householdsEndpoints.refreshInviteLink.params,
+  response: householdsEndpoints.refreshInviteLink.response,
   handle: ({ household, params }) =>
     householdsService.refreshInviteLink(household, params.id, params.inviteId),
 });
 
 export const resendInvite = createHouseholdHandler({
-  params: ManageHouseholdInviteRequestParamsSchema,
+  params: householdsEndpoints.resendInvite.params,
   handle: ({ household, params }) =>
     householdsService.resendInvite(household, params.id, params.inviteId),
   status: 'no-content',
 });
 
 export const cancelInvite = createHouseholdHandler({
-  params: ManageHouseholdInviteRequestParamsSchema,
+  params: householdsEndpoints.cancelInvite.params,
   handle: ({ household, params }) =>
     householdsService.cancelInvite(household, params.id, params.inviteId),
   status: 'no-content',

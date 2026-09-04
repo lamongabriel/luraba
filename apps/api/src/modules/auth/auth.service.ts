@@ -1,3 +1,11 @@
+import type {
+  AuthHousehold,
+  AuthProviders,
+  AuthSession,
+  SessionUser,
+  UpdateUserPreferencesInput,
+  UserPreferences,
+} from '@luraba/contracts/auth';
 import { env } from '@/config/env';
 import { getPermissionsForRole } from '@/config/permissions';
 import { currenciesRepository } from '@/modules/currencies/currencies.repository';
@@ -5,15 +13,7 @@ import { householdsRepository } from '@/modules/households/households.repository
 import { NotFoundError } from '@/shared/errors';
 import { logger } from '@/shared/logger';
 import { authRepository } from './auth.repository';
-import type {
-  AuthHousehold,
-  AuthProviders,
-  AuthSession,
-  SessionUser,
-  UpdateMyPreferencesRequestBody,
-  UserPreferences,
-  UserRecord,
-} from './auth.types';
+import type { UserRecord } from './auth.types';
 
 function mapUserRecordToSessionUser(user: UserRecord): SessionUser {
   return {
@@ -29,8 +29,8 @@ function mapUserRecordToSessionUser(user: UserRecord): SessionUser {
       preferredPeriod: user.preferredPeriod,
       preferredTheme: user.preferredTheme,
     },
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
+    createdAt: user.createdAt.toISOString(),
+    updatedAt: user.updatedAt.toISOString(),
   };
 }
 
@@ -101,7 +101,7 @@ export async function getMyPreferences(userId: string): Promise<UserPreferences>
 
 export async function updateMyPreferences(
   userId: string,
-  dto: UpdateMyPreferencesRequestBody,
+  dto: UpdateUserPreferencesInput,
 ): Promise<UserPreferences> {
   await findRequiredUser(userId);
 

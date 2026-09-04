@@ -1,3 +1,4 @@
+import type { CreateAccountProfile, UpdateAccountProfile } from '@luraba/contracts/accounts';
 import { toDisplayedBalance } from '@luraba/domain';
 import { ACCOUNT_TYPE_TO_CLASSIFICATION } from '@/config/accounts';
 import type { HouseholdContext } from '@/config/permissions';
@@ -10,7 +11,10 @@ import {
   normalizeBrandDomain,
 } from '@/modules/integrations/brandfetch/brandfetch.utils';
 import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
-import type { ListTransactionsRequestQuery } from '@/modules/transactions/transactions.query';
+import type {
+  ListAccountTransactionsQuery,
+  ListTransactionsQuery,
+} from '@/modules/transactions/transactions.query';
 import * as transactionsRepository from '@/modules/transactions/transactions.repository';
 import {
   createBalanceAdjustmentInTransaction,
@@ -20,16 +24,12 @@ import type { TransactionFeedRow } from '@/modules/transactions/transactions.typ
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
 import { formatISODateTime, getTodayInTimezone, parseISODate } from '@/shared/lib/date';
 import { createListMeta, type ListResult } from '@/shared/list';
-import type { CreateAccountProfile, UpdateAccountProfile } from './accounts.profiles';
 import {
   createAccountProfile,
   getAccountProfile,
   updateAccountProfile,
 } from './accounts.profiles.repository';
-import type {
-  ListAccountsRequestQuery,
-  ListAccountTransactionsRequestQuery,
-} from './accounts.query';
+import type { ListAccountsQuery } from './accounts.query';
 import { accountsRepository } from './accounts.repository';
 import type {
   Account,
@@ -38,8 +38,8 @@ import type {
   AccountRecord,
   AccountSummary,
   AccountType,
-  CreateAccountRequestBody,
-  UpdateAccountRequestBody,
+  CreateAccountValues,
+  UpdateAccountValues,
 } from './accounts.types';
 
 function mapAccountRecord(account: AccountRecord): Account {
@@ -189,7 +189,7 @@ export async function updateAccountRecordInTransaction(
 
 export async function createAccount(
   context: HouseholdContext,
-  dto: CreateAccountRequestBody,
+  dto: CreateAccountValues,
 ): Promise<AccountDetails> {
   const currency = await currenciesRepository.findByCode(dto.currencyCode);
   if (!currency) throw new NotFoundError('Currency');
@@ -243,7 +243,7 @@ export async function createAccount(
 
 export async function listAccounts(
   context: HouseholdContext,
-  query: ListAccountsRequestQuery,
+  query: ListAccountsQuery,
 ): Promise<ListResult<AccountSummary>> {
   const page = await accountsRepository.listPage(context, query);
 
@@ -280,7 +280,7 @@ export async function getAccountDetails(
 export async function listAccountTransactions(
   context: HouseholdContext,
   accountId: string,
-  query: ListAccountTransactionsRequestQuery,
+  query: ListAccountTransactionsQuery,
 ): Promise<ListResult<TransactionFeedRow>> {
   const account = await accountsRepository.get(accountId, context);
   if (!account) throw new NotFoundError('Account');
@@ -288,7 +288,7 @@ export async function listAccountTransactions(
     throw new NotFoundError('Account');
   }
 
-  const transactionsQuery: ListTransactionsRequestQuery = {
+  const transactionsQuery: ListTransactionsQuery = {
     ...query,
     accountIds: [account.id],
     creditCardIds: [],
@@ -300,7 +300,7 @@ export async function listAccountTransactions(
 export async function updateAccount(
   context: HouseholdContext,
   accountId: string,
-  dto: UpdateAccountRequestBody,
+  dto: UpdateAccountValues,
 ): Promise<AccountDetails> {
   const account = await accountsRepository.get(accountId, context);
   if (!account) {

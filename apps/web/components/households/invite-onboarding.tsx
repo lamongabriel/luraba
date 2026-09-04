@@ -1,10 +1,13 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import type {
+  HouseholdInvitePreview,
+  HouseholdInviteStatus,
+} from "@luraba/contracts"
 import { useRouter } from "next/navigation"
 import * as React from "react"
 import { useForm } from "react-hook-form"
-
 import { AuthPageHeader } from "@/components/auth/auth-page-header"
 import { AuthFormFrame } from "@/components/forms/auth/auth-form-frame"
 import {
@@ -19,10 +22,6 @@ import { FormItem } from "@/components/forms/form-item"
 import { Button } from "@/components/ui/button"
 import { Loader } from "@/components/ui/loader"
 import { Typography } from "@/components/ui/typography"
-import type {
-  HouseholdInvitePreview,
-  HouseholdInviteStatus,
-} from "@/interfaces/household-invite"
 import { logout } from "@/lib/auth/logout"
 import { formatDate } from "@/lib/format"
 import { queryClient } from "@/lib/query-client"

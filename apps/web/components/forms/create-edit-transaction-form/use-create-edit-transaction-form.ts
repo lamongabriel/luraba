@@ -1,10 +1,9 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { TransactionFeedRow } from "@luraba/contracts"
 import * as React from "react"
 import { useForm, useWatch } from "react-hook-form"
-
-import type { TransactionFeedRow } from "@/interfaces/transaction"
 import { majorToMinorUnits } from "@/lib/finance"
 import { queryClient } from "@/lib/query-client"
 import {

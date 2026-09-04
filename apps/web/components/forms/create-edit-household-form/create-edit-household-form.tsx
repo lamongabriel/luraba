@@ -1,5 +1,7 @@
 "use client"
 
+import type { CreateHouseholdInput, HouseholdSummary } from "@luraba/contracts"
+import { MAX_PER_PAGE } from "@luraba/contracts"
 import { CountryCombobox } from "@/components/forms/country-combobox"
 import { FieldInfoHint } from "@/components/forms/field-info-hint"
 import type { FormComboboxOption } from "@/components/forms/form-combobox"
@@ -7,9 +9,6 @@ import { FormItem } from "@/components/forms/form-item"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
 import { Typography } from "@/components/ui/typography"
-import { MAX_PER_PAGE } from "@/interfaces/api"
-import type { HouseholdSummary } from "@/interfaces/household"
-import type { CreateHouseholdHttpBody } from "@/interfaces/http/households-http"
 import { createTimezoneOptions } from "@/lib/timezones"
 import { useCurrenciesQuery } from "@/queries/currencies/use-currencies-query"
 import { useLocationOptionsQuery } from "@/queries/reference-data/use-location-options-query"
@@ -28,7 +27,7 @@ export function CreateEditHouseholdForm({
   mode: "create" | "edit"
   open: boolean
   onCancel: () => void
-  onSubmit: (body: CreateHouseholdHttpBody) => void
+  onSubmit: (body: CreateHouseholdInput) => void
   isPending?: boolean
 }) {
   const currenciesQuery = useCurrenciesQuery({ perPage: MAX_PER_PAGE })

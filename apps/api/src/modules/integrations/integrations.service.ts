@@ -1,14 +1,14 @@
+import type { Integration } from '@luraba/contracts/integrations';
 import type { HouseholdContext } from '@/config/permissions';
 import { formatISODateTime } from '@/shared/lib/date';
 import { createListMeta, type ListResult } from '@/shared/list';
-import type { ListIntegrationsRequestQuery } from './integrations.query';
+import type { ListIntegrationsQuery } from './integrations.query';
 import * as integrationsRepository from './integrations.repository';
-import type { IntegrationSummary } from './integrations.types';
 
 export async function listIntegrations(
   context: HouseholdContext,
-  query: ListIntegrationsRequestQuery,
-): Promise<ListResult<IntegrationSummary>> {
+  query: ListIntegrationsQuery,
+): Promise<ListResult<Integration>> {
   const page = await integrationsRepository.listPage(context.householdId, query);
 
   return {

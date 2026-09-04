@@ -1,34 +1,19 @@
+import { accountsEndpoints } from '@luraba/contracts';
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import { withApiMeta } from '@/shared/response';
-import {
-  ListAccountsRequestQuerySchema,
-  ListAccountTransactionsRequestQuerySchema,
-} from './accounts.query';
 import * as accountsService from './accounts.service';
-import {
-  CreateAccountRequestBodySchema,
-  CreateAccountResponseSchema,
-  DeleteAccountRequestParamsSchema,
-  GetAccountDetailsRequestParamsSchema,
-  GetAccountDetailsResponseSchema,
-  ListAccountsResponseSchema,
-  ListAccountTransactionsRequestParamsSchema,
-  ListAccountTransactionsResponseSchema,
-  UpdateAccountRequestBodySchema,
-  UpdateAccountRequestParamsSchema,
-  UpdateAccountResponseSchema,
-} from './accounts.types';
 
 export const create = createHouseholdHandler({
-  body: CreateAccountRequestBodySchema,
-  response: CreateAccountResponseSchema,
+  body: accountsEndpoints.create.body,
+  response: accountsEndpoints.create.response,
   handle: ({ household, body }) => accountsService.createAccount(household, body),
   status: 'created',
 });
 
 export const list = createHouseholdHandler({
-  query: ListAccountsRequestQuerySchema,
-  response: ListAccountsResponseSchema,
+  query: accountsEndpoints.list.query,
+  response: accountsEndpoints.list.response,
+  meta: accountsEndpoints.list.meta,
   handle: async ({ household, query }) => {
     const result = await accountsService.listAccounts(household, query);
     return withApiMeta(result.data, result.meta);
@@ -36,15 +21,16 @@ export const list = createHouseholdHandler({
 });
 
 export const details = createHouseholdHandler({
-  params: GetAccountDetailsRequestParamsSchema,
-  response: GetAccountDetailsResponseSchema,
+  params: accountsEndpoints.get.params,
+  response: accountsEndpoints.get.response,
   handle: ({ household, params }) => accountsService.getAccountDetails(household, params.id),
 });
 
 export const listTransactions = createHouseholdHandler({
-  params: ListAccountTransactionsRequestParamsSchema,
-  query: ListAccountTransactionsRequestQuerySchema,
-  response: ListAccountTransactionsResponseSchema,
+  params: accountsEndpoints.transactions.params,
+  query: accountsEndpoints.transactions.query,
+  response: accountsEndpoints.transactions.response,
+  meta: accountsEndpoints.transactions.meta,
   handle: async ({ household, params, query }) => {
     const result = await accountsService.listAccountTransactions(household, params.id, query);
     return withApiMeta(result.data, result.meta);
@@ -52,15 +38,15 @@ export const listTransactions = createHouseholdHandler({
 });
 
 export const update = createHouseholdHandler({
-  params: UpdateAccountRequestParamsSchema,
-  body: UpdateAccountRequestBodySchema,
-  response: UpdateAccountResponseSchema,
+  params: accountsEndpoints.update.params,
+  body: accountsEndpoints.update.body,
+  response: accountsEndpoints.update.response,
   handle: ({ household, params, body }) =>
     accountsService.updateAccount(household, params.id, body),
 });
 
 export const deleteAccount = createHouseholdHandler({
-  params: DeleteAccountRequestParamsSchema,
+  params: accountsEndpoints.delete.params,
   status: 'no-content',
   handle: ({ household, params }) => accountsService.deleteAccount(household, params.id),
 });

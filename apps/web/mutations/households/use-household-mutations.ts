@@ -1,19 +1,25 @@
 "use client"
 
 import type {
-  AcceptHouseholdInviteHttpResponse,
-  CreateHouseholdInviteHttpBody,
-  CreateHouseholdInviteHttpResponse,
-  RefreshHouseholdInviteLinkHttpResponse,
-} from "@/interfaces/http/household-invites-http"
-import type {
-  CreateHouseholdHttpBody,
-  CreateHouseholdHttpResponse,
-  UpdateHouseholdHttpBody,
-  UpdateHouseholdHttpResponse,
-  UpdateHouseholdMemberHttpBody,
-  UpdateHouseholdMemberHttpResponse,
-} from "@/interfaces/http/households-http"
+  AcceptHouseholdInviteByIdResult,
+  AcceptHouseholdInviteInput,
+  AcceptHouseholdInviteResult,
+  CancelHouseholdInviteResult,
+  CreateHouseholdInput,
+  CreateHouseholdInviteInput,
+  CreateHouseholdInviteResult,
+  CreateHouseholdResult,
+  DeleteHouseholdResult,
+  RefreshHouseholdInviteLinkResult,
+  RejectHouseholdInviteByIdResult,
+  RejectHouseholdInviteResult,
+  RemoveHouseholdMemberResult,
+  ResendHouseholdInviteResult,
+  UpdateHouseholdInput,
+  UpdateHouseholdMemberInput,
+  UpdateHouseholdMemberResult,
+  UpdateHouseholdResult,
+} from "@luraba/contracts"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
@@ -36,8 +42,8 @@ import {
 } from "@/services/households.service"
 
 export const createHouseholdMutationDefinition = createAppMutationDefinition<
-  CreateHouseholdHttpResponse,
-  CreateHouseholdHttpBody
+  CreateHouseholdResult,
+  CreateHouseholdInput
 >({
   defaultErrorMessage: "We couldn't create this household. Please try again.",
   mutationFn: createHousehold,
@@ -46,8 +52,8 @@ export const createHouseholdMutationDefinition = createAppMutationDefinition<
 
 export function useCreateHouseholdMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    CreateHouseholdHttpResponse,
-    CreateHouseholdHttpBody,
+    CreateHouseholdResult,
+    CreateHouseholdInput,
     TContext
   >,
 ) {
@@ -55,7 +61,7 @@ export function useCreateHouseholdMutation<TContext = unknown>(
 }
 
 export const deleteHouseholdMutationDefinition = createAppMutationDefinition<
-  void,
+  DeleteHouseholdResult,
   string
 >({
   defaultErrorMessage: "We couldn't delete this household. Please try again.",
@@ -64,27 +70,27 @@ export const deleteHouseholdMutationDefinition = createAppMutationDefinition<
 })
 
 export function useDeleteHouseholdMutation<TContext = unknown>(
-  options?: UseAppMutationOptions<void, string, TContext>,
+  options?: UseAppMutationOptions<DeleteHouseholdResult, string, TContext>,
 ) {
   return useAppMutation(deleteHouseholdMutationDefinition, options)
 }
 
 type UpdateHouseholdVariables = {
   householdId: string
-  body: UpdateHouseholdHttpBody
+  body: UpdateHouseholdInput
 }
 export const updateHouseholdMutationDefinition = createAppMutationDefinition<
-  UpdateHouseholdHttpResponse,
+  UpdateHouseholdResult,
   UpdateHouseholdVariables
 >({
   defaultErrorMessage: "We couldn't update this household. Please try again.",
-  mutationFn: updateHousehold,
+  mutationFn: ({ householdId, body }) => updateHousehold(householdId, body),
   mutationKey: ["households", "update"],
 })
 
 export function useUpdateHouseholdMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateHouseholdHttpResponse,
+    UpdateHouseholdResult,
     UpdateHouseholdVariables,
     TContext
   >,
@@ -95,22 +101,23 @@ export function useUpdateHouseholdMutation<TContext = unknown>(
 type UpdateMemberVariables = {
   householdId: string
   userId: string
-  body: UpdateHouseholdMemberHttpBody
+  body: UpdateHouseholdMemberInput
 }
 export const updateHouseholdMemberMutationDefinition =
   createAppMutationDefinition<
-    UpdateHouseholdMemberHttpResponse,
+    UpdateHouseholdMemberResult,
     UpdateMemberVariables
   >({
     defaultErrorMessage:
       "We couldn't update this household member. Please try again.",
-    mutationFn: updateHouseholdMember,
+    mutationFn: ({ householdId, userId, body }) =>
+      updateHouseholdMember(householdId, userId, body),
     mutationKey: ["households", "members", "update"],
   })
 
 export function useUpdateHouseholdMemberMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateHouseholdMemberHttpResponse,
+    UpdateHouseholdMemberResult,
     UpdateMemberVariables,
     TContext
   >,
@@ -120,37 +127,46 @@ export function useUpdateHouseholdMemberMutation<TContext = unknown>(
 
 type HouseholdMemberVariables = { householdId: string; userId: string }
 export const removeHouseholdMemberMutationDefinition =
-  createAppMutationDefinition<void, HouseholdMemberVariables>({
+  createAppMutationDefinition<
+    RemoveHouseholdMemberResult,
+    HouseholdMemberVariables
+  >({
     defaultErrorMessage:
       "We couldn't remove this household member. Please try again.",
-    mutationFn: removeHouseholdMember,
+    mutationFn: ({ householdId, userId }) =>
+      removeHouseholdMember(householdId, userId),
     mutationKey: ["households", "members", "remove"],
   })
 
 export function useRemoveHouseholdMemberMutation<TContext = unknown>(
-  options?: UseAppMutationOptions<void, HouseholdMemberVariables, TContext>,
+  options?: UseAppMutationOptions<
+    RemoveHouseholdMemberResult,
+    HouseholdMemberVariables,
+    TContext
+  >,
 ) {
   return useAppMutation(removeHouseholdMemberMutationDefinition, options)
 }
 
 type CreateInviteVariables = {
   householdId: string
-  body: CreateHouseholdInviteHttpBody
+  body: CreateHouseholdInviteInput
 }
 export const createHouseholdInviteMutationDefinition =
   createAppMutationDefinition<
-    CreateHouseholdInviteHttpResponse,
+    CreateHouseholdInviteResult,
     CreateInviteVariables
   >({
     defaultErrorMessage:
       "We couldn't create this invitation. Please try again.",
-    mutationFn: createHouseholdInvite,
+    mutationFn: ({ householdId, body }) =>
+      createHouseholdInvite(householdId, body),
     mutationKey: ["households", "invites", "create"],
   })
 
 export function useCreateHouseholdInviteMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    CreateHouseholdInviteHttpResponse,
+    CreateHouseholdInviteResult,
     CreateInviteVariables,
     TContext
   >,
@@ -161,18 +177,19 @@ export function useCreateHouseholdInviteMutation<TContext = unknown>(
 type InviteVariables = { householdId: string; inviteId: string }
 export const refreshHouseholdInviteLinkMutationDefinition =
   createAppMutationDefinition<
-    RefreshHouseholdInviteLinkHttpResponse,
+    RefreshHouseholdInviteLinkResult,
     InviteVariables
   >({
     defaultErrorMessage:
       "We couldn't refresh this invitation link. Please try again.",
-    mutationFn: refreshHouseholdInviteLink,
+    mutationFn: ({ householdId, inviteId }) =>
+      refreshHouseholdInviteLink(householdId, inviteId),
     mutationKey: ["households", "invites", "refresh-link"],
   })
 
 export function useRefreshHouseholdInviteLinkMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    RefreshHouseholdInviteLinkHttpResponse,
+    RefreshHouseholdInviteLinkResult,
     InviteVariables,
     TContext
   >,
@@ -181,48 +198,59 @@ export function useRefreshHouseholdInviteLinkMutation<TContext = unknown>(
 }
 
 export const resendHouseholdInviteMutationDefinition =
-  createAppMutationDefinition<void, InviteVariables>({
+  createAppMutationDefinition<ResendHouseholdInviteResult, InviteVariables>({
     defaultErrorMessage:
       "We couldn't resend this invitation. Please try again.",
-    mutationFn: resendHouseholdInvite,
+    mutationFn: ({ householdId, inviteId }) =>
+      resendHouseholdInvite(householdId, inviteId),
     mutationKey: ["households", "invites", "resend"],
   })
 
 export function useResendHouseholdInviteMutation<TContext = unknown>(
-  options?: UseAppMutationOptions<void, InviteVariables, TContext>,
+  options?: UseAppMutationOptions<
+    ResendHouseholdInviteResult,
+    InviteVariables,
+    TContext
+  >,
 ) {
   return useAppMutation(resendHouseholdInviteMutationDefinition, options)
 }
 
 export const cancelHouseholdInviteMutationDefinition =
-  createAppMutationDefinition<void, InviteVariables>({
+  createAppMutationDefinition<CancelHouseholdInviteResult, InviteVariables>({
     defaultErrorMessage:
       "We couldn't cancel this invitation. Please try again.",
-    mutationFn: cancelHouseholdInvite,
+    mutationFn: ({ householdId, inviteId }) =>
+      cancelHouseholdInvite(householdId, inviteId),
     mutationKey: ["households", "invites", "cancel"],
   })
 
 export function useCancelHouseholdInviteMutation<TContext = unknown>(
-  options?: UseAppMutationOptions<void, InviteVariables, TContext>,
+  options?: UseAppMutationOptions<
+    CancelHouseholdInviteResult,
+    InviteVariables,
+    TContext
+  >,
 ) {
   return useAppMutation(cancelHouseholdInviteMutationDefinition, options)
 }
 
-type InviteTokenVariables = { token: string }
+type InviteTokenVariables = AcceptHouseholdInviteInput
 export const acceptHouseholdInviteMutationDefinition =
   createAppMutationDefinition<
-    AcceptHouseholdInviteHttpResponse,
+    AcceptHouseholdInviteResult,
     InviteTokenVariables
   >({
     defaultErrorMessage:
       "We couldn't accept this invitation. Please try again.",
-    mutationFn: ({ token }) => acceptHouseholdInvite(token),
+    mutationFn: ({ token }) =>
+      acceptHouseholdInvite({ token } satisfies AcceptHouseholdInviteInput),
     mutationKey: ["households", "invites", "accept"],
   })
 
 export function useAcceptHouseholdInviteMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    AcceptHouseholdInviteHttpResponse,
+    AcceptHouseholdInviteResult,
     InviteTokenVariables,
     TContext
   >,
@@ -231,7 +259,7 @@ export function useAcceptHouseholdInviteMutation<TContext = unknown>(
 }
 
 export const acceptHouseholdInviteByIdMutationDefinition =
-  createAppMutationDefinition<AcceptHouseholdInviteHttpResponse, string>({
+  createAppMutationDefinition<AcceptHouseholdInviteByIdResult, string>({
     defaultErrorMessage:
       "We couldn't accept this invitation. Please try again.",
     mutationFn: acceptHouseholdInviteById,
@@ -240,7 +268,7 @@ export const acceptHouseholdInviteByIdMutationDefinition =
 
 export function useAcceptHouseholdInviteByIdMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    AcceptHouseholdInviteHttpResponse,
+    AcceptHouseholdInviteByIdResult,
     string,
     TContext
   >,
@@ -249,7 +277,7 @@ export function useAcceptHouseholdInviteByIdMutation<TContext = unknown>(
 }
 
 export const rejectHouseholdInviteByIdMutationDefinition =
-  createAppMutationDefinition<void, string>({
+  createAppMutationDefinition<RejectHouseholdInviteByIdResult, string>({
     defaultErrorMessage:
       "We couldn't decline this invitation. Please try again.",
     mutationFn: rejectHouseholdInviteById,
@@ -257,21 +285,33 @@ export const rejectHouseholdInviteByIdMutationDefinition =
   })
 
 export function useRejectHouseholdInviteByIdMutation<TContext = unknown>(
-  options?: UseAppMutationOptions<void, string, TContext>,
+  options?: UseAppMutationOptions<
+    RejectHouseholdInviteByIdResult,
+    string,
+    TContext
+  >,
 ) {
   return useAppMutation(rejectHouseholdInviteByIdMutationDefinition, options)
 }
 
 export const rejectHouseholdInviteMutationDefinition =
-  createAppMutationDefinition<void, InviteTokenVariables>({
+  createAppMutationDefinition<
+    RejectHouseholdInviteResult,
+    InviteTokenVariables
+  >({
     defaultErrorMessage:
       "We couldn't reject this invitation. Please try again.",
-    mutationFn: ({ token }) => rejectHouseholdInvite(token),
+    mutationFn: ({ token }) =>
+      rejectHouseholdInvite({ token } satisfies AcceptHouseholdInviteInput),
     mutationKey: ["households", "invites", "reject"],
   })
 
 export function useRejectHouseholdInviteMutation<TContext = unknown>(
-  options?: UseAppMutationOptions<void, InviteTokenVariables, TContext>,
+  options?: UseAppMutationOptions<
+    RejectHouseholdInviteResult,
+    InviteTokenVariables,
+    TContext
+  >,
 ) {
   return useAppMutation(rejectHouseholdInviteMutationDefinition, options)
 }

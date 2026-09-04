@@ -1,177 +1,113 @@
+import { creditCardsEndpoints } from '@luraba/contracts';
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import { withApiMeta } from '@/shared/response';
-import {
-  ListCreditCardCyclesRequestQuerySchema,
-  ListCreditCardsRequestQuerySchema,
-} from './credit-cards.query';
-import * as creditCardsService from './credit-cards.service';
-import {
-  CreateCreditCardPaymentRequestBodySchema,
-  CreateCreditCardPaymentRequestParamsSchema,
-  CreateCreditCardPaymentResponseSchema,
-  CreateCreditCardPurchaseRequestBodySchema,
-  CreateCreditCardPurchaseRequestParamsSchema,
-  CreateCreditCardPurchaseResponseSchema,
-  CreateCreditCardRequestBodySchema,
-  CreateCreditCardResponseSchema,
-  DeleteCreditCardPaymentRequestParamsSchema,
-  DeleteCreditCardPurchaseRequestParamsSchema,
-  DeleteCreditCardRequestParamsSchema,
-  GetCreditCardCycleRequestParamsSchema,
-  GetCreditCardCycleResponseSchema,
-  GetCreditCardForecastRequestParamsSchema,
-  GetCreditCardForecastRequestQuerySchema,
-  GetCreditCardForecastResponseSchema,
-  GetCreditCardPaymentRequestParamsSchema,
-  GetCreditCardPaymentResponseSchema,
-  GetCreditCardPurchaseRequestParamsSchema,
-  GetCreditCardPurchaseResponseSchema,
-  GetCreditCardRequestParamsSchema,
-  GetCreditCardResponseSchema,
-  ListCreditCardCyclesRequestParamsSchema,
-  ListCreditCardCyclesResponseSchema,
-  ListCreditCardsResponseSchema,
-  UpdateCreditCardCycleRequestBodySchema,
-  UpdateCreditCardCycleRequestParamsSchema,
-  UpdateCreditCardCycleResponseSchema,
-  UpdateCreditCardPaymentRequestBodySchema,
-  UpdateCreditCardPaymentRequestParamsSchema,
-  UpdateCreditCardPaymentResponseSchema,
-  UpdateCreditCardPurchaseRequestBodySchema,
-  UpdateCreditCardPurchaseRequestParamsSchema,
-  UpdateCreditCardPurchaseResponseSchema,
-  UpdateCreditCardRequestBodySchema,
-  UpdateCreditCardRequestParamsSchema,
-  UpdateCreditCardResponseSchema,
-} from './credit-cards.types';
+import * as service from './credit-cards.service';
 
 export const list = createHouseholdHandler({
-  query: ListCreditCardsRequestQuerySchema,
-  response: ListCreditCardsResponseSchema,
+  query: creditCardsEndpoints.list.query,
+  response: creditCardsEndpoints.list.response,
+  meta: creditCardsEndpoints.list.meta,
   handle: async ({ household, query }) => {
-    const result = await creditCardsService.listCreditCards(household, query);
+    const result = await service.listCreditCards(household, query);
     return withApiMeta(result.data, result.meta);
   },
 });
-
 export const create = createHouseholdHandler({
-  body: CreateCreditCardRequestBodySchema,
-  response: CreateCreditCardResponseSchema,
+  body: creditCardsEndpoints.create.body,
+  response: creditCardsEndpoints.create.response,
   status: 'created',
-  handle: ({ household, body }) => creditCardsService.createCreditCard(household, body),
+  handle: ({ household, body }) => service.createCreditCard(household, body),
 });
-
 export const getById = createHouseholdHandler({
-  params: GetCreditCardRequestParamsSchema,
-  response: GetCreditCardResponseSchema,
-  handle: ({ household, params }) => creditCardsService.getCreditCard(household, params.id),
+  params: creditCardsEndpoints.get.params,
+  response: creditCardsEndpoints.get.response,
+  handle: ({ household, params }) => service.getCreditCard(household, params.id),
 });
-
 export const update = createHouseholdHandler({
-  params: UpdateCreditCardRequestParamsSchema,
-  body: UpdateCreditCardRequestBodySchema,
-  response: UpdateCreditCardResponseSchema,
-  handle: ({ household, params, body }) =>
-    creditCardsService.updateCreditCard(household, params.id, body),
+  params: creditCardsEndpoints.update.params,
+  body: creditCardsEndpoints.update.body,
+  response: creditCardsEndpoints.update.response,
+  handle: ({ household, params, body }) => service.updateCreditCard(household, params.id, body),
 });
-
 export const deleteCreditCard = createHouseholdHandler({
-  params: DeleteCreditCardRequestParamsSchema,
+  params: creditCardsEndpoints.delete.params,
   status: 'no-content',
-  handle: ({ household, params }) => creditCardsService.deleteCreditCard(household, params.id),
+  handle: ({ household, params }) => service.deleteCreditCard(household, params.id),
 });
-
 export const listCycles = createHouseholdHandler({
-  params: ListCreditCardCyclesRequestParamsSchema,
-  query: ListCreditCardCyclesRequestQuerySchema,
-  response: ListCreditCardCyclesResponseSchema,
+  params: creditCardsEndpoints.cycles.params,
+  query: creditCardsEndpoints.cycles.query,
+  response: creditCardsEndpoints.cycles.response,
+  meta: creditCardsEndpoints.cycles.meta,
   handle: async ({ household, params, query }) => {
-    const result = await creditCardsService.listBillingCycles(household, params.id, query);
+    const result = await service.listBillingCycles(household, params.id, query);
     return withApiMeta(result.data, result.meta);
   },
 });
-
 export const getCycle = createHouseholdHandler({
-  params: GetCreditCardCycleRequestParamsSchema,
-  response: GetCreditCardCycleResponseSchema,
-  handle: ({ household, params }) =>
-    creditCardsService.getBillingCycle(household, params.id, params.cycleId),
+  params: creditCardsEndpoints.getCycle.params,
+  response: creditCardsEndpoints.getCycle.response,
+  handle: ({ household, params }) => service.getBillingCycle(household, params.id, params.cycleId),
 });
-
 export const updateCycle = createHouseholdHandler({
-  params: UpdateCreditCardCycleRequestParamsSchema,
-  body: UpdateCreditCardCycleRequestBodySchema,
-  response: UpdateCreditCardCycleResponseSchema,
+  params: creditCardsEndpoints.updateCycle.params,
+  body: creditCardsEndpoints.updateCycle.body,
+  response: creditCardsEndpoints.updateCycle.response,
   handle: ({ household, params, body }) =>
-    creditCardsService.updateBillingCycle(household, params.id, params.cycleId, body),
+    service.updateBillingCycle(household, params.id, params.cycleId, body),
 });
-
 export const createPurchase = createHouseholdHandler({
-  params: CreateCreditCardPurchaseRequestParamsSchema,
-  body: CreateCreditCardPurchaseRequestBodySchema,
-  response: CreateCreditCardPurchaseResponseSchema,
+  params: creditCardsEndpoints.createPurchase.params,
+  body: creditCardsEndpoints.createPurchase.body,
+  response: creditCardsEndpoints.createPurchase.response,
   status: 'created',
-  handle: ({ household, params, body }) =>
-    creditCardsService.createPurchase(household, params.id, body),
+  handle: ({ household, params, body }) => service.createPurchase(household, params.id, body),
 });
-
 export const getPurchase = createHouseholdHandler({
-  params: GetCreditCardPurchaseRequestParamsSchema,
-  response: GetCreditCardPurchaseResponseSchema,
-  handle: ({ household, params }) =>
-    creditCardsService.getPurchase(household, params.id, params.purchaseId),
+  params: creditCardsEndpoints.getPurchase.params,
+  response: creditCardsEndpoints.getPurchase.response,
+  handle: ({ household, params }) => service.getPurchase(household, params.id, params.purchaseId),
 });
-
 export const updatePurchase = createHouseholdHandler({
-  params: UpdateCreditCardPurchaseRequestParamsSchema,
-  body: UpdateCreditCardPurchaseRequestBodySchema,
-  response: UpdateCreditCardPurchaseResponseSchema,
+  params: creditCardsEndpoints.updatePurchase.params,
+  body: creditCardsEndpoints.updatePurchase.body,
+  response: creditCardsEndpoints.updatePurchase.response,
   handle: ({ household, params, body }) =>
-    creditCardsService.updatePurchase(household, params.id, params.purchaseId, body),
+    service.updatePurchase(household, params.id, params.purchaseId, body),
 });
-
 export const deletePurchase = createHouseholdHandler({
-  params: DeleteCreditCardPurchaseRequestParamsSchema,
+  params: creditCardsEndpoints.deletePurchase.params,
   status: 'no-content',
   handle: ({ household, params }) =>
-    creditCardsService.deletePurchase(household, params.id, params.purchaseId),
+    service.deletePurchase(household, params.id, params.purchaseId),
 });
-
 export const createPayment = createHouseholdHandler({
-  params: CreateCreditCardPaymentRequestParamsSchema,
-  body: CreateCreditCardPaymentRequestBodySchema,
-  response: CreateCreditCardPaymentResponseSchema,
+  params: creditCardsEndpoints.createPayment.params,
+  body: creditCardsEndpoints.createPayment.body,
+  response: creditCardsEndpoints.createPayment.response,
   status: 'created',
-  handle: ({ household, params, body }) =>
-    creditCardsService.createPayment(household, params.id, body),
+  handle: ({ household, params, body }) => service.createPayment(household, params.id, body),
 });
-
 export const getPayment = createHouseholdHandler({
-  params: GetCreditCardPaymentRequestParamsSchema,
-  response: GetCreditCardPaymentResponseSchema,
-  handle: ({ household, params }) =>
-    creditCardsService.getPayment(household, params.id, params.paymentId),
+  params: creditCardsEndpoints.getPayment.params,
+  response: creditCardsEndpoints.getPayment.response,
+  handle: ({ household, params }) => service.getPayment(household, params.id, params.paymentId),
 });
-
 export const updatePayment = createHouseholdHandler({
-  params: UpdateCreditCardPaymentRequestParamsSchema,
-  body: UpdateCreditCardPaymentRequestBodySchema,
-  response: UpdateCreditCardPaymentResponseSchema,
+  params: creditCardsEndpoints.updatePayment.params,
+  body: creditCardsEndpoints.updatePayment.body,
+  response: creditCardsEndpoints.updatePayment.response,
   handle: ({ household, params, body }) =>
-    creditCardsService.updatePayment(household, params.id, params.paymentId, body),
+    service.updatePayment(household, params.id, params.paymentId, body),
 });
-
 export const deletePayment = createHouseholdHandler({
-  params: DeleteCreditCardPaymentRequestParamsSchema,
+  params: creditCardsEndpoints.deletePayment.params,
   status: 'no-content',
-  handle: ({ household, params }) =>
-    creditCardsService.deletePayment(household, params.id, params.paymentId),
+  handle: ({ household, params }) => service.deletePayment(household, params.id, params.paymentId),
 });
-
 export const getForecast = createHouseholdHandler({
-  params: GetCreditCardForecastRequestParamsSchema,
-  query: GetCreditCardForecastRequestQuerySchema,
-  response: GetCreditCardForecastResponseSchema,
-  handle: ({ household, params, query }) =>
-    creditCardsService.getForecast(household, params.id, query),
+  params: creditCardsEndpoints.forecast.params,
+  query: creditCardsEndpoints.forecast.query,
+  response: creditCardsEndpoints.forecast.response,
+  handle: ({ household, params, query }) => service.getForecast(household, params.id, query),
 });

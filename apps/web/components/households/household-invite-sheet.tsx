@@ -1,8 +1,8 @@
 "use client"
 
+import type { CreateHouseholdInviteInput } from "@luraba/contracts"
 import { CreateHouseholdInviteForm } from "@/components/forms/create-household-invite-form/create-household-invite-form"
 import { FormSheet } from "@/components/forms/form-sheet"
-import type { CreateHouseholdInviteHttpBody } from "@/interfaces/http/household-invites-http"
 
 export function HouseholdInviteSheet({
   open,
@@ -12,7 +12,7 @@ export function HouseholdInviteSheet({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (body: CreateHouseholdInviteHttpBody) => void
+  onSubmit: (body: CreateHouseholdInviteInput) => void
   isPending?: boolean
 }) {
   return (

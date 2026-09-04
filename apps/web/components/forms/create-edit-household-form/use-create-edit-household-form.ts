@@ -1,11 +1,9 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { CreateHouseholdInput, HouseholdSummary } from "@luraba/contracts"
 import * as React from "react"
 import { useForm } from "react-hook-form"
-
-import type { HouseholdSummary } from "@/interfaces/household"
-import type { CreateHouseholdHttpBody } from "@/interfaces/http/households-http"
 
 import {
   type CreateEditHouseholdFormValues,
@@ -47,7 +45,7 @@ export function useCreateEditHouseholdForm({
 }: {
   household?: HouseholdSummary | null
   open: boolean
-  onSubmit: (body: CreateHouseholdHttpBody) => void
+  onSubmit: (body: CreateHouseholdInput) => void
 }) {
   const form = useForm<CreateEditHouseholdFormValues>({
     defaultValues: getDefaultValues(household),

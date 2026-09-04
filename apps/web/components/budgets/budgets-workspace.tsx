@@ -6,12 +6,11 @@ import {
   Settings02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { MAX_PER_PAGE, PERMISSIONS } from "@luraba/contracts"
 import { addMonths, format, parseISO } from "date-fns"
 import { useEffect, useMemo, useState } from "react"
-
 import { EmptyState } from "@/components/empty-state"
 import { ErrorState } from "@/components/error-state"
-import { PERMISSIONS } from "@/components/permissions/permissions.constants"
 import { useCan } from "@/components/permissions/use-can"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -33,7 +32,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
-import { MAX_PER_PAGE } from "@/interfaces/api"
 import { formatCurrency } from "@/lib/finance"
 import { useReplaceMonthlyBudgetMutation } from "@/mutations/budgets/use-budget-mutations"
 import { useUpdateHouseholdMutation } from "@/mutations/households/use-household-mutations"

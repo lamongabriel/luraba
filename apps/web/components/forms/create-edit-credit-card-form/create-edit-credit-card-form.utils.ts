@@ -1,8 +1,8 @@
-import type { CreditCard } from "@/interfaces/credit-card"
 import type {
-  CreateCreditCardHttpBody,
-  UpdateCreditCardHttpBody,
-} from "@/interfaces/http/credit-cards-http"
+  CreateCreditCardInput,
+  CreditCard,
+  UpdateCreditCardInput,
+} from "@luraba/contracts"
 import {
   CREDIT_CARD_BRAND_VALUES,
   type CreditCardBrand,
@@ -45,7 +45,7 @@ function optionalValue(value: string) {
 export function buildCreateCreditCardPayload(
   values: CreateEditCreditCardFormValues,
   precision: number,
-): CreateCreditCardHttpBody {
+): CreateCreditCardInput {
   return {
     name: values.name.trim(),
     ownerAccountId: values.ownerAccountId,
@@ -67,7 +67,7 @@ export function buildCreateCreditCardPayload(
 export function buildUpdateCreditCardPayload(
   values: CreateEditCreditCardFormValues,
   precision: number,
-): UpdateCreditCardHttpBody {
+): UpdateCreditCardInput {
   return {
     name: values.name.trim(),
     institutionName: values.institutionName.trim() || null,

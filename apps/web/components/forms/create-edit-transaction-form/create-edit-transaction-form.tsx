@@ -2,11 +2,10 @@
 
 import { SaveMoneyDollarIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { TransactionFeedRow } from "@luraba/contracts"
 import { useWatch } from "react-hook-form"
-
 import { Button } from "@/components/ui/button"
 import { Typography } from "@/components/ui/typography"
-import type { TransactionFeedRow } from "@/interfaces/transaction"
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query"
 import type { TransactionFormDetails } from "./create-edit-transaction-form.utils"
 import { CommonSection } from "./sections/common-section"

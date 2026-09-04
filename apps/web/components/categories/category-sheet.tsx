@@ -1,10 +1,10 @@
 "use client"
 
+import type { Category } from "@luraba/contracts"
 import * as React from "react"
 import { CreateEditCategoryForm } from "@/components/forms/create-edit-category-form/create-edit-category-form"
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary"
 import { FormSheet } from "@/components/forms/form-sheet"
-import type { Category } from "@/interfaces/category"
 
 export function CategorySheet({
   open,

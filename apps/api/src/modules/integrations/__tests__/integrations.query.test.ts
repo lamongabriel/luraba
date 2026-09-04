@@ -1,9 +1,9 @@
+import { listIntegrationsQuerySchema } from '@luraba/contracts/integrations';
 import { describe, expect, it } from 'vitest';
-import { ListIntegrationsRequestQuerySchema } from '../integrations.query';
 
 describe('integrations list query', () => {
   it('parses every column filter and rejects invalid input', () => {
-    const query = ListIntegrationsRequestQuerySchema.parse({
+    const query = listIntegrationsQuerySchema.parse({
       providers: 'brandfetch',
       statuses: 'connected,not_configured',
       configured: 'false',
@@ -13,9 +13,9 @@ describe('integrations list query', () => {
 
     expect(query.providers).toEqual(['brandfetch']);
     expect(query.configured).toBe(false);
-    expect(ListIntegrationsRequestQuerySchema.safeParse({ configured: 'no' }).success).toBe(false);
+    expect(listIntegrationsQuerySchema.safeParse({ configured: 'no' }).success).toBe(false);
     expect(
-      ListIntegrationsRequestQuerySchema.safeParse({
+      listIntegrationsQuerySchema.safeParse({
         lastCheckedAtFrom: '2026-01-01',
         lastCheckedAtTo: '2025-01-01',
       }).success,

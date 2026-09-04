@@ -1,11 +1,5 @@
 "use client"
 
-import type {
-  CreateMerchantHttpBody,
-  CreateMerchantHttpResponse,
-  UpdateMerchantHttpBody,
-  UpdateMerchantHttpResponse,
-} from "@/interfaces/http/merchants-http"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
@@ -17,9 +11,17 @@ import {
   updateMerchant,
 } from "@/services/merchants.service"
 
+type CreateMerchantBody = Parameters<typeof createMerchant>[0]
+type CreateMerchantResponse = Awaited<ReturnType<typeof createMerchant>>
+type UpdateMerchantVariables = {
+  id: string
+  body: Parameters<typeof updateMerchant>[1]
+}
+type UpdateMerchantResponse = Awaited<ReturnType<typeof updateMerchant>>
+
 export const createMerchantMutationDefinition = createAppMutationDefinition<
-  CreateMerchantHttpResponse,
-  CreateMerchantHttpBody
+  CreateMerchantResponse,
+  CreateMerchantBody
 >({
   defaultErrorMessage: "We couldn't create this merchant. Please try again.",
   mutationFn: createMerchant,
@@ -27,26 +29,25 @@ export const createMerchantMutationDefinition = createAppMutationDefinition<
 })
 export function useCreateMerchantMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    CreateMerchantHttpResponse,
-    CreateMerchantHttpBody,
+    CreateMerchantResponse,
+    CreateMerchantBody,
     TContext
   >,
 ) {
   return useAppMutation(createMerchantMutationDefinition, options)
 }
 
-type UpdateMerchantVariables = { id: string; body: UpdateMerchantHttpBody }
 export const updateMerchantMutationDefinition = createAppMutationDefinition<
-  UpdateMerchantHttpResponse,
+  UpdateMerchantResponse,
   UpdateMerchantVariables
 >({
   defaultErrorMessage: "We couldn't update this merchant. Please try again.",
-  mutationFn: updateMerchant,
+  mutationFn: ({ id, body }) => updateMerchant(id, body),
   mutationKey: ["merchants", "update"],
 })
 export function useUpdateMerchantMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateMerchantHttpResponse,
+    UpdateMerchantResponse,
     UpdateMerchantVariables,
     TContext
   >,

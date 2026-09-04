@@ -1,11 +1,11 @@
 "use client"
 
+import type { CreditCard } from "@luraba/contracts"
 import { CreditCardPreview } from "@/components/credit-cards/credit-card-preview"
 import { FormItem } from "@/components/forms/form-item"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
 import { Typography } from "@/components/ui/typography"
-import type { CreditCard } from "@/interfaces/credit-card"
 import { CREDIT_CARD_BRAND_OPTIONS } from "@/lib/credit-cards"
 
 import { creditCardColorPresets } from "./create-edit-credit-card-form.schema"

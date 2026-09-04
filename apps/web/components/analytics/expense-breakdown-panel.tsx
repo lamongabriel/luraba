@@ -1,5 +1,6 @@
 "use client"
 
+import type { TransactionAnalytics } from "@luraba/contracts"
 import * as React from "react"
 import { Pie, PieChart, Sector } from "recharts"
 import type { PieSectorShapeProps } from "recharts/types/polar/Pie"
@@ -9,7 +10,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import type { TransactionAnalytics } from "@/interfaces/transaction"
 import { formatCurrency } from "@/lib/finance"
 import { CURATED_COLOR_PRESETS } from "@/lib/icons"
 

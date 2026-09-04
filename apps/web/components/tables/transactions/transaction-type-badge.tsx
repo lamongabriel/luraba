@@ -7,9 +7,8 @@ import {
   Exchange01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import type { TransactionFeedOriginType } from "@luraba/contracts"
 import { Badge } from "@/components/ui/badge"
-import type { TransactionFeedOriginType } from "@/interfaces/transaction"
 
 const TYPE_LABELS: Record<TransactionFeedOriginType, string> = {
   adjustment: "Adjustment",

@@ -1,9 +1,9 @@
 "use client"
 
+import type { CreateHouseholdInviteInput } from "@luraba/contracts"
 import { FieldInfoHint } from "@/components/forms/field-info-hint"
 import { FormItem } from "@/components/forms/form-item"
 import { Button } from "@/components/ui/button"
-import type { CreateHouseholdInviteHttpBody } from "@/interfaces/http/household-invites-http"
 import { useHouseholdRolesQuery } from "@/queries/households/use-households-query"
 
 import { useCreateHouseholdInviteForm } from "./use-create-household-invite-form"
@@ -14,7 +14,7 @@ export function CreateHouseholdInviteForm({
   isPending = false,
 }: {
   onCancel: () => void
-  onSubmit: (body: CreateHouseholdInviteHttpBody) => void
+  onSubmit: (body: CreateHouseholdInviteInput) => void
   isPending?: boolean
 }) {
   const { form, submit } = useCreateHouseholdInviteForm({ onSubmit })

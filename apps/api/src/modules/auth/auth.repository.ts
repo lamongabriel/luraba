@@ -1,9 +1,10 @@
+import type { UpdateUserPreferencesInput, UserPreferences } from '@luraba/contracts/auth';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { usersTable } from '@/db/schemas/users.schema';
 import { now } from '@/shared/lib/date';
 import { Repository } from '@/shared/repositories/repository';
-import type { UpdateMyPreferencesRequestBody, UserPreferences, UserRecord } from './auth.types';
+import type { UserRecord } from './auth.types';
 
 class AuthRepository extends Repository<UserRecord> {
   constructor() {
@@ -46,7 +47,7 @@ class AuthRepository extends Repository<UserRecord> {
 
   async updateUserPreferences(
     id: string,
-    dto: UpdateMyPreferencesRequestBody,
+    dto: UpdateUserPreferencesInput,
   ): Promise<UserPreferences | undefined> {
     const row = await this.update(id, {
       preferredLanguage: dto.language,

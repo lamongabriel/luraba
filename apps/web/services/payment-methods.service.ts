@@ -1,43 +1,41 @@
 "use client"
 
-import type {
-  CreatePaymentMethodHttpBody,
-  CreatePaymentMethodHttpResponse,
-  ListPaymentMethodsHttpQuery,
-  ListPaymentMethodsHttpResponse,
-  UpdatePaymentMethodHttpBody,
-  UpdatePaymentMethodHttpResponse,
-} from "@/interfaces/http/payment-methods-http"
 import {
-  deleteApiResource,
-  getApiList,
-  patchApiData,
-  postApiData,
-} from "@/services/api-client.service"
-import { serializeHttpQuery } from "@/services/http-query"
+  type CreatePaymentMethodInput,
+  type CreatePaymentMethodResult,
+  type DeletePaymentMethodResult,
+  type ListPaymentMethodsQuery,
+  type ListPaymentMethodsResult,
+  paymentMethodsEndpoints,
+  type UpdatePaymentMethodInput,
+  type UpdatePaymentMethodResult,
+} from "@luraba/contracts"
+import { requestContract } from "@/services/contract-client.service"
 
 export function listPaymentMethods(
-  query: ListPaymentMethodsHttpQuery = {},
-): Promise<ListPaymentMethodsHttpResponse> {
-  return getApiList("/payment-methods", { params: serializeHttpQuery(query) })
+  query: ListPaymentMethodsQuery = {},
+): Promise<ListPaymentMethodsResult> {
+  return requestContract(paymentMethodsEndpoints.list, { query })
 }
 
 export function createPaymentMethod(
-  body: CreatePaymentMethodHttpBody,
-): Promise<CreatePaymentMethodHttpResponse> {
-  return postApiData("/payment-methods", body)
+  input: CreatePaymentMethodInput,
+): Promise<CreatePaymentMethodResult> {
+  return requestContract(paymentMethodsEndpoints.create, { body: input })
 }
 
-export function updatePaymentMethod({
-  id,
-  body,
-}: {
-  id: string
-  body: UpdatePaymentMethodHttpBody
-}): Promise<UpdatePaymentMethodHttpResponse> {
-  return patchApiData(`/payment-methods/${id}`, body)
+export function updatePaymentMethod(
+  id: string,
+  input: UpdatePaymentMethodInput,
+): Promise<UpdatePaymentMethodResult> {
+  return requestContract(paymentMethodsEndpoints.update, {
+    params: { id },
+    body: input,
+  })
 }
 
-export function deletePaymentMethod(id: string): Promise<void> {
-  return deleteApiResource(`/payment-methods/${id}`)
+export function deletePaymentMethod(
+  id: string,
+): Promise<DeletePaymentMethodResult> {
+  return requestContract(paymentMethodsEndpoints.delete, { params: { id } })
 }

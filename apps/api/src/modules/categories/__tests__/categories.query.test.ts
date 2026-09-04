@@ -1,9 +1,9 @@
+import { listCategoriesQuerySchema } from '@luraba/contracts/categories';
 import { describe, expect, it } from 'vitest';
-import { ListCategoriesRequestQuerySchema } from '../categories.query';
 
 describe('categories list query', () => {
   it('parses every column filter and rejects invalid input', () => {
-    const query = ListCategoriesRequestQuerySchema.parse({
+    const query = listCategoriesQuerySchema.parse({
       types: 'expense,income',
       parentIds: '1456d4ee-2f8d-4cec-92be-a780d54312c2',
       hasParent: 'true',
@@ -17,9 +17,9 @@ describe('categories list query', () => {
 
     expect(query.types).toEqual(['expense', 'income']);
     expect(query.hasParent).toBe(true);
-    expect(ListCategoriesRequestQuerySchema.safeParse({ hasParent: 'yes' }).success).toBe(false);
+    expect(listCategoriesQuerySchema.safeParse({ hasParent: 'yes' }).success).toBe(false);
     expect(
-      ListCategoriesRequestQuerySchema.safeParse({
+      listCategoriesQuerySchema.safeParse({
         createdAtFrom: '2026-01-01',
         createdAtTo: '2025-01-01',
       }).success,

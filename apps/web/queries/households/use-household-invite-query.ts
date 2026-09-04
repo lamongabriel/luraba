@@ -1,14 +1,13 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
-
 import type {
-  ListHouseholdInvitesHttpQuery,
-  ListHouseholdInvitesHttpResponse,
-  ListMyHouseholdInvitesHttpQuery,
-  ListMyHouseholdInvitesHttpResponse,
-  PreviewHouseholdInviteHttpResponse,
-} from "@/interfaces/http/household-invites-http"
+  ListHouseholdInvitesQuery,
+  ListHouseholdInvitesResult,
+  ListMyHouseholdInvitesQuery,
+  ListMyHouseholdInvitesResult,
+  PreviewHouseholdInviteResult,
+} from "@luraba/contracts"
+import { useQuery } from "@tanstack/react-query"
 import type { AppQueryOptions } from "@/queries/query-options"
 import {
   listHouseholdInvites,
@@ -19,29 +18,24 @@ import {
 export const householdInviteQueryKeys = {
   all: ["household-invites"] as const,
   lists: () => [...householdInviteQueryKeys.all, "list"] as const,
-  householdList: (
-    householdId: string,
-    query: ListHouseholdInvitesHttpQuery = {},
-  ) =>
+  householdList: (householdId: string, query: ListHouseholdInvitesQuery = {}) =>
     [
       ...householdInviteQueryKeys.lists(),
       "household",
       householdId,
       query,
     ] as const,
-  myList: (query: ListMyHouseholdInvitesHttpQuery = {}) =>
+  myList: (query: ListMyHouseholdInvitesQuery = {}) =>
     [...householdInviteQueryKeys.lists(), "mine", query] as const,
   previews: () => [...householdInviteQueryKeys.all, "preview"] as const,
   preview: (token: string) =>
     [...householdInviteQueryKeys.previews(), token] as const,
 }
 
-export function useHouseholdInvitesQuery<
-  TData = ListHouseholdInvitesHttpResponse,
->(
+export function useHouseholdInvitesQuery<TData = ListHouseholdInvitesResult>(
   householdId: string,
-  query: ListHouseholdInvitesHttpQuery = {},
-  options?: AppQueryOptions<ListHouseholdInvitesHttpResponse, TData>,
+  query: ListHouseholdInvitesQuery = {},
+  options?: AppQueryOptions<ListHouseholdInvitesResult, TData>,
 ) {
   return useQuery({
     queryKey: householdInviteQueryKeys.householdList(householdId, query),
@@ -53,10 +47,10 @@ export function useHouseholdInvitesQuery<
 }
 
 export function useMyHouseholdInvitesQuery<
-  TData = ListMyHouseholdInvitesHttpResponse,
+  TData = ListMyHouseholdInvitesResult,
 >(
-  query: ListMyHouseholdInvitesHttpQuery = {},
-  options?: AppQueryOptions<ListMyHouseholdInvitesHttpResponse, TData>,
+  query: ListMyHouseholdInvitesQuery = {},
+  options?: AppQueryOptions<ListMyHouseholdInvitesResult, TData>,
 ) {
   return useQuery({
     queryKey: householdInviteQueryKeys.myList(query),
@@ -67,14 +61,14 @@ export function useMyHouseholdInvitesQuery<
 }
 
 export function useHouseholdInvitePreviewQuery<
-  TData = PreviewHouseholdInviteHttpResponse,
+  TData = PreviewHouseholdInviteResult,
 >(
   token: string,
-  options?: AppQueryOptions<PreviewHouseholdInviteHttpResponse, TData>,
+  options?: AppQueryOptions<PreviewHouseholdInviteResult, TData>,
 ) {
   return useQuery({
     queryKey: householdInviteQueryKeys.preview(token),
-    queryFn: () => previewHouseholdInvite(token),
+    queryFn: () => previewHouseholdInvite({ token }),
     staleTime: 0,
     ...options,
     enabled: Boolean(token) && (options?.enabled ?? true),

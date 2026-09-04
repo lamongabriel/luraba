@@ -2,23 +2,22 @@
 
 import { useQuery } from "@tanstack/react-query"
 
-import type {
-  ListCategoriesHttpQuery,
-  ListCategoriesHttpResponse,
-} from "@/interfaces/http/categories-http"
 import type { AppQueryOptions } from "@/queries/query-options"
 import { listCategories } from "@/services/categories.service"
+
+type ListCategoriesQuery = NonNullable<Parameters<typeof listCategories>[0]>
+type ListCategoriesResponse = Awaited<ReturnType<typeof listCategories>>
 
 export const categoryQueryKeys = {
   all: ["categories"] as const,
   lists: () => [...categoryQueryKeys.all, "list"] as const,
-  list: (query: ListCategoriesHttpQuery = {}) =>
+  list: (query: ListCategoriesQuery = {}) =>
     [...categoryQueryKeys.lists(), query] as const,
 }
 
-export function useCategoriesQuery<TData = ListCategoriesHttpResponse>(
-  query: ListCategoriesHttpQuery = {},
-  options?: AppQueryOptions<ListCategoriesHttpResponse, TData>,
+export function useCategoriesQuery<TData = ListCategoriesResponse>(
+  query: ListCategoriesQuery = {},
+  options?: AppQueryOptions<ListCategoriesResponse, TData>,
 ) {
   return useQuery({
     queryKey: categoryQueryKeys.list(query),

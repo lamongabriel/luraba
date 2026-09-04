@@ -15,7 +15,7 @@ import {
 import {
   buildCreditCardsListOrder,
   buildCreditCardsListWhere,
-  type ListCreditCardsRequestQuery,
+  type ListCreditCardsQuery,
 } from './credit-cards.query';
 
 export type CreditCardListRow = CreditCardRow & {
@@ -66,7 +66,7 @@ export async function listByHouseholdId(householdId: string): Promise<CreditCard
 
 export async function listPage(
   householdId: string,
-  query: ListCreditCardsRequestQuery,
+  query: ListCreditCardsQuery,
 ): Promise<DbListPage<CreditCardListRow>> {
   const { limit, offset } = getPagination(query);
   const accountBalances = buildAccountBalanceSubquery();

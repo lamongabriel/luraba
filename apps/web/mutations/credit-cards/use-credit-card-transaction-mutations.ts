@@ -1,15 +1,15 @@
 "use client"
 
 import type {
-  CreateCreditCardPaymentHttpBody,
-  CreateCreditCardPaymentHttpResponse,
-  CreateCreditCardPurchaseHttpBody,
-  CreateCreditCardPurchaseHttpResponse,
-  UpdateCreditCardPaymentHttpBody,
-  UpdateCreditCardPaymentHttpResponse,
-  UpdateCreditCardPurchaseHttpBody,
-  UpdateCreditCardPurchaseHttpResponse,
-} from "@/interfaces/http/credit-cards-http"
+  CreateCreditCardPaymentInput,
+  CreateCreditCardPaymentResult,
+  CreateCreditCardPurchaseInput,
+  CreateCreditCardPurchaseResult,
+  UpdateCreditCardPaymentInput,
+  UpdateCreditCardPaymentResult,
+  UpdateCreditCardPurchaseInput,
+  UpdateCreditCardPurchaseResult,
+} from "@luraba/contracts"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
@@ -26,19 +26,20 @@ import {
 
 export const createCreditCardPurchaseMutationDefinition =
   createAppMutationDefinition<
-    CreateCreditCardPurchaseHttpResponse,
-    { creditCardId: string; body: CreateCreditCardPurchaseHttpBody }
+    CreateCreditCardPurchaseResult,
+    { creditCardId: string; body: CreateCreditCardPurchaseInput }
   >({
     defaultErrorMessage:
       "We couldn't create this credit card purchase. Please review the form and try again.",
-    mutationFn: async (variables) => createCreditCardPurchase(variables),
+    mutationFn: ({ creditCardId, body }) =>
+      createCreditCardPurchase(creditCardId, body),
     mutationKey: ["credit-cards", "purchases", "create"],
   })
 
 export function useCreateCreditCardPurchaseMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    CreateCreditCardPurchaseHttpResponse,
-    { creditCardId: string; body: CreateCreditCardPurchaseHttpBody },
+    CreateCreditCardPurchaseResult,
+    { creditCardId: string; body: CreateCreditCardPurchaseInput },
     TContext
   >,
 ) {
@@ -47,26 +48,27 @@ export function useCreateCreditCardPurchaseMutation<TContext = unknown>(
 
 export const updateCreditCardPurchaseMutationDefinition =
   createAppMutationDefinition<
-    UpdateCreditCardPurchaseHttpResponse,
+    UpdateCreditCardPurchaseResult,
     {
       creditCardId: string
       purchaseId: string
-      body: UpdateCreditCardPurchaseHttpBody
+      body: UpdateCreditCardPurchaseInput
     }
   >({
     defaultErrorMessage:
       "We couldn't update this credit card purchase. Please review the form and try again.",
-    mutationFn: async (variables) => updateCreditCardPurchase(variables),
+    mutationFn: ({ creditCardId, purchaseId, body }) =>
+      updateCreditCardPurchase(creditCardId, purchaseId, body),
     mutationKey: ["credit-cards", "purchases", "update"],
   })
 
 export function useUpdateCreditCardPurchaseMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateCreditCardPurchaseHttpResponse,
+    UpdateCreditCardPurchaseResult,
     {
       creditCardId: string
       purchaseId: string
-      body: UpdateCreditCardPurchaseHttpBody
+      body: UpdateCreditCardPurchaseInput
     },
     TContext
   >,
@@ -81,7 +83,8 @@ export const deleteCreditCardPurchaseMutationDefinition =
   >({
     defaultErrorMessage:
       "We couldn't delete this credit card purchase. Please try again.",
-    mutationFn: async (variables) => deleteCreditCardPurchase(variables),
+    mutationFn: ({ creditCardId, purchaseId }) =>
+      deleteCreditCardPurchase(creditCardId, purchaseId),
     mutationKey: ["credit-cards", "purchases", "delete"],
   })
 
@@ -97,19 +100,20 @@ export function useDeleteCreditCardPurchaseMutation<TContext = unknown>(
 
 export const createCreditCardPaymentMutationDefinition =
   createAppMutationDefinition<
-    CreateCreditCardPaymentHttpResponse,
-    { creditCardId: string; body: CreateCreditCardPaymentHttpBody }
+    CreateCreditCardPaymentResult,
+    { creditCardId: string; body: CreateCreditCardPaymentInput }
   >({
     defaultErrorMessage:
       "We couldn't create this credit card payment. Please review the form and try again.",
-    mutationFn: async (variables) => createCreditCardPayment(variables),
+    mutationFn: ({ creditCardId, body }) =>
+      createCreditCardPayment(creditCardId, body),
     mutationKey: ["credit-cards", "payments", "create"],
   })
 
 export function useCreateCreditCardPaymentMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    CreateCreditCardPaymentHttpResponse,
-    { creditCardId: string; body: CreateCreditCardPaymentHttpBody },
+    CreateCreditCardPaymentResult,
+    { creditCardId: string; body: CreateCreditCardPaymentInput },
     TContext
   >,
 ) {
@@ -118,26 +122,27 @@ export function useCreateCreditCardPaymentMutation<TContext = unknown>(
 
 export const updateCreditCardPaymentMutationDefinition =
   createAppMutationDefinition<
-    UpdateCreditCardPaymentHttpResponse,
+    UpdateCreditCardPaymentResult,
     {
       creditCardId: string
       paymentId: string
-      body: UpdateCreditCardPaymentHttpBody
+      body: UpdateCreditCardPaymentInput
     }
   >({
     defaultErrorMessage:
       "We couldn't update this credit card payment. Please review the form and try again.",
-    mutationFn: async (variables) => updateCreditCardPayment(variables),
+    mutationFn: ({ creditCardId, paymentId, body }) =>
+      updateCreditCardPayment(creditCardId, paymentId, body),
     mutationKey: ["credit-cards", "payments", "update"],
   })
 
 export function useUpdateCreditCardPaymentMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateCreditCardPaymentHttpResponse,
+    UpdateCreditCardPaymentResult,
     {
       creditCardId: string
       paymentId: string
-      body: UpdateCreditCardPaymentHttpBody
+      body: UpdateCreditCardPaymentInput
     },
     TContext
   >,
@@ -152,7 +157,8 @@ export const deleteCreditCardPaymentMutationDefinition =
   >({
     defaultErrorMessage:
       "We couldn't delete this credit card payment. Please try again.",
-    mutationFn: async (variables) => deleteCreditCardPayment(variables),
+    mutationFn: ({ creditCardId, paymentId }) =>
+      deleteCreditCardPayment(creditCardId, paymentId),
     mutationKey: ["credit-cards", "payments", "delete"],
   })
 

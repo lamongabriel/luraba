@@ -1,3 +1,22 @@
+import {
+  accountsEndpoints,
+  authEndpoints,
+  budgetsEndpoints,
+  categoriesEndpoints,
+  creditCardsEndpoints,
+  currenciesEndpoints,
+  getEndpointBasePath,
+  householdsEndpoints,
+  integrationsEndpoints,
+  merchantsEndpoints,
+  netWorthEndpoints,
+  onboardingEndpoints,
+  paymentMethodsEndpoints,
+  recurringBillsEndpoints,
+  referenceDataEndpoints,
+  tagsEndpoints,
+  transactionsEndpoints,
+} from '@luraba/contracts';
 import { Router } from 'express';
 
 import accountsRouter from '@/modules/accounts/accounts.routes';
@@ -19,21 +38,21 @@ import transactionsRouter from '@/modules/transactions/transactions.routes';
 
 const router = Router();
 
-router.use('/auth', authRouter);
-router.use('/currencies', currenciesRouter);
-router.use('/households', householdsRouter);
-router.use('/integrations', integrationsRouter);
-router.use('/accounts', accountsRouter);
-router.use('/budgets', budgetsRouter);
-router.use('/categories', categoriesRouter);
-router.use('/credit-cards', creditCardsRouter);
-router.use('/merchants', merchantsRouter);
-router.use('/networth', networthRouter);
-router.use('/onboarding', onboardingRouter);
-router.use('/payment-methods', paymentMethodsRouter);
-router.use('/reference-data', referenceDataRouter);
-router.use('/recurring-bills', recurringBillsRouter);
-router.use('/tags', tagsRouter);
-router.use('/transactions', transactionsRouter);
+router.use(getEndpointBasePath(authEndpoints.me), authRouter);
+router.use(getEndpointBasePath(currenciesEndpoints.list), currenciesRouter);
+router.use(getEndpointBasePath(householdsEndpoints.list), householdsRouter);
+router.use(getEndpointBasePath(integrationsEndpoints.list), integrationsRouter);
+router.use(getEndpointBasePath(accountsEndpoints.list), accountsRouter);
+router.use(getEndpointBasePath(budgetsEndpoints.getMonth), budgetsRouter);
+router.use(getEndpointBasePath(categoriesEndpoints.list), categoriesRouter);
+router.use(getEndpointBasePath(creditCardsEndpoints.list), creditCardsRouter);
+router.use(getEndpointBasePath(merchantsEndpoints.list), merchantsRouter);
+router.use(getEndpointBasePath(netWorthEndpoints.summary), networthRouter);
+router.use(getEndpointBasePath(onboardingEndpoints.getOptions), onboardingRouter);
+router.use(getEndpointBasePath(paymentMethodsEndpoints.list), paymentMethodsRouter);
+router.use(getEndpointBasePath(referenceDataEndpoints.getLocations), referenceDataRouter);
+router.use(getEndpointBasePath(recurringBillsEndpoints.list), recurringBillsRouter);
+router.use(getEndpointBasePath(tagsEndpoints.list), tagsRouter);
+router.use(getEndpointBasePath(transactionsEndpoints.list), transactionsRouter);
 
 export default router;

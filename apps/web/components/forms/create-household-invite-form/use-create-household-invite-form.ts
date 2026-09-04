@@ -1,9 +1,8 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { CreateHouseholdInviteInput } from "@luraba/contracts"
 import { useForm } from "react-hook-form"
-
-import type { CreateHouseholdInviteHttpBody } from "@/interfaces/http/household-invites-http"
 
 import {
   type CreateHouseholdInviteFormValues,
@@ -13,7 +12,7 @@ import {
 export function useCreateHouseholdInviteForm({
   onSubmit,
 }: {
-  onSubmit: (body: CreateHouseholdInviteHttpBody) => void
+  onSubmit: (body: CreateHouseholdInviteInput) => void
 }) {
   const form = useForm<CreateHouseholdInviteFormValues>({
     defaultValues: { email: "", role: "member" },

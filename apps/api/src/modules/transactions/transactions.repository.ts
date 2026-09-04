@@ -19,7 +19,7 @@ import { type DbListPage, getPagination } from '@/shared/list';
 import {
   buildTransactionFeedCte,
   buildTransactionFeedOrder,
-  type ListTransactionsRequestQuery,
+  type ListTransactionsQuery,
 } from './transactions.query';
 import type { TransactionFeedRowKind, TransactionListSummary } from './transactions.types';
 
@@ -94,7 +94,7 @@ const creditCardInstallmentFeedSelect = {
 
 export async function listTransactionFeedPageKeys(
   householdId: string,
-  query: ListTransactionsRequestQuery,
+  query: ListTransactionsQuery,
   options: { includeAdjustments?: boolean; maxPostedDate?: string } = {},
 ): Promise<DbListPage<TransactionFeedPageKey>> {
   const { limit, offset } = getPagination(query);

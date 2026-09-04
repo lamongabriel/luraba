@@ -1,11 +1,10 @@
 "use client"
 
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { Tag } from "@luraba/contracts"
+import { MAX_PER_PAGE } from "@luraba/contracts"
 import type { Column } from "@tanstack/react-table"
-
 import { FilterFaceted } from "@/components/filters/filter-faceted"
-import { MAX_PER_PAGE } from "@/interfaces/api"
-import type { Tag } from "@/interfaces/tag"
 import { DEFAULT_TAG_ICON, resolveTagIcon } from "@/lib/tags"
 import { useTagsQuery } from "@/queries/tags/use-tags-query"
 import type { Option } from "@/types/data-table"

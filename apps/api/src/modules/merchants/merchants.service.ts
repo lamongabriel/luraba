@@ -1,3 +1,8 @@
+import type {
+  CreateMerchantInput,
+  Merchant,
+  UpdateMerchantInput,
+} from '@luraba/contracts/merchants';
 import type { HouseholdContext } from '@/config/permissions';
 import { getBrandfetchClientId } from '@/modules/integrations/brandfetch/brandfetch.service';
 import {
@@ -7,16 +12,9 @@ import {
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
 import { createListMeta, type ListResult } from '@/shared/list';
-import type { ListMerchantsRequestQuery } from './merchants.query';
+import type { ListMerchantsQuery } from './merchants.query';
 import { merchantsRepository } from './merchants.repository';
-import type {
-  CreateMerchantRequestBody,
-  CreateMerchantResponse,
-  ListMerchantsResponse,
-  Merchant,
-  MerchantRecord,
-  UpdateMerchantRequestBody,
-} from './merchants.types';
+import type { MerchantRecord } from './merchants.types';
 
 function mapMerchantRecord(merchant: MerchantRecord): Merchant {
   return {
@@ -31,8 +29,8 @@ function mapMerchantRecord(merchant: MerchantRecord): Merchant {
 
 export async function createMerchant(
   context: HouseholdContext,
-  body: CreateMerchantRequestBody,
-): Promise<CreateMerchantResponse> {
+  body: CreateMerchantInput,
+): Promise<Merchant> {
   const existing = await merchantsRepository.findByName(context, body.name);
 
   if (existing) {
@@ -58,8 +56,8 @@ export async function createMerchant(
 
 export async function listMerchants(
   context: HouseholdContext,
-  query: ListMerchantsRequestQuery,
-): Promise<ListResult<ListMerchantsResponse[number]>> {
+  query: ListMerchantsQuery,
+): Promise<ListResult<Merchant>> {
   const page = await merchantsRepository.listPage(context, query);
 
   return {
@@ -83,7 +81,7 @@ export async function getMerchant(
 export async function updateMerchant(
   context: HouseholdContext,
   merchantId: string,
-  body: UpdateMerchantRequestBody,
+  body: UpdateMerchantInput,
 ): Promise<Merchant> {
   const merchant = await merchantsRepository.get(merchantId, context);
   if (!merchant) {

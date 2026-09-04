@@ -1,23 +1,24 @@
+import type {
+  Currency,
+  CurrencyRate,
+  getCurrencyRateQuerySchema,
+} from '@luraba/contracts/currencies';
+import type { z } from 'zod';
 import { fxService } from '@/modules/fx/fx.service';
 import { NotFoundError } from '@/shared/errors';
 import { formatISODate, now } from '@/shared/lib/date';
 import { createListMeta, type ListResult } from '@/shared/list';
-import type { ListCurrenciesRequestQuery } from './currencies.query';
+import type { ListCurrenciesQuery } from './currencies.query';
 import { currenciesRepository } from './currencies.repository';
-import type {
-  GetCurrencyRateRequestQuery,
-  GetCurrencyRateResponse,
-  ListCurrenciesResponse,
-} from './currencies.types';
+
+type CurrencyRateQuery = z.output<typeof getCurrencyRateQuerySchema>;
 
 function formatRate(rateNumerator: number, rateDenominator: number): number {
   const decimalRate = rateNumerator / rateDenominator;
   return Math.round((decimalRate + Number.EPSILON) * 100) / 100;
 }
 
-export async function listCurrencies(
-  query: ListCurrenciesRequestQuery,
-): Promise<ListResult<ListCurrenciesResponse[number]>> {
+export async function listCurrencies(query: ListCurrenciesQuery): Promise<ListResult<Currency>> {
   const page = await currenciesRepository.listPage(query);
 
   return {
@@ -26,9 +27,7 @@ export async function listCurrencies(
   };
 }
 
-export async function getCurrencyRate(
-  query: GetCurrencyRateRequestQuery,
-): Promise<GetCurrencyRateResponse> {
+export async function getCurrencyRate(query: CurrencyRateQuery): Promise<CurrencyRate> {
   const [fromCurrency, toCurrency] = await Promise.all([
     currenciesRepository.findByCode(query.fromCurrencyCode),
     currenciesRepository.findByCode(query.toCurrencyCode),

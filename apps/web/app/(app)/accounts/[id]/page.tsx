@@ -2,9 +2,9 @@
 
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { TransactionFeedRow } from "@luraba/contracts"
 import { useParams, useRouter } from "next/navigation"
 import * as React from "react"
-
 import { AccountProfileDetails } from "@/components/accounts/account-profile-details"
 import { AccountSheet } from "@/components/accounts/account-sheet"
 import { AdjustAccountBalanceSheet } from "@/components/accounts/adjust-account-balance-sheet"
@@ -17,7 +17,6 @@ import {
 } from "@/components/permissions"
 import { Button } from "@/components/ui/button"
 import { Typography } from "@/components/ui/typography"
-import type { TransactionFeedRow } from "@/interfaces/transaction"
 import {
   formatAccountSubtypeLabel,
   formatAccountTypeLabel,

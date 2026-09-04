@@ -1,8 +1,8 @@
+import { listTagsQuerySchema } from '@luraba/contracts/tags';
 import { describe, expect, it } from 'vitest';
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import { buildTagInput } from '@/test/factories';
-import { ListTagsRequestQuerySchema } from '../tags.query';
 import * as tagsService from '../tags.service';
 
 describe('tags service', () => {
@@ -55,7 +55,7 @@ describe('tags service', () => {
 
     const tags = await tagsService.listTags(
       context.householdContext,
-      ListTagsRequestQuerySchema.parse({}),
+      listTagsQuerySchema.parse({}),
     );
 
     expect(tags.data).toHaveLength(1);
@@ -114,7 +114,7 @@ describe('tags DB list filters', () => {
 
     const result = await tagsService.listTags(
       context.householdContext,
-      ListTagsRequestQuerySchema.parse({
+      listTagsQuerySchema.parse({
         search: 'Target',
         colors: '#16A34A,#FFFFFF',
         icons: 'Ticket01Icon',

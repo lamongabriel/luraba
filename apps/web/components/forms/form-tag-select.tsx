@@ -2,6 +2,8 @@
 
 import { ArrowDown01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { Tag } from "@luraba/contracts"
+import { MAX_PER_PAGE } from "@luraba/contracts"
 import * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,8 +21,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { MAX_PER_PAGE } from "@/interfaces/api"
-import type { Tag } from "@/interfaces/tag"
 import { cn } from "@/lib/utils"
 import { useTagsQuery } from "@/queries/tags/use-tags-query"
 

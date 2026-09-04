@@ -1,9 +1,9 @@
+import { listPaymentMethodsQuerySchema } from '@luraba/contracts/payment-methods';
 import { describe, expect, it } from 'vitest';
-import { ListPaymentMethodsRequestQuerySchema } from '../payment-methods.query';
 
 describe('payment methods list query', () => {
   it('parses every column filter and rejects invalid input', () => {
-    const query = ListPaymentMethodsRequestQuerySchema.parse({
+    const query = listPaymentMethodsQuerySchema.parse({
       codes: 'pix,cash',
       scopes: 'system,household',
       currencyCode: 'brl',
@@ -16,9 +16,7 @@ describe('payment methods list query', () => {
 
     expect(query.codes).toEqual(['pix', 'cash']);
     expect(query.currencyCode).toBe('BRL');
-    expect(ListPaymentMethodsRequestQuerySchema.safeParse({ scopes: 'private' }).success).toBe(
-      false,
-    );
-    expect(ListPaymentMethodsRequestQuerySchema.safeParse({ unknown: true }).success).toBe(false);
+    expect(listPaymentMethodsQuerySchema.safeParse({ scopes: 'private' }).success).toBe(false);
+    expect(listPaymentMethodsQuerySchema.safeParse({ unknown: true }).success).toBe(false);
   });
 });

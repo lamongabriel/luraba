@@ -2,10 +2,10 @@
 
 import { Calendar03Icon, RepeatIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { UpcomingTransaction } from "@luraba/contracts"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import type { UpcomingTransaction } from "@/interfaces/transaction"
 import { formatCurrency } from "@/lib/finance"
 import { formatShortDate } from "@/lib/format"
 

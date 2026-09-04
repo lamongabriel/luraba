@@ -1,19 +1,18 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
-
 import type {
-  GetCreditCardCycleHttpResponse,
-  GetCreditCardForecastHttpQuery,
-  GetCreditCardForecastHttpResponse,
-  GetCreditCardHttpResponse,
-  GetCreditCardPaymentHttpResponse,
-  GetCreditCardPurchaseHttpResponse,
-  ListCreditCardCyclesHttpQuery,
-  ListCreditCardCyclesHttpResponse,
-  ListCreditCardsHttpQuery,
-  ListCreditCardsHttpResponse,
-} from "@/interfaces/http/credit-cards-http"
+  CreditCardForecastQuery,
+  GetCreditCardCycleResult,
+  GetCreditCardForecastResult,
+  GetCreditCardPaymentResult,
+  GetCreditCardPurchaseResult,
+  GetCreditCardResult,
+  ListCreditCardCyclesQuery,
+  ListCreditCardCyclesResult,
+  ListCreditCardsQuery,
+  ListCreditCardsResult,
+} from "@luraba/contracts"
+import { useQuery } from "@tanstack/react-query"
 import type { AppQueryOptions } from "@/queries/query-options"
 import {
   getCreditCard,
@@ -28,12 +27,12 @@ import {
 export const creditCardQueryKeys = {
   all: ["credit-cards"] as const,
   lists: () => [...creditCardQueryKeys.all, "list"] as const,
-  list: (query: ListCreditCardsHttpQuery = {}) =>
+  list: (query: ListCreditCardsQuery = {}) =>
     [...creditCardQueryKeys.lists(), query] as const,
   details: () => [...creditCardQueryKeys.all, "detail"] as const,
   detail: (creditCardId: string) =>
     [...creditCardQueryKeys.details(), creditCardId] as const,
-  cycles: (creditCardId: string, query: ListCreditCardCyclesHttpQuery = {}) =>
+  cycles: (creditCardId: string, query: ListCreditCardCyclesQuery = {}) =>
     [...creditCardQueryKeys.detail(creditCardId), "cycles", query] as const,
   cycle: (creditCardId: string, cycleId: string) =>
     [...creditCardQueryKeys.detail(creditCardId), "cycle", cycleId] as const,
@@ -49,16 +48,13 @@ export const creditCardQueryKeys = {
       "payment",
       paymentId,
     ] as const,
-  forecast: (
-    creditCardId: string,
-    query: GetCreditCardForecastHttpQuery = {},
-  ) =>
+  forecast: (creditCardId: string, query: CreditCardForecastQuery = {}) =>
     [...creditCardQueryKeys.detail(creditCardId), "forecast", query] as const,
 }
 
-export function useCreditCardsQuery<TData = ListCreditCardsHttpResponse>(
-  query: ListCreditCardsHttpQuery = {},
-  options?: AppQueryOptions<ListCreditCardsHttpResponse, TData>,
+export function useCreditCardsQuery<TData = ListCreditCardsResult>(
+  query: ListCreditCardsQuery = {},
+  options?: AppQueryOptions<ListCreditCardsResult, TData>,
 ) {
   return useQuery({
     queryKey: creditCardQueryKeys.list(query),
@@ -67,9 +63,9 @@ export function useCreditCardsQuery<TData = ListCreditCardsHttpResponse>(
   })
 }
 
-export function useCreditCardQuery<TData = GetCreditCardHttpResponse>(
+export function useCreditCardQuery<TData = GetCreditCardResult>(
   creditCardId: string,
-  options?: AppQueryOptions<GetCreditCardHttpResponse, TData>,
+  options?: AppQueryOptions<GetCreditCardResult, TData>,
 ) {
   return useQuery({
     queryKey: creditCardQueryKeys.detail(creditCardId),
@@ -79,12 +75,10 @@ export function useCreditCardQuery<TData = GetCreditCardHttpResponse>(
   })
 }
 
-export function useCreditCardCyclesQuery<
-  TData = ListCreditCardCyclesHttpResponse,
->(
+export function useCreditCardCyclesQuery<TData = ListCreditCardCyclesResult>(
   creditCardId: string,
-  query: ListCreditCardCyclesHttpQuery = {},
-  options?: AppQueryOptions<ListCreditCardCyclesHttpResponse, TData>,
+  query: ListCreditCardCyclesQuery = {},
+  options?: AppQueryOptions<ListCreditCardCyclesResult, TData>,
 ) {
   return useQuery({
     queryKey: creditCardQueryKeys.cycles(creditCardId, query),
@@ -95,55 +89,49 @@ export function useCreditCardCyclesQuery<
   })
 }
 
-export function useCreditCardCycleQuery<TData = GetCreditCardCycleHttpResponse>(
+export function useCreditCardCycleQuery<TData = GetCreditCardCycleResult>(
   creditCardId: string,
   cycleId: string,
-  options?: AppQueryOptions<GetCreditCardCycleHttpResponse, TData>,
+  options?: AppQueryOptions<GetCreditCardCycleResult, TData>,
 ) {
   return useQuery({
     queryKey: creditCardQueryKeys.cycle(creditCardId, cycleId),
-    queryFn: () => getCreditCardCycle({ creditCardId, cycleId }),
+    queryFn: () => getCreditCardCycle(creditCardId, cycleId),
     ...options,
     enabled: Boolean(creditCardId && cycleId) && (options?.enabled ?? true),
   })
 }
 
-export function useCreditCardPurchaseQuery<
-  TData = GetCreditCardPurchaseHttpResponse,
->(
+export function useCreditCardPurchaseQuery<TData = GetCreditCardPurchaseResult>(
   creditCardId: string,
   purchaseId: string,
-  options?: AppQueryOptions<GetCreditCardPurchaseHttpResponse, TData>,
+  options?: AppQueryOptions<GetCreditCardPurchaseResult, TData>,
 ) {
   return useQuery({
     queryKey: creditCardQueryKeys.purchase(creditCardId, purchaseId),
-    queryFn: () => getCreditCardPurchase({ creditCardId, purchaseId }),
+    queryFn: () => getCreditCardPurchase(creditCardId, purchaseId),
     ...options,
     enabled: Boolean(creditCardId && purchaseId) && (options?.enabled ?? true),
   })
 }
 
-export function useCreditCardPaymentQuery<
-  TData = GetCreditCardPaymentHttpResponse,
->(
+export function useCreditCardPaymentQuery<TData = GetCreditCardPaymentResult>(
   creditCardId: string,
   paymentId: string,
-  options?: AppQueryOptions<GetCreditCardPaymentHttpResponse, TData>,
+  options?: AppQueryOptions<GetCreditCardPaymentResult, TData>,
 ) {
   return useQuery({
     queryKey: creditCardQueryKeys.payment(creditCardId, paymentId),
-    queryFn: () => getCreditCardPayment({ creditCardId, paymentId }),
+    queryFn: () => getCreditCardPayment(creditCardId, paymentId),
     ...options,
     enabled: Boolean(creditCardId && paymentId) && (options?.enabled ?? true),
   })
 }
 
-export function useCreditCardForecastQuery<
-  TData = GetCreditCardForecastHttpResponse,
->(
+export function useCreditCardForecastQuery<TData = GetCreditCardForecastResult>(
   creditCardId: string,
-  query: GetCreditCardForecastHttpQuery = {},
-  options?: AppQueryOptions<GetCreditCardForecastHttpResponse, TData>,
+  query: CreditCardForecastQuery = {},
+  options?: AppQueryOptions<GetCreditCardForecastResult, TData>,
 ) {
   return useQuery({
     queryKey: creditCardQueryKeys.forecast(creditCardId, query),

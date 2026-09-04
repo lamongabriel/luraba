@@ -2,6 +2,10 @@
 
 import { Add01Icon, Delete02Icon, Edit02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type {
+  CreateHouseholdInput,
+  CreateHouseholdInviteInput,
+} from "@luraba/contracts"
 import { useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import * as React from "react"
@@ -17,8 +21,6 @@ import { HouseholdSettingsSheet } from "@/components/households/household-settin
 import { PageReveal } from "@/components/motion/reveal"
 import { Button } from "@/components/ui/button"
 import { Typography } from "@/components/ui/typography"
-import type { CreateHouseholdInviteHttpBody } from "@/interfaces/http/household-invites-http"
-import type { CreateHouseholdHttpBody } from "@/interfaces/http/households-http"
 import { canManageHousehold } from "@/lib/households"
 import { formatTimezoneLabel } from "@/lib/timezones"
 import {
@@ -187,7 +189,7 @@ export function HouseholdManagement({ householdId }: { householdId: string }) {
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         household={household}
-        onSubmit={(body: CreateHouseholdHttpBody) =>
+        onSubmit={(body: CreateHouseholdInput) =>
           update.mutate({ householdId: household.id, body })
         }
         isPending={update.isPending}
@@ -195,7 +197,7 @@ export function HouseholdManagement({ householdId }: { householdId: string }) {
       <HouseholdInviteSheet
         open={inviteOpen}
         onOpenChange={setInviteOpen}
-        onSubmit={(body: CreateHouseholdInviteHttpBody) =>
+        onSubmit={(body: CreateHouseholdInviteInput) =>
           invite.mutate({ householdId: household.id, body })
         }
         isPending={invite.isPending}

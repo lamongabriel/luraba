@@ -1,11 +1,11 @@
 "use client"
 
+import type { TransactionAnalytics } from "@luraba/contracts"
 import type { UseQueryResult } from "@tanstack/react-query"
 import { KpiCard, type KpiTrendState } from "@/components/analytics/kpi-card"
 import { ErrorState } from "@/components/error-state"
 import { MoneyValue } from "@/components/finance/money-value"
 import { Skeleton } from "@/components/ui/skeleton"
-import type { TransactionAnalytics } from "@/interfaces/transaction"
 import type { AppClientError } from "@/services/error-client"
 
 type AnalyticsQuery = UseQueryResult<TransactionAnalytics, AppClientError>

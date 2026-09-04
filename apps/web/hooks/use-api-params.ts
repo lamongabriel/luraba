@@ -1,5 +1,6 @@
 "use client"
 
+import type { SortDirection } from "@luraba/contracts"
 import {
   parseAsInteger,
   parseAsString,
@@ -7,9 +8,7 @@ import {
   useQueryStates,
 } from "nuqs"
 import * as React from "react"
-
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback"
-import type { SortDirection } from "@/interfaces/api"
 import {
   type ApiParamFilterConfigs,
   type ApiParamFilterUpdates,

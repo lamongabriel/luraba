@@ -1,8 +1,7 @@
+import type { AccountDetails } from "@luraba/contracts"
 import type { ReactNode } from "react"
-
 import { MoneyValue } from "@/components/finance/money-value"
 import { Typography } from "@/components/ui/typography"
-import type { AccountDetails } from "@/interfaces/account"
 import { formatAccountSubtypeLabel } from "@/lib/accounts"
 import { formatShortDate } from "@/lib/format"
 

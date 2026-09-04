@@ -1,69 +1,24 @@
+import type {
+  listCreditCardCyclesQuerySchema,
+  listCreditCardsQuerySchema,
+} from '@luraba/contracts/credit-cards';
 import { eq, type SQL, sql } from 'drizzle-orm';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
 import {
-  booleanQuerySchema,
   buildIlikeSearch,
   buildOrderBy,
   combineConditions,
-  commaSeparatedArraySchema,
-  createListQuerySchema,
-  dateQuerySchema,
   inArrayIfAny,
   rangeConditions,
-  temporalQuerySchema,
-  validateRange,
 } from '@/shared/list';
-import { creditCardCycleStatusSchema } from '@/shared/validation/credit-cards';
-import { currencySchema } from '@/shared/validation/preferences';
-import {
-  creditCardCycleDisplayStatusSchema,
-  creditCardCycleScopeSchema,
-} from './credit-card-cycles.types';
 import { creditCardOwnerAccountsTable } from './credit-cards.helpers';
 
-export const ListCreditCardsRequestQuerySchema = createListQuerySchema(
-  {
-    brands: commaSeparatedArraySchema(z.string().trim().min(1).max(64)),
-    currencyCodes: commaSeparatedArraySchema(currencySchema),
-    ownerAccountIds: commaSeparatedArraySchema(z.uuid()),
-    closingDays: commaSeparatedArraySchema(z.coerce.number().int().min(1).max(31)),
-    dueDays: commaSeparatedArraySchema(z.coerce.number().int().min(1).max(31)),
-    balanceMin: z.coerce.number().int().optional(),
-    balanceMax: z.coerce.number().int().optional(),
-    creditLimitMin: z.coerce.number().int().min(0).optional(),
-    creditLimitMax: z.coerce.number().int().min(0).optional(),
-    hasCreditLimit: booleanQuerySchema.optional(),
-    createdAtFrom: temporalQuerySchema.optional(),
-    createdAtTo: temporalQuerySchema.optional(),
-    updatedAtFrom: temporalQuerySchema.optional(),
-    updatedAtTo: temporalQuerySchema.optional(),
-  },
-  [
-    'name',
-    'institutionName',
-    'brand',
-    'last4',
-    'currencyCode',
-    'balance',
-    'creditLimitAmount',
-    'closingDay',
-    'dueDay',
-    'createdAt',
-    'updatedAt',
-  ],
-).superRefine((query, ctx) => {
-  validateRange(query, ctx, 'balanceMin', 'balanceMax');
-  validateRange(query, ctx, 'creditLimitMin', 'creditLimitMax');
-  validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
-  validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
-});
-
-export type ListCreditCardsRequestQuery = z.infer<typeof ListCreditCardsRequestQuerySchema>;
+export type ListCreditCardsQuery = z.output<typeof listCreditCardsQuerySchema>;
 
 export function buildCreditCardsListWhere(
   householdId: string,
-  query: ListCreditCardsRequestQuery,
+  query: ListCreditCardsQuery,
   displayedBalance: SQL,
 ): SQL {
   return combineConditions(
@@ -100,7 +55,7 @@ export function buildCreditCardsListWhere(
 }
 
 export function buildCreditCardsListOrder(
-  query: ListCreditCardsRequestQuery,
+  query: ListCreditCardsQuery,
   displayedBalance: SQL,
 ): SQL[] {
   return buildOrderBy(
@@ -122,42 +77,7 @@ export function buildCreditCardsListOrder(
   );
 }
 
-export const ListCreditCardCyclesRequestQuerySchema = createListQuerySchema(
-  {
-    scope: creditCardCycleScopeSchema.default('default'),
-    statuses: commaSeparatedArraySchema(creditCardCycleStatusSchema),
-    displayStatuses: commaSeparatedArraySchema(creditCardCycleDisplayStatusSchema),
-    closingDateFrom: dateQuerySchema.optional(),
-    closingDateTo: dateQuerySchema.optional(),
-    dueDateFrom: dateQuerySchema.optional(),
-    dueDateTo: dateQuerySchema.optional(),
-    statementAmountMin: z.coerce.number().int().optional(),
-    statementAmountMax: z.coerce.number().int().optional(),
-    paidAmountMin: z.coerce.number().int().optional(),
-    paidAmountMax: z.coerce.number().int().optional(),
-    remainingAmountMin: z.coerce.number().int().optional(),
-    remainingAmountMax: z.coerce.number().int().optional(),
-  },
-  [
-    'periodStart',
-    'periodEnd',
-    'closingDate',
-    'dueDate',
-    'status',
-    'displayStatus',
-    'statementAmount',
-    'paidAmount',
-    'remainingAmount',
-  ],
-).superRefine((query, ctx) => {
-  validateRange(query, ctx, 'closingDateFrom', 'closingDateTo');
-  validateRange(query, ctx, 'dueDateFrom', 'dueDateTo');
-  validateRange(query, ctx, 'statementAmountMin', 'statementAmountMax');
-  validateRange(query, ctx, 'paidAmountMin', 'paidAmountMax');
-  validateRange(query, ctx, 'remainingAmountMin', 'remainingAmountMax');
-});
-
-export type ListCreditCardCyclesQuery = z.infer<typeof ListCreditCardCyclesRequestQuerySchema>;
+export type ListCreditCardCyclesQuery = z.output<typeof listCreditCardCyclesQuerySchema>;
 
 export function buildCreditCardCyclesListWhere(query: ListCreditCardCyclesQuery): SQL | undefined {
   return combineConditions(

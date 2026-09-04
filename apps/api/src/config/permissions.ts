@@ -1,8 +1,4 @@
-import {
-  HOUSEHOLD_PERMISSIONS,
-  type HouseholdPermission,
-  type HouseholdRole,
-} from '@luraba/contracts';
+import { type HouseholdPermission, type HouseholdRole, PERMISSIONS } from '@luraba/contracts';
 import type {
   CreditExpenseTiming,
   CreditInstallmentBudgetMode,
@@ -10,46 +6,47 @@ import type {
 } from '@/shared/validation/preferences';
 
 export type { HouseholdPermission, HouseholdRole } from '@luraba/contracts';
-export { HOUSEHOLD_PERMISSIONS, HOUSEHOLD_ROLE_METADATA } from '@luraba/contracts';
+export { HOUSEHOLD_ROLE_METADATA, PERMISSIONS } from '@luraba/contracts';
 
-const allPermissions = new Set<HouseholdPermission>(HOUSEHOLD_PERMISSIONS);
+const allPermissions = new Set<HouseholdPermission>(Object.values(PERMISSIONS));
 
 export const HOUSEHOLD_ROLE_PERMISSIONS: Record<HouseholdRole, ReadonlySet<HouseholdPermission>> = {
   owner: allPermissions,
   admin: new Set(
-    HOUSEHOLD_PERMISSIONS.filter(
-      (permission) => permission !== 'household.update' && permission !== 'household.delete',
+    Object.values(PERMISSIONS).filter(
+      (permission) =>
+        permission !== PERMISSIONS.HOUSEHOLD_UPDATE && permission !== PERMISSIONS.HOUSEHOLD_DELETE,
     ),
   ),
   member: new Set([
-    'household.read',
-    'accounts.read',
-    'accounts.create',
-    'transactions.read',
-    'transactions.create',
-    'categories.read',
-    'tags.read',
-    'paymentMethods.read',
-    'paymentMethods.create',
-    'merchants.read',
-    'budgets.read',
-    'creditCards.read',
-    'recurringBills.read',
-    'recurringBills.update',
-    'recurringBills.delete',
+    PERMISSIONS.HOUSEHOLD_READ,
+    PERMISSIONS.ACCOUNTS_READ,
+    PERMISSIONS.ACCOUNTS_CREATE,
+    PERMISSIONS.TRANSACTIONS_READ,
+    PERMISSIONS.TRANSACTIONS_CREATE,
+    PERMISSIONS.CATEGORIES_READ,
+    PERMISSIONS.TAGS_READ,
+    PERMISSIONS.PAYMENT_METHODS_READ,
+    PERMISSIONS.PAYMENT_METHODS_CREATE,
+    PERMISSIONS.MERCHANTS_READ,
+    PERMISSIONS.BUDGETS_READ,
+    PERMISSIONS.CREDIT_CARDS_READ,
+    PERMISSIONS.RECURRING_BILLS_READ,
+    PERMISSIONS.RECURRING_BILLS_UPDATE,
+    PERMISSIONS.RECURRING_BILLS_DELETE,
   ]),
   viewer: new Set([
-    'household.read',
-    'accounts.read',
-    'transactions.read',
-    'categories.read',
-    'tags.read',
-    'paymentMethods.read',
-    'merchants.read',
-    'budgets.read',
-    'creditCards.read',
-    'recurringBills.read',
-    'recurringBills.create',
+    PERMISSIONS.HOUSEHOLD_READ,
+    PERMISSIONS.ACCOUNTS_READ,
+    PERMISSIONS.TRANSACTIONS_READ,
+    PERMISSIONS.CATEGORIES_READ,
+    PERMISSIONS.TAGS_READ,
+    PERMISSIONS.PAYMENT_METHODS_READ,
+    PERMISSIONS.MERCHANTS_READ,
+    PERMISSIONS.BUDGETS_READ,
+    PERMISSIONS.CREDIT_CARDS_READ,
+    PERMISSIONS.RECURRING_BILLS_READ,
+    PERMISSIONS.RECURRING_BILLS_CREATE,
   ]),
 };
 

@@ -1,5 +1,5 @@
+import type { LocationTimezoneOption } from "@luraba/contracts"
 import type { FormComboboxOption } from "@/components/forms/form-combobox"
-import type { LocationTimezoneOption } from "@/interfaces/reference-data"
 
 export function formatTimezoneLabel(timezone: string) {
   if (timezone === "UTC") return "UTC"

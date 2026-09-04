@@ -1,14 +1,14 @@
-import { describe, expect, it } from 'vitest';
 import {
-  ListHouseholdInvitesRequestQuerySchema,
-  ListHouseholdMembersRequestQuerySchema,
-  ListHouseholdsRequestQuerySchema,
-  ListMyHouseholdInvitesRequestQuerySchema,
-} from '../households.query';
+  listHouseholdInvitesQuerySchema,
+  listHouseholdMembersQuerySchema,
+  listHouseholdsQuerySchema,
+  listMyHouseholdInvitesQuerySchema,
+} from '@luraba/contracts/households';
+import { describe, expect, it } from 'vitest';
 
 describe('households list queries', () => {
   it('parses every household filter', () => {
-    const query = ListHouseholdsRequestQuerySchema.parse({
+    const query = listHouseholdsQuerySchema.parse({
       roles: 'owner,member',
       countryCodes: 'BR,US',
       defaultCurrencyCodes: 'BRL,USD',
@@ -25,7 +25,7 @@ describe('households list queries', () => {
 
     expect(query.roles).toEqual(['owner', 'member']);
     expect(
-      ListHouseholdsRequestQuerySchema.safeParse({
+      listHouseholdsQuerySchema.safeParse({
         budgetMonthStartsOnMin: 20,
         budgetMonthStartsOnMax: 10,
       }).success,
@@ -34,7 +34,7 @@ describe('households list queries', () => {
 
   it('parses member and invite filters, including personal household IDs', () => {
     const id = '1456d4ee-2f8d-4cec-92be-a780d54312c2';
-    const members = ListHouseholdMembersRequestQuerySchema.parse({
+    const members = listHouseholdMembersQuerySchema.parse({
       roles: 'member',
       emailVerified: true,
       lastActiveAtFrom: '2025-01-01',
@@ -44,7 +44,7 @@ describe('households list queries', () => {
     expect(members.roles).toEqual(['member']);
     expect(members.emailVerified).toBe(true);
     expect(
-      ListHouseholdInvitesRequestQuerySchema.parse({
+      listHouseholdInvitesQuerySchema.parse({
         roles: 'admin',
         statuses: 'pending,expired,canceled',
         createdAtFrom: '2025-01-01',
@@ -54,12 +54,10 @@ describe('households list queries', () => {
         sort: 'expiresAt',
       }).statuses,
     ).toEqual(['pending', 'expired', 'canceled']);
-    expect(
-      ListMyHouseholdInvitesRequestQuerySchema.parse({ householdIds: id }).householdIds,
-    ).toEqual([id]);
-    expect(ListHouseholdMembersRequestQuerySchema.safeParse({ unknown: true }).success).toBe(false);
-    expect(ListHouseholdInvitesRequestQuerySchema.safeParse({ statuses: 'revoked' }).success).toBe(
-      false,
-    );
+    expect(listMyHouseholdInvitesQuerySchema.parse({ householdIds: id }).householdIds).toEqual([
+      id,
+    ]);
+    expect(listHouseholdMembersQuerySchema.safeParse({ unknown: true }).success).toBe(false);
+    expect(listHouseholdInvitesQuerySchema.safeParse({ statuses: 'revoked' }).success).toBe(false);
   });
 });

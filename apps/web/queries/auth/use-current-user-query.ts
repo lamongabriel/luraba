@@ -2,27 +2,29 @@
 
 import { useQuery } from "@tanstack/react-query"
 
-import type { GetCurrentUserHttpResponse } from "@/interfaces/http/auth-http"
+import { lurabaApiPassiveClient } from "@/api/luraba-api"
 import { authQueryKeys } from "@/queries/auth/use-auth-providers-query"
 import type { AppQueryOptions } from "@/queries/query-options"
-import { getCurrentUser, probeCurrentUser } from "@/services/auth.service"
+import { getCurrentUser } from "@/services/auth.service"
 
-export function useCurrentUserQuery<TData = GetCurrentUserHttpResponse>(
-  options?: AppQueryOptions<GetCurrentUserHttpResponse, TData>,
+type CurrentUserResponse = Awaited<ReturnType<typeof getCurrentUser>>
+
+export function useCurrentUserQuery<TData = CurrentUserResponse>(
+  options?: AppQueryOptions<CurrentUserResponse, TData>,
 ) {
   return useQuery({
     queryKey: authQueryKeys.session,
-    queryFn: getCurrentUser,
+    queryFn: () => getCurrentUser(),
     ...options,
   })
 }
 
-export function useProbeCurrentUserQuery<TData = GetCurrentUserHttpResponse>(
-  options?: AppQueryOptions<GetCurrentUserHttpResponse, TData>,
+export function useProbeCurrentUserQuery<TData = CurrentUserResponse>(
+  options?: AppQueryOptions<CurrentUserResponse, TData>,
 ) {
   return useQuery({
     queryKey: [...authQueryKeys.session, "probe"] as const,
-    queryFn: probeCurrentUser,
+    queryFn: () => getCurrentUser({ client: lurabaApiPassiveClient }),
     ...options,
   })
 }

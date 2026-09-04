@@ -2,11 +2,10 @@
 
 import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import type { CreditCard } from "@luraba/contracts"
 import { CreditCardPreview } from "@/components/credit-cards/credit-card-preview"
 import { Button } from "@/components/ui/button"
 import { Typography } from "@/components/ui/typography"
-import type { CreditCard } from "@/interfaces/credit-card"
 
 export function CreditCardCarousel({
   cards,

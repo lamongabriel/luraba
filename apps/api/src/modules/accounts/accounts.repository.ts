@@ -1,3 +1,4 @@
+import type { AccountSubtype } from '@luraba/contracts/accounts';
 import { and, eq, sql } from 'drizzle-orm';
 import { unionAll } from 'drizzle-orm/pg-core';
 import type { HouseholdContext } from '@/config/permissions';
@@ -21,9 +22,9 @@ import { HouseholdScopedRepository } from '@/shared/repositories/household-scope
 import {
   buildAccountsListOrder,
   buildAccountsListWhere,
-  type ListAccountsRequestQuery,
+  type ListAccountsQuery,
 } from './accounts.query';
-import type { AccountRecord, AccountSubtype } from './accounts.types';
+import type { AccountRecord } from './accounts.types';
 
 type CreateAccountValues = Omit<
   typeof accountsTable.$inferInsert,
@@ -126,7 +127,7 @@ class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
 
   async listPage(
     context: HouseholdContext,
-    query: ListAccountsRequestQuery,
+    query: ListAccountsQuery,
   ): Promise<DbListPage<AccountDetailsRecord>> {
     const accountBalances = buildAccountBalanceSubquery();
     const accountProfiles = buildAccountProfileSummarySubquery();

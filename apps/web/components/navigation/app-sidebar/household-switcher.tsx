@@ -2,9 +2,13 @@
 
 import { ArrowRight01Icon, Settings02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type {
+  HouseholdContext,
+  HouseholdSummary,
+  User,
+} from "@luraba/contracts"
 import Link from "next/link"
 import * as React from "react"
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,8 +27,6 @@ import {
 } from "@/components/ui/sidebar"
 import { Typography } from "@/components/ui/typography"
 import { STORAGE_KEYS } from "@/config/storage"
-import type { HouseholdContext, HouseholdSummary } from "@/interfaces/household"
-import type { User } from "@/interfaces/user"
 import { readStorage, writeStorage } from "@/lib/local-storage"
 
 const HOUSEHOLD_CHANGED_EVENT = "luraba:household-change"

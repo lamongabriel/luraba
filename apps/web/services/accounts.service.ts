@@ -1,60 +1,56 @@
 "use client"
 
-import type {
-  CreateAccountHttpBody,
-  CreateAccountHttpResponse,
-  GetAccountHttpResponse,
-  ListAccountsHttpQuery,
-  ListAccountsHttpResponse,
-  ListAccountTransactionsHttpQuery,
-  ListAccountTransactionsHttpResponse,
-  UpdateAccountHttpBody,
-  UpdateAccountHttpResponse,
-} from "@/interfaces/http/accounts-http"
 import {
-  deleteApiResource,
-  getApiData,
-  getApiList,
-  patchApiData,
-  postApiData,
-} from "@/services/api-client.service"
-import { serializeHttpQuery } from "@/services/http-query"
+  accountsEndpoints,
+  type CreateAccountInput,
+  type CreateAccountResult,
+  type DeleteAccountResult,
+  type GetAccountResult,
+  type ListAccountsQuery,
+  type ListAccountsResult,
+  type ListAccountTransactionsQuery,
+  type ListAccountTransactionsResult,
+  type UpdateAccountInput,
+  type UpdateAccountResult,
+} from "@luraba/contracts"
+import { requestContract } from "@/services/contract-client.service"
 
 export function listAccounts(
-  query: ListAccountsHttpQuery = {},
-): Promise<ListAccountsHttpResponse> {
-  return getApiList("/accounts", { params: serializeHttpQuery(query) })
+  query: ListAccountsQuery = {},
+): Promise<ListAccountsResult> {
+  return requestContract(accountsEndpoints.list, { query })
 }
 
-export function getAccount(id: string): Promise<GetAccountHttpResponse> {
-  return getApiData(`/accounts/${id}`)
+export function getAccount(id: string): Promise<GetAccountResult> {
+  return requestContract(accountsEndpoints.get, { params: { id } })
 }
 
 export function listAccountTransactions(
-  accountId: string,
-  query: ListAccountTransactionsHttpQuery = {},
-): Promise<ListAccountTransactionsHttpResponse> {
-  return getApiList(`/accounts/${accountId}/transactions`, {
-    params: serializeHttpQuery(query),
+  id: string,
+  query: ListAccountTransactionsQuery = {},
+): Promise<ListAccountTransactionsResult> {
+  return requestContract(accountsEndpoints.transactions, {
+    params: { id },
+    query,
   })
 }
 
 export function createAccount(
-  body: CreateAccountHttpBody,
-): Promise<CreateAccountHttpResponse> {
-  return postApiData("/accounts", body)
+  input: CreateAccountInput,
+): Promise<CreateAccountResult> {
+  return requestContract(accountsEndpoints.create, { body: input })
 }
 
-export function updateAccount({
-  id,
-  body,
-}: {
-  id: string
-  body: UpdateAccountHttpBody
-}): Promise<UpdateAccountHttpResponse> {
-  return patchApiData(`/accounts/${id}`, body)
+export function updateAccount(
+  id: string,
+  input: UpdateAccountInput,
+): Promise<UpdateAccountResult> {
+  return requestContract(accountsEndpoints.update, {
+    params: { id },
+    body: input,
+  })
 }
 
-export function deleteAccount(id: string): Promise<void> {
-  return deleteApiResource(`/accounts/${id}`)
+export function deleteAccount(id: string): Promise<DeleteAccountResult> {
+  return requestContract(accountsEndpoints.delete, { params: { id } })
 }

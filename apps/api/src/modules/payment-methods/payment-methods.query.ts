@@ -1,41 +1,17 @@
+import type { listPaymentMethodsQuerySchema } from '@luraba/contracts/payment-methods';
 import { eq, isNull, or, type SQL, sql } from 'drizzle-orm';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
 import {
-  booleanQuerySchema,
   buildIlikeSearch,
   buildOrderBy,
   combineConditions,
-  commaSeparatedArraySchema,
-  createListQuerySchema,
   inArrayIfAny,
   nullabilityCondition,
   rangeConditions,
-  temporalQuerySchema,
-  validateRange,
 } from '@/shared/list';
-import { currencySchema } from '@/shared/validation/preferences';
 
-export const paymentMethodScopeSchema = z.enum(['system', 'household']);
-
-export const ListPaymentMethodsRequestQuerySchema = createListQuerySchema(
-  {
-    codes: commaSeparatedArraySchema(z.string().trim().min(1).max(32)),
-    scopes: commaSeparatedArraySchema(paymentMethodScopeSchema),
-    currencyCode: currencySchema.optional(),
-    hasCurrency: booleanQuerySchema.optional(),
-    createdAtFrom: temporalQuerySchema.optional(),
-    createdAtTo: temporalQuerySchema.optional(),
-    updatedAtFrom: temporalQuerySchema.optional(),
-    updatedAtTo: temporalQuerySchema.optional(),
-  },
-  ['name', 'code', 'scope', 'currencyCode', 'createdAt', 'updatedAt'],
-).superRefine((query, ctx) => {
-  validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
-  validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
-});
-
-export type ListPaymentMethodsRequestQuery = z.infer<typeof ListPaymentMethodsRequestQuerySchema>;
+export type ListPaymentMethodsQuery = z.output<typeof listPaymentMethodsQuerySchema>;
 
 export const paymentMethodScopeExpression = sql`
   case when ${paymentMethodsTable.householdId} is null then 'system' else 'household' end
@@ -43,7 +19,7 @@ export const paymentMethodScopeExpression = sql`
 
 export function buildPaymentMethodsListWhere(
   householdId: string,
-  query: ListPaymentMethodsRequestQuery,
+  query: ListPaymentMethodsQuery,
 ): SQL {
   return combineConditions(
     or(isNull(paymentMethodsTable.householdId), eq(paymentMethodsTable.householdId, householdId)),
@@ -67,7 +43,7 @@ export function buildPaymentMethodsListWhere(
   ) as SQL;
 }
 
-export function buildPaymentMethodsListOrder(query: ListPaymentMethodsRequestQuery): SQL[] {
+export function buildPaymentMethodsListOrder(query: ListPaymentMethodsQuery): SQL[] {
   return buildOrderBy(
     query,
     {

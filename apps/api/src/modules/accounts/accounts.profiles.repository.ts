@@ -1,3 +1,9 @@
+import type {
+  AccountProfile,
+  AccountType,
+  CreateAccountProfile,
+  UpdateAccountProfile,
+} from '@luraba/contracts/accounts';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import {
@@ -11,12 +17,6 @@ import {
   vehicleAccountProfilesTable,
 } from '@/db/schemas/account-profiles.schema';
 import type { TxClient } from '@/db/types';
-import type {
-  AccountProfile,
-  CreateAccountProfile,
-  UpdateAccountProfile,
-} from './accounts.profiles';
-import type { AccountType } from './accounts.types';
 
 const nullable = <T>(value: T | null | undefined): T | null => value ?? null;
 const withoutKind = <T extends { kind: string }>(details: T): Omit<T, 'kind'> => {

@@ -1,22 +1,16 @@
+import { authEndpoints } from '@luraba/contracts/auth';
 import * as householdsService from '@/modules/households/households.service';
 import { createAuthenticatedHandler } from '@/shared/controllers/authenticated.controller';
 import { createHandler } from '@/shared/controllers/controller';
 import * as authService from './auth.service';
-import {
-  GetAuthProvidersResponseSchema,
-  GetMeResponseSchema,
-  GetMyPreferencesResponseSchema,
-  UpdateMyPreferencesRequestBodySchema,
-  UpdateMyPreferencesResponseSchema,
-} from './auth.types';
 
 export const getProviders = createHandler({
-  response: GetAuthProvidersResponseSchema,
+  response: authEndpoints.providers.response,
   handle: async () => authService.getProviders(),
 });
 
 export const me = createAuthenticatedHandler({
-  response: GetMeResponseSchema,
+  response: authEndpoints.me.response,
   handle: async ({ req, user }) => {
     const rawHouseholdId = req.headers['x-household-id'];
     const selectedHouseholdId = Array.isArray(rawHouseholdId) ? rawHouseholdId[0] : rawHouseholdId;
@@ -28,12 +22,12 @@ export const me = createAuthenticatedHandler({
 });
 
 export const getMyPreferences = createAuthenticatedHandler({
-  response: GetMyPreferencesResponseSchema,
+  response: authEndpoints.preferences.response,
   handle: ({ user }) => authService.getMyPreferences(user.id),
 });
 
 export const updateMyPreferences = createAuthenticatedHandler({
-  body: UpdateMyPreferencesRequestBodySchema,
-  response: UpdateMyPreferencesResponseSchema,
+  body: authEndpoints.updatePreferences.body,
+  response: authEndpoints.updatePreferences.response,
   handle: ({ user, body }) => authService.updateMyPreferences(user.id, body),
 });

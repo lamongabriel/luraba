@@ -1,10 +1,9 @@
-import { format } from "date-fns"
-
 import type {
   CreditCardPayment,
   CreditCardPurchase,
-} from "@/interfaces/credit-card"
-import type { TransactionFeedRow } from "@/interfaces/transaction"
+  TransactionFeedRow,
+} from "@luraba/contracts"
+import { format } from "date-fns"
 import { minorToMajorUnits } from "@/lib/finance"
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query"
 

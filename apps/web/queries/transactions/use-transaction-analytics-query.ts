@@ -1,13 +1,12 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
-
 import type {
-  TransactionAnalyticsHttpQuery,
-  TransactionAnalyticsHttpResponse,
-  UpcomingTransactionsHttpQuery,
-  UpcomingTransactionsHttpResponse,
-} from "@/interfaces/http/transactions-http"
+  TransactionAnalyticsQuery,
+  TransactionAnalyticsResult,
+  UpcomingTransactionsQuery,
+  UpcomingTransactionsResult,
+} from "@luraba/contracts"
+import { useQuery } from "@tanstack/react-query"
 import type { AppQueryOptions } from "@/queries/query-options"
 import {
   getTransactionAnalytics,
@@ -16,15 +15,15 @@ import {
 
 export const transactionAnalyticsQueryKeys = {
   all: ["transactions"] as const,
-  analytics: (query: TransactionAnalyticsHttpQuery) =>
+  analytics: (query: TransactionAnalyticsQuery) =>
     [...transactionAnalyticsQueryKeys.all, "analytics", query] as const,
-  upcoming: (query: UpcomingTransactionsHttpQuery) =>
+  upcoming: (query: UpcomingTransactionsQuery) =>
     [...transactionAnalyticsQueryKeys.all, "upcoming", query] as const,
 }
 
 export function useTransactionAnalyticsQuery(
-  query: TransactionAnalyticsHttpQuery = {},
-  options?: AppQueryOptions<TransactionAnalyticsHttpResponse>,
+  query: TransactionAnalyticsQuery = {},
+  options?: AppQueryOptions<TransactionAnalyticsResult>,
 ) {
   return useQuery({
     queryKey: transactionAnalyticsQueryKeys.analytics(query),
@@ -34,8 +33,8 @@ export function useTransactionAnalyticsQuery(
 }
 
 export function useUpcomingTransactionsQuery(
-  query: UpcomingTransactionsHttpQuery = {},
-  options?: AppQueryOptions<UpcomingTransactionsHttpResponse>,
+  query: UpcomingTransactionsQuery = {},
+  options?: AppQueryOptions<UpcomingTransactionsResult>,
 ) {
   return useQuery({
     queryKey: transactionAnalyticsQueryKeys.upcoming(query),

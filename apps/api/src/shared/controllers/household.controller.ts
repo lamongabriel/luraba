@@ -3,7 +3,6 @@ import type { HouseholdContext } from '@/config/permissions';
 import { getHouseholdContext } from '@/middleware/access.middleware';
 import {
   type ControllerArgs,
-  type ControllerOutput,
   type ControllerSchema,
   type ControllerStatus,
   createHandler,
@@ -16,6 +15,7 @@ export function createHouseholdHandler<
   TParams extends ControllerSchema = undefined,
   TQuery extends ControllerSchema = undefined,
   TResponse extends Schema = Schema,
+  TMeta extends ControllerSchema = undefined,
 >(
   options:
     | {
@@ -23,9 +23,10 @@ export function createHouseholdHandler<
         params?: TParams;
         query?: TQuery;
         response: TResponse;
+        meta?: TMeta;
         handle: (
           input: ControllerArgs<TBody, TParams, TQuery> & { household: HouseholdContext },
-        ) => Promise<ControllerOutput<TResponse>>;
+        ) => Promise<unknown>;
         status?: Exclude<ControllerStatus, 'no-content'>;
       }
     | {
@@ -56,6 +57,7 @@ export function createHouseholdHandler<
     params: options.params,
     query: options.query,
     response: options.response,
+    meta: options.meta,
     status: options.status,
     handle: ({ req, body, params, query }) => {
       const household = getHouseholdContext(req);

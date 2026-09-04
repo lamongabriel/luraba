@@ -2,9 +2,9 @@
 
 import { ArrowRight01Icon, WalletIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { AccountSummary } from "@luraba/contracts"
 import Link from "next/link"
 import * as React from "react"
-
 import { AccountSheet } from "@/components/accounts/account-sheet"
 import { EmptyState } from "@/components/empty-state"
 import { InternalPageLayout } from "@/components/finance/internal-page-layout"
@@ -13,7 +13,6 @@ import { ItemReveal, SectionReveal } from "@/components/motion/reveal"
 import { PERMISSIONS, PermissionButton } from "@/components/permissions"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Typography } from "@/components/ui/typography"
-import type { AccountSummary } from "@/interfaces/account"
 import {
   formatAccountSubtypeLabel,
   formatAccountTypeLabel,

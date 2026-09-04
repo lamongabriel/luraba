@@ -7,7 +7,7 @@ import { type DbListPage, getPagination } from '@/shared/list';
 import {
   buildPaymentMethodsListOrder,
   buildPaymentMethodsListWhere,
-  type ListPaymentMethodsRequestQuery,
+  type ListPaymentMethodsQuery,
 } from './payment-methods.query';
 import type { PaymentMethodRecord } from './payment-methods.types';
 
@@ -42,7 +42,7 @@ class PaymentMethodsRepository {
 
   async listPage(
     context: HouseholdContext,
-    query: ListPaymentMethodsRequestQuery,
+    query: ListPaymentMethodsQuery,
   ): Promise<DbListPage<PaymentMethodRecord>> {
     const where = buildPaymentMethodsListWhere(context.householdId, query);
     const orderBy = buildPaymentMethodsListOrder(query);

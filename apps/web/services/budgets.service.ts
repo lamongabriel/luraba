@@ -1,27 +1,29 @@
 "use client"
-
-import type {
-  GetMonthlyBudgetHttpQuery,
-  GetMonthlyBudgetHttpResponse,
-  ReplaceMonthlyBudgetHttpBody,
-  ReplaceMonthlyBudgetHttpResponse,
-} from "@/interfaces/http/budgets-http"
-import { getApiData, putApiData } from "@/services/api-client.service"
-import { serializeHttpQuery } from "@/services/http-query"
+import {
+  budgetsEndpoints,
+  type GetMonthlyBudgetQuery,
+  type GetMonthlyBudgetResult,
+  type ReplaceMonthlyBudgetInput,
+  type ReplaceMonthlyBudgetResult,
+} from "@luraba/contracts"
+import { requestContract } from "@/services/contract-client.service"
 
 export function getMonthlyBudget(
   month: string,
-  query: GetMonthlyBudgetHttpQuery = {},
-): Promise<GetMonthlyBudgetHttpResponse> {
-  return getApiData(`/budgets/${month}`, { params: serializeHttpQuery(query) })
+  query: GetMonthlyBudgetQuery = {},
+): Promise<GetMonthlyBudgetResult> {
+  return requestContract(budgetsEndpoints.getMonth, {
+    params: { month },
+    query,
+  })
 }
 
-export function replaceMonthlyBudget({
-  month,
-  body,
-}: {
-  month: string
-  body: ReplaceMonthlyBudgetHttpBody
-}): Promise<ReplaceMonthlyBudgetHttpResponse> {
-  return putApiData(`/budgets/${month}`, body)
+export function replaceMonthlyBudget(
+  month: string,
+  input: ReplaceMonthlyBudgetInput,
+): Promise<ReplaceMonthlyBudgetResult> {
+  return requestContract(budgetsEndpoints.replaceMonth, {
+    params: { month },
+    body: input,
+  })
 }

@@ -1,3 +1,4 @@
+import { listMerchantsQuerySchema } from '@luraba/contracts/merchants';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/db';
 import { brandfetchIntegrationsTable } from '@/db/schemas/brandfetch-integrations.schema';
@@ -5,7 +6,6 @@ import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import { buildMerchantInput } from '@/test/factories';
-import { ListMerchantsRequestQuerySchema } from '../merchants.query';
 import * as merchantsService from '../merchants.service';
 
 describe('merchants service', () => {
@@ -93,7 +93,7 @@ describe('merchants service', () => {
 
     const merchants = await merchantsService.listMerchants(
       context.householdContext,
-      ListMerchantsRequestQuerySchema.parse({}),
+      listMerchantsQuerySchema.parse({}),
     );
 
     expect(merchants.data).toHaveLength(1);
@@ -150,7 +150,7 @@ describe('merchants DB list filters', () => {
 
     const result = await merchantsService.listMerchants(
       context.householdContext,
-      ListMerchantsRequestQuerySchema.parse({
+      listMerchantsQuerySchema.parse({
         search: 'Target',
         hasDomain: true,
         hasLogo: false,

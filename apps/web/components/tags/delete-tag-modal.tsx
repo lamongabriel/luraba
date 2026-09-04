@@ -2,8 +2,8 @@
 
 import { Alert02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { Tag } from "@luraba/contracts"
 import * as React from "react"
-
 import {
   Modal,
   ModalBody,
@@ -11,7 +11,6 @@ import {
   ModalFooter,
 } from "@/components/ui/modal"
 import { Typography } from "@/components/ui/typography"
-import type { Tag } from "@/interfaces/tag"
 import { queryClient } from "@/lib/query-client"
 import { useDeleteTagMutation } from "@/mutations/tags/use-tag-mutations"
 import { tagQueryKeys } from "@/queries/tags/use-tags-query"

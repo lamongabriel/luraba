@@ -1,62 +1,20 @@
 import { z } from "zod";
 
 export const householdRoleSchema = z.enum(["owner", "admin", "member", "viewer"]);
-export type HouseholdRole = z.infer<typeof householdRoleSchema>;
+export type HouseholdRole = z.output<typeof householdRoleSchema>;
 
-export const householdInviteStatusSchema = z.enum([
+export const storedHouseholdInviteStatusSchema = z.enum([
   "pending",
   "accepted",
-  "expired",
   "rejected",
   "canceled",
 ]);
-export type HouseholdInviteStatus = z.infer<typeof householdInviteStatusSchema>;
-
-export const HOUSEHOLD_PERMISSIONS = [
-  "household.read",
-  "household.update",
-  "household.delete",
-  "household.members.read",
-  "household.members.manage",
-  "household.invites.manage",
-  "accounts.read",
-  "accounts.create",
-  "accounts.update",
-  "accounts.delete",
-  "transactions.read",
-  "transactions.create",
-  "transactions.update",
-  "transactions.delete",
-  "categories.read",
-  "categories.create",
-  "categories.update",
-  "categories.delete",
-  "tags.read",
-  "tags.create",
-  "tags.update",
-  "tags.delete",
-  "paymentMethods.read",
-  "paymentMethods.create",
-  "paymentMethods.update",
-  "paymentMethods.delete",
-  "merchants.read",
-  "merchants.create",
-  "merchants.update",
-  "merchants.delete",
-  "integrations.read",
-  "integrations.update",
-  "integrations.delete",
-  "budgets.read",
-  "budgets.update",
-  "creditCards.read",
-  "creditCards.create",
-  "creditCards.update",
-  "creditCards.delete",
-  "recurringBills.read",
-  "recurringBills.create",
-  "recurringBills.update",
-  "recurringBills.delete",
-] as const;
+export const householdInviteStatusSchema = z.enum([
+  ...storedHouseholdInviteStatusSchema.options,
+  "expired",
+]);
+export type StoredHouseholdInviteStatus = z.output<typeof storedHouseholdInviteStatusSchema>;
+export type HouseholdInviteStatus = z.output<typeof householdInviteStatusSchema>;
 
 export const PERMISSIONS = {
   HOUSEHOLD_READ: "household.read",
@@ -102,10 +60,13 @@ export const PERMISSIONS = {
   RECURRING_BILLS_CREATE: "recurringBills.create",
   RECURRING_BILLS_UPDATE: "recurringBills.update",
   RECURRING_BILLS_DELETE: "recurringBills.delete",
-} as const satisfies Record<string, (typeof HOUSEHOLD_PERMISSIONS)[number]>;
+} as const;
 
-export const householdPermissionSchema = z.enum(HOUSEHOLD_PERMISSIONS);
-export type HouseholdPermission = z.infer<typeof householdPermissionSchema>;
+export const householdPermissionSchema = z.enum(PERMISSIONS);
+export type HouseholdPermission = z.output<typeof householdPermissionSchema>;
+export type PermissionKey = HouseholdPermission;
+export type PermissionMatch = "any" | "all";
+export type PermissionInput = PermissionKey | readonly PermissionKey[];
 
 export const HOUSEHOLD_ROLE_METADATA = {
   owner: { label: "Owner", description: "Full household control.", canBeInvited: false },

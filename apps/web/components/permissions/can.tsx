@@ -1,8 +1,8 @@
 "use client"
 
+import type { PermissionInput, PermissionMatch } from "@luraba/contracts"
 import type { ReactNode } from "react"
 
-import type { PermissionInput, PermissionMatch } from "./permissions.constants"
 import { Unauthorized } from "./unauthorized"
 import { useCan } from "./use-can"
 

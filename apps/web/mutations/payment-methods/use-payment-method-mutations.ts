@@ -1,11 +1,5 @@
 "use client"
 
-import type {
-  CreatePaymentMethodHttpBody,
-  CreatePaymentMethodHttpResponse,
-  UpdatePaymentMethodHttpBody,
-  UpdatePaymentMethodHttpResponse,
-} from "@/interfaces/http/payment-methods-http"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
@@ -17,10 +11,22 @@ import {
   updatePaymentMethod,
 } from "@/services/payment-methods.service"
 
+type CreatePaymentMethodBody = Parameters<typeof createPaymentMethod>[0]
+type CreatePaymentMethodResponse = Awaited<
+  ReturnType<typeof createPaymentMethod>
+>
+type UpdatePaymentMethodVariables = {
+  id: string
+  body: Parameters<typeof updatePaymentMethod>[1]
+}
+type UpdatePaymentMethodResponse = Awaited<
+  ReturnType<typeof updatePaymentMethod>
+>
+
 export const createPaymentMethodMutationDefinition =
   createAppMutationDefinition<
-    CreatePaymentMethodHttpResponse,
-    CreatePaymentMethodHttpBody
+    CreatePaymentMethodResponse,
+    CreatePaymentMethodBody
   >({
     defaultErrorMessage:
       "We couldn't create this payment method. Please try again.",
@@ -29,31 +35,27 @@ export const createPaymentMethodMutationDefinition =
   })
 export function useCreatePaymentMethodMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    CreatePaymentMethodHttpResponse,
-    CreatePaymentMethodHttpBody,
+    CreatePaymentMethodResponse,
+    CreatePaymentMethodBody,
     TContext
   >,
 ) {
   return useAppMutation(createPaymentMethodMutationDefinition, options)
 }
 
-type UpdatePaymentMethodVariables = {
-  id: string
-  body: UpdatePaymentMethodHttpBody
-}
 export const updatePaymentMethodMutationDefinition =
   createAppMutationDefinition<
-    UpdatePaymentMethodHttpResponse,
+    UpdatePaymentMethodResponse,
     UpdatePaymentMethodVariables
   >({
     defaultErrorMessage:
       "We couldn't update this payment method. Please try again.",
-    mutationFn: updatePaymentMethod,
+    mutationFn: ({ id, body }) => updatePaymentMethod(id, body),
     mutationKey: ["payment-methods", "update"],
   })
 export function useUpdatePaymentMethodMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdatePaymentMethodHttpResponse,
+    UpdatePaymentMethodResponse,
     UpdatePaymentMethodVariables,
     TContext
   >,

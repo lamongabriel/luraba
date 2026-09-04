@@ -1,12 +1,21 @@
+import { authEndpoints, getEndpointRouterPath } from '@luraba/contracts';
 import { Router } from 'express';
 import { requireAccess } from '@/middleware/access.middleware';
 import * as authController from './auth.controller';
 
 const router = Router();
 
-router.get('/providers', authController.getProviders);
-router.get('/me', requireAccess(), authController.me);
-router.get('/me/preferences', requireAccess(), authController.getMyPreferences);
-router.patch('/me/preferences', requireAccess(), authController.updateMyPreferences);
+router.get(getEndpointRouterPath(authEndpoints.providers), authController.getProviders);
+router.get(getEndpointRouterPath(authEndpoints.me), requireAccess(), authController.me);
+router.get(
+  getEndpointRouterPath(authEndpoints.preferences),
+  requireAccess(),
+  authController.getMyPreferences,
+);
+router.patch(
+  getEndpointRouterPath(authEndpoints.updatePreferences),
+  requireAccess(),
+  authController.updateMyPreferences,
+);
 
 export default router;

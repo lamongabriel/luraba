@@ -1,9 +1,9 @@
 "use client"
 
+import type { CreditCard } from "@luraba/contracts"
 import { CreateEditCreditCardForm } from "@/components/forms/create-edit-credit-card-form/create-edit-credit-card-form"
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary"
 import { FormSheet } from "@/components/forms/form-sheet"
-import type { CreditCard } from "@/interfaces/credit-card"
 
 export function CreditCardSheet({
   card,

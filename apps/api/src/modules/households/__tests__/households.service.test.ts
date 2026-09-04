@@ -1,13 +1,13 @@
+import {
+  listHouseholdInvitesQuerySchema,
+  listHouseholdMembersQuerySchema,
+  listHouseholdsQuerySchema,
+  listMyHouseholdInvitesQuerySchema,
+} from '@luraba/contracts/households';
 import { describe, expect, it } from 'vitest';
 import { ValidationError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import { createUser } from '@/test/factories';
-import {
-  ListHouseholdInvitesRequestQuerySchema,
-  ListHouseholdMembersRequestQuerySchema,
-  ListHouseholdsRequestQuerySchema,
-  ListMyHouseholdInvitesRequestQuerySchema,
-} from '../households.query';
 import { householdsRepository } from '../households.repository';
 import * as householdsService from '../households.service';
 
@@ -17,7 +17,7 @@ describe('households service', () => {
 
     const households = await householdsService.listHouseholds(
       user.id,
-      ListHouseholdsRequestQuerySchema.parse({}),
+      listHouseholdsQuerySchema.parse({}),
     );
 
     expect(households.data).toEqual([]);
@@ -96,7 +96,7 @@ describe('households service', () => {
 
     const pendingInvites = await householdsService.listMyPendingInvites(
       invitedUser.email,
-      ListMyHouseholdInvitesRequestQuerySchema.parse({}),
+      listMyHouseholdInvitesQuerySchema.parse({}),
     );
     expect(pendingInvites.data).toHaveLength(0);
   });
@@ -117,7 +117,7 @@ describe('households DB list filters', () => {
 
     const households = await householdsService.listHouseholds(
       context.user.id,
-      ListHouseholdsRequestQuerySchema.parse({
+      listHouseholdsQuerySchema.parse({
         search: context.household.name,
         roles: 'owner,member',
         countryCodes: context.household.countryCode,
@@ -142,7 +142,7 @@ describe('households DB list filters', () => {
     const members = await householdsService.listMembers(
       context.householdContext,
       context.household.id,
-      ListHouseholdMembersRequestQuerySchema.parse({
+      listHouseholdMembersQuerySchema.parse({
         search: context.user.email,
         roles: 'owner',
         createdAtFrom: '2020-01-01',
@@ -156,7 +156,7 @@ describe('households DB list filters', () => {
     const invites = await householdsService.listHouseholdInvites(
       context.householdContext,
       context.household.id,
-      ListHouseholdInvitesRequestQuerySchema.parse({
+      listHouseholdInvitesQuerySchema.parse({
         search: invitedUser.email,
         roles: 'member',
         statuses: 'pending',
@@ -170,7 +170,7 @@ describe('households DB list filters', () => {
 
     const personal = await householdsService.listMyPendingInvites(
       invitedUser.email,
-      ListMyHouseholdInvitesRequestQuerySchema.parse({
+      listMyHouseholdInvitesQuerySchema.parse({
         householdIds: context.household.id,
         roles: 'member',
         statuses: 'pending',

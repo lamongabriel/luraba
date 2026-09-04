@@ -19,9 +19,10 @@ export type ParsedInput<TSchema extends ControllerSchema> = TSchema extends Sche
   ? z.output<TSchema>
   : EmptyInput;
 export type ParsedResponse<TSchema extends Schema> = z.output<TSchema>;
+export type UnparsedResponse<TSchema extends Schema> = z.input<TSchema>;
 export type ControllerOutput<TSchema extends Schema> =
-  | ParsedResponse<TSchema>
-  | ApiResponsePayload<ParsedResponse<TSchema>>;
+  | UnparsedResponse<TSchema>
+  | ApiResponsePayload<UnparsedResponse<TSchema>>;
 
 export type ControllerArgs<
   TBody extends ControllerSchema,
@@ -69,12 +70,16 @@ type ResponseHandlerOptions<
   TParams extends ControllerSchema,
   TQuery extends ControllerSchema,
   TResponse extends Schema,
+  TMeta extends ControllerSchema,
 > = {
   body?: TBody;
   params?: TParams;
   query?: TQuery;
   response: TResponse;
-  handle: (input: ControllerArgs<TBody, TParams, TQuery>) => Promise<ControllerOutput<TResponse>>;
+  meta?: TMeta;
+  // Service values are intentionally unknown here: the response contract is the
+  // runtime boundary and must validate even independently typed service output.
+  handle: (input: ControllerArgs<TBody, TParams, TQuery>) => Promise<unknown>;
   status?: Exclude<ControllerStatus, 'no-content'>;
 };
 
@@ -95,9 +100,10 @@ export function createHandler<
   TParams extends ControllerSchema = undefined,
   TQuery extends ControllerSchema = undefined,
   TResponse extends Schema = Schema,
+  TMeta extends ControllerSchema = undefined,
 >(
   options:
-    | ResponseHandlerOptions<TBody, TParams, TQuery, TResponse>
+    | ResponseHandlerOptions<TBody, TParams, TQuery, TResponse, TMeta>
     | NoContentHandlerOptions<TBody, TParams, TQuery>,
 ) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -118,7 +124,8 @@ export function createHandler<
 
       if (isApiResponsePayload(data)) {
         const response = options.response.parse(data.data) as ParsedResponse<TResponse>;
-        sendResponse(res, response, options.status, data.meta);
+        const meta = options.meta?.parse(data.meta) as ApiResponseMeta | undefined;
+        sendResponse(res, response, options.status, meta ?? data.meta);
         return;
       }
 

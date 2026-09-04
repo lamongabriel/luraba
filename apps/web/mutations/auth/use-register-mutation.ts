@@ -1,16 +1,16 @@
 "use client"
 
 import { lurabaAuthApiClient } from "@/api/luraba-auth-api"
-import type { SignUpEmailHttpBody } from "@/interfaces/http/auth-http"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
   useAppMutation,
 } from "@/mutations/app-mutation"
+import type { SignUpEmailInput } from "@/services/auth-sdk.types"
 
 export const registerMutationDefinition = createAppMutationDefinition<
   void,
-  SignUpEmailHttpBody
+  SignUpEmailInput
 >({
   defaultErrorMessage: "We couldn't create your account. Please try again.",
   mutationFn: async (body) => {
@@ -27,7 +27,7 @@ export const registerMutationDefinition = createAppMutationDefinition<
 })
 
 export function useRegisterMutation<TContext = unknown>(
-  options?: UseAppMutationOptions<void, SignUpEmailHttpBody, TContext>,
+  options?: UseAppMutationOptions<void, SignUpEmailInput, TContext>,
 ) {
   return useAppMutation(registerMutationDefinition, options)
 }

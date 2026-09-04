@@ -28,13 +28,13 @@ import {
   resolveTransferAmounts,
   toRawLedgerBalance,
 } from './transactions.helpers';
-import type { ListTransactionsRequestQuery } from './transactions.query';
+import type { ListTransactionsQuery } from './transactions.query';
 import * as txRepository from './transactions.repository';
 import type {
   CreateTransactionDto,
   TransactionFeedRow,
   TransactionResponse,
-  UpdateTransactionRequestBody,
+  UpdateTransactionValues,
 } from './transactions.types';
 
 // -----------------------------------------------------------------------------
@@ -559,7 +559,7 @@ async function hydrateTransactionFeedPage(
 
 export async function listTransactions(
   context: HouseholdContext,
-  query: ListTransactionsRequestQuery,
+  query: ListTransactionsQuery,
   options: { includeAdjustments?: boolean; maxPostedDate?: string } = {},
 ): Promise<ListResult<TransactionFeedRow>> {
   const page = await txRepository.listTransactionFeedPageKeys(context.householdId, query, options);
@@ -577,7 +577,7 @@ export async function listTransactions(
 export async function updateTransaction(
   context: HouseholdContext,
   transactionId: string,
-  body: UpdateTransactionRequestBody,
+  body: UpdateTransactionValues,
 ): Promise<TransactionResponse> {
   const rows = await txRepository.listDetailedByTransactionIds(context, [transactionId]);
   const [transaction] = mapDetailedRows(rows);

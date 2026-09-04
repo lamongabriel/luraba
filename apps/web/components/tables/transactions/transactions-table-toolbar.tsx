@@ -2,6 +2,7 @@
 
 import { Cancel01Icon, FilterIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { TransactionFeedRow } from "@luraba/contracts"
 import type { Table } from "@tanstack/react-table"
 import { format, isValid, parseISO } from "date-fns"
 import * as React from "react"
@@ -31,7 +32,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Typography } from "@/components/ui/typography"
-import type { TransactionFeedRow } from "@/interfaces/transaction"
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query"
 
 function parseDate(value: string) {

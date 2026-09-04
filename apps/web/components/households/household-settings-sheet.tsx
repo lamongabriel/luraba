@@ -1,9 +1,8 @@
 "use client"
 
+import type { CreateHouseholdInput, HouseholdSummary } from "@luraba/contracts"
 import { CreateEditHouseholdForm } from "@/components/forms/create-edit-household-form/create-edit-household-form"
 import { FormSheet } from "@/components/forms/form-sheet"
-import type { HouseholdSummary } from "@/interfaces/household"
-import type { CreateHouseholdHttpBody } from "@/interfaces/http/households-http"
 
 export function HouseholdSettingsSheet({
   open,
@@ -16,7 +15,7 @@ export function HouseholdSettingsSheet({
   open: boolean
   onOpenChange: (open: boolean) => void
   household?: HouseholdSummary | null
-  onSubmit: (body: CreateHouseholdHttpBody) => void
+  onSubmit: (body: CreateHouseholdInput) => void
   isPending?: boolean
   mode?: "create" | "edit"
 }) {

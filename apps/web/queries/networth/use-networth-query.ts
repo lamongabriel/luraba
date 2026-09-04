@@ -2,16 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query"
 
-import type {
-  GetNetWorthAccountsHttpResponse,
-  GetNetWorthBreakdownHttpResponse,
-  GetNetWorthCashFlowHttpResponse,
-  GetNetWorthCreditCardsHttpResponse,
-  GetNetWorthHistoryHttpResponse,
-  GetNetWorthRecentActivityHttpResponse,
-  GetNetWorthSummaryHttpResponse,
-  NetWorthHttpQuery,
-} from "@/interfaces/http/networth-http"
 import type { AppQueryOptions } from "@/queries/query-options"
 import {
   getNetWorthAccounts,
@@ -24,15 +14,30 @@ import {
   getNetWorthSummary,
 } from "@/services/networth.service"
 
+type NetWorthQuery = Parameters<typeof getNetWorthSummary>[0]
+type NetWorthSummaryResponse = Awaited<ReturnType<typeof getNetWorthSummary>>
+type NetWorthHistoryResponse = Awaited<ReturnType<typeof getNetWorthHistory>>
+type NetWorthAccountsResponse = Awaited<ReturnType<typeof getNetWorthAccounts>>
+type NetWorthCashFlowResponse = Awaited<ReturnType<typeof getNetWorthCashFlow>>
+type NetWorthBreakdownResponse = Awaited<
+  ReturnType<typeof getNetWorthSpendingBreakdown>
+>
+type NetWorthRecentActivityResponse = Awaited<
+  ReturnType<typeof getNetWorthRecentActivity>
+>
+type NetWorthCreditCardsResponse = Awaited<
+  ReturnType<typeof getNetWorthCreditCards>
+>
+
 export const netWorthQueryKeys = {
   all: ["networth"] as const,
-  widget: (name: string, query: NetWorthHttpQuery) =>
+  widget: (name: string, query: NetWorthQuery) =>
     [...netWorthQueryKeys.all, name, query] as const,
 }
 
 function useNetWorthWidget<TData>(
   name: string,
-  query: NetWorthHttpQuery,
+  query: NetWorthQuery,
   queryFn: () => Promise<TData>,
   options?: AppQueryOptions<TData>,
 ) {
@@ -44,8 +49,8 @@ function useNetWorthWidget<TData>(
 }
 
 export function useNetWorthSummaryQuery(
-  query: NetWorthHttpQuery,
-  options?: AppQueryOptions<GetNetWorthSummaryHttpResponse>,
+  query: NetWorthQuery,
+  options?: AppQueryOptions<NetWorthSummaryResponse>,
 ) {
   return useNetWorthWidget(
     "summary",
@@ -55,8 +60,8 @@ export function useNetWorthSummaryQuery(
   )
 }
 export function useNetWorthHistoryQuery(
-  query: NetWorthHttpQuery,
-  options?: AppQueryOptions<GetNetWorthHistoryHttpResponse>,
+  query: NetWorthQuery,
+  options?: AppQueryOptions<NetWorthHistoryResponse>,
 ) {
   return useNetWorthWidget(
     "history",
@@ -66,8 +71,8 @@ export function useNetWorthHistoryQuery(
   )
 }
 export function useNetWorthAccountsQuery(
-  query: NetWorthHttpQuery,
-  options?: AppQueryOptions<GetNetWorthAccountsHttpResponse>,
+  query: NetWorthQuery,
+  options?: AppQueryOptions<NetWorthAccountsResponse>,
 ) {
   return useNetWorthWidget(
     "accounts",
@@ -77,8 +82,8 @@ export function useNetWorthAccountsQuery(
   )
 }
 export function useNetWorthCashFlowQuery(
-  query: NetWorthHttpQuery,
-  options?: AppQueryOptions<GetNetWorthCashFlowHttpResponse>,
+  query: NetWorthQuery,
+  options?: AppQueryOptions<NetWorthCashFlowResponse>,
 ) {
   return useNetWorthWidget(
     "cash-flow",
@@ -88,8 +93,8 @@ export function useNetWorthCashFlowQuery(
   )
 }
 export function useNetWorthSpendingQuery(
-  query: NetWorthHttpQuery,
-  options?: AppQueryOptions<GetNetWorthBreakdownHttpResponse>,
+  query: NetWorthQuery,
+  options?: AppQueryOptions<NetWorthBreakdownResponse>,
 ) {
   return useNetWorthWidget(
     "spending",
@@ -99,8 +104,8 @@ export function useNetWorthSpendingQuery(
   )
 }
 export function useNetWorthIncomeQuery(
-  query: NetWorthHttpQuery,
-  options?: AppQueryOptions<GetNetWorthBreakdownHttpResponse>,
+  query: NetWorthQuery,
+  options?: AppQueryOptions<NetWorthBreakdownResponse>,
 ) {
   return useNetWorthWidget(
     "income",
@@ -110,8 +115,8 @@ export function useNetWorthIncomeQuery(
   )
 }
 export function useNetWorthRecentActivityQuery(
-  query: NetWorthHttpQuery,
-  options?: AppQueryOptions<GetNetWorthRecentActivityHttpResponse>,
+  query: NetWorthQuery,
+  options?: AppQueryOptions<NetWorthRecentActivityResponse>,
 ) {
   return useNetWorthWidget(
     "recent-activity",
@@ -121,8 +126,8 @@ export function useNetWorthRecentActivityQuery(
   )
 }
 export function useNetWorthCreditCardsQuery(
-  query: NetWorthHttpQuery,
-  options?: AppQueryOptions<GetNetWorthCreditCardsHttpResponse>,
+  query: NetWorthQuery,
+  options?: AppQueryOptions<NetWorthCreditCardsResponse>,
 ) {
   return useNetWorthWidget(
     "credit-cards",

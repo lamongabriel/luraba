@@ -1,11 +1,5 @@
 "use client"
 
-import type {
-  CreateCategoryHttpBody,
-  CreateCategoryHttpResponse,
-  UpdateCategoryHttpBody,
-  UpdateCategoryHttpResponse,
-} from "@/interfaces/http/categories-http"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
@@ -17,9 +11,17 @@ import {
   updateCategory,
 } from "@/services/categories.service"
 
+type CreateCategoryBody = Parameters<typeof createCategory>[0]
+type CreateCategoryResponse = Awaited<ReturnType<typeof createCategory>>
+type UpdateCategoryVariables = {
+  id: string
+  body: Parameters<typeof updateCategory>[1]
+}
+type UpdateCategoryResponse = Awaited<ReturnType<typeof updateCategory>>
+
 export const createCategoryMutationDefinition = createAppMutationDefinition<
-  CreateCategoryHttpResponse,
-  CreateCategoryHttpBody
+  CreateCategoryResponse,
+  CreateCategoryBody
 >({
   defaultErrorMessage: "We couldn't create this category. Please try again.",
   mutationFn: createCategory,
@@ -28,27 +30,26 @@ export const createCategoryMutationDefinition = createAppMutationDefinition<
 
 export function useCreateCategoryMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    CreateCategoryHttpResponse,
-    CreateCategoryHttpBody,
+    CreateCategoryResponse,
+    CreateCategoryBody,
     TContext
   >,
 ) {
   return useAppMutation(createCategoryMutationDefinition, options)
 }
 
-type UpdateCategoryVariables = { id: string; body: UpdateCategoryHttpBody }
 export const updateCategoryMutationDefinition = createAppMutationDefinition<
-  UpdateCategoryHttpResponse,
+  UpdateCategoryResponse,
   UpdateCategoryVariables
 >({
   defaultErrorMessage: "We couldn't update this category. Please try again.",
-  mutationFn: updateCategory,
+  mutationFn: ({ id, body }) => updateCategory(id, body),
   mutationKey: ["categories", "update"],
 })
 
 export function useUpdateCategoryMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateCategoryHttpResponse,
+    UpdateCategoryResponse,
     UpdateCategoryVariables,
     TContext
   >,

@@ -1,43 +1,32 @@
 "use client"
 
-import type {
-  CreateTagHttpBody,
-  CreateTagHttpResponse,
-  ListTagsHttpQuery,
-  ListTagsHttpResponse,
-  UpdateTagHttpBody,
-  UpdateTagHttpResponse,
-} from "@/interfaces/http/tags-http"
 import {
-  deleteApiResource,
-  getApiList,
-  patchApiData,
-  postApiData,
-} from "@/services/api-client.service"
-import { serializeHttpQuery } from "@/services/http-query"
+  type CreateTagInput,
+  type CreateTagResult,
+  type DeleteTagResult,
+  type ListTagsQuery,
+  type ListTagsResult,
+  tagsEndpoints,
+  type UpdateTagInput,
+  type UpdateTagResult,
+} from "@luraba/contracts"
+import { requestContract } from "@/services/contract-client.service"
 
-export function listTags(
-  query: ListTagsHttpQuery = {},
-): Promise<ListTagsHttpResponse> {
-  return getApiList("/tags", { params: serializeHttpQuery(query) })
+export function listTags(query: ListTagsQuery = {}): Promise<ListTagsResult> {
+  return requestContract(tagsEndpoints.list, { query })
 }
 
-export function createTag(
-  body: CreateTagHttpBody,
-): Promise<CreateTagHttpResponse> {
-  return postApiData("/tags", body)
+export function createTag(input: CreateTagInput): Promise<CreateTagResult> {
+  return requestContract(tagsEndpoints.create, { body: input })
 }
 
-export function updateTag({
-  id,
-  body,
-}: {
-  id: string
-  body: UpdateTagHttpBody
-}): Promise<UpdateTagHttpResponse> {
-  return patchApiData(`/tags/${id}`, body)
+export function updateTag(
+  id: string,
+  input: UpdateTagInput,
+): Promise<UpdateTagResult> {
+  return requestContract(tagsEndpoints.update, { params: { id }, body: input })
 }
 
-export function deleteTag(id: string): Promise<void> {
-  return deleteApiResource(`/tags/${id}`)
+export function deleteTag(id: string): Promise<DeleteTagResult> {
+  return requestContract(tagsEndpoints.delete, { params: { id } })
 }

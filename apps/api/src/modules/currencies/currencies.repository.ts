@@ -1,3 +1,4 @@
+import type { Currency } from '@luraba/contracts/currencies';
 import { asc, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { currenciesTable } from '@/db/schemas/currencies.schema';
@@ -5,9 +6,8 @@ import { type DbListPage, getPagination } from '@/shared/list';
 import {
   buildCurrenciesListOrder,
   buildCurrenciesListWhere,
-  type ListCurrenciesRequestQuery,
+  type ListCurrenciesQuery,
 } from './currencies.query';
-import type { Currency } from './currencies.types';
 
 class CurrenciesRepository {
   async list(): Promise<Currency[]> {
@@ -21,7 +21,7 @@ class CurrenciesRepository {
       .orderBy(asc(currenciesTable.code));
   }
 
-  async listPage(query: ListCurrenciesRequestQuery): Promise<DbListPage<Currency>> {
+  async listPage(query: ListCurrenciesQuery): Promise<DbListPage<Currency>> {
     const where = buildCurrenciesListWhere(query);
     const orderBy = buildCurrenciesListOrder(query);
     const { limit, offset } = getPagination(query);

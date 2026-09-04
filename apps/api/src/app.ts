@@ -1,3 +1,4 @@
+import { getEndpointBasePath, healthEndpoints } from '@luraba/contracts';
 import { toNodeHandler } from 'better-auth/node';
 import cors from 'cors';
 import express from 'express';
@@ -24,7 +25,7 @@ export function createApp() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  app.use('/health', healthRouter);
+  app.use(getEndpointBasePath(healthEndpoints.get), healthRouter);
   app.use('/api/v1', v1Router);
   app.use(errorMiddleware);
 

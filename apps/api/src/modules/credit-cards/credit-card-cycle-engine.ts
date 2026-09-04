@@ -1,5 +1,5 @@
+import type { CreditCardCycleDisplayStatus } from '@luraba/contracts/credit-cards';
 import { addDays, dateWithClampedDay, isAfter, isBefore, isEqual } from '@/shared/lib/date';
-import type { CreditCardCycleDisplayStatus } from './credit-card-cycles.types';
 
 export type BillingCycleLike = {
   periodStart: Date;

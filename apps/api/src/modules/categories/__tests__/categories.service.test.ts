@@ -1,8 +1,8 @@
+import { listCategoriesQuerySchema } from '@luraba/contracts/categories';
 import { describe, expect, it } from 'vitest';
 import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
 import { createAuthenticatedContext } from '@/test/auth';
 import { buildCategoryInput } from '@/test/factories';
-import { ListCategoriesRequestQuerySchema } from '../categories.query';
 import * as categoriesService from '../categories.service';
 
 describe('categories service', () => {
@@ -103,7 +103,7 @@ describe('categories service', () => {
 
     const categories = await categoriesService.listCategories(
       context.householdContext,
-      ListCategoriesRequestQuerySchema.parse({}),
+      listCategoriesQuerySchema.parse({}),
     );
 
     expect(categories.data).toHaveLength(1);
@@ -168,7 +168,7 @@ describe('categories service', () => {
 
     const categories = await categoriesService.listCategories(
       context.householdContext,
-      ListCategoriesRequestQuerySchema.parse({}),
+      listCategoriesQuerySchema.parse({}),
     );
 
     const survivor = categories.data.find((category) => category.id === child.id);
@@ -196,7 +196,7 @@ describe('categories DB list filters', () => {
 
     const result = await categoriesService.listCategories(
       context.householdContext,
-      ListCategoriesRequestQuerySchema.parse({
+      listCategoriesQuerySchema.parse({
         search: 'Target',
         types: 'expense,income',
         parentIds: parent.id,

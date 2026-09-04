@@ -1,16 +1,7 @@
+import type { ApiResponse, ApiResponseMeta } from '@luraba/contracts/api';
 import type { Response } from 'express';
 
-export type ApiResponseMeta = object;
-
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: {
-    code: string;
-    message: string;
-  };
-  meta?: ApiResponseMeta;
-}
+export type { ApiResponse, ApiResponseMeta } from '@luraba/contracts/api';
 
 const API_RESPONSE_PAYLOAD = Symbol('api-response-payload');
 

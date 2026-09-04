@@ -1,14 +1,12 @@
 import { Exchange01Icon, RefreshIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { AccountSummary, CurrencyRate } from "@luraba/contracts"
 import { type Control, Controller } from "react-hook-form"
-
 import { FormItem } from "@/components/forms/form-item"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Typography } from "@/components/ui/typography"
-import type { AccountSummary } from "@/interfaces/account"
-import type { CurrencyRate } from "@/interfaces/currency"
 
 import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema"
 import { TransactionFormSection } from "./transaction-form-section"

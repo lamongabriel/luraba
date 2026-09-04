@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'vitest';
 import {
-  ListCreditCardCyclesRequestQuerySchema,
-  ListCreditCardsRequestQuerySchema,
-} from '../credit-cards.query';
+  listCreditCardCyclesQuerySchema,
+  listCreditCardsQuerySchema,
+} from '@luraba/contracts/credit-cards';
+import { describe, expect, it } from 'vitest';
 
 describe('credit card list queries', () => {
   it('parses every card filter and rejects invalid ranges', () => {
-    const query = ListCreditCardsRequestQuerySchema.parse({
+    const query = listCreditCardsQuerySchema.parse({
       brands: 'Visa,Mastercard',
       currencyCodes: 'BRL,USD',
       ownerAccountIds: '1456d4ee-2f8d-4cec-92be-a780d54312c2',
@@ -26,7 +26,7 @@ describe('credit card list queries', () => {
     expect(query.closingDays).toEqual([5, 25]);
     expect(query.hasCreditLimit).toBe(true);
     expect(
-      ListCreditCardsRequestQuerySchema.safeParse({
+      listCreditCardsQuerySchema.safeParse({
         creditLimitMin: 2,
         creditLimitMax: 1,
       }).success,
@@ -34,7 +34,7 @@ describe('credit card list queries', () => {
   });
 
   it('parses every cycle filter and rejects invalid ranges', () => {
-    const query = ListCreditCardCyclesRequestQuerySchema.parse({
+    const query = listCreditCardCyclesQuerySchema.parse({
       scope: 'all',
       statuses: 'open,paid',
       displayStatuses: 'current,due,paid',
@@ -52,7 +52,7 @@ describe('credit card list queries', () => {
 
     expect(query.statuses).toEqual(['open', 'paid']);
     expect(
-      ListCreditCardCyclesRequestQuerySchema.safeParse({
+      listCreditCardCyclesQuerySchema.safeParse({
         remainingAmountMin: 2,
         remainingAmountMax: 1,
       }).success,

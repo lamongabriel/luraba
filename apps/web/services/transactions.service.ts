@@ -1,73 +1,57 @@
 "use client"
 
-import type {
-  CreateTransactionHttpBody,
-  CreateTransactionHttpResponse,
-  ListTransactionsHttpQuery,
-  ListTransactionsHttpResponse,
-  TransactionAnalyticsHttpQuery,
-  TransactionAnalyticsHttpResponse,
-  UpcomingTransactionsHttpQuery,
-  UpcomingTransactionsHttpResponse,
-  UpdateTransactionHttpBody,
-  UpdateTransactionHttpResponse,
-} from "@/interfaces/http/transactions-http"
-import type {
-  TransactionFeedRow,
-  TransactionListSummary,
-} from "@/interfaces/transaction"
 import {
-  deleteApiResource,
-  getApiData,
-  getApiList,
-  patchApiData,
-  postApiData,
-} from "@/services/api-client.service"
-import { serializeHttpQuery } from "@/services/http-query"
+  type CreateTransactionInput,
+  type CreateTransactionResult,
+  type DeleteTransactionResult,
+  type ListTransactionsQuery,
+  type ListTransactionsResult,
+  type TransactionAnalyticsQuery,
+  type TransactionAnalyticsResult,
+  transactionsEndpoints,
+  type UpcomingTransactionsQuery,
+  type UpcomingTransactionsResult,
+  type UpdateTransactionInput,
+  type UpdateTransactionResult,
+} from "@luraba/contracts"
+import { requestContract } from "@/services/contract-client.service"
 
 export function listTransactions(
-  query: ListTransactionsHttpQuery = {},
-): Promise<ListTransactionsHttpResponse> {
-  return getApiList<TransactionFeedRow, TransactionListSummary>(
-    "/transactions",
-    {
-      params: serializeHttpQuery(query),
-    },
-  )
+  query: ListTransactionsQuery = {},
+): Promise<ListTransactionsResult> {
+  return requestContract(transactionsEndpoints.list, { query })
 }
 
 export function getTransactionAnalytics(
-  query: TransactionAnalyticsHttpQuery = {},
-): Promise<TransactionAnalyticsHttpResponse> {
-  return getApiData("/transactions/analytics", {
-    params: serializeHttpQuery(query),
-  })
+  query: TransactionAnalyticsQuery = {},
+): Promise<TransactionAnalyticsResult> {
+  return requestContract(transactionsEndpoints.analytics, { query })
 }
 
 export function listUpcomingTransactions(
-  query: UpcomingTransactionsHttpQuery = {},
-): Promise<UpcomingTransactionsHttpResponse> {
-  return getApiList("/transactions/upcoming", {
-    params: serializeHttpQuery(query),
-  })
+  query: UpcomingTransactionsQuery = {},
+): Promise<UpcomingTransactionsResult> {
+  return requestContract(transactionsEndpoints.upcoming, { query })
 }
 
 export function createTransaction(
-  body: CreateTransactionHttpBody,
-): Promise<CreateTransactionHttpResponse> {
-  return postApiData("/transactions", body)
+  input: CreateTransactionInput,
+): Promise<CreateTransactionResult> {
+  return requestContract(transactionsEndpoints.create, { body: input })
 }
 
-export function updateTransaction({
-  id,
-  body,
-}: {
-  id: string
-  body: UpdateTransactionHttpBody
-}): Promise<UpdateTransactionHttpResponse> {
-  return patchApiData(`/transactions/${id}`, body)
+export function updateTransaction(
+  id: string,
+  input: UpdateTransactionInput,
+): Promise<UpdateTransactionResult> {
+  return requestContract(transactionsEndpoints.update, {
+    params: { id },
+    body: input,
+  })
 }
 
-export function deleteTransaction(id: string): Promise<void> {
-  return deleteApiResource(`/transactions/${id}`)
+export function deleteTransaction(
+  id: string,
+): Promise<DeleteTransactionResult> {
+  return requestContract(transactionsEndpoints.delete, { params: { id } })
 }

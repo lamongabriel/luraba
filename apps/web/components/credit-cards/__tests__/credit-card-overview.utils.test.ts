@@ -1,6 +1,5 @@
+import type { CreditCard, CreditCardCycle } from "@luraba/contracts"
 import { describe, expect, it } from "vitest"
-
-import type { CreditCard, CreditCardCycle } from "@/interfaces/credit-card"
 
 import {
   getCreditCardUtilization,

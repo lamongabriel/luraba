@@ -16,6 +16,7 @@ export function createAuthenticatedHandler<
   TParams extends ControllerSchema = undefined,
   TQuery extends ControllerSchema = undefined,
   TResponse extends Schema = Schema,
+  TMeta extends ControllerSchema = undefined,
 >(
   options:
     | {
@@ -23,6 +24,7 @@ export function createAuthenticatedHandler<
         params?: TParams;
         query?: TQuery;
         response: TResponse;
+        meta?: TMeta;
         handle: (
           input: ControllerArgs<TBody, TParams, TQuery> & { user: AuthenticatedUser },
         ) => Promise<ControllerOutput<TResponse>>;
@@ -56,6 +58,7 @@ export function createAuthenticatedHandler<
     params: options.params,
     query: options.query,
     response: options.response,
+    meta: options.meta,
     status: options.status,
     handle: ({ req, body, params, query }) => {
       const user = getAuthenticatedUser(req);

@@ -1,3 +1,9 @@
+import type { CreateAccountInput } from '@luraba/contracts/accounts';
+import type { CreateCategoryInput } from '@luraba/contracts/categories';
+import type { CreateCreditCardInput } from '@luraba/contracts/credit-cards';
+import type { CreateMerchantInput } from '@luraba/contracts/merchants';
+import type { CreatePaymentMethodInput } from '@luraba/contracts/payment-methods';
+import type { CreateTagInput } from '@luraba/contracts/tags';
 import { and, eq } from 'drizzle-orm';
 import type { HouseholdContext } from '@/config/permissions';
 import { getPermissionsForRole } from '@/config/permissions';
@@ -9,12 +15,6 @@ import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
 import { transactionsTable } from '@/db/schemas/transactions.schema';
 import { usersTable } from '@/db/schemas/users.schema';
 import * as accountsService from '@/modules/accounts/accounts.service';
-import type { CreateAccountRequestBody } from '@/modules/accounts/accounts.types';
-import type { CreateCategoryRequestBody } from '@/modules/categories/categories.types';
-import type { CreateCreditCardRequestBody } from '@/modules/credit-cards/credit-cards.types';
-import type { CreateMerchantRequestBody } from '@/modules/merchants/merchants.types';
-import type { CreatePaymentMethodRequestBody } from '@/modules/payment-methods/payment-methods.types';
-import type { CreateTagRequestBody } from '@/modules/tags/tags.types';
 import { now, parseISODate } from '@/shared/lib/date';
 
 function randomSuffix() {
@@ -89,11 +89,9 @@ export async function setDefaultHousehold(userId: string, householdId: string) {
   return rows[0];
 }
 
-export function buildAccountInput(
-  overrides: Partial<CreateAccountRequestBody> = {},
-): CreateAccountRequestBody {
+export function buildAccountInput(overrides: Partial<CreateAccountInput> = {}): CreateAccountInput {
   const type = overrides.type ?? 'cash';
-  const defaultDetails: CreateAccountRequestBody['details'] = (() => {
+  const defaultDetails: CreateAccountInput['details'] = (() => {
     switch (type) {
       case 'cash':
         return { kind: 'cash', subtype: 'other' };
@@ -124,8 +122,8 @@ export function buildAccountInput(
 }
 
 export function buildMerchantInput(
-  overrides: Partial<CreateMerchantRequestBody> = {},
-): CreateMerchantRequestBody {
+  overrides: Partial<CreateMerchantInput> = {},
+): CreateMerchantInput {
   return {
     name: `Merchant ${randomSuffix()}`,
     domain: `${randomSuffix()}.example.com`,
@@ -134,8 +132,8 @@ export function buildMerchantInput(
 }
 
 export function buildCreditCardInput(
-  overrides: Partial<CreateCreditCardRequestBody> = {},
-): CreateCreditCardRequestBody {
+  overrides: Partial<CreateCreditCardInput> = {},
+): CreateCreditCardInput {
   return {
     name: `Card ${randomSuffix()}`,
     ownerAccountId: overrides.ownerAccountId ?? '00000000-0000-0000-0000-000000000000',
@@ -158,7 +156,7 @@ export async function createCreditCardOwner(
     | 'creditExpenseTiming'
     | 'creditInstallmentBudgetMode'
   >,
-  overrides: Partial<CreateAccountRequestBody> = {},
+  overrides: Partial<CreateAccountInput> = {},
 ) {
   return accountsService.createAccount(
     context,
@@ -172,8 +170,8 @@ export async function createCreditCardOwner(
 }
 
 export function buildCategoryInput(
-  overrides: Partial<CreateCategoryRequestBody> = {},
-): CreateCategoryRequestBody {
+  overrides: Partial<CreateCategoryInput> = {},
+): CreateCategoryInput {
   return {
     name: `Category ${randomSuffix()}`,
     type: 'expense',
@@ -183,7 +181,7 @@ export function buildCategoryInput(
   };
 }
 
-export function buildTagInput(overrides: Partial<CreateTagRequestBody> = {}): CreateTagRequestBody {
+export function buildTagInput(overrides: Partial<CreateTagInput> = {}): CreateTagInput {
   return {
     name: `Tag ${randomSuffix()}`,
     color: '#7C3AED',
@@ -193,8 +191,8 @@ export function buildTagInput(overrides: Partial<CreateTagRequestBody> = {}): Cr
 }
 
 export function buildPaymentMethodInput(
-  overrides: Partial<CreatePaymentMethodRequestBody> = {},
-): CreatePaymentMethodRequestBody {
+  overrides: Partial<CreatePaymentMethodInput> = {},
+): CreatePaymentMethodInput {
   return {
     name: `Payment Method ${randomSuffix()}`,
     color: '#0EA5E9',

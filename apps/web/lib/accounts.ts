@@ -9,14 +9,13 @@ import {
   WalletIcon,
 } from "@hugeicons/core-free-icons"
 import type { HugeiconsIcon } from "@hugeicons/react"
-import type { ComponentProps } from "react"
-
 import {
   ACCOUNT_TYPES,
   type AccountSubtype,
   type AccountType,
   type CreatableNonCardAccountType,
-} from "@/interfaces/account"
+} from "@luraba/contracts"
+import type { ComponentProps } from "react"
 
 export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   cash: "Cash",

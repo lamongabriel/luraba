@@ -1,3 +1,4 @@
+import type { TagSummary } from '@luraba/contracts/tags';
 import { asc, eq } from 'drizzle-orm';
 import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
@@ -6,7 +7,6 @@ import { transactionTagsTable } from '@/db/schemas/transaction-tags.schema';
 import type { TxClient } from '@/db/types';
 import { NotFoundError } from '@/shared/errors';
 import { tagsRepository } from './tags.repository';
-import type { TagSummary } from './tags.types';
 
 export async function validateTagIds(
   context: HouseholdContext,

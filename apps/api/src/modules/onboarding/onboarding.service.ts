@@ -1,3 +1,4 @@
+import type { OnboardingOptionsResponse } from '@luraba/contracts/onboarding';
 import { currenciesRepository } from '@/modules/currencies/currencies.repository';
 import {
   COUNTRY_CODE_VALUES,
@@ -9,9 +10,8 @@ import {
   PREFERRED_THEME_VALUES,
   TIMEZONE_VALUES,
 } from '@/shared/validation/preferences';
-import type { GetOnboardingOptionsResponse } from './onboarding.types';
 
-export async function getOptions(): Promise<GetOnboardingOptionsResponse> {
+export async function getOptions(): Promise<OnboardingOptionsResponse> {
   const currencies = await currenciesRepository.list();
 
   return {

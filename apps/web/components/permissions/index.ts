@@ -1,13 +1,13 @@
-export { Can } from "./can"
-export type { PermissionButtonProps } from "./permission-button"
-export { PermissionButton } from "./permission-button"
-export { PermissionGuard } from "./permission-guard"
 export type {
   PermissionInput,
   PermissionKey,
   PermissionMatch,
-} from "./permissions.constants"
-export { PERMISSIONS } from "./permissions.constants"
+} from "@luraba/contracts"
+export { PERMISSIONS } from "@luraba/contracts"
+export { Can } from "./can"
+export type { PermissionButtonProps } from "./permission-button"
+export { PermissionButton } from "./permission-button"
+export { PermissionGuard } from "./permission-guard"
 export {
   getResourceAccessStatus,
   isResourceAccessError,

@@ -1,5 +1,6 @@
 "use client"
 
+import type { PermissionInput, PermissionMatch } from "@luraba/contracts"
 import type * as React from "react"
 
 import { Button } from "@/components/ui/button"
@@ -10,7 +11,6 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
-import type { PermissionInput, PermissionMatch } from "./permissions.constants"
 import { useCan } from "./use-can"
 
 type ButtonProps = React.ComponentProps<typeof Button>

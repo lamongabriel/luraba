@@ -7,7 +7,7 @@ import { HouseholdScopedRepository } from '@/shared/repositories/household-scope
 import {
   buildMerchantsListOrder,
   buildMerchantsListWhere,
-  type ListMerchantsRequestQuery,
+  type ListMerchantsQuery,
 } from './merchants.query';
 import type { MerchantRecord } from './merchants.types';
 
@@ -35,7 +35,7 @@ class MerchantRepository extends HouseholdScopedRepository<MerchantRecord, Creat
 
   async listPage(
     context: HouseholdContext,
-    query: ListMerchantsRequestQuery,
+    query: ListMerchantsQuery,
   ): Promise<DbListPage<MerchantRecord>> {
     const where = buildMerchantsListWhere(context.householdId, query);
     const orderBy = buildMerchantsListOrder(query);

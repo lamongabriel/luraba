@@ -1,3 +1,5 @@
+import type { MonthlyBudget, replaceMonthlyBudgetBodySchema } from '@luraba/contracts/budgets';
+import type { z } from 'zod';
 import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
 import { categoriesRepository } from '@/modules/categories/categories.repository';
@@ -5,11 +7,9 @@ import { fxService } from '@/modules/fx/fx.service';
 import { householdsRepository } from '@/modules/households/households.repository';
 import { NotFoundError, ValidationError } from '@/shared/errors';
 import { budgetsRepository } from './budgets.repository';
-import {
-  formatBudgetMonthKey,
-  type MonthlyBudget,
-  type ReplaceMonthlyBudgetRequestBody,
-} from './budgets.types';
+import { formatBudgetMonthKey } from './budgets.types';
+
+type ReplaceMonthlyBudget = z.output<typeof replaceMonthlyBudgetBodySchema>;
 
 type BudgetRow = Awaited<ReturnType<typeof budgetsRepository.listMonthBudgets>>[number];
 type ActualRow = Awaited<ReturnType<typeof budgetsRepository.listMonthActuals>>[number];
@@ -179,7 +179,7 @@ export async function getMonthlyBudget(
 export async function replaceMonthlyBudget(
   context: HouseholdContext,
   month: Date,
-  dto: ReplaceMonthlyBudgetRequestBody,
+  dto: ReplaceMonthlyBudget,
 ): Promise<MonthlyBudget> {
   const { budgetCurrencyCode } = await resolveBudgetContext(context.householdId);
 

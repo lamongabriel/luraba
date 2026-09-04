@@ -1,30 +1,48 @@
+import { getEndpointRouterPath, netWorthEndpoints } from '@luraba/contracts';
 import { Router } from 'express';
+import { PERMISSIONS } from '@/config/permissions';
 import { requireAccess } from '@/middleware/access.middleware';
 import * as controller from './networth.controller';
 
 const router = Router();
-router.get('/summary', requireAccess({ permission: 'accounts.read' }), controller.summary);
-router.get('/history', requireAccess({ permission: 'accounts.read' }), controller.history);
-router.get('/accounts', requireAccess({ permission: 'accounts.read' }), controller.accounts);
-router.get('/cash-flow', requireAccess({ permission: 'transactions.read' }), controller.cashFlow);
 router.get(
-  '/spending-breakdown',
-  requireAccess({ permission: 'transactions.read' }),
+  getEndpointRouterPath(netWorthEndpoints.summary),
+  requireAccess({ permission: PERMISSIONS.ACCOUNTS_READ }),
+  controller.summary,
+);
+router.get(
+  getEndpointRouterPath(netWorthEndpoints.history),
+  requireAccess({ permission: PERMISSIONS.ACCOUNTS_READ }),
+  controller.history,
+);
+router.get(
+  getEndpointRouterPath(netWorthEndpoints.accounts),
+  requireAccess({ permission: PERMISSIONS.ACCOUNTS_READ }),
+  controller.accounts,
+);
+router.get(
+  getEndpointRouterPath(netWorthEndpoints.cashFlow),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_READ }),
+  controller.cashFlow,
+);
+router.get(
+  getEndpointRouterPath(netWorthEndpoints.spendingBreakdown),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_READ }),
   controller.spendingBreakdown,
 );
 router.get(
-  '/income-breakdown',
-  requireAccess({ permission: 'transactions.read' }),
+  getEndpointRouterPath(netWorthEndpoints.incomeBreakdown),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_READ }),
   controller.incomeBreakdown,
 );
 router.get(
-  '/recent-activity',
-  requireAccess({ permission: 'transactions.read' }),
+  getEndpointRouterPath(netWorthEndpoints.recentActivity),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_READ }),
   controller.recentActivity,
 );
 router.get(
-  '/credit-cards',
-  requireAccess({ permission: 'creditCards.read' }),
+  getEndpointRouterPath(netWorthEndpoints.creditCards),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
   controller.creditCards,
 );
 export default router;

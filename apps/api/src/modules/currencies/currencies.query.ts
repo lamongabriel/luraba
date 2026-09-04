@@ -1,27 +1,12 @@
+import type { listCurrenciesQuerySchema } from '@luraba/contracts/currencies';
 import { type SQL, sql } from 'drizzle-orm';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { currenciesTable } from '@/db/schemas/currencies.schema';
-import {
-  buildIlikeSearch,
-  buildOrderBy,
-  combineConditions,
-  commaSeparatedArraySchema,
-  createListQuerySchema,
-  inArrayIfAny,
-} from '@/shared/list';
-import { currencySchema } from '@/shared/validation/preferences';
+import { buildIlikeSearch, buildOrderBy, combineConditions, inArrayIfAny } from '@/shared/list';
 
-export const ListCurrenciesRequestQuerySchema = createListQuerySchema(
-  {
-    codes: commaSeparatedArraySchema(currencySchema),
-    precisions: commaSeparatedArraySchema(z.coerce.number().int().min(0).max(8)),
-  },
-  ['code', 'symbol', 'precision'],
-);
+export type ListCurrenciesQuery = z.output<typeof listCurrenciesQuerySchema>;
 
-export type ListCurrenciesRequestQuery = z.infer<typeof ListCurrenciesRequestQuerySchema>;
-
-export function buildCurrenciesListWhere(query: ListCurrenciesRequestQuery): SQL | undefined {
+export function buildCurrenciesListWhere(query: ListCurrenciesQuery): SQL | undefined {
   return combineConditions(
     buildIlikeSearch(query.search, [sql`${currenciesTable.code}`, sql`${currenciesTable.symbol}`]),
     inArrayIfAny(currenciesTable.code, query.codes),
@@ -29,7 +14,7 @@ export function buildCurrenciesListWhere(query: ListCurrenciesRequestQuery): SQL
   );
 }
 
-export function buildCurrenciesListOrder(query: ListCurrenciesRequestQuery): SQL[] {
+export function buildCurrenciesListOrder(query: ListCurrenciesQuery): SQL[] {
   return buildOrderBy(
     query,
     {

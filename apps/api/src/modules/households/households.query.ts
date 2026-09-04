@@ -1,7 +1,12 @@
-import { householdInviteStatusSchema } from '@luraba/contracts';
+import type {
+  listHouseholdInvitesQuerySchema,
+  listHouseholdMembersQuerySchema,
+  listHouseholdsQuerySchema,
+  listMyHouseholdInvitesQuerySchema,
+} from '@luraba/contracts/households';
 import { eq, gt, type SQL, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { z } from 'zod';
+import type { z } from 'zod';
 import {
   householdInvitesTable,
   householdMembersTable,
@@ -9,29 +14,14 @@ import {
 } from '@/db/schemas/households.schema';
 import { usersTable } from '@/db/schemas/users.schema';
 import {
-  booleanQuerySchema,
   buildIlikeSearch,
   buildOrderBy,
   combineConditions,
-  commaSeparatedArraySchema,
-  createListQuerySchema,
   inArrayIfAny,
   rangeConditions,
-  temporalQuerySchema,
-  validateRange,
 } from '@/shared/list';
-import { householdRoleSchema } from '@/shared/validation/households';
-import {
-  countryCodeSchema,
-  creditExpenseTimingSchema,
-  creditInstallmentBudgetModeSchema,
-  currencySchema,
-  timezoneSchema,
-} from '@/shared/validation/preferences';
 
 export const householdInviteInviter = alias(usersTable, 'household_invite_inviter');
-
-export const householdInviteComputedStatusSchema = householdInviteStatusSchema;
 
 export const householdInviteComputedStatusSql = sql<string>`
   case
@@ -42,118 +32,12 @@ export const householdInviteComputedStatusSql = sql<string>`
   end
 `;
 
-export const ListHouseholdsRequestQuerySchema = createListQuerySchema(
-  {
-    roles: commaSeparatedArraySchema(householdRoleSchema),
-    countryCodes: commaSeparatedArraySchema(countryCodeSchema),
-    defaultCurrencyCodes: commaSeparatedArraySchema(currencySchema),
-    timezones: commaSeparatedArraySchema(timezoneSchema),
-    budgetMonthStartsOnMin: z.coerce.number().int().min(1).max(31).optional(),
-    budgetMonthStartsOnMax: z.coerce.number().int().min(1).max(31).optional(),
-    creditExpenseTimings: commaSeparatedArraySchema(creditExpenseTimingSchema),
-    creditInstallmentBudgetModes: commaSeparatedArraySchema(creditInstallmentBudgetModeSchema),
-    createdAtFrom: temporalQuerySchema.optional(),
-    createdAtTo: temporalQuerySchema.optional(),
-    updatedAtFrom: temporalQuerySchema.optional(),
-    updatedAtTo: temporalQuerySchema.optional(),
-  },
-  ['countryCode', 'createdAt', 'defaultCurrencyId', 'name', 'role', 'updatedAt'],
-).superRefine((query, ctx) => {
-  validateRange(query, ctx, 'budgetMonthStartsOnMin', 'budgetMonthStartsOnMax');
-  validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
-  validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
-});
+export type ListHouseholdsQuery = z.output<typeof listHouseholdsQuerySchema>;
+export type ListHouseholdMembersQuery = z.output<typeof listHouseholdMembersQuerySchema>;
+export type ListHouseholdInvitesQuery = z.output<typeof listHouseholdInvitesQuerySchema>;
+export type ListMyHouseholdInvitesQuery = z.output<typeof listMyHouseholdInvitesQuerySchema>;
 
-export type ListHouseholdsRequestQuery = z.infer<typeof ListHouseholdsRequestQuerySchema>;
-
-export const ListHouseholdMembersRequestQuerySchema = createListQuerySchema(
-  {
-    roles: commaSeparatedArraySchema(householdRoleSchema),
-    emailVerified: booleanQuerySchema.optional(),
-    lastActiveAtFrom: temporalQuerySchema.optional(),
-    lastActiveAtTo: temporalQuerySchema.optional(),
-    createdAtFrom: temporalQuerySchema.optional(),
-    createdAtTo: temporalQuerySchema.optional(),
-    updatedAtFrom: temporalQuerySchema.optional(),
-    updatedAtTo: temporalQuerySchema.optional(),
-  },
-  ['createdAt', 'email', 'emailVerified', 'lastActiveAt', 'name', 'role', 'updatedAt'],
-).superRefine((query, ctx) => {
-  validateRange(query, ctx, 'lastActiveAtFrom', 'lastActiveAtTo');
-  validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
-  validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
-});
-
-export type ListHouseholdMembersRequestQuery = z.infer<
-  typeof ListHouseholdMembersRequestQuerySchema
->;
-
-const householdInviteFilterShape = {
-  roles: commaSeparatedArraySchema(householdRoleSchema),
-  statuses: commaSeparatedArraySchema(householdInviteComputedStatusSchema),
-  createdAtFrom: temporalQuerySchema.optional(),
-  createdAtTo: temporalQuerySchema.optional(),
-  updatedAtFrom: temporalQuerySchema.optional(),
-  updatedAtTo: temporalQuerySchema.optional(),
-  expiresAtFrom: temporalQuerySchema.optional(),
-  expiresAtTo: temporalQuerySchema.optional(),
-  acceptedAtFrom: temporalQuerySchema.optional(),
-  acceptedAtTo: temporalQuerySchema.optional(),
-  rejectedAtFrom: temporalQuerySchema.optional(),
-  rejectedAtTo: temporalQuerySchema.optional(),
-  canceledAtFrom: temporalQuerySchema.optional(),
-  canceledAtTo: temporalQuerySchema.optional(),
-} as const;
-
-const householdInviteSortFields = [
-  'acceptedAt',
-  'createdAt',
-  'email',
-  'expiresAt',
-  'householdName',
-  'role',
-  'rejectedAt',
-  'canceledAt',
-  'status',
-  'updatedAt',
-] as const;
-
-export const ListHouseholdInvitesRequestQuerySchema = createListQuerySchema(
-  householdInviteFilterShape,
-  householdInviteSortFields,
-).superRefine((query, ctx) => {
-  validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
-  validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
-  validateRange(query, ctx, 'expiresAtFrom', 'expiresAtTo');
-  validateRange(query, ctx, 'acceptedAtFrom', 'acceptedAtTo');
-  validateRange(query, ctx, 'rejectedAtFrom', 'rejectedAtTo');
-  validateRange(query, ctx, 'canceledAtFrom', 'canceledAtTo');
-});
-
-export type ListHouseholdInvitesRequestQuery = z.infer<
-  typeof ListHouseholdInvitesRequestQuerySchema
->;
-
-export const ListMyHouseholdInvitesRequestQuerySchema = createListQuerySchema(
-  {
-    ...householdInviteFilterShape,
-    householdIds: commaSeparatedArraySchema(z.uuid()),
-  },
-  householdInviteSortFields,
-).superRefine((query, ctx) => {
-  validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
-  validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
-  validateRange(query, ctx, 'expiresAtFrom', 'expiresAtTo');
-  validateRange(query, ctx, 'acceptedAtFrom', 'acceptedAtTo');
-  validateRange(query, ctx, 'rejectedAtFrom', 'rejectedAtTo');
-  validateRange(query, ctx, 'canceledAtFrom', 'canceledAtTo');
-});
-
-export type ListMyHouseholdInvitesRequestQuery = z.infer<
-  typeof ListMyHouseholdInvitesRequestQuerySchema
->;
-
-export function buildHouseholdsListWhere(userId: string, query: ListHouseholdsRequestQuery): SQL {
+export function buildHouseholdsListWhere(userId: string, query: ListHouseholdsQuery): SQL {
   return combineConditions(
     eq(householdMembersTable.userId, userId),
     buildIlikeSearch(query.search, [
@@ -180,7 +64,7 @@ export function buildHouseholdsListWhere(userId: string, query: ListHouseholdsRe
   ) as SQL;
 }
 
-export function buildHouseholdsListOrder(query: ListHouseholdsRequestQuery): SQL[] {
+export function buildHouseholdsListOrder(query: ListHouseholdsQuery): SQL[] {
   return buildOrderBy(
     query,
     {
@@ -197,7 +81,7 @@ export function buildHouseholdsListOrder(query: ListHouseholdsRequestQuery): SQL
 
 export function buildHouseholdMembersListWhere(
   householdId: string,
-  query: ListHouseholdMembersRequestQuery,
+  query: ListHouseholdMembersQuery,
 ): SQL {
   return combineConditions(
     eq(householdMembersTable.householdId, householdId),
@@ -216,7 +100,7 @@ export function buildHouseholdMembersListWhere(
   ) as SQL;
 }
 
-export function buildHouseholdMembersListOrder(query: ListHouseholdMembersRequestQuery): SQL[] {
+export function buildHouseholdMembersListOrder(query: ListHouseholdMembersQuery): SQL[] {
   return buildOrderBy(
     query,
     {
@@ -233,7 +117,7 @@ export function buildHouseholdMembersListOrder(query: ListHouseholdMembersReques
 }
 
 function buildInviteFilters(
-  query: ListHouseholdInvitesRequestQuery | ListMyHouseholdInvitesRequestQuery,
+  query: ListHouseholdInvitesQuery | ListMyHouseholdInvitesQuery,
 ): Array<SQL | undefined> {
   return [
     buildIlikeSearch(query.search, [
@@ -257,7 +141,7 @@ function buildInviteFilters(
 
 export function buildHouseholdInvitesListWhere(
   householdId: string,
-  query: ListHouseholdInvitesRequestQuery,
+  query: ListHouseholdInvitesQuery,
 ): SQL {
   return combineConditions(
     eq(householdInvitesTable.householdId, householdId),
@@ -267,7 +151,7 @@ export function buildHouseholdInvitesListWhere(
 
 export function buildMyHouseholdInvitesListWhere(
   email: string,
-  query: ListMyHouseholdInvitesRequestQuery,
+  query: ListMyHouseholdInvitesQuery,
 ): SQL {
   return combineConditions(
     eq(householdInvitesTable.email, email),
@@ -279,7 +163,7 @@ export function buildMyHouseholdInvitesListWhere(
 }
 
 export function buildHouseholdInvitesListOrder(
-  query: ListHouseholdInvitesRequestQuery | ListMyHouseholdInvitesRequestQuery,
+  query: ListHouseholdInvitesQuery | ListMyHouseholdInvitesQuery,
   personal = false,
 ): SQL[] {
   return buildOrderBy(

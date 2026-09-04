@@ -1,24 +1,23 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
-
 import type {
-  ListTransactionsHttpQuery,
-  ListTransactionsHttpResponse,
-} from "@/interfaces/http/transactions-http"
+  ListTransactionsQuery,
+  ListTransactionsResult,
+} from "@luraba/contracts"
+import { useQuery } from "@tanstack/react-query"
 import type { AppQueryOptions } from "@/queries/query-options"
 import { listTransactions } from "@/services/transactions.service"
 
 export const transactionQueryKeys = {
   all: ["transactions"] as const,
   lists: () => [...transactionQueryKeys.all, "list"] as const,
-  list: (filters: ListTransactionsHttpQuery) =>
+  list: (filters: ListTransactionsQuery) =>
     [...transactionQueryKeys.lists(), filters] as const,
 }
 
-export function useTransactionsQuery<TData = ListTransactionsHttpResponse>(
-  filters: ListTransactionsHttpQuery = {},
-  options?: AppQueryOptions<ListTransactionsHttpResponse, TData>,
+export function useTransactionsQuery<TData = ListTransactionsResult>(
+  filters: ListTransactionsQuery = {},
+  options?: AppQueryOptions<ListTransactionsResult, TData>,
 ) {
   return useQuery({
     queryKey: transactionQueryKeys.list(filters),

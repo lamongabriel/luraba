@@ -1,11 +1,8 @@
+import type { CreateAccountInput, UpdateAccountInput } from '@luraba/contracts/accounts';
 import request from 'supertest';
 import { vi } from 'vitest';
 import app from '@/app';
 import * as accountsService from '@/modules/accounts/accounts.service';
-import type {
-  CreateAccountRequestBody,
-  UpdateAccountRequestBody,
-} from '@/modules/accounts/accounts.types';
 import * as categoriesService from '@/modules/categories/categories.service';
 import * as creditCardsService from '@/modules/credit-cards/credit-cards.service';
 import * as transactionsService from '@/modules/transactions/transactions.service';
@@ -20,9 +17,9 @@ import {
 } from '@/test/factories';
 
 type TypedAccountHttpCase = {
-  type: CreateAccountRequestBody['type'];
-  createDetails: CreateAccountRequestBody['details'];
-  updateDetails: NonNullable<UpdateAccountRequestBody['details']>;
+  type: CreateAccountInput['type'];
+  createDetails: CreateAccountInput['details'];
+  updateDetails: NonNullable<UpdateAccountInput['details']>;
 };
 
 const typedAccountHttpCases = [

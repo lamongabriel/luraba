@@ -1,3 +1,4 @@
+import type { UserPreferredPeriod, UserTimezone } from "@luraba/contracts"
 import {
   endOfMonth,
   format,
@@ -8,8 +9,6 @@ import {
   subMonths,
   subYears,
 } from "date-fns"
-
-import type { UserPreferredPeriod, UserTimezone } from "@/interfaces/user"
 
 function getTodayInTimezone(timezone: UserTimezone) {
   const parts = new Intl.DateTimeFormat("en-US", {

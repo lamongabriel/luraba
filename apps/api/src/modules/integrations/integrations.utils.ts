@@ -1,11 +1,11 @@
+import type { Integration } from '@luraba/contracts/integrations';
 import type { IntegrationProviderId } from '@/config/integrations';
 import { formatISODateTime } from '@/shared/lib/date';
-import type { IntegrationSummary } from './integrations.types';
 
 export function buildIntegrationSummary(
   provider: IntegrationProviderId,
   record?: { lastCheckedAt: Date | null },
-): IntegrationSummary {
+): Integration {
   return {
     provider,
     configured: Boolean(record),

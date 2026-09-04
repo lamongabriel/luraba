@@ -1,12 +1,12 @@
+import { integrationsEndpoints } from '@luraba/contracts/integrations';
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import { withApiMeta } from '@/shared/response';
-import { ListIntegrationsRequestQuerySchema } from './integrations.query';
 import * as integrationsService from './integrations.service';
-import { ListIntegrationsResponseSchema } from './integrations.types';
 
 export const list = createHouseholdHandler({
-  query: ListIntegrationsRequestQuerySchema,
-  response: ListIntegrationsResponseSchema,
+  query: integrationsEndpoints.list.query,
+  response: integrationsEndpoints.list.response,
+  meta: integrationsEndpoints.list.meta,
   handle: async ({ household, query }) => {
     const result = await integrationsService.listIntegrations(household, query);
     return withApiMeta(result.data, result.meta);

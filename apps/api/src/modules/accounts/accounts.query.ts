@@ -1,67 +1,21 @@
+import type { listAccountsQuerySchema } from '@luraba/contracts/accounts';
 import { eq, ne, type SQL, sql } from 'drizzle-orm';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { accountsTable } from '@/db/schemas/accounts.schema';
 import {
-  booleanQuerySchema,
   buildIlikeSearch,
   buildOrderBy,
   combineConditions,
-  commaSeparatedArraySchema,
-  createListQuerySchema,
   inArrayIfAny,
   nullabilityCondition,
   rangeConditions,
-  temporalQuerySchema,
-  validateRange,
 } from '@/shared/list';
-import {
-  accountClassificationSchema,
-  accountSubtypeSchema,
-  accountTypeSchema,
-} from '@/shared/validation/accounts';
-import { currencySchema } from '@/shared/validation/preferences';
 
-export {
-  type ListAccountTransactionsRequestQuery,
-  ListAccountTransactionsRequestQuerySchema,
-} from '@/modules/transactions/transactions.query';
-
-export const ListAccountsRequestQuerySchema = createListQuerySchema(
-  {
-    types: commaSeparatedArraySchema(accountTypeSchema),
-    subtypes: commaSeparatedArraySchema(accountSubtypeSchema),
-    classifications: commaSeparatedArraySchema(accountClassificationSchema),
-    currencyCodes: commaSeparatedArraySchema(currencySchema),
-    balanceMin: z.coerce.number().int().optional(),
-    balanceMax: z.coerce.number().int().optional(),
-    hasInstitution: booleanQuerySchema.optional(),
-    createdAtFrom: temporalQuerySchema.optional(),
-    createdAtTo: temporalQuerySchema.optional(),
-    updatedAtFrom: temporalQuerySchema.optional(),
-    updatedAtTo: temporalQuerySchema.optional(),
-  },
-  [
-    'name',
-    'institutionName',
-    'type',
-    'subtype',
-    'classification',
-    'currencyCode',
-    'balance',
-    'createdAt',
-    'updatedAt',
-  ],
-).superRefine((query, ctx) => {
-  validateRange(query, ctx, 'balanceMin', 'balanceMax');
-  validateRange(query, ctx, 'createdAtFrom', 'createdAtTo');
-  validateRange(query, ctx, 'updatedAtFrom', 'updatedAtTo');
-});
-
-export type ListAccountsRequestQuery = z.infer<typeof ListAccountsRequestQuerySchema>;
+export type ListAccountsQuery = z.output<typeof listAccountsQuerySchema>;
 
 export function buildAccountsListWhere(
   householdId: string,
-  query: ListAccountsRequestQuery,
+  query: ListAccountsQuery,
   displayedBalance: SQL,
   profileSubtype: SQL,
   profileSearchText: SQL,
@@ -90,7 +44,7 @@ export function buildAccountsListWhere(
 }
 
 export function buildAccountsListOrder(
-  query: ListAccountsRequestQuery,
+  query: ListAccountsQuery,
   displayedBalance: SQL,
   profileSubtype: SQL,
 ): SQL[] {

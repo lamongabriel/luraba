@@ -1,3 +1,7 @@
+import {
+  listCreditCardCyclesQuerySchema,
+  listCreditCardsQuerySchema,
+} from '@luraba/contracts/credit-cards';
 import { eq } from 'drizzle-orm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/db';
@@ -16,10 +20,6 @@ import {
   createBalanceEntryForAccount,
   createCreditCardOwner,
 } from '@/test/factories';
-import {
-  ListCreditCardCyclesRequestQuerySchema,
-  ListCreditCardsRequestQuerySchema,
-} from '../credit-cards.query';
 import * as creditCardsService from '../credit-cards.service';
 
 describe('credit cards service', () => {
@@ -29,7 +29,7 @@ describe('credit cards service', () => {
   });
 
   function buildCyclesQuery(scope: 'default' | 'all' = 'default') {
-    return ListCreditCardCyclesRequestQuerySchema.parse({ scope });
+    return listCreditCardCyclesQuerySchema.parse({ scope });
   }
 
   it('creates a card with normalized institution branding from the account flow', async () => {
@@ -700,7 +700,7 @@ describe('credit card DB list filters', () => {
 
     const cards = await creditCardsService.listCreditCards(
       context.householdContext,
-      ListCreditCardsRequestQuerySchema.parse({
+      listCreditCardsQuerySchema.parse({
         search: 'Query Target',
         brands: 'Visa,Mastercard',
         currencyCodes: 'BRL',
@@ -725,7 +725,7 @@ describe('credit card DB list filters', () => {
     const allCycles = await creditCardsService.listBillingCycles(
       context.householdContext,
       card.id,
-      ListCreditCardCyclesRequestQuerySchema.parse({ scope: 'all' }),
+      listCreditCardCyclesQuerySchema.parse({ scope: 'all' }),
     );
     const activeCycle = allCycles.data.find((cycle) => cycle.statementAmount === 10_000);
     expect(activeCycle).toBeDefined();
@@ -733,7 +733,7 @@ describe('credit card DB list filters', () => {
     const filteredCycles = await creditCardsService.listBillingCycles(
       context.householdContext,
       card.id,
-      ListCreditCardCyclesRequestQuerySchema.parse({
+      listCreditCardCyclesQuerySchema.parse({
         scope: 'all',
         search: activeCycle?.status,
         statuses: activeCycle?.status,

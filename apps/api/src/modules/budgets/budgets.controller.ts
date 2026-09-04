@@ -1,19 +1,12 @@
+import { budgetsEndpoints } from '@luraba/contracts/budgets';
 import { createHouseholdHandler } from '@/shared/controllers/household.controller';
 import * as budgetsService from './budgets.service';
-import {
-  GetMonthlyBudgetRequestParamsSchema,
-  GetMonthlyBudgetRequestQuerySchema,
-  GetMonthlyBudgetResponseSchema,
-  parseBudgetMonthKey,
-  ReplaceMonthlyBudgetRequestBodySchema,
-  ReplaceMonthlyBudgetRequestParamsSchema,
-  ReplaceMonthlyBudgetResponseSchema,
-} from './budgets.types';
+import { parseBudgetMonthKey } from './budgets.types';
 
 export const getMonth = createHouseholdHandler({
-  params: GetMonthlyBudgetRequestParamsSchema,
-  query: GetMonthlyBudgetRequestQuerySchema,
-  response: GetMonthlyBudgetResponseSchema,
+  params: budgetsEndpoints.getMonth.params,
+  query: budgetsEndpoints.getMonth.query,
+  response: budgetsEndpoints.getMonth.response,
   handle: ({ household, params, query }) =>
     budgetsService.getMonthlyBudget(
       household,
@@ -23,9 +16,9 @@ export const getMonth = createHouseholdHandler({
 });
 
 export const replaceMonth = createHouseholdHandler({
-  params: ReplaceMonthlyBudgetRequestParamsSchema,
-  body: ReplaceMonthlyBudgetRequestBodySchema,
-  response: ReplaceMonthlyBudgetResponseSchema,
+  params: budgetsEndpoints.replaceMonth.params,
+  body: budgetsEndpoints.replaceMonth.body,
+  response: budgetsEndpoints.replaceMonth.response,
   handle: ({ household, params, body }) =>
     budgetsService.replaceMonthlyBudget(household, parseBudgetMonthKey(params.month), body),
 });

@@ -1,13 +1,13 @@
 "use client"
-
+import {
+  type GetLocationOptionsResult,
+  referenceDataEndpoints,
+} from "@luraba/contracts"
 import { lurabaApiPassiveClient } from "@/api/luraba-api"
-import type { GetLocationOptionsHttpResponse } from "@/interfaces/http/reference-data-http"
-import { getApiData } from "@/services/api-client.service"
+import { requestContract } from "@/services/contract-client.service"
 
-export function getLocationOptions(): Promise<GetLocationOptionsHttpResponse> {
-  return getApiData(
-    "/reference-data/locations",
-    undefined,
-    lurabaApiPassiveClient,
-  )
+export function getLocationOptions(): Promise<GetLocationOptionsResult> {
+  return requestContract(referenceDataEndpoints.getLocations, {
+    client: lurabaApiPassiveClient,
+  })
 }

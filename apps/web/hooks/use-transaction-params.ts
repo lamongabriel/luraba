@@ -1,5 +1,6 @@
 "use client"
 
+import type { TransactionSortField } from "@luraba/contracts"
 import { useSearchParams } from "next/navigation"
 import * as React from "react"
 import {
@@ -9,7 +10,6 @@ import {
   type TransactionTableFilterUpdates,
 } from "@/components/tables/transactions/transactions-table-filters"
 import { useApiParams } from "@/hooks/use-api-params"
-import type { TransactionSortField } from "@/interfaces/transaction"
 import { getPreferredTransactionDateRange } from "@/lib/transaction-period"
 import { useAuthSessionStore } from "@/stores/auth-session-store"
 

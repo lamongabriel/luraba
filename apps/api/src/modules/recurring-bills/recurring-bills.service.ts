@@ -1,4 +1,12 @@
+import {
+  type createRecurringBillBodySchema,
+  type listRecurringBillsQuerySchema,
+  recurringBillSchema,
+  recurringOccurrenceSchema,
+  type updateRecurringBillBodySchema,
+} from '@luraba/contracts/recurring-bills';
 import { isAfter, isBefore, parseISO } from 'date-fns';
+import type { z } from 'zod';
 import type { HouseholdContext } from '@/config/permissions';
 import { paymentMethodsRepository } from '@/modules/payment-methods/payment-methods.repository';
 import * as transactionsService from '@/modules/transactions/transactions.service';
@@ -6,14 +14,11 @@ import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
 import { formatISODate } from '@/shared/lib/date';
 import { createListMeta } from '@/shared/list';
 import * as repository from './recurring-bills.repository';
-import {
-  type CreateRecurringBillBody,
-  type ListRecurringBillsQuery,
-  type RecurringBillRecord,
-  recurringBillSchema,
-  recurringOccurrenceSchema,
-  type UpdateRecurringBillBody,
-} from './recurring-bills.types';
+import type { RecurringBillRecord } from './recurring-bills.types';
+
+type CreateRecurringBillValues = z.output<typeof createRecurringBillBodySchema>;
+type UpdateRecurringBillValues = z.output<typeof updateRecurringBillBodySchema>;
+type ListRecurringBillsQuery = z.output<typeof listRecurringBillsQuerySchema>;
 
 function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
@@ -31,7 +36,7 @@ function mapBill(row: RecurringBillRecord) {
 
 function nextDate(
   date: Date,
-  frequency: CreateRecurringBillBody['frequency'],
+  frequency: CreateRecurringBillValues['frequency'],
   dayOfMonth?: number | null,
 ): Date {
   const year = date.getUTCFullYear();
@@ -55,10 +60,18 @@ export function getOccurrenceDates(bill: RecurringBillRecord, from: Date, to: Da
   const endDate = bill.endDate ? new Date(`${formatISODate(bill.endDate)}T00:00:00.000Z`) : null;
   const limit = endDate && isBefore(endDate, to) ? endDate : to;
   while (isBefore(current, from))
-    current = nextDate(current, bill.frequency as CreateRecurringBillBody['frequency'], dayOfMonth);
+    current = nextDate(
+      current,
+      bill.frequency as CreateRecurringBillValues['frequency'],
+      dayOfMonth,
+    );
   while (!isAfter(current, limit)) {
     dates.push(current);
-    current = nextDate(current, bill.frequency as CreateRecurringBillBody['frequency'], dayOfMonth);
+    current = nextDate(
+      current,
+      bill.frequency as CreateRecurringBillValues['frequency'],
+      dayOfMonth,
+    );
   }
   return dates;
 }
@@ -90,13 +103,17 @@ export async function get(context: HouseholdContext, id: string) {
   return mapBill(row);
 }
 
-export async function create(context: HouseholdContext, body: CreateRecurringBillBody) {
+export async function create(context: HouseholdContext, body: CreateRecurringBillValues) {
   const method = await resolvePaymentMethod(context, body.paymentMethodCode, body.currencyCode);
   const row = await repository.create(context, body, method?.id ?? null);
   return mapBill(row);
 }
 
-export async function update(context: HouseholdContext, id: string, body: UpdateRecurringBillBody) {
+export async function update(
+  context: HouseholdContext,
+  id: string,
+  body: UpdateRecurringBillValues,
+) {
   const existing = await repository.get(context, id);
   if (!existing) throw new NotFoundError('Recurring bill');
   const method =

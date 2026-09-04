@@ -1,3 +1,19 @@
+import type {
+  AcceptHouseholdInviteResult,
+  Household,
+  HouseholdInvite,
+  HouseholdInviteLink,
+  HouseholdInvitePreview,
+  HouseholdMember,
+} from '@luraba/contracts/households';
+import {
+  type createHouseholdBodySchema,
+  type createHouseholdInviteBodySchema,
+  householdInviteComputedStatusSchema,
+  type updateHouseholdBodySchema,
+  type updateHouseholdMemberBodySchema,
+} from '@luraba/contracts/households';
+import type { z } from 'zod';
 import { env } from '@/config/env';
 import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
@@ -15,26 +31,17 @@ import {
   hashHouseholdInvitationToken,
 } from './household-invitation-token';
 import type {
-  ListHouseholdInvitesRequestQuery,
-  ListHouseholdMembersRequestQuery,
-  ListHouseholdsRequestQuery,
-  ListMyHouseholdInvitesRequestQuery,
+  ListHouseholdInvitesQuery,
+  ListHouseholdMembersQuery,
+  ListHouseholdsQuery,
+  ListMyHouseholdInvitesQuery,
 } from './households.query';
-import { householdInviteComputedStatusSchema } from './households.query';
 import { type HouseholdInviteListRow, householdsRepository } from './households.repository';
-import type {
-  AcceptHouseholdInviteResponse,
-  CreateHouseholdInviteRequestBody,
-  CreateHouseholdRequestBody,
-  Household,
-  HouseholdInvite,
-  HouseholdInviteLinkResponse,
-  HouseholdMember,
-  PreviewHouseholdInviteResponse,
-  UpdateHouseholdMemberRequestBody,
-  UpdateHouseholdRequestBody,
-} from './households.types';
 
+type CreateHouseholdValues = z.output<typeof createHouseholdBodySchema>;
+type UpdateHouseholdValues = z.output<typeof updateHouseholdBodySchema>;
+type UpdateHouseholdMemberValues = z.output<typeof updateHouseholdMemberBodySchema>;
+type CreateHouseholdInviteValues = z.output<typeof createHouseholdInviteBodySchema>;
 const INVITATION_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
 
 function normalizeEmail(email: string): string {
@@ -225,7 +232,7 @@ export async function provisionDefaultHouseholdForUser(
 
 export async function listHouseholds(
   userId: string,
-  query: ListHouseholdsRequestQuery,
+  query: ListHouseholdsQuery,
 ): Promise<ListResult<Household>> {
   const page = await householdsRepository.listHouseholdsForUserPage(userId, query);
   return { data: page.rows.map(mapHousehold), meta: createListMeta(query, page.totalCount) };
@@ -255,7 +262,7 @@ export async function deleteHousehold(
 
 export async function createHousehold(
   userId: string,
-  body: CreateHouseholdRequestBody,
+  body: CreateHouseholdValues,
 ): Promise<Household> {
   const currency = await currenciesRepository.findByCode(body.defaultCurrencyId);
   if (!currency) throw new NotFoundError('Currency');
@@ -282,7 +289,7 @@ export async function createHousehold(
 export async function updateHousehold(
   context: HouseholdContext,
   householdId: string,
-  body: UpdateHouseholdRequestBody,
+  body: UpdateHouseholdValues,
 ): Promise<Household> {
   const current = await householdsRepository.findHouseholdById(householdId);
   if (!current) throw new NotFoundError('Household');
@@ -333,7 +340,7 @@ export async function updateHousehold(
 export async function listMembers(
   _context: HouseholdContext,
   householdId: string,
-  query: ListHouseholdMembersRequestQuery,
+  query: ListHouseholdMembersQuery,
 ): Promise<ListResult<HouseholdMember>> {
   const page = await householdsRepository.listMembersPage(householdId, query);
   return { data: page.rows.map(mapHouseholdMember), meta: createListMeta(query, page.totalCount) };
@@ -343,7 +350,7 @@ export async function updateMemberRole(
   context: HouseholdContext,
   householdId: string,
   userId: string,
-  body: UpdateHouseholdMemberRequestBody,
+  body: UpdateHouseholdMemberValues,
 ): Promise<HouseholdMember> {
   const target = await householdsRepository.findMembership(householdId, userId);
   if (!target) throw new NotFoundError('Household member');
@@ -385,7 +392,7 @@ export async function removeMember(
 export async function createInvite(
   context: HouseholdContext,
   householdId: string,
-  body: CreateHouseholdInviteRequestBody,
+  body: CreateHouseholdInviteValues,
 ): Promise<HouseholdInvite> {
   if (!canManageRole(context.role, body.role)) {
     throw new ForbiddenError('You do not have permission to invite users with this role');
@@ -431,7 +438,7 @@ export async function createInvite(
 export async function listHouseholdInvites(
   _context: HouseholdContext,
   householdId: string,
-  query: ListHouseholdInvitesRequestQuery,
+  query: ListHouseholdInvitesQuery,
 ): Promise<ListResult<HouseholdInvite>> {
   const page = await householdsRepository.listInvitesForHouseholdPage(householdId, query);
   return { data: page.rows.map(mapHouseholdInvite), meta: createListMeta(query, page.totalCount) };
@@ -439,7 +446,7 @@ export async function listHouseholdInvites(
 
 export async function listMyPendingInvites(
   userEmail: string,
-  query: ListMyHouseholdInvitesRequestQuery,
+  query: ListMyHouseholdInvitesQuery,
 ): Promise<ListResult<HouseholdInvite>> {
   const page = await householdsRepository.listPendingInvitesForEmailPage(
     normalizeEmail(userEmail),
@@ -448,7 +455,7 @@ export async function listMyPendingInvites(
   return { data: page.rows.map(mapHouseholdInvite), meta: createListMeta(query, page.totalCount) };
 }
 
-export async function previewInvite(token: string): Promise<PreviewHouseholdInviteResponse> {
+export async function previewInvite(token: string): Promise<HouseholdInvitePreview> {
   const invite = await householdsRepository.findInvitePreviewByTokenHash(
     hashHouseholdInvitationToken(token),
   );
@@ -468,7 +475,7 @@ export async function acceptInvite(
   userId: string,
   userEmail: string,
   token: string,
-): Promise<AcceptHouseholdInviteResponse> {
+): Promise<AcceptHouseholdInviteResult> {
   const invite = await householdsRepository.findInviteByTokenHash(
     hashHouseholdInvitationToken(token),
   );
@@ -503,7 +510,7 @@ async function acceptInviteRecord(
   userId: string,
   userEmail: string,
   invite: Awaited<ReturnType<typeof householdsRepository.findInviteById>>,
-): Promise<AcceptHouseholdInviteResponse> {
+): Promise<AcceptHouseholdInviteResult> {
   assertInviteRecipient(invite, userEmail);
   assertActionableInvite(invite);
 
@@ -535,7 +542,7 @@ export async function acceptInviteById(
   userId: string,
   userEmail: string,
   inviteId: string,
-): Promise<AcceptHouseholdInviteResponse> {
+): Promise<AcceptHouseholdInviteResult> {
   return acceptInviteRecord(userId, userEmail, await householdsRepository.findInviteById(inviteId));
 }
 
@@ -582,7 +589,7 @@ export async function refreshInviteLink(
   context: HouseholdContext,
   householdId: string,
   inviteId: string,
-): Promise<HouseholdInviteLinkResponse> {
+): Promise<HouseholdInviteLink> {
   const { invite, rawToken } = await rotateManagedInvite(context, householdId, inviteId);
   return { url: invitationUrl(rawToken), expiresAt: invite.expiresAt };
 }

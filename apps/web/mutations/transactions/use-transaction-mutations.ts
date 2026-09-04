@@ -1,11 +1,11 @@
 "use client"
 
 import type {
-  CreateTransactionHttpBody,
-  CreateTransactionHttpResponse,
-  UpdateTransactionHttpBody,
-  UpdateTransactionHttpResponse,
-} from "@/interfaces/http/transactions-http"
+  CreateTransactionInput,
+  CreateTransactionResult,
+  UpdateTransactionInput,
+  UpdateTransactionResult,
+} from "@luraba/contracts"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
@@ -18,8 +18,8 @@ import {
 } from "@/services/transactions.service"
 
 export const createTransactionMutationDefinition = createAppMutationDefinition<
-  CreateTransactionHttpResponse,
-  CreateTransactionHttpBody
+  CreateTransactionResult,
+  CreateTransactionInput
 >({
   defaultErrorMessage:
     "We couldn't create this transaction. Please review the form and try again.",
@@ -29,8 +29,8 @@ export const createTransactionMutationDefinition = createAppMutationDefinition<
 
 export function useCreateTransactionMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    CreateTransactionHttpResponse,
-    CreateTransactionHttpBody,
+    CreateTransactionResult,
+    CreateTransactionInput,
     TContext
   >,
 ) {
@@ -38,19 +38,19 @@ export function useCreateTransactionMutation<TContext = unknown>(
 }
 
 export const updateTransactionMutationDefinition = createAppMutationDefinition<
-  UpdateTransactionHttpResponse,
-  { id: string; body: UpdateTransactionHttpBody }
+  UpdateTransactionResult,
+  { id: string; body: UpdateTransactionInput }
 >({
   defaultErrorMessage:
     "We couldn't update this transaction. Please review the form and try again.",
-  mutationFn: async (variables) => updateTransaction(variables),
+  mutationFn: ({ id, body }) => updateTransaction(id, body),
   mutationKey: ["transactions", "update"],
 })
 
 export function useUpdateTransactionMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateTransactionHttpResponse,
-    { id: string; body: UpdateTransactionHttpBody },
+    UpdateTransactionResult,
+    { id: string; body: UpdateTransactionInput },
     TContext
   >,
 ) {

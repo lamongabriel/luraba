@@ -1,9 +1,9 @@
+import { listMerchantsQuerySchema } from '@luraba/contracts/merchants';
 import { describe, expect, it } from 'vitest';
-import { ListMerchantsRequestQuerySchema } from '../merchants.query';
 
 describe('merchants list query', () => {
   it('parses every column filter and rejects invalid input', () => {
-    const query = ListMerchantsRequestQuerySchema.parse({
+    const query = listMerchantsQuerySchema.parse({
       hasDomain: 'true',
       hasLogo: 'false',
       createdAtFrom: '2025-01-01',
@@ -13,7 +13,7 @@ describe('merchants list query', () => {
     });
 
     expect(query).toMatchObject({ hasDomain: true, hasLogo: false });
-    expect(ListMerchantsRequestQuerySchema.safeParse({ hasLogo: 'sometimes' }).success).toBe(false);
-    expect(ListMerchantsRequestQuerySchema.safeParse({ extra: true }).success).toBe(false);
+    expect(listMerchantsQuerySchema.safeParse({ hasLogo: 'sometimes' }).success).toBe(false);
+    expect(listMerchantsQuerySchema.safeParse({ extra: true }).success).toBe(false);
   });
 });

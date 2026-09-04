@@ -1,14 +1,12 @@
+import { listAccountsQuerySchema } from '@luraba/contracts/accounts';
+import { listAccountTransactionsQuerySchema } from '@luraba/contracts/transactions';
 import { describe, expect, it } from 'vitest';
-import {
-  ListAccountsRequestQuerySchema,
-  ListAccountTransactionsRequestQuerySchema,
-} from '../accounts.query';
 
 const id = '1456d4ee-2f8d-4cec-92be-a780d54312c2';
 
 describe('accounts list queries', () => {
   it('parses every account column filter and rejects invalid ranges and unknown fields', () => {
-    const query = ListAccountsRequestQuerySchema.parse({
+    const query = listAccountsQuerySchema.parse({
       types: 'cash,loan',
       subtypes: 'checking,mortgage',
       classifications: 'asset',
@@ -25,15 +23,13 @@ describe('accounts list queries', () => {
     expect(query.types).toEqual(['cash', 'loan']);
     expect(query.subtypes).toEqual(['checking', 'mortgage']);
     expect(query.hasInstitution).toBe(true);
-    expect(ListAccountsRequestQuerySchema.safeParse({ balanceMin: 2, balanceMax: 1 }).success).toBe(
-      false,
-    );
-    expect(ListAccountsRequestQuerySchema.safeParse({ nope: true }).success).toBe(false);
+    expect(listAccountsQuerySchema.safeParse({ balanceMin: 2, balanceMax: 1 }).success).toBe(false);
+    expect(listAccountsQuerySchema.safeParse({ nope: true }).success).toBe(false);
   });
 
   it('reuses transaction filters without exposing account/card selectors', () => {
     expect(
-      ListAccountTransactionsRequestQuerySchema.parse({
+      listAccountTransactionsQuerySchema.parse({
         search: 'salary',
         dateFrom: '2025-01-01',
         dateTo: '2025-12-31',
@@ -50,11 +46,7 @@ describe('accounts list queries', () => {
         includeInBudget: 'true',
       }).originTypes,
     ).toEqual(['income', 'transfer']);
-    expect(ListAccountTransactionsRequestQuerySchema.safeParse({ accountIds: id }).success).toBe(
-      false,
-    );
-    expect(ListAccountTransactionsRequestQuerySchema.safeParse({ creditCardIds: id }).success).toBe(
-      false,
-    );
+    expect(listAccountTransactionsQuerySchema.safeParse({ accountIds: id }).success).toBe(false);
+    expect(listAccountTransactionsQuerySchema.safeParse({ creditCardIds: id }).success).toBe(false);
   });
 });

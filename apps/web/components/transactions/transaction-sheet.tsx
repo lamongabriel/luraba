@@ -1,5 +1,6 @@
 "use client"
 
+import type { TransactionFeedRow } from "@luraba/contracts"
 import { useQuery } from "@tanstack/react-query"
 import * as React from "react"
 import { ErrorState } from "@/components/error-state"
@@ -15,7 +16,6 @@ import {
 import { TransactionDetailHeader } from "@/components/transactions/transaction-detail-header"
 import { TransactionDetails } from "@/components/transactions/transaction-details"
 import { Skeleton } from "@/components/ui/skeleton"
-import type { TransactionFeedRow } from "@/interfaces/transaction"
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query"
 import {
   getCreditCardPayment,
@@ -49,19 +49,13 @@ export function TransactionSheet({
     enabled: open && Boolean(row?.creditCardId && row?.purchaseId),
     queryKey: ["credit-cards", row?.creditCardId, "purchases", row?.purchaseId],
     queryFn: () =>
-      getCreditCardPurchase({
-        creditCardId: row?.creditCardId ?? "",
-        purchaseId: row?.purchaseId ?? "",
-      }),
+      getCreditCardPurchase(row?.creditCardId ?? "", row?.purchaseId ?? ""),
   })
   const paymentQuery = useQuery({
     enabled: open && Boolean(row?.creditCardId && row?.paymentId),
     queryKey: ["credit-cards", row?.creditCardId, "payments", row?.paymentId],
     queryFn: () =>
-      getCreditCardPayment({
-        creditCardId: row?.creditCardId ?? "",
-        paymentId: row?.paymentId ?? "",
-      }),
+      getCreditCardPayment(row?.creditCardId ?? "", row?.paymentId ?? ""),
   })
   const detailQuery =
     row?.rowKind === "credit_card_installment"

@@ -1,9 +1,6 @@
+import type { AccountSummary, Merchant, PaymentMethod } from "@luraba/contracts"
 import type { Control } from "react-hook-form"
-
 import { FormItem } from "@/components/forms/form-item"
-import type { AccountSummary } from "@/interfaces/account"
-import type { Merchant } from "@/interfaces/merchant"
-import type { PaymentMethod } from "@/interfaces/payment-method"
 
 import type {
   CreateEditTransactionFormValues,

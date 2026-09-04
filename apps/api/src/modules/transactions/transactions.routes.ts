@@ -1,33 +1,39 @@
+import { getEndpointRouterPath, transactionsEndpoints } from '@luraba/contracts';
 import { Router } from 'express';
+import { PERMISSIONS } from '@/config/permissions';
 import { requireAccess } from '@/middleware/access.middleware';
 import * as transactionsController from './transactions.controller';
 
 const router = Router();
 
 router.get(
-  '/analytics',
-  requireAccess({ permission: 'transactions.read' }),
+  getEndpointRouterPath(transactionsEndpoints.analytics),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_READ }),
   transactionsController.analytics,
 );
 router.get(
-  '/upcoming',
-  requireAccess({ permission: 'transactions.read' }),
+  getEndpointRouterPath(transactionsEndpoints.upcoming),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_READ }),
   transactionsController.upcoming,
 );
-router.get('/', requireAccess({ permission: 'transactions.read' }), transactionsController.list);
+router.get(
+  getEndpointRouterPath(transactionsEndpoints.list),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_READ }),
+  transactionsController.list,
+);
 router.post(
-  '/',
-  requireAccess({ permission: 'transactions.create' }),
+  getEndpointRouterPath(transactionsEndpoints.create),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_CREATE }),
   transactionsController.create,
 );
 router.patch(
-  '/:id',
-  requireAccess({ permission: 'transactions.update' }),
+  getEndpointRouterPath(transactionsEndpoints.update),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_UPDATE }),
   transactionsController.update,
 );
 router.delete(
-  '/:id',
-  requireAccess({ permission: 'transactions.delete' }),
+  getEndpointRouterPath(transactionsEndpoints.delete),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_DELETE }),
   transactionsController.deleteTransaction,
 );
 

@@ -1,5 +1,10 @@
 "use client"
 
+import type {
+  ListTransactionsQuery,
+  TransactionFeedRow,
+  TransactionSortField,
+} from "@luraba/contracts"
 import * as React from "react"
 import { TransactionsEmpty } from "@/app/(app)/transactions/_empty"
 import { TransactionsError } from "@/app/(app)/transactions/_error"
@@ -13,11 +18,6 @@ import type {
 import { TransactionsTableToolbar } from "@/components/tables/transactions/transactions-table-toolbar"
 import { useDataTable } from "@/hooks/use-data-table"
 import type { useTransactionParams } from "@/hooks/use-transaction-params"
-import type { ListTransactionsHttpQuery } from "@/interfaces/http/transactions-http"
-import type {
-  TransactionFeedRow,
-  TransactionSortField,
-} from "@/interfaces/transaction"
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query"
 import { useTransactionsQuery } from "@/queries/transactions/use-transactions-query"
 
@@ -34,7 +34,7 @@ export function TransactionsTable({
   onView: (row: TransactionFeedRow) => void
   params: ReturnType<typeof useTransactionParams>
 }) {
-  const queryParams = params.apiParams as ListTransactionsHttpQuery
+  const queryParams = params.apiParams as ListTransactionsQuery
   const transactionFilters = params.filters as TransactionTableFilters
   const hasTransactionFilters = params.hasFilters
   const query = useTransactionsQuery(queryParams, { enabled: params.ready })

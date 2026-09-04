@@ -1,3 +1,7 @@
+import {
+  transactionAnalyticsQuerySchema,
+  transactionAnalyticsSchema,
+} from '@luraba/contracts/transactions';
 import { differenceInCalendarDays, startOfMonth, startOfWeek, subDays } from 'date-fns';
 import { eq } from 'drizzle-orm';
 import type { HouseholdContext } from '@/config/permissions';
@@ -7,10 +11,7 @@ import { authRepository } from '@/modules/auth/auth.repository';
 import { fxService } from '@/modules/fx/fx.service';
 import { formatISODate, getTodayInTimezone, parseISODate } from '@/shared/lib/date';
 import * as repository from './transactions.analytics.repository';
-import { type TransactionFilterQuery, TransactionFilterQuerySchema } from './transactions.query';
-import { transactionAnalyticsResponseSchema } from './transactions.types';
-
-export { transactionAnalyticsResponseSchema } from './transactions.types';
+import type { TransactionFilterQuery } from './transactions.query';
 
 type ConvertedRow = repository.TransactionAnalyticsAggregateRow & { amount: number };
 
@@ -117,7 +118,7 @@ function createMetric(
 }
 
 export async function getAnalytics(context: HouseholdContext, input: TransactionFilterQuery) {
-  const parsed = TransactionFilterQuerySchema.parse(input);
+  const parsed = transactionAnalyticsQuerySchema.parse(input);
   const today = formatISODate(getTodayInTimezone(context.timezone));
   const query = clampDates(parsed, today);
   const currencyCode = await resolveCurrency(context);
@@ -179,7 +180,7 @@ export async function getAnalytics(context: HouseholdContext, input: Transaction
   }
   const totalExpense = top.reduce((total, item) => total + item.amount, 0);
 
-  return transactionAnalyticsResponseSchema.parse({
+  return transactionAnalyticsSchema.parse({
     currencyCode,
     dateFrom: query.dateFrom ?? null,
     dateTo: query.dateTo ?? null,

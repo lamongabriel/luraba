@@ -1,4 +1,9 @@
+import type {
+  createHouseholdBodySchema,
+  updateHouseholdBodySchema,
+} from '@luraba/contracts/households';
 import { and, asc, eq, gt, type SQL, sql } from 'drizzle-orm';
+import type { z } from 'zod';
 import { db } from '@/db';
 import {
   householdInvitesTable,
@@ -21,18 +26,19 @@ import {
   buildMyHouseholdInvitesListWhere,
   householdInviteComputedStatusSql,
   householdInviteInviter,
-  type ListHouseholdInvitesRequestQuery,
-  type ListHouseholdMembersRequestQuery,
-  type ListHouseholdsRequestQuery,
-  type ListMyHouseholdInvitesRequestQuery,
+  type ListHouseholdInvitesQuery,
+  type ListHouseholdMembersQuery,
+  type ListHouseholdsQuery,
+  type ListMyHouseholdInvitesQuery,
 } from './households.query';
 import type {
-  CreateHouseholdRequestBody,
   HouseholdInviteRecord,
   HouseholdMemberRecord,
   HouseholdRecord,
-  UpdateHouseholdRequestBody,
 } from './households.types';
+
+type CreateHouseholdValues = z.output<typeof createHouseholdBodySchema>;
+type UpdateHouseholdValues = z.output<typeof updateHouseholdBodySchema>;
 
 export type HouseholdMembership = HouseholdMemberRecord & {
   householdName: HouseholdRecord['name'];
@@ -176,7 +182,7 @@ class HouseholdsRepository {
   async createHousehold(
     tx: TxClient,
     userId: string,
-    values: CreateHouseholdRequestBody,
+    values: CreateHouseholdValues,
   ): Promise<HouseholdRecord> {
     const rows = await tx
       .insert(householdsTable)
@@ -198,7 +204,7 @@ class HouseholdsRepository {
 
   async updateHousehold(
     householdId: string,
-    values: UpdateHouseholdRequestBody,
+    values: UpdateHouseholdValues,
   ): Promise<HouseholdRecord | undefined> {
     return this.updateHouseholdWithClient(db, householdId, values);
   }
@@ -206,7 +212,7 @@ class HouseholdsRepository {
   async updateHouseholdInTransaction(
     tx: TxClient,
     householdId: string,
-    values: UpdateHouseholdRequestBody,
+    values: UpdateHouseholdValues,
   ): Promise<HouseholdRecord | undefined> {
     return this.updateHouseholdWithClient(tx, householdId, values);
   }
@@ -214,7 +220,7 @@ class HouseholdsRepository {
   private async updateHouseholdWithClient(
     client: TxClient | typeof db,
     householdId: string,
-    values: UpdateHouseholdRequestBody,
+    values: UpdateHouseholdValues,
   ): Promise<HouseholdRecord | undefined> {
     const rows = await client
       .update(householdsTable)
@@ -410,7 +416,7 @@ class HouseholdsRepository {
 
   async listHouseholdsForUserPage(
     userId: string,
-    query: ListHouseholdsRequestQuery,
+    query: ListHouseholdsQuery,
   ): Promise<DbListPage<HouseholdForUserRow>> {
     const { limit, offset } = getPagination(query);
     const whereCondition = buildHouseholdsListWhere(userId, query);
@@ -451,7 +457,7 @@ class HouseholdsRepository {
 
   async listMembersPage(
     householdId: string,
-    query: ListHouseholdMembersRequestQuery,
+    query: ListHouseholdMembersQuery,
   ): Promise<DbListPage<HouseholdMemberListRow>> {
     const { limit, offset } = getPagination(query);
     const whereCondition = buildHouseholdMembersListWhere(householdId, query);
@@ -567,7 +573,7 @@ class HouseholdsRepository {
 
   private async listInvitePage(
     whereCondition: SQL,
-    query: ListHouseholdInvitesRequestQuery | ListMyHouseholdInvitesRequestQuery,
+    query: ListHouseholdInvitesQuery | ListMyHouseholdInvitesQuery,
     orderBy: SQL[],
   ): Promise<DbListPage<HouseholdInviteListRow>> {
     const { limit, offset } = getPagination(query);
@@ -617,7 +623,7 @@ class HouseholdsRepository {
 
   async listInvitesForHouseholdPage(
     householdId: string,
-    query: ListHouseholdInvitesRequestQuery,
+    query: ListHouseholdInvitesQuery,
   ): Promise<DbListPage<HouseholdInviteListRow>> {
     return this.listInvitePage(
       buildHouseholdInvitesListWhere(householdId, query),
@@ -628,7 +634,7 @@ class HouseholdsRepository {
 
   async listPendingInvitesForEmailPage(
     email: string,
-    query: ListMyHouseholdInvitesRequestQuery,
+    query: ListMyHouseholdInvitesQuery,
   ): Promise<DbListPage<HouseholdInviteListRow>> {
     return this.listInvitePage(
       buildMyHouseholdInvitesListWhere(email, query),

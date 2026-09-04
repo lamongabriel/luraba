@@ -6,6 +6,8 @@ import {
   PencilEdit02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { Tag } from "@luraba/contracts"
+import { MAX_PER_PAGE } from "@luraba/contracts"
 import * as React from "react"
 import { DataTableSearchInput } from "@/components/data-table/data-table-search-input"
 import { InternalPageLayout } from "@/components/finance/internal-page-layout"
@@ -23,8 +25,6 @@ import {
 import { Icon } from "@/components/ui/icon"
 import { useApiParams } from "@/hooks/use-api-params"
 import { useEntityDisclosure } from "@/hooks/use-disclosure"
-import { MAX_PER_PAGE } from "@/interfaces/api"
-import type { Tag } from "@/interfaces/tag"
 import { useTagsQuery } from "@/queries/tags/use-tags-query"
 
 import { TagsEmpty } from "./_empty"

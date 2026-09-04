@@ -1,17 +1,17 @@
-import {
+import type {
   householdInviteStatusMetadataSchema,
   householdPermissionMetadataSchema,
   householdRoleMetadataSchema,
 } from '@luraba/contracts';
-import { z } from 'zod';
+import { householdInviteComputedStatusSchema } from '@luraba/contracts/households';
+import type { z } from 'zod';
 import {
-  HOUSEHOLD_PERMISSIONS,
   HOUSEHOLD_ROLE_METADATA,
   HOUSEHOLD_ROLE_PERMISSIONS,
   type HouseholdPermission,
+  PERMISSIONS,
 } from '@/config/permissions';
 import { householdRoleSchema } from '@/shared/validation/households';
-import { householdInviteComputedStatusSchema } from './households.query';
 
 const inviteStatusDefinitions = {
   pending: {
@@ -73,20 +73,12 @@ function permissionMetadata(permission: HouseholdPermission) {
   };
 }
 
-export const ListHouseholdPermissionsResponseSchema = z.array(householdPermissionMetadataSchema);
-
-export const ListHouseholdRolesResponseSchema = z.array(householdRoleMetadataSchema);
-
-export const ListHouseholdInviteStatusesResponseSchema = z.array(
-  householdInviteStatusMetadataSchema,
-);
-
 export type HouseholdPermissionMetadata = z.infer<typeof householdPermissionMetadataSchema>;
 export type HouseholdRoleMetadata = z.infer<typeof householdRoleMetadataSchema>;
 export type HouseholdInviteStatusMetadata = z.infer<typeof householdInviteStatusMetadataSchema>;
 
 export function listHouseholdPermissions(): HouseholdPermissionMetadata[] {
-  return HOUSEHOLD_PERMISSIONS.map(permissionMetadata);
+  return Object.values(PERMISSIONS).map(permissionMetadata);
 }
 
 export function listHouseholdRoles(): HouseholdRoleMetadata[] {

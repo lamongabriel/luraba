@@ -1,11 +1,11 @@
 "use client"
 
 import type {
-  CreateAccountHttpBody,
-  CreateAccountHttpResponse,
-  UpdateAccountHttpBody,
-  UpdateAccountHttpResponse,
-} from "@/interfaces/http/accounts-http"
+  CreateAccountInput,
+  CreateAccountResult,
+  UpdateAccountInput,
+  UpdateAccountResult,
+} from "@luraba/contracts"
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
@@ -18,8 +18,8 @@ import {
 } from "@/services/accounts.service"
 
 export const createAccountMutationDefinition = createAppMutationDefinition<
-  CreateAccountHttpResponse,
-  CreateAccountHttpBody
+  CreateAccountResult,
+  CreateAccountInput
 >({
   defaultErrorMessage:
     "We couldn't create this account. Please review the information and try again.",
@@ -29,28 +29,28 @@ export const createAccountMutationDefinition = createAppMutationDefinition<
 
 export function useCreateAccountMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    CreateAccountHttpResponse,
-    CreateAccountHttpBody,
+    CreateAccountResult,
+    CreateAccountInput,
     TContext
   >,
 ) {
   return useAppMutation(createAccountMutationDefinition, options)
 }
 
-type UpdateAccountVariables = { id: string; body: UpdateAccountHttpBody }
+type UpdateAccountVariables = { id: string; body: UpdateAccountInput }
 
 export const updateAccountMutationDefinition = createAppMutationDefinition<
-  UpdateAccountHttpResponse,
+  UpdateAccountResult,
   UpdateAccountVariables
 >({
   defaultErrorMessage: "We couldn't update this account. Please try again.",
-  mutationFn: updateAccount,
+  mutationFn: ({ id, body }) => updateAccount(id, body),
   mutationKey: ["accounts", "update"],
 })
 
 export function useUpdateAccountMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
-    UpdateAccountHttpResponse,
+    UpdateAccountResult,
     UpdateAccountVariables,
     TContext
   >,

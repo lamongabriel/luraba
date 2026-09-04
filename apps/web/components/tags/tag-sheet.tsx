@@ -1,10 +1,10 @@
 "use client"
 
+import type { Tag } from "@luraba/contracts"
 import * as React from "react"
 import { CreateEditTagForm } from "@/components/forms/create-edit-tag-form/create-edit-tag-form"
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary"
 import { FormSheet } from "@/components/forms/form-sheet"
-import type { Tag } from "@/interfaces/tag"
 
 export function TagSheet({
   open,

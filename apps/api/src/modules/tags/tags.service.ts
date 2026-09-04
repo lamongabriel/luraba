@@ -1,10 +1,11 @@
+import type { CreateTagInput, Tag, UpdateTagInput } from '@luraba/contracts/tags';
 import type { HouseholdContext } from '@/config/permissions';
 import { ConflictError, NotFoundError } from '@/shared/errors';
 import { formatISODateTime } from '@/shared/lib/date';
 import { createListMeta, type ListResult } from '@/shared/list';
-import type { ListTagsRequestQuery } from './tags.query';
+import type { ListTagsQuery } from './tags.query';
 import { tagsRepository } from './tags.repository';
-import type { CreateTagRequestBody, Tag, TagRecord, UpdateTagRequestBody } from './tags.types';
+import type { TagRecord } from './tags.types';
 
 function mapTagRecord(tag: TagRecord): Tag {
   return {
@@ -17,10 +18,7 @@ function mapTagRecord(tag: TagRecord): Tag {
   };
 }
 
-export async function createTag(
-  context: HouseholdContext,
-  body: CreateTagRequestBody,
-): Promise<Tag> {
+export async function createTag(context: HouseholdContext, body: CreateTagInput): Promise<Tag> {
   const existing = await tagsRepository.findByHouseholdAndName(context, body.name);
   if (existing) {
     throw new ConflictError('A tag with this name already exists');
@@ -37,7 +35,7 @@ export async function createTag(
 
 export async function listTags(
   context: HouseholdContext,
-  query: ListTagsRequestQuery,
+  query: ListTagsQuery,
 ): Promise<ListResult<Tag>> {
   const page = await tagsRepository.listPage(context, query);
 
@@ -50,7 +48,7 @@ export async function listTags(
 export async function updateTag(
   context: HouseholdContext,
   tagId: string,
-  body: UpdateTagRequestBody,
+  body: UpdateTagInput,
 ): Promise<Tag> {
   const tag = await tagsRepository.get(tagId, context);
   if (!tag) {

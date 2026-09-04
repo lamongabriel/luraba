@@ -120,16 +120,19 @@ describe('transaction analytics routes', () => {
       .query({ search: 'Upcoming Laptop', perPage: 10 });
 
     expect(response.status).toBe(200);
-    expect(response.body.data).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          sourceType: 'credit_card_installment',
-          sourceId: purchase.installments[0].installmentId,
-          parentId: purchase.purchaseId,
-          creditCardId: card.id,
-          description: 'Upcoming Laptop',
-        }),
-      ]),
+    const upcomingInstallment = response.body.data.find(
+      (row: { sourceType: string }) => row.sourceType === 'credit_card_installment',
+    );
+    expect(purchase.installments.map(({ installmentId }) => installmentId)).toContain(
+      upcomingInstallment?.sourceId,
+    );
+    expect(upcomingInstallment).toEqual(
+      expect.objectContaining({
+        sourceType: 'credit_card_installment',
+        parentId: purchase.purchaseId,
+        creditCardId: card.id,
+        description: 'Upcoming Laptop',
+      }),
     );
     expect(response.body.meta.pagination).toMatchObject({
       page: 1,

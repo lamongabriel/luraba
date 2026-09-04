@@ -1,5 +1,5 @@
+import type { Merchant } from "@luraba/contracts"
 import { type Control, Controller } from "react-hook-form"
-
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import {
   Select,
@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { Merchant } from "@/interfaces/merchant"
 
 import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema"
 

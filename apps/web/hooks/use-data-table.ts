@@ -1,3 +1,4 @@
+import type { SortDirection } from "@luraba/contracts"
 import {
   type ColumnFiltersState,
   getCoreRowModel,
@@ -11,8 +12,6 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table"
 import * as React from "react"
-
-import type { SortDirection } from "@/interfaces/api"
 import type { ExtendedColumnSort } from "@/types/data-table"
 
 interface UseDataTableProps<TData>

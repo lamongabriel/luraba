@@ -2,7 +2,7 @@
 
 import { PencilEdit02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import type { TransactionFeedRow } from "@luraba/contracts"
 import { MoneyValue } from "@/components/finance/money-value"
 import { PERMISSIONS, PermissionButton } from "@/components/permissions"
 import { SidePanelTitle } from "@/components/side-panel/side-panel"
@@ -12,7 +12,6 @@ import {
   TransactionMerchantPanelDisplay,
 } from "@/components/tables/transactions/transaction-resource-display"
 import { TransactionTypeBadge } from "@/components/tables/transactions/transaction-type-badge"
-import type { TransactionFeedRow } from "@/interfaces/transaction"
 import { formatShortDate } from "@/lib/format"
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query"
 

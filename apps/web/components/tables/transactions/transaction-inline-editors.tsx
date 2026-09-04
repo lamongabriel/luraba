@@ -1,5 +1,6 @@
 "use client"
 
+import type { TransactionFeedRow } from "@luraba/contracts"
 import { ComboboxControl } from "@/components/forms/form-combobox"
 import { TransactionTypeBadge } from "@/components/tables/transactions/transaction-type-badge"
 import {
@@ -7,7 +8,6 @@ import {
   UncategorizedChip,
 } from "@/components/transactions/transaction-label-chip"
 import { useTransactionInlineUpdates } from "@/components/transactions/use-transaction-inline-updates"
-import type { TransactionFeedRow } from "@/interfaces/transaction"
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query"
 
 const UNCATEGORIZED_VALUE = "__uncategorized__"

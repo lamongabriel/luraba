@@ -1,31 +1,28 @@
 "use client"
-
-import type {
-  DeleteBrandfetchIntegrationHttpResponse,
-  ListIntegrationsHttpQuery,
-  ListIntegrationsHttpResponse,
-  UpdateBrandfetchIntegrationHttpBody,
-  UpdateBrandfetchIntegrationHttpResponse,
-} from "@/interfaces/http/integrations-http"
 import {
-  deleteApiData,
-  getApiList,
-  putApiData,
-} from "@/services/api-client.service"
-import { serializeHttpQuery } from "@/services/http-query"
+  type DeleteBrandfetchIntegrationResult,
+  integrationsEndpoints,
+  type ListIntegrationsQuery,
+  type ListIntegrationsResult,
+  type UpdateBrandfetchIntegrationInput,
+  type UpdateBrandfetchIntegrationResult,
+} from "@luraba/contracts"
+import { requestContract } from "@/services/contract-client.service"
 
 export function listIntegrations(
-  query: ListIntegrationsHttpQuery = {},
-): Promise<ListIntegrationsHttpResponse> {
-  return getApiList("/integrations", { params: serializeHttpQuery(query) })
+  query: ListIntegrationsQuery = {},
+): Promise<ListIntegrationsResult> {
+  return requestContract(integrationsEndpoints.list, { query })
 }
 
 export function updateBrandfetchIntegration(
-  body: UpdateBrandfetchIntegrationHttpBody,
-): Promise<UpdateBrandfetchIntegrationHttpResponse> {
-  return putApiData("/integrations/brandfetch", body)
+  input: UpdateBrandfetchIntegrationInput,
+): Promise<UpdateBrandfetchIntegrationResult> {
+  return requestContract(integrationsEndpoints.updateBrandfetch, {
+    body: input,
+  })
 }
 
-export function deleteBrandfetchIntegration(): Promise<DeleteBrandfetchIntegrationHttpResponse> {
-  return deleteApiData("/integrations/brandfetch")
+export function deleteBrandfetchIntegration(): Promise<DeleteBrandfetchIntegrationResult> {
+  return requestContract(integrationsEndpoints.deleteBrandfetch)
 }

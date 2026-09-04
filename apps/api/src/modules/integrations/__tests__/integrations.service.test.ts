@@ -1,8 +1,8 @@
+import { listIntegrationsQuerySchema } from '@luraba/contracts/integrations';
 import { describe, expect, it } from 'vitest';
 import { db } from '@/db';
 import { brandfetchIntegrationsTable } from '@/db/schemas/brandfetch-integrations.schema';
 import { createAuthenticatedContext } from '@/test/auth';
-import { ListIntegrationsRequestQuerySchema } from '../integrations.query';
 import * as integrationsService from '../integrations.service';
 
 describe('integrations service', () => {
@@ -11,7 +11,7 @@ describe('integrations service', () => {
 
     const listed = await integrationsService.listIntegrations(
       context.householdContext,
-      ListIntegrationsRequestQuerySchema.parse({}),
+      listIntegrationsQuerySchema.parse({}),
     );
     expect(listed.data).toEqual([
       {
@@ -34,7 +34,7 @@ describe('integrations service', () => {
 
     const result = await integrationsService.listIntegrations(
       context.householdContext,
-      ListIntegrationsRequestQuerySchema.parse({
+      listIntegrationsQuerySchema.parse({
         search: 'connected',
         providers: 'brandfetch',
         statuses: 'connected',

@@ -1,4 +1,4 @@
-import type { CategoryType } from "@/interfaces/category"
+import type { CategoryType } from "@luraba/contracts"
 import {
   CURATED_COLOR_PRESETS,
   CURATED_ICONS,

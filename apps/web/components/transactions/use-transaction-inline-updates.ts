@@ -1,11 +1,10 @@
 "use client"
 
-import * as React from "react"
-
 import type {
   TransactionFeedRow,
-  UpdateTransactionBody,
-} from "@/interfaces/transaction"
+  UpdateTransactionInput,
+} from "@luraba/contracts"
+import * as React from "react"
 import { queryClient } from "@/lib/query-client"
 import { useUpdateCreditCardPurchaseMutation } from "@/mutations/credit-cards/use-credit-card-transaction-mutations"
 import { useUpdateTransactionMutation } from "@/mutations/transactions/use-transaction-mutations"
@@ -16,7 +15,7 @@ import { transactionAnalyticsQueryKeys } from "@/queries/transactions/use-transa
 import { transactionQueryKeys } from "@/queries/transactions/use-transactions-query"
 
 export type InlineTransactionUpdate = Pick<
-  UpdateTransactionBody,
+  UpdateTransactionInput,
   "categoryId" | "merchantId" | "tagIds" | "includeInBudget"
 >
 

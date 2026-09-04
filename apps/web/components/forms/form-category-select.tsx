@@ -1,12 +1,12 @@
 "use client"
 
+import type { Category, CategoryType } from "@luraba/contracts"
+import { MAX_PER_PAGE } from "@luraba/contracts"
 import {
   ComboboxControl,
   type FormComboboxOption,
 } from "@/components/forms/form-combobox"
 import { Icon } from "@/components/ui/icon"
-import { MAX_PER_PAGE } from "@/interfaces/api"
-import type { Category, CategoryType } from "@/interfaces/category"
 import { useCategoriesQuery } from "@/queries/categories/use-categories-query"
 
 const CLEAR_VALUE = ""

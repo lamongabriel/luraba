@@ -1,5 +1,6 @@
 "use client"
 
+import type { CategoryType } from "@luraba/contracts"
 import type * as React from "react"
 import type { Control, FieldValues, Path } from "react-hook-form"
 import { Controller } from "react-hook-form"
@@ -28,7 +29,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import type { CategoryType } from "@/interfaces/category"
 import type { CuratedIconOption } from "@/lib/icons"
 
 type BaseFormItemProps<TFieldValues extends FieldValues> = {

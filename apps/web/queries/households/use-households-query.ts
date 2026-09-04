@@ -1,16 +1,17 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
-import type { HouseholdSummary } from "@/interfaces/household"
 import type {
-  ListHouseholdInviteStatusesHttpResponse,
-  ListHouseholdMembersHttpQuery,
-  ListHouseholdMembersHttpResponse,
-  ListHouseholdPermissionsHttpResponse,
-  ListHouseholdRolesHttpResponse,
-  ListHouseholdsHttpQuery,
-  ListHouseholdsHttpResponse,
-} from "@/interfaces/http/households-http"
+  HouseholdSummary,
+  ListHouseholdInviteStatusesResult,
+  ListHouseholdMembersQuery,
+  ListHouseholdMembersResult,
+  ListHouseholdPermissionsResult,
+  ListHouseholdRolesResult,
+  ListHouseholdsQuery,
+  ListHouseholdsResult,
+} from "@luraba/contracts"
+import { useQuery } from "@tanstack/react-query"
+import { lurabaApiPassiveClient } from "@/api/luraba-api"
 import type { AppQueryOptions } from "@/queries/query-options"
 import {
   getHousehold,
@@ -19,28 +20,27 @@ import {
   listHouseholdPermissions,
   listHouseholdRoles,
   listHouseholds,
-  probeHouseholds,
 } from "@/services/households.service"
 
 export const householdQueryKeys = {
   all: ["households"] as const,
   lists: () => [...householdQueryKeys.all, "list"] as const,
-  list: (query: ListHouseholdsHttpQuery = {}) =>
+  list: (query: ListHouseholdsQuery = {}) =>
     [...householdQueryKeys.lists(), query] as const,
   detail: (householdId: string) =>
     [...householdQueryKeys.all, "detail", householdId] as const,
-  probe: (query: ListHouseholdsHttpQuery = {}) =>
+  probe: (query: ListHouseholdsQuery = {}) =>
     [...householdQueryKeys.list(query), "probe"] as const,
-  members: (householdId: string, query: ListHouseholdMembersHttpQuery = {}) =>
+  members: (householdId: string, query: ListHouseholdMembersQuery = {}) =>
     [...householdQueryKeys.all, householdId, "members", query] as const,
   roles: () => [...householdQueryKeys.all, "roles"] as const,
   permissions: () => [...householdQueryKeys.all, "permissions"] as const,
   inviteStatuses: () => [...householdQueryKeys.all, "invite-statuses"] as const,
 }
 
-export function useHouseholdsQuery<TData = ListHouseholdsHttpResponse>(
-  query: ListHouseholdsHttpQuery = {},
-  options?: AppQueryOptions<ListHouseholdsHttpResponse, TData>,
+export function useHouseholdsQuery<TData = ListHouseholdsResult>(
+  query: ListHouseholdsQuery = {},
+  options?: AppQueryOptions<ListHouseholdsResult, TData>,
 ) {
   return useQuery({
     queryKey: householdQueryKeys.list(query),
@@ -49,8 +49,8 @@ export function useHouseholdsQuery<TData = ListHouseholdsHttpResponse>(
   })
 }
 
-export function useHouseholdRolesQuery<TData = ListHouseholdRolesHttpResponse>(
-  options?: AppQueryOptions<ListHouseholdRolesHttpResponse, TData>,
+export function useHouseholdRolesQuery<TData = ListHouseholdRolesResult>(
+  options?: AppQueryOptions<ListHouseholdRolesResult, TData>,
 ) {
   return useQuery({
     queryKey: householdQueryKeys.roles(),
@@ -61,8 +61,8 @@ export function useHouseholdRolesQuery<TData = ListHouseholdRolesHttpResponse>(
 }
 
 export function useHouseholdPermissionsQuery<
-  TData = ListHouseholdPermissionsHttpResponse,
->(options?: AppQueryOptions<ListHouseholdPermissionsHttpResponse, TData>) {
+  TData = ListHouseholdPermissionsResult,
+>(options?: AppQueryOptions<ListHouseholdPermissionsResult, TData>) {
   return useQuery({
     queryKey: householdQueryKeys.permissions(),
     queryFn: listHouseholdPermissions,
@@ -72,8 +72,8 @@ export function useHouseholdPermissionsQuery<
 }
 
 export function useHouseholdInviteStatusesQuery<
-  TData = ListHouseholdInviteStatusesHttpResponse,
->(options?: AppQueryOptions<ListHouseholdInviteStatusesHttpResponse, TData>) {
+  TData = ListHouseholdInviteStatusesResult,
+>(options?: AppQueryOptions<ListHouseholdInviteStatusesResult, TData>) {
   return useQuery({
     queryKey: householdQueryKeys.inviteStatuses(),
     queryFn: listHouseholdInviteStatuses,
@@ -94,23 +94,21 @@ export function useHouseholdQuery<TData = HouseholdSummary>(
   })
 }
 
-export function useProbeHouseholdsQuery<TData = ListHouseholdsHttpResponse>(
-  query: ListHouseholdsHttpQuery = {},
-  options?: AppQueryOptions<ListHouseholdsHttpResponse, TData>,
+export function useProbeHouseholdsQuery<TData = ListHouseholdsResult>(
+  query: ListHouseholdsQuery = {},
+  options?: AppQueryOptions<ListHouseholdsResult, TData>,
 ) {
   return useQuery({
     queryKey: householdQueryKeys.probe(query),
-    queryFn: () => probeHouseholds(query),
+    queryFn: () => listHouseholds(query, { client: lurabaApiPassiveClient }),
     ...options,
   })
 }
 
-export function useHouseholdMembersQuery<
-  TData = ListHouseholdMembersHttpResponse,
->(
+export function useHouseholdMembersQuery<TData = ListHouseholdMembersResult>(
   householdId: string,
-  query: ListHouseholdMembersHttpQuery = {},
-  options?: AppQueryOptions<ListHouseholdMembersHttpResponse, TData>,
+  query: ListHouseholdMembersQuery = {},
+  options?: AppQueryOptions<ListHouseholdMembersResult, TData>,
 ) {
   return useQuery({
     queryKey: householdQueryKeys.members(householdId, query),

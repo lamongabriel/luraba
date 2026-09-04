@@ -2,28 +2,27 @@
 
 import { useQuery } from "@tanstack/react-query"
 
-import type {
-  GetCurrencyRateHttpQuery,
-  GetCurrencyRateHttpResponse,
-  ListCurrenciesHttpQuery,
-  ListCurrenciesHttpResponse,
-} from "@/interfaces/http/currencies-http"
 import type { AppQueryOptions } from "@/queries/query-options"
 import { getCurrencyRate, listCurrencies } from "@/services/currencies.service"
+
+type ListCurrenciesQuery = NonNullable<Parameters<typeof listCurrencies>[0]>
+type ListCurrenciesResponse = Awaited<ReturnType<typeof listCurrencies>>
+type GetCurrencyRateQuery = Parameters<typeof getCurrencyRate>[0]
+type GetCurrencyRateResponse = Awaited<ReturnType<typeof getCurrencyRate>>
 
 export const currencyQueryKeys = {
   all: ["currencies"] as const,
   lists: () => [...currencyQueryKeys.all, "list"] as const,
-  list: (query: ListCurrenciesHttpQuery = {}) =>
+  list: (query: ListCurrenciesQuery = {}) =>
     [...currencyQueryKeys.lists(), query] as const,
   rates: () => [...currencyQueryKeys.all, "rate"] as const,
-  rate: (query: GetCurrencyRateHttpQuery) =>
+  rate: (query: GetCurrencyRateQuery) =>
     [...currencyQueryKeys.rates(), query] as const,
 }
 
-export function useCurrenciesQuery<TData = ListCurrenciesHttpResponse>(
-  query: ListCurrenciesHttpQuery = {},
-  options?: AppQueryOptions<ListCurrenciesHttpResponse, TData>,
+export function useCurrenciesQuery<TData = ListCurrenciesResponse>(
+  query: ListCurrenciesQuery = {},
+  options?: AppQueryOptions<ListCurrenciesResponse, TData>,
 ) {
   return useQuery({
     queryKey: currencyQueryKeys.list(query),
@@ -32,9 +31,9 @@ export function useCurrenciesQuery<TData = ListCurrenciesHttpResponse>(
   })
 }
 
-export function useCurrencyRateQuery<TData = GetCurrencyRateHttpResponse>(
-  query: GetCurrencyRateHttpQuery,
-  options?: AppQueryOptions<GetCurrencyRateHttpResponse, TData>,
+export function useCurrencyRateQuery<TData = GetCurrencyRateResponse>(
+  query: GetCurrencyRateQuery,
+  options?: AppQueryOptions<GetCurrencyRateResponse, TData>,
 ) {
   return useQuery({
     queryKey: currencyQueryKeys.rate(query),

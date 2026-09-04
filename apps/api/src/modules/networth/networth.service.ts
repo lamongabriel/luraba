@@ -1,3 +1,5 @@
+import type { netWorthQuerySchema } from '@luraba/contracts/networth';
+import { listTransactionsQuerySchema } from '@luraba/contracts/transactions';
 import {
   endOfMonth,
   startOfMonth,
@@ -8,17 +10,18 @@ import {
   subYears,
 } from 'date-fns';
 import { eq } from 'drizzle-orm';
+import type { z } from 'zod';
 import type { HouseholdContext } from '@/config/permissions';
 import { db } from '@/db';
 import { householdsTable } from '@/db/schemas/households.schema';
 import { authRepository } from '@/modules/auth/auth.repository';
 import { fxService } from '@/modules/fx/fx.service';
-import { ListTransactionsRequestQuerySchema } from '@/modules/transactions/transactions.query';
 import { listTransactions } from '@/modules/transactions/transactions.service';
 import { NotFoundError } from '@/shared/errors';
 import { formatISODate, getTodayInTimezone, parseISODate } from '@/shared/lib/date';
 import * as repository from './networth.repository';
-import type { NetWorthQuery } from './networth.types';
+
+type NetWorthQuery = z.output<typeof netWorthQuerySchema>;
 
 type DateRange = { dateFrom: string; dateTo: string };
 
@@ -310,7 +313,7 @@ export const getIncomeBreakdown = (context: HouseholdContext, input: NetWorthQue
 
 export async function getRecentActivity(context: HouseholdContext, input: NetWorthQuery) {
   const query = await resolveQuery(context, input);
-  const parsed = ListTransactionsRequestQuerySchema.parse({
+  const parsed = listTransactionsQuerySchema.parse({
     page: 1,
     perPage: query.limit,
     search: '',

@@ -2,9 +2,10 @@
 
 import { Add01Icon, CreditCardIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { CreditCard, ListCreditCardsQuery } from "@luraba/contracts"
+import { MAX_PER_PAGE } from "@luraba/contracts"
 import { parseAsString, useQueryState } from "nuqs"
 import * as React from "react"
-
 import { CreditCardActivity } from "@/components/credit-cards/credit-card-activity"
 import { CreditCardCarousel } from "@/components/credit-cards/credit-card-carousel"
 import { CreditCardKpiGrid } from "@/components/credit-cards/credit-card-kpi-grid"
@@ -27,9 +28,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { Typography } from "@/components/ui/typography"
 import { useApiParams } from "@/hooks/use-api-params"
-import { MAX_PER_PAGE } from "@/interfaces/api"
-import type { CreditCard } from "@/interfaces/credit-card"
-import type { ListCreditCardsHttpQuery } from "@/interfaces/http/credit-cards-http"
 import { CREDIT_CARD_BRAND_OPTIONS } from "@/lib/credit-cards"
 import { formatDate, parseDateValue } from "@/lib/format"
 import { useAccountsQuery } from "@/queries/accounts/use-accounts-query"
@@ -259,7 +257,7 @@ export function CreditCardsWorkspace() {
     },
   })
   const cardsQuery = useCreditCardsQuery(
-    params.apiParams as ListCreditCardsHttpQuery,
+    params.apiParams as ListCreditCardsQuery,
   )
   const accountsQuery = useAccountsQuery({
     types: ["cash"],

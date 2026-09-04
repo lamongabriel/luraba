@@ -12,7 +12,7 @@ import * as cycleService from './credit-card-cycles.service';
 import * as paymentService from './credit-card-payments.service';
 import * as purchaseService from './credit-card-purchases.service';
 import type { CreditCardRow } from './credit-cards.helpers';
-import type { ListCreditCardCyclesQuery, ListCreditCardsRequestQuery } from './credit-cards.query';
+import type { ListCreditCardCyclesQuery, ListCreditCardsQuery } from './credit-cards.query';
 import * as creditCardsRepository from './credit-cards.repository';
 import { computeRemainingCreditAmount, mapCreditCard } from './credit-cards.shared';
 import type {
@@ -35,7 +35,7 @@ import type {
 
 export async function listCreditCards(
   context: HouseholdContext,
-  query: ListCreditCardsRequestQuery,
+  query: ListCreditCardsQuery,
 ): Promise<ListResult<ListCreditCardsResponse[number]>> {
   const page = await creditCardsRepository.listPage(context.householdId, query);
 

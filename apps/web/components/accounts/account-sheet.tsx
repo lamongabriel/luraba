@@ -1,10 +1,10 @@
 "use client"
 
+import type { AccountDetails } from "@luraba/contracts"
 import * as React from "react"
 import { CreateEditAccountForm } from "@/components/forms/create-edit-account-form/create-edit-account-form"
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary"
 import { FormSheet } from "@/components/forms/form-sheet"
-import type { AccountDetails } from "@/interfaces/account"
 
 export function AccountSheet({
   account,

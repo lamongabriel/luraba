@@ -1,8 +1,8 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { Tag } from "@luraba/contracts"
 import { useForm } from "react-hook-form"
-import type { Tag } from "@/interfaces/tag"
 import { queryClient } from "@/lib/query-client"
 import { DEFAULT_TAG_COLOR, DEFAULT_TAG_ICON } from "@/lib/tags"
 import {

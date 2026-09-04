@@ -1,11 +1,13 @@
 "use client"
 
+import type {
+  AuthSession,
+  HouseholdContext,
+  HouseholdSummary,
+  User,
+} from "@luraba/contracts"
 import { create } from "zustand"
-
 import { STORAGE_KEYS } from "@/config/storage"
-import type { AuthSession } from "@/interfaces/auth"
-import type { HouseholdContext, HouseholdSummary } from "@/interfaces/household"
-import type { User } from "@/interfaces/user"
 import { readStorage, removeStorage, writeStorage } from "@/lib/local-storage"
 
 export type AuthBootstrapStatus =

@@ -1,31 +1,53 @@
+import { getEndpointRouterPath, recurringBillsEndpoints } from '@luraba/contracts';
 import { Router } from 'express';
+import { PERMISSIONS } from '@/config/permissions';
 import { requireAccess } from '@/middleware/access.middleware';
 import * as controller from './recurring-bills.controller';
 
 const router = Router();
-router.get('/', requireAccess({ permission: 'recurringBills.read' }), controller.list);
-router.post('/', requireAccess({ permission: 'recurringBills.create' }), controller.create);
 router.get(
-  '/:id/occurrences',
-  requireAccess({ permission: 'recurringBills.read' }),
+  getEndpointRouterPath(recurringBillsEndpoints.list),
+  requireAccess({ permission: PERMISSIONS.RECURRING_BILLS_READ }),
+  controller.list,
+);
+router.post(
+  getEndpointRouterPath(recurringBillsEndpoints.create),
+  requireAccess({ permission: PERMISSIONS.RECURRING_BILLS_CREATE }),
+  controller.create,
+);
+router.get(
+  getEndpointRouterPath(recurringBillsEndpoints.occurrences),
+  requireAccess({ permission: PERMISSIONS.RECURRING_BILLS_READ }),
   controller.occurrences,
 );
 router.post(
-  '/:id/occurrences/:date/skip',
-  requireAccess({ permission: 'recurringBills.update' }),
+  getEndpointRouterPath(recurringBillsEndpoints.skip),
+  requireAccess({ permission: PERMISSIONS.RECURRING_BILLS_UPDATE }),
   controller.skip,
 );
 router.post(
-  '/:id/occurrences/:date/reschedule',
-  requireAccess({ permission: 'recurringBills.update' }),
+  getEndpointRouterPath(recurringBillsEndpoints.reschedule),
+  requireAccess({ permission: PERMISSIONS.RECURRING_BILLS_UPDATE }),
   controller.reschedule,
 );
 router.post(
-  '/:id/occurrences/:date/create',
-  requireAccess({ permission: 'recurringBills.create' }),
+  getEndpointRouterPath(recurringBillsEndpoints.createOccurrence),
+  requireAccess({ permission: PERMISSIONS.RECURRING_BILLS_CREATE }),
   controller.createOccurrence,
 );
-router.get('/:id', requireAccess({ permission: 'recurringBills.read' }), controller.get);
-router.patch('/:id', requireAccess({ permission: 'recurringBills.update' }), controller.update);
-router.delete('/:id', requireAccess({ permission: 'recurringBills.delete' }), controller.remove);
+router.get(
+  getEndpointRouterPath(recurringBillsEndpoints.get),
+  requireAccess({ permission: PERMISSIONS.RECURRING_BILLS_READ }),
+  controller.get,
+);
+router.patch(
+  getEndpointRouterPath(recurringBillsEndpoints.update),
+  requireAccess({ permission: PERMISSIONS.RECURRING_BILLS_UPDATE }),
+  controller.update,
+);
+router.delete(
+  getEndpointRouterPath(recurringBillsEndpoints.delete),
+  requireAccess({ permission: PERMISSIONS.RECURRING_BILLS_DELETE }),
+  controller.remove,
+);
 export default router;

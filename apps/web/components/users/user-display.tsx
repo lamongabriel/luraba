@@ -2,7 +2,7 @@
 
 import { Tick02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-
+import type { HouseholdMember, HouseholdRole } from "@luraba/contracts"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -11,7 +11,6 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
 import { Typography } from "@/components/ui/typography"
-import type { HouseholdMember, HouseholdRole } from "@/interfaces/household"
 import { formatDate } from "@/lib/format"
 import { getHouseholdRoleLabel } from "@/lib/households"
 import { cn } from "@/lib/utils"

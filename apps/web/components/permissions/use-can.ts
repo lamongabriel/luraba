@@ -1,10 +1,9 @@
 "use client"
 
+import type { PermissionInput, PermissionMatch } from "@luraba/contracts"
 import * as React from "react"
 
 import { useCurrentUserQuery } from "@/queries/auth/use-current-user-query"
-
-import type { PermissionInput, PermissionMatch } from "./permissions.constants"
 
 export function useCan() {
   const { data: session } = useCurrentUserQuery()

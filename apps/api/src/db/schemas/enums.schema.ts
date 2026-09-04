@@ -1,34 +1,25 @@
+import {
+  CREDIT_EXPENSE_TIMING_VALUES,
+  CREDIT_INSTALLMENT_BUDGET_MODE_VALUES,
+  DATE_FORMAT_VALUES,
+  LANGUAGE_VALUES,
+  PREFERRED_PERIOD_VALUES,
+  PREFERRED_THEME_VALUES,
+} from '@luraba/contracts/preferences';
 import { pgEnum } from 'drizzle-orm/pg-core';
 
 // ─── User Preference Enums ───────────────────────────────────────────────
-export const preferredLanguageEnum = pgEnum('preferred_language', ['en', 'pt-BR']);
+export const preferredLanguageEnum = pgEnum('preferred_language', LANGUAGE_VALUES);
 export const preferredCurrencyEnum = pgEnum('preferred_currency', ['BRL', 'USD', 'EUR']);
-export const preferredDateFormatEnum = pgEnum('preferred_date_format', [
-  'DD/MM/YYYY',
-  'MM/DD/YYYY',
-  'YYYY-MM-DD',
-]);
-export const defaultPeriodEnum = pgEnum('default_period', [
-  'last_day',
-  'current_week',
-  'last_7_days',
-  'current_month',
-  'last_month',
-  'last_30_days',
-  'last_90_days',
-  'current_year',
-  'last_365_days',
-  'last_5_years',
-  'last_10_years',
-  'all_time',
-]);
+export const preferredDateFormatEnum = pgEnum('preferred_date_format', DATE_FORMAT_VALUES);
+export const defaultPeriodEnum = pgEnum('default_period', PREFERRED_PERIOD_VALUES);
 export const defaultAccountOrderEnum = pgEnum('default_account_order', [
   'name_asc',
   'name_desc',
   'newest',
   'oldest',
 ]);
-export const themePreferenceEnum = pgEnum('theme_preference', ['light', 'dark', 'system']);
+export const themePreferenceEnum = pgEnum('theme_preference', PREFERRED_THEME_VALUES);
 
 // ─── Account & Ledger Enums ──────────────────────────────────────────────
 export const accountClassificationEnum = pgEnum('account_classification', ['asset', 'liability']);
@@ -141,14 +132,14 @@ export const transactionTypeEnum = pgEnum('transaction_type', [
 ]);
 export const categoryTypeEnum = pgEnum('category_type', ['expense', 'income']);
 
-export const creditExpenseTimingEnum = pgEnum('credit_expense_timing', [
-  'spend_month',
-  'payment_month',
-]);
-export const creditInstallmentBudgetModeEnum = pgEnum('credit_installment_budget_mode', [
-  'per_installment',
-  'full_amount',
-]);
+export const creditExpenseTimingEnum = pgEnum(
+  'credit_expense_timing',
+  CREDIT_EXPENSE_TIMING_VALUES,
+);
+export const creditInstallmentBudgetModeEnum = pgEnum(
+  'credit_installment_budget_mode',
+  CREDIT_INSTALLMENT_BUDGET_MODE_VALUES,
+);
 export const creditCardProductTypeEnum = pgEnum('credit_card_product_type', ['credit']);
 export const creditCardCycleStatusEnum = pgEnum('credit_card_cycle_status', [
   'open',

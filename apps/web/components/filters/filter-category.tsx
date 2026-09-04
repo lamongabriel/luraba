@@ -1,10 +1,10 @@
 "use client"
 
 import { HugeiconsIcon } from "@hugeicons/react"
+import type { Category, CategoryType } from "@luraba/contracts"
+import { MAX_PER_PAGE } from "@luraba/contracts"
 import type { Column } from "@tanstack/react-table"
 import { FilterFaceted } from "@/components/filters/filter-faceted"
-import { MAX_PER_PAGE } from "@/interfaces/api"
-import type { Category, CategoryType } from "@/interfaces/category"
 import { DEFAULT_CATEGORY_ICON, resolveCategoryIcon } from "@/lib/categories"
 import { useCategoriesQuery } from "@/queries/categories/use-categories-query"
 import type { Option } from "@/types/data-table"

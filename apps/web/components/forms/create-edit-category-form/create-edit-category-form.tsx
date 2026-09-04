@@ -1,10 +1,10 @@
 "use client"
 
+import type { Category, CategoryType } from "@luraba/contracts"
 import { FormItem } from "@/components/forms/form-item"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
 import { Typography } from "@/components/ui/typography"
-import type { Category, CategoryType } from "@/interfaces/category"
 import {
   CATEGORY_COLOR_PRESETS,
   CATEGORY_ICONS,

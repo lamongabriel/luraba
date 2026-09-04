@@ -1,7 +1,6 @@
 "use client"
 
-import type { AuthSession } from "@/interfaces/auth"
-import type { HouseholdSummary } from "@/interfaces/household"
+import type { AuthSession, HouseholdSummary } from "@luraba/contracts"
 import { queryClient } from "@/lib/query-client"
 import { authQueryKeys } from "@/queries/auth/use-auth-providers-query"
 import { householdQueryKeys } from "@/queries/households/use-households-query"
@@ -18,7 +17,7 @@ export async function hydrateAuthenticatedSession(
   const [session, households] = await Promise.all([
     queryClient.fetchQuery({
       queryKey: authQueryKeys.session,
-      queryFn: getCurrentUser,
+      queryFn: () => getCurrentUser(),
     }),
     queryClient.fetchQuery({
       queryKey: householdQueryKeys.list(),

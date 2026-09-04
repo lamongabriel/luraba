@@ -11,11 +11,7 @@ import {
   UserGroupIcon,
   WalletIcon,
 } from "@hugeicons/core-free-icons"
-
-import {
-  PERMISSIONS,
-  type PermissionKey,
-} from "@/components/permissions/permissions.constants"
+import { PERMISSIONS, type PermissionKey } from "@luraba/contracts"
 
 export interface NavigationItem {
   title: string

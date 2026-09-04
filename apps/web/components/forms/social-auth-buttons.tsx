@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { Typography } from "@/components/ui/typography"
-import type { SignInSocialHttpBody } from "@/interfaces/http/auth-http"
 import { useSocialSignInMutation } from "@/mutations/auth/use-social-sign-in-mutation"
 import { useAuthProvidersQuery } from "@/queries/auth/use-auth-providers-query"
+import type { SignInSocialInput } from "@/services/auth-sdk.types"
 
 type SocialAuthButtonsProps = {
   mode: "login" | "register"
@@ -100,7 +100,7 @@ export function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
               className="h-10 w-full justify-start gap-2.5 px-4 text-left"
               disabled={socialMutation.isPending}
               onClick={() => {
-                const body: SignInSocialHttpBody = {
+                const body: SignInSocialInput = {
                   callbackURL: "/dashboard",
                   provider,
                 }

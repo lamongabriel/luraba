@@ -2,24 +2,23 @@
 
 import { useQuery } from "@tanstack/react-query"
 
-import type {
-  GetMonthlyBudgetHttpQuery,
-  GetMonthlyBudgetHttpResponse,
-} from "@/interfaces/http/budgets-http"
 import type { AppQueryOptions } from "@/queries/query-options"
 import { getMonthlyBudget } from "@/services/budgets.service"
+
+type GetMonthlyBudgetQuery = NonNullable<Parameters<typeof getMonthlyBudget>[1]>
+type GetMonthlyBudgetResponse = Awaited<ReturnType<typeof getMonthlyBudget>>
 
 export const budgetQueryKeys = {
   all: ["budgets"] as const,
   months: () => [...budgetQueryKeys.all, "month"] as const,
-  month: (month: string, query: GetMonthlyBudgetHttpQuery = {}) =>
+  month: (month: string, query: GetMonthlyBudgetQuery = {}) =>
     [...budgetQueryKeys.months(), month, query] as const,
 }
 
-export function useMonthlyBudgetQuery<TData = GetMonthlyBudgetHttpResponse>(
+export function useMonthlyBudgetQuery<TData = GetMonthlyBudgetResponse>(
   month: string,
-  query: GetMonthlyBudgetHttpQuery = {},
-  options?: AppQueryOptions<GetMonthlyBudgetHttpResponse, TData>,
+  query: GetMonthlyBudgetQuery = {},
+  options?: AppQueryOptions<GetMonthlyBudgetResponse, TData>,
 ) {
   return useQuery({
     queryKey: budgetQueryKeys.month(month, query),
