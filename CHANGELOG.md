@@ -1,5 +1,49 @@
 # Changelog
 
+## [1.2.0](https://github.com/lamongabriel/luraba/compare/v1.1.0...v1.2.0) (2026-09-04)
+
+
+### Features
+
+* add better timezone handling, country handling, create reusable api helpers ([1380807](https://github.com/lamongabriel/luraba/commit/13808079189ce605131347da91520d95a77f9bd7))
+* add color-picker and credit-card UI components ([5ab8f05](https://github.com/lamongabriel/luraba/commit/5ab8f052192b5a8ed08261bccbccd86e62b045ba))
+* add networth, recurring-bills, and reference-data modules ([f4df1b3](https://github.com/lamongabriel/luraba/commit/f4df1b321a734c22ca26fcef86dcd6d28debafb2))
+* add new schemas, recurringBills, households and more ([e0f0d3d](https://github.com/lamongabriel/luraba/commit/e0f0d3d7d6ae5c843532cb67b293e48b7dbe4494))
+* add tags and categories page ([5e0cecd](https://github.com/lamongabriel/luraba/commit/5e0cecde5b064a114a81570f43aed758fcb7c9a4))
+* **analytics:** add KpiCard component with trend sparkline ([6d1bdee](https://github.com/lamongabriel/luraba/commit/6d1bdee24e594740513702d525e8ca8fc122e304))
+* **categories:** add create/edit category form component ([080b4e1](https://github.com/lamongabriel/luraba/commit/080b4e1614eafdd668e09115b3cd35d4e65a5d36))
+* **credit-cards:** add includeInBudget and tags support to purchases ([38f3ca8](https://github.com/lamongabriel/luraba/commit/38f3ca836102305c89949e7eb58f79d86b536041))
+* **households:** add get, delete, and invite-by-id endpoints ([bc52ba7](https://github.com/lamongabriel/luraba/commit/bc52ba7122b68edf106799328e54cf1081bcef7b))
+* **merchants:** add get merchant by ID endpoint ([b16da02](https://github.com/lamongabriel/luraba/commit/b16da026efe28fb0d6fc6d0db4f9587634c86b1b))
+* **networth:** add net worth module with dashboard and analytics ([4f30a52](https://github.com/lamongabriel/luraba/commit/4f30a52dc2d844a5348744ca495a492a993165ff))
+* setup monorepo ([ff5054d](https://github.com/lamongabriel/luraba/commit/ff5054dc7b45fc342a53b8870b1c7650df315ec8))
+* update accounts, categories, and credit cards management ([23b8b98](https://github.com/lamongabriel/luraba/commit/23b8b98b5715c4201649d326fff987309cd56d82))
+
+
+### Bug Fixes
+
+* **sidebar:** only set data-active attribute when active ([d55fda5](https://github.com/lamongabriel/luraba/commit/d55fda5974410f93e1c2db743f21f5f9fd37107b))
+* **ui:** use onSelect for command items and fix selected state styles ([964d70f](https://github.com/lamongabriel/luraba/commit/964d70fad54467d24ce4086f6c86ab3dd2a9ce99))
+
+
+### Refactors
+
+* **auth-forms:** remove redundant input and button styling ([e5ba4aa](https://github.com/lamongabriel/luraba/commit/e5ba4aa375f5700932b2fe07ad07a1a492b5d1a5))
+* **contracts:** introduce typed endpoint definitions and PERMISSIONS constants ([00c4057](https://github.com/lamongabriel/luraba/commit/00c405703f20eef798d7fc6040bf61a95d42fa07))
+* **credit-cards:** replace accountId with ownerAccountId and ledgerAccountId ([1f471ad](https://github.com/lamongabriel/luraba/commit/1f471ad75d755112c76b2aa3cf85fa4d077fe167))
+* **onboarding:** replace country code enum with regex validation ([12b7e62](https://github.com/lamongabriel/luraba/commit/12b7e62ac2e7c78ec341a92480e8bc2c48437d0b))
+* **transactions:** use AccountRecord type for balance adjustment input ([ea76ac3](https://github.com/lamongabriel/luraba/commit/ea76ac3190e87b37dacde46a101e266fbccef638))
+
+
+### Documentation
+
+* add root orchestration, agent skills, and compose updates ([58d499d](https://github.com/lamongabriel/luraba/commit/58d499d2b54cbb3f9adda5f02841f7ed7b0dd6e9))
+
+
+### Continuous Integration
+
+* update docker compose and dockerfile ([d8b7b48](https://github.com/lamongabriel/luraba/commit/d8b7b481362f400c64efb87864a669cd761f6e0f))
+
 ## [1.1.0](https://github.com/lamongabriel/luraba/compare/v1.0.0...v1.1.0) (2026-08-01)
 
 
