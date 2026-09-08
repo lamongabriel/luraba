@@ -15,13 +15,27 @@ with one domain. `/health` reaches the API health check.
    `/compose.coolify.yaml`. Leave **Raw Compose Deployment** disabled so Coolify
    processes the generated variables and service settings.
 3. Load the Compose file, then assign your public HTTPS origin (for example,
-   `https://finance.example.com`) to the **luraba** service on port **80**. Leave
+   `https://finance.example.com`) to the **luraba** service in **Domains**. Leave
    the other services without public domains. Use the default isolated network;
    this stack resolves its internal services by their Compose names.
-4. In **Environment Variables**, verify that `SERVICE_URL_LURABA` matches that
-   public origin and that the generated credentials are populated. Add any
-   optional email or OAuth settings below, then deploy. No repository `.env`
-   files are needed.
+4. Add email or OAuth credentials only if you want those features, then deploy.
+   Coolify generates the database and application secrets. No repository `.env`
+   files or manually entered database credentials are needed.
+
+The service domain is the single source for the public URL. Coolify supplies
+`SERVICE_URL_LURABA` from that domain; Compose passes it to the API as both
+`BASE_URL` and `FRONTEND_ORIGIN`, and to the web build as `NEXT_PUBLIC_API_URL`.
+You do not configure these app variables separately.
+
+The database name is fixed at `luraba_db`. Postgres and the API receive the same
+generated username and password. `POSTGRES_USER`/`DB_USER` and
+`POSTGRES_PASSWORD`/`DB_PASSWORD` are the names each container expects; each pair
+receives one shared value from Coolify, with no separate credential inputs.
+
+The gateway listens on port 80 internally, which Coolify routes automatically
+from its assigned domain. The API, web app, and database use fixed internal
+ports and publish no host ports. There are no application port settings to fill
+in.
 
 The database must become healthy and migrations must finish successfully before
 the API and web app start. The migration service uses Coolify's
@@ -39,7 +53,7 @@ variable share one value across the services.
 
 | Coolify variable | Used by Luraba |
 | --- | --- |
-| `SERVICE_URL_LURABA` | Public origin for API `BASE_URL`, `FRONTEND_ORIGIN`, and web `NEXT_PUBLIC_API_URL`. Derived from the service domain. |
+| `SERVICE_URL_LURABA` | All public URLs; derived from the **luraba** service domain. |
 | `SERVICE_USER_POSTGRES` | Database username for Postgres, migrations, and API. |
 | `SERVICE_PASSWORD_64_POSTGRES` | Database password, 64 alphanumeric characters. |
 | `SERVICE_PASSWORD_64_AUTH` | `AUTH_SECRET`, 64 alphanumeric characters. |
@@ -50,11 +64,36 @@ encryption key alongside the database: existing encrypted integration credential
 require the original key. Changing the Postgres password variable alone does not
 change the password inside an already initialized database volume.
 
-`NEXT_PUBLIC_API_URL` is compiled into the web image, so changing the public
-domain requires a rebuild and redeploy. The public URL is the only application
-setting passed as a Docker build argument; credentials are runtime environment
-variables. Internal ports, database host, and `DB_SSL=false` are already wired
-for the bundled Postgres service.
+`NEXT_PUBLIC_API_URL` is compiled into the web image from the service URL, so
+changing the domain requires a rebuild and redeploy. The public URL is the only
+application setting passed as a Docker build argument; credentials are runtime
+environment variables. Internal ports, database host, and `DB_SSL=false` are
+already wired for the bundled Postgres service.
+
+## Clean up an existing Coolify resource
+
+If you previously loaded `compose.yaml`, or a version that asked for `BASE_URL`,
+switch the Compose location to `/compose.coolify.yaml` and reload the file.
+Remove these old entries from the resource's saved environment variables if
+they are still present:
+
+```text
+DB_NAME
+DB_USER
+DB_PASSWORD
+BASE_URL
+API_PORT
+FRONTEND_ORIGIN
+WEB_PORT
+NEXT_PUBLIC_API_URL
+POSTGRES_PORT
+```
+
+The Coolify file does not read these as configuration inputs. Keep the existing
+`SERVICE_USER_POSTGRES`, `SERVICE_PASSWORD_64_POSTGRES`,
+`SERVICE_PASSWORD_64_AUTH`, and `SERVICE_HEX_64_INTEGRATIONS` values; these are
+the generated credentials that the stack uses. Set the service domain once and
+rebuild/redeploy.
 
 ## Optional settings
 
@@ -62,7 +101,6 @@ The Compose file exposes these variables in Coolify's environment editor.
 
 | Variable | Default / purpose |
 | --- | --- |
-| `DB_NAME` | `luraba_db`; choose before the first deployment. |
 | `LOG_LEVEL` | `info`. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Empty; set both to enable Google sign-in. |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Empty; set both to enable GitHub sign-in. |

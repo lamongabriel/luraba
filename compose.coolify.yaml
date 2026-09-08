@@ -1,5 +1,6 @@
 # Coolify Docker Compose build pack (Git source), v4.0.0-beta.411 or newer.
-# Assign the public HTTPS domain to luraba before building. See docs/coolify.md.
+# Set the luraba service domain in Coolify; public URLs follow it automatically.
+# Database credentials are generated once and shared. See docs/coolify.md.
 x-api-environment: &api-environment
   NODE_ENV: production
   PORT: 3001
@@ -8,7 +9,7 @@ x-api-environment: &api-environment
   FRONTEND_ORIGIN: ${SERVICE_URL_LURABA}
   DB_HOST: db
   DB_PORT: 5432
-  DB_NAME: ${DB_NAME:-luraba_db}
+  DB_NAME: luraba_db
   DB_USER: ${SERVICE_USER_POSTGRES}
   DB_PASSWORD: ${SERVICE_PASSWORD_64_POSTGRES}
   DB_SSL: "false"
@@ -44,7 +45,7 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME:-luraba_db}
+      POSTGRES_DB: luraba_db
       POSTGRES_USER: ${SERVICE_USER_POSTGRES}
       POSTGRES_PASSWORD: ${SERVICE_PASSWORD_64_POSTGRES}
     volumes:
