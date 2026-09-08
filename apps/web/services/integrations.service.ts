@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
   type DeleteBrandfetchIntegrationResult,
   integrationsEndpoints,
@@ -6,13 +6,13 @@ import {
   type ListIntegrationsResult,
   type UpdateBrandfetchIntegrationInput,
   type UpdateBrandfetchIntegrationResult,
-} from "@luraba/contracts"
-import { requestContract } from "@/services/contract-client.service"
+} from "@luraba/contracts";
+import { requestContract } from "@/services/contract-client.service";
 
 export function listIntegrations(
   query: ListIntegrationsQuery = {},
 ): Promise<ListIntegrationsResult> {
-  return requestContract(integrationsEndpoints.list, { query })
+  return requestContract(integrationsEndpoints.list, { query });
 }
 
 export function updateBrandfetchIntegration(
@@ -20,9 +20,9 @@ export function updateBrandfetchIntegration(
 ): Promise<UpdateBrandfetchIntegrationResult> {
   return requestContract(integrationsEndpoints.updateBrandfetch, {
     body: input,
-  })
+  });
 }
 
 export function deleteBrandfetchIntegration(): Promise<DeleteBrandfetchIntegrationResult> {
-  return requestContract(integrationsEndpoints.deleteBrandfetch)
+  return requestContract(integrationsEndpoints.deleteBrandfetch);
 }

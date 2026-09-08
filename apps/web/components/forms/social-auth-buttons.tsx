@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Typography } from "@/components/ui/typography"
-import { useSocialSignInMutation } from "@/mutations/auth/use-social-sign-in-mutation"
-import { useAuthProvidersQuery } from "@/queries/auth/use-auth-providers-query"
-import type { SignInSocialInput } from "@/services/auth-sdk.types"
+import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
+import { useSocialSignInMutation } from "@/mutations/auth/use-social-sign-in-mutation";
+import { useAuthProvidersQuery } from "@/queries/auth/use-auth-providers-query";
+import type { SignInSocialInput } from "@/services/auth-sdk.types";
 
 type SocialAuthButtonsProps = {
-  mode: "login" | "register"
-}
+  mode: "login" | "register";
+};
 
 const socialProviderLabels = {
   github: "GitHub",
   google: "Google",
-} as const
+} as const;
 
 function GoogleIcon() {
   return (
@@ -35,7 +35,7 @@ function GoogleIcon() {
         fill="currentColor"
       />
     </svg>
-  )
+  );
 }
 
 function GitHubIcon() {
@@ -46,30 +46,28 @@ function GitHubIcon() {
         d="M12 2C6.48 2 2 6.58 2 12.22c0 4.5 2.87 8.31 6.84 9.66.5.1.68-.22.68-.49 0-.24-.01-1.04-.01-1.89-2.78.62-3.37-1.2-3.37-1.2-.46-1.2-1.11-1.51-1.11-1.51-.9-.63.07-.62.07-.62 1 .08 1.52 1.05 1.52 1.05.88 1.56 2.3 1.1 2.86.84.09-.66.35-1.1.63-1.35-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.31 9.31 0 0 1 12 6.92c.85 0 1.7.12 2.5.36 1.9-1.34 2.75-1.05 2.75-1.05.54 1.4.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.95.68 1.92 0 1.39-.01 2.5-.01 2.84 0 .27.18.6.69.49A10.24 10.24 0 0 0 22 12.22C22 6.58 17.52 2 12 2Z"
       />
     </svg>
-  )
+  );
 }
 
 const socialProviderIcons = {
   github: GitHubIcon,
   google: GoogleIcon,
-} as const
+} as const;
 
 export function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
-  const providersQuery = useAuthProvidersQuery()
-  const socialMutation = useSocialSignInMutation()
+  const providersQuery = useAuthProvidersQuery();
+  const socialMutation = useSocialSignInMutation();
 
   if (!providersQuery.data) {
-    return null
+    return null;
   }
 
-  const availableProviders = Object.entries(
-    providersQuery.data.socialProviders,
-  ).filter(([, enabled]) => enabled) as Array<
-    [keyof typeof socialProviderLabels, boolean]
-  >
+  const availableProviders = Object.entries(providersQuery.data.socialProviders).filter(
+    ([, enabled]) => enabled,
+  ) as Array<[keyof typeof socialProviderLabels, boolean]>;
 
   if (availableProviders.length === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -90,7 +88,7 @@ export function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
 
       <div className="grid gap-2">
         {availableProviders.map(([provider]) => {
-          const Icon = socialProviderIcons[provider]
+          const Icon = socialProviderIcons[provider];
 
           return (
             <Button
@@ -103,10 +101,10 @@ export function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
                 const body: SignInSocialInput = {
                   callbackURL: "/dashboard",
                   provider,
-                }
+                };
 
-                socialMutation.reset()
-                socialMutation.mutate(body)
+                socialMutation.reset();
+                socialMutation.mutate(body);
               }}
             >
               <span className="flex size-8 items-center justify-center rounded-full border border-white/8 bg-black/20 text-foreground/86">
@@ -119,15 +117,13 @@ export function SocialAuthButtons({ mode }: SocialAuthButtonsProps) {
                 </span>
               </span>
             </Button>
-          )
+          );
         })}
       </div>
 
       {socialMutation.errorMessage ? (
-        <Typography variant="small-destructive">
-          {socialMutation.errorMessage}
-        </Typography>
+        <Typography variant="small-destructive">{socialMutation.errorMessage}</Typography>
       ) : null}
     </div>
-  )
+  );
 }

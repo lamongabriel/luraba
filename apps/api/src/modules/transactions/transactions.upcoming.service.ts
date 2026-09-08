@@ -2,16 +2,16 @@ import {
   transactionAnalyticsQuerySchema,
   upcomingTransactionSchema,
   type upcomingTransactionsQuerySchema,
-} from '@luraba/contracts/transactions';
-import type { z } from 'zod';
-import type { HouseholdContext } from '@/config/permissions';
-import * as recurringBillsRepository from '@/modules/recurring-bills/recurring-bills.repository';
-import { getOccurrenceDates } from '@/modules/recurring-bills/recurring-bills.service';
-import { addDays, formatISODate, getTodayInTimezone } from '@/shared/lib/date';
-import { createListMeta } from '@/shared/list';
-import * as repository from './transactions.analytics.repository';
-import type { TransactionFilterQuery } from './transactions.query';
-import type { UpcomingTransaction } from './transactions.types';
+} from "@luraba/contracts/transactions";
+import type { z } from "zod";
+import type { HouseholdContext } from "@/config/permissions";
+import * as recurringBillsRepository from "@/modules/recurring-bills/recurring-bills.repository";
+import { getOccurrenceDates } from "@/modules/recurring-bills/recurring-bills.service";
+import { addDays, formatISODate, getTodayInTimezone } from "@/shared/lib/date";
+import { createListMeta } from "@/shared/list";
+import * as repository from "./transactions.analytics.repository";
+import type { TransactionFilterQuery } from "./transactions.query";
+import type { UpcomingTransaction } from "./transactions.types";
 
 type UpcomingQuery = z.output<typeof upcomingTransactionsQuerySchema>;
 
@@ -42,7 +42,7 @@ export async function listUpcomingTransactions(context: HouseholdContext, query:
   );
   const installments: UpcomingTransaction[] = installmentRows.map((row) =>
     upcomingTransactionSchema.parse({
-      sourceType: 'credit_card_installment',
+      sourceType: "credit_card_installment",
       sourceId: row.sourceId,
       parentId: row.parentId,
       description: row.description,
@@ -81,14 +81,14 @@ export async function listUpcomingTransactions(context: HouseholdContext, query:
           .filter(
             ({ occurrence }) =>
               !occurrence ||
-              ((occurrence.status === 'scheduled' || occurrence.status === 'rescheduled') &&
+              ((occurrence.status === "scheduled" || occurrence.status === "rescheduled") &&
                 !occurrence.transactionId),
           )
           .map(({ date, occurrence }) => {
             const effectiveDate = occurrence?.rescheduledDate ?? date;
             if (effectiveDate < tomorrow || effectiveDate > end) return null;
             return upcomingTransactionSchema.parse({
-              sourceType: 'recurring_bill',
+              sourceType: "recurring_bill",
               sourceId: bill.id,
               parentId: bill.id,
               description: bill.name,
@@ -115,7 +115,7 @@ export async function listUpcomingTransactions(context: HouseholdContext, query:
 
   const data = [...installments, ...recurring].sort(
     (a, b) =>
-      (query.sortDirection === 'desc' ? -1 : 1) *
+      (query.sortDirection === "desc" ? -1 : 1) *
       (a.effectiveDate.localeCompare(b.effectiveDate) || a.sourceId.localeCompare(b.sourceId)),
   );
   const offset = (query.page - 1) * query.perPage;

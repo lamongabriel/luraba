@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { categoryTypeEnum } from '@/db/schemas/enums.schema';
+import { z } from "zod";
+import { categoryTypeEnum } from "@/db/schemas/enums.schema";
 
 export const categoryTypeSchema = z.enum(categoryTypeEnum.enumValues);
 export const hexColorSchema = z

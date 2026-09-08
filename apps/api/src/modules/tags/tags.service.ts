@@ -1,11 +1,11 @@
-import type { CreateTagInput, Tag, UpdateTagInput } from '@luraba/contracts/tags';
-import type { HouseholdContext } from '@/config/permissions';
-import { ConflictError, NotFoundError } from '@/shared/errors';
-import { formatISODateTime } from '@/shared/lib/date';
-import { createListMeta, type ListResult } from '@/shared/list';
-import type { ListTagsQuery } from './tags.query';
-import { tagsRepository } from './tags.repository';
-import type { TagRecord } from './tags.types';
+import type { CreateTagInput, Tag, UpdateTagInput } from "@luraba/contracts/tags";
+import type { HouseholdContext } from "@/config/permissions";
+import { ConflictError, NotFoundError } from "@/shared/errors";
+import { formatISODateTime } from "@/shared/lib/date";
+import { createListMeta, type ListResult } from "@/shared/list";
+import type { ListTagsQuery } from "./tags.query";
+import { tagsRepository } from "./tags.repository";
+import type { TagRecord } from "./tags.types";
 
 function mapTagRecord(tag: TagRecord): Tag {
   return {
@@ -21,7 +21,7 @@ function mapTagRecord(tag: TagRecord): Tag {
 export async function createTag(context: HouseholdContext, body: CreateTagInput): Promise<Tag> {
   const existing = await tagsRepository.findByHouseholdAndName(context, body.name);
   if (existing) {
-    throw new ConflictError('A tag with this name already exists');
+    throw new ConflictError("A tag with this name already exists");
   }
 
   const created = await tagsRepository.create(context, {
@@ -52,13 +52,13 @@ export async function updateTag(
 ): Promise<Tag> {
   const tag = await tagsRepository.get(tagId, context);
   if (!tag) {
-    throw new NotFoundError('Tag');
+    throw new NotFoundError("Tag");
   }
 
   if (body.name && body.name !== tag.name) {
     const existing = await tagsRepository.findByHouseholdAndName(context, body.name);
     if (existing && existing.id !== tagId) {
-      throw new ConflictError('A tag with this name already exists');
+      throw new ConflictError("A tag with this name already exists");
     }
   }
 
@@ -69,7 +69,7 @@ export async function updateTag(
   });
 
   if (!updated) {
-    throw new NotFoundError('Tag');
+    throw new NotFoundError("Tag");
   }
 
   return mapTagRecord(updated);
@@ -78,6 +78,6 @@ export async function updateTag(
 export async function deleteTag(context: HouseholdContext, tagId: string): Promise<void> {
   const deleted = await tagsRepository.delete(tagId, context);
   if (!deleted) {
-    throw new NotFoundError('Tag');
+    throw new NotFoundError("Tag");
   }
 }

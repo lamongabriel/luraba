@@ -1,4 +1,4 @@
-import type { ListMeta, ListResponse, PaginationMeta } from '@luraba/contracts/api';
+import type { ListMeta, ListResponse, PaginationMeta } from "@luraba/contracts/api";
 import {
   type BaseListQueryOutput,
   baseListQuerySchema,
@@ -10,10 +10,10 @@ import {
   sortDirectionSchema,
   temporalQuerySchema,
   validateRange,
-} from '@luraba/contracts/list';
-import { and, inArray, isNotNull, isNull, or, type SQL, type SQLWrapper, sql } from 'drizzle-orm';
+} from "@luraba/contracts/list";
+import { and, inArray, isNotNull, isNull, or, type SQL, type SQLWrapper, sql } from "drizzle-orm";
 
-export type { ListMeta, PaginationMeta } from '@luraba/contracts/api';
+export type { ListMeta, PaginationMeta } from "@luraba/contracts/api";
 
 export const BaseListQuerySchema = baseListQuerySchema;
 export {
@@ -28,7 +28,7 @@ export {
 };
 
 export type BaseListQuery = BaseListQueryOutput;
-export type { SortDirection } from '@luraba/contracts/api';
+export type { SortDirection } from "@luraba/contracts/api";
 
 export type ListResult<TItem> = ListResponse<TItem, Record<string, unknown>>;
 
@@ -38,7 +38,7 @@ export interface DbListPage<TItem> {
   summary?: Record<string, unknown>;
 }
 
-export function getPagination(query: Pick<BaseListQuery, 'page' | 'perPage'>) {
+export function getPagination(query: Pick<BaseListQuery, "page" | "perPage">) {
   return {
     limit: query.perPage,
     offset: (query.page - 1) * query.perPage,
@@ -46,7 +46,7 @@ export function getPagination(query: Pick<BaseListQuery, 'page' | 'perPage'>) {
 }
 
 export function createPaginationMeta(
-  query: Pick<BaseListQuery, 'page' | 'perPage'>,
+  query: Pick<BaseListQuery, "page" | "perPage">,
   totalCount: number,
 ): PaginationMeta {
   return {
@@ -58,7 +58,7 @@ export function createPaginationMeta(
 }
 
 export function createListMeta(
-  query: Pick<BaseListQuery, 'page' | 'perPage'>,
+  query: Pick<BaseListQuery, "page" | "perPage">,
   totalCount: number,
   summary?: Record<string, unknown>,
 ): ListMeta<Record<string, unknown>> {
@@ -114,7 +114,7 @@ export function nullabilityCondition(
 }
 
 export function buildOrderBy(
-  query: Pick<BaseListQuery, 'sort' | 'sortDirection'>,
+  query: Pick<BaseListQuery, "sort" | "sortDirection">,
   sortExpressions: Record<string, SQL>,
   defaultOrderBy: SQL[],
 ): SQL[] {
@@ -124,7 +124,7 @@ export function buildOrderBy(
   if (!expression) return defaultOrderBy;
 
   const primaryOrder =
-    query.sortDirection === 'desc' ? sql`${expression} desc` : sql`${expression} asc`;
+    query.sortDirection === "desc" ? sql`${expression} desc` : sql`${expression} asc`;
 
   return [primaryOrder, ...defaultOrderBy];
 }

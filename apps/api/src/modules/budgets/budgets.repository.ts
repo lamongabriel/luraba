@@ -1,22 +1,22 @@
-import { and, asc, eq, sql } from 'drizzle-orm';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { budgetsTable } from '@/db/schemas/budgets.schema';
-import { categoriesTable } from '@/db/schemas/categories.schema';
-import { creditCardBudgetRecognitionsTable } from '@/db/schemas/credit-card-budget-recognitions.schema';
-import { creditCardPurchasesTable } from '@/db/schemas/credit-card-purchases.schema';
-import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
-import { entriesTable } from '@/db/schemas/entries.schema';
-import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
-import { transactionsTable } from '@/db/schemas/transactions.schema';
-import type { TxClient } from '@/db/types';
-import { now } from '@/shared/lib/date';
-import { HouseholdScopedRepository } from '@/shared/repositories/household-scoped.repository';
-import type { BudgetRecord } from './budgets.types';
+import { and, asc, eq, sql } from "drizzle-orm";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { budgetsTable } from "@/db/schemas/budgets.schema";
+import { categoriesTable } from "@/db/schemas/categories.schema";
+import { creditCardBudgetRecognitionsTable } from "@/db/schemas/credit-card-budget-recognitions.schema";
+import { creditCardPurchasesTable } from "@/db/schemas/credit-card-purchases.schema";
+import { creditCardsTable } from "@/db/schemas/credit-cards.schema";
+import { entriesTable } from "@/db/schemas/entries.schema";
+import { ledgerAccountsTable } from "@/db/schemas/ledger-accounts.schema";
+import { transactionsTable } from "@/db/schemas/transactions.schema";
+import type { TxClient } from "@/db/types";
+import { now } from "@/shared/lib/date";
+import { HouseholdScopedRepository } from "@/shared/repositories/household-scoped.repository";
+import type { BudgetRecord } from "./budgets.types";
 
 type CreateBudgetValues = Omit<
   typeof budgetsTable.$inferInsert,
-  'id' | 'householdId' | 'createdAt' | 'updatedAt'
+  "id" | "householdId" | "createdAt" | "updatedAt"
 >;
 
 class BudgetRepository extends HouseholdScopedRepository<BudgetRecord, CreateBudgetValues> {
@@ -59,7 +59,7 @@ class BudgetRepository extends HouseholdScopedRepository<BudgetRecord, CreateBud
         and(
           eq(transactionsTable.householdId, householdId),
           eq(transactionsTable.includeInBudget, true),
-          eq(ledgerAccountsTable.ownerType, 'account'),
+          eq(ledgerAccountsTable.ownerType, "account"),
           eq(entriesTable.budgetMonth, month),
         ),
       )

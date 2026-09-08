@@ -1,18 +1,18 @@
 import type {
   listCreditCardCyclesQuerySchema,
   listCreditCardsQuerySchema,
-} from '@luraba/contracts/credit-cards';
-import { eq, type SQL, sql } from 'drizzle-orm';
-import type { z } from 'zod';
-import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
+} from "@luraba/contracts/credit-cards";
+import { eq, type SQL, sql } from "drizzle-orm";
+import type { z } from "zod";
+import { creditCardsTable } from "@/db/schemas/credit-cards.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,
   combineConditions,
   inArrayIfAny,
   rangeConditions,
-} from '@/shared/list';
-import { creditCardOwnerAccountsTable } from './credit-cards.helpers';
+} from "@/shared/list";
+import { creditCardOwnerAccountsTable } from "./credit-cards.helpers";
 
 export type ListCreditCardsQuery = z.output<typeof listCreditCardsQuerySchema>;
 
@@ -81,7 +81,7 @@ export type ListCreditCardCyclesQuery = z.output<typeof listCreditCardCyclesQuer
 
 export function buildCreditCardCyclesListWhere(query: ListCreditCardCyclesQuery): SQL | undefined {
   return combineConditions(
-    query.scope === 'default' ? sql`(is_current or is_next or has_activity)` : undefined,
+    query.scope === "default" ? sql`(is_current or is_next or has_activity)` : undefined,
     buildIlikeSearch(query.search, [sql`status`, sql`display_status`]),
     inArrayIfAny(sql`status`, query.statuses),
     inArrayIfAny(sql`display_status`, query.displayStatuses),

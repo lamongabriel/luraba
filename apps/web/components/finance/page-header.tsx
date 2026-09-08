@@ -1,10 +1,10 @@
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import Link from "next/link"
-import type * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Typography } from "@/components/ui/typography"
-import { cn } from "@/lib/utils"
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import Link from "next/link";
+import type * as React from "react";
+import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
+import { cn } from "@/lib/utils";
 
 export function PageHeader({
   title,
@@ -14,12 +14,12 @@ export function PageHeader({
   backHref,
   backText,
 }: {
-  title: string
-  description?: React.ReactNode
-  actions?: React.ReactNode
-  className?: string
-  backHref?: string
-  backText?: string
+  title: string;
+  description?: React.ReactNode;
+  actions?: React.ReactNode;
+  className?: string;
+  backHref?: string;
+  backText?: string;
 }) {
   return (
     <section
@@ -46,9 +46,7 @@ export function PageHeader({
           </Typography>
         ) : null}
       </div>
-      {actions ? (
-        <div className="flex flex-wrap items-center gap-2">{actions}</div>
-      ) : null}
+      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </section>
-  )
+  );
 }

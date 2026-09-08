@@ -2,19 +2,19 @@ import type {
   CreateMerchantInput,
   Merchant,
   UpdateMerchantInput,
-} from '@luraba/contracts/merchants';
-import type { HouseholdContext } from '@/config/permissions';
-import { getBrandfetchClientId } from '@/modules/integrations/brandfetch/brandfetch.service';
+} from "@luraba/contracts/merchants";
+import type { HouseholdContext } from "@/config/permissions";
+import { getBrandfetchClientId } from "@/modules/integrations/brandfetch/brandfetch.service";
 import {
   buildBrandfetchLogoUrl,
   normalizeBrandDomain,
-} from '@/modules/integrations/brandfetch/brandfetch.utils';
-import { ConflictError, NotFoundError } from '@/shared/errors';
-import { formatISODateTime } from '@/shared/lib/date';
-import { createListMeta, type ListResult } from '@/shared/list';
-import type { ListMerchantsQuery } from './merchants.query';
-import { merchantsRepository } from './merchants.repository';
-import type { MerchantRecord } from './merchants.types';
+} from "@/modules/integrations/brandfetch/brandfetch.utils";
+import { ConflictError, NotFoundError } from "@/shared/errors";
+import { formatISODateTime } from "@/shared/lib/date";
+import { createListMeta, type ListResult } from "@/shared/list";
+import type { ListMerchantsQuery } from "./merchants.query";
+import { merchantsRepository } from "./merchants.repository";
+import type { MerchantRecord } from "./merchants.types";
 
 function mapMerchantRecord(merchant: MerchantRecord): Merchant {
   return {
@@ -34,7 +34,7 @@ export async function createMerchant(
   const existing = await merchantsRepository.findByName(context, body.name);
 
   if (existing) {
-    throw new ConflictError('A merchant with this name already exists');
+    throw new ConflictError("A merchant with this name already exists");
   }
 
   const normalizedDomain = body.domain ? normalizeBrandDomain(body.domain) : undefined;
@@ -72,7 +72,7 @@ export async function getMerchant(
 ): Promise<Merchant> {
   const merchant = await merchantsRepository.get(merchantId, context);
   if (!merchant) {
-    throw new NotFoundError('Merchant');
+    throw new NotFoundError("Merchant");
   }
 
   return mapMerchantRecord(merchant);
@@ -85,13 +85,13 @@ export async function updateMerchant(
 ): Promise<Merchant> {
   const merchant = await merchantsRepository.get(merchantId, context);
   if (!merchant) {
-    throw new NotFoundError('Merchant');
+    throw new NotFoundError("Merchant");
   }
 
   if (body.name && body.name !== merchant.name) {
     const existing = await merchantsRepository.findByName(context, body.name);
     if (existing && existing.id !== merchantId) {
-      throw new ConflictError('A merchant with this name already exists');
+      throw new ConflictError("A merchant with this name already exists");
     }
   }
 
@@ -114,7 +114,7 @@ export async function updateMerchant(
   });
 
   if (!updated) {
-    throw new NotFoundError('Merchant');
+    throw new NotFoundError("Merchant");
   }
 
   return mapMerchantRecord(updated);
@@ -123,6 +123,6 @@ export async function updateMerchant(
 export async function deleteMerchant(context: HouseholdContext, merchantId: string): Promise<void> {
   const deleted = await merchantsRepository.delete(merchantId, context);
   if (!deleted) {
-    throw new NotFoundError('Merchant');
+    throw new NotFoundError("Merchant");
   }
 }

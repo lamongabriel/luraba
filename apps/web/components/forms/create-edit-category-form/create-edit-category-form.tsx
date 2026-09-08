@@ -1,34 +1,32 @@
-"use client"
+"use client";
 
-import type { Category, CategoryType } from "@luraba/contracts"
-import { FormItem } from "@/components/forms/form-item"
-import { Button } from "@/components/ui/button"
-import { Icon } from "@/components/ui/icon"
-import { Typography } from "@/components/ui/typography"
-import {
-  CATEGORY_COLOR_PRESETS,
-  CATEGORY_ICONS,
-  CATEGORY_TYPE_OPTIONS,
-} from "@/lib/categories"
+import type { Category, CategoryType } from "@luraba/contracts";
+import { FormItem } from "@/components/forms/form-item";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { Typography } from "@/components/ui/typography";
+import { CATEGORY_COLOR_PRESETS, CATEGORY_ICONS, CATEGORY_TYPE_OPTIONS } from "@/lib/categories";
 
-import { useCreateEditCategoryForm } from "./use-create-edit-category-form"
+import { useCreateEditCategoryForm } from "./use-create-edit-category-form";
 
 export function CreateEditCategoryForm({
   category,
   onCancel,
   onSuccess,
 }: {
-  category?: Category
-  onCancel: () => void
-  onSuccess: () => void
+  category?: Category;
+  onCancel: () => void;
+  onSuccess: () => void;
 }) {
-  const { form, onSubmit, isEdit, isPending, errorMessage } =
-    useCreateEditCategoryForm({ category, onSuccess })
+  const { form, onSubmit, isEdit, isPending, errorMessage } = useCreateEditCategoryForm({
+    category,
+    onSuccess,
+  });
 
-  const type = form.watch("type") as CategoryType
-  const color = form.watch("color")
-  const icon = form.watch("icon")
-  const name = form.watch("name")
+  const type = form.watch("type") as CategoryType;
+  const color = form.watch("color");
+  const icon = form.watch("icon");
+  const name = form.watch("name");
 
   return (
     <form className="space-y-5" onSubmit={onSubmit} noValidate>
@@ -60,9 +58,7 @@ export function CreateEditCategoryForm({
         placeholder="Select a type"
         disabled={isPending || isEdit}
         options={CATEGORY_TYPE_OPTIONS}
-        description={
-          isEdit ? "Type cannot be changed after creation." : undefined
-        }
+        description={isEdit ? "Type cannot be changed after creation." : undefined}
       />
 
       {/* Re-render the parent select against the current type so options stay valid. */}
@@ -99,17 +95,10 @@ export function CreateEditCategoryForm({
         disabled={isPending}
       />
 
-      {errorMessage ? (
-        <Typography variant="small-destructive">{errorMessage}</Typography>
-      ) : null}
+      {errorMessage ? <Typography variant="small-destructive">{errorMessage}</Typography> : null}
 
       <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onCancel}
-          disabled={isPending}
-        >
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={isPending}>
           Cancel
         </Button>
         <Button
@@ -121,5 +110,5 @@ export function CreateEditCategoryForm({
         </Button>
       </div>
     </form>
-  )
+  );
 }

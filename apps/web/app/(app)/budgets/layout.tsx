@@ -1,7 +1,7 @@
-import type { ReactNode } from "react"
+import type { ReactNode } from "react";
 
-import { BudgetsAccess } from "./_access"
+import { BudgetsAccess } from "./_access";
 
 export default function BudgetsLayout({ children }: { children: ReactNode }) {
-  return <BudgetsAccess>{children}</BudgetsAccess>
+  return <BudgetsAccess>{children}</BudgetsAccess>;
 }

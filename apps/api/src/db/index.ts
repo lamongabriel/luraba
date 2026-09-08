@@ -1,8 +1,8 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
-import { env } from '@/config/env';
-import { logger } from '@/shared/logger';
-import * as schema from './schema';
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import { env } from "@/config/env";
+import { logger } from "@/shared/logger";
+import * as schema from "./schema";
 
 export const pool = new Pool({
   host: env.dbHost,
@@ -10,14 +10,15 @@ export const pool = new Pool({
   database: env.dbName,
   user: env.dbUser,
   password: env.dbPassword,
+  ssl: env.dbSsl ? { rejectUnauthorized: false } : false,
 });
 
-pool.on('connect', () => {
+pool.on("connect", () => {
   logger.debug(`[db] New client connected (host=${env.dbHost} db=${env.dbName})`);
 });
 
-pool.on('error', (err) => {
-  logger.error({ err }, '[db] Unexpected pool error');
+pool.on("error", (err) => {
+  logger.error({ err }, "[db] Unexpected pool error");
 });
 
 export const db = drizzle(pool, { schema });

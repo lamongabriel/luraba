@@ -1,6 +1,6 @@
-import { getEndpointRouterPath, healthEndpoints } from '@luraba/contracts';
-import { Router } from 'express';
-import * as healthController from './health.controller';
+import { getEndpointRouterPath, healthEndpoints } from "@luraba/contracts";
+import { Router } from "express";
+import * as healthController from "./health.controller";
 
 const router = Router();
 

@@ -1,8 +1,7 @@
-import { creditCardsEndpoints, getEndpointRouterPath } from '@luraba/contracts';
-import { Router } from 'express';
-import { PERMISSIONS } from '@/config/permissions';
-import { requireAccess } from '@/middleware/access.middleware';
-import * as creditCardsController from './credit-cards.controller';
+import { creditCardsEndpoints, getEndpointRouterPath, PERMISSIONS } from "@luraba/contracts";
+import { Router } from "express";
+import { requireAccess } from "@/middleware/access.middleware";
+import * as creditCardsController from "./credit-cards.controller";
 
 const router = Router();
 

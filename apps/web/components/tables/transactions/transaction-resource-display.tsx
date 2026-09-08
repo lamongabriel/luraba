@@ -1,39 +1,35 @@
-"use client"
+"use client";
 
-import { Store01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
+import { Store01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type {
   AccountDetails,
   AccountType,
   CreditCard,
   Merchant,
   TransactionFeedRow,
-} from "@luraba/contracts"
-import * as React from "react"
-import { CreditCardBrandMark } from "@/components/credit-cards/credit-card-brand"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Typography } from "@/components/ui/typography"
-import { formatAccountTypeLabel, getAccountTypeIcon } from "@/lib/accounts"
-import { cn } from "@/lib/utils"
-import { useAccountQuery } from "@/queries/accounts/use-accounts-query"
-import { useCreditCardQuery } from "@/queries/credit-cards/use-credit-cards-query"
-import { useMerchantQuery } from "@/queries/merchants/use-merchants-query"
-import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query"
+} from "@luraba/contracts";
+import * as React from "react";
+import { CreditCardBrandMark } from "@/components/credit-cards/credit-card-brand";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
+import { formatAccountTypeLabel, getAccountTypeIcon } from "@/lib/accounts";
+import { cn } from "@/lib/utils";
+import { useAccountQuery } from "@/queries/accounts/use-accounts-query";
+import { useCreditCardQuery } from "@/queries/credit-cards/use-credit-cards-query";
+import { useMerchantQuery } from "@/queries/merchants/use-merchants-query";
+import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
 
 function ResourceMark({
   imageUrl,
   fallback,
   className,
 }: {
-  imageUrl?: string | null
-  fallback: React.ReactNode
-  className?: string
+  imageUrl?: string | null;
+  fallback: React.ReactNode;
+  className?: string;
 }) {
   return (
     <Avatar
@@ -42,20 +38,14 @@ function ResourceMark({
         className,
       )}
     >
-      <AvatarImage
-        src={imageUrl ?? undefined}
-        alt=""
-        className="object-contain"
-      />
-      <AvatarFallback className="rounded-sm text-[0.6rem]">
-        {fallback}
-      </AvatarFallback>
+      <AvatarImage src={imageUrl ?? undefined} alt="" className="object-contain" />
+      <AvatarFallback className="rounded-sm text-[0.6rem]">{fallback}</AvatarFallback>
     </Avatar>
-  )
+  );
 }
 
 function getInitial(value: string) {
-  return value.trim().charAt(0).toUpperCase() || "?"
+  return value.trim().charAt(0).toUpperCase() || "?";
 }
 
 function AccountHoverDetails({
@@ -66,12 +56,12 @@ function AccountHoverDetails({
   accountError,
   cardError,
 }: {
-  account: AccountDetails | undefined
-  card: CreditCard | undefined
-  accountLoading: boolean
-  cardLoading: boolean
-  accountError: Error | null
-  cardError: Error | null
+  account: AccountDetails | undefined;
+  card: CreditCard | undefined;
+  accountLoading: boolean;
+  cardLoading: boolean;
+  accountError: Error | null;
+  cardError: Error | null;
 }) {
   if (accountLoading || cardLoading) {
     return (
@@ -85,27 +75,17 @@ function AccountHoverDetails({
         <Skeleton className="h-3 w-24" />
         <Skeleton className="h-3 w-28" />
       </div>
-    )
+    );
   }
 
   if (accountError || cardError || (!account && !card)) {
-    return (
-      <p className="text-xs text-muted-foreground">
-        Account details unavailable.
-      </p>
-    )
+    return <p className="text-xs text-muted-foreground">Account details unavailable.</p>;
   }
 
-  const resource = card ?? account
-  const name = card
-    ? `${card.brand} •••• ${card.last4}`
-    : (account?.name ?? "Account")
-  const type = card
-    ? "Credit card"
-    : account
-      ? formatAccountTypeLabel(account.type)
-      : null
-  const currency = resource?.currencyCode
+  const resource = card ?? account;
+  const name = card ? `${card.brand} •••• ${card.last4}` : (account?.name ?? "Account");
+  const type = card ? "Credit card" : account ? formatAccountTypeLabel(account.type) : null;
+  const currency = resource?.currencyCode;
 
   return (
     <div className="space-y-3">
@@ -157,44 +137,39 @@ function AccountHoverDetails({
         ) : null}
       </dl>
     </div>
-  )
+  );
 }
 
 export function TransactionAccountDisplay({
   row,
   lookups,
 }: {
-  row: TransactionFeedRow
-  lookups: TransactionLookups
+  row: TransactionFeedRow;
+  lookups: TransactionLookups;
 }) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
   const card = row.creditCardId
     ? lookups.creditCards.find((item) => item.id === row.creditCardId)
-    : undefined
+    : undefined;
   const account = row.accountId
     ? lookups.accounts.find((item) => item.id === row.accountId)
-    : undefined
-  const accountId = row.accountId ?? ""
-  const creditCardId = row.creditCardId ?? ""
+    : undefined;
+  const accountId = row.accountId ?? "";
+  const creditCardId = row.creditCardId ?? "";
   const accountQuery = useAccountQuery(accountId, {
     enabled: open && Boolean(accountId),
-  })
+  });
   const cardQuery = useCreditCardQuery(creditCardId, {
     enabled: open && Boolean(creditCardId),
-  })
+  });
   const label = card
     ? `${card.brand} •••• ${card.last4}`
-    : (account?.name ?? row.accountName ?? "No account")
-  const imageUrl = card?.institutionLogoUrl ?? account?.institutionLogoUrl
+    : (account?.name ?? row.accountName ?? "No account");
+  const imageUrl = card?.institutionLogoUrl ?? account?.institutionLogoUrl;
 
   return (
     <div className="min-w-44">
-      <HoverCard
-        openDelay={300}
-        closeDelay={120}
-        open={open}
-        onOpenChange={setOpen}
-      >
+      <HoverCard openDelay={300} closeDelay={120} open={open} onOpenChange={setOpen}>
         <HoverCardTrigger asChild>
           <button
             type="button"
@@ -230,7 +205,7 @@ export function TransactionAccountDisplay({
         </HoverCardContent>
       </HoverCard>
     </div>
-  )
+  );
 }
 
 function MerchantHoverDetails({
@@ -238,9 +213,9 @@ function MerchantHoverDetails({
   isLoading,
   isError,
 }: {
-  merchant: Merchant | undefined
-  isLoading: boolean
-  isError: boolean
+  merchant: Merchant | undefined;
+  isLoading: boolean;
+  isError: boolean;
 }) {
   if (isLoading) {
     return (
@@ -254,14 +229,10 @@ function MerchantHoverDetails({
         <Skeleton className="h-3 w-24" />
         <Skeleton className="h-3 w-28" />
       </div>
-    )
+    );
   }
   if (isError || !merchant) {
-    return (
-      <p className="text-xs text-muted-foreground">
-        Merchant details unavailable.
-      </p>
-    )
+    return <p className="text-xs text-muted-foreground">Merchant details unavailable.</p>;
   }
 
   return (
@@ -287,7 +258,7 @@ function MerchantHoverDetails({
         </div>
       </dl>
     </div>
-  )
+  );
 }
 
 export function TransactionAccountPanelDisplay({
@@ -296,44 +267,41 @@ export function TransactionAccountPanelDisplay({
   row,
   lookups,
 }: {
-  accountId?: string | null
-  accountName?: string | null
-  row: TransactionFeedRow
-  lookups: TransactionLookups
+  accountId?: string | null;
+  accountName?: string | null;
+  row: TransactionFeedRow;
+  lookups: TransactionLookups;
 }) {
-  const resolvedAccountId = accountId === undefined ? row.accountId : accountId
-  const resolvedAccountName =
-    accountName === undefined ? row.accountName : accountName
-  const resolvedCreditCardId = accountId === undefined ? row.creditCardId : null
+  const resolvedAccountId = accountId === undefined ? row.accountId : accountId;
+  const resolvedAccountName = accountName === undefined ? row.accountName : accountName;
+  const resolvedCreditCardId = accountId === undefined ? row.creditCardId : null;
   const card = resolvedCreditCardId
     ? lookups.creditCards.find((item) => item.id === resolvedCreditCardId)
-    : undefined
+    : undefined;
   const account = resolvedAccountId
     ? lookups.accounts.find((item) => item.id === resolvedAccountId)
-    : undefined
+    : undefined;
   const accountQuery = useAccountQuery(resolvedAccountId ?? "", {
     enabled: Boolean(resolvedAccountId),
-  })
+  });
   const cardQuery = useCreditCardQuery(resolvedCreditCardId ?? "", {
     enabled: Boolean(resolvedCreditCardId),
-  })
-  const resolvedCard = cardQuery.data ?? card
-  const resolvedAccount = accountQuery.data ?? account
+  });
+  const resolvedCard = cardQuery.data ?? card;
+  const resolvedAccount = accountQuery.data ?? account;
   const label = resolvedCard
     ? `${resolvedCard.brand} •••• ${resolvedCard.last4}`
-    : (resolvedAccount?.name ?? resolvedAccountName ?? "No account")
+    : (resolvedAccount?.name ?? resolvedAccountName ?? "No account");
   const type = resolvedCard
     ? "Credit card"
     : resolvedAccount
       ? formatAccountTypeLabel(resolvedAccount.type)
-      : "Account"
+      : "Account";
 
   return (
     <div className="flex min-w-0 items-center gap-2">
       <ResourceMark
-        imageUrl={
-          resolvedCard ? undefined : resolvedAccount?.institutionLogoUrl
-        }
+        imageUrl={resolvedCard ? undefined : resolvedAccount?.institutionLogoUrl}
         fallback={
           resolvedCard ? (
             <CreditCardBrandMark brand={resolvedCard.brand} />
@@ -355,40 +323,34 @@ export function TransactionAccountPanelDisplay({
         </Typography>
       </div>
     </div>
-  )
+  );
 }
 
 export function TransactionMerchantPanelDisplay({
   merchantId,
   lookups,
 }: {
-  merchantId: string | null
-  lookups: TransactionLookups
+  merchantId: string | null;
+  lookups: TransactionLookups;
 }) {
   const merchant = merchantId
     ? lookups.merchants.find((item) => item.id === merchantId)
-    : undefined
+    : undefined;
   const merchantQuery = useMerchantQuery(merchantId ?? "", {
     enabled: Boolean(merchantId),
-  })
+  });
 
   if (!merchantId || !merchant) {
-    return <span className="text-xs text-muted-foreground">No merchant</span>
+    return <span className="text-xs text-muted-foreground">No merchant</span>;
   }
 
-  const resolvedMerchant = merchantQuery.data ?? merchant
+  const resolvedMerchant = merchantQuery.data ?? merchant;
 
   return (
     <div className="flex min-w-0 items-center gap-2">
       <ResourceMark
         imageUrl={resolvedMerchant.logoUrl}
-        fallback={
-          <HugeiconsIcon
-            icon={Store01Icon}
-            strokeWidth={2}
-            className="size-3"
-          />
-        }
+        fallback={<HugeiconsIcon icon={Store01Icon} strokeWidth={2} className="size-3" />}
       />
       <div className="min-w-0">
         <Typography as="p" variant="small-strong" className="truncate">
@@ -396,36 +358,31 @@ export function TransactionMerchantPanelDisplay({
         </Typography>
       </div>
     </div>
-  )
+  );
 }
 
 export function TransactionMerchantDisplay({
   merchantId,
   lookups,
 }: {
-  merchantId: string | null
-  lookups: TransactionLookups
+  merchantId: string | null;
+  lookups: TransactionLookups;
 }) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
   const lookupMerchant = merchantId
     ? lookups.merchants.find((item) => item.id === merchantId)
-    : undefined
+    : undefined;
   const merchantQuery = useMerchantQuery(merchantId ?? "", {
     enabled: open && Boolean(merchantId),
-  })
+  });
 
   if (!merchantId || !lookupMerchant) {
-    return <span className="text-xs text-muted-foreground">-</span>
+    return <span className="text-xs text-muted-foreground">-</span>;
   }
 
   return (
     <div className="min-w-36">
-      <HoverCard
-        openDelay={300}
-        closeDelay={120}
-        open={open}
-        onOpenChange={setOpen}
-      >
+      <HoverCard openDelay={300} closeDelay={120} open={open} onOpenChange={setOpen}>
         <HoverCardTrigger asChild>
           <button
             type="button"
@@ -434,17 +391,9 @@ export function TransactionMerchantDisplay({
           >
             <ResourceMark
               imageUrl={lookupMerchant.logoUrl}
-              fallback={
-                <HugeiconsIcon
-                  icon={Store01Icon}
-                  strokeWidth={2}
-                  className="size-3"
-                />
-              }
+              fallback={<HugeiconsIcon icon={Store01Icon} strokeWidth={2} className="size-3" />}
             />
-            <span className="truncate text-xs font-medium">
-              {lookupMerchant.name}
-            </span>
+            <span className="truncate text-xs font-medium">{lookupMerchant.name}</span>
           </button>
         </HoverCardTrigger>
         <HoverCardContent align="start" className="w-72">
@@ -456,5 +405,5 @@ export function TransactionMerchantDisplay({
         </HoverCardContent>
       </HoverCard>
     </div>
-  )
+  );
 }

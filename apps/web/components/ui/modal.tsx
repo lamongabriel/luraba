@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 /**
  * Modal system - built on top of the existing Dialog primitives.
@@ -36,42 +36,36 @@
  *   </Modal>
  */
 
-import { Cancel01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { VariantProps } from "class-variance-authority"
-import { Dialog as DialogPrimitive } from "radix-ui"
-import type * as React from "react"
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { VariantProps } from "class-variance-authority";
+import { Dialog as DialogPrimitive } from "radix-ui";
+import type * as React from "react";
 
-import { Button, type buttonVariants } from "@/components/ui/button"
+import { Button, type buttonVariants } from "@/components/ui/button";
 import {
   DialogClose,
   DialogDescription,
   DialogOverlay,
   DialogPortal,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
-export type ModalVariant = "default" | "destructive" | "warning" | "success"
+export type ModalVariant = "default" | "destructive" | "warning" | "success";
 
 // ── Root / Trigger / Close ───────────────────────────────────────────────────
 
-function Modal({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="modal" {...props} />
+function Modal({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  return <DialogPrimitive.Root data-slot="modal" {...props} />;
 }
 
-function ModalTrigger({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
-  return <DialogPrimitive.Trigger data-slot="modal-trigger" {...props} />
+function ModalTrigger({ ...props }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+  return <DialogPrimitive.Trigger data-slot="modal-trigger" {...props} />;
 }
 
-function ModalClose({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Close>) {
-  return <DialogPrimitive.Close data-slot="modal-close" {...props} />
+function ModalClose({ ...props }: React.ComponentProps<typeof DialogPrimitive.Close>) {
+  return <DialogPrimitive.Close data-slot="modal-close" {...props} />;
 }
 
 // ── Icon container (coloured background + icon in the header) ─────────────────
@@ -81,19 +75,15 @@ const ICON_VARIANT_CLASSES: Record<ModalVariant, string> = {
   destructive: "bg-destructive/10 text-destructive",
   warning: "bg-amber-500/10 text-amber-500",
   success: "bg-emerald-500/10 text-emerald-500",
-}
+};
 
 interface ModalIconProps {
-  children: React.ReactNode
-  variant?: ModalVariant
-  className?: string
+  children: React.ReactNode;
+  variant?: ModalVariant;
+  className?: string;
 }
 
-function ModalIcon({
-  children,
-  variant = "default",
-  className,
-}: ModalIconProps) {
+function ModalIcon({ children, variant = "default", className }: ModalIconProps) {
   return (
     <div
       data-slot="modal-icon"
@@ -105,7 +95,7 @@ function ModalIcon({
     >
       {children}
     </div>
-  )
+  );
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────────
@@ -120,31 +110,20 @@ function ModalHeader({ className, ...props }: React.ComponentProps<"div">) {
       )}
       {...props}
     />
-  )
+  );
 }
 
-function ModalTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogTitle>) {
-  return (
-    <DialogTitle
-      className={cn("text-xl font-medium leading-snug", className)}
-      {...props}
-    />
-  )
+function ModalTitle({ className, ...props }: React.ComponentProps<typeof DialogTitle>) {
+  return <DialogTitle className={cn("text-xl font-medium leading-snug", className)} {...props} />;
 }
 
-function ModalDescription({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogDescription>) {
+function ModalDescription({ className, ...props }: React.ComponentProps<typeof DialogDescription>) {
   return (
     <DialogDescription
       className={cn("text-xs/relaxed text-muted-foreground", className)}
       {...props}
     />
-  )
+  );
 }
 
 // ── Body ───────────────────────────────────────────────────────────────────────
@@ -153,32 +132,29 @@ function ModalBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="modal-body"
-      className={cn(
-        "flex flex-col gap-4 px-6 py-5 text-xs/relaxed empty:hidden",
-        className,
-      )}
+      className={cn("flex flex-col gap-4 px-6 py-5 text-xs/relaxed empty:hidden", className)}
       {...props}
     />
-  )
+  );
 }
 
 // ── Footer ─────────────────────────────────────────────────────────────────────
 
 interface ModalFooterProps extends React.ComponentProps<"div"> {
   /** Label for the cancel/close button. Omit to hide it. */
-  cancelLabel?: string
+  cancelLabel?: string;
   /** Label for the primary action button. Omit to hide it. */
-  confirmLabel?: string
+  confirmLabel?: string;
   /** Variant for the primary action button. */
-  confirmVariant?: VariantProps<typeof buttonVariants>["variant"]
+  confirmVariant?: VariantProps<typeof buttonVariants>["variant"];
   /** Called when the primary action button is clicked. */
-  onConfirm?: () => void
+  onConfirm?: () => void;
   /** Disables both buttons (e.g. while submitting). */
-  isLoading?: boolean
+  isLoading?: boolean;
   /** Text shown in the confirm button while loading. */
-  loadingLabel?: string
+  loadingLabel?: string;
   /** Whether the confirm button is additionally disabled. */
-  confirmDisabled?: boolean
+  confirmDisabled?: boolean;
 }
 
 function ModalFooter({
@@ -223,27 +199,26 @@ function ModalFooter({
         </Button>
       ) : null}
     </div>
-  )
+  );
 }
 
 // ── Content shell ─────────────────────────────────────────────────────────────
 
-interface ModalContentProps
-  extends React.ComponentProps<typeof DialogPrimitive.Content> {
+interface ModalContentProps extends React.ComponentProps<typeof DialogPrimitive.Content> {
   /** Optional icon rendered at the top of the header. */
-  icon?: React.ReactNode
+  icon?: React.ReactNode;
   /** Variant that colours the icon background. */
-  variant?: ModalVariant
+  variant?: ModalVariant;
   /** Shorthand title - equivalent to <ModalTitle> inside <ModalHeader>. */
-  title?: string
+  title?: string;
   /** Shorthand description - equivalent to <ModalDescription> inside <ModalHeader>. */
-  description?: string
+  description?: string;
   /** Blocks closing while something is loading. */
-  isLoading?: boolean
+  isLoading?: boolean;
   /** Whether to render the top-right close button. */
-  showCloseButton?: boolean
+  showCloseButton?: boolean;
   /** Max width. Defaults to "md". */
-  size?: "sm" | "md" | "lg" | "xl"
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 const SIZE_CLASSES: Record<NonNullable<ModalContentProps["size"]>, string> = {
@@ -251,7 +226,7 @@ const SIZE_CLASSES: Record<NonNullable<ModalContentProps["size"]>, string> = {
   md: "sm:max-w-lg",
   lg: "sm:max-w-xl",
   xl: "sm:max-w-2xl",
-}
+};
 
 function ModalContent({
   icon,
@@ -275,12 +250,8 @@ function ModalContent({
           SIZE_CLASSES[size],
           className,
         )}
-        onEscapeKeyDown={
-          isLoading ? (event) => event.preventDefault() : undefined
-        }
-        onInteractOutside={
-          isLoading ? (event) => event.preventDefault() : undefined
-        }
+        onEscapeKeyDown={isLoading ? (event) => event.preventDefault() : undefined}
+        onInteractOutside={isLoading ? (event) => event.preventDefault() : undefined}
         {...props}
       >
         {showCloseButton ? (
@@ -302,16 +273,14 @@ function ModalContent({
             <ModalHeader>
               {icon ? <ModalIcon variant={variant}>{icon}</ModalIcon> : null}
               {title ? <ModalTitle>{title}</ModalTitle> : null}
-              {description ? (
-                <ModalDescription>{description}</ModalDescription>
-              ) : null}
+              {description ? <ModalDescription>{description}</ModalDescription> : null}
             </ModalHeader>
           ) : null}
           {children}
         </div>
       </DialogPrimitive.Content>
     </DialogPortal>
-  )
+  );
 }
 
 export {
@@ -325,4 +294,4 @@ export {
   ModalIcon,
   ModalTitle,
   ModalTrigger,
-}
+};

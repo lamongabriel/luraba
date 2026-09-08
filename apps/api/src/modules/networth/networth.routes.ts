@@ -1,8 +1,7 @@
-import { getEndpointRouterPath, netWorthEndpoints } from '@luraba/contracts';
-import { Router } from 'express';
-import { PERMISSIONS } from '@/config/permissions';
-import { requireAccess } from '@/middleware/access.middleware';
-import * as controller from './networth.controller';
+import { getEndpointRouterPath, netWorthEndpoints, PERMISSIONS } from "@luraba/contracts";
+import { Router } from "express";
+import { requireAccess } from "@/middleware/access.middleware";
+import * as controller from "./networth.controller";
 
 const router = Router();
 router.get(

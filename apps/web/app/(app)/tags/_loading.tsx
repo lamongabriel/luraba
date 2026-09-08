@@ -1,6 +1,6 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/components/ui/skeleton";
 
-const LOADING_ROW_KEYS = ["a", "b", "c", "d", "e"] as const
+const LOADING_ROW_KEYS = ["a", "b", "c", "d", "e"] as const;
 
 export function TagsLoading() {
   return (
@@ -12,5 +12,5 @@ export function TagsLoading() {
         </div>
       ))}
     </div>
-  )
+  );
 }

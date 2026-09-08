@@ -1,10 +1,10 @@
-import { sql } from 'drizzle-orm';
-import { db } from '@/db';
-import { buildTransactionFeedCte, type TransactionFilterQuery } from './transactions.query';
+import { sql } from "drizzle-orm";
+import { db } from "@/db";
+import { buildTransactionFeedCte, type TransactionFilterQuery } from "./transactions.query";
 
 export type TransactionAnalyticsAggregateRow = {
   date: string;
-  originType: 'income' | 'expense' | 'credit_card_installment';
+  originType: "income" | "expense" | "credit_card_installment";
   amount: number;
   currencyCode: string;
   categoryId: string | null;

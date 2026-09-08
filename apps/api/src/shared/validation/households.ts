@@ -3,4 +3,4 @@ export {
   type HouseholdRole,
   householdInviteStatusSchema,
   householdRoleSchema,
-} from '@luraba/contracts';
+} from "@luraba/contracts";

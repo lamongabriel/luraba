@@ -7,11 +7,11 @@ import {
   PREFERRED_PERIOD_VALUES,
   PREFERRED_THEME_VALUES,
   TIMEZONE_VALUES,
-} from '@/shared/validation/preferences';
-import * as onboardingService from '../onboarding.service';
+} from "@/shared/validation/preferences";
+import * as onboardingService from "../onboarding.service";
 
-describe('onboarding service', () => {
-  it('getOptions returns the seeded currencies and shared option lists', async () => {
+describe("onboarding service", () => {
+  it("getOptions returns the seeded currencies and shared option lists", async () => {
     const result = await onboardingService.getOptions();
 
     expect(result.languages).toEqual([...LANGUAGE_VALUES]);
@@ -28,8 +28,8 @@ describe('onboarding service', () => {
 
     expect(result.currencies).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ code: 'BRL', symbol: 'R$', precision: 2 }),
-        expect.objectContaining({ code: 'USD', symbol: '$', precision: 2 }),
+        expect.objectContaining({ code: "BRL", symbol: "R$", precision: 2 }),
+        expect.objectContaining({ code: "USD", symbol: "$", precision: 2 }),
       ]),
     );
   });

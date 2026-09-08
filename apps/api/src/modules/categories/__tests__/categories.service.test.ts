@@ -1,33 +1,33 @@
-import { listCategoriesQuerySchema } from '@luraba/contracts/categories';
-import { describe, expect, it } from 'vitest';
-import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
-import { createAuthenticatedContext } from '@/test/auth';
-import { buildCategoryInput } from '@/test/factories';
-import * as categoriesService from '../categories.service';
+import { listCategoriesQuerySchema } from "@luraba/contracts/categories";
+import { describe, expect, it } from "vitest";
+import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
+import { createAuthenticatedContext } from "@/test/auth";
+import { buildCategoryInput } from "@/test/factories";
+import * as categoriesService from "../categories.service";
 
-describe('categories service', () => {
-  it('creates a category with color and icon', async () => {
+describe("categories service", () => {
+  it("creates a category with color and icon", async () => {
     const context = await createAuthenticatedContext();
 
     const category = await categoriesService.createCategory(
       context.householdContext,
       buildCategoryInput({
-        name: 'Food',
-        type: 'expense',
-        color: '#10B981',
-        icon: 'AppleIcon',
+        name: "Food",
+        type: "expense",
+        color: "#10B981",
+        icon: "AppleIcon",
       }),
     );
 
-    expect(category.name).toBe('Food');
-    expect(category.type).toBe('expense');
-    expect(category.color).toBe('#10B981');
-    expect(category.icon).toBe('AppleIcon');
+    expect(category.name).toBe("Food");
+    expect(category.type).toBe("expense");
+    expect(category.color).toBe("#10B981");
+    expect(category.icon).toBe("AppleIcon");
   });
 
-  it('rejects duplicate category names in the same household', async () => {
+  it("rejects duplicate category names in the same household", async () => {
     const context = await createAuthenticatedContext();
-    const input = buildCategoryInput({ name: 'Salary', type: 'income' });
+    const input = buildCategoryInput({ name: "Salary", type: "income" });
 
     await categoriesService.createCategory(context.householdContext, input);
 
@@ -36,10 +36,10 @@ describe('categories service', () => {
     );
   });
 
-  it('allows the same category name in different households', async () => {
+  it("allows the same category name in different households", async () => {
     const left = await createAuthenticatedContext();
     const right = await createAuthenticatedContext();
-    const input = buildCategoryInput({ name: 'Groceries' });
+    const input = buildCategoryInput({ name: "Groceries" });
 
     const leftCategory = await categoriesService.createCategory(left.householdContext, input);
     const rightCategory = await categoriesService.createCategory(right.householdContext, input);
@@ -48,26 +48,26 @@ describe('categories service', () => {
     expect(leftCategory.name).toBe(rightCategory.name);
   });
 
-  it('rejects a missing parent category', async () => {
+  it("rejects a missing parent category", async () => {
     const context = await createAuthenticatedContext();
 
     await expect(
       categoriesService.createCategory(
         context.householdContext,
         buildCategoryInput({
-          parentId: '2ef3a4ba-fb3b-42f2-9252-fcf549d14210',
+          parentId: "2ef3a4ba-fb3b-42f2-9252-fcf549d14210",
         }),
       ),
     ).rejects.toThrow(NotFoundError);
   });
 
-  it('rejects a parent category with a different type', async () => {
+  it("rejects a parent category with a different type", async () => {
     const context = await createAuthenticatedContext();
     const incomeParent = await categoriesService.createCategory(
       context.householdContext,
       buildCategoryInput({
-        name: 'Income Parent',
-        type: 'income',
+        name: "Income Parent",
+        type: "income",
       }),
     );
 
@@ -75,29 +75,29 @@ describe('categories service', () => {
       categoriesService.createCategory(
         context.householdContext,
         buildCategoryInput({
-          name: 'Expense Child',
-          type: 'expense',
+          name: "Expense Child",
+          type: "expense",
           parentId: incomeParent.id,
         }),
       ),
     ).rejects.toThrow(ValidationError);
   });
 
-  it('lists only categories from the active household', async () => {
+  it("lists only categories from the active household", async () => {
     const context = await createAuthenticatedContext();
     const otherContext = await createAuthenticatedContext();
 
     await categoriesService.createCategory(
       context.householdContext,
       buildCategoryInput({
-        name: 'Household Category',
+        name: "Household Category",
       }),
     );
 
     await categoriesService.createCategory(
       otherContext.householdContext,
       buildCategoryInput({
-        name: 'Other Household Category',
+        name: "Other Household Category",
       }),
     );
 
@@ -107,22 +107,22 @@ describe('categories service', () => {
     );
 
     expect(categories.data).toHaveLength(1);
-    expect(categories.data[0]?.name).toBe('Household Category');
+    expect(categories.data[0]?.name).toBe("Household Category");
   });
 
-  it('updates a category and can clear optional display fields and parent', async () => {
+  it("updates a category and can clear optional display fields and parent", async () => {
     const context = await createAuthenticatedContext();
     const parent = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Parent', type: 'expense' }),
+      buildCategoryInput({ name: "Parent", type: "expense" }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Child', type: 'expense', parentId: parent.id }),
+      buildCategoryInput({ name: "Child", type: "expense", parentId: parent.id }),
     );
 
     const updated = await categoriesService.updateCategory(context.householdContext, category.id, {
-      name: 'Updated Child',
+      name: "Updated Child",
       parentId: null,
       color: null,
       icon: null,
@@ -131,7 +131,7 @@ describe('categories service', () => {
     expect(updated).toEqual(
       expect.objectContaining({
         id: category.id,
-        name: 'Updated Child',
+        name: "Updated Child",
         parentId: null,
         color: null,
         icon: null,
@@ -139,11 +139,11 @@ describe('categories service', () => {
     );
   });
 
-  it('deletes a category from the active household', async () => {
+  it("deletes a category from the active household", async () => {
     const context = await createAuthenticatedContext();
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Temporary Category' }),
+      buildCategoryInput({ name: "Temporary Category" }),
     );
 
     await categoriesService.deleteCategory(context.householdContext, category.id);
@@ -153,15 +153,15 @@ describe('categories service', () => {
     ).rejects.toThrow(NotFoundError);
   });
 
-  it('detaches children when their parent is deleted', async () => {
+  it("detaches children when their parent is deleted", async () => {
     const context = await createAuthenticatedContext();
     const parent = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Parent To Delete', type: 'expense' }),
+      buildCategoryInput({ name: "Parent To Delete", type: "expense" }),
     );
     const child = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Surviving Child', type: 'expense', parentId: parent.id }),
+      buildCategoryInput({ name: "Surviving Child", type: "expense", parentId: parent.id }),
     );
 
     await categoriesService.deleteCategory(context.householdContext, parent.id);
@@ -177,19 +177,19 @@ describe('categories service', () => {
   });
 });
 
-describe('categories DB list filters', () => {
-  it('combines search and every structured filter in SQL', async () => {
+describe("categories DB list filters", () => {
+  it("combines search and every structured filter in SQL", async () => {
     const context = await createAuthenticatedContext();
     const parent = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Filter Parent', type: 'expense' }),
+      buildCategoryInput({ name: "Filter Parent", type: "expense" }),
     );
     const target = await categoriesService.createCategory(context.householdContext, {
       ...buildCategoryInput({
-        name: 'Filter Child Target',
-        type: 'expense',
-        color: '#10B981',
-        icon: 'AppleIcon',
+        name: "Filter Child Target",
+        type: "expense",
+        color: "#10B981",
+        icon: "AppleIcon",
       }),
       parentId: parent.id,
     });
@@ -197,17 +197,17 @@ describe('categories DB list filters', () => {
     const result = await categoriesService.listCategories(
       context.householdContext,
       listCategoriesQuerySchema.parse({
-        search: 'Target',
-        types: 'expense,income',
+        search: "Target",
+        types: "expense,income",
         parentIds: parent.id,
         hasParent: true,
-        colors: '#10B981',
-        icons: 'AppleIcon',
-        createdAtFrom: '2020-01-01',
-        createdAtTo: '2030-01-01',
-        updatedAtFrom: '2020-01-01',
-        updatedAtTo: '2030-01-01',
-        sort: 'name',
+        colors: "#10B981",
+        icons: "AppleIcon",
+        createdAtFrom: "2020-01-01",
+        createdAtTo: "2030-01-01",
+        updatedAtFrom: "2020-01-01",
+        updatedAtTo: "2030-01-01",
+        sort: "name",
         page: 1,
         perPage: 1,
       }),

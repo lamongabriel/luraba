@@ -1,68 +1,66 @@
-"use client"
+"use client";
 
-import { Add01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import * as React from "react"
+import { Add01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import * as React from "react";
 
-import { AuthPageHeader } from "@/components/auth/auth-page-header"
-import { AuthFormFrame } from "@/components/forms/auth/auth-form-frame"
-import { Button } from "@/components/ui/button"
-import { Typography } from "@/components/ui/typography"
-import { queryClient } from "@/lib/query-client"
-import { useCreateHouseholdMutation } from "@/mutations/households/use-household-mutations"
-import { authQueryKeys } from "@/queries/auth/use-auth-providers-query"
-import { householdQueryKeys } from "@/queries/households/use-households-query"
-import { useAuthSessionStore } from "@/stores/auth-session-store"
+import { AuthPageHeader } from "@/components/auth/auth-page-header";
+import { AuthFormFrame } from "@/components/forms/auth/auth-form-frame";
+import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
+import { queryClient } from "@/lib/query-client";
+import { useCreateHouseholdMutation } from "@/mutations/households/use-household-mutations";
+import { authQueryKeys } from "@/queries/auth/use-auth-providers-query";
+import { householdQueryKeys } from "@/queries/households/use-households-query";
+import { useAuthSessionStore } from "@/stores/auth-session-store";
 
-type PendingAction = "create" | string | null
+type PendingAction = "create" | string | null;
 
 export function NoActiveHouseholdState() {
-  const households = useAuthSessionStore((state) => state.households)
-  const user = useAuthSessionStore((state) => state.user)
-  const setActiveHouseholdId = useAuthSessionStore(
-    (state) => state.setActiveHouseholdId,
-  )
-  const createHouseholdMutation = useCreateHouseholdMutation()
-  const [pendingAction, setPendingAction] = React.useState<PendingAction>(null)
-  const [isTransitioning, startTransition] = React.useTransition()
-  const isPending = isTransitioning || createHouseholdMutation.isPending
+  const households = useAuthSessionStore((state) => state.households);
+  const user = useAuthSessionStore((state) => state.user);
+  const setActiveHouseholdId = useAuthSessionStore((state) => state.setActiveHouseholdId);
+  const createHouseholdMutation = useCreateHouseholdMutation();
+  const [pendingAction, setPendingAction] = React.useState<PendingAction>(null);
+  const [isTransitioning, startTransition] = React.useTransition();
+  const isPending = isTransitioning || createHouseholdMutation.isPending;
 
   async function refresh() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: authQueryKeys.session }),
       queryClient.invalidateQueries({ queryKey: householdQueryKeys.all }),
-    ])
+    ]);
   }
 
   function activateHousehold(householdId: string) {
-    setPendingAction(householdId)
+    setPendingAction(householdId);
     startTransition(async () => {
       try {
-        setActiveHouseholdId(householdId)
-        await refresh()
+        setActiveHouseholdId(householdId);
+        await refresh();
       } finally {
-        setPendingAction(null)
+        setPendingAction(null);
       }
-    })
+    });
   }
 
   function handleCreateHousehold() {
-    const firstName = user?.name.trim().split(/\s+/)[0]
-    const name = firstName ? `${firstName}'s household` : "My household"
+    const firstName = user?.name.trim().split(/\s+/)[0];
+    const name = firstName ? `${firstName}'s household` : "My household";
 
-    createHouseholdMutation.reset()
-    setPendingAction("create")
+    createHouseholdMutation.reset();
+    setPendingAction("create");
     startTransition(async () => {
       try {
-        const household = await createHouseholdMutation.mutateAsync({ name })
-        setActiveHouseholdId(household.id)
-        await refresh()
+        const household = await createHouseholdMutation.mutateAsync({ name });
+        setActiveHouseholdId(household.id);
+        await refresh();
       } catch {
         // The mutation error remains visible so the user can retry.
       } finally {
-        setPendingAction(null)
+        setPendingAction(null);
       }
-    })
+    });
   }
 
   return (
@@ -95,9 +93,7 @@ export function NoActiveHouseholdState() {
                           {household.name.charAt(0).toUpperCase()}
                         </span>
                         <span className="min-w-0">
-                          <span className="block truncate font-medium">
-                            {household.name}
-                          </span>
+                          <span className="block truncate font-medium">{household.name}</span>
                           <span className="block text-[0.68rem] capitalize text-muted-foreground">
                             {household.role}
                           </span>
@@ -115,8 +111,7 @@ export function NoActiveHouseholdState() {
               ) : (
                 <div className="rounded-xl border border-dashed border-white/10 bg-background/25 px-4 py-5 text-center">
                   <Typography variant="body-muted">
-                    You don&apos;t have a household yet. Create one to start
-                    using Luraba.
+                    You don&apos;t have a household yet. Create one to start using Luraba.
                   </Typography>
                 </div>
               )}
@@ -150,5 +145,5 @@ export function NoActiveHouseholdState() {
         </div>
       </section>
     </main>
-  )
+  );
 }

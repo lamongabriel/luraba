@@ -1,6 +1,6 @@
-import { getEndpointRouterPath, referenceDataEndpoints } from '@luraba/contracts';
-import { Router } from 'express';
-import * as referenceDataController from './reference-data.controller';
+import { getEndpointRouterPath, referenceDataEndpoints } from "@luraba/contracts";
+import { Router } from "express";
+import * as referenceDataController from "./reference-data.controller";
 
 const router = Router();
 

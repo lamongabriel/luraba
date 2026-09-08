@@ -1,19 +1,19 @@
-import type { HouseholdContext } from '@/config/permissions';
-import type { TxClient } from '@/db/types';
-import { accountsRepository } from '@/modules/accounts/accounts.repository';
-import { categoriesRepository } from '@/modules/categories/categories.repository';
-import * as entriesService from '@/modules/entries/entries.service';
-import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
-import { merchantsRepository } from '@/modules/merchants/merchants.repository';
-import { paymentMethodsRepository } from '@/modules/payment-methods/payment-methods.repository';
-import * as baseTxRepository from '@/modules/transactions/transactions.repository';
-import { NotFoundError, ValidationError } from '@/shared/errors';
-import type { CreditCardRow } from './credit-cards.helpers';
-import type { CreditCardResponse } from './credit-cards.types';
+import type { HouseholdContext } from "@/config/permissions";
+import type { TxClient } from "@/db/types";
+import { accountsRepository } from "@/modules/accounts/accounts.repository";
+import { categoriesRepository } from "@/modules/categories/categories.repository";
+import * as entriesService from "@/modules/entries/entries.service";
+import { ledgerAccountsRepository } from "@/modules/ledger-accounts/ledger-accounts.repository";
+import { merchantsRepository } from "@/modules/merchants/merchants.repository";
+import { paymentMethodsRepository } from "@/modules/payment-methods/payment-methods.repository";
+import * as baseTxRepository from "@/modules/transactions/transactions.repository";
+import { NotFoundError, ValidationError } from "@/shared/errors";
+import type { CreditCardRow } from "./credit-cards.helpers";
+import type { CreditCardResponse } from "./credit-cards.types";
 
 export async function computeCardBalance(ledgerAccountId: string): Promise<number> {
-  const ledger = await ledgerAccountsRepository.findByOwner('account', ledgerAccountId);
-  if (!ledger) throw new NotFoundError('Credit card ledger');
+  const ledger = await ledgerAccountsRepository.findByOwner("account", ledgerAccountId);
+  if (!ledger) throw new NotFoundError("Credit card ledger");
   const balance = await ledgerAccountsRepository.getBalance(ledger.id);
   return -balance;
 }
@@ -45,7 +45,7 @@ export async function ensureCardHasAvailableCredit(
   );
 
   if (requiredAmount > availableCreditAmount) {
-    throw new ValidationError('Purchase amount exceeds the remaining credit card limit');
+    throw new ValidationError("Purchase amount exceeds the remaining credit card limit");
   }
 }
 
@@ -64,8 +64,8 @@ export async function ensureExpenseCategory(
 ): Promise<void> {
   if (!categoryId) return;
   const category = await categoriesRepository.get(categoryId, context);
-  if (!category) throw new NotFoundError('Category');
-  if (category.type !== 'expense') {
+  if (!category) throw new NotFoundError("Category");
+  if (category.type !== "expense") {
     throw new ValidationError(`Category ${categoryId} must be of type expense`);
   }
 }
@@ -76,7 +76,7 @@ export async function ensureMerchant(
 ): Promise<void> {
   if (!merchantId) return;
   const merchant = await merchantsRepository.get(merchantId, context);
-  if (!merchant) throw new NotFoundError('Merchant');
+  if (!merchant) throw new NotFoundError("Merchant");
 }
 
 export async function resolveCreditCardPaymentMethod(
@@ -85,7 +85,7 @@ export async function resolveCreditCardPaymentMethod(
 ) {
   const paymentMethod = await paymentMethodsRepository.findAvailableByCode(
     context,
-    'credit_card',
+    "credit_card",
     currencyCode,
   );
   if (!paymentMethod) {
@@ -111,21 +111,21 @@ export async function createUnderlyingExpenseTransaction(
   },
 ) {
   const accountLedger = await ledgerAccountsRepository.findByOwner(
-    'account',
+    "account",
     params.card.ledgerAccountId,
   );
-  if (!accountLedger) throw new NotFoundError('Credit card ledger');
+  if (!accountLedger) throw new NotFoundError("Credit card ledger");
 
   const expenseLedger = await ledgerAccountsRepository.findOrCreateSystem(
     tx,
     `system:expense:${params.card.currencyCode}`,
-    'liability',
+    "liability",
     params.card.currencyCode,
   );
 
   const createdTransaction = await baseTxRepository.createTransaction(tx, {
     householdId: params.householdId,
-    type: 'expense',
+    type: "expense",
     paymentMethodId: params.paymentMethodId,
     categoryId: params.categoryId ?? undefined,
     description: params.description,
@@ -164,16 +164,16 @@ export async function createUnderlyingPaymentTransaction(
     postedDate: Date;
   },
 ) {
-  const fromLedger = await ledgerAccountsRepository.findByOwner('account', params.fromAccountId);
+  const fromLedger = await ledgerAccountsRepository.findByOwner("account", params.fromAccountId);
   const toLedger = await ledgerAccountsRepository.findByOwner(
-    'account',
+    "account",
     params.card.ledgerAccountId,
   );
-  if (!fromLedger || !toLedger) throw new NotFoundError('Account ledger');
+  if (!fromLedger || !toLedger) throw new NotFoundError("Account ledger");
 
   const createdTransaction = await baseTxRepository.createTransaction(tx, {
     householdId: params.householdId,
-    type: 'transfer',
+    type: "transfer",
     paymentMethodId: null,
     categoryId: null,
     description: params.description,
@@ -204,7 +204,7 @@ export async function deleteUnderlyingTransaction(
   transactionId: string,
 ): Promise<void> {
   const deleted = await baseTxRepository.deleteTransaction(householdId, transactionId);
-  if (!deleted) throw new NotFoundError('Transaction');
+  if (!deleted) throw new NotFoundError("Transaction");
 }
 
 export async function deleteUnderlyingTransactionInTransaction(
@@ -217,7 +217,7 @@ export async function deleteUnderlyingTransactionInTransaction(
     householdId,
     transactionId,
   );
-  if (!deleted) throw new NotFoundError('Transaction');
+  if (!deleted) throw new NotFoundError("Transaction");
 }
 
 export async function updateUnderlyingTransaction(
@@ -227,7 +227,7 @@ export async function updateUnderlyingTransaction(
   values: Parameters<typeof baseTxRepository.updateTransaction>[3],
 ) {
   const updated = await baseTxRepository.updateTransaction(tx, householdId, transactionId, values);
-  if (!updated) throw new NotFoundError('Transaction');
+  if (!updated) throw new NotFoundError("Transaction");
   return updated;
 }
 
@@ -238,15 +238,15 @@ export async function ensureSourceAccountForPayment(
 ) {
   const sourceAccount = await accountsRepository.get(fromAccountId, context);
 
-  if (!sourceAccount) throw new NotFoundError('Payment source account');
-  if (sourceAccount.classification !== 'asset') {
-    throw new ValidationError('Credit card payments must come from an asset account');
+  if (!sourceAccount) throw new NotFoundError("Payment source account");
+  if (sourceAccount.classification !== "asset") {
+    throw new ValidationError("Credit card payments must come from an asset account");
   }
-  if (sourceAccount.type === 'credit_card') {
-    throw new ValidationError('Credit card payments cannot come from another credit card account');
+  if (sourceAccount.type === "credit_card") {
+    throw new ValidationError("Credit card payments cannot come from another credit card account");
   }
   if (sourceAccount.currencyId !== card.currencyCode) {
-    throw new ValidationError('Payment source account currency must match credit card currency');
+    throw new ValidationError("Payment source account currency must match credit card currency");
   }
 
   return sourceAccount;

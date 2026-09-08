@@ -2,14 +2,14 @@ import type {
   Category,
   CreateCategoryInput,
   UpdateCategoryInput,
-} from '@luraba/contracts/categories';
-import type { HouseholdContext } from '@/config/permissions';
-import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
-import { formatISODateTime } from '@/shared/lib/date';
-import { createListMeta, type ListResult } from '@/shared/list';
-import type { ListCategoriesQuery } from './categories.query';
-import { categoriesRepository } from './categories.repository';
-import type { CategoryRecord } from './categories.types';
+} from "@luraba/contracts/categories";
+import type { HouseholdContext } from "@/config/permissions";
+import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
+import { formatISODateTime } from "@/shared/lib/date";
+import { createListMeta, type ListResult } from "@/shared/list";
+import type { ListCategoriesQuery } from "./categories.query";
+import { categoriesRepository } from "./categories.repository";
+import type { CategoryRecord } from "./categories.types";
 
 function mapCategoryRecord(category: CategoryRecord): Category {
   return {
@@ -30,17 +30,17 @@ export async function createCategory(
 ): Promise<Category> {
   const existing = await categoriesRepository.findByHouseholdAndName(context, body.name);
   if (existing) {
-    throw new ConflictError('A category with this name already exists');
+    throw new ConflictError("A category with this name already exists");
   }
 
   if (body.parentId) {
     const parent = await categoriesRepository.get(body.parentId, context);
     if (!parent) {
-      throw new NotFoundError('Parent category');
+      throw new NotFoundError("Parent category");
     }
 
     if (parent.type !== body.type) {
-      throw new ValidationError('Parent category type must match child category type');
+      throw new ValidationError("Parent category type must match child category type");
     }
   }
 
@@ -74,13 +74,13 @@ export async function updateCategory(
 ): Promise<Category> {
   const category = await categoriesRepository.get(categoryId, context);
   if (!category) {
-    throw new NotFoundError('Category');
+    throw new NotFoundError("Category");
   }
 
   if (body.name && body.name !== category.name) {
     const existing = await categoriesRepository.findByHouseholdAndName(context, body.name);
     if (existing && existing.id !== categoryId) {
-      throw new ConflictError('A category with this name already exists');
+      throw new ConflictError("A category with this name already exists");
     }
   }
 
@@ -89,15 +89,15 @@ export async function updateCategory(
   if (nextParentId) {
     const parent = await categoriesRepository.get(nextParentId, context);
     if (!parent) {
-      throw new NotFoundError('Parent category');
+      throw new NotFoundError("Parent category");
     }
 
     if (parent.id === categoryId) {
-      throw new ValidationError('Category cannot be its own parent');
+      throw new ValidationError("Category cannot be its own parent");
     }
 
     if (parent.type !== nextType) {
-      throw new ValidationError('Parent category type must match child category type');
+      throw new ValidationError("Parent category type must match child category type");
     }
   }
 
@@ -110,7 +110,7 @@ export async function updateCategory(
   });
 
   if (!updated) {
-    throw new NotFoundError('Category');
+    throw new NotFoundError("Category");
   }
 
   return mapCategoryRecord(updated);
@@ -119,6 +119,6 @@ export async function updateCategory(
 export async function deleteCategory(context: HouseholdContext, categoryId: string): Promise<void> {
   const deleted = await categoriesRepository.delete(categoryId, context);
   if (!deleted) {
-    throw new NotFoundError('Category');
+    throw new NotFoundError("Category");
   }
 }

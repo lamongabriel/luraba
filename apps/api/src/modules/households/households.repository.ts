@@ -1,21 +1,21 @@
 import type {
   createHouseholdBodySchema,
   updateHouseholdBodySchema,
-} from '@luraba/contracts/households';
-import { and, asc, eq, gt, type SQL, sql } from 'drizzle-orm';
-import type { z } from 'zod';
-import { db } from '@/db';
+} from "@luraba/contracts/households";
+import { and, asc, eq, gt, type SQL, sql } from "drizzle-orm";
+import type { z } from "zod";
+import { db } from "@/db";
 import {
   householdInvitesTable,
   householdMembersTable,
   householdsTable,
-} from '@/db/schemas/households.schema';
-import { usersTable } from '@/db/schemas/users.schema';
-import type { TxClient } from '@/db/types';
-import { now } from '@/shared/lib/date';
-import { type DbListPage, getPagination } from '@/shared/list';
-import type { Currency, Timezone } from '@/shared/validation/preferences';
-import { currencySchema } from '@/shared/validation/preferences';
+} from "@/db/schemas/households.schema";
+import { usersTable } from "@/db/schemas/users.schema";
+import type { TxClient } from "@/db/types";
+import { now } from "@/shared/lib/date";
+import { type DbListPage, getPagination } from "@/shared/list";
+import type { Currency, Timezone } from "@/shared/validation/preferences";
+import { currencySchema } from "@/shared/validation/preferences";
 import {
   buildHouseholdInvitesListOrder,
   buildHouseholdInvitesListWhere,
@@ -30,24 +30,24 @@ import {
   type ListHouseholdMembersQuery,
   type ListHouseholdsQuery,
   type ListMyHouseholdInvitesQuery,
-} from './households.query';
+} from "./households.query";
 import type {
   HouseholdInviteRecord,
   HouseholdMemberRecord,
   HouseholdRecord,
-} from './households.types';
+} from "./households.types";
 
 type CreateHouseholdValues = z.output<typeof createHouseholdBodySchema>;
 type UpdateHouseholdValues = z.output<typeof updateHouseholdBodySchema>;
 
 export type HouseholdMembership = HouseholdMemberRecord & {
-  householdName: HouseholdRecord['name'];
+  householdName: HouseholdRecord["name"];
   defaultCurrencyId: Currency;
-  countryCode: HouseholdRecord['countryCode'];
-  timezone: HouseholdRecord['timezone'];
-  budgetMonthStartsOn: HouseholdRecord['budgetMonthStartsOn'];
-  creditExpenseTiming: HouseholdRecord['creditExpenseTiming'];
-  creditInstallmentBudgetMode: HouseholdRecord['creditInstallmentBudgetMode'];
+  countryCode: HouseholdRecord["countryCode"];
+  timezone: HouseholdRecord["timezone"];
+  budgetMonthStartsOn: HouseholdRecord["budgetMonthStartsOn"];
+  creditExpenseTiming: HouseholdRecord["creditExpenseTiming"];
+  creditInstallmentBudgetMode: HouseholdRecord["creditInstallmentBudgetMode"];
 };
 
 type HouseholdForUserRow = {
@@ -55,12 +55,12 @@ type HouseholdForUserRow = {
   name: string;
   description: string | null;
   defaultCurrencyId: Currency;
-  countryCode: HouseholdRecord['countryCode'];
-  timezone: HouseholdRecord['timezone'];
-  budgetMonthStartsOn: HouseholdRecord['budgetMonthStartsOn'];
-  creditExpenseTiming: HouseholdRecord['creditExpenseTiming'];
-  creditInstallmentBudgetMode: HouseholdRecord['creditInstallmentBudgetMode'];
-  role: HouseholdMemberRecord['role'];
+  countryCode: HouseholdRecord["countryCode"];
+  timezone: HouseholdRecord["timezone"];
+  budgetMonthStartsOn: HouseholdRecord["budgetMonthStartsOn"];
+  creditExpenseTiming: HouseholdRecord["creditExpenseTiming"];
+  creditInstallmentBudgetMode: HouseholdRecord["creditInstallmentBudgetMode"];
+  role: HouseholdMemberRecord["role"];
   createdByUserId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -74,7 +74,7 @@ type HouseholdMemberListRow = {
   email: string;
   image: string | null;
   emailVerified: boolean;
-  role: HouseholdMemberRecord['role'];
+  role: HouseholdMemberRecord["role"];
   lastActiveAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -85,8 +85,8 @@ export type HouseholdInviteListRow = {
   householdId: string;
   householdName: string;
   email: string;
-  role: HouseholdInviteRecord['role'];
-  status: HouseholdInviteRecord['status'];
+  role: HouseholdInviteRecord["role"];
+  status: HouseholdInviteRecord["status"];
   computedStatus: string;
   invitedByUserId: string;
   inviterId: string | null;
@@ -104,8 +104,8 @@ export type HouseholdInviteListRow = {
 export type HouseholdInvitePreviewRow = {
   id: string;
   email: string;
-  role: HouseholdInviteRecord['role'];
-  status: HouseholdInviteRecord['status'];
+  role: HouseholdInviteRecord["role"];
+  status: HouseholdInviteRecord["status"];
   computedStatus: string;
   householdId: string;
   householdName: string;
@@ -252,7 +252,7 @@ class HouseholdsRepository {
     tx: TxClient,
     householdId: string,
     userId: string,
-    role: HouseholdMemberRecord['role'],
+    role: HouseholdMemberRecord["role"],
   ): Promise<HouseholdMemberRecord> {
     const rows = await tx
       .insert(householdMembersTable)
@@ -491,7 +491,7 @@ class HouseholdsRepository {
       .where(
         and(
           eq(householdMembersTable.householdId, householdId),
-          eq(householdMembersTable.role, 'owner'),
+          eq(householdMembersTable.role, "owner"),
         ),
       );
 
@@ -501,7 +501,7 @@ class HouseholdsRepository {
   async updateMemberRole(
     householdId: string,
     userId: string,
-    role: HouseholdMemberRecord['role'],
+    role: HouseholdMemberRecord["role"],
   ): Promise<HouseholdMemberRecord | undefined> {
     const rows = await db
       .update(householdMembersTable)
@@ -537,7 +537,7 @@ class HouseholdsRepository {
   async createInvite(values: {
     householdId: string;
     email: string;
-    role: HouseholdInviteRecord['role'];
+    role: HouseholdInviteRecord["role"];
     invitedByUserId: string;
     tokenHash: string;
     expiresAt: Date;
@@ -549,7 +549,7 @@ class HouseholdsRepository {
   async refreshInvite(
     inviteId: string,
     values: {
-      role?: HouseholdInviteRecord['role'];
+      role?: HouseholdInviteRecord["role"];
       invitedByUserId?: string;
       tokenHash: string;
       expiresAt: Date;
@@ -562,7 +562,7 @@ class HouseholdsRepository {
         acceptedAt: null,
         rejectedAt: null,
         canceledAt: null,
-        status: 'pending',
+        status: "pending",
         updatedAt: now(),
       })
       .where(eq(householdInvitesTable.id, inviteId))
@@ -696,7 +696,7 @@ class HouseholdsRepository {
         and(
           eq(householdInvitesTable.householdId, householdId),
           eq(householdInvitesTable.email, email),
-          eq(householdInvitesTable.status, 'pending'),
+          eq(householdInvitesTable.status, "pending"),
         ),
       )
       .limit(1);
@@ -711,7 +711,7 @@ class HouseholdsRepository {
       .where(
         and(
           eq(householdInvitesTable.email, email),
-          eq(householdInvitesTable.status, 'pending'),
+          eq(householdInvitesTable.status, "pending"),
           gt(householdInvitesTable.expiresAt, now()),
         ),
       )
@@ -735,14 +735,14 @@ class HouseholdsRepository {
     const rows = await tx
       .update(householdInvitesTable)
       .set({
-        status: 'accepted',
+        status: "accepted",
         acceptedAt: timestamp,
         updatedAt: timestamp,
       })
       .where(
         and(
           eq(householdInvitesTable.id, inviteId),
-          eq(householdInvitesTable.status, 'pending'),
+          eq(householdInvitesTable.status, "pending"),
           gt(householdInvitesTable.expiresAt, timestamp),
         ),
       )
@@ -763,14 +763,14 @@ class HouseholdsRepository {
     const rows = await db
       .update(householdInvitesTable)
       .set({
-        status: 'rejected',
+        status: "rejected",
         rejectedAt: timestamp,
         updatedAt: timestamp,
       })
       .where(
         and(
           eq(householdInvitesTable.id, inviteId),
-          eq(householdInvitesTable.status, 'pending'),
+          eq(householdInvitesTable.status, "pending"),
           gt(householdInvitesTable.expiresAt, timestamp),
         ),
       )
@@ -787,7 +787,7 @@ class HouseholdsRepository {
     const rows = await db
       .update(householdInvitesTable)
       .set({
-        status: 'canceled',
+        status: "canceled",
         canceledAt: timestamp,
         updatedAt: timestamp,
       })
@@ -795,7 +795,7 @@ class HouseholdsRepository {
         and(
           eq(householdInvitesTable.householdId, householdId),
           eq(householdInvitesTable.id, inviteId),
-          eq(householdInvitesTable.status, 'pending'),
+          eq(householdInvitesTable.status, "pending"),
         ),
       )
       .returning();

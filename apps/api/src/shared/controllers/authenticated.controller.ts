@@ -1,12 +1,12 @@
-import type { z } from 'zod';
-import { getAuthenticatedUser } from '@/middleware/access.middleware';
+import type { z } from "zod";
+import { getAuthenticatedUser } from "@/middleware/access.middleware";
 import {
   type ControllerArgs,
   type ControllerOutput,
   type ControllerSchema,
   type ControllerStatus,
   createHandler,
-} from '@/shared/controllers/controller';
+} from "@/shared/controllers/controller";
 
 type Schema = z.ZodTypeAny;
 type AuthenticatedUser = ReturnType<typeof getAuthenticatedUser>;
@@ -28,7 +28,7 @@ export function createAuthenticatedHandler<
         handle: (
           input: ControllerArgs<TBody, TParams, TQuery> & { user: AuthenticatedUser },
         ) => Promise<ControllerOutput<TResponse>>;
-        status?: Exclude<ControllerStatus, 'no-content'>;
+        status?: Exclude<ControllerStatus, "no-content">;
       }
     | {
         body?: TBody;
@@ -37,15 +37,15 @@ export function createAuthenticatedHandler<
         handle: (
           input: ControllerArgs<TBody, TParams, TQuery> & { user: AuthenticatedUser },
         ) => Promise<void>;
-        status: 'no-content';
+        status: "no-content";
       },
 ) {
-  if (options.status === 'no-content') {
+  if (options.status === "no-content") {
     return createHandler({
       body: options.body,
       params: options.params,
       query: options.query,
-      status: 'no-content',
+      status: "no-content",
       handle: ({ req, body, params, query }) => {
         const user = getAuthenticatedUser(req);
         return options.handle({ req, user, body, params, query });

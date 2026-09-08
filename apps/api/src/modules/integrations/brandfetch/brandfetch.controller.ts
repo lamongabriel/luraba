@@ -1,6 +1,6 @@
-import { integrationsEndpoints } from '@luraba/contracts/integrations';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
-import * as brandfetchService from './brandfetch.service';
+import { integrationsEndpoints } from "@luraba/contracts/integrations";
+import { createHouseholdHandler } from "@/shared/controllers/household.controller";
+import * as brandfetchService from "./brandfetch.service";
 
 export const update = createHouseholdHandler({
   body: integrationsEndpoints.updateBrandfetch.body,

@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -6,17 +6,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 interface DataTableSkeletonProps extends React.ComponentProps<"div"> {
-  columnCount: number
-  rowCount?: number
-  filterCount?: number
-  cellWidths?: string[]
-  withViewOptions?: boolean
-  withPagination?: boolean
-  shrinkZero?: boolean
+  columnCount: number;
+  rowCount?: number;
+  filterCount?: number;
+  cellWidths?: string[];
+  withViewOptions?: boolean;
+  withPagination?: boolean;
+  shrinkZero?: boolean;
 }
 
 export function DataTableSkeleton({
@@ -33,13 +33,10 @@ export function DataTableSkeleton({
   const cozyCellWidths = Array.from(
     { length: columnCount },
     (_, index) => cellWidths[index % cellWidths.length] ?? "auto",
-  )
+  );
 
   return (
-    <div
-      className={cn("flex w-full flex-col gap-2.5 overflow-auto", className)}
-      {...props}
-    >
+    <div className={cn("flex w-full flex-col gap-2.5 overflow-auto", className)} {...props}>
       <div className="flex w-full items-center justify-between gap-2 overflow-auto p-1">
         <div className="flex flex-1 items-center gap-2">
           {filterCount > 0
@@ -48,9 +45,7 @@ export function DataTableSkeleton({
               ))
             : null}
         </div>
-        {withViewOptions ? (
-          <Skeleton className="ml-auto hidden h-7 w-18 lg:flex" />
-        ) : null}
+        {withViewOptions ? <Skeleton className="ml-auto hidden h-7 w-18 lg:flex" /> : null}
       </div>
       <div className="rounded-md border">
         <Table>
@@ -111,5 +106,5 @@ export function DataTableSkeleton({
         </div>
       ) : null}
     </div>
-  )
+  );
 }

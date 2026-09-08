@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { Add01Icon, UnfoldMoreIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { useControllableState } from "@radix-ui/react-use-controllable-state"
+import { Add01Icon, UnfoldMoreIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import {
   type ComponentProps,
   createContext,
@@ -11,8 +11,8 @@ import {
   useEffect,
   useRef,
   useState,
-} from "react"
-import { Button } from "@/components/ui/button"
+} from "react";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -21,31 +21,27 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 type ComboboxData = {
-  label: string
-  value: string
-}
+  label: string;
+  value: string;
+};
 
 type ComboboxContextType = {
-  data: ComboboxData[]
-  type: string
-  value: string
-  onValueChange: (value: string) => void
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  width: number
-  setWidth: (width: number) => void
-  inputValue: string
-  setInputValue: (value: string) => void
-}
+  data: ComboboxData[];
+  type: string;
+  value: string;
+  onValueChange: (value: string) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  width: number;
+  setWidth: (width: number) => void;
+  inputValue: string;
+  setInputValue: (value: string) => void;
+};
 
 const ComboboxContext = createContext<ComboboxContextType>({
   data: [],
@@ -58,17 +54,17 @@ const ComboboxContext = createContext<ComboboxContextType>({
   setWidth: () => {},
   inputValue: "",
   setInputValue: () => {},
-})
+});
 
 export type ComboboxProps = ComponentProps<typeof Popover> & {
-  data: ComboboxData[]
-  type: string
-  defaultValue?: string
-  value?: string
-  onValueChange?: (value: string) => void
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
-}
+  data: ComboboxData[];
+  type: string;
+  defaultValue?: string;
+  value?: string;
+  onValueChange?: (value: string) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
 
 export const Combobox = ({
   data,
@@ -85,14 +81,14 @@ export const Combobox = ({
     defaultProp: defaultValue ?? "",
     prop: controlledValue,
     onChange: controlledOnValueChange,
-  })
+  });
   const [open, onOpenChange] = useControllableState({
     defaultProp: defaultOpen,
     prop: controlledOpen,
     onChange: controlledOnOpenChange,
-  })
-  const [width, setWidth] = useState(200)
-  const [inputValue, setInputValue] = useState("")
+  });
+  const [width, setWidth] = useState(200);
+  const [inputValue, setInputValue] = useState("");
 
   return (
     <ComboboxContext.Provider
@@ -111,45 +107,40 @@ export const Combobox = ({
     >
       <Popover {...props} onOpenChange={onOpenChange} open={open} />
     </ComboboxContext.Provider>
-  )
-}
+  );
+};
 
-export type ComboboxTriggerProps = ComponentProps<typeof Button>
+export type ComboboxTriggerProps = ComponentProps<typeof Button>;
 
-export const ComboboxTrigger = ({
-  children,
-  ...props
-}: ComboboxTriggerProps) => {
-  const { value, data, type, setWidth } = useContext(ComboboxContext)
-  const ref = useRef<HTMLButtonElement>(null)
+export const ComboboxTrigger = ({ children, ...props }: ComboboxTriggerProps) => {
+  const { value, data, type, setWidth } = useContext(ComboboxContext);
+  const ref = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        const newWidth = (entry.target as HTMLElement).offsetWidth
+        const newWidth = (entry.target as HTMLElement).offsetWidth;
         if (newWidth) {
-          setWidth?.(newWidth)
+          setWidth?.(newWidth);
         }
       }
-    })
+    });
 
     if (ref.current) {
-      resizeObserver.observe(ref.current)
+      resizeObserver.observe(ref.current);
     }
 
     return () => {
-      resizeObserver.disconnect()
-    }
-  }, [setWidth])
+      resizeObserver.disconnect();
+    };
+  }, [setWidth]);
 
   return (
     <PopoverTrigger asChild>
       <Button variant="outline" {...props} ref={ref}>
         {children ?? (
           <span className="flex w-full items-center justify-between gap-2">
-            {value
-              ? data.find((item) => item.value === value)?.label
-              : `Select ${type}...`}
+            {value ? data.find((item) => item.value === value)?.label : `Select ${type}...`}
             <HugeiconsIcon
               icon={UnfoldMoreIcon}
               className="shrink-0 text-muted-foreground"
@@ -160,14 +151,14 @@ export const ComboboxTrigger = ({
         )}
       </Button>
     </PopoverTrigger>
-  )
-}
+  );
+};
 
 export type ComboboxContentProps = ComponentProps<typeof Command> & {
-  commandClassName?: string
-  contentWidth?: string | number
-  popoverOptions?: ComponentProps<typeof PopoverContent>
-}
+  commandClassName?: string;
+  contentWidth?: string | number;
+  popoverOptions?: ComponentProps<typeof PopoverContent>;
+};
 
 export const ComboboxContent = ({
   className,
@@ -176,30 +167,24 @@ export const ComboboxContent = ({
   popoverOptions,
   ...props
 }: ComboboxContentProps) => {
-  const { width } = useContext(ComboboxContext)
+  const { width } = useContext(ComboboxContext);
 
   return (
     <PopoverContent
-      className={cn(
-        "w-max max-w-[calc(100vw-1rem)] overflow-hidden p-0",
-        className,
-      )}
+      className={cn("w-max max-w-[calc(100vw-1rem)] overflow-hidden p-0", className)}
       {...popoverOptions}
       style={{ ...popoverOptions?.style, width: contentWidth ?? width }}
     >
-      <Command
-        className={cn("h-auto min-h-0 max-h-full", commandClassName)}
-        {...props}
-      />
+      <Command className={cn("h-auto min-h-0 max-h-full", commandClassName)} {...props} />
     </PopoverContent>
-  )
-}
+  );
+};
 
 export type ComboboxInputProps = ComponentProps<typeof CommandInput> & {
-  value?: string
-  defaultValue?: string
-  onValueChange?: (value: string) => void
-}
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+};
 
 export const ComboboxInput = ({
   value: controlledValue,
@@ -207,16 +192,16 @@ export const ComboboxInput = ({
   onValueChange: controlledOnValueChange,
   ...props
 }: ComboboxInputProps) => {
-  const { type, inputValue, setInputValue } = useContext(ComboboxContext)
+  const { type, inputValue, setInputValue } = useContext(ComboboxContext);
 
   const [value, onValueChange] = useControllableState({
     defaultProp: defaultValue ?? inputValue,
     prop: controlledValue,
     onChange: (newValue) => {
-      setInputValue(newValue)
-      controlledOnValueChange?.(newValue)
+      setInputValue(newValue);
+      controlledOnValueChange?.(newValue);
     },
-  })
+  });
 
   return (
     <CommandInput
@@ -225,90 +210,72 @@ export const ComboboxInput = ({
       value={value}
       {...props}
     />
-  )
-}
+  );
+};
 
-export type ComboboxListProps = ComponentProps<typeof CommandList>
+export type ComboboxListProps = ComponentProps<typeof CommandList>;
 
-export const ComboboxList = ({
-  className,
-  onWheelCapture,
-  ...props
-}: ComboboxListProps) => (
+export const ComboboxList = ({ className, onWheelCapture, ...props }: ComboboxListProps) => (
   <CommandList
-    className={cn(
-      "min-h-0 touch-pan-y overflow-y-auto overscroll-contain",
-      className,
-    )}
+    className={cn("min-h-0 touch-pan-y overflow-y-auto overscroll-contain", className)}
     onWheelCapture={(event) => {
-      event.stopPropagation()
-      onWheelCapture?.(event)
+      event.stopPropagation();
+      onWheelCapture?.(event);
     }}
     {...props}
   />
-)
+);
 
-export type ComboboxEmptyProps = ComponentProps<typeof CommandEmpty>
+export type ComboboxEmptyProps = ComponentProps<typeof CommandEmpty>;
 
 export const ComboboxEmpty = ({ children, ...props }: ComboboxEmptyProps) => {
-  const { type } = useContext(ComboboxContext)
+  const { type } = useContext(ComboboxContext);
 
-  return (
-    <CommandEmpty {...props}>{children ?? `No ${type} found.`}</CommandEmpty>
-  )
-}
+  return <CommandEmpty {...props}>{children ?? `No ${type} found.`}</CommandEmpty>;
+};
 
-export type ComboboxGroupProps = ComponentProps<typeof CommandGroup>
+export type ComboboxGroupProps = ComponentProps<typeof CommandGroup>;
 
-export const ComboboxGroup = (props: ComboboxGroupProps) => (
-  <CommandGroup {...props} />
-)
+export const ComboboxGroup = (props: ComboboxGroupProps) => <CommandGroup {...props} />;
 
-export type ComboboxItemProps = ComponentProps<typeof CommandItem>
+export type ComboboxItemProps = ComponentProps<typeof CommandItem>;
 
 export const ComboboxItem = (props: ComboboxItemProps) => {
-  const { onValueChange, onOpenChange } = useContext(ComboboxContext)
+  const { onValueChange, onOpenChange } = useContext(ComboboxContext);
 
   return (
     <CommandItem
       onSelect={(currentValue) => {
-        onValueChange(currentValue)
-        onOpenChange(false)
+        onValueChange(currentValue);
+        onOpenChange(false);
       }}
       {...props}
     />
-  )
-}
+  );
+};
 
-export type ComboboxSeparatorProps = ComponentProps<typeof CommandSeparator>
+export type ComboboxSeparatorProps = ComponentProps<typeof CommandSeparator>;
 
-export const ComboboxSeparator = (props: ComboboxSeparatorProps) => (
-  <CommandSeparator {...props} />
-)
+export const ComboboxSeparator = (props: ComboboxSeparatorProps) => <CommandSeparator {...props} />;
 
 export type ComboboxCreateNewProps = {
-  onCreateNew: (value: string) => void
-  children?: (inputValue: string) => ReactNode
-  className?: string
-}
+  onCreateNew: (value: string) => void;
+  children?: (inputValue: string) => ReactNode;
+  className?: string;
+};
 
-export const ComboboxCreateNew = ({
-  onCreateNew,
-  children,
-  className,
-}: ComboboxCreateNewProps) => {
-  const { inputValue, type, onValueChange, onOpenChange } =
-    useContext(ComboboxContext)
+export const ComboboxCreateNew = ({ onCreateNew, children, className }: ComboboxCreateNewProps) => {
+  const { inputValue, type, onValueChange, onOpenChange } = useContext(ComboboxContext);
 
   if (!inputValue.trim()) {
-    return null
+    return null;
   }
 
   const handleCreateNew = () => {
-    onCreateNew(inputValue.trim())
-    onValueChange(inputValue.trim())
-    onOpenChange(false)
-  }
+    onCreateNew(inputValue.trim());
+    onValueChange(inputValue.trim());
+    onOpenChange(false);
+  };
 
   return (
     <button
@@ -332,5 +299,5 @@ export const ComboboxCreateNew = ({
         </>
       )}
     </button>
-  )
-}
+  );
+};

@@ -1,23 +1,15 @@
-import type {
-  CreateCreditCardInput,
-  CreditCard,
-  UpdateCreditCardInput,
-} from "@luraba/contracts"
-import {
-  CREDIT_CARD_BRAND_VALUES,
-  type CreditCardBrand,
-} from "@/lib/credit-cards"
-import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance"
+import type { CreateCreditCardInput, CreditCard, UpdateCreditCardInput } from "@luraba/contracts";
+import { CREDIT_CARD_BRAND_VALUES, type CreditCardBrand } from "@/lib/credit-cards";
+import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance";
 
-import type { CreateEditCreditCardFormValues } from "./create-edit-credit-card-form.schema"
+import type { CreateEditCreditCardFormValues } from "./create-edit-credit-card-form.schema";
 
 export function getCreateEditCreditCardDefaultValues(
   defaultCurrencyCode: string,
   card?: CreditCard,
   precision = 2,
 ): CreateEditCreditCardFormValues {
-  const brand =
-    CREDIT_CARD_BRAND_VALUES.find((value) => value === card?.brand) ?? "Visa"
+  const brand = CREDIT_CARD_BRAND_VALUES.find((value) => value === card?.brand) ?? "Visa";
 
   return {
     name: card?.name ?? "",
@@ -35,11 +27,11 @@ export function getCreateEditCreditCardDefaultValues(
       card && card.creditLimitAmount >= 0
         ? minorToMajorUnits(card.creditLimitAmount, precision)
         : "",
-  }
+  };
 }
 
 function optionalValue(value: string) {
-  return value.trim() || undefined
+  return value.trim() || undefined;
 }
 
 export function buildCreateCreditCardPayload(
@@ -61,7 +53,7 @@ export function buildCreateCreditCardPayload(
       values.creditLimitAmount === ""
         ? undefined
         : majorToMinorUnits(values.creditLimitAmount, precision),
-  }
+  };
 }
 
 export function buildUpdateCreditCardPayload(
@@ -82,5 +74,5 @@ export function buildUpdateCreditCardPayload(
       values.creditLimitAmount === ""
         ? undefined
         : majorToMinorUnits(values.creditLimitAmount, precision),
-  }
+  };
 }

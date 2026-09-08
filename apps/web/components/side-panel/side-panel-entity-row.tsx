@@ -1,16 +1,16 @@
-import type * as React from "react"
+import type * as React from "react";
 
-import { Typography } from "@/components/ui/typography"
-import { cn } from "@/lib/utils"
+import { Typography } from "@/components/ui/typography";
+import { cn } from "@/lib/utils";
 
 export function SidePanelEntityRow({
   label,
   children,
   className,
 }: {
-  label: string
-  children: React.ReactNode
-  className?: string
+  label: string;
+  children: React.ReactNode;
+  className?: string;
 }) {
   return (
     <div
@@ -24,5 +24,5 @@ export function SidePanelEntityRow({
       </Typography>
       <div className="min-w-0 flex-1">{children}</div>
     </div>
-  )
+  );
 }

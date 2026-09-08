@@ -1,21 +1,21 @@
-import { and, asc, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
-import { db } from '@/db';
-import { creditCardBillingCyclesTable } from '@/db/schemas/credit-card-billing-cycles.schema';
-import { creditCardInstallmentsTable } from '@/db/schemas/credit-card-installments.schema';
-import { creditCardPaymentAllocationsTable } from '@/db/schemas/credit-card-payment-allocations.schema';
-import { creditCardPaymentsTable } from '@/db/schemas/credit-card-payments.schema';
-import { creditCardPurchasesTable } from '@/db/schemas/credit-card-purchases.schema';
-import { transactionsTable } from '@/db/schemas/transactions.schema';
-import type { TxClient } from '@/db/types';
-import { type DbListPage, getPagination } from '@/shared/list';
-import type { CreditCardCycleItemRow } from './credit-cards.helpers';
-import { mapCycleRow } from './credit-cards.helpers';
+import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { db } from "@/db";
+import { creditCardBillingCyclesTable } from "@/db/schemas/credit-card-billing-cycles.schema";
+import { creditCardInstallmentsTable } from "@/db/schemas/credit-card-installments.schema";
+import { creditCardPaymentAllocationsTable } from "@/db/schemas/credit-card-payment-allocations.schema";
+import { creditCardPaymentsTable } from "@/db/schemas/credit-card-payments.schema";
+import { creditCardPurchasesTable } from "@/db/schemas/credit-card-purchases.schema";
+import { transactionsTable } from "@/db/schemas/transactions.schema";
+import type { TxClient } from "@/db/types";
+import { type DbListPage, getPagination } from "@/shared/list";
+import type { CreditCardCycleItemRow } from "./credit-cards.helpers";
+import { mapCycleRow } from "./credit-cards.helpers";
 import {
   buildCreditCardCyclesCte,
   buildCreditCardCyclesListOrder,
   type ListCreditCardCyclesQuery,
-} from './credit-cards.query';
-import type { CreditCardCycleSummary } from './credit-cards.types';
+} from "./credit-cards.query";
+import type { CreditCardCycleSummary } from "./credit-cards.types";
 
 function toDate(value: Date | string): Date {
   return value instanceof Date ? value : new Date(`${value}T00:00:00.000Z`);
@@ -122,13 +122,13 @@ export async function listCyclesPage(
     periodEnd: Date | string;
     closingDate: Date | string;
     dueDate: Date | string;
-    status: CreditCardCycleSummary['status'];
+    status: CreditCardCycleSummary["status"];
     statementAmount: number;
     paidAmount: number;
     remainingAmount: number;
     createdAt: Date;
     updatedAt: Date;
-    displayStatus: CreditCardCycleSummary['displayStatus'];
+    displayStatus: CreditCardCycleSummary["displayStatus"];
     isCurrent: boolean;
     isNext: boolean;
     hasActivity: boolean;

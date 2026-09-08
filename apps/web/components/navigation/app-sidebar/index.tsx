@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { HugeiconsIcon } from "@hugeicons/react"
-import { motion } from "framer-motion"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import * as React from "react"
-import { HouseholdSwitcher } from "@/components/navigation/app-sidebar/household-switcher"
-import { NavUser } from "@/components/navigation/app-sidebar/nav-user"
-import { useCan } from "@/components/permissions"
+import { HugeiconsIcon } from "@hugeicons/react";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import * as React from "react";
+import { HouseholdSwitcher } from "@/components/navigation/app-sidebar/household-switcher";
+import { NavUser } from "@/components/navigation/app-sidebar/nav-user";
+import { useCan } from "@/components/permissions";
 import {
   Sidebar,
   SidebarContent,
@@ -17,50 +17,46 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { Typography } from "@/components/ui/typography"
-import { logout } from "@/lib/auth/logout"
-import { mainNav } from "@/lib/navigation"
-import { queryClient } from "@/lib/query-client"
-import { authQueryKeys } from "@/queries/auth/use-auth-providers-query"
-import { useAuthSessionStore } from "@/stores/auth-session-store"
+} from "@/components/ui/sidebar";
+import { Typography } from "@/components/ui/typography";
+import { logout } from "@/lib/auth/logout";
+import { mainNav } from "@/lib/navigation";
+import { queryClient } from "@/lib/query-client";
+import { authQueryKeys } from "@/queries/auth/use-auth-providers-query";
+import { useAuthSessionStore } from "@/stores/auth-session-store";
 
 const sidebarItemTransition = {
   damping: 22,
   stiffness: 320,
   type: "spring" as const,
-}
+};
 
 export function AppSidebar() {
-  const pathname = usePathname()
-  const can = useCan()
-  const household = useAuthSessionStore((state) => state.household)
-  const households = useAuthSessionStore((state) => state.households)
-  const setActiveHouseholdId = useAuthSessionStore(
-    (state) => state.setActiveHouseholdId,
-  )
-  const user = useAuthSessionStore((state) => state.user)
+  const pathname = usePathname();
+  const can = useCan();
+  const household = useAuthSessionStore((state) => state.household);
+  const households = useAuthSessionStore((state) => state.households);
+  const setActiveHouseholdId = useAuthSessionStore((state) => state.setActiveHouseholdId);
+  const user = useAuthSessionStore((state) => state.user);
 
   const handleHouseholdChange = React.useCallback(
     (householdId: string) => {
-      setActiveHouseholdId(householdId)
-      void queryClient.invalidateQueries({ queryKey: authQueryKeys.session })
-      void queryClient.invalidateQueries()
+      setActiveHouseholdId(householdId);
+      void queryClient.invalidateQueries({ queryKey: authQueryKeys.session });
+      void queryClient.invalidateQueries();
     },
     [setActiveHouseholdId],
-  )
+  );
 
   const handleSignOut = React.useCallback(() => {
-    void logout()
-  }, [])
+    void logout();
+  }, []);
 
   if (!user || !household) {
-    return null
+    return null;
   }
 
-  const navigationItems = mainNav.filter(
-    ({ permission }) => !permission || can(permission),
-  )
+  const navigationItems = mainNav.filter(({ permission }) => !permission || can(permission));
 
   return (
     <Sidebar variant="sidebar">
@@ -77,7 +73,7 @@ export function AppSidebar() {
         <SidebarGroup className="px-4">
           <SidebarMenu className="gap-2">
             {navigationItems.map((item, index) => {
-              const active = pathname === item.href
+              const active = pathname === item.href;
 
               return (
                 <SidebarMenuItem key={item.href}>
@@ -116,7 +112,7 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </motion.div>
                 </SidebarMenuItem>
-              )
+              );
             })}
           </SidebarMenu>
         </SidebarGroup>
@@ -132,5 +128,5 @@ export function AppSidebar() {
         />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

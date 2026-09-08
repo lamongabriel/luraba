@@ -1,5 +1,5 @@
-import type { netWorthQuerySchema } from '@luraba/contracts/networth';
-import { listTransactionsQuerySchema } from '@luraba/contracts/transactions';
+import type { netWorthQuerySchema } from "@luraba/contracts/networth";
+import { listTransactionsQuerySchema } from "@luraba/contracts/transactions";
 import {
   endOfMonth,
   startOfMonth,
@@ -8,18 +8,18 @@ import {
   subDays,
   subMonths,
   subYears,
-} from 'date-fns';
-import { eq } from 'drizzle-orm';
-import type { z } from 'zod';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { householdsTable } from '@/db/schemas/households.schema';
-import { authRepository } from '@/modules/auth/auth.repository';
-import { fxService } from '@/modules/fx/fx.service';
-import { listTransactions } from '@/modules/transactions/transactions.service';
-import { NotFoundError } from '@/shared/errors';
-import { formatISODate, getTodayInTimezone, parseISODate } from '@/shared/lib/date';
-import * as repository from './networth.repository';
+} from "date-fns";
+import { eq } from "drizzle-orm";
+import type { z } from "zod";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { householdsTable } from "@/db/schemas/households.schema";
+import { authRepository } from "@/modules/auth/auth.repository";
+import { fxService } from "@/modules/fx/fx.service";
+import { listTransactions } from "@/modules/transactions/transactions.service";
+import { NotFoundError } from "@/shared/errors";
+import { formatISODate, getTodayInTimezone, parseISODate } from "@/shared/lib/date";
+import * as repository from "./networth.repository";
 
 type NetWorthQuery = z.output<typeof netWorthQuerySchema>;
 
@@ -29,30 +29,30 @@ function rangeForPeriod(period: string, timezone: string): DateRange {
   const today = getTodayInTimezone(timezone);
   const format = (date: Date) => formatISODate(date);
   switch (period) {
-    case 'last_day':
+    case "last_day":
       return { dateFrom: format(today), dateTo: format(today) };
-    case 'current_week':
+    case "current_week":
       return { dateFrom: format(startOfWeek(today, { weekStartsOn: 1 })), dateTo: format(today) };
-    case 'last_7_days':
+    case "last_7_days":
       return { dateFrom: format(subDays(today, 6)), dateTo: format(today) };
-    case 'last_month': {
+    case "last_month": {
       const month = subMonths(today, 1);
       return { dateFrom: format(startOfMonth(month)), dateTo: format(endOfMonth(month)) };
     }
-    case 'last_30_days':
+    case "last_30_days":
       return { dateFrom: format(subDays(today, 29)), dateTo: format(today) };
-    case 'last_90_days':
+    case "last_90_days":
       return { dateFrom: format(subDays(today, 89)), dateTo: format(today) };
-    case 'current_year':
+    case "current_year":
       return { dateFrom: format(startOfYear(today)), dateTo: format(today) };
-    case 'last_365_days':
+    case "last_365_days":
       return { dateFrom: format(subDays(today, 364)), dateTo: format(today) };
-    case 'last_5_years':
+    case "last_5_years":
       return { dateFrom: format(startOfYear(subYears(today, 4))), dateTo: format(today) };
-    case 'last_10_years':
+    case "last_10_years":
       return { dateFrom: format(startOfYear(subYears(today, 9))), dateTo: format(today) };
-    case 'all_time':
-      return { dateFrom: '2000-01-01', dateTo: format(today) };
+    case "all_time":
+      return { dateFrom: "2000-01-01", dateTo: format(today) };
     default:
       return { dateFrom: format(startOfMonth(today)), dateTo: format(today) };
   }
@@ -68,16 +68,16 @@ async function resolveQuery(
   const range =
     query.dateFrom || query.dateTo
       ? {
-          dateFrom: query.dateFrom ?? '2000-01-01',
+          dateFrom: query.dateFrom ?? "2000-01-01",
           dateTo: query.dateTo ?? todayString,
         }
-      : rangeForPeriod(preferences?.preferredPeriod ?? 'current_month', context.timezone);
+      : rangeForPeriod(preferences?.preferredPeriod ?? "current_month", context.timezone);
   const household = await db
     .select({ currencyCode: householdsTable.defaultCurrencyId })
     .from(householdsTable)
     .where(eq(householdsTable.id, context.householdId));
   const defaultCurrency = household.find((item) => item)?.currencyCode;
-  if (!defaultCurrency) throw new NotFoundError('Household');
+  if (!defaultCurrency) throw new NotFoundError("Household");
   return { ...query, ...range, displayCurrencyCode: query.displayCurrencyCode ?? defaultCurrency };
 }
 
@@ -120,17 +120,17 @@ function sum(values: number[]): number {
 function chooseGranularity(
   dateFrom: string,
   dateTo: string,
-  requested?: NetWorthQuery['granularity'],
-): 'day' | 'week' | 'month' {
+  requested?: NetWorthQuery["granularity"],
+): "day" | "week" | "month" {
   if (requested) return requested;
   const days = Math.round(
     (parseISODate(dateTo).getTime() - parseISODate(dateFrom).getTime()) / 86_400_000,
   );
-  return days <= 45 ? 'day' : days <= 240 ? 'week' : 'month';
+  return days <= 45 ? "day" : days <= 240 ? "week" : "month";
 }
 
-function stepFor(granularity: 'day' | 'week' | 'month'): string {
-  return granularity === 'day' ? '1 day' : granularity === 'week' ? '7 days' : '1 month';
+function stepFor(granularity: "day" | "week" | "month"): string {
+  return granularity === "day" ? "1 day" : granularity === "week" ? "7 days" : "1 month";
 }
 
 export async function getSummary(context: HouseholdContext, input: NetWorthQuery) {
@@ -148,10 +148,10 @@ export async function getSummary(context: HouseholdContext, input: NetWorthQuery
     })),
   );
   const assets = sum(
-    converted.filter((row) => row.classification === 'asset').map((row) => row.balance),
+    converted.filter((row) => row.classification === "asset").map((row) => row.balance),
   );
   const liabilities = sum(
-    converted.filter((row) => row.classification === 'liability').map((row) => row.balance),
+    converted.filter((row) => row.classification === "liability").map((row) => row.balance),
   );
   const flow = await repository.listCashFlow(context.householdId, query.dateFrom, query.dateTo);
   const flowConverted = await convertRows(
@@ -159,9 +159,9 @@ export async function getSummary(context: HouseholdContext, input: NetWorthQuery
     query.displayCurrencyCode,
     parseISODate(query.dateTo),
   );
-  const income = sum(flowConverted.filter((row) => row.type === 'income').map((row) => row.amount));
+  const income = sum(flowConverted.filter((row) => row.type === "income").map((row) => row.amount));
   const expenses = sum(
-    flowConverted.filter((row) => row.type === 'expense').map((row) => row.amount),
+    flowConverted.filter((row) => row.type === "expense").map((row) => row.amount),
   );
   const transferCount = await repository.countTransfers(
     context.householdId,
@@ -195,12 +195,12 @@ export async function getHistory(context: HouseholdContext, input: NetWorthQuery
   for (const row of rows) {
     const item = grouped.get(row.date) ?? { assets: 0, liabilities: 0 };
     const amount = await convert(
-      row.classification === 'asset' ? row.balance : -row.balance,
+      row.classification === "asset" ? row.balance : -row.balance,
       row.currencyCode,
       query.displayCurrencyCode,
       parseISODate(row.date),
     );
-    if (row.classification === 'asset') item.assets += amount;
+    if (row.classification === "asset") item.assets += amount;
     else item.liabilities += amount;
     grouped.set(row.date, item);
   }
@@ -233,12 +233,12 @@ export async function getAccounts(context: HouseholdContext, input: NetWorthQuer
   return {
     displayCurrencyCode: query.displayCurrencyCode,
     assets: converted
-      .filter((row) => row.classification === 'asset')
+      .filter((row) => row.classification === "asset")
       .sort((a, b) => b.balance - a.balance)
       .slice(0, 3)
       .map(({ classification: _classification, ...row }) => row),
     liabilities: converted
-      .filter((row) => row.classification === 'liability')
+      .filter((row) => row.classification === "liability")
       .sort((a, b) => b.balance - a.balance)
       .slice(0, 3)
       .map(({ classification: _classification, ...row }) => row),
@@ -255,9 +255,9 @@ export async function getCashFlow(context: HouseholdContext, input: NetWorthQuer
   );
   const points = new Map<string, { income: number; expenses: number }>();
   for (const row of rows) {
-    const date = row.date.slice(0, granularity === 'month' ? 7 : 10);
+    const date = row.date.slice(0, granularity === "month" ? 7 : 10);
     const point = points.get(date) ?? { income: 0, expenses: 0 };
-    point[row.type === 'income' ? 'income' : 'expenses'] += row.amount;
+    point[row.type === "income" ? "income" : "expenses"] += row.amount;
     points.set(date, point);
   }
   return {
@@ -272,11 +272,11 @@ export async function getCashFlow(context: HouseholdContext, input: NetWorthQuer
 async function breakdown(
   context: HouseholdContext,
   input: NetWorthQuery,
-  type: 'expense' | 'income',
+  type: "expense" | "income",
 ) {
   const query = await resolveQuery(context, input);
   const rows =
-    type === 'expense'
+    type === "expense"
       ? await repository.listCategoryBreakdown(
           context.householdId,
           query.dateFrom,
@@ -292,7 +292,7 @@ async function breakdown(
     remainder > 0
       ? [
           ...top,
-          { id: null, name: 'Other', amount: remainder, currencyCode: query.displayCurrencyCode },
+          { id: null, name: "Other", amount: remainder, currencyCode: query.displayCurrencyCode },
         ]
       : top;
   return {
@@ -307,18 +307,18 @@ async function breakdown(
 }
 
 export const getSpendingBreakdown = (context: HouseholdContext, input: NetWorthQuery) =>
-  breakdown(context, input, 'expense');
+  breakdown(context, input, "expense");
 export const getIncomeBreakdown = (context: HouseholdContext, input: NetWorthQuery) =>
-  breakdown(context, input, 'income');
+  breakdown(context, input, "income");
 
 export async function getRecentActivity(context: HouseholdContext, input: NetWorthQuery) {
   const query = await resolveQuery(context, input);
   const parsed = listTransactionsQuerySchema.parse({
     page: 1,
     perPage: query.limit,
-    search: '',
-    sort: 'postedDate',
-    sortDirection: 'desc',
+    search: "",
+    sort: "postedDate",
+    sortDirection: "desc",
     dateFrom: query.dateFrom,
     dateTo: query.dateTo,
   });

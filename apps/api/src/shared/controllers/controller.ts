@@ -1,5 +1,5 @@
-import type { NextFunction, Request, Response } from 'express';
-import type { z } from 'zod';
+import type { NextFunction, Request, Response } from "express";
+import type { z } from "zod";
 import {
   type ApiResponseMeta,
   type ApiResponsePayload,
@@ -7,9 +7,9 @@ import {
   sendCreated,
   sendNoContent,
   sendSuccess,
-} from '@/shared/response';
+} from "@/shared/response";
 
-export type ControllerStatus = 'ok' | 'created' | 'no-content';
+export type ControllerStatus = "ok" | "created" | "no-content";
 
 type Schema = z.ZodTypeAny;
 export type ControllerSchema = Schema | undefined;
@@ -49,15 +49,15 @@ function parseInput<TSchema extends ControllerSchema>(
 function sendResponse(
   res: Response,
   data: unknown,
-  status: ControllerStatus = 'ok',
+  status: ControllerStatus = "ok",
   meta?: ApiResponseMeta,
 ): void {
-  if (status === 'no-content') {
+  if (status === "no-content") {
     sendNoContent(res);
     return;
   }
 
-  if (status === 'created') {
+  if (status === "created") {
     sendCreated(res, data);
     return;
   }
@@ -80,7 +80,7 @@ type ResponseHandlerOptions<
   // Service values are intentionally unknown here: the response contract is the
   // runtime boundary and must validate even independently typed service output.
   handle: (input: ControllerArgs<TBody, TParams, TQuery>) => Promise<unknown>;
-  status?: Exclude<ControllerStatus, 'no-content'>;
+  status?: Exclude<ControllerStatus, "no-content">;
 };
 
 type NoContentHandlerOptions<
@@ -92,7 +92,7 @@ type NoContentHandlerOptions<
   params?: TParams;
   query?: TQuery;
   handle: (input: ControllerArgs<TBody, TParams, TQuery>) => Promise<void>;
-  status: 'no-content';
+  status: "no-content";
 };
 
 export function createHandler<
@@ -117,8 +117,8 @@ export function createHandler<
         TQuery
       >);
 
-      if (options.status === 'no-content') {
-        sendResponse(res, undefined, 'no-content');
+      if (options.status === "no-content") {
+        sendResponse(res, undefined, "no-content");
         return;
       }
 

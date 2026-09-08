@@ -1,5 +1,5 @@
-import type { CreditCardCycleDisplayStatus } from '@luraba/contracts/credit-cards';
-import { addDays, dateWithClampedDay, isAfter, isBefore, isEqual } from '@/shared/lib/date';
+import type { CreditCardCycleDisplayStatus } from "@luraba/contracts/credit-cards";
+import { addDays, dateWithClampedDay, isAfter, isBefore, isEqual } from "@/shared/lib/date";
 
 export type BillingCycleLike = {
   periodStart: Date;
@@ -62,11 +62,11 @@ export function deriveCycleDisplayStatus(
   referenceDate: Date,
 ): CreditCardCycleDisplayStatus {
   if (isBefore(referenceDate, cycle.periodStart)) {
-    return 'upcoming';
+    return "upcoming";
   }
 
   if (cycle.remainingAmount <= 0 && !isBefore(referenceDate, cycle.closingDate)) {
-    return 'paid';
+    return "paid";
   }
 
   if (
@@ -74,22 +74,22 @@ export function deriveCycleDisplayStatus(
     isEqual(referenceDate, cycle.closingDate) ||
     isEqual(referenceDate, cycle.periodStart)
   ) {
-    return 'current';
+    return "current";
   }
 
   if (cycle.remainingAmount <= 0) {
-    return 'paid';
+    return "paid";
   }
 
   if (isAfter(referenceDate, cycle.dueDate)) {
-    return 'overdue';
+    return "overdue";
   }
 
   if (isAfter(referenceDate, cycle.closingDate)) {
-    return 'due';
+    return "due";
   }
 
-  return 'upcoming';
+  return "upcoming";
 }
 
 export function hasCycleActivity(cycle: BillingCycleLike) {

@@ -1,22 +1,15 @@
-"use client"
+"use client";
 
-import type {
-  ListResponse,
-  TransactionAnalytics,
-  UpcomingTransaction,
-} from "@luraba/contracts"
-import type { UseQueryResult } from "@tanstack/react-query"
-import { ExpenseBreakdownPanel } from "@/components/analytics/expense-breakdown-panel"
-import { UpcomingTransactionsPanel } from "@/components/analytics/upcoming-transactions-panel"
-import { ErrorState } from "@/components/error-state"
-import { Skeleton } from "@/components/ui/skeleton"
-import type { AppClientError } from "@/services/error-client"
+import type { ListResponse, TransactionAnalytics, UpcomingTransaction } from "@luraba/contracts";
+import type { UseQueryResult } from "@tanstack/react-query";
+import { ExpenseBreakdownPanel } from "@/components/analytics/expense-breakdown-panel";
+import { UpcomingTransactionsPanel } from "@/components/analytics/upcoming-transactions-panel";
+import { ErrorState } from "@/components/error-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { AppClientError } from "@/services/error-client";
 
-type AnalyticsQuery = UseQueryResult<TransactionAnalytics, AppClientError>
-type UpcomingQuery = UseQueryResult<
-  ListResponse<UpcomingTransaction>,
-  AppClientError
->
+type AnalyticsQuery = UseQueryResult<TransactionAnalytics, AppClientError>;
+type UpcomingQuery = UseQueryResult<ListResponse<UpcomingTransaction>, AppClientError>;
 
 export function TransactionAnalyticsRail({
   analyticsQuery,
@@ -25,11 +18,11 @@ export function TransactionAnalyticsRail({
   precision = 2,
   onSelectUpcoming,
 }: {
-  analyticsQuery: AnalyticsQuery
-  upcomingQuery: UpcomingQuery
-  language?: string
-  precision?: number
-  onSelectUpcoming?: (row: UpcomingTransaction) => void
+  analyticsQuery: AnalyticsQuery;
+  upcomingQuery: UpcomingQuery;
+  language?: string;
+  precision?: number;
+  onSelectUpcoming?: (row: UpcomingTransaction) => void;
 }) {
   return (
     <aside className="min-w-0 space-y-3" aria-label="Transaction insights">
@@ -38,9 +31,7 @@ export function TransactionAnalyticsRail({
       ) : analyticsQuery.isError || !analyticsQuery.data ? (
         <ErrorState
           title="Couldn&apos;t load expense breakdown"
-          description={
-            analyticsQuery.error?.message ?? "Try again to load this panel."
-          }
+          description={analyticsQuery.error?.message ?? "Try again to load this panel."}
           onRetry={() => void analyticsQuery.refetch()}
         />
       ) : (
@@ -56,9 +47,7 @@ export function TransactionAnalyticsRail({
       ) : upcomingQuery.isError ? (
         <ErrorState
           title="Couldn&apos;t load upcoming transactions"
-          description={
-            upcomingQuery.error?.message ?? "Try again to load this panel."
-          }
+          description={upcomingQuery.error?.message ?? "Try again to load this panel."}
           onRetry={() => void upcomingQuery.refetch()}
         />
       ) : (
@@ -70,5 +59,5 @@ export function TransactionAnalyticsRail({
         />
       )}
     </aside>
-  )
+  );
 }

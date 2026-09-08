@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
 export interface UseDisclosureReturn {
-  isOpen: boolean
-  onOpen: () => void
-  onClose: () => void
-  onToggle: () => void
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>
+  isOpen: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+  onToggle: () => void;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 /**
@@ -16,23 +16,22 @@ export interface UseDisclosureReturn {
  *   const { isOpen, onOpen, onClose } = useDisclosure()
  */
 export function useDisclosure(defaultIsOpen = false): UseDisclosureReturn {
-  const [isOpen, setIsOpen] = React.useState(defaultIsOpen)
+  const [isOpen, setIsOpen] = React.useState(defaultIsOpen);
 
-  const onOpen = React.useCallback(() => setIsOpen(true), [])
-  const onClose = React.useCallback(() => setIsOpen(false), [])
-  const onToggle = React.useCallback(() => setIsOpen((value) => !value), [])
+  const onOpen = React.useCallback(() => setIsOpen(true), []);
+  const onClose = React.useCallback(() => setIsOpen(false), []);
+  const onToggle = React.useCallback(() => setIsOpen((value) => !value), []);
 
-  return { isOpen, onOpen, onClose, onToggle, setIsOpen }
+  return { isOpen, onOpen, onClose, onToggle, setIsOpen };
 }
 
-export interface UseEntityDisclosureReturn<TEntity>
-  extends UseDisclosureReturn {
+export interface UseEntityDisclosureReturn<TEntity> extends UseDisclosureReturn {
   /** The entity being created/edited/deleted. `undefined` means "create new". */
-  entity: TEntity | undefined
+  entity: TEntity | undefined;
   /** Opens the disclosure for creating a new entity (clears `entity`). */
-  onCreate: () => void
+  onCreate: () => void;
   /** Opens the disclosure for an existing entity. */
-  onEdit: (entity: TEntity) => void
+  onEdit: (entity: TEntity) => void;
 }
 
 /**
@@ -58,24 +57,22 @@ export interface UseEntityDisclosureReturn<TEntity>
  *   onClick={() => createEdit.onEdit(row)} // edit existing
  *   onClick={() => deleteDisclosure.onEdit(row)} // "delete this one"
  */
-export function useEntityDisclosure<
-  TEntity,
->(): UseEntityDisclosureReturn<TEntity> {
-  const disclosure = useDisclosure()
-  const [entity, setEntity] = React.useState<TEntity | undefined>(undefined)
+export function useEntityDisclosure<TEntity>(): UseEntityDisclosureReturn<TEntity> {
+  const disclosure = useDisclosure();
+  const [entity, setEntity] = React.useState<TEntity | undefined>(undefined);
 
   const onCreate = React.useCallback(() => {
-    setEntity(undefined)
-    disclosure.onOpen()
-  }, [disclosure])
+    setEntity(undefined);
+    disclosure.onOpen();
+  }, [disclosure]);
 
   const onEdit = React.useCallback(
     (nextEntity: TEntity) => {
-      setEntity(nextEntity)
-      disclosure.onOpen()
+      setEntity(nextEntity);
+      disclosure.onOpen();
     },
     [disclosure],
-  )
+  );
 
-  return { ...disclosure, entity, onCreate, onEdit }
+  return { ...disclosure, entity, onCreate, onEdit };
 }

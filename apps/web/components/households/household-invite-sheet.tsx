@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import type { CreateHouseholdInviteInput } from "@luraba/contracts"
-import { CreateHouseholdInviteForm } from "@/components/forms/create-household-invite-form/create-household-invite-form"
-import { FormSheet } from "@/components/forms/form-sheet"
+import type { CreateHouseholdInviteInput } from "@luraba/contracts";
+import { CreateHouseholdInviteForm } from "@/components/forms/create-household-invite-form/create-household-invite-form";
+import { FormSheet } from "@/components/forms/form-sheet";
 
 export function HouseholdInviteSheet({
   open,
@@ -10,10 +10,10 @@ export function HouseholdInviteSheet({
   onSubmit,
   isPending = false,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSubmit: (body: CreateHouseholdInviteInput) => void
-  isPending?: boolean
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (body: CreateHouseholdInviteInput) => void;
+  isPending?: boolean;
 }) {
   return (
     <FormSheet
@@ -29,5 +29,5 @@ export function HouseholdInviteSheet({
         isPending={isPending}
       />
     </FormSheet>
-  )
+  );
 }

@@ -1,23 +1,23 @@
-import { SaveMoneyDollarIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { type Control, Controller } from "react-hook-form"
+import { SaveMoneyDollarIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { type Control, Controller } from "react-hook-form";
 
-import { FormItem } from "@/components/forms/form-item"
-import { Button } from "@/components/ui/button"
+import { FormItem } from "@/components/forms/form-item";
+import { Button } from "@/components/ui/button";
 
-import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema"
-import { TransactionFormSection } from "./transaction-form-section"
+import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema";
+import { TransactionFormSection } from "./transaction-form-section";
 
 export function SettingsSection({
   control,
   showBudget = true,
   showTags = true,
 }: {
-  control: Control<CreateEditTransactionFormValues>
-  showBudget?: boolean
-  showTags?: boolean
+  control: Control<CreateEditTransactionFormValues>;
+  showBudget?: boolean;
+  showTags?: boolean;
 }) {
-  if (!showBudget && !showTags) return null
+  if (!showBudget && !showTags) return null;
 
   return (
     <TransactionFormSection title="Settings">
@@ -48,5 +48,5 @@ export function SettingsSection({
         />
       ) : null}
     </TransactionFormSection>
-  )
+  );
 }

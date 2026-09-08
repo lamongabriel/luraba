@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from "zod";
 
 export const registerFormSchema = z
   .object({
@@ -10,6 +10,6 @@ export const registerFormSchema = z
   .refine((value) => value.password === value.confirmPassword, {
     message: "Passwords must match.",
     path: ["confirmPassword"],
-  })
+  });
 
-export type RegisterFormValues = z.infer<typeof registerFormSchema>
+export type RegisterFormValues = z.infer<typeof registerFormSchema>;

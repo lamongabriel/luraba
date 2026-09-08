@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import type { Category, CategoryType } from "@luraba/contracts"
-import * as React from "react"
-import { useForm } from "react-hook-form"
-import { DEFAULT_CATEGORY_COLOR, DEFAULT_CATEGORY_ICON } from "@/lib/categories"
-import { queryClient } from "@/lib/query-client"
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Category, CategoryType } from "@luraba/contracts";
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { DEFAULT_CATEGORY_COLOR, DEFAULT_CATEGORY_ICON } from "@/lib/categories";
+import { queryClient } from "@/lib/query-client";
 import {
   useCreateCategoryMutation,
   useUpdateCategoryMutation,
-} from "@/mutations/categories/use-category-mutations"
-import { categoryQueryKeys } from "@/queries/categories/use-categories-query"
+} from "@/mutations/categories/use-category-mutations";
+import { categoryQueryKeys } from "@/queries/categories/use-categories-query";
 
 import {
   type CreateEditCategoryFormValues,
   createEditCategoryFormSchema,
-} from "./create-edit-category-form.schema"
+} from "./create-edit-category-form.schema";
 
 function getDefaultValues(category?: Category): CreateEditCategoryFormValues {
   return {
@@ -24,64 +24,63 @@ function getDefaultValues(category?: Category): CreateEditCategoryFormValues {
     parentId: category?.parentId ?? "",
     color: category?.color ?? DEFAULT_CATEGORY_COLOR,
     icon: category?.icon ?? DEFAULT_CATEGORY_ICON,
-  }
+  };
 }
 
 export function useCreateEditCategoryForm({
   category,
   onSuccess,
 }: {
-  category?: Category
-  onSuccess: () => void
+  category?: Category;
+  onSuccess: () => void;
 }) {
-  const isEdit = Boolean(category)
+  const isEdit = Boolean(category);
   const form = useForm<CreateEditCategoryFormValues>({
     defaultValues: getDefaultValues(category),
     resolver: zodResolver(createEditCategoryFormSchema),
-  })
+  });
 
-  const type = form.watch("type") as CategoryType
-  const parentId = form.watch("parentId")
+  const type = form.watch("type") as CategoryType;
+  const parentId = form.watch("parentId");
 
   const createMutation = useCreateCategoryMutation({
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: categoryQueryKeys.lists(),
-      })
-      form.reset(getDefaultValues())
-      onSuccess()
+      });
+      form.reset(getDefaultValues());
+      onSuccess();
     },
-  })
+  });
 
   const updateMutation = useUpdateCategoryMutation({
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: categoryQueryKeys.lists(),
-      })
-      onSuccess()
+      });
+      onSuccess();
     },
-  })
+  });
 
-  const isPending = createMutation.isPending || updateMutation.isPending
-  const errorMessage =
-    createMutation.errorMessage || updateMutation.errorMessage
+  const isPending = createMutation.isPending || updateMutation.isPending;
+  const errorMessage = createMutation.errorMessage || updateMutation.errorMessage;
 
   // When the type changes, clear a parent that no longer matches the new type.
-  const previousTypeRef = React.useRef(type)
+  const previousTypeRef = React.useRef(type);
   React.useEffect(() => {
     if (previousTypeRef.current !== type) {
-      previousTypeRef.current = type
+      previousTypeRef.current = type;
       if (parentId) {
-        form.setValue("parentId", "")
+        form.setValue("parentId", "");
       }
     }
-  }, [type, parentId, form])
+  }, [type, parentId, form]);
 
   const onSubmit = form.handleSubmit((values) => {
-    const trimmedParent = values.parentId.trim()
+    const trimmedParent = values.parentId.trim();
 
     if (isEdit && category) {
-      updateMutation.reset()
+      updateMutation.reset();
       updateMutation.mutate({
         id: category.id,
         body: {
@@ -91,19 +90,19 @@ export function useCreateEditCategoryForm({
           icon: values.icon,
           parentId: trimmedParent ? trimmedParent : null,
         },
-      })
-      return
+      });
+      return;
     }
 
-    createMutation.reset()
+    createMutation.reset();
     createMutation.mutate({
       name: values.name.trim(),
       type: values.type,
       color: values.color,
       icon: values.icon,
       parentId: trimmedParent || undefined,
-    })
-  })
+    });
+  });
 
   return {
     form,
@@ -111,5 +110,5 @@ export function useCreateEditCategoryForm({
     isEdit,
     isPending,
     errorMessage,
-  }
+  };
 }

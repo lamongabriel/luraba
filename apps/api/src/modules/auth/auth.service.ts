@@ -1,3 +1,4 @@
+import { getPermissionsForRole } from "@luraba/contracts";
 import type {
   AuthHousehold,
   AuthProviders,
@@ -5,15 +6,14 @@ import type {
   SessionUser,
   UpdateUserPreferencesInput,
   UserPreferences,
-} from '@luraba/contracts/auth';
-import { env } from '@/config/env';
-import { getPermissionsForRole } from '@/config/permissions';
-import { currenciesRepository } from '@/modules/currencies/currencies.repository';
-import { householdsRepository } from '@/modules/households/households.repository';
-import { NotFoundError } from '@/shared/errors';
-import { logger } from '@/shared/logger';
-import { authRepository } from './auth.repository';
-import type { UserRecord } from './auth.types';
+} from "@luraba/contracts/auth";
+import { env } from "@/config/env";
+import { currenciesRepository } from "@/modules/currencies/currencies.repository";
+import { householdsRepository } from "@/modules/households/households.repository";
+import { NotFoundError } from "@/shared/errors";
+import { logger } from "@/shared/logger";
+import { authRepository } from "./auth.repository";
+import type { UserRecord } from "./auth.types";
 
 function mapUserRecordToSessionUser(user: UserRecord): SessionUser {
   return {
@@ -36,7 +36,7 @@ function mapUserRecordToSessionUser(user: UserRecord): SessionUser {
 
 async function findRequiredUser(userId: string): Promise<UserRecord> {
   const user = await authRepository.findById(userId);
-  if (!user) throw new NotFoundError('User');
+  if (!user) throw new NotFoundError("User");
   return user;
 }
 
@@ -45,7 +45,7 @@ async function getSessionHousehold(
   householdId: string,
 ): Promise<AuthHousehold | null> {
   const membership = await householdsRepository.findMembership(householdId, userId);
-  if (!membership) throw new NotFoundError('Household membership');
+  if (!membership) throw new NotFoundError("Household membership");
 
   return {
     id: householdId,
@@ -77,7 +77,7 @@ export async function getMe(userId: string, householdId: string | null): Promise
   const session = await buildSession(userId, householdId);
 
   void authRepository.touchLastActive(userId).catch((error) => {
-    logger.warn({ err: error, userId }, 'Failed to update user activity');
+    logger.warn({ err: error, userId }, "Failed to update user activity");
   });
 
   return session;
@@ -95,7 +95,7 @@ export function getProviders(): AuthProviders {
 
 export async function getMyPreferences(userId: string): Promise<UserPreferences> {
   const preferences = await authRepository.getUserPreferences(userId);
-  if (!preferences) throw new NotFoundError('User');
+  if (!preferences) throw new NotFoundError("User");
   return preferences;
 }
 
@@ -107,10 +107,10 @@ export async function updateMyPreferences(
 
   if (dto.currency) {
     const currency = await currenciesRepository.findByCode(dto.currency);
-    if (!currency) throw new NotFoundError('Currency');
+    if (!currency) throw new NotFoundError("Currency");
   }
 
   const preferences = await authRepository.updateUserPreferences(userId, dto);
-  if (!preferences) throw new NotFoundError('User');
+  if (!preferences) throw new NotFoundError("User");
   return preferences;
 }

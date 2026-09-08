@@ -10,14 +10,14 @@ import {
   TagsIcon,
   UserGroupIcon,
   WalletIcon,
-} from "@hugeicons/core-free-icons"
-import { PERMISSIONS, type PermissionKey } from "@luraba/contracts"
+} from "@hugeicons/core-free-icons";
+import { PERMISSIONS, type PermissionKey } from "@luraba/contracts";
 
 export interface NavigationItem {
-  title: string
-  href: string
-  icon: typeof DashboardSquare01Icon
-  permission?: PermissionKey
+  title: string;
+  href: string;
+  icon: typeof DashboardSquare01Icon;
+  permission?: PermissionKey;
 }
 
 export const mainNav: NavigationItem[] = [
@@ -75,20 +75,16 @@ export const mainNav: NavigationItem[] = [
     icon: RepeatIcon,
     permission: PERMISSIONS.RECURRING_BILLS_READ,
   },
-]
+];
 
 export const userMenuLinks = [
   { label: "Settings", href: "/settings", icon: Settings02Icon },
   { label: "Households", href: "/households", icon: UserGroupIcon },
-] as const
+] as const;
 
-export function getFirstAccessibleRoute(
-  permissions: readonly string[],
-): string {
-  const granted = new Set(permissions)
-  const item = mainNav.find(
-    ({ permission }) => !permission || granted.has(permission),
-  )
+export function getFirstAccessibleRoute(permissions: readonly string[]): string {
+  const granted = new Set(permissions);
+  const item = mainNav.find(({ permission }) => !permission || granted.has(permission));
 
-  return item?.href ?? "/dashboard"
+  return item?.href ?? "/dashboard";
 }

@@ -1,28 +1,28 @@
-import { and, asc, eq } from 'drizzle-orm';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { creditCardBillingCyclesTable } from '@/db/schemas/credit-card-billing-cycles.schema';
-import { creditCardBudgetRecognitionsTable } from '@/db/schemas/credit-card-budget-recognitions.schema';
-import { creditCardInstallmentsTable } from '@/db/schemas/credit-card-installments.schema';
-import { creditCardPurchasesTable } from '@/db/schemas/credit-card-purchases.schema';
-import { transactionsTable } from '@/db/schemas/transactions.schema';
-import { entriesRepository } from '@/modules/entries/entries.repository';
-import * as entriesService from '@/modules/entries/entries.service';
-import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
+import { and, asc, eq } from "drizzle-orm";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { creditCardBillingCyclesTable } from "@/db/schemas/credit-card-billing-cycles.schema";
+import { creditCardBudgetRecognitionsTable } from "@/db/schemas/credit-card-budget-recognitions.schema";
+import { creditCardInstallmentsTable } from "@/db/schemas/credit-card-installments.schema";
+import { creditCardPurchasesTable } from "@/db/schemas/credit-card-purchases.schema";
+import { transactionsTable } from "@/db/schemas/transactions.schema";
+import { entriesRepository } from "@/modules/entries/entries.repository";
+import * as entriesService from "@/modules/entries/entries.service";
+import { ledgerAccountsRepository } from "@/modules/ledger-accounts/ledger-accounts.repository";
 import {
   addTransactionTags,
   listTransactionTags,
   replaceTransactionTags,
   validateTagIds,
-} from '@/modules/tags/tags-associations.service';
-import { NotFoundError } from '@/shared/errors';
-import { formatISODate } from '@/shared/lib/date';
+} from "@/modules/tags/tags-associations.service";
+import { NotFoundError } from "@/shared/errors";
+import { formatISODate } from "@/shared/lib/date";
 import {
   createInstallmentsForPurchase,
   recreateBudgetRecognitionsForPurchase,
   syncCardCycles,
-} from './credit-card-cycles.service';
-import * as creditCardsRepository from './credit-cards.repository';
+} from "./credit-card-cycles.service";
+import * as creditCardsRepository from "./credit-cards.repository";
 import {
   createUnderlyingExpenseTransaction,
   deleteUnderlyingTransactionInTransaction,
@@ -31,12 +31,12 @@ import {
   ensureMerchant,
   resolveCreditCardPaymentMethod,
   updateUnderlyingTransaction,
-} from './credit-cards.shared';
+} from "./credit-cards.shared";
 import type {
   CreateCreditCardPurchaseDto,
   CreditCardPurchaseResponse,
   UpdateCreditCardPurchaseDto,
-} from './credit-cards.types';
+} from "./credit-cards.types";
 
 type PurchaseWithTransactionRow = {
   purchaseId: string;
@@ -50,8 +50,8 @@ type PurchaseWithTransactionRow = {
   amount: number;
   installmentCount: number;
   includeInBudget: boolean;
-  budgetExpenseTiming: 'spend_month' | 'payment_month';
-  budgetInstallmentMode: 'per_installment' | 'full_amount';
+  budgetExpenseTiming: "spend_month" | "payment_month";
+  budgetInstallmentMode: "per_installment" | "full_amount";
   createdAt: Date;
 };
 
@@ -89,7 +89,7 @@ async function loadPurchase(
     .limit(1);
 
   const purchase = rows[0];
-  if (!purchase) throw new NotFoundError('Credit card purchase');
+  if (!purchase) throw new NotFoundError("Credit card purchase");
 
   return {
     ...purchase,
@@ -217,7 +217,7 @@ export async function createPurchase(
       transaction,
       installments: installments.map((installment) => {
         const cycle = cyclesById.get(installment.billingCycleId);
-        if (!cycle) throw new NotFoundError('Billing cycle');
+        if (!cycle) throw new NotFoundError("Billing cycle");
         return {
           installmentId: installment.id,
           installmentNumber: installment.installmentNumber,
@@ -310,15 +310,15 @@ export async function updatePurchase(
     await entriesRepository.deleteByTransactionId(tx, existingPurchase.transactionId);
 
     const accountLedger = await ledgerAccountsRepository.findByOwner(
-      'account',
+      "account",
       card.ledgerAccountId,
     );
-    if (!accountLedger) throw new NotFoundError('Credit card ledger');
+    if (!accountLedger) throw new NotFoundError("Credit card ledger");
 
     const expenseLedger = await ledgerAccountsRepository.findOrCreateSystem(
       tx,
       `system:expense:${card.currencyCode}`,
-      'liability',
+      "liability",
       card.currencyCode,
     );
 

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   ArrowDown01Icon,
@@ -6,9 +6,9 @@ import {
   ArrowUpDownIcon,
   Cancel01Icon,
   EyeOffIcon,
-} from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { Column } from "@tanstack/react-table"
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { Column } from "@tanstack/react-table";
 
 import {
   DropdownMenu,
@@ -16,13 +16,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 interface DataTableColumnHeaderProps<TData, TValue>
   extends React.ComponentProps<typeof DropdownMenuTrigger> {
-  column: Column<TData, TValue>
-  label: string
+  column: Column<TData, TValue>;
+  label: string;
 }
 
 export function DataTableColumnHeader<TData, TValue>({
@@ -32,7 +32,7 @@ export function DataTableColumnHeader<TData, TValue>({
   ...props
 }: DataTableColumnHeaderProps<TData, TValue>) {
   if (!column.getCanSort() && !column.getCanHide()) {
-    return <div className={cn(className)}>{label}</div>
+    return <div className={cn(className)}>{label}</div>;
   }
 
   return (
@@ -96,5 +96,5 @@ export function DataTableColumnHeader<TData, TValue>({
         )}
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

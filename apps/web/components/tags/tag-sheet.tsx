@@ -1,28 +1,28 @@
-"use client"
+"use client";
 
-import type { Tag } from "@luraba/contracts"
-import * as React from "react"
-import { CreateEditTagForm } from "@/components/forms/create-edit-tag-form/create-edit-tag-form"
-import { FormErrorBoundary } from "@/components/forms/form-error-boundary"
-import { FormSheet } from "@/components/forms/form-sheet"
+import type { Tag } from "@luraba/contracts";
+import * as React from "react";
+import { CreateEditTagForm } from "@/components/forms/create-edit-tag-form/create-edit-tag-form";
+import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
+import { FormSheet } from "@/components/forms/form-sheet";
 
 export function TagSheet({
   open,
   onOpenChange,
   tag,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  tag?: Tag
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  tag?: Tag;
 }) {
-  const isEdit = Boolean(tag)
+  const isEdit = Boolean(tag);
 
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
-      onOpenChange(nextOpen)
+      onOpenChange(nextOpen);
     },
     [onOpenChange],
-  )
+  );
 
   return (
     <FormSheet
@@ -45,5 +45,5 @@ export function TagSheet({
         />
       </FormErrorBoundary>
     </FormSheet>
-  )
+  );
 }

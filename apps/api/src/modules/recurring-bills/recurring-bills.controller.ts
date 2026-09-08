@@ -1,7 +1,7 @@
-import { recurringBillsEndpoints } from '@luraba/contracts/recurring-bills';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
-import { withApiMeta } from '@/shared/response';
-import * as service from './recurring-bills.service';
+import { recurringBillsEndpoints } from "@luraba/contracts/recurring-bills";
+import { createHouseholdHandler } from "@/shared/controllers/household.controller";
+import { withApiMeta } from "@/shared/response";
+import * as service from "./recurring-bills.service";
 
 export const list = createHouseholdHandler({
   query: recurringBillsEndpoints.list.query,
@@ -20,7 +20,7 @@ export const get = createHouseholdHandler({
 export const create = createHouseholdHandler({
   body: recurringBillsEndpoints.create.body,
   response: recurringBillsEndpoints.create.response,
-  status: 'created',
+  status: "created",
   handle: ({ household, body }) => service.create(household, body),
 });
 export const update = createHouseholdHandler({
@@ -31,7 +31,7 @@ export const update = createHouseholdHandler({
 });
 export const remove = createHouseholdHandler({
   params: recurringBillsEndpoints.delete.params,
-  status: 'no-content',
+  status: "no-content",
   handle: ({ household, params }) => service.remove(household, params.id),
 });
 export const occurrences = createHouseholdHandler({
@@ -43,13 +43,13 @@ export const occurrences = createHouseholdHandler({
 });
 export const skip = createHouseholdHandler({
   params: recurringBillsEndpoints.skip.params,
-  status: 'no-content',
+  status: "no-content",
   handle: ({ household, params }) => service.skipOccurrence(household, params.id, params.date),
 });
 export const reschedule = createHouseholdHandler({
   params: recurringBillsEndpoints.reschedule.params,
   body: recurringBillsEndpoints.reschedule.body,
-  status: 'no-content',
+  status: "no-content",
   handle: ({ household, params, body }) =>
     service.rescheduleOccurrence(household, params.id, params.date, body.date),
 });
@@ -63,7 +63,7 @@ export const createOccurrence = createHouseholdHandler({
       recurringBillId: params.id,
       occurrenceDate: params.date,
       effectiveDate: params.date,
-      status: 'created',
+      status: "created",
       rescheduledDate: null,
       transactionId: transaction.id,
     });

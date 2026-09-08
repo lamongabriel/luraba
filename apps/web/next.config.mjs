@@ -1,13 +1,14 @@
-import { fileURLToPath } from "node:url"
+import { fileURLToPath } from "node:url";
 
-const appRoot = fileURLToPath(new URL("..", import.meta.url))
+const workspaceRoot = fileURLToPath(new URL("../..", import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+  outputFileTracingRoot: workspaceRoot,
   turbopack: {
-    root: appRoot,
+    root: workspaceRoot,
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;

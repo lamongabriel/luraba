@@ -1,7 +1,7 @@
-import { asc, eq } from 'drizzle-orm';
-import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
-import { db } from '@/db';
-import { now as _now } from '@/shared/lib/date';
+import { asc, eq } from "drizzle-orm";
+import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
+import { db } from "@/db";
+import { now as _now } from "@/shared/lib/date";
 
 type RepositoryTable = PgTable & {
   id: PgColumn;

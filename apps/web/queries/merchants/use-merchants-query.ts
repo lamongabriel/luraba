@@ -1,22 +1,21 @@
-"use client"
+"use client";
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query";
 
-import type { AppQueryOptions } from "@/queries/query-options"
-import { getMerchant, listMerchants } from "@/services/merchants.service"
+import type { AppQueryOptions } from "@/queries/query-options";
+import { getMerchant, listMerchants } from "@/services/merchants.service";
 
-type GetMerchantResponse = Awaited<ReturnType<typeof getMerchant>>
-type ListMerchantsQuery = NonNullable<Parameters<typeof listMerchants>[0]>
-type ListMerchantsResponse = Awaited<ReturnType<typeof listMerchants>>
+type GetMerchantResponse = Awaited<ReturnType<typeof getMerchant>>;
+type ListMerchantsQuery = NonNullable<Parameters<typeof listMerchants>[0]>;
+type ListMerchantsResponse = Awaited<ReturnType<typeof listMerchants>>;
 
 export const merchantQueryKeys = {
   all: ["merchants"] as const,
   lists: () => [...merchantQueryKeys.all, "list"] as const,
-  list: (query: ListMerchantsQuery = {}) =>
-    [...merchantQueryKeys.lists(), query] as const,
+  list: (query: ListMerchantsQuery = {}) => [...merchantQueryKeys.lists(), query] as const,
   details: () => [...merchantQueryKeys.all, "detail"] as const,
   detail: (id: string) => [...merchantQueryKeys.details(), id] as const,
-}
+};
 
 export function useMerchantQuery<TData = GetMerchantResponse>(
   id: string,
@@ -27,7 +26,7 @@ export function useMerchantQuery<TData = GetMerchantResponse>(
     queryFn: () => getMerchant(id),
     ...options,
     enabled: Boolean(id) && (options?.enabled ?? true),
-  })
+  });
 }
 
 export function useMerchantsQuery<TData = ListMerchantsResponse>(
@@ -38,5 +37,5 @@ export function useMerchantsQuery<TData = ListMerchantsResponse>(
     queryKey: merchantQueryKeys.list(query),
     queryFn: () => listMerchants(query),
     ...options,
-  })
+  });
 }

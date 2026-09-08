@@ -1,13 +1,13 @@
-import { categoriesEndpoints } from '@luraba/contracts/categories';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
-import { withApiMeta } from '@/shared/response';
-import * as categoriesService from './categories.service';
+import { categoriesEndpoints } from "@luraba/contracts/categories";
+import { createHouseholdHandler } from "@/shared/controllers/household.controller";
+import { withApiMeta } from "@/shared/response";
+import * as categoriesService from "./categories.service";
 
 export const create = createHouseholdHandler({
   body: categoriesEndpoints.create.body,
   response: categoriesEndpoints.create.response,
   handle: ({ household, body }) => categoriesService.createCategory(household, body),
-  status: 'created',
+  status: "created",
 });
 
 export const list = createHouseholdHandler({
@@ -30,6 +30,6 @@ export const update = createHouseholdHandler({
 
 export const deleteCategory = createHouseholdHandler({
   params: categoriesEndpoints.delete.params,
-  status: 'no-content',
+  status: "no-content",
   handle: ({ household, params }) => categoriesService.deleteCategory(household, params.id),
 });

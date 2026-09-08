@@ -1,13 +1,14 @@
-import { makeSignature } from 'better-auth/crypto';
-import { getPermissionsForRole, type HouseholdContext } from '@/config/permissions';
-import { auth } from '@/shared/lib/auth';
+import { getPermissionsForRole } from "@luraba/contracts";
+import { makeSignature } from "better-auth/crypto";
+import type { HouseholdContext } from "@/config/permissions";
+import { auth } from "@/shared/lib/auth";
 import {
   buildHouseholdContext,
   createHousehold,
   createHouseholdMembership,
   createUser,
   setDefaultHousehold,
-} from './factories';
+} from "./factories";
 
 async function createSessionCookieValue(userId: string): Promise<string> {
   const context = await auth.$context;
@@ -24,14 +25,14 @@ export async function createAccessTokenForUser(user: { id: string; email: string
 export function createAuthHeaders(cookie: string, householdId?: string) {
   return {
     Cookie: cookie,
-    ...(householdId ? { 'X-Household-Id': householdId } : {}),
+    ...(householdId ? { "X-Household-Id": householdId } : {}),
   };
 }
 
 export async function createAuthenticatedContext(
-  options: { role?: HouseholdContext['role']; defaultHousehold?: boolean } = {},
+  options: { role?: HouseholdContext["role"]; defaultHousehold?: boolean } = {},
 ) {
-  const role = options.role ?? 'owner';
+  const role = options.role ?? "owner";
   const user = await createUser();
   const household = await createHousehold(user.id);
   const membership = await createHouseholdMembership(household.id, user.id, role);

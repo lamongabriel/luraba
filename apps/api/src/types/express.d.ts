@@ -1,5 +1,5 @@
-import 'express';
-import type { HouseholdContext } from '@/config/permissions';
+import "express";
+import type { HouseholdContext } from "@/config/permissions";
 
 declare global {
   namespace Express {

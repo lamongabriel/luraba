@@ -1,5 +1,5 @@
-import { currenciesRepository } from '@/modules/currencies/currencies.repository';
-import { fxService } from './fx.service';
+import { currenciesRepository } from "@/modules/currencies/currencies.repository";
+import { fxService } from "./fx.service";
 
 async function resolveQuoteCurrencyCodes(
   baseCurrencyCode: string,

@@ -77,3 +77,62 @@ export const HOUSEHOLD_ROLE_METADATA = {
   HouseholdRole,
   { label: string; description: string; canBeInvited: boolean }
 >;
+
+const allPermissions = new Set<HouseholdPermission>(Object.values(PERMISSIONS));
+
+/**
+ * The product's role policy. Both clients and the API use this for consistent
+ * capability checks; the API remains the authority that enforces it.
+ */
+export const HOUSEHOLD_ROLE_PERMISSIONS: Readonly<
+  Record<HouseholdRole, ReadonlySet<HouseholdPermission>>
+> = {
+  owner: allPermissions,
+  admin: new Set(
+    Object.values(PERMISSIONS).filter(
+      (permission) =>
+        permission !== PERMISSIONS.HOUSEHOLD_UPDATE && permission !== PERMISSIONS.HOUSEHOLD_DELETE,
+    ),
+  ),
+  member: new Set([
+    PERMISSIONS.HOUSEHOLD_READ,
+    PERMISSIONS.ACCOUNTS_READ,
+    PERMISSIONS.ACCOUNTS_CREATE,
+    PERMISSIONS.TRANSACTIONS_READ,
+    PERMISSIONS.TRANSACTIONS_CREATE,
+    PERMISSIONS.CATEGORIES_READ,
+    PERMISSIONS.TAGS_READ,
+    PERMISSIONS.PAYMENT_METHODS_READ,
+    PERMISSIONS.PAYMENT_METHODS_CREATE,
+    PERMISSIONS.MERCHANTS_READ,
+    PERMISSIONS.BUDGETS_READ,
+    PERMISSIONS.CREDIT_CARDS_READ,
+    PERMISSIONS.RECURRING_BILLS_READ,
+    PERMISSIONS.RECURRING_BILLS_UPDATE,
+    PERMISSIONS.RECURRING_BILLS_DELETE,
+  ]),
+  viewer: new Set([
+    PERMISSIONS.HOUSEHOLD_READ,
+    PERMISSIONS.ACCOUNTS_READ,
+    PERMISSIONS.TRANSACTIONS_READ,
+    PERMISSIONS.CATEGORIES_READ,
+    PERMISSIONS.TAGS_READ,
+    PERMISSIONS.PAYMENT_METHODS_READ,
+    PERMISSIONS.MERCHANTS_READ,
+    PERMISSIONS.BUDGETS_READ,
+    PERMISSIONS.CREDIT_CARDS_READ,
+    PERMISSIONS.RECURRING_BILLS_READ,
+    PERMISSIONS.RECURRING_BILLS_CREATE,
+  ]),
+};
+
+export function getPermissionsForRole(role: HouseholdRole): HouseholdPermission[] {
+  return Array.from(HOUSEHOLD_ROLE_PERMISSIONS[role]);
+}
+
+export function hasHouseholdPermission(
+  role: HouseholdRole,
+  permission: HouseholdPermission,
+): boolean {
+  return HOUSEHOLD_ROLE_PERMISSIONS[role].has(permission);
+}

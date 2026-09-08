@@ -1,19 +1,19 @@
-import { and, eq, sql } from 'drizzle-orm';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { merchantsTable } from '@/db/schemas/merchants.schema';
-import { type DbListPage, getPagination } from '@/shared/list';
-import { HouseholdScopedRepository } from '@/shared/repositories/household-scoped.repository';
+import { and, eq, sql } from "drizzle-orm";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { merchantsTable } from "@/db/schemas/merchants.schema";
+import { type DbListPage, getPagination } from "@/shared/list";
+import { HouseholdScopedRepository } from "@/shared/repositories/household-scoped.repository";
 import {
   buildMerchantsListOrder,
   buildMerchantsListWhere,
   type ListMerchantsQuery,
-} from './merchants.query';
-import type { MerchantRecord } from './merchants.types';
+} from "./merchants.query";
+import type { MerchantRecord } from "./merchants.types";
 
 type CreateMerchantValues = Omit<
   typeof merchantsTable.$inferInsert,
-  'id' | 'householdId' | 'createdAt' | 'updatedAt'
+  "id" | "householdId" | "createdAt" | "updatedAt"
 >;
 
 class MerchantRepository extends HouseholdScopedRepository<MerchantRecord, CreateMerchantValues> {

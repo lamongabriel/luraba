@@ -1,7 +1,7 @@
-import { and, eq, isNotNull } from 'drizzle-orm';
-import { entriesTable } from '@/db/schemas/entries.schema';
-import type { TxClient } from '@/db/types';
-import type { EntryRecord } from './entries.types';
+import { and, eq, isNotNull } from "drizzle-orm";
+import { entriesTable } from "@/db/schemas/entries.schema";
+import type { TxClient } from "@/db/types";
+import type { EntryRecord } from "./entries.types";
 
 class EntriesRepository {
   async createMany(

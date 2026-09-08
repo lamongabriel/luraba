@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import type { PermissionInput, PermissionMatch } from "@luraba/contracts"
-import type { ReactNode } from "react"
+import type { PermissionInput, PermissionMatch } from "@luraba/contracts";
+import type { ReactNode } from "react";
 
-import { useCurrentUserQuery } from "@/queries/auth/use-current-user-query"
+import { useCurrentUserQuery } from "@/queries/auth/use-current-user-query";
 
-import { Unauthorized } from "./unauthorized"
-import { useCan } from "./use-can"
+import { Unauthorized } from "./unauthorized";
+import { useCan } from "./use-can";
 
 interface PermissionGuardProps {
-  permission: PermissionInput
-  match?: PermissionMatch
-  title?: string
-  description?: string
-  backHref?: string
-  backLabel?: string
-  children: ReactNode
+  permission: PermissionInput;
+  match?: PermissionMatch;
+  title?: string;
+  description?: string;
+  backHref?: string;
+  backLabel?: string;
+  children: ReactNode;
 }
 
 export function PermissionGuard({
@@ -27,11 +27,11 @@ export function PermissionGuard({
   backLabel,
   children,
 }: PermissionGuardProps) {
-  const { isPending } = useCurrentUserQuery()
-  const can = useCan()
+  const { isPending } = useCurrentUserQuery();
+  const can = useCan();
 
-  if (isPending) return null
-  if (can(permission, match)) return <>{children}</>
+  if (isPending) return null;
+  if (can(permission, match)) return <>{children}</>;
 
   return (
     <Unauthorized
@@ -40,5 +40,5 @@ export function PermissionGuard({
       backHref={backHref}
       backLabel={backLabel}
     />
-  )
+  );
 }

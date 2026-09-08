@@ -1,58 +1,51 @@
-"use client"
+"use client";
 
-import { Delete02Icon, UserGroupIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type {
-  HouseholdMember,
-  HouseholdRole,
-  ListHouseholdMembersQuery,
-} from "@luraba/contracts"
-import { useQueryClient } from "@tanstack/react-query"
-import type { ColumnDef } from "@tanstack/react-table"
-import * as React from "react"
-import { DataTable } from "@/components/data-table/data-table"
-import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header"
-import { EmptyState } from "@/components/empty-state"
-import { ErrorState } from "@/components/error-state"
-import { FilterFaceted } from "@/components/filters/filter-faceted"
-import { HouseholdTableToolbar } from "@/components/households/household-table-toolbar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Delete02Icon, UserGroupIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { HouseholdMember, HouseholdRole, ListHouseholdMembersQuery } from "@luraba/contracts";
+import { useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
+import * as React from "react";
+import { DataTable } from "@/components/data-table/data-table";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
+import { FilterFaceted } from "@/components/filters/filter-faceted";
+import { HouseholdTableToolbar } from "@/components/households/household-table-toolbar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import {
-  householdMemberToUserDisplay,
-  UserDisplay,
-} from "@/components/users/user-display"
-import { useApiParams } from "@/hooks/use-api-params"
-import { useDataTable } from "@/hooks/use-data-table"
-import { formatDate } from "@/lib/format"
-import { canManageHousehold } from "@/lib/households"
+} from "@/components/ui/select";
+import { householdMemberToUserDisplay, UserDisplay } from "@/components/users/user-display";
+import { useApiParams } from "@/hooks/use-api-params";
+import { useDataTable } from "@/hooks/use-data-table";
+import { formatDate } from "@/lib/format";
+import { canManageHousehold } from "@/lib/households";
 import {
   useRemoveHouseholdMemberMutation,
   useUpdateHouseholdMemberMutation,
-} from "@/mutations/households/use-household-mutations"
+} from "@/mutations/households/use-household-mutations";
 import {
   householdQueryKeys,
   useHouseholdMembersQuery,
   useHouseholdRolesQuery,
-} from "@/queries/households/use-households-query"
-import { useAuthSessionStore } from "@/stores/auth-session-store"
+} from "@/queries/households/use-households-query";
+import { useAuthSessionStore } from "@/stores/auth-session-store";
 
 export function HouseholdMembersTable({
   householdId,
   householdRole,
 }: {
-  householdId: string
-  householdRole: HouseholdRole
+  householdId: string;
+  householdRole: HouseholdRole;
 }) {
-  const client = useQueryClient()
-  const currentUserId = useAuthSessionStore((state) => state.user?.id)
+  const client = useQueryClient();
+  const currentUserId = useAuthSessionStore((state) => state.user?.id);
   const params = useApiParams({
     keyPrefix: "members",
     pagination: true,
@@ -65,37 +58,33 @@ export function HouseholdMembersTable({
       roles: { type: "stringArray" },
       emailVerified: { type: "boolean" },
     },
-  })
+  });
   const query = useHouseholdMembersQuery(
     householdId,
     params.apiParams as ListHouseholdMembersQuery,
-  )
-  const rolesQuery = useHouseholdRolesQuery()
-  const roles = rolesQuery.data ?? []
-  const roleOptions = roles
+  );
+  const rolesQuery = useHouseholdRolesQuery();
+  const roles = rolesQuery.data ?? [];
+  const roleOptions = roles;
   const update = useUpdateHouseholdMemberMutation({
     onSuccess: () =>
       client.invalidateQueries({
         queryKey: householdQueryKeys.members(householdId),
       }),
-  })
+  });
   const remove = useRemoveHouseholdMemberMutation({
     onSuccess: () =>
       client.invalidateQueries({
         queryKey: householdQueryKeys.members(householdId),
       }),
-  })
-  const manager = canManageHousehold(householdRole, roles)
+  });
+  const manager = canManageHousehold(householdRole, roles);
   const columns = React.useMemo<ColumnDef<HouseholdMember>[]>(
     () => [
       {
         accessorKey: "name",
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Member" />
-        ),
-        cell: ({ row }) => (
-          <UserDisplay user={householdMemberToUserDisplay(row.original)} />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} label="Member" />,
+        cell: ({ row }) => <UserDisplay user={householdMemberToUserDisplay(row.original)} />,
         enableSorting: true,
       },
       {
@@ -117,9 +106,7 @@ export function HouseholdMembersTable({
       },
       {
         accessorKey: "role",
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Role" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} label="Role" />,
         cell: ({ row }) => (
           <Select
             disabled={!manager || row.original.userId === currentUserId}
@@ -155,26 +142,18 @@ export function HouseholdMembersTable({
       },
       {
         accessorKey: "createdAt",
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Member since" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} label="Member since" />,
         cell: ({ row }) => (
-          <span className="text-muted-foreground">
-            {formatDate(row.original.createdAt)}
-          </span>
+          <span className="text-muted-foreground">{formatDate(row.original.createdAt)}</span>
         ),
         enableSorting: true,
       },
       {
         accessorKey: "lastActiveAt",
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} label="Last active" />
-        ),
+        header: ({ column }) => <DataTableColumnHeader column={column} label="Last active" />,
         cell: ({ row }) => (
           <span className="text-muted-foreground">
-            {row.original.lastActiveAt
-              ? formatDate(row.original.lastActiveAt)
-              : "Never"}
+            {row.original.lastActiveAt ? formatDate(row.original.lastActiveAt) : "Never"}
           </span>
         ),
         enableSorting: true,
@@ -194,23 +173,17 @@ export function HouseholdMembersTable({
                   ? "You cannot remove yourself"
                   : "Remove member"
               }
-              onClick={() =>
-                remove.mutate({ householdId, userId: row.original.userId })
-              }
+              onClick={() => remove.mutate({ householdId, userId: row.original.userId })}
             >
-              <HugeiconsIcon
-                icon={Delete02Icon}
-                className="text-destructive"
-                strokeWidth={2}
-              />
+              <HugeiconsIcon icon={Delete02Icon} className="text-destructive" strokeWidth={2} />
             </Button>
           </div>
         ),
       },
     ],
     [currentUserId, householdId, manager, remove, roleOptions, update],
-  )
-  const rows = query.data?.data ?? []
+  );
+  const rows = query.data?.data ?? [];
   const { table } = useDataTable({
     data: rows,
     columns,
@@ -227,7 +200,7 @@ export function HouseholdMembersTable({
         direction,
       ),
     getRowId: (row) => row.id,
-  })
+  });
 
   return (
     <div className="space-y-3">
@@ -236,9 +209,7 @@ export function HouseholdMembersTable({
         search={params.search}
         onSearchChange={params.setSearch}
         role={params.filters.roles?.[0]}
-        onRoleChange={(value) =>
-          params.setFilter("roles", value ? [value] : null)
-        }
+        onRoleChange={(value) => params.setFilter("roles", value ? [value] : null)}
         roleOptions={roleOptions}
         onClear={params.clearFilters}
         hasFilters={params.hasFilters}
@@ -260,11 +231,7 @@ export function HouseholdMembersTable({
           onValueChange={(value) =>
             params.setFilter(
               "emailVerified",
-              value === "verified"
-                ? true
-                : value === "unverified"
-                  ? false
-                  : null,
+              value === "verified" ? true : value === "unverified" ? false : null,
             )
           }
         />
@@ -292,5 +259,5 @@ export function HouseholdMembersTable({
         />
       )}
     </div>
-  )
+  );
 }

@@ -1,15 +1,15 @@
-import { Exchange01Icon, RefreshIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { AccountSummary, CurrencyRate } from "@luraba/contracts"
-import { type Control, Controller } from "react-hook-form"
-import { FormItem } from "@/components/forms/form-item"
-import { Button } from "@/components/ui/button"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Typography } from "@/components/ui/typography"
+import { Exchange01Icon, RefreshIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { AccountSummary, CurrencyRate } from "@luraba/contracts";
+import { type Control, Controller } from "react-hook-form";
+import { FormItem } from "@/components/forms/form-item";
+import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Typography } from "@/components/ui/typography";
 
-import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema"
-import { TransactionFormSection } from "./transaction-form-section"
+import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema";
+import { TransactionFormSection } from "./transaction-form-section";
 
 export function TransferSection({
   accounts,
@@ -24,23 +24,23 @@ export function TransferSection({
   toCurrencyCode,
   usesMarketRate,
 }: {
-  accounts: AccountSummary[]
-  control: Control<CreateEditTransactionFormValues>
-  fromCurrencyCode?: string
-  isCrossCurrency: boolean
-  isRateError: boolean
-  isRateFetching: boolean
-  onUseMarketRate: () => void
-  onUseCustomAmount: () => void
-  rate?: CurrencyRate
-  toCurrencyCode?: string
-  usesMarketRate: boolean
+  accounts: AccountSummary[];
+  control: Control<CreateEditTransactionFormValues>;
+  fromCurrencyCode?: string;
+  isCrossCurrency: boolean;
+  isRateError: boolean;
+  isRateFetching: boolean;
+  onUseMarketRate: () => void;
+  onUseCustomAmount: () => void;
+  rate?: CurrencyRate;
+  toCurrencyCode?: string;
+  usesMarketRate: boolean;
 }) {
   const accountOptions = accounts.map((account) => ({
     value: account.id,
     label: account.name,
     description: account.currencyCode,
-  }))
+  }));
 
   return (
     <TransactionFormSection
@@ -93,14 +93,12 @@ export function TransferSection({
                 aria-invalid={Boolean(fieldState.error)}
                 onBlur={field.onBlur}
                 onChange={(event) => {
-                  const value = event.target.value
-                  field.onChange(value === "" ? "" : Number(value))
-                  if (isCrossCurrency) onUseCustomAmount()
+                  const value = event.target.value;
+                  field.onChange(value === "" ? "" : Number(value));
+                  if (isCrossCurrency) onUseCustomAmount();
                 }}
               />
-              <FieldError
-                errors={fieldState.error ? [fieldState.error] : undefined}
-              />
+              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
             </Field>
           )}
         />
@@ -131,18 +129,12 @@ export function TransferSection({
               </>
             ) : (
               <Typography variant="small-muted">
-                Same-currency transfers keep the sent and received amounts
-                equal.
+                Same-currency transfers keep the sent and received amounts equal.
               </Typography>
             )}
           </div>
           {isCrossCurrency && !usesMarketRate ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={onUseMarketRate}
-            >
+            <Button type="button" size="sm" variant="outline" onClick={onUseMarketRate}>
               <HugeiconsIcon icon={RefreshIcon} strokeWidth={2} />
               Use market rate
             </Button>
@@ -150,5 +142,5 @@ export function TransferSection({
         </div>
       ) : null}
     </TransactionFormSection>
-  )
+  );
 }

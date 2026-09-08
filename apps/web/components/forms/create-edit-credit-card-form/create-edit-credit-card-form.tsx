@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import type { CreditCard } from "@luraba/contracts"
-import { CreditCardPreview } from "@/components/credit-cards/credit-card-preview"
-import { FormItem } from "@/components/forms/form-item"
-import { Button } from "@/components/ui/button"
-import { FieldError } from "@/components/ui/field"
-import { Typography } from "@/components/ui/typography"
-import { CREDIT_CARD_BRAND_OPTIONS } from "@/lib/credit-cards"
+import type { CreditCard } from "@luraba/contracts";
+import { CreditCardPreview } from "@/components/credit-cards/credit-card-preview";
+import { FormItem } from "@/components/forms/form-item";
+import { Button } from "@/components/ui/button";
+import { FieldError } from "@/components/ui/field";
+import { Typography } from "@/components/ui/typography";
+import { CREDIT_CARD_BRAND_OPTIONS } from "@/lib/credit-cards";
 
-import { creditCardColorPresets } from "./create-edit-credit-card-form.schema"
-import { useCreateEditCreditCardForm } from "./use-create-edit-credit-card-form"
+import { creditCardColorPresets } from "./create-edit-credit-card-form.schema";
+import { useCreateEditCreditCardForm } from "./use-create-edit-credit-card-form";
 
 export function CreateEditCreditCardForm({
   card,
@@ -17,10 +17,10 @@ export function CreateEditCreditCardForm({
   onCancel,
   onSuccess,
 }: {
-  card?: CreditCard
-  defaultCurrencyCode: string
-  onCancel: () => void
-  onSuccess: () => void
+  card?: CreditCard;
+  defaultCurrencyCode: string;
+  onCancel: () => void;
+  onSuccess: () => void;
 }) {
   const {
     accountsQuery,
@@ -31,15 +31,15 @@ export function CreateEditCreditCardForm({
     isPending,
     onSubmit,
     selectedOwner,
-  } = useCreateEditCreditCardForm({ card, defaultCurrencyCode, onSuccess })
+  } = useCreateEditCreditCardForm({ card, defaultCurrencyCode, onSuccess });
 
-  const values = form.watch()
+  const values = form.watch();
   const ownerOptions =
     accountsQuery.data?.data.map((account) => ({
       value: account.id,
       label: account.name,
       description: `${account.institutionName ? `${account.institutionName} · ` : ""}${account.currencyCode}`,
-    })) ?? []
+    })) ?? [];
 
   return (
     <form className="space-y-6" onSubmit={onSubmit} noValidate>
@@ -180,13 +180,9 @@ export function CreateEditCreditCardForm({
         <FieldError>Couldn&apos;t load card options right now.</FieldError>
       ) : null}
       {selectedOwner && selectedOwner.currencyCode !== values.currencyCode ? (
-        <FieldError>
-          The selected account currency changed. Please review this form.
-        </FieldError>
+        <FieldError>The selected account currency changed. Please review this form.</FieldError>
       ) : null}
-      {errorMessage ? (
-        <Typography variant="small-destructive">{errorMessage}</Typography>
-      ) : null}
+      {errorMessage ? <Typography variant="small-destructive">{errorMessage}</Typography> : null}
 
       <div className="flex flex-col gap-3 border-t border-border/70 pt-5 sm:flex-row sm:justify-end">
         <Button type="button" variant="ghost" onClick={onCancel}>
@@ -197,5 +193,5 @@ export function CreateEditCreditCardForm({
         </Button>
       </div>
     </form>
-  )
+  );
 }

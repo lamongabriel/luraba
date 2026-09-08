@@ -1,14 +1,13 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-export interface SwitchProps
-  extends Omit<React.ComponentPropsWithoutRef<"button">, "onChange"> {
-  checked?: boolean
-  defaultChecked?: boolean
-  onCheckedChange?: (checked: boolean) => void
+export interface SwitchProps extends Omit<React.ComponentPropsWithoutRef<"button">, "onChange"> {
+  checked?: boolean;
+  defaultChecked?: boolean;
+  onCheckedChange?: (checked: boolean) => void;
 }
 
 const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
@@ -23,10 +22,9 @@ const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
   },
   ref,
 ) {
-  const [uncontrolledChecked, setUncontrolledChecked] =
-    React.useState(defaultChecked)
-  const isControlled = controlledChecked !== undefined
-  const checked = isControlled ? controlledChecked : uncontrolledChecked
+  const [uncontrolledChecked, setUncontrolledChecked] = React.useState(defaultChecked);
+  const isControlled = controlledChecked !== undefined;
+  const checked = isControlled ? controlledChecked : uncontrolledChecked;
 
   return (
     <button
@@ -41,12 +39,12 @@ const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
         className,
       )}
       onClick={(event) => {
-        onClick?.(event)
-        if (event.defaultPrevented) return
+        onClick?.(event);
+        if (event.defaultPrevented) return;
 
-        const nextChecked = !checked
-        if (!isControlled) setUncontrolledChecked(nextChecked)
-        onCheckedChange?.(nextChecked)
+        const nextChecked = !checked;
+        if (!isControlled) setUncontrolledChecked(nextChecked);
+        onCheckedChange?.(nextChecked);
       }}
       {...props}
     >
@@ -56,7 +54,7 @@ const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
         data-state={checked ? "checked" : "unchecked"}
       />
     </button>
-  )
-})
+  );
+});
 
-export { Switch }
+export { Switch };

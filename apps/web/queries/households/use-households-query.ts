@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import type {
   HouseholdSummary,
@@ -9,10 +9,10 @@ import type {
   ListHouseholdRolesResult,
   ListHouseholdsQuery,
   ListHouseholdsResult,
-} from "@luraba/contracts"
-import { useQuery } from "@tanstack/react-query"
-import { lurabaApiPassiveClient } from "@/api/luraba-api"
-import type { AppQueryOptions } from "@/queries/query-options"
+} from "@luraba/contracts";
+import { useQuery } from "@tanstack/react-query";
+import { lurabaApiPassiveClient } from "@/api/luraba-api";
+import type { AppQueryOptions } from "@/queries/query-options";
 import {
   getHousehold,
   listHouseholdInviteStatuses,
@@ -20,23 +20,20 @@ import {
   listHouseholdPermissions,
   listHouseholdRoles,
   listHouseholds,
-} from "@/services/households.service"
+} from "@/services/households.service";
 
 export const householdQueryKeys = {
   all: ["households"] as const,
   lists: () => [...householdQueryKeys.all, "list"] as const,
-  list: (query: ListHouseholdsQuery = {}) =>
-    [...householdQueryKeys.lists(), query] as const,
-  detail: (householdId: string) =>
-    [...householdQueryKeys.all, "detail", householdId] as const,
-  probe: (query: ListHouseholdsQuery = {}) =>
-    [...householdQueryKeys.list(query), "probe"] as const,
+  list: (query: ListHouseholdsQuery = {}) => [...householdQueryKeys.lists(), query] as const,
+  detail: (householdId: string) => [...householdQueryKeys.all, "detail", householdId] as const,
+  probe: (query: ListHouseholdsQuery = {}) => [...householdQueryKeys.list(query), "probe"] as const,
   members: (householdId: string, query: ListHouseholdMembersQuery = {}) =>
     [...householdQueryKeys.all, householdId, "members", query] as const,
   roles: () => [...householdQueryKeys.all, "roles"] as const,
   permissions: () => [...householdQueryKeys.all, "permissions"] as const,
   inviteStatuses: () => [...householdQueryKeys.all, "invite-statuses"] as const,
-}
+};
 
 export function useHouseholdsQuery<TData = ListHouseholdsResult>(
   query: ListHouseholdsQuery = {},
@@ -46,7 +43,7 @@ export function useHouseholdsQuery<TData = ListHouseholdsResult>(
     queryKey: householdQueryKeys.list(query),
     queryFn: () => listHouseholds(query),
     ...options,
-  })
+  });
 }
 
 export function useHouseholdRolesQuery<TData = ListHouseholdRolesResult>(
@@ -57,29 +54,29 @@ export function useHouseholdRolesQuery<TData = ListHouseholdRolesResult>(
     queryFn: listHouseholdRoles,
     staleTime: Number.POSITIVE_INFINITY,
     ...options,
-  })
+  });
 }
 
-export function useHouseholdPermissionsQuery<
-  TData = ListHouseholdPermissionsResult,
->(options?: AppQueryOptions<ListHouseholdPermissionsResult, TData>) {
+export function useHouseholdPermissionsQuery<TData = ListHouseholdPermissionsResult>(
+  options?: AppQueryOptions<ListHouseholdPermissionsResult, TData>,
+) {
   return useQuery({
     queryKey: householdQueryKeys.permissions(),
     queryFn: listHouseholdPermissions,
     staleTime: Number.POSITIVE_INFINITY,
     ...options,
-  })
+  });
 }
 
-export function useHouseholdInviteStatusesQuery<
-  TData = ListHouseholdInviteStatusesResult,
->(options?: AppQueryOptions<ListHouseholdInviteStatusesResult, TData>) {
+export function useHouseholdInviteStatusesQuery<TData = ListHouseholdInviteStatusesResult>(
+  options?: AppQueryOptions<ListHouseholdInviteStatusesResult, TData>,
+) {
   return useQuery({
     queryKey: householdQueryKeys.inviteStatuses(),
     queryFn: listHouseholdInviteStatuses,
     staleTime: Number.POSITIVE_INFINITY,
     ...options,
-  })
+  });
 }
 
 export function useHouseholdQuery<TData = HouseholdSummary>(
@@ -91,7 +88,7 @@ export function useHouseholdQuery<TData = HouseholdSummary>(
     queryFn: () => getHousehold(householdId),
     ...options,
     enabled: Boolean(householdId) && (options?.enabled ?? true),
-  })
+  });
 }
 
 export function useProbeHouseholdsQuery<TData = ListHouseholdsResult>(
@@ -102,7 +99,7 @@ export function useProbeHouseholdsQuery<TData = ListHouseholdsResult>(
     queryKey: householdQueryKeys.probe(query),
     queryFn: () => listHouseholds(query, { client: lurabaApiPassiveClient }),
     ...options,
-  })
+  });
 }
 
 export function useHouseholdMembersQuery<TData = ListHouseholdMembersResult>(
@@ -116,5 +113,5 @@ export function useHouseholdMembersQuery<TData = ListHouseholdMembersResult>(
     placeholderData: (previousData) => previousData,
     ...options,
     enabled: Boolean(householdId) && (options?.enabled ?? true),
-  })
+  });
 }

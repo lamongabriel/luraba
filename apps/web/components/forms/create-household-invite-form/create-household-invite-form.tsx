@@ -1,25 +1,25 @@
-"use client"
+"use client";
 
-import type { CreateHouseholdInviteInput } from "@luraba/contracts"
-import { FieldInfoHint } from "@/components/forms/field-info-hint"
-import { FormItem } from "@/components/forms/form-item"
-import { Button } from "@/components/ui/button"
-import { useHouseholdRolesQuery } from "@/queries/households/use-households-query"
+import type { CreateHouseholdInviteInput } from "@luraba/contracts";
+import { FieldInfoHint } from "@/components/forms/field-info-hint";
+import { FormItem } from "@/components/forms/form-item";
+import { Button } from "@/components/ui/button";
+import { useHouseholdRolesQuery } from "@/queries/households/use-households-query";
 
-import { useCreateHouseholdInviteForm } from "./use-create-household-invite-form"
+import { useCreateHouseholdInviteForm } from "./use-create-household-invite-form";
 
 export function CreateHouseholdInviteForm({
   onCancel,
   onSubmit,
   isPending = false,
 }: {
-  onCancel: () => void
-  onSubmit: (body: CreateHouseholdInviteInput) => void
-  isPending?: boolean
+  onCancel: () => void;
+  onSubmit: (body: CreateHouseholdInviteInput) => void;
+  isPending?: boolean;
 }) {
-  const { form, submit } = useCreateHouseholdInviteForm({ onSubmit })
-  const rolesQuery = useHouseholdRolesQuery()
-  const roleOptions = rolesQuery.data?.filter((role) => role.canBeInvited) ?? []
+  const { form, submit } = useCreateHouseholdInviteForm({ onSubmit });
+  const rolesQuery = useHouseholdRolesQuery();
+  const roleOptions = rolesQuery.data?.filter((role) => role.canBeInvited) ?? [];
 
   return (
     <form className="space-y-6" onSubmit={submit} noValidate>
@@ -33,8 +33,8 @@ export function CreateHouseholdInviteForm({
         disabled={isPending}
         labelAdornment={
           <FieldInfoHint>
-            The secure invitation link will be addressed to this email. The
-            recipient must authenticate with the same address to accept it.
+            The secure invitation link will be addressed to this email. The recipient must
+            authenticate with the same address to accept it.
           </FieldInfoHint>
         }
       />
@@ -47,28 +47,19 @@ export function CreateHouseholdInviteForm({
         disabled={isPending || rolesQuery.isPending}
         labelAdornment={
           <FieldInfoHint>
-            Admins can manage members and invitations. Members can use the
-            finance features allowed by their household permissions.
+            Admins can manage members and invitations. Members can use the finance features allowed
+            by their household permissions.
           </FieldInfoHint>
         }
       />
       <div className="flex flex-col gap-3 border-t border-dashed border-border pt-5 sm:flex-row sm:justify-end">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onCancel}
-          disabled={isPending}
-        >
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={isPending}>
           Cancel
         </Button>
-        <Button
-          type="submit"
-          isLoading={isPending}
-          loadingText="Sending invite..."
-        >
+        <Button type="submit" isLoading={isPending} loadingText="Sending invite...">
           Send invitation
         </Button>
       </div>
     </form>
-  )
+  );
 }

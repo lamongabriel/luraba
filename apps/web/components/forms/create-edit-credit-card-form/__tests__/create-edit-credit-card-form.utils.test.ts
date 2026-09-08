@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it } from "vitest";
 
 import {
   buildCreateCreditCardPayload,
   buildUpdateCreditCardPayload,
-} from "../create-edit-credit-card-form.utils"
+} from "../create-edit-credit-card-form.utils";
 
 const values = {
   brand: "Visa" as const,
@@ -18,7 +18,7 @@ const values = {
   name: "Northstar Rewards",
   notes: "Travel purchases",
   ownerAccountId: "11111111-1111-4111-8111-111111111111",
-}
+};
 
 describe("credit card form payload helpers", () => {
   it("sends the owner account and omits derived currency on create", () => {
@@ -34,18 +34,18 @@ describe("credit card form payload helpers", () => {
       name: "Northstar Rewards",
       notes: "Travel purchases",
       ownerAccountId: "11111111-1111-4111-8111-111111111111",
-    })
-  })
+    });
+  });
 
   it("does not send immutable ownership or currency on update", () => {
-    const payload = buildUpdateCreditCardPayload(values, 2)
+    const payload = buildUpdateCreditCardPayload(values, 2);
 
     expect(payload).toMatchObject({
       brand: "Visa",
       creditLimitAmount: 150_000,
       name: "Northstar Rewards",
-    })
-    expect(payload).not.toHaveProperty("ownerAccountId")
-    expect(payload).not.toHaveProperty("currencyCode")
-  })
-})
+    });
+    expect(payload).not.toHaveProperty("ownerAccountId");
+    expect(payload).not.toHaveProperty("currencyCode");
+  });
+});

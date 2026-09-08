@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it } from "vitest";
 
 import {
   buildCreateAccountPayload,
   getCreateEditAccountDefaultValues,
-} from "../create-edit-account-form.utils"
+} from "../create-edit-account-form.utils";
 
 describe("create account form helpers", () => {
   it("returns branch defaults for the selected account type", () => {
@@ -11,8 +11,8 @@ describe("create account form helpers", () => {
       type: "cash",
       subtype: "checking",
       currencyCode: "USD",
-    })
-  })
+    });
+  });
 
   it("builds a minor-unit cash account payload", () => {
     const payload = buildCreateAccountPayload(
@@ -28,7 +28,7 @@ describe("create account form helpers", () => {
         subtype: "checking",
       },
       2,
-    )
+    );
 
     expect(payload).toEqual({
       balanceAsOfDate: "2026-01-31",
@@ -43,6 +43,6 @@ describe("create account form helpers", () => {
       notes: undefined,
       openingBalance: 125_050,
       type: "cash",
-    })
-  })
-})
+    });
+  });
+});

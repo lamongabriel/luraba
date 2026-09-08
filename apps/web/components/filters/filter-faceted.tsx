@@ -1,16 +1,12 @@
-"use client"
+"use client";
 
-import {
-  CancelCircleIcon,
-  CheckIcon,
-  CirclePlusIcon,
-} from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { Column } from "@tanstack/react-table"
-import * as React from "react"
+import { CancelCircleIcon, CheckIcon, CirclePlusIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { Column } from "@tanstack/react-table";
+import * as React from "react";
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -19,116 +15,101 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { Separator } from "@/components/ui/separator"
-import { cn } from "@/lib/utils"
-import type { Option } from "@/types/data-table"
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import type { Option } from "@/types/data-table";
 
 type FilterFacetedProps<TData, TValue> =
   | {
-      column: Column<TData, TValue>
-      title?: string
-      options: ReadonlyArray<Option>
-      multiple?: boolean
-      className?: string
-      contentClassName?: string
+      column: Column<TData, TValue>;
+      title?: string;
+      options: ReadonlyArray<Option>;
+      multiple?: boolean;
+      className?: string;
+      contentClassName?: string;
     }
   | {
-      value?: string | string[]
-      onValueChange?: (value: string | string[] | undefined) => void
-      title?: string
-      options: ReadonlyArray<Option>
-      multiple?: boolean
-      className?: string
-      contentClassName?: string
-    }
+      value?: string | string[];
+      onValueChange?: (value: string | string[] | undefined) => void;
+      title?: string;
+      options: ReadonlyArray<Option>;
+      multiple?: boolean;
+      className?: string;
+      contentClassName?: string;
+    };
 
 function isTableFilterProps<TData, TValue>(
   props: FilterFacetedProps<TData, TValue>,
-): props is Extract<
-  FilterFacetedProps<TData, TValue>,
-  { column: Column<TData, TValue> }
-> {
-  return "column" in props
+): props is Extract<FilterFacetedProps<TData, TValue>, { column: Column<TData, TValue> }> {
+  return "column" in props;
 }
 
 function normalizeSelectedValues(value: unknown) {
-  if (Array.isArray(value)) return new Set(value)
-  if (typeof value === "string" && value.length > 0) return new Set([value])
-  return new Set<string>()
+  if (Array.isArray(value)) return new Set(value);
+  if (typeof value === "string" && value.length > 0) return new Set([value]);
+  return new Set<string>();
 }
 
-export function FilterFaceted<TData, TValue>(
-  props: FilterFacetedProps<TData, TValue>,
-) {
-  const {
-    title,
-    options,
-    multiple = false,
-    className,
-    contentClassName,
-  } = props
-  const [open, setOpen] = React.useState(false)
+export function FilterFaceted<TData, TValue>(props: FilterFacetedProps<TData, TValue>) {
+  const { title, options, multiple = false, className, contentClassName } = props;
+  const [open, setOpen] = React.useState(false);
 
   const selectedValues = React.useMemo(() => {
     return normalizeSelectedValues(
       isTableFilterProps(props) ? props.column.getFilterValue() : props.value,
-    )
-  }, [props])
+    );
+  }, [props]);
 
   const onValueChange = React.useCallback(
     (value: string | string[] | undefined) => {
       if (isTableFilterProps(props)) {
-        props.column.setFilterValue(value)
-        return
+        props.column.setFilterValue(value);
+        return;
       }
 
-      props.onValueChange?.(value)
+      props.onValueChange?.(value);
     },
     [props],
-  )
+  );
 
   const onItemSelect = React.useCallback(
     (option: Option, isSelected: boolean) => {
       if (multiple) {
-        const nextValues = new Set(selectedValues)
+        const nextValues = new Set(selectedValues);
 
         if (isSelected) {
-          nextValues.delete(option.value)
+          nextValues.delete(option.value);
         } else {
-          nextValues.add(option.value)
+          nextValues.add(option.value);
         }
 
-        const values = Array.from(nextValues)
-        onValueChange(values.length > 0 ? values : undefined)
-        return
+        const values = Array.from(nextValues);
+        onValueChange(values.length > 0 ? values : undefined);
+        return;
       }
 
       if (isTableFilterProps(props)) {
-        onValueChange(isSelected ? undefined : [option.value])
+        onValueChange(isSelected ? undefined : [option.value]);
       } else {
-        onValueChange(isSelected ? undefined : option.value)
+        onValueChange(isSelected ? undefined : option.value);
       }
 
-      setOpen(false)
+      setOpen(false);
     },
     [multiple, onValueChange, props, selectedValues],
-  )
+  );
 
   const onReset = React.useCallback(
     (event?: React.MouseEvent) => {
-      event?.preventDefault()
-      event?.stopPropagation()
-      setOpen(false)
-      onValueChange(undefined)
+      event?.preventDefault();
+      event?.stopPropagation();
+      setOpen(false);
+      onValueChange(undefined);
     },
     [onValueChange],
-  )
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -150,18 +131,12 @@ export function FilterFaceted<TData, TValue>(
                   orientation="vertical"
                   className="mx-0.5 data-[orientation=vertical]:h-4"
                 />
-                <Badge
-                  variant="secondary"
-                  className="rounded-sm px-1 font-normal lg:hidden"
-                >
+                <Badge variant="secondary" className="rounded-sm px-1 font-normal lg:hidden">
                   {selectedValues.size}
                 </Badge>
                 <div className="hidden items-center gap-1 lg:flex">
                   {selectedValues.size > 2 ? (
-                    <Badge
-                      variant="secondary"
-                      className="rounded-sm px-1 font-normal"
-                    >
+                    <Badge variant="secondary" className="rounded-sm px-1 font-normal">
                       {selectedValues.size} selected
                     </Badge>
                   ) : (
@@ -208,7 +183,7 @@ export function FilterFaceted<TData, TValue>(
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup className="max-h-[300px] scroll-py-1 overflow-y-auto overflow-x-hidden">
               {options.map((option) => {
-                const isSelected = selectedValues.has(option.value)
+                const isSelected = selectedValues.has(option.value);
 
                 return (
                   <CommandItem
@@ -229,22 +204,17 @@ export function FilterFaceted<TData, TValue>(
                     {option.icon ? <option.icon /> : null}
                     <span className="truncate">{option.label}</span>
                     {option.count ? (
-                      <span className="ml-auto font-mono text-xs">
-                        {option.count}
-                      </span>
+                      <span className="ml-auto font-mono text-xs">{option.count}</span>
                     ) : null}
                   </CommandItem>
-                )
+                );
               })}
             </CommandGroup>
             {selectedValues.size > 0 && (
               <>
                 <CommandSeparator />
                 <CommandGroup>
-                  <CommandItem
-                    onSelect={() => onReset()}
-                    className="justify-center text-center"
-                  >
+                  <CommandItem onSelect={() => onReset()} className="justify-center text-center">
                     Clear filters
                   </CommandItem>
                 </CommandGroup>
@@ -254,5 +224,5 @@ export function FilterFaceted<TData, TValue>(
         </Command>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

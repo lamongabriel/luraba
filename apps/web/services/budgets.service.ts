@@ -1,12 +1,12 @@
-"use client"
+"use client";
 import {
   budgetsEndpoints,
   type GetMonthlyBudgetQuery,
   type GetMonthlyBudgetResult,
   type ReplaceMonthlyBudgetInput,
   type ReplaceMonthlyBudgetResult,
-} from "@luraba/contracts"
-import { requestContract } from "@/services/contract-client.service"
+} from "@luraba/contracts";
+import { requestContract } from "@/services/contract-client.service";
 
 export function getMonthlyBudget(
   month: string,
@@ -15,7 +15,7 @@ export function getMonthlyBudget(
   return requestContract(budgetsEndpoints.getMonth, {
     params: { month },
     query,
-  })
+  });
 }
 
 export function replaceMonthlyBudget(
@@ -25,5 +25,5 @@ export function replaceMonthlyBudget(
   return requestContract(budgetsEndpoints.replaceMonth, {
     params: { month },
     body: input,
-  })
+  });
 }

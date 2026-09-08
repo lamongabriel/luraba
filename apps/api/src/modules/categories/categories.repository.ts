@@ -1,19 +1,19 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { categoriesTable } from '@/db/schemas/categories.schema';
-import { type DbListPage, getPagination } from '@/shared/list';
-import { HouseholdScopedRepository } from '@/shared/repositories/household-scoped.repository';
+import { and, eq, inArray, sql } from "drizzle-orm";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { categoriesTable } from "@/db/schemas/categories.schema";
+import { type DbListPage, getPagination } from "@/shared/list";
+import { HouseholdScopedRepository } from "@/shared/repositories/household-scoped.repository";
 import {
   buildCategoriesListOrder,
   buildCategoriesListWhere,
   type ListCategoriesQuery,
-} from './categories.query';
-import type { CategoryRecord } from './categories.types';
+} from "./categories.query";
+import type { CategoryRecord } from "./categories.types";
 
 type CreateCategoryValues = Omit<
   typeof categoriesTable.$inferInsert,
-  'id' | 'householdId' | 'createdAt' | 'updatedAt'
+  "id" | "householdId" | "createdAt" | "updatedAt"
 >;
 
 class CategoriesRepository extends HouseholdScopedRepository<CategoryRecord, CreateCategoryValues> {

@@ -1,60 +1,52 @@
-"use client"
+"use client";
 
-import type { AxiosInstance } from "axios"
-import axios from "axios"
+import type { AxiosInstance } from "axios";
+import axios from "axios";
 
-import { apiConfig } from "@/config/api"
-import { STORAGE_KEYS } from "@/config/storage"
-import { logout } from "@/lib/auth/logout"
-import { readStorage } from "@/lib/local-storage"
-import { toAppClientError } from "@/services/error-client"
+import { apiConfig } from "@/config/api";
+import { STORAGE_KEYS } from "@/config/storage";
+import { logout } from "@/lib/auth/logout";
+import { readStorage } from "@/lib/local-storage";
+import { toAppClientError } from "@/services/error-client";
 
 export function toLurabaApiError(error: unknown) {
-  return toAppClientError(error)
+  return toAppClientError(error);
 }
 
-function createApiClient({
-  logoutOnUnauthorized,
-}: {
-  logoutOnUnauthorized: boolean
-}) {
+function createApiClient({ logoutOnUnauthorized }: { logoutOnUnauthorized: boolean }) {
   const client = axios.create({
     baseURL: apiConfig.restBaseUrl,
     withCredentials: true,
-  })
+  });
 
   client.interceptors.request.use((config) => {
-    const activeHouseholdId = readStorage(STORAGE_KEYS.activeHouseholdId)
+    const activeHouseholdId = readStorage(STORAGE_KEYS.activeHouseholdId);
 
     if (activeHouseholdId) {
-      config.headers.set("X-Household-Id", activeHouseholdId)
+      config.headers.set("X-Household-Id", activeHouseholdId);
     }
 
-    return config
-  })
+    return config;
+  });
 
   client.interceptors.response.use(
     (response) => response,
     async (error) => {
-      if (
-        logoutOnUnauthorized &&
-        axios.isAxiosError(error) &&
-        error.response?.status === 401
-      ) {
-        await logout()
+      if (logoutOnUnauthorized && axios.isAxiosError(error) && error.response?.status === 401) {
+        await logout();
       }
 
-      throw toLurabaApiError(error)
+      throw toLurabaApiError(error);
     },
-  )
+  );
 
-  return client
+  return client;
 }
 
 export const lurabaApiClient: AxiosInstance = createApiClient({
   logoutOnUnauthorized: true,
-})
+});
 
 export const lurabaApiPassiveClient: AxiosInstance = createApiClient({
   logoutOnUnauthorized: false,
-})
+});

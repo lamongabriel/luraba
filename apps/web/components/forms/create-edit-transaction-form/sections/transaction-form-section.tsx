@@ -1,7 +1,7 @@
-import type * as React from "react"
+import type * as React from "react";
 
-import { Typography } from "@/components/ui/typography"
-import { cn } from "@/lib/utils"
+import { Typography } from "@/components/ui/typography";
+import { cn } from "@/lib/utils";
 
 export function TransactionFormSection({
   children,
@@ -9,10 +9,10 @@ export function TransactionFormSection({
   description,
   title,
 }: {
-  children: React.ReactNode
-  className?: string
-  description?: string
-  title: string
+  children: React.ReactNode;
+  className?: string;
+  description?: string;
+  title: string;
 }) {
   return (
     <section className={cn("space-y-3", className)}>
@@ -20,11 +20,9 @@ export function TransactionFormSection({
         <Typography as="h3" variant="eyebrow">
           {title}
         </Typography>
-        {description ? (
-          <Typography variant="small-muted">{description}</Typography>
-        ) : null}
+        {description ? <Typography variant="small-muted">{description}</Typography> : null}
       </div>
       <div className="space-y-3">{children}</div>
     </section>
-  )
+  );
 }

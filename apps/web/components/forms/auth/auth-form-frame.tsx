@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { motion, useReducedMotion } from "framer-motion"
-import type { ReactNode } from "react"
+import { motion, useReducedMotion } from "framer-motion";
+import type { ReactNode } from "react";
 
-import { Typography } from "@/components/ui/typography"
+import { Typography } from "@/components/ui/typography";
 
 type AuthFormFrameProps = {
-  children: ReactNode
-  footer: ReactNode
-}
+  children: ReactNode;
+  footer: ReactNode;
+};
 
 export function AuthFormFrame({ children, footer }: AuthFormFrameProps) {
-  const reduceMotion = useReducedMotion()
+  const reduceMotion = useReducedMotion();
 
   return (
     <motion.div
@@ -41,5 +41,5 @@ export function AuthFormFrame({ children, footer }: AuthFormFrameProps) {
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

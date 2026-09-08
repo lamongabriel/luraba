@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import Link from "next/link"
+import Link from "next/link";
 
-import { AuthFormFrame } from "@/components/forms/auth/auth-form-frame"
-import { FormItem } from "@/components/forms/form-item"
-import { SocialAuthButtons } from "@/components/forms/social-auth-buttons"
-import { Button } from "@/components/ui/button"
-import { Typography } from "@/components/ui/typography"
+import { AuthFormFrame } from "@/components/forms/auth/auth-form-frame";
+import { FormItem } from "@/components/forms/form-item";
+import { SocialAuthButtons } from "@/components/forms/social-auth-buttons";
+import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 
-import { useRegisterForm } from "./use-register-form"
+import { useRegisterForm } from "./use-register-form";
 
 export function RegisterForm() {
-  const { form, registerMutation, onSubmit } = useRegisterForm()
+  const { form, registerMutation, onSubmit } = useRegisterForm();
 
   return (
     <AuthFormFrame
@@ -66,9 +66,7 @@ export function RegisterForm() {
         </div>
 
         {registerMutation.errorMessage ? (
-          <Typography variant="small-destructive">
-            {registerMutation.errorMessage}
-          </Typography>
+          <Typography variant="small-destructive">{registerMutation.errorMessage}</Typography>
         ) : null}
 
         <Button
@@ -84,5 +82,5 @@ export function RegisterForm() {
 
       <SocialAuthButtons mode="register" />
     </AuthFormFrame>
-  )
+  );
 }

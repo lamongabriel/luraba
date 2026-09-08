@@ -1,33 +1,33 @@
-import { and, asc, eq, inArray, lt } from 'drizzle-orm';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { accountsTable } from '@/db/schemas/accounts.schema';
-import { creditCardPaymentAllocationsTable } from '@/db/schemas/credit-card-payment-allocations.schema';
-import { creditCardPaymentsTable } from '@/db/schemas/credit-card-payments.schema';
-import { entriesTable } from '@/db/schemas/entries.schema';
-import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
-import { transactionsTable } from '@/db/schemas/transactions.schema';
-import type { TxClient } from '@/db/types';
-import { entriesRepository } from '@/modules/entries/entries.repository';
-import * as entriesService from '@/modules/entries/entries.service';
-import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
-import { NotFoundError, ValidationError } from '@/shared/errors';
-import { formatISODate } from '@/shared/lib/date';
-import { listPayableCycles, syncCardCycles } from './credit-card-cycles.service';
-import type { CreditCardRow } from './credit-cards.helpers';
-import * as creditCardsRepository from './credit-cards.repository';
+import { and, asc, eq, inArray, lt } from "drizzle-orm";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { accountsTable } from "@/db/schemas/accounts.schema";
+import { creditCardPaymentAllocationsTable } from "@/db/schemas/credit-card-payment-allocations.schema";
+import { creditCardPaymentsTable } from "@/db/schemas/credit-card-payments.schema";
+import { entriesTable } from "@/db/schemas/entries.schema";
+import { ledgerAccountsTable } from "@/db/schemas/ledger-accounts.schema";
+import { transactionsTable } from "@/db/schemas/transactions.schema";
+import type { TxClient } from "@/db/types";
+import { entriesRepository } from "@/modules/entries/entries.repository";
+import * as entriesService from "@/modules/entries/entries.service";
+import { ledgerAccountsRepository } from "@/modules/ledger-accounts/ledger-accounts.repository";
+import { NotFoundError, ValidationError } from "@/shared/errors";
+import { formatISODate } from "@/shared/lib/date";
+import { listPayableCycles, syncCardCycles } from "./credit-card-cycles.service";
+import type { CreditCardRow } from "./credit-cards.helpers";
+import * as creditCardsRepository from "./credit-cards.repository";
 import {
   computeCardBalance,
   createUnderlyingPaymentTransaction,
   deleteUnderlyingTransactionInTransaction,
   ensureSourceAccountForPayment,
   updateUnderlyingTransaction,
-} from './credit-cards.shared';
+} from "./credit-cards.shared";
 import type {
   CreateCreditCardPaymentDto,
   CreditCardPaymentResponse,
   UpdateCreditCardPaymentDto,
-} from './credit-cards.types';
+} from "./credit-cards.types";
 
 type PaymentRow = {
   paymentId: string;
@@ -66,7 +66,7 @@ async function loadPayment(
       accountsTable,
       and(
         eq(accountsTable.id, ledgerAccountsTable.ownerId),
-        eq(ledgerAccountsTable.ownerType, 'account'),
+        eq(ledgerAccountsTable.ownerType, "account"),
       ),
     )
     .where(
@@ -80,7 +80,7 @@ async function loadPayment(
     .limit(1);
 
   const payment = rows[0];
-  if (!payment) throw new NotFoundError('Credit card payment');
+  if (!payment) throw new NotFoundError("Credit card payment");
   return payment;
 }
 
@@ -131,9 +131,9 @@ async function createTransferEntriesForPayment(
   fromAccountId: string,
   amount: number,
 ) {
-  const fromLedger = await ledgerAccountsRepository.findByOwner('account', fromAccountId);
-  const toLedger = await ledgerAccountsRepository.findByOwner('account', card.ledgerAccountId);
-  if (!fromLedger || !toLedger) throw new NotFoundError('Account ledger');
+  const fromLedger = await ledgerAccountsRepository.findByOwner("account", fromAccountId);
+  const toLedger = await ledgerAccountsRepository.findByOwner("account", card.ledgerAccountId);
+  if (!fromLedger || !toLedger) throw new NotFoundError("Account ledger");
 
   await entriesService.createTransactionEntries(tx, transactionId, [
     {
@@ -153,7 +153,7 @@ async function applySinglePayment(
   tx: TxClient,
   card: CreditCardRow,
   timezone: string,
-  payment: Pick<PaymentRow, 'paymentId' | 'amount'>,
+  payment: Pick<PaymentRow, "paymentId" | "amount">,
 ) {
   const payableCycles = await listPayableCycles(tx, card, timezone);
   let remainingAmount = payment.amount;
@@ -210,7 +210,7 @@ async function ensurePaymentAmountWithinUsedLimit(
   const maxPayableAmount = usedAmount + additionalAllowedAmount;
 
   if (amount > maxPayableAmount) {
-    throw new ValidationError('Payment amount cannot be greater than the currently used credit');
+    throw new ValidationError("Payment amount cannot be greater than the currently used credit");
   }
 }
 

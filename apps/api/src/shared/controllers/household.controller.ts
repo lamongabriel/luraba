@@ -1,12 +1,12 @@
-import type { z } from 'zod';
-import type { HouseholdContext } from '@/config/permissions';
-import { getHouseholdContext } from '@/middleware/access.middleware';
+import type { z } from "zod";
+import type { HouseholdContext } from "@/config/permissions";
+import { getHouseholdContext } from "@/middleware/access.middleware";
 import {
   type ControllerArgs,
   type ControllerSchema,
   type ControllerStatus,
   createHandler,
-} from '@/shared/controllers/controller';
+} from "@/shared/controllers/controller";
 
 type Schema = z.ZodTypeAny;
 
@@ -27,7 +27,7 @@ export function createHouseholdHandler<
         handle: (
           input: ControllerArgs<TBody, TParams, TQuery> & { household: HouseholdContext },
         ) => Promise<unknown>;
-        status?: Exclude<ControllerStatus, 'no-content'>;
+        status?: Exclude<ControllerStatus, "no-content">;
       }
     | {
         body?: TBody;
@@ -36,15 +36,15 @@ export function createHouseholdHandler<
         handle: (
           input: ControllerArgs<TBody, TParams, TQuery> & { household: HouseholdContext },
         ) => Promise<void>;
-        status: 'no-content';
+        status: "no-content";
       },
 ) {
-  if (options.status === 'no-content') {
+  if (options.status === "no-content") {
     return createHandler({
       body: options.body,
       params: options.params,
       query: options.query,
-      status: 'no-content',
+      status: "no-content",
       handle: ({ req, body, params, query }) => {
         const household = getHouseholdContext(req);
         return options.handle({ req, household, body, params, query });

@@ -1,35 +1,31 @@
-"use client"
+"use client";
 
-import {
-  Delete02Icon,
-  MoreHorizontalIcon,
-  PencilEdit02Icon,
-} from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { Tag } from "@luraba/contracts"
-import { MAX_PER_PAGE } from "@luraba/contracts"
-import * as React from "react"
-import { DataTableSearchInput } from "@/components/data-table/data-table-search-input"
-import { InternalPageLayout } from "@/components/finance/internal-page-layout"
-import { ItemReveal, SectionReveal } from "@/components/motion/reveal"
-import { PERMISSIONS, PermissionButton, useCan } from "@/components/permissions"
-import { DeleteTagModal } from "@/components/tags/delete-tag-modal"
-import { TagSheet } from "@/components/tags/tag-sheet"
-import { Button } from "@/components/ui/button"
+import { Delete02Icon, MoreHorizontalIcon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { Tag } from "@luraba/contracts";
+import { MAX_PER_PAGE } from "@luraba/contracts";
+import * as React from "react";
+import { DataTableSearchInput } from "@/components/data-table/data-table-search-input";
+import { InternalPageLayout } from "@/components/finance/internal-page-layout";
+import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
+import { PERMISSIONS, PermissionButton, useCan } from "@/components/permissions";
+import { DeleteTagModal } from "@/components/tags/delete-tag-modal";
+import { TagSheet } from "@/components/tags/tag-sheet";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Icon } from "@/components/ui/icon"
-import { useApiParams } from "@/hooks/use-api-params"
-import { useEntityDisclosure } from "@/hooks/use-disclosure"
-import { useTagsQuery } from "@/queries/tags/use-tags-query"
+} from "@/components/ui/dropdown-menu";
+import { Icon } from "@/components/ui/icon";
+import { useApiParams } from "@/hooks/use-api-params";
+import { useEntityDisclosure } from "@/hooks/use-disclosure";
+import { useTagsQuery } from "@/queries/tags/use-tags-query";
 
-import { TagsEmpty } from "./_empty"
-import { TagsError } from "./_error"
-import { TagsLoading } from "./_loading"
+import { TagsEmpty } from "./_empty";
+import { TagsError } from "./_error";
+import { TagsLoading } from "./_loading";
 
 function TagRow({
   tag,
@@ -38,13 +34,13 @@ function TagRow({
   onEdit,
   onDelete,
 }: {
-  tag: Tag
-  canUpdate: boolean
-  canDelete: boolean
-  onEdit: (tag: Tag) => void
-  onDelete: (tag: Tag) => void
+  tag: Tag;
+  canUpdate: boolean;
+  canDelete: boolean;
+  onEdit: (tag: Tag) => void;
+  onDelete: (tag: Tag) => void;
 }) {
-  const hasActions = canUpdate || canDelete
+  const hasActions = canUpdate || canDelete;
 
   return (
     <div className="group flex items-center gap-2 rounded-lg py-1.5 pr-1.5 pl-1 transition-colors hover:bg-muted/50">
@@ -79,10 +75,7 @@ function TagRow({
               </DropdownMenuItem>
             ) : null}
             {canDelete ? (
-              <DropdownMenuItem
-                variant="destructive"
-                onSelect={() => onDelete(tag)}
-              >
+              <DropdownMenuItem variant="destructive" onSelect={() => onDelete(tag)}>
                 <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
                 Delete
               </DropdownMenuItem>
@@ -91,51 +84,44 @@ function TagRow({
         </DropdownMenu>
       ) : null}
     </div>
-  )
+  );
 }
 
 export default function TagsPage() {
-  const can = useCan()
-  const canUpdate = can(PERMISSIONS.TAGS_UPDATE)
-  const canDelete = can(PERMISSIONS.TAGS_DELETE)
+  const can = useCan();
+  const canUpdate = can(PERMISSIONS.TAGS_UPDATE);
+  const canDelete = can(PERMISSIONS.TAGS_DELETE);
 
-  const { search, setSearch, normalizedSearch, hasFilters } = useApiParams()
-  const createEdit = useEntityDisclosure<Tag>()
-  const deleteDisclosure = useEntityDisclosure<Tag>()
+  const { search, setSearch, normalizedSearch, hasFilters } = useApiParams();
+  const createEdit = useEntityDisclosure<Tag>();
+  const deleteDisclosure = useEntityDisclosure<Tag>();
 
-  const query = useTagsQuery({ perPage: MAX_PER_PAGE })
-  const tags = React.useMemo(() => query.data?.data ?? [], [query.data])
+  const query = useTagsQuery({ perPage: MAX_PER_PAGE });
+  const tags = React.useMemo(() => query.data?.data ?? [], [query.data]);
 
   const visibleTags = React.useMemo(() => {
     if (!normalizedSearch) {
-      return tags
+      return tags;
     }
 
-    return tags.filter((tag) =>
-      tag.name.toLowerCase().includes(normalizedSearch),
-    )
-  }, [tags, normalizedSearch])
+    return tags.filter((tag) => tag.name.toLowerCase().includes(normalizedSearch));
+  }, [tags, normalizedSearch]);
 
-  let content: React.ReactNode
+  let content: React.ReactNode;
 
   if (query.isPending) {
-    content = <TagsLoading />
+    content = <TagsLoading />;
   } else if (query.isError) {
     content = (
       <TagsError
-        message={
-          query.error.message ||
-          "An unexpected error occurred while loading this page."
-        }
+        message={query.error.message || "An unexpected error occurred while loading this page."}
         onRetry={() => void query.refetch()}
       />
-    )
+    );
   } else if (tags.length === 0) {
-    content = <TagsEmpty hasFilters={false} onCreate={createEdit.onCreate} />
+    content = <TagsEmpty hasFilters={false} onCreate={createEdit.onCreate} />;
   } else if (visibleTags.length === 0) {
-    content = (
-      <TagsEmpty hasFilters={hasFilters} onCreate={createEdit.onCreate} />
-    )
+    content = <TagsEmpty hasFilters={hasFilters} onCreate={createEdit.onCreate} />;
   } else {
     content = (
       <SectionReveal className="space-y-0.5">
@@ -150,7 +136,7 @@ export default function TagsPage() {
           />
         ))}
       </SectionReveal>
-    )
+    );
   }
 
   return (
@@ -188,5 +174,5 @@ export default function TagsPage() {
         tag={deleteDisclosure.entity}
       />
     </InternalPageLayout>
-  )
+  );
 }

@@ -1,4 +1,4 @@
 export {
   createAccountMutationDefinition,
   useCreateAccountMutation,
-} from "@/mutations/accounts/use-account-mutations"
+} from "@/mutations/accounts/use-account-mutations";

@@ -1,7 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DependencyUnavailableError, NotFoundError } from '@/shared/errors';
-import { FxService } from '../fx.service';
-import type { FxProvider, FxProviderId } from '../fx.types';
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { DependencyUnavailableError, NotFoundError } from "@/shared/errors";
+import { FxService } from "../fx.service";
+import type { FxProvider, FxProviderId } from "../fx.types";
 
 type StoredRate = {
   provider: FxProviderId;
@@ -44,100 +44,100 @@ function createProvider(id: FxProviderId, overrides: Partial<FxProvider> = {}): 
   };
 }
 
-describe('FxService', () => {
+describe("FxService", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('returns a stored direct rate on or before the requested date', async () => {
+  it("returns a stored direct rate on or before the requested date", async () => {
     const repository = createRepository();
     repository.findRateByDate
       .mockResolvedValueOnce({
-        provider: 'frankfurter',
-        fromCurrencyId: 'USD',
-        toCurrencyId: 'BRL',
-        rateDate: new Date('2026-05-20T00:00:00.000Z'),
+        provider: "frankfurter",
+        fromCurrencyId: "USD",
+        toCurrencyId: "BRL",
+        rateDate: new Date("2026-05-20T00:00:00.000Z"),
         rateNumerator: 5,
         rateDenominator: 1,
       })
       .mockResolvedValue(undefined);
 
     const service = new FxService(repository, {
-      frankfurter: createProvider('frankfurter'),
-      'yahoo-finance2': createProvider('yahoo-finance2'),
+      frankfurter: createProvider("frankfurter"),
+      "yahoo-finance2": createProvider("yahoo-finance2"),
     });
 
     const rate = await service.getRate({
-      fromCurrencyCode: 'USD',
-      toCurrencyCode: 'BRL',
-      date: new Date('2026-05-21T15:00:00.000Z'),
+      fromCurrencyCode: "USD",
+      toCurrencyCode: "BRL",
+      date: new Date("2026-05-21T15:00:00.000Z"),
     });
 
     expect(rate).toEqual({
-      provider: 'frankfurter',
-      fromCurrencyCode: 'USD',
-      toCurrencyCode: 'BRL',
-      rateDate: new Date('2026-05-20T00:00:00.000Z'),
+      provider: "frankfurter",
+      fromCurrencyCode: "USD",
+      toCurrencyCode: "BRL",
+      rateDate: new Date("2026-05-20T00:00:00.000Z"),
       rateNumerator: 5,
       rateDenominator: 1,
     });
   });
 
-  it('inverts a stored reverse rate when the direct pair is missing', async () => {
+  it("inverts a stored reverse rate when the direct pair is missing", async () => {
     const repository = createRepository();
     repository.findRateByDate
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce({
-        provider: 'frankfurter',
-        fromCurrencyId: 'BRL',
-        toCurrencyId: 'USD',
-        rateDate: new Date('2026-05-20T00:00:00.000Z'),
+        provider: "frankfurter",
+        fromCurrencyId: "BRL",
+        toCurrencyId: "USD",
+        rateDate: new Date("2026-05-20T00:00:00.000Z"),
         rateNumerator: 1,
         rateDenominator: 5,
       })
       .mockResolvedValueOnce(undefined);
 
     const service = new FxService(repository, {
-      frankfurter: createProvider('frankfurter'),
-      'yahoo-finance2': createProvider('yahoo-finance2'),
+      frankfurter: createProvider("frankfurter"),
+      "yahoo-finance2": createProvider("yahoo-finance2"),
     });
 
     const rate = await service.getRate({
-      fromCurrencyCode: 'USD',
-      toCurrencyCode: 'BRL',
-      date: new Date('2026-05-21T00:00:00.000Z'),
+      fromCurrencyCode: "USD",
+      toCurrencyCode: "BRL",
+      date: new Date("2026-05-21T00:00:00.000Z"),
     });
 
     expect(rate).toEqual({
-      provider: 'frankfurter',
-      fromCurrencyCode: 'USD',
-      toCurrencyCode: 'BRL',
-      rateDate: new Date('2026-05-20T00:00:00.000Z'),
+      provider: "frankfurter",
+      fromCurrencyCode: "USD",
+      toCurrencyCode: "BRL",
+      rateDate: new Date("2026-05-20T00:00:00.000Z"),
       rateNumerator: 5,
       rateDenominator: 1,
     });
   });
 
-  it('falls back to the next provider when the primary provider fails', async () => {
+  it("falls back to the next provider when the primary provider fails", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-05-29T10:00:00.000Z'));
+    vi.setSystemTime(new Date("2026-05-29T10:00:00.000Z"));
 
     const repository = createRepository();
     repository.findRateByDate.mockResolvedValue(undefined);
     repository.findRateOnOrBefore.mockResolvedValue(undefined);
 
-    const frankfurter = createProvider('frankfurter', {
+    const frankfurter = createProvider("frankfurter", {
       getLatestRates: vi
         .fn<(...args: unknown[]) => Promise<never>>()
-        .mockRejectedValue(new Error('down')),
+        .mockRejectedValue(new Error("down")),
     });
-    const yahoo = createProvider('yahoo-finance2', {
+    const yahoo = createProvider("yahoo-finance2", {
       getLatestRates: vi
         .fn<
           (...args: unknown[]) => Promise<
             Array<{
-              provider: 'yahoo-finance2';
+              provider: "yahoo-finance2";
               fromCurrencyCode: string;
               toCurrencyCode: string;
               rateDate: Date;
@@ -147,10 +147,10 @@ describe('FxService', () => {
         >()
         .mockResolvedValue([
           {
-            provider: 'yahoo-finance2',
-            fromCurrencyCode: 'USD',
-            toCurrencyCode: 'BRL',
-            rateDate: new Date('2026-05-29T00:00:00.000Z'),
+            provider: "yahoo-finance2",
+            fromCurrencyCode: "USD",
+            toCurrencyCode: "BRL",
+            rateDate: new Date("2026-05-29T00:00:00.000Z"),
             rate: 5.04,
           },
         ]),
@@ -158,37 +158,37 @@ describe('FxService', () => {
 
     const service = new FxService(repository, {
       frankfurter,
-      'yahoo-finance2': yahoo,
+      "yahoo-finance2": yahoo,
     });
 
     const rate = await service.getRate({
-      fromCurrencyCode: 'USD',
-      toCurrencyCode: 'BRL',
-      date: new Date('2026-05-29T00:00:00.000Z'),
+      fromCurrencyCode: "USD",
+      toCurrencyCode: "BRL",
+      date: new Date("2026-05-29T00:00:00.000Z"),
     });
 
     expect(frankfurter.getLatestRates).toHaveBeenCalledTimes(1);
     expect(yahoo.getLatestRates).toHaveBeenCalledTimes(1);
     expect(repository.upsertRates).toHaveBeenCalledWith([
       {
-        provider: 'yahoo-finance2',
-        fromCurrencyCode: 'USD',
-        toCurrencyCode: 'BRL',
-        rateDate: new Date('2026-05-29T00:00:00.000Z'),
+        provider: "yahoo-finance2",
+        fromCurrencyCode: "USD",
+        toCurrencyCode: "BRL",
+        rateDate: new Date("2026-05-29T00:00:00.000Z"),
         rateNumerator: 126,
         rateDenominator: 25,
       },
     ]);
     expect(rate).toMatchObject({
-      provider: 'yahoo-finance2',
-      fromCurrencyCode: 'USD',
-      toCurrencyCode: 'BRL',
+      provider: "yahoo-finance2",
+      fromCurrencyCode: "USD",
+      toCurrencyCode: "BRL",
     });
   });
 
-  it('deduplicates concurrent lookups for the same pair and date', async () => {
+  it("deduplicates concurrent lookups for the same pair and date", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-05-29T10:00:00.000Z'));
+    vi.setSystemTime(new Date("2026-05-29T10:00:00.000Z"));
 
     const repository = createRepository();
     repository.findRateByDate.mockResolvedValue(undefined);
@@ -197,7 +197,7 @@ describe('FxService', () => {
     let resolveRates:
       | ((
           value: Array<{
-            provider: 'frankfurter';
+            provider: "frankfurter";
             fromCurrencyCode: string;
             toCurrencyCode: string;
             rateDate: Date;
@@ -209,7 +209,7 @@ describe('FxService', () => {
       .fn<
         (...args: unknown[]) => Promise<
           Array<{
-            provider: 'frankfurter';
+            provider: "frankfurter";
             fromCurrencyCode: string;
             toCurrencyCode: string;
             rateDate: Date;
@@ -227,16 +227,16 @@ describe('FxService', () => {
     const service = new FxService(
       repository,
       {
-        frankfurter: createProvider('frankfurter', { getLatestRates }),
-        'yahoo-finance2': createProvider('yahoo-finance2'),
+        frankfurter: createProvider("frankfurter", { getLatestRates }),
+        "yahoo-finance2": createProvider("yahoo-finance2"),
       },
-      ['frankfurter', 'yahoo-finance2'],
+      ["frankfurter", "yahoo-finance2"],
     );
 
     const query = {
-      fromCurrencyCode: 'USD',
-      toCurrencyCode: 'BRL',
-      date: new Date('2026-05-29T00:00:00.000Z'),
+      fromCurrencyCode: "USD",
+      toCurrencyCode: "BRL",
+      date: new Date("2026-05-29T00:00:00.000Z"),
     };
 
     const first = service.getRate(query);
@@ -246,10 +246,10 @@ describe('FxService', () => {
     });
     resolveRates?.([
       {
-        provider: 'frankfurter',
-        fromCurrencyCode: 'USD',
-        toCurrencyCode: 'BRL',
-        rateDate: new Date('2026-05-29T00:00:00.000Z'),
+        provider: "frankfurter",
+        fromCurrencyCode: "USD",
+        toCurrencyCode: "BRL",
+        rateDate: new Date("2026-05-29T00:00:00.000Z"),
         rate: 5.1,
       },
     ]);
@@ -260,7 +260,7 @@ describe('FxService', () => {
     expect(left).toEqual(right);
   });
 
-  it('converts grouped amounts into the requested target currency', async () => {
+  it("converts grouped amounts into the requested target currency", async () => {
     const repository = createRepository();
     const currencyRepository = createCurrencyRepository({
       USD: 2,
@@ -268,10 +268,10 @@ describe('FxService', () => {
     });
     repository.findRateByDate
       .mockResolvedValueOnce({
-        provider: 'frankfurter',
-        fromCurrencyId: 'USD',
-        toCurrencyId: 'BRL',
-        rateDate: new Date('2026-05-20T00:00:00.000Z'),
+        provider: "frankfurter",
+        fromCurrencyId: "USD",
+        toCurrencyId: "BRL",
+        rateDate: new Date("2026-05-20T00:00:00.000Z"),
         rateNumerator: 5,
         rateDenominator: 1,
       })
@@ -280,29 +280,29 @@ describe('FxService', () => {
     const service = new FxService(
       repository,
       {
-        frankfurter: createProvider('frankfurter'),
-        'yahoo-finance2': createProvider('yahoo-finance2'),
+        frankfurter: createProvider("frankfurter"),
+        "yahoo-finance2": createProvider("yahoo-finance2"),
       },
-      ['frankfurter', 'yahoo-finance2'],
+      ["frankfurter", "yahoo-finance2"],
       currencyRepository,
     );
 
     const totals = await service.convertGroupedAmounts(
       [
         {
-          groupKey: 'travel',
+          groupKey: "travel",
           amount: 1_000,
-          currencyCode: 'USD',
-          effectiveDate: new Date('2026-05-21T00:00:00.000Z'),
+          currencyCode: "USD",
+          effectiveDate: new Date("2026-05-21T00:00:00.000Z"),
         },
         {
-          groupKey: 'travel',
+          groupKey: "travel",
           amount: 500,
-          currencyCode: 'BRL',
-          effectiveDate: new Date('2026-05-21T00:00:00.000Z'),
+          currencyCode: "BRL",
+          effectiveDate: new Date("2026-05-21T00:00:00.000Z"),
         },
       ],
-      'BRL',
+      "BRL",
     );
 
     expect(totals).toEqual({
@@ -310,7 +310,7 @@ describe('FxService', () => {
     });
   });
 
-  it('rejects conversions when the target currency is unknown', async () => {
+  it("rejects conversions when the target currency is unknown", async () => {
     const repository = createRepository();
     const currencyRepository = createCurrencyRepository({
       USD: 2,
@@ -319,10 +319,10 @@ describe('FxService', () => {
     const service = new FxService(
       repository,
       {
-        frankfurter: createProvider('frankfurter'),
-        'yahoo-finance2': createProvider('yahoo-finance2'),
+        frankfurter: createProvider("frankfurter"),
+        "yahoo-finance2": createProvider("yahoo-finance2"),
       },
-      ['frankfurter', 'yahoo-finance2'],
+      ["frankfurter", "yahoo-finance2"],
       currencyRepository,
     );
 
@@ -331,63 +331,63 @@ describe('FxService', () => {
         [
           {
             amount: 1_000,
-            currencyCode: 'USD',
-            effectiveDate: new Date('2026-05-21T00:00:00.000Z'),
+            currencyCode: "USD",
+            effectiveDate: new Date("2026-05-21T00:00:00.000Z"),
           },
         ],
-        'BRL',
+        "BRL",
       ),
     ).rejects.toThrow(NotFoundError);
   });
 
-  it('throws when no provider or stored rate can satisfy the request', async () => {
+  it("throws when no provider or stored rate can satisfy the request", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-05-29T10:00:00.000Z'));
+    vi.setSystemTime(new Date("2026-05-29T10:00:00.000Z"));
 
     const repository = createRepository();
     repository.findRateByDate.mockResolvedValue(undefined);
     repository.findRateOnOrBefore.mockResolvedValue(undefined);
 
     const service = new FxService(repository, {
-      frankfurter: createProvider('frankfurter', {
+      frankfurter: createProvider("frankfurter", {
         getLatestRates: vi
           .fn<(...args: unknown[]) => Promise<never>>()
-          .mockRejectedValue(new Error('down')),
+          .mockRejectedValue(new Error("down")),
       }),
-      'yahoo-finance2': createProvider('yahoo-finance2', {
+      "yahoo-finance2": createProvider("yahoo-finance2", {
         getLatestRates: vi
           .fn<(...args: unknown[]) => Promise<never>>()
-          .mockRejectedValue(new Error('down')),
+          .mockRejectedValue(new Error("down")),
       }),
     });
 
     await expect(
       service.getRate({
-        fromCurrencyCode: 'USD',
-        toCurrencyCode: 'BRL',
-        date: new Date('2026-05-29T00:00:00.000Z'),
+        fromCurrencyCode: "USD",
+        toCurrencyCode: "BRL",
+        date: new Date("2026-05-29T00:00:00.000Z"),
       }),
     ).rejects.toThrow(DependencyUnavailableError);
   });
 
-  it('prefers an exact fetched historical rate over an older stored fallback rate', async () => {
+  it("prefers an exact fetched historical rate over an older stored fallback rate", async () => {
     const repository = createRepository();
     repository.findRateByDate.mockResolvedValue(undefined);
     repository.findRateOnOrBefore.mockResolvedValue({
-      provider: 'frankfurter',
-      fromCurrencyId: 'USD',
-      toCurrencyId: 'BRL',
-      rateDate: new Date('2025-12-31T00:00:00.000Z'),
+      provider: "frankfurter",
+      fromCurrencyId: "USD",
+      toCurrencyId: "BRL",
+      rateDate: new Date("2025-12-31T00:00:00.000Z"),
       rateNumerator: 548,
       rateDenominator: 100,
     });
 
-    const frankfurter = createProvider('frankfurter', {
+    const frankfurter = createProvider("frankfurter", {
       getHistoricalRates: vi
         .fn<
           (...args: unknown[]) => Promise<
             Array<{
-              provider: 'frankfurter';
+              provider: "frankfurter";
               fromCurrencyCode: string;
               toCurrencyCode: string;
               rateDate: Date;
@@ -397,10 +397,10 @@ describe('FxService', () => {
         >()
         .mockResolvedValue([
           {
-            provider: 'frankfurter',
-            fromCurrencyCode: 'USD',
-            toCurrencyCode: 'BRL',
-            rateDate: new Date('2026-01-20T00:00:00.000Z'),
+            provider: "frankfurter",
+            fromCurrencyCode: "USD",
+            toCurrencyCode: "BRL",
+            rateDate: new Date("2026-01-20T00:00:00.000Z"),
             rate: 5.61,
           },
         ]),
@@ -408,21 +408,21 @@ describe('FxService', () => {
 
     const service = new FxService(repository, {
       frankfurter,
-      'yahoo-finance2': createProvider('yahoo-finance2'),
+      "yahoo-finance2": createProvider("yahoo-finance2"),
     });
 
     const rate = await service.getRate({
-      fromCurrencyCode: 'USD',
-      toCurrencyCode: 'BRL',
-      date: new Date('2026-01-20T00:00:00.000Z'),
+      fromCurrencyCode: "USD",
+      toCurrencyCode: "BRL",
+      date: new Date("2026-01-20T00:00:00.000Z"),
     });
 
     expect(frankfurter.getHistoricalRates).toHaveBeenCalledTimes(1);
     expect(rate).toEqual({
-      provider: 'frankfurter',
-      fromCurrencyCode: 'USD',
-      toCurrencyCode: 'BRL',
-      rateDate: new Date('2026-01-20T00:00:00.000Z'),
+      provider: "frankfurter",
+      fromCurrencyCode: "USD",
+      toCurrencyCode: "BRL",
+      rateDate: new Date("2026-01-20T00:00:00.000Z"),
       rateNumerator: 561,
       rateDenominator: 100,
     });

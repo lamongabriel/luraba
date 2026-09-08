@@ -1,19 +1,15 @@
-"use client"
+"use client";
 
-import {
-  ArrowLeft01Icon,
-  ArrowRight01Icon,
-  Settings02Icon,
-} from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { MAX_PER_PAGE, PERMISSIONS } from "@luraba/contracts"
-import { addMonths, format, parseISO } from "date-fns"
-import { useEffect, useMemo, useState } from "react"
-import { EmptyState } from "@/components/empty-state"
-import { ErrorState } from "@/components/error-state"
-import { useCan } from "@/components/permissions/use-can"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowLeft01Icon, ArrowRight01Icon, Settings02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { MAX_PER_PAGE, PERMISSIONS } from "@luraba/contracts";
+import { addMonths, format, parseISO } from "date-fns";
+import { useEffect, useMemo, useState } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
+import { useCan } from "@/components/permissions/use-can";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -21,98 +17,89 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
-import { formatCurrency } from "@/lib/finance"
-import { useReplaceMonthlyBudgetMutation } from "@/mutations/budgets/use-budget-mutations"
-import { useUpdateHouseholdMutation } from "@/mutations/households/use-household-mutations"
-import { useMonthlyBudgetQuery } from "@/queries/budgets/use-monthly-budget-query"
-import { useCategoriesQuery } from "@/queries/categories/use-categories-query"
-import { useHouseholdsQuery } from "@/queries/households/use-households-query"
-import { useAuthSessionStore } from "@/stores/auth-session-store"
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from "@/lib/finance";
+import { cn } from "@/lib/utils";
+import { useReplaceMonthlyBudgetMutation } from "@/mutations/budgets/use-budget-mutations";
+import { useUpdateHouseholdMutation } from "@/mutations/households/use-household-mutations";
+import { useMonthlyBudgetQuery } from "@/queries/budgets/use-monthly-budget-query";
+import { useCategoriesQuery } from "@/queries/categories/use-categories-query";
+import { useHouseholdsQuery } from "@/queries/households/use-households-query";
+import { useAuthSessionStore } from "@/stores/auth-session-store";
 
 function monthKey(value: Date) {
-  return format(value, "yyyy-MM")
+  return format(value, "yyyy-MM");
 }
 
 export function BudgetsWorkspace() {
-  const [month, setMonth] = useState(monthKey(new Date()))
-  const [draft, setDraft] = useState<Record<string, string>>({})
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [monthStart, setMonthStart] = useState("1")
-  const [creditTiming, setCreditTiming] = useState<
-    "spend_month" | "payment_month"
-  >("spend_month")
-  const [installmentMode, setInstallmentMode] = useState<
-    "per_installment" | "full_amount"
-  >("per_installment")
-  const canUpdate = useCan()(PERMISSIONS.BUDGETS_UPDATE)
-  const activeHouseholdId = useAuthSessionStore(
-    (state) => state.activeHouseholdId,
-  )
-  const households = useHouseholdsQuery({ perPage: MAX_PER_PAGE })
-  const household = households.data?.data.find(
-    (item) => item.id === activeHouseholdId,
-  )
-  const budget = useMonthlyBudgetQuery(month)
-  const categories = useCategoriesQuery({ perPage: MAX_PER_PAGE })
-  const replaceBudget = useReplaceMonthlyBudgetMutation()
+  const [month, setMonth] = useState(monthKey(new Date()));
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [monthStart, setMonthStart] = useState("1");
+  const [creditTiming, setCreditTiming] = useState<"spend_month" | "payment_month">("spend_month");
+  const [installmentMode, setInstallmentMode] = useState<"per_installment" | "full_amount">(
+    "per_installment",
+  );
+  const canUpdate = useCan()(PERMISSIONS.BUDGETS_UPDATE);
+  const activeHouseholdId = useAuthSessionStore((state) => state.activeHouseholdId);
+  const households = useHouseholdsQuery({ perPage: MAX_PER_PAGE });
+  const household = households.data?.data.find((item) => item.id === activeHouseholdId);
+  const budget = useMonthlyBudgetQuery(month);
+  const categories = useCategoriesQuery({ perPage: MAX_PER_PAGE });
+  const replaceBudget = useReplaceMonthlyBudgetMutation();
   const updateHousehold = useUpdateHouseholdMutation({
     onSuccess: () => {
-      setSettingsOpen(false)
-      households.refetch()
+      setSettingsOpen(false);
+      households.refetch();
     },
-  })
+  });
 
   const rows = useMemo(() => {
-    const data = budget.data
-    if (!data) return []
-    return [...data.categories.expense, ...data.categories.income]
-  }, [budget.data])
+    const data = budget.data;
+    if (!data) return [];
+    return [...data.categories.expense, ...data.categories.income];
+  }, [budget.data]);
 
   useEffect(() => {
-    if (!budget.data) return
+    if (!budget.data) return;
     setDraft(
-      Object.fromEntries(
-        rows.map((row) => [row.categoryId, String(row.budgetedAmount / 100)]),
-      ),
-    )
-  }, [budget.data, rows])
+      Object.fromEntries(rows.map((row) => [row.categoryId, String(row.budgetedAmount / 100)])),
+    );
+  }, [budget.data, rows]);
 
   useEffect(() => {
-    if (!household) return
-    setMonthStart(String(household.budgetMonthStartsOn))
-    setCreditTiming(household.creditExpenseTiming)
-    setInstallmentMode(household.creditInstallmentBudgetMode)
-  }, [household])
+    if (!household) return;
+    setMonthStart(String(household.budgetMonthStartsOn));
+    setCreditTiming(household.creditExpenseTiming);
+    setInstallmentMode(household.creditInstallmentBudgetMode);
+  }, [household]);
 
   function save() {
-    if (!budget.data || !canUpdate) return
-    const expenseIds = new Set(
-      budget.data.categories.expense.map((row) => row.categoryId),
-    )
+    if (!budget.data || !canUpdate) return;
+    const expenseIds = new Set(budget.data.categories.expense.map((row) => row.categoryId));
     const allocations = Object.entries(draft)
       .map(([categoryId, value]) => ({
         categoryId,
         amount: Math.round(Number(value || 0) * 100),
       }))
-      .filter((item) => item.amount > 0)
+      .filter((item) => item.amount > 0);
     replaceBudget.mutate({
       month,
       body: {
         expense: allocations.filter((item) => expenseIds.has(item.categoryId)),
         income: allocations.filter((item) => !expenseIds.has(item.categoryId)),
       },
-    })
+    });
   }
 
   if (budget.isLoading || categories.isLoading) {
@@ -121,7 +108,7 @@ export function BudgetsWorkspace() {
         <Skeleton className="h-32" />
         <Skeleton className="h-64" />
       </div>
-    )
+    );
   }
   if (budget.isError)
     return (
@@ -130,18 +117,18 @@ export function BudgetsWorkspace() {
         description={budget.error.message}
         onRetry={() => budget.refetch()}
       />
-    )
+    );
   if (!budget.data)
     return (
       <EmptyState
         title="No budget available"
         description="Choose another month or create your first allocations."
       />
-    )
+    );
 
-  const totals = budget.data.totals
-  const remaining = totals.expenseBudgeted - totals.expenseActual
-  const currency = budget.data.displayCurrencyCode
+  const totals = budget.data.totals;
+  const remaining = totals.expenseBudgeted - totals.expenseActual;
+  const currency = budget.data.displayCurrencyCode;
 
   return (
     <div className="space-y-5">
@@ -159,9 +146,7 @@ export function BudgetsWorkspace() {
             aria-label="Previous month"
             variant="ghost"
             size="icon-sm"
-            onClick={() =>
-              setMonth(monthKey(addMonths(parseISO(`${month}-01`), -1)))
-            }
+            onClick={() => setMonth(monthKey(addMonths(parseISO(`${month}-01`), -1)))}
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} />
           </Button>
@@ -172,9 +157,7 @@ export function BudgetsWorkspace() {
             aria-label="Next month"
             variant="ghost"
             size="icon-sm"
-            onClick={() =>
-              setMonth(monthKey(addMonths(parseISO(`${month}-01`), 1)))
-            }
+            onClick={() => setMonth(monthKey(addMonths(parseISO(`${month}-01`), 1)))}
           >
             <HugeiconsIcon icon={ArrowRight01Icon} />
           </Button>
@@ -203,10 +186,10 @@ export function BudgetsWorkspace() {
             <CardTitle>Remaining</CardTitle>
           </CardHeader>
           <CardContent
-            className={
-              "text-2xl font-semibold " +
-              (remaining < 0 ? "text-destructive" : "text-emerald-600")
-            }
+            className={cn(
+              "text-2xl font-semibold",
+              remaining < 0 ? "text-destructive" : "text-emerald-600",
+            )}
           >
             {formatCurrency(remaining, currency)}
           </CardContent>
@@ -217,8 +200,7 @@ export function BudgetsWorkspace() {
         <div>
           <h2 className="text-sm font-medium">Category allocations</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Set an amount for each category. Changes replace this month
-            atomically.
+            Set an amount for each category. Changes replace this month atomically.
           </p>
         </div>
         {rows.length === 0 ? (
@@ -268,11 +250,7 @@ export function BudgetsWorkspace() {
         </div>
       ) : null}
       {canUpdate ? (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setSettingsOpen(true)}
-        >
+        <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
           <HugeiconsIcon icon={Settings02Icon} /> Budget settings
         </Button>
       ) : null}
@@ -280,9 +258,7 @@ export function BudgetsWorkspace() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Budget settings</DialogTitle>
-            <DialogDescription>
-              These settings apply to the selected household.
-            </DialogDescription>
+            <DialogDescription>These settings apply to the selected household.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -300,9 +276,7 @@ export function BudgetsWorkspace() {
               <Label>Credit-card expense timing</Label>
               <Select
                 value={creditTiming}
-                onValueChange={(value) =>
-                  setCreditTiming(value as typeof creditTiming)
-                }
+                onValueChange={(value) => setCreditTiming(value as typeof creditTiming)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -317,17 +291,13 @@ export function BudgetsWorkspace() {
               <Label>Installment budget mode</Label>
               <Select
                 value={installmentMode}
-                onValueChange={(value) =>
-                  setInstallmentMode(value as typeof installmentMode)
-                }
+                onValueChange={(value) => setInstallmentMode(value as typeof installmentMode)}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="per_installment">
-                    Per installment
-                  </SelectItem>
+                  <SelectItem value="per_installment">Per installment</SelectItem>
                   <SelectItem value="full_amount">Full amount</SelectItem>
                 </SelectContent>
               </Select>
@@ -358,5 +328,5 @@ export function BudgetsWorkspace() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

@@ -1,37 +1,36 @@
-"use client"
+"use client";
 
-import type { AccountDetails } from "@luraba/contracts"
-import { format } from "date-fns"
-import * as React from "react"
-import { FormSheet } from "@/components/forms/form-sheet"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Typography } from "@/components/ui/typography"
-import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance"
-import { queryClient } from "@/lib/query-client"
-import { useCreateTransactionMutation } from "@/mutations/transactions/use-transaction-mutations"
-import { accountQueryKeys } from "@/queries/accounts/use-accounts-query"
-import { useCurrenciesQuery } from "@/queries/currencies/use-currencies-query"
-import { transactionQueryKeys } from "@/queries/transactions/use-transactions-query"
+import type { AccountDetails } from "@luraba/contracts";
+import { format } from "date-fns";
+import * as React from "react";
+import { FormSheet } from "@/components/forms/form-sheet";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Typography } from "@/components/ui/typography";
+import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance";
+import { queryClient } from "@/lib/query-client";
+import { useCreateTransactionMutation } from "@/mutations/transactions/use-transaction-mutations";
+import { accountQueryKeys } from "@/queries/accounts/use-accounts-query";
+import { useCurrenciesQuery } from "@/queries/currencies/use-currencies-query";
+import { transactionQueryKeys } from "@/queries/transactions/use-transactions-query";
 
 export function AdjustAccountBalanceSheet({
   account,
   open,
   onOpenChange,
 }: {
-  account: AccountDetails
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  account: AccountDetails;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
-  const currencies = useCurrenciesQuery()
+  const currencies = useCurrenciesQuery();
   const precision =
-    currencies.data?.data.find((item) => item.code === account.currencyCode)
-      ?.precision ?? 2
+    currencies.data?.data.find((item) => item.code === account.currencyCode)?.precision ?? 2;
   const [balance, setBalance] = React.useState(
     String(minorToMajorUnits(account.balance, precision)),
-  )
-  const [date, setDate] = React.useState(format(new Date(), "yyyy-MM-dd"))
+  );
+  const [date, setDate] = React.useState(format(new Date(), "yyyy-MM-dd"));
   const mutation = useCreateTransactionMutation({
     onSuccess: async () => {
       await Promise.all([
@@ -42,15 +41,15 @@ export function AdjustAccountBalanceSheet({
           queryKey: accountQueryKeys.transactions(account.id),
         }),
         queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all }),
-      ])
-      onOpenChange(false)
+      ]);
+      onOpenChange(false);
     },
-  })
+  });
 
   function submit(event: React.FormEvent) {
-    event.preventDefault()
-    const nextBalance = Number(balance)
-    if (!Number.isFinite(nextBalance)) return
+    event.preventDefault();
+    const nextBalance = Number(balance);
+    if (!Number.isFinite(nextBalance)) return;
 
     mutation.mutate({
       type: "adjustment",
@@ -60,7 +59,7 @@ export function AdjustAccountBalanceSheet({
       purchaseDate: date,
       postedDate: date,
       includeInBudget: false,
-    })
+    });
   }
 
   return (
@@ -96,9 +95,7 @@ export function AdjustAccountBalanceSheet({
           />
         </div>
         {mutation.errorMessage ? (
-          <Typography variant="small-destructive">
-            {mutation.errorMessage}
-          </Typography>
+          <Typography variant="small-destructive">{mutation.errorMessage}</Typography>
         ) : null}
         <div className="flex justify-end gap-3">
           <Button
@@ -109,15 +106,11 @@ export function AdjustAccountBalanceSheet({
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            isLoading={mutation.isPending}
-            loadingText="Adjusting..."
-          >
+          <Button type="submit" isLoading={mutation.isPending} loadingText="Adjusting...">
             Save adjustment
           </Button>
         </div>
       </form>
     </FormSheet>
-  )
+  );
 }

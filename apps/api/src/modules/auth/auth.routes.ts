@@ -1,7 +1,7 @@
-import { authEndpoints, getEndpointRouterPath } from '@luraba/contracts';
-import { Router } from 'express';
-import { requireAccess } from '@/middleware/access.middleware';
-import * as authController from './auth.controller';
+import { authEndpoints, getEndpointRouterPath } from "@luraba/contracts";
+import { Router } from "express";
+import { requireAccess } from "@/middleware/access.middleware";
+import * as authController from "./auth.controller";
 
 const router = Router();
 

@@ -1,6 +1,6 @@
-import { sql } from 'drizzle-orm';
-import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import { sql } from "drizzle-orm";
+import { describe, expect, it } from "vitest";
+import { z } from "zod";
 import {
   BaseListQuerySchema,
   booleanQuerySchema,
@@ -15,63 +15,63 @@ import {
   nullabilityCondition,
   rangeConditions,
   validateRange,
-} from '@/shared/list';
+} from "@/shared/list";
 
-describe('shared list helpers', () => {
-  it('parses base defaults and trims empty search values', () => {
-    const query = BaseListQuerySchema.parse({ search: '   ' });
+describe("shared list helpers", () => {
+  it("parses base defaults and trims empty search values", () => {
+    const query = BaseListQuerySchema.parse({ search: "   " });
 
     expect(query).toEqual({
       page: 1,
       perPage: 20,
       search: undefined,
       sort: undefined,
-      sortDirection: 'asc',
+      sortDirection: "asc",
     });
   });
 
-  it('rejects arrays, JSON sort payloads, unknown sort fields, and invalid directions', () => {
-    const querySchema = createListQuerySchema({}, ['name']);
+  it("rejects arrays, JSON sort payloads, unknown sort fields, and invalid directions", () => {
+    const querySchema = createListQuerySchema({}, ["name"]);
 
-    expect(querySchema.safeParse({ sort: ['name'] }).success).toBe(false);
+    expect(querySchema.safeParse({ sort: ["name"] }).success).toBe(false);
     expect(querySchema.safeParse({ sort: '[{"id":"name","desc":false}]' }).success).toBe(false);
-    expect(querySchema.safeParse({ sort: 'createdAt' }).success).toBe(false);
-    expect(querySchema.safeParse({ sort: 'name', sortDirection: 'sideways' }).success).toBe(false);
-    expect(querySchema.safeParse({ unknown: 'value' }).success).toBe(false);
+    expect(querySchema.safeParse({ sort: "createdAt" }).success).toBe(false);
+    expect(querySchema.safeParse({ sort: "name", sortDirection: "sideways" }).success).toBe(false);
+    expect(querySchema.safeParse({ unknown: "value" }).success).toBe(false);
   });
 
-  it('strictly parses booleans and validates inclusive ranges', () => {
+  it("strictly parses booleans and validates inclusive ranges", () => {
     const querySchema = createListQuerySchema(
       {
         enabled: booleanQuerySchema.optional(),
         minimum: z.coerce.number().optional(),
         maximum: z.coerce.number().optional(),
       },
-      ['name'],
-    ).superRefine((query, ctx) => validateRange(query, ctx, 'minimum', 'maximum'));
+      ["name"],
+    ).superRefine((query, ctx) => validateRange(query, ctx, "minimum", "maximum"));
 
-    expect(querySchema.parse({ enabled: 'true', minimum: 10, maximum: 10 })).toMatchObject({
+    expect(querySchema.parse({ enabled: "true", minimum: 10, maximum: 10 })).toMatchObject({
       enabled: true,
       minimum: 10,
       maximum: 10,
     });
-    expect(querySchema.safeParse({ enabled: 'yes' }).success).toBe(false);
+    expect(querySchema.safeParse({ enabled: "yes" }).success).toBe(false);
     expect(querySchema.safeParse({ minimum: 11, maximum: 10 }).success).toBe(false);
   });
 
-  it('parses comma-separated array filters', () => {
+  it("parses comma-separated array filters", () => {
     const querySchema = createListQuerySchema(
       {
         ids: commaSeparatedArraySchema(z.string().min(1)),
       },
-      ['name'],
+      ["name"],
     );
 
-    expect(querySchema.parse({ ids: 'one, two,,three' }).ids).toEqual(['one', 'two', 'three']);
+    expect(querySchema.parse({ ids: "one, two,,three" }).ids).toEqual(["one", "two", "three"]);
   });
 
-  it('computes pagination offsets and metadata without touching rows', () => {
-    const query = BaseListQuerySchema.parse({ page: '3', perPage: '25' });
+  it("computes pagination offsets and metadata without touching rows", () => {
+    const query = BaseListQuerySchema.parse({ page: "3", perPage: "25" });
 
     expect(getPagination(query)).toEqual({ limit: 25, offset: 50 });
     expect(createPaginationMeta(query, 51)).toEqual({
@@ -82,7 +82,7 @@ describe('shared list helpers', () => {
     });
   });
 
-  it('preserves requested page metadata for zero results and beyond-range pages', () => {
+  it("preserves requested page metadata for zero results and beyond-range pages", () => {
     expect(createPaginationMeta(BaseListQuerySchema.parse({}), 0)).toEqual({
       page: 1,
       perPage: 20,
@@ -97,7 +97,7 @@ describe('shared list helpers', () => {
     });
   });
 
-  it('attaches optional summary metadata', () => {
+  it("attaches optional summary metadata", () => {
     const query = BaseListQuerySchema.parse({});
 
     expect(createListMeta(query, 0)).toEqual({
@@ -119,10 +119,10 @@ describe('shared list helpers', () => {
     });
   });
 
-  it('builds SQL search and single-field ordering fragments', () => {
-    const query = BaseListQuerySchema.parse({ sort: 'name', sortDirection: 'desc' });
+  it("builds SQL search and single-field ordering fragments", () => {
+    const query = BaseListQuerySchema.parse({ sort: "name", sortDirection: "desc" });
 
-    expect(buildIlikeSearch('alpha', [sql`name`])).toBeDefined();
+    expect(buildIlikeSearch("alpha", [sql`name`])).toBeDefined();
     expect(buildOrderBy(query, { name: sql`name` }, [sql`created_at desc`])).toHaveLength(2);
     expect(
       buildOrderBy(BaseListQuerySchema.parse({}), { name: sql`name` }, [sql`created_at desc`]),

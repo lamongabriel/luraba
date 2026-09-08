@@ -1,49 +1,46 @@
-"use client"
+"use client";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import type {
-  HouseholdInvitePreview,
-  HouseholdInviteStatus,
-} from "@luraba/contracts"
-import { useRouter } from "next/navigation"
-import * as React from "react"
-import { useForm } from "react-hook-form"
-import { AuthPageHeader } from "@/components/auth/auth-page-header"
-import { AuthFormFrame } from "@/components/forms/auth/auth-form-frame"
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { HouseholdInvitePreview, HouseholdInviteStatus } from "@luraba/contracts";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { AuthPageHeader } from "@/components/auth/auth-page-header";
+import { AuthFormFrame } from "@/components/forms/auth/auth-form-frame";
 import {
   type LoginFormValues,
   loginFormSchema,
-} from "@/components/forms/auth/login-form/login-form-schema"
+} from "@/components/forms/auth/login-form/login-form-schema";
 import {
   type RegisterFormValues,
   registerFormSchema,
-} from "@/components/forms/auth/register-form/register-form-schema"
-import { FormItem } from "@/components/forms/form-item"
-import { Button } from "@/components/ui/button"
-import { Loader } from "@/components/ui/loader"
-import { Typography } from "@/components/ui/typography"
-import { logout } from "@/lib/auth/logout"
-import { formatDate } from "@/lib/format"
-import { queryClient } from "@/lib/query-client"
-import { useLoginMutation } from "@/mutations/auth/use-login-mutation"
-import { useRegisterMutation } from "@/mutations/auth/use-register-mutation"
-import { useAcceptHouseholdInviteMutation } from "@/mutations/households/use-accept-household-invite-mutation"
-import { authQueryKeys } from "@/queries/auth/use-auth-providers-query"
-import { useProbeCurrentUserQuery } from "@/queries/auth/use-current-user-query"
-import { useHouseholdInvitePreviewQuery } from "@/queries/households/use-household-invite-query"
-import { householdQueryKeys } from "@/queries/households/use-households-query"
-import { hydrateAuthenticatedSession } from "@/services/auth-session.service"
-import { AppClientError } from "@/services/error-client"
-import { useAuthSessionStore } from "@/stores/auth-session-store"
+} from "@/components/forms/auth/register-form/register-form-schema";
+import { FormItem } from "@/components/forms/form-item";
+import { Button } from "@/components/ui/button";
+import { Loader } from "@/components/ui/loader";
+import { Typography } from "@/components/ui/typography";
+import { logout } from "@/lib/auth/logout";
+import { formatDate } from "@/lib/format";
+import { queryClient } from "@/lib/query-client";
+import { useLoginMutation } from "@/mutations/auth/use-login-mutation";
+import { useRegisterMutation } from "@/mutations/auth/use-register-mutation";
+import { useAcceptHouseholdInviteMutation } from "@/mutations/households/use-accept-household-invite-mutation";
+import { authQueryKeys } from "@/queries/auth/use-auth-providers-query";
+import { useProbeCurrentUserQuery } from "@/queries/auth/use-current-user-query";
+import { useHouseholdInvitePreviewQuery } from "@/queries/households/use-household-invite-query";
+import { householdQueryKeys } from "@/queries/households/use-households-query";
+import { hydrateAuthenticatedSession } from "@/services/auth-session.service";
+import { AppClientError } from "@/services/error-client";
+import { useAuthSessionStore } from "@/stores/auth-session-store";
 
-type AuthMode = "register" | "login"
+type AuthMode = "register" | "login";
 
 const roleLabels = {
   owner: "owner",
   admin: "administrator",
   member: "member",
   viewer: "viewer",
-} as const
+} as const;
 
 const terminalStatusContent: Record<
   Exclude<HouseholdInviteStatus, "pending">,
@@ -51,25 +48,22 @@ const terminalStatusContent: Record<
 > = {
   expired: {
     title: "This invitation has expired",
-    description:
-      "Ask a household administrator to resend the invitation or create a new link.",
+    description: "Ask a household administrator to resend the invitation or create a new link.",
   },
   accepted: {
     title: "This invitation was already accepted",
-    description:
-      "Continue to Luraba and sign in with the account that accepted it.",
+    description: "Continue to Luraba and sign in with the account that accepted it.",
   },
   rejected: {
     title: "This invitation was declined",
-    description:
-      "A household administrator can send another invitation if you still need access.",
+    description: "A household administrator can send another invitation if you still need access.",
   },
   canceled: {
     title: "This invitation was canceled",
     description:
       "This link is no longer active. Ask a household administrator for a new invitation.",
   },
-}
+};
 
 function InvitePageShell({
   eyebrow,
@@ -78,44 +72,38 @@ function InvitePageShell({
   footer,
   children,
 }: {
-  eyebrow: string
-  title: string
-  description: string
-  footer: React.ReactNode
-  children: React.ReactNode
+  eyebrow: string;
+  title: string;
+  description: string;
+  footer: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <main className="min-h-dvh bg-background px-4 py-8">
       <section className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-[29rem] items-center justify-center">
         <div className="w-full space-y-6">
-          <AuthPageHeader
-            eyebrow={eyebrow}
-            title={title}
-            description={description}
-          />
+          <AuthPageHeader eyebrow={eyebrow} title={title} description={description} />
 
           <AuthFormFrame footer={footer}>{children}</AuthFormFrame>
         </div>
       </section>
     </main>
-  )
+  );
 }
 
 function InviteContext({ invite }: { invite: HouseholdInvitePreview }) {
   return (
     <div className="rounded-xl border border-border bg-muted/25 px-4 py-3">
       <Typography variant="small-muted">Invited email</Typography>
-      <Typography className="mt-1 truncate text-sm font-medium">
-        {invite.email}
-      </Typography>
+      <Typography className="mt-1 truncate text-sm font-medium">{invite.email}</Typography>
     </div>
-  )
+  );
 }
 
 function InlineError({ message }: { message: string }) {
-  if (!message) return null
+  if (!message) return null;
 
-  return <Typography variant="small-destructive">{message}</Typography>
+  return <Typography variant="small-destructive">{message}</Typography>;
 }
 
 function InviteAuthForms({
@@ -124,13 +112,13 @@ function InviteAuthForms({
   onModeChange,
   onAuthenticated,
 }: {
-  invite: HouseholdInvitePreview
-  mode: AuthMode
-  onModeChange: (mode: AuthMode) => void
-  onAuthenticated: () => Promise<void>
+  invite: HouseholdInvitePreview;
+  mode: AuthMode;
+  onModeChange: (mode: AuthMode) => void;
+  onAuthenticated: () => Promise<void>;
 }) {
-  const registerMutation = useRegisterMutation()
-  const loginMutation = useLoginMutation()
+  const registerMutation = useRegisterMutation();
+  const loginMutation = useLoginMutation();
   const registerForm = useForm<RegisterFormValues>({
     defaultValues: {
       confirmPassword: "",
@@ -139,42 +127,42 @@ function InviteAuthForms({
       password: "",
     },
     resolver: zodResolver(registerFormSchema),
-  })
+  });
   const loginForm = useForm<LoginFormValues>({
     defaultValues: {
       email: invite.email,
       password: "",
     },
     resolver: zodResolver(loginFormSchema),
-  })
-  const isPending = registerMutation.isPending || loginMutation.isPending
+  });
+  const isPending = registerMutation.isPending || loginMutation.isPending;
 
   const submitRegistration = registerForm.handleSubmit(async (values) => {
-    registerMutation.reset()
+    registerMutation.reset();
     try {
       await registerMutation.mutateAsync({
         email: invite.email,
         name: values.name,
         password: values.password,
-      })
-      await onAuthenticated()
+      });
+      await onAuthenticated();
     } catch {
       // Mutation state renders the API error beside the form.
     }
-  })
+  });
 
   const submitLogin = loginForm.handleSubmit(async (values) => {
-    loginMutation.reset()
+    loginMutation.reset();
     try {
       await loginMutation.mutateAsync({
         email: invite.email,
         password: values.password,
-      })
-      await onAuthenticated()
+      });
+      await onAuthenticated();
     } catch {
       // Mutation state renders the API error beside the form.
     }
-  })
+  });
 
   return (
     <div>
@@ -198,12 +186,7 @@ function InviteAuthForms({
       </div>
 
       {mode === "register" ? (
-        <form
-          key="register"
-          className="mt-5 space-y-5"
-          onSubmit={submitRegistration}
-          noValidate
-        >
+        <form key="register" className="mt-5 space-y-5" onSubmit={submitRegistration} noValidate>
           <FormItem
             control={registerForm.control}
             name="name"
@@ -260,12 +243,7 @@ function InviteAuthForms({
           ) : null}
         </form>
       ) : (
-        <form
-          key="login"
-          className="mt-5 space-y-5"
-          onSubmit={submitLogin}
-          noValidate
-        >
+        <form key="login" className="mt-5 space-y-5" onSubmit={submitLogin} noValidate>
           <FormItem
             control={loginForm.control}
             name="email"
@@ -296,70 +274,52 @@ function InviteAuthForms({
         </form>
       )}
     </div>
-  )
+  );
 }
 
-function TerminalInviteState({
-  isAuthenticated,
-}: {
-  isAuthenticated: boolean
-}) {
+function TerminalInviteState({ isAuthenticated }: { isAuthenticated: boolean }) {
   return (
     <Button asChild size="lg" className="h-10 w-full">
       <a href={isAuthenticated ? "/dashboard" : "/login"}>
         {isAuthenticated ? "Continue to Luraba" : "Go to sign in"}
       </a>
     </Button>
-  )
+  );
 }
 
-function PendingInvitePanel({
-  token,
-  invite,
-}: {
-  token: string
-  invite: HouseholdInvitePreview
-}) {
-  const router = useRouter()
-  const hydrate = useAuthSessionStore((state) => state.hydrate)
-  const setActiveHouseholdId = useAuthSessionStore(
-    (state) => state.setActiveHouseholdId,
-  )
-  const sessionQuery = useProbeCurrentUserQuery()
-  const acceptMutation = useAcceptHouseholdInviteMutation()
-  const [mode, setMode] = React.useState<AuthMode>("register")
-  const [authenticatedEmail, setAuthenticatedEmail] = React.useState<
-    string | null
-  >(null)
-  const sessionEmail =
-    authenticatedEmail ?? sessionQuery.data?.user.email ?? null
-  const isMatchingSession =
-    sessionEmail?.toLowerCase() === invite.email.toLowerCase()
+function PendingInvitePanel({ token, invite }: { token: string; invite: HouseholdInvitePreview }) {
+  const router = useRouter();
+  const hydrate = useAuthSessionStore((state) => state.hydrate);
+  const setActiveHouseholdId = useAuthSessionStore((state) => state.setActiveHouseholdId);
+  const sessionQuery = useProbeCurrentUserQuery();
+  const acceptMutation = useAcceptHouseholdInviteMutation();
+  const [mode, setMode] = React.useState<AuthMode>("register");
+  const [authenticatedEmail, setAuthenticatedEmail] = React.useState<string | null>(null);
+  const sessionEmail = authenticatedEmail ?? sessionQuery.data?.user.email ?? null;
+  const isMatchingSession = sessionEmail?.toLowerCase() === invite.email.toLowerCase();
 
   async function completeAcceptance() {
-    acceptMutation.reset()
+    acceptMutation.reset();
     try {
-      const accepted = await acceptMutation.mutateAsync({ token })
-      setActiveHouseholdId(accepted.household.id)
-      queryClient.removeQueries({ queryKey: authQueryKeys.session })
-      queryClient.removeQueries({ queryKey: householdQueryKeys.lists() })
-      await hydrateAuthenticatedSession({ hydrate })
-      router.replace("/dashboard")
-      router.refresh()
+      const accepted = await acceptMutation.mutateAsync({ token });
+      setActiveHouseholdId(accepted.household.id);
+      queryClient.removeQueries({ queryKey: authQueryKeys.session });
+      queryClient.removeQueries({ queryKey: householdQueryKeys.lists() });
+      await hydrateAuthenticatedSession({ hydrate });
+      router.replace("/dashboard");
+      router.refresh();
     } catch {
       // The panel keeps the signed-in state and exposes a retry action.
     }
   }
 
   async function handleAuthenticated() {
-    setAuthenticatedEmail(invite.email)
-    await completeAcceptance()
+    setAuthenticatedEmail(invite.email);
+    await completeAcceptance();
   }
 
   if (sessionQuery.isPending && !authenticatedEmail) {
-    return (
-      <Loader size="lg" label="Checking your session" className="mx-auto" />
-    )
+    return <Loader size="lg" label="Checking your session" className="mx-auto" />;
   }
 
   if (sessionEmail && !isMatchingSession) {
@@ -367,8 +327,8 @@ function PendingInvitePanel({
       <div className="space-y-5">
         <InviteContext invite={invite} />
         <Typography variant="body-muted">
-          You&apos;re signed in as {sessionEmail}. Sign in with {invite.email}{" "}
-          to accept this invitation.
+          You&apos;re signed in as {sessionEmail}. Sign in with {invite.email} to accept this
+          invitation.
         </Typography>
         <Button
           size="lg"
@@ -378,7 +338,7 @@ function PendingInvitePanel({
           Sign in with another account
         </Button>
       </div>
-    )
+    );
   }
 
   if (isMatchingSession) {
@@ -386,8 +346,7 @@ function PendingInvitePanel({
       <div className="space-y-5">
         <InviteContext invite={invite} />
         <Typography variant="body-muted">
-          You&apos;re signed in with the invited email. Accept to join the
-          household.
+          You&apos;re signed in with the invited email. Accept to join the household.
         </Typography>
         <InlineError message={acceptMutation.errorMessage} />
         <Button
@@ -400,7 +359,7 @@ function PendingInvitePanel({
           Accept invitation
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -410,31 +369,21 @@ function PendingInvitePanel({
         invite={invite}
         mode={mode}
         onModeChange={(nextMode) => {
-          acceptMutation.reset()
-          setMode(nextMode)
+          acceptMutation.reset();
+          setMode(nextMode);
         }}
         onAuthenticated={handleAuthenticated}
       />
       <InlineError message={acceptMutation.errorMessage} />
     </div>
-  )
+  );
 }
 
-function InvalidInviteState({
-  retry,
-  isMissing,
-}: {
-  retry: () => void
-  isMissing: boolean
-}) {
+function InvalidInviteState({ retry, isMissing }: { retry: () => void; isMissing: boolean }) {
   return (
     <InvitePageShell
       eyebrow="Invitation unavailable"
-      title={
-        isMissing
-          ? "This invitation link isn't valid"
-          : "We couldn't load this invitation"
-      }
+      title={isMissing ? "This invitation link isn't valid" : "We couldn't load this invitation"}
       description={
         isMissing
           ? "The link may have been replaced or copied incorrectly. Ask for a new invitation."
@@ -451,51 +400,48 @@ function InvalidInviteState({
         {isMissing ? "Go to sign in" : "Try again"}
       </Button>
     </InvitePageShell>
-  )
+  );
 }
 
 export function InviteOnboarding({ token }: { token: string }) {
-  const previewQuery = useHouseholdInvitePreviewQuery(token)
-  const sessionQuery = useProbeCurrentUserQuery()
+  const previewQuery = useHouseholdInvitePreviewQuery(token);
+  const sessionQuery = useProbeCurrentUserQuery();
 
   if (previewQuery.isPending) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-background">
         <Loader fullPage size="lg" label="Opening invitation" />
       </main>
-    )
+    );
   }
 
   if (previewQuery.isError || !previewQuery.data) {
     const isMissing =
-      previewQuery.error instanceof AppClientError &&
-      previewQuery.error.status === 404
+      previewQuery.error instanceof AppClientError && previewQuery.error.status === 404;
     return (
       <InvalidInviteState
         isMissing={isMissing}
         retry={() => {
           if (isMissing) {
-            window.location.assign("/login")
-            return
+            window.location.assign("/login");
+            return;
           }
-          void previewQuery.refetch()
+          void previewQuery.refetch();
         }}
       />
-    )
+    );
   }
 
-  const invite = previewQuery.data
-  const inviterName = invite.inviter?.name ?? "A household administrator"
-  const content =
-    invite.status === "pending" ? null : terminalStatusContent[invite.status]
+  const invite = previewQuery.data;
+  const inviterName = invite.inviter?.name ?? "A household administrator";
+  const content = invite.status === "pending" ? null : terminalStatusContent[invite.status];
 
   return (
     <InvitePageShell
       eyebrow="Household invitation"
       title={content?.title ?? `Join ${invite.household.name}`}
       description={
-        content?.description ??
-        `${inviterName} invited you to join as ${roleLabels[invite.role]}.`
+        content?.description ?? `${inviterName} invited you to join as ${roleLabels[invite.role]}.`
       }
       footer={
         invite.status === "pending"
@@ -511,5 +457,5 @@ export function InviteOnboarding({ token }: { token: string }) {
         <TerminalInviteState isAuthenticated={Boolean(sessionQuery.data)} />
       )}
     </InvitePageShell>
-  )
+  );
 }

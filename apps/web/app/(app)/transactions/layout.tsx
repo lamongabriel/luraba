@@ -1,11 +1,7 @@
-import type { ReactNode } from "react"
+import type { ReactNode } from "react";
 
-import { TransactionsAccess } from "./_access"
+import { TransactionsAccess } from "./_access";
 
-export default function TransactionsLayout({
-  children,
-}: {
-  children: ReactNode
-}) {
-  return <TransactionsAccess>{children}</TransactionsAccess>
+export default function TransactionsLayout({ children }: { children: ReactNode }) {
+  return <TransactionsAccess>{children}</TransactionsAccess>;
 }

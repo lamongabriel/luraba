@@ -1,14 +1,14 @@
-import { householdsEndpoints } from '@luraba/contracts/households';
-import { createAuthenticatedHandler } from '@/shared/controllers/authenticated.controller';
-import { createHandler } from '@/shared/controllers/controller';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
-import { withApiMeta } from '@/shared/response';
+import { householdsEndpoints } from "@luraba/contracts/households";
+import { createAuthenticatedHandler } from "@/shared/controllers/authenticated.controller";
+import { createHandler } from "@/shared/controllers/controller";
+import { createHouseholdHandler } from "@/shared/controllers/household.controller";
+import { withApiMeta } from "@/shared/response";
 import {
   listHouseholdInviteStatuses,
   listHouseholdPermissions,
   listHouseholdRoles,
-} from './households.access';
-import * as householdsService from './households.service';
+} from "./households.access";
+import * as householdsService from "./households.service";
 
 export const list = createAuthenticatedHandler({
   query: householdsEndpoints.list.query,
@@ -24,7 +24,7 @@ export const create = createAuthenticatedHandler({
   body: householdsEndpoints.create.body,
   response: householdsEndpoints.create.response,
   handle: ({ user, body }) => householdsService.createHousehold(user.id, body),
-  status: 'created',
+  status: "created",
 });
 
 export const listRoles = createAuthenticatedHandler({
@@ -51,7 +51,7 @@ export const get = createHouseholdHandler({
 export const remove = createHouseholdHandler({
   params: householdsEndpoints.delete.params,
   handle: ({ household, params }) => householdsService.deleteHousehold(household, params.id),
-  status: 'no-content',
+  status: "no-content",
 });
 
 export const update = createHouseholdHandler({
@@ -85,7 +85,7 @@ export const removeMember = createHouseholdHandler({
   params: householdsEndpoints.removeMember.params,
   handle: ({ household, params }) =>
     householdsService.removeMember(household, params.id, params.userId),
-  status: 'no-content',
+  status: "no-content",
 });
 
 export const createInvite = createHouseholdHandler({
@@ -94,7 +94,7 @@ export const createInvite = createHouseholdHandler({
   response: householdsEndpoints.createInvite.response,
   handle: ({ household, params, body }) =>
     householdsService.createInvite(household, params.id, body),
-  status: 'created',
+  status: "created",
 });
 
 export const listHouseholdInvites = createHouseholdHandler({
@@ -133,7 +133,7 @@ export const acceptInvite = createAuthenticatedHandler({
 export const rejectInvite = createAuthenticatedHandler({
   body: householdsEndpoints.rejectInvite.body,
   handle: ({ user, body }) => householdsService.rejectInvite(user.email, body.token),
-  status: 'no-content',
+  status: "no-content",
 });
 
 export const acceptInviteById = createAuthenticatedHandler({
@@ -146,7 +146,7 @@ export const acceptInviteById = createAuthenticatedHandler({
 export const rejectInviteById = createAuthenticatedHandler({
   params: householdsEndpoints.rejectInviteById.params,
   handle: ({ user, params }) => householdsService.rejectInviteById(user.email, params.inviteId),
-  status: 'no-content',
+  status: "no-content",
 });
 
 export const refreshInviteLink = createHouseholdHandler({
@@ -160,12 +160,12 @@ export const resendInvite = createHouseholdHandler({
   params: householdsEndpoints.resendInvite.params,
   handle: ({ household, params }) =>
     householdsService.resendInvite(household, params.id, params.inviteId),
-  status: 'no-content',
+  status: "no-content",
 });
 
 export const cancelInvite = createHouseholdHandler({
   params: householdsEndpoints.cancelInvite.params,
   handle: ({ household, params }) =>
     householdsService.cancelInvite(household, params.id, params.inviteId),
-  status: 'no-content',
+  status: "no-content",
 });

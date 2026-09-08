@@ -1,42 +1,24 @@
-"use client"
+"use client";
 
 import {
   Calendar03Icon,
   ChartLineData02Icon,
   CreditCardIcon,
   Wallet01Icon,
-} from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import * as React from "react"
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from "recharts"
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import * as React from "react";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
-import { ErrorState } from "@/components/error-state"
-import { MoneyValue } from "@/components/finance/money-value"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useApiParams } from "@/hooks/use-api-params"
-import { getPreferredTransactionDateRange } from "@/lib/transaction-period"
-import { useCurrentUserQuery } from "@/queries/auth/use-current-user-query"
+import { ErrorState } from "@/components/error-state";
+import { MoneyValue } from "@/components/finance/money-value";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useApiParams } from "@/hooks/use-api-params";
+import { getPreferredTransactionDateRange } from "@/lib/transaction-period";
+import { useCurrentUserQuery } from "@/queries/auth/use-current-user-query";
 import {
   useNetWorthAccountsQuery,
   useNetWorthCashFlowQuery,
@@ -46,16 +28,16 @@ import {
   useNetWorthRecentActivityQuery,
   useNetWorthSpendingQuery,
   useNetWorthSummaryQuery,
-} from "@/queries/networth/use-networth-query"
+} from "@/queries/networth/use-networth-query";
 
 const chartConfig = {
   netWorth: { label: "Net worth", color: "var(--color-primary)" },
   income: { label: "Income", color: "var(--color-success)" },
   expenses: { label: "Expenses", color: "var(--color-destructive)" },
-} as const
+} as const;
 
 function WidgetSkeleton() {
-  return <Skeleton className="h-36 w-full rounded-lg" />
+  return <Skeleton className="h-36 w-full rounded-lg" />;
 }
 
 function WidgetError({ onRetry }: { onRetry: () => void }) {
@@ -65,68 +47,52 @@ function WidgetError({ onRetry }: { onRetry: () => void }) {
       description="The rest of the dashboard is still available."
       onRetry={onRetry}
     />
-  )
+  );
 }
 
 export function DashboardWorkspace() {
-  const session = useCurrentUserQuery()
+  const session = useCurrentUserQuery();
   const params = useApiParams({
     filters: {
       dateFrom: { type: "string" },
       dateTo: { type: "string" },
       displayCurrencyCode: { type: "string" },
     },
-  })
-  const [ready, setReady] = React.useState(false)
-  const initialized = React.useRef(false)
+  });
+  const [ready, setReady] = React.useState(false);
+  const initialized = React.useRef(false);
 
   React.useEffect(() => {
-    if (!session.data || initialized.current) return
-    initialized.current = true
-    const hasExplicitDates = Boolean(
-      params.filters.dateFrom || params.filters.dateTo,
-    )
+    if (!session.data || initialized.current) return;
+    initialized.current = true;
+    const hasExplicitDates = Boolean(params.filters.dateFrom || params.filters.dateTo);
     if (hasExplicitDates) {
-      setReady(true)
-      return
+      setReady(true);
+      return;
     }
     const range = getPreferredTransactionDateRange(
       session.data.user.preferences.preferredPeriod,
       session.data.user.preferences.timezone,
-    )
-    params.setFilters(range)
-    if (session.data.user.preferences.preferredPeriod === "all_time")
-      setReady(true)
-  }, [params, session.data])
+    );
+    params.setFilters(range);
+    if (session.data.user.preferences.preferredPeriod === "all_time") setReady(true);
+  }, [params, session.data]);
 
   React.useEffect(() => {
-    if (
-      initialized.current &&
-      params.filters.dateFrom &&
-      params.filters.dateTo
-    ) {
-      setReady(true)
+    if (initialized.current && params.filters.dateFrom && params.filters.dateTo) {
+      setReady(true);
     }
-  }, [params.filters.dateFrom, params.filters.dateTo])
+  }, [params.filters.dateFrom, params.filters.dateTo]);
 
-  const query = ready ? params.apiParams : {}
-  const summary = useNetWorthSummaryQuery(query, { enabled: ready })
-  const history = useNetWorthHistoryQuery(query, { enabled: ready })
-  const accounts = useNetWorthAccountsQuery(
-    { ...query, limit: 3 },
-    { enabled: ready },
-  )
-  const cashFlow = useNetWorthCashFlowQuery(query, { enabled: ready })
-  const spending = useNetWorthSpendingQuery(query, { enabled: ready })
-  const income = useNetWorthIncomeQuery(query, { enabled: ready })
-  const cards = useNetWorthCreditCardsQuery(
-    { ...query, limit: 3 },
-    { enabled: ready },
-  )
-  const activity = useNetWorthRecentActivityQuery(
-    { ...query, limit: 5 },
-    { enabled: ready },
-  )
+  const query = ready ? params.apiParams : {};
+  const summary = useNetWorthSummaryQuery(query, { enabled: ready });
+  const history = useNetWorthHistoryQuery(query, { enabled: ready });
+  const accounts = useNetWorthAccountsQuery({ ...query, limit: 3 }, { enabled: ready });
+  const cashFlow = useNetWorthCashFlowQuery(query, { enabled: ready });
+  const spending = useNetWorthSpendingQuery(query, { enabled: ready });
+  const income = useNetWorthIncomeQuery(query, { enabled: ready });
+  const cards = useNetWorthCreditCardsQuery({ ...query, limit: 3 }, { enabled: ready });
+  const activity = useNetWorthRecentActivityQuery({ ...query, limit: 5 }, { enabled: ready });
 
   if (session.isPending || !ready)
     return (
@@ -138,22 +104,18 @@ export function DashboardWorkspace() {
           <WidgetSkeleton />
         </div>
       </div>
-    )
+    );
 
   const currencyCode =
     summary.data?.displayCurrencyCode ??
     session.data?.household?.settings.defaultCurrencyId ??
-    "USD"
+    "USD";
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-            Overview
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-            Your financial picture
-          </h1>
+          <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Overview</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Your financial picture</h1>
         </div>
         <Button variant="outline" size="sm">
           <HugeiconsIcon icon={Calendar03Icon} />
@@ -161,10 +123,7 @@ export function DashboardWorkspace() {
           {params.filters.dateTo ? `- ${params.filters.dateTo}` : ""}
         </Button>
       </div>
-      <section
-        className="grid gap-3 md:grid-cols-3"
-        aria-label="Net worth summary"
-      >
+      <section className="grid gap-3 md:grid-cols-3" aria-label="Net worth summary">
         {summary.isPending ? (
           <>
             <WidgetSkeleton />
@@ -181,26 +140,18 @@ export function DashboardWorkspace() {
               <CardHeader>
                 <CardDescription>Net worth</CardDescription>
                 <CardTitle className="text-2xl">
-                  <MoneyValue
-                    amount={summary.data.netWorth.amount}
-                    currencyCode={currencyCode}
-                  />
+                  <MoneyValue amount={summary.data.netWorth.amount} currencyCode={currencyCode} />
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-xs text-muted-foreground">
-                  Assets less liabilities
-                </p>
+                <p className="text-xs text-muted-foreground">Assets less liabilities</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
                 <CardDescription>Income</CardDescription>
                 <CardTitle className="text-emerald-600">
-                  <MoneyValue
-                    amount={summary.data.income.amount}
-                    currencyCode={currencyCode}
-                  />
+                  <MoneyValue amount={summary.data.income.amount} currencyCode={currencyCode} />
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -211,16 +162,11 @@ export function DashboardWorkspace() {
               <CardHeader>
                 <CardDescription>Expenses</CardDescription>
                 <CardTitle>
-                  <MoneyValue
-                    amount={summary.data.expenses.amount}
-                    currencyCode={currencyCode}
-                  />
+                  <MoneyValue amount={summary.data.expenses.amount} currencyCode={currencyCode} />
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-xs text-muted-foreground">
-                  Transfers excluded
-                </p>
+                <p className="text-xs text-muted-foreground">Transfers excluded</p>
               </CardContent>
             </Card>
           </>
@@ -233,9 +179,7 @@ export function DashboardWorkspace() {
               <HugeiconsIcon icon={ChartLineData02Icon} />
               Net worth history
             </CardTitle>
-            <CardDescription>
-              Ledger balance over the selected period
-            </CardDescription>
+            <CardDescription>Ledger balance over the selected period</CardDescription>
           </CardHeader>
           <CardContent>
             {history.isPending ? (
@@ -307,26 +251,14 @@ export function DashboardWorkspace() {
                   <YAxis hide />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="income" fill="var(--color-income)" radius={2} />
-                  <Bar
-                    dataKey="expenses"
-                    fill="var(--color-expenses)"
-                    radius={2}
-                  />
+                  <Bar dataKey="expenses" fill="var(--color-expenses)" radius={2} />
                 </BarChart>
               </ChartContainer>
             )}
           </CardContent>
         </Card>
-        <BreakdownCard
-          title="Where money goes"
-          query={spending}
-          currencyCode={currencyCode}
-        />
-        <BreakdownCard
-          title="Where money comes from"
-          query={income}
-          currencyCode={currencyCode}
-        />
+        <BreakdownCard title="Where money goes" query={spending} currencyCode={currencyCode} />
+        <BreakdownCard title="Where money comes from" query={income} currencyCode={currencyCode} />
       </section>
       <section className="grid gap-4 lg:grid-cols-2">
         <Card>
@@ -344,10 +276,7 @@ export function DashboardWorkspace() {
               <WidgetError onRetry={() => void cards.refetch()} />
             ) : (
               cards.data?.cards.map((card) => (
-                <div
-                  key={card.id}
-                  className="flex items-center justify-between gap-3"
-                >
+                <div key={card.id} className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-medium">{card.name}</p>
                     <p className="text-xs text-muted-foreground">
@@ -389,13 +318,9 @@ export function DashboardWorkspace() {
                     <p className="text-sm font-medium">
                       {String(row.description ?? "Transaction")}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {String(row.postedDate ?? "")}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{String(row.postedDate ?? "")}</p>
                   </div>
-                  <span className="text-sm tabular-nums">
-                    {String(row.amount ?? "")}
-                  </span>
+                  <span className="text-sm tabular-nums">{String(row.amount ?? "")}</span>
                 </div>
               ))
             )}
@@ -403,7 +328,7 @@ export function DashboardWorkspace() {
         </Card>
       </section>
     </div>
-  )
+  );
 }
 
 function AccountList({
@@ -411,9 +336,9 @@ function AccountList({
   rows,
   currencyCode,
 }: {
-  title: string
-  rows: Array<{ id: string; name: string; balance: number }>
-  currencyCode: string
+  title: string;
+  rows: Array<{ id: string; name: string; balance: number }>;
+  currencyCode: string;
 }) {
   return (
     <div>
@@ -428,16 +353,12 @@ function AccountList({
               />
               {row.name}
             </span>
-            <MoneyValue
-              amount={row.balance}
-              currencyCode={currencyCode}
-              className="text-sm"
-            />
+            <MoneyValue amount={row.balance} currencyCode={currencyCode} className="text-sm" />
           </div>
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 function BreakdownCard({
@@ -445,9 +366,9 @@ function BreakdownCard({
   query,
   currencyCode,
 }: {
-  title: string
-  query: ReturnType<typeof useNetWorthSpendingQuery>
-  currencyCode: string
+  title: string;
+  query: ReturnType<typeof useNetWorthSpendingQuery>;
+  currencyCode: string;
 }) {
   return (
     <Card>
@@ -462,17 +383,10 @@ function BreakdownCard({
           <WidgetError onRetry={() => void query.refetch()} />
         ) : (
           query.data?.items.map((item) => (
-            <div
-              key={`${item.id ?? "other"}-${item.name}`}
-              className="space-y-1"
-            >
+            <div key={`${item.id ?? "other"}-${item.name}`} className="space-y-1">
               <div className="flex justify-between gap-2 text-sm">
                 <span>{item.name}</span>
-                <MoneyValue
-                  amount={item.amount}
-                  currencyCode={currencyCode}
-                  className="text-sm"
-                />
+                <MoneyValue amount={item.amount} currencyCode={currencyCode} className="text-sm" />
               </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
@@ -485,5 +399,5 @@ function BreakdownCard({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

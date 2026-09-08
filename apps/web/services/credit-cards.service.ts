@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   type CreateCreditCardInput,
@@ -29,23 +29,19 @@ import {
   type UpdateCreditCardPurchaseInput,
   type UpdateCreditCardPurchaseResult,
   type UpdateCreditCardResult,
-} from "@luraba/contracts"
-import { requestContract } from "@/services/contract-client.service"
+} from "@luraba/contracts";
+import { requestContract } from "@/services/contract-client.service";
 
-export function listCreditCards(
-  query: ListCreditCardsQuery = {},
-): Promise<ListCreditCardsResult> {
-  return requestContract(creditCardsEndpoints.list, { query })
+export function listCreditCards(query: ListCreditCardsQuery = {}): Promise<ListCreditCardsResult> {
+  return requestContract(creditCardsEndpoints.list, { query });
 }
 
-export function createCreditCard(
-  input: CreateCreditCardInput,
-): Promise<CreateCreditCardResult> {
-  return requestContract(creditCardsEndpoints.create, { body: input })
+export function createCreditCard(input: CreateCreditCardInput): Promise<CreateCreditCardResult> {
+  return requestContract(creditCardsEndpoints.create, { body: input });
 }
 
 export function getCreditCard(id: string): Promise<GetCreditCardResult> {
-  return requestContract(creditCardsEndpoints.get, { params: { id } })
+  return requestContract(creditCardsEndpoints.get, { params: { id } });
 }
 
 export function updateCreditCard(
@@ -55,27 +51,24 @@ export function updateCreditCard(
   return requestContract(creditCardsEndpoints.update, {
     params: { id },
     body: input,
-  })
+  });
 }
 
 export function deleteCreditCard(id: string): Promise<DeleteCreditCardResult> {
-  return requestContract(creditCardsEndpoints.delete, { params: { id } })
+  return requestContract(creditCardsEndpoints.delete, { params: { id } });
 }
 
 export function listCreditCardCycles(
   id: string,
   query: ListCreditCardCyclesQuery = {},
 ): Promise<ListCreditCardCyclesResult> {
-  return requestContract(creditCardsEndpoints.cycles, { params: { id }, query })
+  return requestContract(creditCardsEndpoints.cycles, { params: { id }, query });
 }
 
-export function getCreditCardCycle(
-  id: string,
-  cycleId: string,
-): Promise<GetCreditCardCycleResult> {
+export function getCreditCardCycle(id: string, cycleId: string): Promise<GetCreditCardCycleResult> {
   return requestContract(creditCardsEndpoints.getCycle, {
     params: { id, cycleId },
-  })
+  });
 }
 
 export function updateCreditCardCycle(
@@ -86,7 +79,7 @@ export function updateCreditCardCycle(
   return requestContract(creditCardsEndpoints.updateCycle, {
     params: { id, cycleId },
     body: input,
-  })
+  });
 }
 
 export function createCreditCardPurchase(
@@ -96,7 +89,7 @@ export function createCreditCardPurchase(
   return requestContract(creditCardsEndpoints.createPurchase, {
     params: { id },
     body: input,
-  })
+  });
 }
 
 export function getCreditCardPurchase(
@@ -105,7 +98,7 @@ export function getCreditCardPurchase(
 ): Promise<GetCreditCardPurchaseResult> {
   return requestContract(creditCardsEndpoints.getPurchase, {
     params: { id, purchaseId },
-  })
+  });
 }
 
 export function updateCreditCardPurchase(
@@ -116,7 +109,7 @@ export function updateCreditCardPurchase(
   return requestContract(creditCardsEndpoints.updatePurchase, {
     params: { id, purchaseId },
     body: input,
-  })
+  });
 }
 
 export function deleteCreditCardPurchase(
@@ -125,7 +118,7 @@ export function deleteCreditCardPurchase(
 ): Promise<DeleteCreditCardPurchaseResult> {
   return requestContract(creditCardsEndpoints.deletePurchase, {
     params: { id, purchaseId },
-  })
+  });
 }
 
 export function createCreditCardPayment(
@@ -135,7 +128,7 @@ export function createCreditCardPayment(
   return requestContract(creditCardsEndpoints.createPayment, {
     params: { id },
     body: input,
-  })
+  });
 }
 
 export function getCreditCardPayment(
@@ -144,7 +137,7 @@ export function getCreditCardPayment(
 ): Promise<GetCreditCardPaymentResult> {
   return requestContract(creditCardsEndpoints.getPayment, {
     params: { id, paymentId },
-  })
+  });
 }
 
 export function updateCreditCardPayment(
@@ -155,7 +148,7 @@ export function updateCreditCardPayment(
   return requestContract(creditCardsEndpoints.updatePayment, {
     params: { id, paymentId },
     body: input,
-  })
+  });
 }
 
 export function deleteCreditCardPayment(
@@ -164,7 +157,7 @@ export function deleteCreditCardPayment(
 ): Promise<DeleteCreditCardPaymentResult> {
   return requestContract(creditCardsEndpoints.deletePayment, {
     params: { id, paymentId },
-  })
+  });
 }
 
 export function getCreditCardForecast(
@@ -174,5 +167,5 @@ export function getCreditCardForecast(
   return requestContract(creditCardsEndpoints.forecast, {
     params: { id },
     query,
-  })
+  });
 }

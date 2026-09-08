@@ -1,7 +1,7 @@
-import { FRANKFURTER_API_URL } from '@/config/fx';
-import { ValidationError } from '@/shared/errors';
-import { formatISODate as formatFxDate, parseISODate as parseFxDate } from '@/shared/lib/date';
-import type { FxProvider, FxProviderRate } from '../fx.types';
+import { FRANKFURTER_API_URL } from "@/config/fx";
+import { ValidationError } from "@/shared/errors";
+import { formatISODate as formatFxDate, parseISODate as parseFxDate } from "@/shared/lib/date";
+import type { FxProvider, FxProviderRate } from "../fx.types";
 
 type FrankfurterRateRow = {
   date: string;
@@ -22,12 +22,12 @@ async function fetchRates(url: URL): Promise<FrankfurterRateRow[]> {
 }
 
 export class FrankfurterFxProvider implements FxProvider {
-  readonly id = 'frankfurter' as const;
+  readonly id = "frankfurter" as const;
 
   async healthCheck(): Promise<void> {
-    const rates = await this.getLatestRates('USD', ['BRL']);
+    const rates = await this.getLatestRates("USD", ["BRL"]);
     if (rates.length === 0) {
-      throw new ValidationError('Frankfurter did not return any rates during health check');
+      throw new ValidationError("Frankfurter did not return any rates during health check");
     }
   }
 
@@ -36,8 +36,8 @@ export class FrankfurterFxProvider implements FxProvider {
     quoteCurrencyCodes: string[],
   ): Promise<FxProviderRate[]> {
     const url = new URL(`${FRANKFURTER_API_URL}/rates`);
-    url.searchParams.set('base', baseCurrencyCode);
-    url.searchParams.set('quotes', quoteCurrencyCodes.join(','));
+    url.searchParams.set("base", baseCurrencyCode);
+    url.searchParams.set("quotes", quoteCurrencyCodes.join(","));
 
     const rows = await fetchRates(url);
     return rows.map((row) => ({
@@ -55,9 +55,9 @@ export class FrankfurterFxProvider implements FxProvider {
     date: Date,
   ): Promise<FxProviderRate[]> {
     const url = new URL(`${FRANKFURTER_API_URL}/rates`);
-    url.searchParams.set('base', baseCurrencyCode);
-    url.searchParams.set('quotes', quoteCurrencyCodes.join(','));
-    url.searchParams.set('date', formatFxDate(date));
+    url.searchParams.set("base", baseCurrencyCode);
+    url.searchParams.set("quotes", quoteCurrencyCodes.join(","));
+    url.searchParams.set("date", formatFxDate(date));
 
     const rows = await fetchRates(url);
     return rows.map((row) => ({
@@ -76,10 +76,10 @@ export class FrankfurterFxProvider implements FxProvider {
     to: Date,
   ): Promise<FxProviderRate[]> {
     const url = new URL(`${FRANKFURTER_API_URL}/rates`);
-    url.searchParams.set('base', baseCurrencyCode);
-    url.searchParams.set('quotes', quoteCurrencyCodes.join(','));
-    url.searchParams.set('from', formatFxDate(from));
-    url.searchParams.set('to', formatFxDate(to));
+    url.searchParams.set("base", baseCurrencyCode);
+    url.searchParams.set("quotes", quoteCurrencyCodes.join(","));
+    url.searchParams.set("from", formatFxDate(from));
+    url.searchParams.set("to", formatFxDate(to));
 
     const rows = await fetchRates(url);
     return rows.map((row) => ({

@@ -1,8 +1,7 @@
-import { categoriesEndpoints, getEndpointRouterPath } from '@luraba/contracts';
-import { Router } from 'express';
-import { PERMISSIONS } from '@/config/permissions';
-import { requireAccess } from '@/middleware/access.middleware';
-import * as categoriesController from './categories.controller';
+import { categoriesEndpoints, getEndpointRouterPath, PERMISSIONS } from "@luraba/contracts";
+import { Router } from "express";
+import { requireAccess } from "@/middleware/access.middleware";
+import * as categoriesController from "./categories.controller";
 
 const router = Router();
 

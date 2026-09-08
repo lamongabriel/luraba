@@ -1,8 +1,7 @@
-import { getEndpointRouterPath, tagsEndpoints } from '@luraba/contracts';
-import { Router } from 'express';
-import { PERMISSIONS } from '@/config/permissions';
-import { requireAccess } from '@/middleware/access.middleware';
-import * as tagsController from './tags.controller';
+import { getEndpointRouterPath, PERMISSIONS, tagsEndpoints } from "@luraba/contracts";
+import { Router } from "express";
+import { requireAccess } from "@/middleware/access.middleware";
+import * as tagsController from "./tags.controller";
 
 const router = Router();
 

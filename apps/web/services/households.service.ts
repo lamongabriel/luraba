@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   type AcceptHouseholdInviteByIdResult,
@@ -34,12 +34,12 @@ import {
   type UpdateHouseholdMemberInput,
   type UpdateHouseholdMemberResult,
   type UpdateHouseholdResult,
-} from "@luraba/contracts"
-import type { AxiosInstance } from "axios"
-import { lurabaApiPassiveClient } from "@/api/luraba-api"
-import { requestContract } from "@/services/contract-client.service"
+} from "@luraba/contracts";
+import type { AxiosInstance } from "axios";
+import { lurabaApiPassiveClient } from "@/api/luraba-api";
+import { requestContract } from "@/services/contract-client.service";
 
-type HouseholdRequestOptions = { client?: AxiosInstance }
+type HouseholdRequestOptions = { client?: AxiosInstance };
 
 export function listHouseholds(
   query: ListHouseholdsQuery = {},
@@ -48,33 +48,31 @@ export function listHouseholds(
   return requestContract(householdsEndpoints.list, {
     query,
     client: options.client,
-  })
+  });
 }
 
-export function createHousehold(
-  input: CreateHouseholdInput,
-): Promise<CreateHouseholdResult> {
-  return requestContract(householdsEndpoints.create, { body: input })
+export function createHousehold(input: CreateHouseholdInput): Promise<CreateHouseholdResult> {
+  return requestContract(householdsEndpoints.create, { body: input });
 }
 
 export function listHouseholdRoles(): Promise<ListHouseholdRolesResult> {
-  return requestContract(householdsEndpoints.roles)
+  return requestContract(householdsEndpoints.roles);
 }
 
 export function listHouseholdPermissions(): Promise<ListHouseholdPermissionsResult> {
-  return requestContract(householdsEndpoints.permissions)
+  return requestContract(householdsEndpoints.permissions);
 }
 
 export function listHouseholdInviteStatuses(): Promise<ListHouseholdInviteStatusesResult> {
-  return requestContract(householdsEndpoints.inviteStatuses)
+  return requestContract(householdsEndpoints.inviteStatuses);
 }
 
 export function getHousehold(id: string): Promise<GetHouseholdResult> {
-  return requestContract(householdsEndpoints.get, { params: { id } })
+  return requestContract(householdsEndpoints.get, { params: { id } });
 }
 
 export function deleteHousehold(id: string): Promise<DeleteHouseholdResult> {
-  return requestContract(householdsEndpoints.delete, { params: { id } })
+  return requestContract(householdsEndpoints.delete, { params: { id } });
 }
 
 export function updateHousehold(
@@ -84,7 +82,7 @@ export function updateHousehold(
   return requestContract(householdsEndpoints.update, {
     params: { id },
     body: input,
-  })
+  });
 }
 
 export function listHouseholdMembers(
@@ -94,7 +92,7 @@ export function listHouseholdMembers(
   return requestContract(householdsEndpoints.members, {
     params: { id },
     query,
-  })
+  });
 }
 
 export function updateHouseholdMember(
@@ -105,7 +103,7 @@ export function updateHouseholdMember(
   return requestContract(householdsEndpoints.updateMember, {
     params: { id, userId },
     body: input,
-  })
+  });
 }
 
 export function removeHouseholdMember(
@@ -114,7 +112,7 @@ export function removeHouseholdMember(
 ): Promise<RemoveHouseholdMemberResult> {
   return requestContract(householdsEndpoints.removeMember, {
     params: { id, userId },
-  })
+  });
 }
 
 export function listHouseholdInvites(
@@ -124,13 +122,13 @@ export function listHouseholdInvites(
   return requestContract(householdsEndpoints.invites, {
     params: { id },
     query,
-  })
+  });
 }
 
 export function listMyHouseholdInvites(
   query: ListMyHouseholdInvitesQuery = {},
 ): Promise<ListMyHouseholdInvitesResult> {
-  return requestContract(householdsEndpoints.myInvites, { query })
+  return requestContract(householdsEndpoints.myInvites, { query });
 }
 
 export function createHouseholdInvite(
@@ -140,7 +138,7 @@ export function createHouseholdInvite(
   return requestContract(householdsEndpoints.createInvite, {
     params: { id },
     body: input,
-  })
+  });
 }
 
 export function previewHouseholdInvite(
@@ -149,19 +147,19 @@ export function previewHouseholdInvite(
   return requestContract(householdsEndpoints.previewInvite, {
     query,
     client: lurabaApiPassiveClient,
-  })
+  });
 }
 
 export function acceptHouseholdInvite(
   input: AcceptHouseholdInviteInput,
 ): Promise<AcceptHouseholdInviteResult> {
-  return requestContract(householdsEndpoints.acceptInvite, { body: input })
+  return requestContract(householdsEndpoints.acceptInvite, { body: input });
 }
 
 export function rejectHouseholdInvite(
   input: AcceptHouseholdInviteInput,
 ): Promise<RejectHouseholdInviteResult> {
-  return requestContract(householdsEndpoints.rejectInvite, { body: input })
+  return requestContract(householdsEndpoints.rejectInvite, { body: input });
 }
 
 export function acceptHouseholdInviteById(
@@ -169,7 +167,7 @@ export function acceptHouseholdInviteById(
 ): Promise<AcceptHouseholdInviteByIdResult> {
   return requestContract(householdsEndpoints.acceptInviteById, {
     params: { inviteId },
-  })
+  });
 }
 
 export function rejectHouseholdInviteById(
@@ -177,7 +175,7 @@ export function rejectHouseholdInviteById(
 ): Promise<RejectHouseholdInviteByIdResult> {
   return requestContract(householdsEndpoints.rejectInviteById, {
     params: { inviteId },
-  })
+  });
 }
 
 export function refreshHouseholdInviteLink(
@@ -186,7 +184,7 @@ export function refreshHouseholdInviteLink(
 ): Promise<RefreshHouseholdInviteLinkResult> {
   return requestContract(householdsEndpoints.refreshInviteLink, {
     params: { id, inviteId },
-  })
+  });
 }
 
 export function resendHouseholdInvite(
@@ -195,7 +193,7 @@ export function resendHouseholdInvite(
 ): Promise<ResendHouseholdInviteResult> {
   return requestContract(householdsEndpoints.resendInvite, {
     params: { id, inviteId },
-  })
+  });
 }
 
 export function cancelHouseholdInvite(
@@ -204,5 +202,5 @@ export function cancelHouseholdInvite(
 ): Promise<CancelHouseholdInviteResult> {
   return requestContract(householdsEndpoints.cancelInvite, {
     params: { id, inviteId },
-  })
+  });
 }

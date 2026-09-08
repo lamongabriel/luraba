@@ -1,28 +1,24 @@
-"use client"
+"use client";
 
-import type { PermissionInput, PermissionMatch } from "@luraba/contracts"
-import type * as React from "react"
+import type { PermissionInput, PermissionMatch } from "@luraba/contracts";
+import type * as React from "react";
 
-import { Button } from "@/components/ui/button"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
-import { useCan } from "./use-can"
+import { useCan } from "./use-can";
 
-type ButtonProps = React.ComponentProps<typeof Button>
+type ButtonProps = React.ComponentProps<typeof Button>;
 
 interface PermissionButtonExtraProps {
-  permission: PermissionInput
-  match?: PermissionMatch
-  deniedMessage?: string
-  whenDenied?: "disabled" | "hidden"
+  permission: PermissionInput;
+  match?: PermissionMatch;
+  deniedMessage?: string;
+  whenDenied?: "disabled" | "hidden";
 }
 
-export type PermissionButtonProps = ButtonProps & PermissionButtonExtraProps
+export type PermissionButtonProps = ButtonProps & PermissionButtonExtraProps;
 
 export function PermissionButton({
   permission,
@@ -33,15 +29,15 @@ export function PermissionButton({
   className,
   ...buttonProps
 }: PermissionButtonProps) {
-  const can = useCan()
-  const allowed = can(permission, match)
+  const can = useCan();
+  const allowed = can(permission, match);
 
   if (allowed) {
-    return <Button disabled={disabled} className={className} {...buttonProps} />
+    return <Button disabled={disabled} className={className} {...buttonProps} />;
   }
 
   if (whenDenied === "hidden") {
-    return null
+    return null;
   }
 
   return (
@@ -58,5 +54,5 @@ export function PermissionButton({
       </TooltipTrigger>
       <TooltipContent side="top">{deniedMessage}</TooltipContent>
     </Tooltip>
-  )
+  );
 }

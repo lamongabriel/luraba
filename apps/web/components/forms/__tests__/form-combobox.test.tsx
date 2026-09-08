@@ -1,9 +1,9 @@
-import { render, screen } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
-import { describe, expect, it, vi } from "vitest"
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 
-import { ComboboxControl } from "@/components/forms/form-combobox"
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
+import { ComboboxControl } from "@/components/forms/form-combobox";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
 class ResizeObserverMock {
   disconnect() {}
@@ -15,13 +15,13 @@ class ResizeObserverMock {
 
 describe("ComboboxControl", () => {
   it("keeps an inline row-action trigger click out of its table row", async () => {
-    vi.stubGlobal("ResizeObserver", ResizeObserverMock)
+    vi.stubGlobal("ResizeObserver", ResizeObserverMock);
     Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
       configurable: true,
       value: vi.fn(),
-    })
-    const user = userEvent.setup()
-    const onRowClick = vi.fn()
+    });
+    const user = userEvent.setup();
+    const onRowClick = vi.fn();
 
     render(
       <Table>
@@ -39,13 +39,13 @@ describe("ComboboxControl", () => {
           </TableRow>
         </TableBody>
       </Table>,
-    )
+    );
 
-    await user.click(screen.getByRole("button", { name: /groceries/i }))
+    await user.click(screen.getByRole("button", { name: /groceries/i }));
 
-    expect(screen.getByPlaceholderText("Search...")).toBeInTheDocument()
-    await user.click(screen.getByRole("option", { name: /groceries/i }))
+    expect(screen.getByPlaceholderText("Search...")).toBeInTheDocument();
+    await user.click(screen.getByRole("option", { name: /groceries/i }));
 
-    expect(onRowClick).not.toHaveBeenCalled()
-  })
-})
+    expect(onRowClick).not.toHaveBeenCalled();
+  });
+});

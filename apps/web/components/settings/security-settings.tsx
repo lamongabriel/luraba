@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   useChangePasswordMutation,
   useRevokeOtherSessionsMutation,
-} from "@/mutations/settings/use-settings-mutations"
+} from "@/mutations/settings/use-settings-mutations";
 
 export function SecuritySettings() {
-  const [currentPassword, setCurrentPassword] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const password = useChangePasswordMutation()
-  const sessions = useRevokeOtherSessionsMutation()
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const password = useChangePasswordMutation();
+  const sessions = useRevokeOtherSessionsMutation();
   return (
     <div className="space-y-4">
       <Card>
@@ -77,5 +77,5 @@ export function SecuritySettings() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,10 +1,10 @@
-import type { LocationTimezoneOption } from "@luraba/contracts"
-import type { FormComboboxOption } from "@/components/forms/form-combobox"
+import type { LocationTimezoneOption } from "@luraba/contracts";
+import type { FormComboboxOption } from "@/components/forms/form-combobox";
 
 export function formatTimezoneLabel(timezone: string) {
-  if (timezone === "UTC") return "UTC"
+  if (timezone === "UTC") return "UTC";
 
-  const city = timezone.split("/").slice(1).join(" / ").replaceAll("_", " ")
+  const city = timezone.split("/").slice(1).join(" / ").replaceAll("_", " ");
 
   try {
     const offset = new Intl.DateTimeFormat("en-US", {
@@ -12,11 +12,11 @@ export function formatTimezoneLabel(timezone: string) {
       timeZoneName: "shortOffset",
     })
       .formatToParts(new Date())
-      .find((part) => part.type === "timeZoneName")?.value
+      .find((part) => part.type === "timeZoneName")?.value;
 
-    return offset ? `${city} (${offset})` : city
+    return offset ? `${city} (${offset})` : city;
   } catch {
-    return city || timezone
+    return city || timezone;
   }
 }
 
@@ -28,5 +28,5 @@ export function createTimezoneOptions(
     label: timezone.value,
     description: timezone.label,
     searchText: `${timezone.value} ${timezone.label} ${timezone.abbreviation}`,
-  }))
+  }));
 }

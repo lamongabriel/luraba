@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 import {
   accountClassificationEnum,
   accountTypeEnum,
@@ -14,7 +14,7 @@ import {
   propertyAreaUnitEnum,
   vehicleAccountSubtypeEnum,
   vehicleMileageUnitEnum,
-} from '@/db/schemas/enums.schema';
+} from "@/db/schemas/enums.schema";
 
 export const accountClassificationSchema = z.enum(accountClassificationEnum.enumValues);
 export const accountTypeSchema = z.enum(accountTypeEnum.enumValues);
@@ -40,7 +40,7 @@ export const accountSubtypeSchema = z.union([
   loanAccountSubtypeSchema,
   otherAssetSubtypeSchema,
   otherLiabilitySubtypeSchema,
-  z.literal('credit'),
+  z.literal("credit"),
 ]);
 
 export type AccountClassification = z.infer<typeof accountClassificationSchema>;

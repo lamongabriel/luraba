@@ -1,10 +1,10 @@
-import nodemailer from 'nodemailer';
-import type { Address } from 'nodemailer/lib/mailer';
-import type SMTPTransport from 'nodemailer/lib/smtp-transport';
-import { env } from '@/config/env';
-import { DependencyUnavailableError } from '@/shared/errors';
-import { isMailConfigured } from './mail.config';
-import { sendMailPayloadSchema } from './mail.schemas';
+import nodemailer from "nodemailer";
+import type { Address } from "nodemailer/lib/mailer";
+import type SMTPTransport from "nodemailer/lib/smtp-transport";
+import { env } from "@/config/env";
+import { DependencyUnavailableError } from "@/shared/errors";
+import { isMailConfigured } from "./mail.config";
+import { sendMailPayloadSchema } from "./mail.schemas";
 import type {
   MailAddress,
   MailConfig,
@@ -12,10 +12,10 @@ import type {
   MailTransportFactory,
   SendMailPayload,
   SendMailResult,
-} from './mail.types';
+} from "./mail.types";
 
 function formatRecipient(recipient: string | Address): string {
-  return typeof recipient === 'string' ? recipient : recipient.address;
+  return typeof recipient === "string" ? recipient : recipient.address;
 }
 
 export class MailService {
@@ -35,7 +35,7 @@ export class MailService {
     const parsed = sendMailPayloadSchema.parse(payload);
 
     if (!isMailConfigured(this.config)) {
-      throw new DependencyUnavailableError('Email delivery is not configured');
+      throw new DependencyUnavailableError("Email delivery is not configured");
     }
 
     try {
@@ -54,13 +54,13 @@ export class MailService {
         rejected: result.rejected.map(formatRecipient),
       };
     } catch {
-      throw new DependencyUnavailableError('Email delivery is currently unavailable');
+      throw new DependencyUnavailableError("Email delivery is currently unavailable");
     }
   }
 
   private defaultFrom(): MailAddress {
     if (!isMailConfigured(this.config)) {
-      throw new DependencyUnavailableError('Email delivery is not configured');
+      throw new DependencyUnavailableError("Email delivery is not configured");
     }
 
     return {
@@ -71,7 +71,7 @@ export class MailService {
 
   private getTransporter(): MailTransporter {
     if (!isMailConfigured(this.config)) {
-      throw new DependencyUnavailableError('Email delivery is not configured');
+      throw new DependencyUnavailableError("Email delivery is not configured");
     }
 
     const options: SMTPTransport.Options = {

@@ -1,14 +1,14 @@
-import type { listIntegrationsQuerySchema } from '@luraba/contracts/integrations';
-import { eq, type SQL, sql } from 'drizzle-orm';
-import type { z } from 'zod';
-import { brandfetchIntegrationsTable } from '@/db/schemas/brandfetch-integrations.schema';
+import type { listIntegrationsQuerySchema } from "@luraba/contracts/integrations";
+import { eq, type SQL, sql } from "drizzle-orm";
+import type { z } from "zod";
+import { brandfetchIntegrationsTable } from "@/db/schemas/brandfetch-integrations.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,
   combineConditions,
   inArrayIfAny,
   rangeConditions,
-} from '@/shared/list';
+} from "@/shared/list";
 
 export type ListIntegrationsQuery = z.output<typeof listIntegrationsQuerySchema>;
 

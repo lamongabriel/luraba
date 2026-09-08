@@ -1,11 +1,11 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it } from "vitest";
 
-import { createEditTransactionFormSchema } from "../create-edit-transaction-form.schema"
+import { createEditTransactionFormSchema } from "../create-edit-transaction-form.schema";
 
-const ACCOUNT_ID = "11111111-1111-4111-8111-111111111111"
-const TO_ACCOUNT_ID = "22222222-2222-4222-8222-222222222222"
-const CARD_ID = "33333333-3333-4333-8333-333333333333"
-const CATEGORY_ID = "44444444-4444-4444-8444-444444444444"
+const ACCOUNT_ID = "11111111-1111-4111-8111-111111111111";
+const TO_ACCOUNT_ID = "22222222-2222-4222-8222-222222222222";
+const CARD_ID = "33333333-3333-4333-8333-333333333333";
+const CATEGORY_ID = "44444444-4444-4444-8444-444444444444";
 
 const base = {
   description: "Transaction",
@@ -23,7 +23,7 @@ const base = {
   installmentCount: 1,
   includeInBudget: true,
   tagIds: [],
-}
+};
 
 describe("createEditTransactionFormSchema", () => {
   it.each([
@@ -57,10 +57,8 @@ describe("createEditTransactionFormSchema", () => {
       fromAccountId: ACCOUNT_ID,
     },
   ] as const)("accepts the $kind form branch", (branch) => {
-    expect(
-      createEditTransactionFormSchema.safeParse({ ...base, ...branch }).success,
-    ).toBe(true)
-  })
+    expect(createEditTransactionFormSchema.safeParse({ ...base, ...branch }).success).toBe(true);
+  });
 
   it("rejects a transfer to the same account", () => {
     const result = createEditTransactionFormSchema.safeParse({
@@ -69,17 +67,17 @@ describe("createEditTransactionFormSchema", () => {
       fromAccountId: ACCOUNT_ID,
       toAccountId: ACCOUNT_ID,
       toAmount: 100,
-    })
+    });
 
-    expect(result.success).toBe(false)
-    if (result.success) return
+    expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error.issues).toContainEqual(
       expect.objectContaining({
         path: ["toAccountId"],
         message: "Choose a different destination account.",
       }),
-    )
-  })
+    );
+  });
 
   it("requires a destination amount when FX quoting is unavailable", () => {
     const result = createEditTransactionFormSchema.safeParse({
@@ -87,15 +85,15 @@ describe("createEditTransactionFormSchema", () => {
       kind: "transfer",
       fromAccountId: ACCOUNT_ID,
       toAccountId: TO_ACCOUNT_ID,
-    })
+    });
 
-    expect(result.success).toBe(false)
-    if (result.success) return
+    expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error.issues).toContainEqual(
       expect.objectContaining({
         path: ["toAmount"],
         message: "Enter or quote a destination amount.",
       }),
-    )
-  })
-})
+    );
+  });
+});

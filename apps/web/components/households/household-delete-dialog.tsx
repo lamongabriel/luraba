@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Button } from "@/components/ui/button"
+import * as React from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function HouseholdDeleteDialog({
   householdName,
@@ -20,18 +20,18 @@ export function HouseholdDeleteDialog({
   onConfirm,
   isPending = false,
 }: {
-  householdName: string
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onConfirm: () => void
-  isPending?: boolean
+  householdName: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  isPending?: boolean;
 }) {
-  const [confirmation, setConfirmation] = React.useState("")
-  const matches = confirmation.trim() === householdName
+  const [confirmation, setConfirmation] = React.useState("");
+  const matches = confirmation.trim() === householdName;
 
   React.useEffect(() => {
-    if (!open) setConfirmation("")
-  }, [open])
+    if (!open) setConfirmation("");
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -39,15 +39,12 @@ export function HouseholdDeleteDialog({
         <DialogHeader>
           <DialogTitle>Delete {householdName}?</DialogTitle>
           <DialogDescription>
-            This permanently destroys the household, its accounts, transactions,
-            cards, budgets, categories, tags, invitations, members, and
-            settings. This cannot be undone.
+            This permanently destroys the household, its accounts, transactions, cards, budgets,
+            categories, tags, invitations, members, and settings. This cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-2">
-          <Label htmlFor="delete-household-confirmation">
-            Type the household name to continue
-          </Label>
+          <Label htmlFor="delete-household-confirmation">Type the household name to continue</Label>
           <Input
             id="delete-household-confirmation"
             value={confirmation}
@@ -71,5 +68,5 @@ export function HouseholdDeleteDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

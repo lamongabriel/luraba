@@ -1,17 +1,17 @@
 import {
   transactionAnalyticsQuerySchema,
   transactionAnalyticsSchema,
-} from '@luraba/contracts/transactions';
-import { differenceInCalendarDays, startOfMonth, startOfWeek, subDays } from 'date-fns';
-import { eq } from 'drizzle-orm';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { householdsTable } from '@/db/schemas/households.schema';
-import { authRepository } from '@/modules/auth/auth.repository';
-import { fxService } from '@/modules/fx/fx.service';
-import { formatISODate, getTodayInTimezone, parseISODate } from '@/shared/lib/date';
-import * as repository from './transactions.analytics.repository';
-import type { TransactionFilterQuery } from './transactions.query';
+} from "@luraba/contracts/transactions";
+import { differenceInCalendarDays, startOfMonth, startOfWeek, subDays } from "date-fns";
+import { eq } from "drizzle-orm";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { householdsTable } from "@/db/schemas/households.schema";
+import { authRepository } from "@/modules/auth/auth.repository";
+import { fxService } from "@/modules/fx/fx.service";
+import { formatISODate, getTodayInTimezone, parseISODate } from "@/shared/lib/date";
+import * as repository from "./transactions.analytics.repository";
+import type { TransactionFilterQuery } from "./transactions.query";
 
 type ConvertedRow = repository.TransactionAnalyticsAggregateRow & { amount: number };
 
@@ -22,16 +22,16 @@ function clampDates(query: TransactionFilterQuery, today: string) {
   };
 }
 
-function chooseBucket(from: string | null, to: string | null): 'day' | 'week' | 'month' {
-  if (!from || !to) return 'month';
+function chooseBucket(from: string | null, to: string | null): "day" | "week" | "month" {
+  if (!from || !to) return "month";
   const days = differenceInCalendarDays(parseISODate(to), parseISODate(from));
-  return days <= 45 ? 'day' : days <= 240 ? 'week' : 'month';
+  return days <= 45 ? "day" : days <= 240 ? "week" : "month";
 }
 
-function bucketDate(value: string, bucket: 'day' | 'week' | 'month'): string {
+function bucketDate(value: string, bucket: "day" | "week" | "month"): string {
   const date = parseISODate(value);
-  if (bucket === 'day') return value;
-  if (bucket === 'week') return formatISODate(startOfWeek(date, { weekStartsOn: 1 }));
+  if (bucket === "day") return value;
+  if (bucket === "week") return formatISODate(startOfWeek(date, { weekStartsOn: 1 }));
   return formatISODate(startOfMonth(date));
 }
 
@@ -47,7 +47,7 @@ async function resolveCurrency(context: HouseholdContext): Promise<string> {
     .select({ currencyCode: householdsTable.defaultCurrencyId })
     .from(householdsTable)
     .where(eq(householdsTable.id, context.householdId));
-  return rows[0]?.currencyCode ?? 'USD';
+  return rows[0]?.currencyCode ?? "USD";
 }
 
 async function convertRows(
@@ -72,19 +72,19 @@ async function convertRows(
 
 function metric(
   rows: ConvertedRow[],
-  kind: 'moneyIn' | 'moneyOut' | 'net',
-  bucket: 'day' | 'week' | 'month',
+  kind: "moneyIn" | "moneyOut" | "net",
+  bucket: "day" | "week" | "month",
 ) {
   const values = new Map<string, number>();
   for (const row of rows) {
-    const signed = row.originType === 'income' ? row.amount : -row.amount;
+    const signed = row.originType === "income" ? row.amount : -row.amount;
     const value =
-      kind === 'moneyIn'
-        ? row.originType === 'income'
+      kind === "moneyIn"
+        ? row.originType === "income"
           ? row.amount
           : 0
-        : kind === 'moneyOut'
-          ? row.originType === 'income'
+        : kind === "moneyOut"
+          ? row.originType === "income"
             ? 0
             : row.amount
           : signed;
@@ -101,8 +101,8 @@ function metric(
 function createMetric(
   currentRows: ConvertedRow[],
   previousRows: ConvertedRow[],
-  kind: 'moneyIn' | 'moneyOut' | 'net',
-  bucket: 'day' | 'week' | 'month',
+  kind: "moneyIn" | "moneyOut" | "net",
+  bucket: "day" | "week" | "month",
 ) {
   const currentTrend = metric(currentRows, kind, bucket);
   const previousTrend = metric(previousRows, kind, bucket);
@@ -155,11 +155,11 @@ export async function getAnalytics(context: HouseholdContext, input: Transaction
     }
   >();
   for (const row of current) {
-    if (row.originType === 'income') continue;
-    const key = row.categoryId ?? 'uncategorized';
+    if (row.originType === "income") continue;
+    const key = row.categoryId ?? "uncategorized";
     const item = breakdown.get(key) ?? {
       id: row.categoryId,
-      name: row.categoryName ?? 'Uncategorized',
+      name: row.categoryName ?? "Uncategorized",
       icon: row.categoryIcon,
       color: row.categoryColor,
       amount: 0,
@@ -172,7 +172,7 @@ export async function getAnalytics(context: HouseholdContext, input: Transaction
   if (sortedBreakdown.length > 10) {
     top.push({
       id: null,
-      name: 'Other',
+      name: "Other",
       icon: null,
       color: null,
       amount: sortedBreakdown.slice(10).reduce((total, item) => total + item.amount, 0),
@@ -185,9 +185,9 @@ export async function getAnalytics(context: HouseholdContext, input: Transaction
     dateFrom: query.dateFrom ?? null,
     dateTo: query.dateTo ?? null,
     metrics: {
-      moneyIn: createMetric(current, previous, 'moneyIn', bucket),
-      moneyOut: createMetric(current, previous, 'moneyOut', bucket),
-      net: createMetric(current, previous, 'net', bucket),
+      moneyIn: createMetric(current, previous, "moneyIn", bucket),
+      moneyOut: createMetric(current, previous, "moneyOut", bucket),
+      net: createMetric(current, previous, "net", bucket),
     },
     expenseBreakdown: {
       items: top.map((item) => ({

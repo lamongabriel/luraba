@@ -3,9 +3,9 @@ import type {
   AccountType,
   CreateAccountProfile,
   UpdateAccountProfile,
-} from '@luraba/contracts/accounts';
-import { eq } from 'drizzle-orm';
-import { db } from '@/db';
+} from "@luraba/contracts/accounts";
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
 import {
   cashAccountProfilesTable,
   cryptoAccountProfilesTable,
@@ -15,11 +15,11 @@ import {
   otherLiabilityAccountProfilesTable,
   propertyAccountProfilesTable,
   vehicleAccountProfilesTable,
-} from '@/db/schemas/account-profiles.schema';
-import type { TxClient } from '@/db/types';
+} from "@/db/schemas/account-profiles.schema";
+import type { TxClient } from "@/db/types";
 
 const nullable = <T>(value: T | null | undefined): T | null => value ?? null;
-const withoutKind = <T extends { kind: string }>(details: T): Omit<T, 'kind'> => {
+const withoutKind = <T extends { kind: string }>(details: T): Omit<T, "kind"> => {
   const { kind: _kind, ...values } = details;
   return values;
 };
@@ -30,32 +30,32 @@ export async function createAccountProfile(
   details: CreateAccountProfile,
 ): Promise<void> {
   switch (details.kind) {
-    case 'cash':
+    case "cash":
       await tx.insert(cashAccountProfilesTable).values({ accountId, ...withoutKind(details) });
       return;
-    case 'investment':
+    case "investment":
       await tx
         .insert(investmentAccountProfilesTable)
         .values({ accountId, ...withoutKind(details) });
       return;
-    case 'crypto':
+    case "crypto":
       await tx.insert(cryptoAccountProfilesTable).values({ accountId, ...withoutKind(details) });
       return;
-    case 'property':
+    case "property":
       await tx.insert(propertyAccountProfilesTable).values({ accountId, ...withoutKind(details) });
       return;
-    case 'vehicle':
+    case "vehicle":
       await tx.insert(vehicleAccountProfilesTable).values({ accountId, ...withoutKind(details) });
       return;
-    case 'loan':
+    case "loan":
       await tx.insert(loanAccountProfilesTable).values({ accountId, ...withoutKind(details) });
       return;
-    case 'other_asset':
+    case "other_asset":
       await tx
         .insert(otherAssetAccountProfilesTable)
         .values({ accountId, subtype: details.subtype });
       return;
-    case 'other_liability':
+    case "other_liability":
       await tx
         .insert(otherLiabilityAccountProfilesTable)
         .values({ accountId, subtype: details.subtype });
@@ -69,49 +69,49 @@ export async function updateAccountProfile(
   details: UpdateAccountProfile,
 ): Promise<void> {
   switch (details.kind) {
-    case 'cash':
+    case "cash":
       await tx
         .update(cashAccountProfilesTable)
         .set(withoutKind(details))
         .where(eq(cashAccountProfilesTable.accountId, accountId));
       return;
-    case 'investment':
+    case "investment":
       await tx
         .update(investmentAccountProfilesTable)
         .set(withoutKind(details))
         .where(eq(investmentAccountProfilesTable.accountId, accountId));
       return;
-    case 'crypto':
+    case "crypto":
       await tx
         .update(cryptoAccountProfilesTable)
         .set(withoutKind(details))
         .where(eq(cryptoAccountProfilesTable.accountId, accountId));
       return;
-    case 'property':
+    case "property":
       await tx
         .update(propertyAccountProfilesTable)
         .set(withoutKind(details))
         .where(eq(propertyAccountProfilesTable.accountId, accountId));
       return;
-    case 'vehicle':
+    case "vehicle":
       await tx
         .update(vehicleAccountProfilesTable)
         .set(withoutKind(details))
         .where(eq(vehicleAccountProfilesTable.accountId, accountId));
       return;
-    case 'loan':
+    case "loan":
       await tx
         .update(loanAccountProfilesTable)
         .set(withoutKind(details))
         .where(eq(loanAccountProfilesTable.accountId, accountId));
       return;
-    case 'other_asset':
+    case "other_asset":
       await tx
         .update(otherAssetAccountProfilesTable)
         .set(withoutKind(details))
         .where(eq(otherAssetAccountProfilesTable.accountId, accountId));
       return;
-    case 'other_liability':
+    case "other_liability":
       await tx
         .update(otherLiabilityAccountProfilesTable)
         .set(withoutKind(details))
@@ -125,52 +125,52 @@ export async function getAccountProfile(
   type: AccountType,
 ): Promise<AccountProfile | undefined> {
   switch (type) {
-    case 'cash': {
+    case "cash": {
       const [row] = await db
         .select()
         .from(cashAccountProfilesTable)
         .where(eq(cashAccountProfilesTable.accountId, accountId));
       return row
         ? {
-            kind: 'cash',
+            kind: "cash",
             subtype: row.subtype,
           }
         : undefined;
     }
-    case 'investment': {
+    case "investment": {
       const [row] = await db
         .select()
         .from(investmentAccountProfilesTable)
         .where(eq(investmentAccountProfilesTable.accountId, accountId));
       return row
         ? {
-            kind: 'investment',
+            kind: "investment",
             subtype: row.subtype,
           }
         : undefined;
     }
-    case 'crypto': {
+    case "crypto": {
       const [row] = await db
         .select()
         .from(cryptoAccountProfilesTable)
         .where(eq(cryptoAccountProfilesTable.accountId, accountId));
       return row
         ? {
-            kind: 'crypto',
+            kind: "crypto",
             subtype: row.subtype,
             walletAddress: nullable(row.walletAddress),
             network: nullable(row.network),
           }
         : undefined;
     }
-    case 'property': {
+    case "property": {
       const [row] = await db
         .select()
         .from(propertyAccountProfilesTable)
         .where(eq(propertyAccountProfilesTable.accountId, accountId));
       return row
         ? {
-            kind: 'property',
+            kind: "property",
             subtype: row.subtype,
             addressLine1: nullable(row.addressLine1),
             addressLine2: nullable(row.addressLine2),
@@ -184,14 +184,14 @@ export async function getAccountProfile(
           }
         : undefined;
     }
-    case 'vehicle': {
+    case "vehicle": {
       const [row] = await db
         .select()
         .from(vehicleAccountProfilesTable)
         .where(eq(vehicleAccountProfilesTable.accountId, accountId));
       return row
         ? {
-            kind: 'vehicle',
+            kind: "vehicle",
             subtype: row.subtype,
             make: nullable(row.make),
             model: nullable(row.model),
@@ -204,14 +204,14 @@ export async function getAccountProfile(
           }
         : undefined;
     }
-    case 'loan': {
+    case "loan": {
       const [row] = await db
         .select()
         .from(loanAccountProfilesTable)
         .where(eq(loanAccountProfilesTable.accountId, accountId));
       return row
         ? {
-            kind: 'loan',
+            kind: "loan",
             subtype: row.subtype,
             originalPrincipal: nullable(row.originalPrincipal),
             annualInterestRate: nullable(row.annualInterestRate),
@@ -225,19 +225,19 @@ export async function getAccountProfile(
           }
         : undefined;
     }
-    case 'other_asset': {
+    case "other_asset": {
       const [row] = await db
         .select()
         .from(otherAssetAccountProfilesTable)
         .where(eq(otherAssetAccountProfilesTable.accountId, accountId));
-      return row ? { kind: 'other_asset', subtype: row.subtype } : undefined;
+      return row ? { kind: "other_asset", subtype: row.subtype } : undefined;
     }
-    case 'other_liability': {
+    case "other_liability": {
       const [row] = await db
         .select()
         .from(otherLiabilityAccountProfilesTable)
         .where(eq(otherLiabilityAccountProfilesTable.accountId, accountId));
-      return row ? { kind: 'other_liability', subtype: row.subtype } : undefined;
+      return row ? { kind: "other_liability", subtype: row.subtype } : undefined;
     }
   }
 

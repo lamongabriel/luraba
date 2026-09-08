@@ -1,4 +1,4 @@
-import type { entriesTable } from '@/db/schemas/entries.schema';
+import type { entriesTable } from "@/db/schemas/entries.schema";
 
 export type EntryRecord = typeof entriesTable.$inferSelect;
 

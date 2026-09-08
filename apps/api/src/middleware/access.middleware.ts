@@ -1,16 +1,16 @@
-import { fromNodeHeaders } from 'better-auth/node';
-import { and, eq } from 'drizzle-orm';
-import type { NextFunction, Request, Response } from 'express';
 import {
   getPermissionsForRole,
   type HouseholdPermission,
   hasHouseholdPermission,
-} from '@/config/permissions';
-import { db } from '@/db';
-import { householdMembersTable, householdsTable } from '@/db/schemas/households.schema';
-import * as householdsService from '@/modules/households/households.service';
-import { ForbiddenError, UnauthorizedError } from '@/shared/errors';
-import { auth } from '@/shared/lib/auth';
+} from "@luraba/contracts";
+import { fromNodeHeaders } from "better-auth/node";
+import { and, eq } from "drizzle-orm";
+import type { NextFunction, Request, Response } from "express";
+import { db } from "@/db";
+import { householdMembersTable, householdsTable } from "@/db/schemas/households.schema";
+import * as householdsService from "@/modules/households/households.service";
+import { ForbiddenError, UnauthorizedError } from "@/shared/errors";
+import { auth } from "@/shared/lib/auth";
 
 export type AuthenticatedUser = {
   id: string;
@@ -32,7 +32,7 @@ async function authenticateRequest(req: Request): Promise<AuthenticatedUser> {
     headers: fromNodeHeaders(req.headers),
   });
   if (!session) {
-    throw new UnauthorizedError('Authentication required');
+    throw new UnauthorizedError("Authentication required");
   }
 
   req.user = {
@@ -44,7 +44,7 @@ async function authenticateRequest(req: Request): Promise<AuthenticatedUser> {
 }
 
 function getHouseholdIdFromHeader(req: Request): string | undefined {
-  const rawValue = req.headers['x-household-id'];
+  const rawValue = req.headers["x-household-id"];
   const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;
   return value?.trim() || undefined;
 }
@@ -55,13 +55,13 @@ function getHouseholdIdFromRoute(req: Request, householdParam?: string): string 
   }
 
   const value = req.params[householdParam];
-  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
 async function resolveHousehold(
   req: Request,
   options: AccessOptions,
-): Promise<NonNullable<Request['household']>> {
+): Promise<NonNullable<Request["household"]>> {
   const user = await authenticateRequest(req);
   const requestedHouseholdId =
     getHouseholdIdFromHeader(req) ?? getHouseholdIdFromRoute(req, options.householdParam);
@@ -77,7 +77,7 @@ async function resolveHousehold(
     requestedHouseholdId ?? (await householdsService.resolveHouseholdIdForUser(user.id));
 
   if (!householdId) {
-    throw new ForbiddenError('A household is required for this request');
+    throw new ForbiddenError("A household is required for this request");
   }
 
   const rows = await db
@@ -98,7 +98,7 @@ async function resolveHousehold(
 
   const membership = rows[0];
   if (!membership) {
-    throw new ForbiddenError('You do not have access to this household');
+    throw new ForbiddenError("You do not have access to this household");
   }
 
   req.household = {
@@ -124,7 +124,7 @@ export function requireAccess(options: AccessOptions = {}) {
         const household = await resolveHousehold(req, options);
 
         if (options.permission && !hasHouseholdPermission(household.role, options.permission)) {
-          throw new ForbiddenError('You do not have permission to perform this action');
+          throw new ForbiddenError("You do not have permission to perform this action");
         }
       }
 
@@ -137,7 +137,7 @@ export function requireAccess(options: AccessOptions = {}) {
 
 export function getAuthenticatedUser(req: Request): AuthenticatedUser {
   if (!req.user) {
-    throw new UnauthorizedError('Authentication required');
+    throw new UnauthorizedError("Authentication required");
   }
 
   return req.user;
@@ -145,7 +145,7 @@ export function getAuthenticatedUser(req: Request): AuthenticatedUser {
 
 export function getHouseholdContext(req: Request) {
   if (!req.household) {
-    throw new ForbiddenError('Household context required');
+    throw new ForbiddenError("Household context required");
   }
 
   return req.household;

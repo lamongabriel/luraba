@@ -1,28 +1,28 @@
-"use client"
+"use client";
 
-import { ArrowRight01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { CreditCard } from "@luraba/contracts"
-import Link from "next/link"
-import { EmptyState } from "@/components/empty-state"
-import { ErrorState } from "@/components/error-state"
-import { MoneyValue } from "@/components/finance/money-value"
-import { TransactionTypeBadge } from "@/components/tables/transactions/transaction-type-badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Typography } from "@/components/ui/typography"
-import { formatDate } from "@/lib/format"
-import { useTransactionsQuery } from "@/queries/transactions/use-transactions-query"
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { CreditCard } from "@luraba/contracts";
+import Link from "next/link";
+import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
+import { MoneyValue } from "@/components/finance/money-value";
+import { TransactionTypeBadge } from "@/components/tables/transactions/transaction-type-badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
+import { formatDate } from "@/lib/format";
+import { useTransactionsQuery } from "@/queries/transactions/use-transactions-query";
 
 export function CreditCardActivity({
   card,
   language,
   precision,
 }: {
-  card: CreditCard
-  language: string
-  precision: number
+  card: CreditCard;
+  language: string;
+  precision: number;
 }) {
   const query = useTransactionsQuery({
     creditCardIds: [card.id],
@@ -30,16 +30,14 @@ export function CreditCardActivity({
     perPage: 5,
     sort: "postedDate",
     sortDirection: "desc",
-  })
+  });
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-3 pb-2">
         <CardTitle>Recent activity</CardTitle>
         <Button asChild variant="link" size="sm">
-          <Link
-            href={`/transactions?creditCardIds=${encodeURIComponent(card.id)}`}
-          >
+          <Link href={`/transactions?creditCardIds=${encodeURIComponent(card.id)}`}>
             View all
             <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} />
           </Link>
@@ -103,5 +101,5 @@ export function CreditCardActivity({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

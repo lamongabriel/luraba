@@ -1,5 +1,5 @@
-import type { OnboardingOptionsResponse } from '@luraba/contracts/onboarding';
-import { currenciesRepository } from '@/modules/currencies/currencies.repository';
+import type { OnboardingOptionsResponse } from "@luraba/contracts/onboarding";
+import { currenciesRepository } from "@/modules/currencies/currencies.repository";
 import {
   COUNTRY_CODE_VALUES,
   CREDIT_EXPENSE_TIMING_VALUES,
@@ -9,7 +9,7 @@ import {
   PREFERRED_PERIOD_VALUES,
   PREFERRED_THEME_VALUES,
   TIMEZONE_VALUES,
-} from '@/shared/validation/preferences';
+} from "@/shared/validation/preferences";
 
 export async function getOptions(): Promise<OnboardingOptionsResponse> {
   const currencies = await currenciesRepository.list();

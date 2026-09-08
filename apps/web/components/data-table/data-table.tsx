@@ -1,11 +1,7 @@
-import {
-  flexRender,
-  type Row,
-  type Table as TanstackTable,
-} from "@tanstack/react-table"
-import type * as React from "react"
+import { flexRender, type Row, type Table as TanstackTable } from "@tanstack/react-table";
+import type * as React from "react";
 
-import { DataTablePagination } from "@/components/data-table/data-table-pagination"
+import { DataTablePagination } from "@/components/data-table/data-table-pagination";
 import {
   Table,
   TableBody,
@@ -13,25 +9,23 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { getColumnPinningStyle } from "@/lib/data-table"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/table";
+import { getColumnPinningStyle } from "@/lib/data-table";
+import { cn } from "@/lib/utils";
 
 function isRowActionTarget(target: EventTarget | null) {
-  return (
-    target instanceof Element && Boolean(target.closest("[data-row-action]"))
-  )
+  return target instanceof Element && Boolean(target.closest("[data-row-action]"));
 }
 
 interface DataTableProps<TData> extends React.ComponentProps<"div"> {
-  table: TanstackTable<TData>
-  actionBar?: React.ReactNode
-  emptyState?: React.ReactNode
-  onRowClick?: (row: Row<TData>) => void
-  pageSizeOptions?: number[]
-  showPagination?: boolean
-  totalCount?: number
-  itemLabel?: string
+  table: TanstackTable<TData>;
+  actionBar?: React.ReactNode;
+  emptyState?: React.ReactNode;
+  onRowClick?: (row: Row<TData>) => void;
+  pageSizeOptions?: number[];
+  showPagination?: boolean;
+  totalCount?: number;
+  itemLabel?: string;
 }
 
 export function DataTable<TData>({
@@ -49,10 +43,7 @@ export function DataTable<TData>({
 }: DataTableProps<TData>) {
   return (
     <div
-      className={cn(
-        "flex min-w-0 w-full max-w-full flex-col gap-2.5 overflow-hidden",
-        className,
-      )}
+      className={cn("flex min-w-0 w-full max-w-full flex-col gap-2.5 overflow-hidden", className)}
       {...props}
     >
       {children}
@@ -71,10 +62,7 @@ export function DataTable<TData>({
                   >
                     {header.isPlaceholder
                       ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                      : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -87,16 +75,13 @@ export function DataTable<TData>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   onClick={(event) => {
-                    if (event.defaultPrevented) return
+                    if (event.defaultPrevented) return;
                     if (isRowActionTarget(event.target)) {
-                      return
+                      return;
                     }
-                    onRowClick?.(row)
+                    onRowClick?.(row);
                   }}
-                  className={cn(
-                    "transition-colors",
-                    onRowClick && "active:bg-primary/15",
-                  )}
+                  className={cn("transition-colors", onRowClick && "active:bg-primary/15")}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
@@ -105,20 +90,14 @@ export function DataTable<TData>({
                         ...getColumnPinningStyle({ column: cell.column }),
                       }}
                     >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow data-hover-disabled="true">
-                <TableCell
-                  colSpan={table.getAllColumns().length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={table.getAllColumns().length} className="h-24 text-center">
                   {emptyState ?? "No results."}
                 </TableCell>
               </TableRow>
@@ -139,5 +118,5 @@ export function DataTable<TData>({
         {actionBar && table.getSelectedRowModel().rows.length > 0 && actionBar}
       </div>
     </div>
-  )
+  );
 }

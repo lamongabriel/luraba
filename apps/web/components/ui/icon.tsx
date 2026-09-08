@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { HugeiconsIcon } from "@hugeicons/react"
-import { cva, type VariantProps } from "class-variance-authority"
-import type * as React from "react"
+import { HugeiconsIcon } from "@hugeicons/react";
+import { cva, type VariantProps } from "class-variance-authority";
+import type * as React from "react";
 
-import { DEFAULT_CURATED_ICON_NAME, resolveCuratedIcon } from "@/lib/icons"
-import { cn } from "@/lib/utils"
+import { DEFAULT_CURATED_ICON_NAME, resolveCuratedIcon } from "@/lib/icons";
+import { cn } from "@/lib/utils";
 
 const iconVariants = cva("inline-flex shrink-0 items-center justify-center", {
   variants: {
@@ -34,24 +34,21 @@ const iconVariants = cva("inline-flex shrink-0 items-center justify-center", {
     variant: "plain",
     size: "md",
   },
-})
+});
 
-const NEUTRAL_COLOR = "var(--color-muted-foreground)"
+const NEUTRAL_COLOR = "var(--color-muted-foreground)";
 
 export interface IconProps
-  extends Omit<
-      React.ComponentProps<typeof HugeiconsIcon>,
-      "icon" | "size" | "color" | "name"
-    >,
+  extends Omit<React.ComponentProps<typeof HugeiconsIcon>, "icon" | "size" | "color" | "name">,
     VariantProps<typeof iconVariants> {
   /** Persisted icon name (a hugeicons export name, e.g. "Wallet01Icon"). */
-  name?: string | null
+  name?: string | null;
   /**
    * Tint color. Applied to the glyph; on `variant="chip"` it also tints a
    * translucent chip background. Falls back to a neutral muted tone.
    */
-  color?: string | null
-  className?: string
+  color?: string | null;
+  className?: string;
 }
 
 /**
@@ -73,10 +70,9 @@ export function Icon({
   strokeWidth = 2,
   ...props
 }: IconProps) {
-  const icon =
-    resolveCuratedIcon(name) ?? resolveCuratedIcon(DEFAULT_CURATED_ICON_NAME)
-  const tint = color ?? NEUTRAL_COLOR
-  const isChip = variant === "chip"
+  const icon = resolveCuratedIcon(name) ?? resolveCuratedIcon(DEFAULT_CURATED_ICON_NAME);
+  const tint = color ?? NEUTRAL_COLOR;
+  const isChip = variant === "chip";
 
   return (
     <span
@@ -91,9 +87,7 @@ export function Icon({
           : undefined,
       }}
     >
-      {icon ? (
-        <HugeiconsIcon icon={icon} strokeWidth={strokeWidth} {...props} />
-      ) : null}
+      {icon ? <HugeiconsIcon icon={icon} strokeWidth={strokeWidth} {...props} /> : null}
     </span>
-  )
+  );
 }

@@ -1,7 +1,7 @@
-import type { listAccountsQuerySchema } from '@luraba/contracts/accounts';
-import { eq, ne, type SQL, sql } from 'drizzle-orm';
-import type { z } from 'zod';
-import { accountsTable } from '@/db/schemas/accounts.schema';
+import type { listAccountsQuerySchema } from "@luraba/contracts/accounts";
+import { eq, ne, type SQL, sql } from "drizzle-orm";
+import type { z } from "zod";
+import { accountsTable } from "@/db/schemas/accounts.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,
@@ -9,7 +9,7 @@ import {
   inArrayIfAny,
   nullabilityCondition,
   rangeConditions,
-} from '@/shared/list';
+} from "@/shared/list";
 
 export type ListAccountsQuery = z.output<typeof listAccountsQuerySchema>;
 
@@ -22,7 +22,7 @@ export function buildAccountsListWhere(
 ): SQL {
   return combineConditions(
     eq(accountsTable.householdId, householdId),
-    ne(accountsTable.type, 'credit_card'),
+    ne(accountsTable.type, "credit_card"),
     buildIlikeSearch(query.search, [
       sql`${accountsTable.name}`,
       sql`${accountsTable.institutionName}`,

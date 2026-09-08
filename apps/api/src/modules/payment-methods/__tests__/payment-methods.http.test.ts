@@ -1,33 +1,33 @@
-import request from 'supertest';
-import app from '@/app';
-import { createAuthenticatedContext, createAuthHeaders } from '@/test/auth';
-import { buildPaymentMethodInput } from '@/test/factories';
+import request from "supertest";
+import app from "@/app";
+import { createAuthenticatedContext, createAuthHeaders } from "@/test/auth";
+import { buildPaymentMethodInput } from "@/test/factories";
 
-describe('payment methods routes', () => {
-  it('GET /api/v1/payment-methods requires authentication', async () => {
-    const response = await request(app).get('/api/v1/payment-methods');
+describe("payment methods routes", () => {
+  it("GET /api/v1/payment-methods requires authentication", async () => {
+    const response = await request(app).get("/api/v1/payment-methods");
 
     expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('UNAUTHORIZED');
+    expect(response.body.error.code).toBe("UNAUTHORIZED");
   });
 
-  it('GET /api/v1/payment-methods lists system and household methods', async () => {
+  it("GET /api/v1/payment-methods lists system and household methods", async () => {
     const context = await createAuthenticatedContext();
 
     await request(app)
-      .post('/api/v1/payment-methods')
+      .post("/api/v1/payment-methods")
       .set(createAuthHeaders(context.token, context.household.id))
       .send(
         buildPaymentMethodInput({
-          name: 'Meal Voucher',
-          color: '#16A34A',
-          icon: 'Restaurant02Icon',
+          name: "Meal Voucher",
+          color: "#16A34A",
+          icon: "Restaurant02Icon",
         }),
       );
 
     const response = await request(app)
-      .get('/api/v1/payment-methods')
+      .get("/api/v1/payment-methods")
       .set(createAuthHeaders(context.token, context.household.id));
 
     expect(response.status).toBe(200);
@@ -35,33 +35,33 @@ describe('payment methods routes', () => {
     expect(response.body.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          code: 'cash',
-          scope: 'system',
-          translationKey: 'paymentMethods.system.cash',
+          code: "cash",
+          scope: "system",
+          translationKey: "paymentMethods.system.cash",
         }),
         expect.objectContaining({
-          code: 'meal_voucher',
-          scope: 'household',
+          code: "meal_voucher",
+          scope: "household",
           translationKey: null,
-          color: '#16A34A',
-          icon: 'Restaurant02Icon',
+          color: "#16A34A",
+          icon: "Restaurant02Icon",
         }),
       ]),
     );
 
     const filtered = await request(app)
-      .get('/api/v1/payment-methods')
+      .get("/api/v1/payment-methods")
       .set(createAuthHeaders(context.token, context.household.id))
       .query({
         page: 1,
         perPage: 1,
-        search: 'Meal Voucher',
-        sort: 'name',
-        scopes: 'household',
-        codes: 'meal_voucher',
+        search: "Meal Voucher",
+        sort: "name",
+        scopes: "household",
+        codes: "meal_voucher",
       });
     expect(filtered.body.data).toEqual([
-      expect.objectContaining({ code: 'meal_voucher', scope: 'household' }),
+      expect.objectContaining({ code: "meal_voucher", scope: "household" }),
     ]);
     expect(filtered.body.meta.pagination).toMatchObject({
       page: 1,
@@ -70,64 +70,64 @@ describe('payment methods routes', () => {
     });
   });
 
-  it('POST /api/v1/payment-methods creates a household method', async () => {
+  it("POST /api/v1/payment-methods creates a household method", async () => {
     const context = await createAuthenticatedContext();
 
     const response = await request(app)
-      .post('/api/v1/payment-methods')
+      .post("/api/v1/payment-methods")
       .set(createAuthHeaders(context.token, context.household.id))
-      .send(buildPaymentMethodInput({ name: 'Gift Card', code: 'gift-card', currencyCode: 'USD' }));
+      .send(buildPaymentMethodInput({ name: "Gift Card", code: "gift-card", currencyCode: "USD" }));
 
     expect(response.status).toBe(201);
     expect(response.body.success).toBe(true);
     expect(response.body.data).toEqual(
       expect.objectContaining({
-        code: 'gift_card',
-        name: 'Gift Card',
-        scope: 'household',
-        currencyCode: 'USD',
+        code: "gift_card",
+        name: "Gift Card",
+        scope: "household",
+        currencyCode: "USD",
       }),
     );
   });
 
-  it('POST /api/v1/payment-methods validates body fields', async () => {
+  it("POST /api/v1/payment-methods validates body fields", async () => {
     const context = await createAuthenticatedContext();
 
     const response = await request(app)
-      .post('/api/v1/payment-methods')
+      .post("/api/v1/payment-methods")
       .set(createAuthHeaders(context.token, context.household.id))
-      .send({ name: '', color: 'blue' });
+      .send({ name: "", color: "blue" });
 
     expect(response.status).toBe(422);
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
 
-  it('POST /api/v1/payment-methods respects household permissions', async () => {
-    const context = await createAuthenticatedContext({ role: 'viewer' });
+  it("POST /api/v1/payment-methods respects household permissions", async () => {
+    const context = await createAuthenticatedContext({ role: "viewer" });
 
     const response = await request(app)
-      .post('/api/v1/payment-methods')
+      .post("/api/v1/payment-methods")
       .set(createAuthHeaders(context.token, context.household.id))
-      .send(buildPaymentMethodInput({ name: 'Viewer Voucher' }));
+      .send(buildPaymentMethodInput({ name: "Viewer Voucher" }));
 
     expect(response.status).toBe(403);
     expect(response.body.success).toBe(false);
-    expect(response.body.error.code).toBe('FORBIDDEN');
+    expect(response.body.error.code).toBe("FORBIDDEN");
   });
 
-  it('PATCH /api/v1/payment-methods/:id updates a household method', async () => {
+  it("PATCH /api/v1/payment-methods/:id updates a household method", async () => {
     const context = await createAuthenticatedContext();
     const created = await request(app)
-      .post('/api/v1/payment-methods')
+      .post("/api/v1/payment-methods")
       .set(createAuthHeaders(context.token, context.household.id))
-      .send(buildPaymentMethodInput({ name: 'Patch Payment Method', currencyCode: 'BRL' }));
+      .send(buildPaymentMethodInput({ name: "Patch Payment Method", currencyCode: "BRL" }));
 
     const response = await request(app)
       .patch(`/api/v1/payment-methods/${created.body.data.id}`)
       .set(createAuthHeaders(context.token, context.household.id))
       .send({
-        name: 'Patched Payment Method',
+        name: "Patched Payment Method",
         currencyCode: null,
         color: null,
         icon: null,
@@ -138,7 +138,7 @@ describe('payment methods routes', () => {
     expect(response.body.data).toEqual(
       expect.objectContaining({
         id: created.body.data.id,
-        name: 'Patched Payment Method',
+        name: "Patched Payment Method",
         currencyCode: null,
         color: null,
         icon: null,
@@ -146,12 +146,12 @@ describe('payment methods routes', () => {
     );
   });
 
-  it('DELETE /api/v1/payment-methods/:id deletes a household method', async () => {
+  it("DELETE /api/v1/payment-methods/:id deletes a household method", async () => {
     const context = await createAuthenticatedContext();
     const created = await request(app)
-      .post('/api/v1/payment-methods')
+      .post("/api/v1/payment-methods")
       .set(createAuthHeaders(context.token, context.household.id))
-      .send(buildPaymentMethodInput({ name: 'Delete Payment Method' }));
+      .send(buildPaymentMethodInput({ name: "Delete Payment Method" }));
 
     const response = await request(app)
       .delete(`/api/v1/payment-methods/${created.body.data.id}`)
@@ -160,7 +160,7 @@ describe('payment methods routes', () => {
     expect(response.status).toBe(204);
 
     const list = await request(app)
-      .get('/api/v1/payment-methods')
+      .get("/api/v1/payment-methods")
       .set(createAuthHeaders(context.token, context.household.id));
 
     expect(list.body.data).not.toEqual(
@@ -168,22 +168,22 @@ describe('payment methods routes', () => {
     );
   });
 
-  it('isolates list, update, and delete access across households', async () => {
+  it("isolates list, update, and delete access across households", async () => {
     const owner = await createAuthenticatedContext();
     const outsider = await createAuthenticatedContext();
     const created = await request(app)
-      .post('/api/v1/payment-methods')
+      .post("/api/v1/payment-methods")
       .set(createAuthHeaders(owner.token, owner.household.id))
-      .send(buildPaymentMethodInput({ name: 'Isolated Method', code: 'isolated_method' }));
+      .send(buildPaymentMethodInput({ name: "Isolated Method", code: "isolated_method" }));
     const id = created.body.data.id;
 
     const list = await request(app)
-      .get('/api/v1/payment-methods')
+      .get("/api/v1/payment-methods")
       .set(createAuthHeaders(outsider.token, owner.household.id));
     const update = await request(app)
       .patch(`/api/v1/payment-methods/${id}`)
       .set(createAuthHeaders(outsider.token, outsider.household.id))
-      .send({ name: 'Leaked' });
+      .send({ name: "Leaked" });
     const remove = await request(app)
       .delete(`/api/v1/payment-methods/${id}`)
       .set(createAuthHeaders(outsider.token, outsider.household.id));

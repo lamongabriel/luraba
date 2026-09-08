@@ -1,25 +1,25 @@
-"use client"
+"use client";
 
 import type {
   ListTransactionsQuery,
   TransactionFeedRow,
   TransactionSortField,
-} from "@luraba/contracts"
-import * as React from "react"
-import { TransactionsEmpty } from "@/app/(app)/transactions/_empty"
-import { TransactionsError } from "@/app/(app)/transactions/_error"
-import { TransactionsLoading } from "@/app/(app)/transactions/_loading"
-import { DataTable } from "@/components/data-table/data-table"
-import { getTransactionsTableColumns } from "@/components/tables/transactions/transactions-table.config"
+} from "@luraba/contracts";
+import * as React from "react";
+import { TransactionsEmpty } from "@/app/(app)/transactions/_empty";
+import { TransactionsError } from "@/app/(app)/transactions/_error";
+import { TransactionsLoading } from "@/app/(app)/transactions/_loading";
+import { DataTable } from "@/components/data-table/data-table";
+import { getTransactionsTableColumns } from "@/components/tables/transactions/transactions-table.config";
 import type {
   TransactionTableFilters,
   TransactionTableFilterUpdates,
-} from "@/components/tables/transactions/transactions-table-filters"
-import { TransactionsTableToolbar } from "@/components/tables/transactions/transactions-table-toolbar"
-import { useDataTable } from "@/hooks/use-data-table"
-import type { useTransactionParams } from "@/hooks/use-transaction-params"
-import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query"
-import { useTransactionsQuery } from "@/queries/transactions/use-transactions-query"
+} from "@/components/tables/transactions/transactions-table-filters";
+import { TransactionsTableToolbar } from "@/components/tables/transactions/transactions-table-toolbar";
+import { useDataTable } from "@/hooks/use-data-table";
+import type { useTransactionParams } from "@/hooks/use-transaction-params";
+import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
+import { useTransactionsQuery } from "@/queries/transactions/use-transactions-query";
 
 export function TransactionsTable({
   language,
@@ -28,18 +28,18 @@ export function TransactionsTable({
   onView,
   params,
 }: {
-  language: string
-  lookups: TransactionLookups
-  onCreate: () => void
-  onView: (row: TransactionFeedRow) => void
-  params: ReturnType<typeof useTransactionParams>
+  language: string;
+  lookups: TransactionLookups;
+  onCreate: () => void;
+  onView: (row: TransactionFeedRow) => void;
+  params: ReturnType<typeof useTransactionParams>;
 }) {
-  const queryParams = params.apiParams as ListTransactionsQuery
-  const transactionFilters = params.filters as TransactionTableFilters
-  const hasTransactionFilters = params.hasFilters
-  const query = useTransactionsQuery(queryParams, { enabled: params.ready })
-  const rows = query.data?.data ?? []
-  const pagination = query.data?.meta.pagination
+  const queryParams = params.apiParams as ListTransactionsQuery;
+  const transactionFilters = params.filters as TransactionTableFilters;
+  const hasTransactionFilters = params.hasFilters;
+  const query = useTransactionsQuery(queryParams, { enabled: params.ready });
+  const rows = query.data?.data ?? [];
+  const pagination = query.data?.meta.pagination;
   const columns = React.useMemo(
     () =>
       getTransactionsTableColumns({
@@ -47,7 +47,7 @@ export function TransactionsTable({
         lookups,
       }),
     [language, lookups],
-  )
+  );
   const { table } = useDataTable({
     data: rows,
     columns,
@@ -61,31 +61,26 @@ export function TransactionsTable({
     onSortChange: (field, direction) =>
       params.setSorting(field as TransactionSortField | undefined, direction),
     getRowId: (row) => row.rowId,
-  })
+  });
   const setFilter = React.useCallback(
     (key: keyof TransactionTableFilters, value: unknown) => {
-      params.setFilter(key, value as never)
+      params.setFilter(key, value as never);
     },
     [params],
-  )
+  );
   const setFilters = React.useCallback(
     (updates: TransactionTableFilterUpdates) => {
-      params.setFilters(updates)
+      params.setFilters(updates);
     },
     [params],
-  )
+  );
   const clearFilters = React.useCallback(() => {
-    params.clearFilters()
-  }, [params.clearFilters])
+    params.clearFilters();
+  }, [params.clearFilters]);
 
-  if (query.isPending) return <TransactionsLoading />
+  if (query.isPending) return <TransactionsLoading />;
   if (query.isError) {
-    return (
-      <TransactionsError
-        message={query.error.message}
-        onRetry={() => void query.refetch()}
-      />
-    )
+    return <TransactionsError message={query.error.message} onRetry={() => void query.refetch()} />;
   }
 
   return (
@@ -117,5 +112,5 @@ export function TransactionsTable({
         />
       )}
     </div>
-  )
+  );
 }

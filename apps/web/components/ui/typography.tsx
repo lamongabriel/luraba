@@ -1,7 +1,7 @@
-import { cva, type VariantProps } from "class-variance-authority"
-import type * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority";
+import type * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const typographyVariants = cva("", {
   variants: {
@@ -15,19 +15,15 @@ const typographyVariants = cva("", {
       "small-destructive": "text-sm text-destructive",
       label:
         "text-[0.68rem] leading-none font-medium uppercase tracking-[0.18em] text-muted-foreground",
-      eyebrow:
-        "text-[0.7rem] font-medium uppercase tracking-[0.24em] text-muted-foreground",
+      eyebrow: "text-[0.7rem] font-medium uppercase tracking-[0.24em] text-muted-foreground",
       "sidebar-eyebrow":
         "text-[0.68rem] font-medium uppercase tracking-[0.22em] text-sidebar-foreground/55",
-      "logo-subtitle":
-        "text-[0.7rem] font-medium uppercase tracking-[0.2em] text-muted-foreground",
+      "logo-subtitle": "text-[0.7rem] font-medium uppercase tracking-[0.2em] text-muted-foreground",
       title: "text-sm font-medium text-foreground",
       "sidebar-title": "text-sm font-medium text-sidebar-foreground",
       "sidebar-muted": "text-xs text-sidebar-foreground/55",
-      "card-title":
-        "font-heading text-sm font-medium tracking-[-0.01em] text-foreground",
-      "section-title":
-        "font-heading text-xl tracking-[-0.02em] text-foreground",
+      "card-title": "font-heading text-sm font-medium tracking-[-0.01em] text-foreground",
+      "section-title": "font-heading text-xl tracking-[-0.02em] text-foreground",
       subheading: "font-heading text-lg tracking-[-0.02em] text-foreground",
       "page-title":
         "font-heading text-2xl tracking-[-0.03em] text-foreground md:text-3xl md:leading-tight",
@@ -38,8 +34,7 @@ const typographyVariants = cva("", {
       meta: "text-xs uppercase tracking-[0.18em] text-muted-foreground",
       inverse: "text-sm leading-6 text-white",
       "inverse-small": "text-xs text-white/70",
-      "inverse-label":
-        "text-[0.62rem] font-medium uppercase tracking-[0.28em] text-white/60",
+      "inverse-label": "text-[0.62rem] font-medium uppercase tracking-[0.28em] text-white/60",
     },
     truncate: {
       true: "truncate",
@@ -48,13 +43,13 @@ const typographyVariants = cva("", {
   defaultVariants: {
     variant: "body",
   },
-})
+});
 
 type TypographyProps<T extends React.ElementType> = {
-  as?: T
-  className?: string
+  as?: T;
+  className?: string;
 } & VariantProps<typeof typographyVariants> &
-  Omit<React.ComponentPropsWithoutRef<T>, "as" | "className">
+  Omit<React.ComponentPropsWithoutRef<T>, "as" | "className">;
 
 function Typography<T extends React.ElementType = "p">({
   as,
@@ -63,14 +58,9 @@ function Typography<T extends React.ElementType = "p">({
   truncate,
   ...props
 }: TypographyProps<T>) {
-  const Comp = as ?? "p"
+  const Comp = as ?? "p";
 
-  return (
-    <Comp
-      className={cn(typographyVariants({ variant, truncate }), className)}
-      {...props}
-    />
-  )
+  return <Comp className={cn(typographyVariants({ variant, truncate }), className)} {...props} />;
 }
 
-export { Typography, typographyVariants }
+export { Typography, typographyVariants };

@@ -1,5 +1,5 @@
-import countryData from './countries.json' with { type: 'json' };
-import timezoneData from './timezones.json' with { type: 'json' };
+import countryData from "./countries.json" with { type: "json" };
+import timezoneData from "./timezones.json" with { type: "json" };
 
 export type CountryOption = {
   code: string;

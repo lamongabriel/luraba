@@ -1,13 +1,13 @@
-import { merchantsEndpoints } from '@luraba/contracts/merchants';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
-import { withApiMeta } from '@/shared/response';
-import * as merchantsService from './merchants.service';
+import { merchantsEndpoints } from "@luraba/contracts/merchants";
+import { createHouseholdHandler } from "@/shared/controllers/household.controller";
+import { withApiMeta } from "@/shared/response";
+import * as merchantsService from "./merchants.service";
 
 export const create = createHouseholdHandler({
   body: merchantsEndpoints.create.body,
   response: merchantsEndpoints.create.response,
   handle: ({ household, body }) => merchantsService.createMerchant(household, body),
-  status: 'created',
+  status: "created",
 });
 
 export const list = createHouseholdHandler({
@@ -36,6 +36,6 @@ export const update = createHouseholdHandler({
 
 export const deleteMerchant = createHouseholdHandler({
   params: merchantsEndpoints.delete.params,
-  status: 'no-content',
+  status: "no-content",
   handle: ({ household, params }) => merchantsService.deleteMerchant(household, params.id),
 });

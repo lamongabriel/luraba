@@ -1,14 +1,14 @@
-import type { Metadata } from "next"
+import type { Metadata } from "next";
 
-import { AuthPageHeader } from "@/components/auth/auth-page-header"
-import { RegisterForm } from "@/components/forms/auth/register-form"
-import { FormErrorBoundary } from "@/components/forms/form-error-boundary"
-import { createPageMetadata } from "@/lib/metadata"
+import { AuthPageHeader } from "@/components/auth/auth-page-header";
+import { RegisterForm } from "@/components/forms/auth/register-form";
+import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
+import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Create account",
   description: "Create your Luraba account.",
-})
+});
 
 export default function RegisterPage() {
   return (
@@ -33,5 +33,5 @@ export default function RegisterPage() {
         </div>
       </section>
     </main>
-  )
+  );
 }

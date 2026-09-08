@@ -1,8 +1,7 @@
-import { getEndpointRouterPath, householdsEndpoints } from '@luraba/contracts';
-import { Router } from 'express';
-import { PERMISSIONS } from '@/config/permissions';
-import { requireAccess } from '@/middleware/access.middleware';
-import * as householdsController from './households.controller';
+import { getEndpointRouterPath, householdsEndpoints, PERMISSIONS } from "@luraba/contracts";
+import { Router } from "express";
+import { requireAccess } from "@/middleware/access.middleware";
+import * as householdsController from "./households.controller";
 
 const router = Router();
 
@@ -61,57 +60,57 @@ router.post(
 
 router.get(
   getEndpointRouterPath(householdsEndpoints.get),
-  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_READ, householdParam: 'id' }),
+  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_READ, householdParam: "id" }),
   householdsController.get,
 );
 router.patch(
   getEndpointRouterPath(householdsEndpoints.update),
-  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_UPDATE, householdParam: 'id' }),
+  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_UPDATE, householdParam: "id" }),
   householdsController.update,
 );
 router.delete(
   getEndpointRouterPath(householdsEndpoints.delete),
-  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_DELETE, householdParam: 'id' }),
+  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_DELETE, householdParam: "id" }),
   householdsController.remove,
 );
 router.get(
   getEndpointRouterPath(householdsEndpoints.members),
-  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_MEMBERS_READ, householdParam: 'id' }),
+  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_MEMBERS_READ, householdParam: "id" }),
   householdsController.listMembers,
 );
 router.patch(
   getEndpointRouterPath(householdsEndpoints.updateMember),
-  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_MEMBERS_MANAGE, householdParam: 'id' }),
+  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_MEMBERS_MANAGE, householdParam: "id" }),
   householdsController.updateMember,
 );
 router.delete(
   getEndpointRouterPath(householdsEndpoints.removeMember),
-  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_MEMBERS_MANAGE, householdParam: 'id' }),
+  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_MEMBERS_MANAGE, householdParam: "id" }),
   householdsController.removeMember,
 );
 router.get(
   getEndpointRouterPath(householdsEndpoints.invites),
-  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_INVITES_MANAGE, householdParam: 'id' }),
+  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_INVITES_MANAGE, householdParam: "id" }),
   householdsController.listHouseholdInvites,
 );
 router.post(
   getEndpointRouterPath(householdsEndpoints.createInvite),
-  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_INVITES_MANAGE, householdParam: 'id' }),
+  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_INVITES_MANAGE, householdParam: "id" }),
   householdsController.createInvite,
 );
 router.post(
   getEndpointRouterPath(householdsEndpoints.refreshInviteLink),
-  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_INVITES_MANAGE, householdParam: 'id' }),
+  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_INVITES_MANAGE, householdParam: "id" }),
   householdsController.refreshInviteLink,
 );
 router.post(
   getEndpointRouterPath(householdsEndpoints.resendInvite),
-  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_INVITES_MANAGE, householdParam: 'id' }),
+  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_INVITES_MANAGE, householdParam: "id" }),
   householdsController.resendInvite,
 );
 router.delete(
   getEndpointRouterPath(householdsEndpoints.cancelInvite),
-  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_INVITES_MANAGE, householdParam: 'id' }),
+  requireAccess({ permission: PERMISSIONS.HOUSEHOLD_INVITES_MANAGE, householdParam: "id" }),
   householdsController.cancelInvite,
 );
 

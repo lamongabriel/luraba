@@ -1,34 +1,29 @@
-"use client"
+"use client";
 
-import type { TransactionAnalytics } from "@luraba/contracts"
-import * as React from "react"
-import { Pie, PieChart, Sector } from "recharts"
-import type { PieSectorShapeProps } from "recharts/types/polar/Pie"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
-import { formatCurrency } from "@/lib/finance"
-import { CURATED_COLOR_PRESETS } from "@/lib/icons"
+import type { TransactionAnalytics } from "@luraba/contracts";
+import * as React from "react";
+import { Pie, PieChart, Sector } from "recharts";
+import type { PieSectorShapeProps } from "recharts/types/polar/Pie";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { formatCurrency } from "@/lib/finance";
+import { CURATED_COLOR_PRESETS } from "@/lib/icons";
 
 export function ExpenseBreakdownPanel({
   analytics,
   language = "en",
   precision = 2,
 }: {
-  analytics: TransactionAnalytics
-  language?: string
-  precision?: number
+  analytics: TransactionAnalytics;
+  language?: string;
+  precision?: number;
 }) {
-  const items = analytics.expenseBreakdown.items
-  const [activeIndex, setActiveIndex] = React.useState(0)
+  const items = analytics.expenseBreakdown.items;
+  const [activeIndex, setActiveIndex] = React.useState(0);
   const chartItems = items.map((item, index) => ({
     ...item,
-    fill:
-      item.color ?? CURATED_COLOR_PRESETS[index % CURATED_COLOR_PRESETS.length],
-  }))
+    fill: item.color ?? CURATED_COLOR_PRESETS[index % CURATED_COLOR_PRESETS.length],
+  }));
 
   return (
     <Card>
@@ -58,11 +53,7 @@ export function ExpenseBreakdownPanel({
                   outerRadius={58}
                   strokeWidth={2}
                   stroke="var(--color-card)"
-                  shape={({
-                    index,
-                    outerRadius = 0,
-                    ...props
-                  }: PieSectorShapeProps) =>
+                  shape={({ index, outerRadius = 0, ...props }: PieSectorShapeProps) =>
                     index === activeIndex ? (
                       <Sector {...props} outerRadius={outerRadius + 6} />
                     ) : (
@@ -77,18 +68,13 @@ export function ExpenseBreakdownPanel({
             </ChartContainer>
             <ul className="space-y-2" aria-label="Expense categories">
               {chartItems.map((item) => (
-                <li
-                  key={item.id ?? "uncategorized"}
-                  className="flex items-center gap-2"
-                >
+                <li key={item.id ?? "uncategorized"} className="flex items-center gap-2">
                   <span
                     className="size-2 shrink-0 rounded-full"
                     style={{ backgroundColor: item.fill }}
                     aria-hidden="true"
                   />
-                  <span className="min-w-0 flex-1 truncate text-xs">
-                    {item.name}
-                  </span>
+                  <span className="min-w-0 flex-1 truncate text-xs">{item.name}</span>
                   <span className="text-xs text-muted-foreground">
                     {formatCurrency(
                       item.amount,
@@ -105,5 +91,5 @@ export function ExpenseBreakdownPanel({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

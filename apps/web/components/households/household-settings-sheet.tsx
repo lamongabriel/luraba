@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import type { CreateHouseholdInput, HouseholdSummary } from "@luraba/contracts"
-import { CreateEditHouseholdForm } from "@/components/forms/create-edit-household-form/create-edit-household-form"
-import { FormSheet } from "@/components/forms/form-sheet"
+import type { CreateHouseholdInput, HouseholdSummary } from "@luraba/contracts";
+import { CreateEditHouseholdForm } from "@/components/forms/create-edit-household-form/create-edit-household-form";
+import { FormSheet } from "@/components/forms/form-sheet";
 
 export function HouseholdSettingsSheet({
   open,
@@ -12,14 +12,14 @@ export function HouseholdSettingsSheet({
   isPending = false,
   mode = "edit",
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  household?: HouseholdSummary | null
-  onSubmit: (body: CreateHouseholdInput) => void
-  isPending?: boolean
-  mode?: "create" | "edit"
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  household?: HouseholdSummary | null;
+  onSubmit: (body: CreateHouseholdInput) => void;
+  isPending?: boolean;
+  mode?: "create" | "edit";
 }) {
-  const isCreate = mode === "create"
+  const isCreate = mode === "create";
 
   return (
     <FormSheet
@@ -42,5 +42,5 @@ export function HouseholdSettingsSheet({
         isPending={isPending}
       />
     </FormSheet>
-  )
+  );
 }

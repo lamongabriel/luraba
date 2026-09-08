@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import type {
   CreditCardForecastQuery,
@@ -11,9 +11,9 @@ import type {
   ListCreditCardCyclesResult,
   ListCreditCardsQuery,
   ListCreditCardsResult,
-} from "@luraba/contracts"
-import { useQuery } from "@tanstack/react-query"
-import type { AppQueryOptions } from "@/queries/query-options"
+} from "@luraba/contracts";
+import { useQuery } from "@tanstack/react-query";
+import type { AppQueryOptions } from "@/queries/query-options";
 import {
   getCreditCard,
   getCreditCardCycle,
@@ -22,35 +22,25 @@ import {
   getCreditCardPurchase,
   listCreditCardCycles,
   listCreditCards,
-} from "@/services/credit-cards.service"
+} from "@/services/credit-cards.service";
 
 export const creditCardQueryKeys = {
   all: ["credit-cards"] as const,
   lists: () => [...creditCardQueryKeys.all, "list"] as const,
-  list: (query: ListCreditCardsQuery = {}) =>
-    [...creditCardQueryKeys.lists(), query] as const,
+  list: (query: ListCreditCardsQuery = {}) => [...creditCardQueryKeys.lists(), query] as const,
   details: () => [...creditCardQueryKeys.all, "detail"] as const,
-  detail: (creditCardId: string) =>
-    [...creditCardQueryKeys.details(), creditCardId] as const,
+  detail: (creditCardId: string) => [...creditCardQueryKeys.details(), creditCardId] as const,
   cycles: (creditCardId: string, query: ListCreditCardCyclesQuery = {}) =>
     [...creditCardQueryKeys.detail(creditCardId), "cycles", query] as const,
   cycle: (creditCardId: string, cycleId: string) =>
     [...creditCardQueryKeys.detail(creditCardId), "cycle", cycleId] as const,
   purchase: (creditCardId: string, purchaseId: string) =>
-    [
-      ...creditCardQueryKeys.detail(creditCardId),
-      "purchase",
-      purchaseId,
-    ] as const,
+    [...creditCardQueryKeys.detail(creditCardId), "purchase", purchaseId] as const,
   payment: (creditCardId: string, paymentId: string) =>
-    [
-      ...creditCardQueryKeys.detail(creditCardId),
-      "payment",
-      paymentId,
-    ] as const,
+    [...creditCardQueryKeys.detail(creditCardId), "payment", paymentId] as const,
   forecast: (creditCardId: string, query: CreditCardForecastQuery = {}) =>
     [...creditCardQueryKeys.detail(creditCardId), "forecast", query] as const,
-}
+};
 
 export function useCreditCardsQuery<TData = ListCreditCardsResult>(
   query: ListCreditCardsQuery = {},
@@ -60,7 +50,7 @@ export function useCreditCardsQuery<TData = ListCreditCardsResult>(
     queryKey: creditCardQueryKeys.list(query),
     queryFn: () => listCreditCards(query),
     ...options,
-  })
+  });
 }
 
 export function useCreditCardQuery<TData = GetCreditCardResult>(
@@ -72,7 +62,7 @@ export function useCreditCardQuery<TData = GetCreditCardResult>(
     queryFn: () => getCreditCard(creditCardId),
     ...options,
     enabled: Boolean(creditCardId) && (options?.enabled ?? true),
-  })
+  });
 }
 
 export function useCreditCardCyclesQuery<TData = ListCreditCardCyclesResult>(
@@ -86,7 +76,7 @@ export function useCreditCardCyclesQuery<TData = ListCreditCardCyclesResult>(
     placeholderData: (previousData) => previousData,
     ...options,
     enabled: Boolean(creditCardId) && (options?.enabled ?? true),
-  })
+  });
 }
 
 export function useCreditCardCycleQuery<TData = GetCreditCardCycleResult>(
@@ -99,7 +89,7 @@ export function useCreditCardCycleQuery<TData = GetCreditCardCycleResult>(
     queryFn: () => getCreditCardCycle(creditCardId, cycleId),
     ...options,
     enabled: Boolean(creditCardId && cycleId) && (options?.enabled ?? true),
-  })
+  });
 }
 
 export function useCreditCardPurchaseQuery<TData = GetCreditCardPurchaseResult>(
@@ -112,7 +102,7 @@ export function useCreditCardPurchaseQuery<TData = GetCreditCardPurchaseResult>(
     queryFn: () => getCreditCardPurchase(creditCardId, purchaseId),
     ...options,
     enabled: Boolean(creditCardId && purchaseId) && (options?.enabled ?? true),
-  })
+  });
 }
 
 export function useCreditCardPaymentQuery<TData = GetCreditCardPaymentResult>(
@@ -125,7 +115,7 @@ export function useCreditCardPaymentQuery<TData = GetCreditCardPaymentResult>(
     queryFn: () => getCreditCardPayment(creditCardId, paymentId),
     ...options,
     enabled: Boolean(creditCardId && paymentId) && (options?.enabled ?? true),
-  })
+  });
 }
 
 export function useCreditCardForecastQuery<TData = GetCreditCardForecastResult>(
@@ -138,5 +128,5 @@ export function useCreditCardForecastQuery<TData = GetCreditCardForecastResult>(
     queryFn: () => getCreditCardForecast(creditCardId, query),
     ...options,
     enabled: Boolean(creditCardId) && (options?.enabled ?? true),
-  })
+  });
 }

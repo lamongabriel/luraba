@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import type { CreateHouseholdInput, HouseholdSummary } from "@luraba/contracts"
-import { MAX_PER_PAGE } from "@luraba/contracts"
-import { CountryCombobox } from "@/components/forms/country-combobox"
-import { FieldInfoHint } from "@/components/forms/field-info-hint"
-import type { FormComboboxOption } from "@/components/forms/form-combobox"
-import { FormItem } from "@/components/forms/form-item"
-import { Button } from "@/components/ui/button"
-import { FieldError } from "@/components/ui/field"
-import { Typography } from "@/components/ui/typography"
-import { createTimezoneOptions } from "@/lib/timezones"
-import { useCurrenciesQuery } from "@/queries/currencies/use-currencies-query"
-import { useLocationOptionsQuery } from "@/queries/reference-data/use-location-options-query"
+import type { CreateHouseholdInput, HouseholdSummary } from "@luraba/contracts";
+import { MAX_PER_PAGE } from "@luraba/contracts";
+import { CountryCombobox } from "@/components/forms/country-combobox";
+import { FieldInfoHint } from "@/components/forms/field-info-hint";
+import type { FormComboboxOption } from "@/components/forms/form-combobox";
+import { FormItem } from "@/components/forms/form-item";
+import { Button } from "@/components/ui/button";
+import { FieldError } from "@/components/ui/field";
+import { Typography } from "@/components/ui/typography";
+import { createTimezoneOptions } from "@/lib/timezones";
+import { useCurrenciesQuery } from "@/queries/currencies/use-currencies-query";
+import { useLocationOptionsQuery } from "@/queries/reference-data/use-location-options-query";
 
-import { useCreateEditHouseholdForm } from "./use-create-edit-household-form"
+import { useCreateEditHouseholdForm } from "./use-create-edit-household-form";
 
 export function CreateEditHouseholdForm({
   household,
@@ -23,20 +23,20 @@ export function CreateEditHouseholdForm({
   onSubmit,
   isPending = false,
 }: {
-  household?: HouseholdSummary | null
-  mode: "create" | "edit"
-  open: boolean
-  onCancel: () => void
-  onSubmit: (body: CreateHouseholdInput) => void
-  isPending?: boolean
+  household?: HouseholdSummary | null;
+  mode: "create" | "edit";
+  open: boolean;
+  onCancel: () => void;
+  onSubmit: (body: CreateHouseholdInput) => void;
+  isPending?: boolean;
 }) {
-  const currenciesQuery = useCurrenciesQuery({ perPage: MAX_PER_PAGE })
-  const locationOptionsQuery = useLocationOptionsQuery()
+  const currenciesQuery = useCurrenciesQuery({ perPage: MAX_PER_PAGE });
+  const locationOptionsQuery = useLocationOptionsQuery();
   const { form, submit, isEdit } = useCreateEditHouseholdForm({
     household,
     open,
     onSubmit,
-  })
+  });
 
   const currencyOptions: FormComboboxOption[] =
     currenciesQuery.data?.data.map((currency) => ({
@@ -44,10 +44,10 @@ export function CreateEditHouseholdForm({
       label: currency.code,
       description: currency.symbol,
       searchText: `${currency.code} ${currency.symbol}`,
-    })) ?? []
+    })) ?? [];
   const timezoneOptions: FormComboboxOption[] = createTimezoneOptions(
     locationOptionsQuery.data?.timezones ?? [],
-  )
+  );
 
   return (
     <form className="space-y-6" onSubmit={submit} noValidate>
@@ -70,9 +70,7 @@ export function CreateEditHouseholdForm({
           options={currencyOptions}
           disabled={isPending || currenciesQuery.isPending}
           labelAdornment={
-            <FieldInfoHint>
-              Used for household summaries and budget defaults.
-            </FieldInfoHint>
+            <FieldInfoHint>Used for household summaries and budget defaults.</FieldInfoHint>
           }
         />
       </div>
@@ -87,8 +85,7 @@ export function CreateEditHouseholdForm({
         disabled={isPending}
         labelAdornment={
           <FieldInfoHint>
-            Describe what this household is used for. This is visible to its
-            members.
+            Describe what this household is used for. This is visible to its members.
           </FieldInfoHint>
         }
       />
@@ -99,11 +96,7 @@ export function CreateEditHouseholdForm({
           countries={locationOptionsQuery.data?.countries ?? []}
           name="countryCode"
           label="Country"
-          disabled={
-            isPending ||
-            locationOptionsQuery.isPending ||
-            locationOptionsQuery.isError
-          }
+          disabled={isPending || locationOptionsQuery.isPending || locationOptionsQuery.isError}
           labelAdornment={
             <FieldInfoHint>
               Used for regional defaults and future locale-aware features.
@@ -119,11 +112,7 @@ export function CreateEditHouseholdForm({
           searchPlaceholder="Search timezones..."
           emptyMessage="No timezones found."
           options={timezoneOptions}
-          disabled={
-            isPending ||
-            locationOptionsQuery.isPending ||
-            locationOptionsQuery.isError
-          }
+          disabled={isPending || locationOptionsQuery.isPending || locationOptionsQuery.isError}
           labelAdornment={
             <FieldInfoHint>
               Controls calendar boundaries and date display for this household.
@@ -145,8 +134,8 @@ export function CreateEditHouseholdForm({
         parseValue={(value) => Number(value)}
         labelAdornment={
           <FieldInfoHint>
-            Each budget month begins on this calendar day. Shorter months clamp
-            to their last valid day.
+            Each budget month begins on this calendar day. Shorter months clamp to their last valid
+            day.
           </FieldInfoHint>
         }
         disabled={isPending}
@@ -164,8 +153,7 @@ export function CreateEditHouseholdForm({
           ]}
           labelAdornment={
             <FieldInfoHint>
-              Choose whether credit-card expenses belong to the purchase month
-              or the payment month.
+              Choose whether credit-card expenses belong to the purchase month or the payment month.
             </FieldInfoHint>
           }
           disabled={isPending}
@@ -181,8 +169,8 @@ export function CreateEditHouseholdForm({
           ]}
           labelAdornment={
             <FieldInfoHint>
-              Decide whether a purchase is recognized one installment at a time
-              or in full when it is created.
+              Decide whether a purchase is recognized one installment at a time or in full when it
+              is created.
             </FieldInfoHint>
           }
           disabled={isPending}
@@ -194,20 +182,14 @@ export function CreateEditHouseholdForm({
           Some household options could not be loaded. Try again before saving.
         </FieldError>
       ) : null}
-      {form.formState.isSubmitted &&
-      Object.keys(form.formState.errors).length > 0 ? (
+      {form.formState.isSubmitted && Object.keys(form.formState.errors).length > 0 ? (
         <Typography variant="small-destructive">
           Check the highlighted fields before saving.
         </Typography>
       ) : null}
 
       <div className="flex flex-col gap-3 border-t border-dashed border-border pt-5 sm:flex-row sm:justify-end">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onCancel}
-          disabled={isPending}
-        >
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={isPending}>
           Cancel
         </Button>
         <Button
@@ -219,5 +201,5 @@ export function CreateEditHouseholdForm({
         </Button>
       </div>
     </form>
-  )
+  );
 }

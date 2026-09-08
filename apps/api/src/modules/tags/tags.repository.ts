@@ -1,15 +1,15 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { tagsTable } from '@/db/schemas/tags.schema';
-import { type DbListPage, getPagination } from '@/shared/list';
-import { HouseholdScopedRepository } from '@/shared/repositories/household-scoped.repository';
-import { buildTagsListOrder, buildTagsListWhere, type ListTagsQuery } from './tags.query';
-import type { TagRecord } from './tags.types';
+import { and, eq, inArray, sql } from "drizzle-orm";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { tagsTable } from "@/db/schemas/tags.schema";
+import { type DbListPage, getPagination } from "@/shared/list";
+import { HouseholdScopedRepository } from "@/shared/repositories/household-scoped.repository";
+import { buildTagsListOrder, buildTagsListWhere, type ListTagsQuery } from "./tags.query";
+import type { TagRecord } from "./tags.types";
 
 type CreateTagValues = Omit<
   typeof tagsTable.$inferInsert,
-  'id' | 'householdId' | 'createdAt' | 'updatedAt'
+  "id" | "householdId" | "createdAt" | "updatedAt"
 >;
 
 class TagsRepository extends HouseholdScopedRepository<TagRecord, CreateTagValues> {

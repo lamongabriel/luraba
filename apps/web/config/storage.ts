@@ -1,9 +1,9 @@
-import { z } from "zod"
+import { z } from "zod";
 
-import type { StorageDefinition } from "@/lib/local-storage"
+import type { StorageDefinition } from "@/lib/local-storage";
 
 function defineStorage<T>(definition: StorageDefinition<T>) {
-  return definition
+  return definition;
 }
 
 export const STORAGE_KEYS = {
@@ -12,4 +12,4 @@ export const STORAGE_KEYS = {
     fallback: "",
     schema: z.string().min(1),
   }),
-} as const
+} as const;

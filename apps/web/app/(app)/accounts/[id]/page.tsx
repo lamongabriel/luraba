@@ -1,46 +1,33 @@
-"use client"
+"use client";
 
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { TransactionFeedRow } from "@luraba/contracts"
-import { useParams, useRouter } from "next/navigation"
-import * as React from "react"
-import { AccountProfileDetails } from "@/components/accounts/account-profile-details"
-import { AccountSheet } from "@/components/accounts/account-sheet"
-import { AdjustAccountBalanceSheet } from "@/components/accounts/adjust-account-balance-sheet"
-import { InternalPageLayout } from "@/components/finance/internal-page-layout"
-import { MoneyValue } from "@/components/finance/money-value"
-import {
-  PERMISSIONS,
-  PermissionButton,
-  ResourceAccessBoundary,
-} from "@/components/permissions"
-import { Button } from "@/components/ui/button"
-import { Typography } from "@/components/ui/typography"
-import {
-  formatAccountSubtypeLabel,
-  formatAccountTypeLabel,
-} from "@/lib/accounts"
-import { formatShortDate } from "@/lib/format"
-import { queryClient } from "@/lib/query-client"
-import { useDeleteAccountMutation } from "@/mutations/accounts/use-account-mutations"
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { TransactionFeedRow } from "@luraba/contracts";
+import { useParams, useRouter } from "next/navigation";
+import * as React from "react";
+import { AccountProfileDetails } from "@/components/accounts/account-profile-details";
+import { AccountSheet } from "@/components/accounts/account-sheet";
+import { AdjustAccountBalanceSheet } from "@/components/accounts/adjust-account-balance-sheet";
+import { InternalPageLayout } from "@/components/finance/internal-page-layout";
+import { MoneyValue } from "@/components/finance/money-value";
+import { PERMISSIONS, PermissionButton, ResourceAccessBoundary } from "@/components/permissions";
+import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
+import { formatAccountSubtypeLabel, formatAccountTypeLabel } from "@/lib/accounts";
+import { formatShortDate } from "@/lib/format";
+import { queryClient } from "@/lib/query-client";
+import { useDeleteAccountMutation } from "@/mutations/accounts/use-account-mutations";
 import {
   accountQueryKeys,
   useAccountQuery,
   useAccountTransactionsQuery,
-} from "@/queries/accounts/use-accounts-query"
-import { useAuthSessionStore } from "@/stores/auth-session-store"
+} from "@/queries/accounts/use-accounts-query";
+import { useAuthSessionStore } from "@/stores/auth-session-store";
 
-import { AccountDetailsError } from "./_error"
-import { AccountDetailsLoading } from "./_loading"
+import { AccountDetailsError } from "./_error";
+import { AccountDetailsLoading } from "./_loading";
 
-function RecentActivityRow({
-  row,
-  language,
-}: {
-  row: TransactionFeedRow
-  language: string
-}) {
+function RecentActivityRow({ row, language }: { row: TransactionFeedRow; language: string }) {
   return (
     <div className="flex items-center justify-between gap-5 border-b border-border/60 py-3 last:border-b-0">
       <div className="min-w-0">
@@ -59,33 +46,31 @@ function RecentActivityRow({
         className="shrink-0 text-sm"
       />
     </div>
-  )
+  );
 }
 
 export default function AccountDetailsPage() {
-  const { id = "" } = useParams<{ id: string }>()
-  const router = useRouter()
-  const [editOpen, setEditOpen] = React.useState(false)
-  const [adjustOpen, setAdjustOpen] = React.useState(false)
-  const accountQuery = useAccountQuery(id)
-  const account = accountQuery.data
-  const language = useAuthSessionStore(
-    (state) => state.user?.preferences.language ?? "en",
-  )
+  const { id = "" } = useParams<{ id: string }>();
+  const router = useRouter();
+  const [editOpen, setEditOpen] = React.useState(false);
+  const [adjustOpen, setAdjustOpen] = React.useState(false);
+  const accountQuery = useAccountQuery(id);
+  const account = accountQuery.data;
+  const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
   const accountActivity = useAccountTransactionsQuery(
     id,
     { page: 1, perPage: 8, sort: "postedDate", sortDirection: "desc" },
     { enabled: Boolean(account) },
-  )
+  );
   const deleteAccountMutation = useDeleteAccountMutation({
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: accountQueryKeys.all })
-      router.replace("/accounts")
+      await queryClient.invalidateQueries({ queryKey: accountQueryKeys.all });
+      router.replace("/accounts");
     },
-  })
+  });
 
   if (accountQuery.isPending) {
-    return <AccountDetailsLoading />
+    return <AccountDetailsLoading />;
   }
 
   return (
@@ -95,10 +80,7 @@ export default function AccountDetailsPage() {
       backHref="/accounts"
       fallback={
         <AccountDetailsError
-          message={
-            accountQuery.error?.message ||
-            "We couldn't load this account right now."
-          }
+          message={accountQuery.error?.message || "We couldn't load this account right now."}
           onRetry={() => void accountQuery.refetch()}
         />
       }
@@ -108,11 +90,7 @@ export default function AccountDetailsPage() {
           title={account.name}
           actions={
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push("/accounts")}
-              >
+              <Button variant="ghost" size="sm" onClick={() => router.push("/accounts")}>
                 <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
                 Accounts
               </Button>
@@ -166,11 +144,9 @@ export default function AccountDetailsPage() {
                   currencyCode={account.currencyCode}
                   language={language}
                   className={`mt-1 block text-3xl ${
-                    account.classification === "liability" &&
-                    account.balance > 0
+                    account.classification === "liability" && account.balance > 0
                       ? "text-destructive"
-                      : account.classification === "liability" &&
-                          account.balance < 0
+                      : account.classification === "liability" && account.balance < 0
                         ? "text-emerald-300"
                         : "text-foreground"
                   }`}
@@ -188,11 +164,7 @@ export default function AccountDetailsPage() {
                 </Typography>
                 <div className="mt-4">
                   {accountActivity.data?.data.map((row) => (
-                    <RecentActivityRow
-                      key={row.rowId}
-                      row={row}
-                      language={language}
-                    />
+                    <RecentActivityRow key={row.rowId} row={row} language={language} />
                   ))}
                   {accountActivity.data?.data.length === 0 ? (
                     <Typography variant="body-muted" className="py-6">
@@ -209,10 +181,7 @@ export default function AccountDetailsPage() {
                   Details
                 </Typography>
                 <div className="mt-3">
-                  <AccountProfileDetails
-                    account={account}
-                    language={language}
-                  />
+                  <AccountProfileDetails account={account} language={language} />
                 </div>
               </section>
               {account.notes ? (
@@ -220,10 +189,7 @@ export default function AccountDetailsPage() {
                   <Typography as="h2" variant="section-title">
                     Notes
                   </Typography>
-                  <Typography
-                    variant="body-muted"
-                    className="mt-3 whitespace-pre-wrap"
-                  >
+                  <Typography variant="body-muted" className="mt-3 whitespace-pre-wrap">
                     {account.notes}
                   </Typography>
                 </section>
@@ -242,13 +208,8 @@ export default function AccountDetailsPage() {
                   className="mt-4 shadow-none"
                   isLoading={deleteAccountMutation.isPending}
                   onClick={() => {
-                    if (
-                      !window.confirm(
-                        `Delete ${account.name}? This cannot be undone.`,
-                      )
-                    )
-                      return
-                    deleteAccountMutation.mutate(account.id)
+                    if (!window.confirm(`Delete ${account.name}? This cannot be undone.`)) return;
+                    deleteAccountMutation.mutate(account.id);
                   }}
                 >
                   Delete permanently
@@ -259,5 +220,5 @@ export default function AccountDetailsPage() {
         </InternalPageLayout>
       ) : null}
     </ResourceAccessBoundary>
-  )
+  );
 }

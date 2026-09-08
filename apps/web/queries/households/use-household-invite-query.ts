@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import type {
   ListHouseholdInvitesQuery,
@@ -6,31 +6,25 @@ import type {
   ListMyHouseholdInvitesQuery,
   ListMyHouseholdInvitesResult,
   PreviewHouseholdInviteResult,
-} from "@luraba/contracts"
-import { useQuery } from "@tanstack/react-query"
-import type { AppQueryOptions } from "@/queries/query-options"
+} from "@luraba/contracts";
+import { useQuery } from "@tanstack/react-query";
+import type { AppQueryOptions } from "@/queries/query-options";
 import {
   listHouseholdInvites,
   listMyHouseholdInvites,
   previewHouseholdInvite,
-} from "@/services/households.service"
+} from "@/services/households.service";
 
 export const householdInviteQueryKeys = {
   all: ["household-invites"] as const,
   lists: () => [...householdInviteQueryKeys.all, "list"] as const,
   householdList: (householdId: string, query: ListHouseholdInvitesQuery = {}) =>
-    [
-      ...householdInviteQueryKeys.lists(),
-      "household",
-      householdId,
-      query,
-    ] as const,
+    [...householdInviteQueryKeys.lists(), "household", householdId, query] as const,
   myList: (query: ListMyHouseholdInvitesQuery = {}) =>
     [...householdInviteQueryKeys.lists(), "mine", query] as const,
   previews: () => [...householdInviteQueryKeys.all, "preview"] as const,
-  preview: (token: string) =>
-    [...householdInviteQueryKeys.previews(), token] as const,
-}
+  preview: (token: string) => [...householdInviteQueryKeys.previews(), token] as const,
+};
 
 export function useHouseholdInvitesQuery<TData = ListHouseholdInvitesResult>(
   householdId: string,
@@ -43,12 +37,10 @@ export function useHouseholdInvitesQuery<TData = ListHouseholdInvitesResult>(
     placeholderData: (previousData) => previousData,
     ...options,
     enabled: Boolean(householdId) && (options?.enabled ?? true),
-  })
+  });
 }
 
-export function useMyHouseholdInvitesQuery<
-  TData = ListMyHouseholdInvitesResult,
->(
+export function useMyHouseholdInvitesQuery<TData = ListMyHouseholdInvitesResult>(
   query: ListMyHouseholdInvitesQuery = {},
   options?: AppQueryOptions<ListMyHouseholdInvitesResult, TData>,
 ) {
@@ -57,12 +49,10 @@ export function useMyHouseholdInvitesQuery<
     queryFn: () => listMyHouseholdInvites(query),
     placeholderData: (previousData) => previousData,
     ...options,
-  })
+  });
 }
 
-export function useHouseholdInvitePreviewQuery<
-  TData = PreviewHouseholdInviteResult,
->(
+export function useHouseholdInvitePreviewQuery<TData = PreviewHouseholdInviteResult>(
   token: string,
   options?: AppQueryOptions<PreviewHouseholdInviteResult, TData>,
 ) {
@@ -72,5 +62,5 @@ export function useHouseholdInvitePreviewQuery<
     staleTime: 0,
     ...options,
     enabled: Boolean(token) && (options?.enabled ?? true),
-  })
+  });
 }

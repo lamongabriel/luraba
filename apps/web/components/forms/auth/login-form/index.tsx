@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import Link from "next/link"
+import Link from "next/link";
 
-import { AuthFormFrame } from "@/components/forms/auth/auth-form-frame"
-import { FormItem } from "@/components/forms/form-item"
-import { SocialAuthButtons } from "@/components/forms/social-auth-buttons"
-import { Button } from "@/components/ui/button"
-import { Typography } from "@/components/ui/typography"
+import { AuthFormFrame } from "@/components/forms/auth/auth-form-frame";
+import { FormItem } from "@/components/forms/form-item";
+import { SocialAuthButtons } from "@/components/forms/social-auth-buttons";
+import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 
-import { useLoginForm } from "./use-login-form"
+import { useLoginForm } from "./use-login-form";
 
 export function LoginForm() {
-  const { form, loginMutation, onSubmit } = useLoginForm()
+  const { form, loginMutation, onSubmit } = useLoginForm();
 
   return (
     <AuthFormFrame
@@ -47,9 +47,7 @@ export function LoginForm() {
         />
 
         {loginMutation.errorMessage ? (
-          <Typography variant="small-destructive">
-            {loginMutation.errorMessage}
-          </Typography>
+          <Typography variant="small-destructive">{loginMutation.errorMessage}</Typography>
         ) : null}
 
         <Button
@@ -65,5 +63,5 @@ export function LoginForm() {
 
       <SocialAuthButtons mode="login" />
     </AuthFormFrame>
-  )
+  );
 }

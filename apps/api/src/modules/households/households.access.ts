@@ -2,67 +2,67 @@ import type {
   householdInviteStatusMetadataSchema,
   householdPermissionMetadataSchema,
   householdRoleMetadataSchema,
-} from '@luraba/contracts';
-import { householdInviteComputedStatusSchema } from '@luraba/contracts/households';
-import type { z } from 'zod';
+} from "@luraba/contracts";
 import {
   HOUSEHOLD_ROLE_METADATA,
   HOUSEHOLD_ROLE_PERMISSIONS,
   type HouseholdPermission,
   PERMISSIONS,
-} from '@/config/permissions';
-import { householdRoleSchema } from '@/shared/validation/households';
+} from "@luraba/contracts";
+import { householdInviteComputedStatusSchema } from "@luraba/contracts/households";
+import type { z } from "zod";
+import { householdRoleSchema } from "@/shared/validation/households";
 
 const inviteStatusDefinitions = {
   pending: {
-    label: 'Pending',
-    description: 'The invitation is waiting for the recipient.',
+    label: "Pending",
+    description: "The invitation is waiting for the recipient.",
   },
   accepted: {
-    label: 'Accepted',
-    description: 'The recipient joined the household.',
+    label: "Accepted",
+    description: "The recipient joined the household.",
   },
   expired: {
-    label: 'Expired',
-    description: 'The invitation link is no longer valid.',
+    label: "Expired",
+    description: "The invitation link is no longer valid.",
   },
   rejected: {
-    label: 'Rejected',
-    description: 'The recipient declined the invitation.',
+    label: "Rejected",
+    description: "The recipient declined the invitation.",
   },
   canceled: {
-    label: 'Canceled',
-    description: 'The invitation was canceled by a household manager.',
+    label: "Canceled",
+    description: "The invitation was canceled by a household manager.",
   },
 } as const;
 
 const permissionActionLabels = {
-  read: 'View',
-  create: 'Create',
-  update: 'Manage',
-  delete: 'Delete',
-  manage: 'Manage',
+  read: "View",
+  create: "Create",
+  update: "Manage",
+  delete: "Delete",
+  manage: "Manage",
 } as const;
 
 const permissionActionDescriptions = {
-  read: 'View household data.',
-  create: 'Create household data.',
-  update: 'Update household data.',
-  delete: 'Delete household data.',
-  manage: 'Manage household access.',
+  read: "View household data.",
+  create: "Create household data.",
+  update: "Update household data.",
+  delete: "Delete household data.",
+  manage: "Manage household access.",
 } as const;
 
 function humanizePermissionResource(resource: string): string {
   return resource
-    .replaceAll('.', ' ')
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replaceAll(".", " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/^[a-z]/, (character) => character.toUpperCase());
 }
 
 function permissionMetadata(permission: HouseholdPermission) {
-  const parts = permission.split('.');
+  const parts = permission.split(".");
   const action = parts.pop() as keyof typeof permissionActionLabels;
-  const resource = parts.join('.');
+  const resource = parts.join(".");
   const resourceLabel = humanizePermissionResource(resource);
 
   return {

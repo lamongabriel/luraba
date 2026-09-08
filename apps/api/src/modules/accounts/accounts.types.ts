@@ -4,12 +4,12 @@ import type {
   accountSummarySchema,
   createAccountInputSchema,
   updateAccountInputSchema,
-} from '@luraba/contracts/accounts';
+} from "@luraba/contracts/accounts";
 
-export type { AccountClassification, AccountType } from '@luraba/contracts/accounts';
+export type { AccountClassification, AccountType } from "@luraba/contracts/accounts";
 
-import type { z } from 'zod';
-import type { accountsTable } from '@/db/schemas/accounts.schema';
+import type { z } from "zod";
+import type { accountsTable } from "@/db/schemas/accounts.schema";
 
 /** Database records and service-facing values stay API-local; wire schemas live in contracts. */
 export type AccountRecord = typeof accountsTable.$inferSelect;

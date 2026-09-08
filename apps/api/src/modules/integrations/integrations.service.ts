@@ -1,9 +1,9 @@
-import type { Integration } from '@luraba/contracts/integrations';
-import type { HouseholdContext } from '@/config/permissions';
-import { formatISODateTime } from '@/shared/lib/date';
-import { createListMeta, type ListResult } from '@/shared/list';
-import type { ListIntegrationsQuery } from './integrations.query';
-import * as integrationsRepository from './integrations.repository';
+import type { Integration } from "@luraba/contracts/integrations";
+import type { HouseholdContext } from "@/config/permissions";
+import { formatISODateTime } from "@/shared/lib/date";
+import { createListMeta, type ListResult } from "@/shared/list";
+import type { ListIntegrationsQuery } from "./integrations.query";
+import * as integrationsRepository from "./integrations.repository";
 
 export async function listIntegrations(
   context: HouseholdContext,

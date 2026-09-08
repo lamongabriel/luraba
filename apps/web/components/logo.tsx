@@ -1,7 +1,7 @@
-import { Wallet03Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Typography } from "@/components/ui/typography"
-import { cn } from "@/lib/utils"
+import { Wallet03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Typography } from "@/components/ui/typography";
+import { cn } from "@/lib/utils";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
@@ -11,15 +11,10 @@ export function Logo({ compact = false }: { compact?: boolean }) {
       </div>
 
       <div className={cn("min-w-0", compact && "hidden")}>
-        <Typography
-          as="span"
-          truncate
-          variant="card-title"
-          className="text-base leading-none"
-        >
+        <Typography as="span" truncate variant="card-title" className="text-base leading-none">
           Luraba
         </Typography>
       </div>
     </div>
-  )
+  );
 }

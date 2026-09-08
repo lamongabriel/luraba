@@ -1,58 +1,53 @@
-"use client"
+"use client";
 
-import { Alert02Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { Category } from "@luraba/contracts"
-import * as React from "react"
-import {
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-} from "@/components/ui/modal"
-import { Typography } from "@/components/ui/typography"
-import { queryClient } from "@/lib/query-client"
-import { useDeleteCategoryMutation } from "@/mutations/categories/use-category-mutations"
-import { categoryQueryKeys } from "@/queries/categories/use-categories-query"
+import { Alert02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { Category } from "@luraba/contracts";
+import * as React from "react";
+import { Modal, ModalBody, ModalContent, ModalFooter } from "@/components/ui/modal";
+import { Typography } from "@/components/ui/typography";
+import { queryClient } from "@/lib/query-client";
+import { useDeleteCategoryMutation } from "@/mutations/categories/use-category-mutations";
+import { categoryQueryKeys } from "@/queries/categories/use-categories-query";
 
 export function DeleteCategoryModal({
   open,
   onOpenChange,
   category,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  category?: Category
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  category?: Category;
 }) {
   const deleteMutation = useDeleteCategoryMutation({
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: categoryQueryKeys.lists(),
-      })
-      onOpenChange(false)
+      });
+      onOpenChange(false);
     },
     successToast: {
       title: "Category deleted",
     },
-  })
+  });
 
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
-        deleteMutation.reset()
+        deleteMutation.reset();
       }
-      onOpenChange(nextOpen)
+      onOpenChange(nextOpen);
     },
     [deleteMutation, onOpenChange],
-  )
+  );
 
   const handleConfirm = React.useCallback(() => {
     if (!category) {
-      return
+      return;
     }
-    deleteMutation.reset()
-    deleteMutation.mutate(category.id)
-  }, [category, deleteMutation])
+    deleteMutation.reset();
+    deleteMutation.mutate(category.id);
+  }, [category, deleteMutation]);
 
   return (
     <Modal open={open} onOpenChange={handleOpenChange}>
@@ -71,12 +66,9 @@ export function DeleteCategoryModal({
         <ModalBody>
           {deleteMutation.errorMessage ? (
             <div className="rounded-lg bg-destructive/10 px-3 py-2.5">
-              <Typography variant="small-destructive">
-                {deleteMutation.errorMessage}
-              </Typography>
+              <Typography variant="small-destructive">{deleteMutation.errorMessage}</Typography>
               <Typography variant="small-muted" className="mt-1 text-[0.72rem]">
-                This category may be in use by a budget. Remove it from any
-                budgets before deleting.
+                This category may be in use by a budget. Remove it from any budgets before deleting.
               </Typography>
             </div>
           ) : null}
@@ -91,5 +83,5 @@ export function DeleteCategoryModal({
         />
       </ModalContent>
     </Modal>
-  )
+  );
 }

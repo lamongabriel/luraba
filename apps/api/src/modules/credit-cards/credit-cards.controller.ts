@@ -1,7 +1,7 @@
-import { creditCardsEndpoints } from '@luraba/contracts';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
-import { withApiMeta } from '@/shared/response';
-import * as service from './credit-cards.service';
+import { creditCardsEndpoints } from "@luraba/contracts";
+import { createHouseholdHandler } from "@/shared/controllers/household.controller";
+import { withApiMeta } from "@/shared/response";
+import * as service from "./credit-cards.service";
 
 export const list = createHouseholdHandler({
   query: creditCardsEndpoints.list.query,
@@ -15,7 +15,7 @@ export const list = createHouseholdHandler({
 export const create = createHouseholdHandler({
   body: creditCardsEndpoints.create.body,
   response: creditCardsEndpoints.create.response,
-  status: 'created',
+  status: "created",
   handle: ({ household, body }) => service.createCreditCard(household, body),
 });
 export const getById = createHouseholdHandler({
@@ -31,7 +31,7 @@ export const update = createHouseholdHandler({
 });
 export const deleteCreditCard = createHouseholdHandler({
   params: creditCardsEndpoints.delete.params,
-  status: 'no-content',
+  status: "no-content",
   handle: ({ household, params }) => service.deleteCreditCard(household, params.id),
 });
 export const listCycles = createHouseholdHandler({
@@ -60,7 +60,7 @@ export const createPurchase = createHouseholdHandler({
   params: creditCardsEndpoints.createPurchase.params,
   body: creditCardsEndpoints.createPurchase.body,
   response: creditCardsEndpoints.createPurchase.response,
-  status: 'created',
+  status: "created",
   handle: ({ household, params, body }) => service.createPurchase(household, params.id, body),
 });
 export const getPurchase = createHouseholdHandler({
@@ -77,7 +77,7 @@ export const updatePurchase = createHouseholdHandler({
 });
 export const deletePurchase = createHouseholdHandler({
   params: creditCardsEndpoints.deletePurchase.params,
-  status: 'no-content',
+  status: "no-content",
   handle: ({ household, params }) =>
     service.deletePurchase(household, params.id, params.purchaseId),
 });
@@ -85,7 +85,7 @@ export const createPayment = createHouseholdHandler({
   params: creditCardsEndpoints.createPayment.params,
   body: creditCardsEndpoints.createPayment.body,
   response: creditCardsEndpoints.createPayment.response,
-  status: 'created',
+  status: "created",
   handle: ({ household, params, body }) => service.createPayment(household, params.id, body),
 });
 export const getPayment = createHouseholdHandler({
@@ -102,7 +102,7 @@ export const updatePayment = createHouseholdHandler({
 });
 export const deletePayment = createHouseholdHandler({
   params: creditCardsEndpoints.deletePayment.params,
-  status: 'no-content',
+  status: "no-content",
   handle: ({ household, params }) => service.deletePayment(household, params.id, params.paymentId),
 });
 export const getForecast = createHouseholdHandler({

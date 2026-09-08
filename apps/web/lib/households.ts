@@ -5,34 +5,34 @@ import type {
   HouseholdPermissionMetadata,
   HouseholdRole,
   HouseholdRoleMetadata,
-} from "@luraba/contracts"
+} from "@luraba/contracts";
 
 export function getHouseholdRoleMetadata(
   role: HouseholdRole,
   roles: readonly HouseholdRoleMetadata[] = [],
 ) {
-  return roles.find((option) => option.value === role)
+  return roles.find((option) => option.value === role);
 }
 
 export function getHouseholdRoleLabel(
   role: HouseholdRole,
   roles: readonly HouseholdRoleMetadata[] = [],
 ) {
-  return getHouseholdRoleMetadata(role, roles)?.label ?? role
+  return getHouseholdRoleMetadata(role, roles)?.label ?? role;
 }
 
 export function getHouseholdRoleDescription(
   role: HouseholdRole,
   roles: readonly HouseholdRoleMetadata[] = [],
 ) {
-  return getHouseholdRoleMetadata(role, roles)?.description ?? ""
+  return getHouseholdRoleMetadata(role, roles)?.description ?? "";
 }
 
 export function getHouseholdInviteStatusLabel(
   status: HouseholdInviteStatus,
   statuses: readonly HouseholdInviteStatusMetadata[] = [],
 ) {
-  return statuses.find((option) => option.value === status)?.label ?? status
+  return statuses.find((option) => option.value === status)?.label ?? status;
 }
 
 export function canManageHousehold(
@@ -40,10 +40,8 @@ export function canManageHousehold(
   roles: readonly HouseholdRoleMetadata[] = [],
 ) {
   return (
-    getHouseholdRoleMetadata(role, roles)?.permissions.includes(
-      "household.members.manage",
-    ) === true
-  )
+    getHouseholdRoleMetadata(role, roles)?.permissions.includes("household.members.manage") === true
+  );
 }
 
 export function hasHouseholdRolePermission(
@@ -51,28 +49,21 @@ export function hasHouseholdRolePermission(
   permission: HouseholdPermission,
   roles: readonly HouseholdRoleMetadata[] = [],
 ) {
-  return (
-    getHouseholdRoleMetadata(role, roles)?.permissions.includes(permission) ===
-    true
-  )
+  return getHouseholdRoleMetadata(role, roles)?.permissions.includes(permission) === true;
 }
 
 export function getHouseholdPermissionMetadata(
   permission: HouseholdPermission,
   permissions: readonly HouseholdPermissionMetadata[] = [],
 ) {
-  return permissions.find((option) => option.value === permission)
+  return permissions.find((option) => option.value === permission);
 }
 
-export function getHouseholdInviteStatusClassName(
-  status: HouseholdInviteStatus,
-) {
-  if (status === "accepted")
-    return "border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
-  if (status === "pending")
-    return "border-blue-500/30 bg-blue-500/10 text-blue-600"
+export function getHouseholdInviteStatusClassName(status: HouseholdInviteStatus) {
+  if (status === "accepted") return "border-emerald-500/30 bg-emerald-500/10 text-emerald-600";
+  if (status === "pending") return "border-blue-500/30 bg-blue-500/10 text-blue-600";
   if (status === "expired" || status === "rejected") {
-    return "border-amber-500/30 bg-amber-500/10 text-amber-700"
+    return "border-amber-500/30 bg-amber-500/10 text-amber-700";
   }
-  return "border-border bg-muted text-muted-foreground"
+  return "border-border bg-muted text-muted-foreground";
 }

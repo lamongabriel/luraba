@@ -1,7 +1,7 @@
-import { budgetsEndpoints } from '@luraba/contracts/budgets';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
-import * as budgetsService from './budgets.service';
-import { parseBudgetMonthKey } from './budgets.types';
+import { budgetsEndpoints } from "@luraba/contracts/budgets";
+import { createHouseholdHandler } from "@/shared/controllers/household.controller";
+import * as budgetsService from "./budgets.service";
+import { parseBudgetMonthKey } from "./budgets.types";
 
 export const getMonth = createHouseholdHandler({
   params: budgetsEndpoints.getMonth.params,

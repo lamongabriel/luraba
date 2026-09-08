@@ -1,28 +1,28 @@
-"use client"
+"use client";
 
-import type { Category } from "@luraba/contracts"
-import * as React from "react"
-import { CreateEditCategoryForm } from "@/components/forms/create-edit-category-form/create-edit-category-form"
-import { FormErrorBoundary } from "@/components/forms/form-error-boundary"
-import { FormSheet } from "@/components/forms/form-sheet"
+import type { Category } from "@luraba/contracts";
+import * as React from "react";
+import { CreateEditCategoryForm } from "@/components/forms/create-edit-category-form/create-edit-category-form";
+import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
+import { FormSheet } from "@/components/forms/form-sheet";
 
 export function CategorySheet({
   open,
   onOpenChange,
   category,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  category?: Category
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  category?: Category;
 }) {
-  const isEdit = Boolean(category)
+  const isEdit = Boolean(category);
 
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
-      onOpenChange(nextOpen)
+      onOpenChange(nextOpen);
     },
     [onOpenChange],
-  )
+  );
 
   return (
     <FormSheet
@@ -45,5 +45,5 @@ export function CategorySheet({
         />
       </FormErrorBoundary>
     </FormSheet>
-  )
+  );
 }

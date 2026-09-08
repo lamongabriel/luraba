@@ -3,25 +3,25 @@ import type {
   listHouseholdMembersQuerySchema,
   listHouseholdsQuerySchema,
   listMyHouseholdInvitesQuerySchema,
-} from '@luraba/contracts/households';
-import { eq, gt, type SQL, sql } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
-import type { z } from 'zod';
+} from "@luraba/contracts/households";
+import { eq, gt, type SQL, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
+import type { z } from "zod";
 import {
   householdInvitesTable,
   householdMembersTable,
   householdsTable,
-} from '@/db/schemas/households.schema';
-import { usersTable } from '@/db/schemas/users.schema';
+} from "@/db/schemas/households.schema";
+import { usersTable } from "@/db/schemas/users.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,
   combineConditions,
   inArrayIfAny,
   rangeConditions,
-} from '@/shared/list';
+} from "@/shared/list";
 
-export const householdInviteInviter = alias(usersTable, 'household_invite_inviter');
+export const householdInviteInviter = alias(usersTable, "household_invite_inviter");
 
 export const householdInviteComputedStatusSql = sql<string>`
   case
@@ -155,7 +155,7 @@ export function buildMyHouseholdInvitesListWhere(
 ): SQL {
   return combineConditions(
     eq(householdInvitesTable.email, email),
-    eq(householdInvitesTable.status, 'pending'),
+    eq(householdInvitesTable.status, "pending"),
     gt(householdInvitesTable.expiresAt, sql`now()`),
     inArrayIfAny(householdInvitesTable.householdId, query.householdIds),
     ...buildInviteFilters(query),

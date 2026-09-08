@@ -1,13 +1,13 @@
-import { CreditCardIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { CreditCard, Merchant } from "@luraba/contracts"
-import type { Control } from "react-hook-form"
-import { FormItem } from "@/components/forms/form-item"
-import { Typography } from "@/components/ui/typography"
+import { CreditCardIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { CreditCard, Merchant } from "@luraba/contracts";
+import type { Control } from "react-hook-form";
+import { FormItem } from "@/components/forms/form-item";
+import { Typography } from "@/components/ui/typography";
 
-import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema"
-import { OptionalMerchantField } from "./optional-merchant-field"
-import { TransactionFormSection } from "./transaction-form-section"
+import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema";
+import { OptionalMerchantField } from "./optional-merchant-field";
+import { TransactionFormSection } from "./transaction-form-section";
 
 export function CreditCardPurchaseSection({
   cards,
@@ -15,16 +15,16 @@ export function CreditCardPurchaseSection({
   isEdit,
   merchants,
 }: {
-  cards: CreditCard[]
-  control: Control<CreateEditTransactionFormValues>
-  isEdit: boolean
-  merchants: Merchant[]
+  cards: CreditCard[];
+  control: Control<CreateEditTransactionFormValues>;
+  isEdit: boolean;
+  merchants: Merchant[];
 }) {
   const cardOptions = cards.map((card) => ({
     value: card.id,
     label: card.name,
     description: `${card.brand} · •••• ${card.last4} · ${card.currencyCode}`,
-  }))
+  }));
 
   return (
     <TransactionFormSection title="Credit card purchase">
@@ -36,9 +36,7 @@ export function CreditCardPurchaseSection({
         options={cardOptions}
         placeholder="Choose a card"
         disabled={isEdit}
-        description={
-          isEdit ? "The purchase card cannot be changed." : undefined
-        }
+        description={isEdit ? "The purchase card cannot be changed." : undefined}
       />
       <FormItem
         control={control}
@@ -74,11 +72,11 @@ export function CreditCardPurchaseSection({
             className="mt-0.5 size-4 shrink-0 text-muted-foreground"
           />
           <Typography variant="small-muted">
-            Saving rebuilds the complete installment schedule. Every installment
-            of this purchase is affected.
+            Saving rebuilds the complete installment schedule. Every installment of this purchase is
+            affected.
           </Typography>
         </div>
       ) : null}
     </TransactionFormSection>
-  )
+  );
 }

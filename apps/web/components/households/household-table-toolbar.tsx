@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import type { Table } from "@tanstack/react-table"
-import { DataTableSearchInput } from "@/components/data-table/data-table-search-input"
-import { DataTableViewOptions } from "@/components/data-table/data-table-view-options"
-import { FilterFaceted } from "@/components/filters/filter-faceted"
-import { Button } from "@/components/ui/button"
-import type { Option } from "@/types/data-table"
+import type { Table } from "@tanstack/react-table";
+import { DataTableSearchInput } from "@/components/data-table/data-table-search-input";
+import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
+import { FilterFaceted } from "@/components/filters/filter-faceted";
+import { Button } from "@/components/ui/button";
+import type { Option } from "@/types/data-table";
 
 export function HouseholdTableToolbar<TData>({
   table,
@@ -20,17 +20,17 @@ export function HouseholdTableToolbar<TData>({
   children,
   filterTitle = "Role",
 }: {
-  table?: Table<TData>
-  search: string
-  onSearchChange: (value: string) => void
-  role?: string
-  onRoleChange?: (value: string | undefined) => void
-  roleOptions?: ReadonlyArray<{ value: string; label: string }>
-  onClear: () => void
-  hasFilters: boolean
-  placeholder?: string
-  children?: React.ReactNode
-  filterTitle?: string
+  table?: Table<TData>;
+  search: string;
+  onSearchChange: (value: string) => void;
+  role?: string;
+  onRoleChange?: (value: string | undefined) => void;
+  roleOptions?: ReadonlyArray<{ value: string; label: string }>;
+  onClear: () => void;
+  hasFilters: boolean;
+  placeholder?: string;
+  children?: React.ReactNode;
+  filterTitle?: string;
 }) {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -48,11 +48,7 @@ export function HouseholdTableToolbar<TData>({
             value={role}
             options={roleOptions as Option[]}
             onValueChange={(value) =>
-              onRoleChange(
-                typeof value === "string" && value.length > 0
-                  ? value
-                  : undefined,
-              )
+              onRoleChange(typeof value === "string" && value.length > 0 ? value : undefined)
             }
           />
         ) : null}
@@ -67,5 +63,5 @@ export function HouseholdTableToolbar<TData>({
         {table ? <DataTableViewOptions table={table} /> : null}
       </div>
     </div>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import type { SortDirection } from "@luraba/contracts"
+import type { SortDirection } from "@luraba/contracts";
 import {
   type ColumnFiltersState,
   getCoreRowModel,
@@ -10,9 +10,9 @@ import {
   type Updater,
   useReactTable,
   type VisibilityState,
-} from "@tanstack/react-table"
-import * as React from "react"
-import type { ExtendedColumnSort } from "@/types/data-table"
+} from "@tanstack/react-table";
+import * as React from "react";
+import type { ExtendedColumnSort } from "@/types/data-table";
 
 interface UseDataTableProps<TData>
   extends Omit<
@@ -26,18 +26,15 @@ interface UseDataTableProps<TData>
     >,
     Required<Pick<TableOptions<TData>, "pageCount">> {
   initialState?: Omit<Partial<TableState>, "sorting"> & {
-    sorting?: ExtendedColumnSort<TData>[]
-  }
-  page: number
-  perPage: number
-  sort?: Extract<keyof TData, string>
-  sortDirection?: SortDirection
-  onPageChange: (page: number) => void
-  onPerPageChange: (perPage: number) => void
-  onSortChange: (
-    sort: Extract<keyof TData, string> | undefined,
-    direction?: SortDirection,
-  ) => void
+    sorting?: ExtendedColumnSort<TData>[];
+  };
+  page: number;
+  perPage: number;
+  sort?: Extract<keyof TData, string>;
+  sortDirection?: SortDirection;
+  onPageChange: (page: number) => void;
+  onPerPageChange: (perPage: number) => void;
+  onSortChange: (sort: Extract<keyof TData, string> | undefined, direction?: SortDirection) => void;
 }
 
 /**
@@ -58,58 +55,54 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     onPerPageChange,
     onSortChange,
     ...tableProps
-  } = props
+  } = props;
 
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>(
     initialState?.rowSelection ?? {},
-  )
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>(initialState?.columnVisibility ?? {})
+  );
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
+    initialState?.columnVisibility ?? {},
+  );
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     initialState?.columnFilters ?? [],
-  )
+  );
 
   const pagination: PaginationState = React.useMemo(
     () => ({ pageIndex: Math.max(page - 1, 0), pageSize: perPage }),
     [page, perPage],
-  )
+  );
   const sorting: SortingState = React.useMemo(
     () => (sort ? [{ id: sort, desc: sortDirection === "desc" }] : []),
     [sort, sortDirection],
-  )
+  );
 
   const onPaginationChange = React.useCallback(
     (updaterOrValue: Updater<PaginationState>) => {
       const next =
-        typeof updaterOrValue === "function"
-          ? updaterOrValue(pagination)
-          : updaterOrValue
+        typeof updaterOrValue === "function" ? updaterOrValue(pagination) : updaterOrValue;
 
       if (next.pageSize !== pagination.pageSize) {
-        onPerPageChange(next.pageSize)
-        return
+        onPerPageChange(next.pageSize);
+        return;
       }
 
-      onPageChange(next.pageIndex + 1)
+      onPageChange(next.pageIndex + 1);
     },
     [onPageChange, onPerPageChange, pagination],
-  )
+  );
 
   const onSortingChange = React.useCallback(
     (updaterOrValue: Updater<SortingState>) => {
-      const next =
-        typeof updaterOrValue === "function"
-          ? updaterOrValue(sorting)
-          : updaterOrValue
-      const [nextSort] = next
+      const next = typeof updaterOrValue === "function" ? updaterOrValue(sorting) : updaterOrValue;
+      const [nextSort] = next;
 
       onSortChange(
         nextSort?.id as Extract<keyof TData, string> | undefined,
         nextSort ? (nextSort.desc ? "desc" : "asc") : undefined,
-      )
+      );
     },
     [onSortChange, sorting],
-  )
+  );
 
   const table = useReactTable({
     ...tableProps,
@@ -138,7 +131,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     manualPagination: true,
     manualSorting: true,
     manualFiltering: true,
-  })
+  });
 
-  return { table }
+  return { table };
 }

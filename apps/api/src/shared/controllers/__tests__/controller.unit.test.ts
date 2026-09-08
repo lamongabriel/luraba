@@ -1,8 +1,8 @@
-import type { Request, Response } from 'express';
-import { describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
-import { withApiMeta } from '@/shared/response';
-import { createHandler } from '../controller';
+import type { Request, Response } from "express";
+import { describe, expect, it, vi } from "vitest";
+import { z } from "zod";
+import { withApiMeta } from "@/shared/response";
+import { createHandler } from "../controller";
 
 const responseSchema = z.object({ id: z.uuid() });
 const metaSchema = z.object({
@@ -28,8 +28,8 @@ function response() {
   return res;
 }
 
-describe('createHandler contract boundary', () => {
-  it('parses service data and metadata before sending', async () => {
+describe("createHandler contract boundary", () => {
+  it("parses service data and metadata before sending", async () => {
     const res = response();
     const next = vi.fn();
     const handler = createHandler({
@@ -37,7 +37,7 @@ describe('createHandler contract boundary', () => {
       meta: metaSchema,
       handle: async () =>
         withApiMeta(
-          { id: '8ba1a21a-f0c7-475d-a91d-cad8349ff6c9' },
+          { id: "8ba1a21a-f0c7-475d-a91d-cad8349ff6c9" },
           { pagination: { page: 1, perPage: 20, totalCount: 0, totalPages: 0 } },
         ),
     });
@@ -48,17 +48,17 @@ describe('createHandler contract boundary', () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       success: true,
-      data: { id: '8ba1a21a-f0c7-475d-a91d-cad8349ff6c9' },
+      data: { id: "8ba1a21a-f0c7-475d-a91d-cad8349ff6c9" },
       meta: { pagination: { page: 1, perPage: 20, totalCount: 0, totalPages: 0 } },
     });
   });
 
-  it('rejects invalid service output instead of sending it', async () => {
+  it("rejects invalid service output instead of sending it", async () => {
     const res = response();
     const next = vi.fn();
     const handler = createHandler({
       response: responseSchema,
-      handle: async () => ({ id: 'not-a-uuid' }),
+      handle: async () => ({ id: "not-a-uuid" }),
     });
 
     await handler(request(), res, next);

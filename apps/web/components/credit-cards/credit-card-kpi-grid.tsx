@@ -1,31 +1,25 @@
-"use client"
+"use client";
 
-import type { CreditCard, CreditCardCycle } from "@luraba/contracts"
-import type { UseQueryResult } from "@tanstack/react-query"
-import { ErrorState } from "@/components/error-state"
-import { MoneyValue } from "@/components/finance/money-value"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Typography } from "@/components/ui/typography"
-import { formatDate } from "@/lib/format"
-import type { AppClientError } from "@/services/error-client"
+import type { CreditCard, CreditCardCycle } from "@luraba/contracts";
+import type { UseQueryResult } from "@tanstack/react-query";
+import { ErrorState } from "@/components/error-state";
+import { MoneyValue } from "@/components/finance/money-value";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
+import { formatDate } from "@/lib/format";
+import type { AppClientError } from "@/services/error-client";
 
 import {
   getCreditCardUtilization,
   getCurrentCreditCardCycle,
   getCycleAmount,
   getNextCreditCardCycle,
-} from "./credit-card-overview.utils"
+} from "./credit-card-overview.utils";
 
-type CyclesQuery = UseQueryResult<{ data: CreditCardCycle[] }, AppClientError>
+type CyclesQuery = UseQueryResult<{ data: CreditCardCycle[] }, AppClientError>;
 
-function Kpi({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
+function Kpi({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="min-w-0 border-l border-border/70 pl-3 first:border-l-0 first:pl-0">
       <Typography variant="small-muted" className="truncate">
@@ -33,7 +27,7 @@ function Kpi({
       </Typography>
       <div className="mt-1 truncate text-sm font-medium">{children}</div>
     </div>
-  )
+  );
 }
 
 export function CreditCardKpiGrid({
@@ -42,41 +36,37 @@ export function CreditCardKpiGrid({
   language,
   precision,
 }: {
-  card: CreditCard
-  cyclesQuery: CyclesQuery
-  language: string
-  precision: number
+  card: CreditCard;
+  cyclesQuery: CyclesQuery;
+  language: string;
+  precision: number;
 }) {
   if (cyclesQuery.isPending) {
     return (
       <Card aria-busy="true" aria-label="Loading credit card summary">
         <CardContent className="grid grid-cols-2 gap-4 py-4 lg:grid-cols-5">
-          {["balance", "available", "utilization", "statement", "due"].map(
-            (key) => (
-              <Skeleton key={key} className="h-10" />
-            ),
-          )}
+          {["balance", "available", "utilization", "statement", "due"].map((key) => (
+            <Skeleton key={key} className="h-10" />
+          ))}
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (cyclesQuery.isError || !cyclesQuery.data) {
     return (
       <ErrorState
         title="Couldn’t load the card summary"
-        description={
-          cyclesQuery.error?.message ?? "Try again to load billing details."
-        }
+        description={cyclesQuery.error?.message ?? "Try again to load billing details."}
         onRetry={() => void cyclesQuery.refetch()}
       />
-    )
+    );
   }
 
-  const cycles = cyclesQuery.data.data
-  const currentCycle = getCurrentCreditCardCycle(cycles)
-  const nextCycle = getNextCreditCardCycle(cycles)
-  const utilization = getCreditCardUtilization(card)
+  const cycles = cyclesQuery.data.data;
+  const currentCycle = getCurrentCreditCardCycle(cycles);
+  const nextCycle = getNextCreditCardCycle(cycles);
+  const utilization = getCreditCardUtilization(card);
 
   return (
     <Card>
@@ -142,5 +132,5 @@ export function CreditCardKpiGrid({
         </Kpi>
       </CardContent>
     </Card>
-  )
+  );
 }

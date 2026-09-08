@@ -2,20 +2,20 @@ import type {
   createRecurringBillBodySchema,
   listRecurringBillsQuerySchema,
   updateRecurringBillBodySchema,
-} from '@luraba/contracts/recurring-bills';
-import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
-import type { z } from 'zod';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { accountsTable } from '@/db/schemas/accounts.schema';
-import { categoriesTable } from '@/db/schemas/categories.schema';
-import { merchantsTable } from '@/db/schemas/merchants.schema';
-import { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
+} from "@luraba/contracts/recurring-bills";
+import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import type { z } from "zod";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { accountsTable } from "@/db/schemas/accounts.schema";
+import { categoriesTable } from "@/db/schemas/categories.schema";
+import { merchantsTable } from "@/db/schemas/merchants.schema";
+import { paymentMethodsTable } from "@/db/schemas/payment-methods.schema";
 import {
   recurringBillOccurrencesTable,
   recurringBillsTable,
-} from '@/db/schemas/recurring-bills.schema';
-import type { TransactionFilterQuery } from '@/modules/transactions/transactions.query';
+} from "@/db/schemas/recurring-bills.schema";
+import type { TransactionFilterQuery } from "@/modules/transactions/transactions.query";
 
 type CreateRecurringBillValues = z.output<typeof createRecurringBillBodySchema>;
 type UpdateRecurringBillValues = z.output<typeof updateRecurringBillBodySchema>;
@@ -40,7 +40,7 @@ function whereFor(context: HouseholdContext, query?: ListRecurringBillsQuery) {
 export async function list(context: HouseholdContext, query: ListRecurringBillsQuery) {
   const where = whereFor(context, query);
   const field = sortFields[query.sort];
-  const order = query.sortDirection === 'desc' ? desc(field) : asc(field);
+  const order = query.sortDirection === "desc" ? desc(field) : asc(field);
   const offset = (query.page - 1) * query.perPage;
   const [rows, count] = await Promise.all([
     db
@@ -60,7 +60,7 @@ export async function listUpcomingCandidates(
   query: TransactionFilterQuery,
 ) {
   const types = query.originTypes.filter(
-    (type): type is 'income' | 'expense' => type === 'income' || type === 'expense',
+    (type): type is "income" | "expense" => type === "income" || type === "expense",
   );
   if (query.originTypes.length > 0 && types.length === 0) return [];
 
@@ -75,7 +75,7 @@ export async function listUpcomingCandidates(
       : undefined;
   const predicates = [
     eq(recurringBillsTable.householdId, context.householdId),
-    eq(recurringBillsTable.status, 'active'),
+    eq(recurringBillsTable.status, "active"),
     query.search
       ? or(
           ilike(recurringBillsTable.name, `%${query.search}%`),

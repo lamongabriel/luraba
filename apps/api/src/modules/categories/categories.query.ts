@@ -1,7 +1,7 @@
-import type { listCategoriesQuerySchema } from '@luraba/contracts/categories';
-import { eq, type SQL, sql } from 'drizzle-orm';
-import type { z } from 'zod';
-import { categoriesTable } from '@/db/schemas/categories.schema';
+import type { listCategoriesQuerySchema } from "@luraba/contracts/categories";
+import { eq, type SQL, sql } from "drizzle-orm";
+import type { z } from "zod";
+import { categoriesTable } from "@/db/schemas/categories.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,
@@ -9,7 +9,7 @@ import {
   inArrayIfAny,
   nullabilityCondition,
   rangeConditions,
-} from '@/shared/list';
+} from "@/shared/list";
 
 export type ListCategoriesQuery = z.output<typeof listCategoriesQuerySchema>;
 

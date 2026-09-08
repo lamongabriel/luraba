@@ -1,7 +1,7 @@
-import type * as React from "react"
+import type * as React from "react";
 
-import { Typography } from "@/components/ui/typography"
-import { cn } from "@/lib/utils"
+import { Typography } from "@/components/ui/typography";
+import { cn } from "@/lib/utils";
 
 export function InfoItem({
   label,
@@ -9,10 +9,10 @@ export function InfoItem({
   description,
   className,
 }: {
-  label: string
-  value: React.ReactNode
-  description?: string
-  className?: string
+  label: string;
+  value: React.ReactNode;
+  description?: string;
+  className?: string;
 }) {
   return (
     <div className={cn("min-w-0 space-y-1", className)}>
@@ -26,5 +26,5 @@ export function InfoItem({
         </Typography>
       ) : null}
     </div>
-  )
+  );
 }

@@ -1,24 +1,24 @@
-import type { Merchant } from "@luraba/contracts"
-import { type Control, Controller } from "react-hook-form"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import type { Merchant } from "@luraba/contracts";
+import { type Control, Controller } from "react-hook-form";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
-import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema"
+import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema";
 
-const EMPTY_MERCHANT = "__none__"
+const EMPTY_MERCHANT = "__none__";
 
 export function OptionalMerchantField({
   control,
   merchants,
 }: {
-  control: Control<CreateEditTransactionFormValues>
-  merchants: Merchant[]
+  control: Control<CreateEditTransactionFormValues>;
+  merchants: Merchant[];
 }) {
   return (
     <Controller
@@ -29,14 +29,9 @@ export function OptionalMerchantField({
           <FieldLabel htmlFor="merchantId">Merchant</FieldLabel>
           <Select
             value={field.value || EMPTY_MERCHANT}
-            onValueChange={(value) =>
-              field.onChange(value === EMPTY_MERCHANT ? "" : value)
-            }
+            onValueChange={(value) => field.onChange(value === EMPTY_MERCHANT ? "" : value)}
           >
-            <SelectTrigger
-              id="merchantId"
-              aria-invalid={Boolean(fieldState.error)}
-            >
+            <SelectTrigger id="merchantId" aria-invalid={Boolean(fieldState.error)}>
               <SelectValue placeholder="No merchant" />
             </SelectTrigger>
             <SelectContent>
@@ -48,11 +43,9 @@ export function OptionalMerchantField({
               ))}
             </SelectContent>
           </Select>
-          <FieldError
-            errors={fieldState.error ? [fieldState.error] : undefined}
-          />
+          <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
         </Field>
       )}
     />
-  )
+  );
 }

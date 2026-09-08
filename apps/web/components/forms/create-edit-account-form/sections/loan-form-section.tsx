@@ -1,22 +1,16 @@
-"use client"
+"use client";
 
-import { FormItem } from "@/components/forms/form-item"
-import {
-  INTEREST_RATE_TYPE_OPTIONS,
-  PAYMENT_FREQUENCY_OPTIONS,
-} from "@/lib/accounts"
-import { useAccountsQuery } from "@/queries/accounts/use-accounts-query"
+import { FormItem } from "@/components/forms/form-item";
+import { INTEREST_RATE_TYPE_OPTIONS, PAYMENT_FREQUENCY_OPTIONS } from "@/lib/accounts";
+import { useAccountsQuery } from "@/queries/accounts/use-accounts-query";
 
-import type { CreateEditAccountSectionProps } from "./create-edit-account-section.types"
+import type { CreateEditAccountSectionProps } from "./create-edit-account-section.types";
 
-export function LoanFormSection({
-  disabled,
-  form,
-}: CreateEditAccountSectionProps) {
+export function LoanFormSection({ disabled, form }: CreateEditAccountSectionProps) {
   const assetAccounts = useAccountsQuery(
     { classifications: ["asset"], perPage: 100 },
     { enabled: !disabled },
-  )
+  );
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -98,5 +92,5 @@ export function LoanFormSection({
         }
       />
     </div>
-  )
+  );
 }

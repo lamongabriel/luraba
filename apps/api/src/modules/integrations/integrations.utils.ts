@@ -1,6 +1,6 @@
-import type { Integration } from '@luraba/contracts/integrations';
-import type { IntegrationProviderId } from '@/config/integrations';
-import { formatISODateTime } from '@/shared/lib/date';
+import type { Integration } from "@luraba/contracts/integrations";
+import type { IntegrationProviderId } from "@/config/integrations";
+import { formatISODateTime } from "@/shared/lib/date";
 
 export function buildIntegrationSummary(
   provider: IntegrationProviderId,
@@ -9,7 +9,7 @@ export function buildIntegrationSummary(
   return {
     provider,
     configured: Boolean(record),
-    status: record ? 'connected' : 'not_configured',
+    status: record ? "connected" : "not_configured",
     lastCheckedAt: record?.lastCheckedAt ? formatISODateTime(record.lastCheckedAt) : null,
   };
 }

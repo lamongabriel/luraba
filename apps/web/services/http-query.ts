@@ -5,38 +5,26 @@ type QueryValue =
   | string
   | readonly (boolean | Date | number | string)[]
   | null
-  | undefined
+  | undefined;
 
-function serializeValue(
-  value: Exclude<QueryValue, readonly unknown[] | null | undefined>,
-) {
-  if (value instanceof Date) return value.toISOString()
-  return value
+function serializeValue(value: Exclude<QueryValue, readonly unknown[] | null | undefined>) {
+  if (value instanceof Date) return value.toISOString();
+  return value;
 }
 
 export function serializeHttpQuery(query: object) {
   return Object.fromEntries(
-    Object.entries(query as Record<string, QueryValue>).flatMap(
-      ([key, value]) => {
-        if (value === undefined || value === null || value === "") return []
+    Object.entries(query as Record<string, QueryValue>).flatMap(([key, value]) => {
+      if (value === undefined || value === null || value === "") return [];
 
-        if (Array.isArray(value)) {
-          if (value.length === 0) return []
-          return [[key, value.map(serializeValue).join(",")]]
-        }
+      if (Array.isArray(value)) {
+        if (value.length === 0) return [];
+        return [[key, value.map(serializeValue).join(",")]];
+      }
 
-        return [
-          [
-            key,
-            serializeValue(
-              value as Exclude<
-                QueryValue,
-                readonly unknown[] | null | undefined
-              >,
-            ),
-          ],
-        ]
-      },
-    ),
-  )
+      return [
+        [key, serializeValue(value as Exclude<QueryValue, readonly unknown[] | null | undefined>)],
+      ];
+    }),
+  );
 }

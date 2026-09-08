@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import Color from "color"
-import type { ComponentProps } from "react"
+import Color from "color";
+import type { ComponentProps } from "react";
 
 import {
   CreditCard,
@@ -13,17 +13,17 @@ import {
   CreditCardName,
   CreditCardNumber,
   CreditCardServiceProvider,
-} from "@/components/ui/credit-card"
-import { getCreditCardBrand } from "@/lib/credit-cards"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/credit-card";
+import { getCreditCardBrand } from "@/lib/credit-cards";
+import { cn } from "@/lib/utils";
 
-const fallbackColor = "#d4d4d8"
+const fallbackColor = "#d4d4d8";
 
 function safeColor(value: string | undefined) {
   try {
-    return Color(value || fallbackColor)
+    return Color(value || fallbackColor);
   } catch {
-    return Color(fallbackColor)
+    return Color(fallbackColor);
   }
 }
 
@@ -37,19 +37,19 @@ export function CreditCardPreview({
   selected = false,
   className,
 }: {
-  brand?: string
-  color?: string
-  institutionName?: string
-  last4?: string
-  name?: string
-  onClick?: ComponentProps<typeof CreditCardFlipper>["onClick"]
-  selected?: boolean
-  className?: string
+  brand?: string;
+  color?: string;
+  institutionName?: string;
+  last4?: string;
+  name?: string;
+  onClick?: ComponentProps<typeof CreditCardFlipper>["onClick"];
+  selected?: boolean;
+  className?: string;
 }) {
-  const cardColor = safeColor(color)
-  const foreground = cardColor.isLight() ? "#111827" : "#ffffff"
-  const provider = getCreditCardBrand(brand)
-  const displayedLast4 = /^\d{4}$/.test(last4 ?? "") ? last4 : "••••"
+  const cardColor = safeColor(color);
+  const foreground = cardColor.isLight() ? "#111827" : "#ffffff";
+  const provider = getCreditCardBrand(brand);
+  const displayedLast4 = /^\d{4}$/.test(last4 ?? "") ? last4 : "••••";
 
   return (
     <div
@@ -60,13 +60,8 @@ export function CreditCardPreview({
       )}
     >
       <CreditCard className="mx-auto max-w-sm">
-        <CreditCardFlipper
-          aria-label={`Select ${name?.trim() || "credit card"}`}
-          onClick={onClick}
-        >
-          <CreditCardFront
-            style={{ backgroundColor: cardColor.hex(), color: foreground }}
-          >
+        <CreditCardFlipper aria-label={`Select ${name?.trim() || "credit card"}`} onClick={onClick}>
+          <CreditCardFront style={{ backgroundColor: cardColor.hex(), color: foreground }}>
             <CreditCardName className="absolute top-0 left-0 max-w-[70%] truncate text-xs tracking-[0.16em] opacity-75">
               {institutionName?.trim() || "\u00a0"}
             </CreditCardName>
@@ -83,9 +78,7 @@ export function CreditCardPreview({
               type={provider.paymentType}
             />
           </CreditCardFront>
-          <CreditCardBack
-            style={{ backgroundColor: cardColor.hex(), color: foreground }}
-          >
+          <CreditCardBack style={{ backgroundColor: cardColor.hex(), color: foreground }}>
             <CreditCardMagStripe />
             <CreditCardNumber className="absolute bottom-0 left-0 text-base tracking-[0.12em]">
               •••• •••• •••• {displayedLast4}
@@ -94,5 +87,5 @@ export function CreditCardPreview({
         </CreditCardFlipper>
       </CreditCard>
     </div>
-  )
+  );
 }

@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import type { AccountDetails } from "@luraba/contracts"
-import * as React from "react"
-import { CreateEditAccountForm } from "@/components/forms/create-edit-account-form/create-edit-account-form"
-import { FormErrorBoundary } from "@/components/forms/form-error-boundary"
-import { FormSheet } from "@/components/forms/form-sheet"
+import type { AccountDetails } from "@luraba/contracts";
+import * as React from "react";
+import { CreateEditAccountForm } from "@/components/forms/create-edit-account-form/create-edit-account-form";
+import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
+import { FormSheet } from "@/components/forms/form-sheet";
 
 export function AccountSheet({
   account,
@@ -12,19 +12,19 @@ export function AccountSheet({
   open,
   onOpenChange,
 }: {
-  account?: AccountDetails
-  defaultCurrencyCode: string
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  account?: AccountDetails;
+  defaultCurrencyCode: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
-  const isEdit = Boolean(account)
+  const isEdit = Boolean(account);
 
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
-      onOpenChange(nextOpen)
+      onOpenChange(nextOpen);
     },
     [onOpenChange],
-  )
+  );
 
   return (
     <FormSheet
@@ -49,5 +49,5 @@ export function AccountSheet({
         />
       </FormErrorBoundary>
     </FormSheet>
-  )
+  );
 }

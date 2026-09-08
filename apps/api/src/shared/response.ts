@@ -1,9 +1,9 @@
-import type { ApiResponse, ApiResponseMeta } from '@luraba/contracts/api';
-import type { Response } from 'express';
+import type { ApiResponse, ApiResponseMeta } from "@luraba/contracts/api";
+import type { Response } from "express";
 
-export type { ApiResponse, ApiResponseMeta } from '@luraba/contracts/api';
+export type { ApiResponse, ApiResponseMeta } from "@luraba/contracts/api";
 
-const API_RESPONSE_PAYLOAD = Symbol('api-response-payload');
+const API_RESPONSE_PAYLOAD = Symbol("api-response-payload");
 
 export interface ApiResponsePayload<T> {
   readonly [API_RESPONSE_PAYLOAD]: true;
@@ -21,7 +21,7 @@ export function withApiMeta<T>(data: T, meta?: ApiResponseMeta): ApiResponsePayl
 
 export function isApiResponsePayload(value: unknown): value is ApiResponsePayload<unknown> {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
     (value as Partial<ApiResponsePayload<unknown>>)[API_RESPONSE_PAYLOAD] === true
   );

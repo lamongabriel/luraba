@@ -1,35 +1,25 @@
-"use client"
+"use client";
 
-import { TagsIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
+import { TagsIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
-import { EmptyState } from "@/components/empty-state"
-import { PERMISSIONS, PermissionButton } from "@/components/permissions"
+import { EmptyState } from "@/components/empty-state";
+import { PERMISSIONS, PermissionButton } from "@/components/permissions";
 
-export function TagsEmpty({
-  hasFilters,
-  onCreate,
-}: {
-  hasFilters: boolean
-  onCreate: () => void
-}) {
+export function TagsEmpty({ hasFilters, onCreate }: { hasFilters: boolean; onCreate: () => void }) {
   if (hasFilters) {
     return (
       <EmptyState
-        icon={
-          <HugeiconsIcon icon={TagsIcon} strokeWidth={1.8} className="size-5" />
-        }
+        icon={<HugeiconsIcon icon={TagsIcon} strokeWidth={1.8} className="size-5" />}
         title="No matching tags"
         description="Try adjusting your search."
       />
-    )
+    );
   }
 
   return (
     <EmptyState
-      icon={
-        <HugeiconsIcon icon={TagsIcon} strokeWidth={1.8} className="size-5" />
-      }
+      icon={<HugeiconsIcon icon={TagsIcon} strokeWidth={1.8} className="size-5" />}
       title="Tag your transactions"
       description="Create tags to label and group transactions your own way, across any account or category."
       action={
@@ -42,5 +32,5 @@ export function TagsEmpty({
         </PermissionButton>
       }
     />
-  )
+  );
 }

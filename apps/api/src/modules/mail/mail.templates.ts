@@ -1,13 +1,13 @@
-import { householdInvitationTemplateInputSchema } from './mail.schemas';
-import type { HouseholdInvitationTemplateInput, RenderedMail } from './mail.types';
+import { householdInvitationTemplateInputSchema } from "./mail.schemas";
+import type { HouseholdInvitationTemplateInput, RenderedMail } from "./mail.types";
 
 function escapeHtml(value: string): string {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 export function renderHouseholdInvitation(input: HouseholdInvitationTemplateInput): RenderedMail {

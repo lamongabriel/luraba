@@ -1,7 +1,7 @@
-import { integrationsEndpoints } from '@luraba/contracts/integrations';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
-import { withApiMeta } from '@/shared/response';
-import * as integrationsService from './integrations.service';
+import { integrationsEndpoints } from "@luraba/contracts/integrations";
+import { createHouseholdHandler } from "@/shared/controllers/household.controller";
+import { withApiMeta } from "@/shared/response";
+import * as integrationsService from "./integrations.service";
 
 export const list = createHouseholdHandler({
   query: integrationsEndpoints.list.query,

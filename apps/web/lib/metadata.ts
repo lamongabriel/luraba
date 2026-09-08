@@ -1,15 +1,15 @@
-import type { Metadata } from "next"
+import type { Metadata } from "next";
 
-const SITE_NAME = "Luraba"
+const SITE_NAME = "Luraba";
 
 export function createPageMetadata({
   title,
   description,
 }: {
-  title: string
-  description: string
+  title: string;
+  description: string;
 }): Metadata {
-  const fullTitle = `${title} | ${SITE_NAME}`
+  const fullTitle = `${title} | ${SITE_NAME}`;
 
   return {
     title,
@@ -25,5 +25,5 @@ export function createPageMetadata({
       title: fullTitle,
       description,
     },
-  }
+  };
 }

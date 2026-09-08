@@ -1,8 +1,8 @@
-import { and, desc, eq, lte } from 'drizzle-orm';
-import { db } from '@/db';
-import { exchangeRatesTable } from '@/db/schemas/exchange-rates.schema';
-import { formatISODate } from '@/shared/lib/date';
-import type { FxProviderId, FxResolvedRate } from './fx.types';
+import { and, desc, eq, lte } from "drizzle-orm";
+import { db } from "@/db";
+import { exchangeRatesTable } from "@/db/schemas/exchange-rates.schema";
+import { formatISODate } from "@/shared/lib/date";
+import type { FxProviderId, FxResolvedRate } from "./fx.types";
 
 type ExchangeRateRecord = typeof exchangeRatesTable.$inferSelect;
 

@@ -1,4 +1,4 @@
-import type { FX_PROVIDER_IDS } from '@/config/fx';
+import type { FX_PROVIDER_IDS } from "@/config/fx";
 
 export type FxProviderId = (typeof FX_PROVIDER_IDS)[number];
 

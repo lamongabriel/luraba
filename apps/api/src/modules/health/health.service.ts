@@ -1,11 +1,11 @@
-import type { HealthResponse } from '@luraba/contracts/health';
-import { pool } from '@/db';
-import { fxProviderOrder, fxProvidersById } from '@/modules/fx/fx.providers';
-import { formatISODateTime, now } from '@/shared/lib/date';
+import type { HealthResponse } from "@luraba/contracts/health";
+import { pool } from "@/db";
+import { fxProviderOrder, fxProvidersById } from "@/modules/fx/fx.providers";
+import { formatISODateTime, now } from "@/shared/lib/date";
 
 const PROVIDER_HEALTH_TIMEOUT_MS = 3_000;
 
-type DependencyStatus = HealthResponse['services']['db'];
+type DependencyStatus = HealthResponse["services"]["db"];
 
 function nowIso() {
   return formatISODateTime(now());
@@ -34,16 +34,16 @@ async function checkDbHealth(): Promise<DependencyStatus> {
   const checkedAt = nowIso();
 
   try {
-    await pool.query('SELECT 1');
+    await pool.query("SELECT 1");
     return {
-      status: 'up',
+      status: "up",
       checkedAt,
     };
   } catch (error) {
     return {
-      status: 'down',
+      status: "down",
       checkedAt,
-      error: error instanceof Error ? error.message : 'Database health check failed',
+      error: error instanceof Error ? error.message : "Database health check failed",
     };
   }
 }
@@ -60,12 +60,12 @@ async function checkFxProviderHealth(
       providerId,
     );
     return {
-      status: 'up',
+      status: "up",
       checkedAt,
     };
   } catch (error) {
     return {
-      status: 'down',
+      status: "down",
       checkedAt,
       error: error instanceof Error ? error.message : `${providerId} health check failed`,
     };
@@ -86,8 +86,8 @@ export async function getHealth(): Promise<HealthResponse> {
   ]);
 
   const fxProviders = Object.fromEntries(fxProviderEntries);
-  const hasFxFailure = Object.values(fxProviders).some((provider) => provider.status === 'down');
-  const status = db.status === 'down' ? 'error' : hasFxFailure ? 'degraded' : 'ok';
+  const hasFxFailure = Object.values(fxProviders).some((provider) => provider.status === "down");
+  const status = db.status === "down" ? "error" : hasFxFailure ? "degraded" : "ok";
 
   return {
     status,
@@ -95,7 +95,7 @@ export async function getHealth(): Promise<HealthResponse> {
     uptimeSeconds,
     services: {
       api: {
-        status: 'up',
+        status: "up",
         checkedAt,
         uptimeSeconds,
       },

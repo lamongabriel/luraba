@@ -1,29 +1,29 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { ErrorState } from "@/components/error-state"
-import { ComboboxControl } from "@/components/forms/form-combobox"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
+import { useEffect, useState } from "react";
+import { ErrorState } from "@/components/error-state";
+import { ComboboxControl } from "@/components/forms/form-combobox";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
-import { createTimezoneOptions } from "@/lib/timezones"
-import { useUpdateUserPreferencesMutation } from "@/mutations/auth/use-update-user-preferences-mutation"
-import { useUserPreferencesQuery } from "@/queries/auth/use-user-preferences-query"
-import { useLocationOptionsQuery } from "@/queries/reference-data/use-location-options-query"
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { createTimezoneOptions } from "@/lib/timezones";
+import { useUpdateUserPreferencesMutation } from "@/mutations/auth/use-update-user-preferences-mutation";
+import { useUserPreferencesQuery } from "@/queries/auth/use-user-preferences-query";
+import { useLocationOptionsQuery } from "@/queries/reference-data/use-location-options-query";
 
 export function PreferencesSettings() {
-  const query = useUserPreferencesQuery()
-  const locationOptionsQuery = useLocationOptionsQuery()
-  const mutation = useUpdateUserPreferencesMutation()
-  const [values, setValues] = useState<Record<string, string>>({})
+  const query = useUserPreferencesQuery();
+  const locationOptionsQuery = useLocationOptionsQuery();
+  const mutation = useUpdateUserPreferencesMutation();
+  const [values, setValues] = useState<Record<string, string>>({});
   useEffect(() => {
     if (query.data)
       setValues({
@@ -33,10 +33,9 @@ export function PreferencesSettings() {
         dateFormat: query.data.dateFormat,
         preferredPeriod: query.data.preferredPeriod,
         preferredTheme: query.data.preferredTheme,
-      })
-  }, [query.data])
-  if (query.isLoading || locationOptionsQuery.isLoading)
-    return <Skeleton className="h-72" />
+      });
+  }, [query.data]);
+  if (query.isLoading || locationOptionsQuery.isLoading) return <Skeleton className="h-72" />;
   if (query.isError || !query.data)
     return (
       <ErrorState
@@ -44,7 +43,7 @@ export function PreferencesSettings() {
         description={query.error?.message}
         onRetry={() => query.refetch()}
       />
-    )
+    );
   if (locationOptionsQuery.isError || !locationOptionsQuery.data)
     return (
       <ErrorState
@@ -52,11 +51,9 @@ export function PreferencesSettings() {
         description={locationOptionsQuery.error?.message}
         onRetry={() => locationOptionsQuery.refetch()}
       />
-    )
+    );
 
-  const timezoneOptions = createTimezoneOptions(
-    locationOptionsQuery.data.timezones,
-  )
+  const timezoneOptions = createTimezoneOptions(locationOptionsQuery.data.timezones);
   const fields = [
     ["language", "Language", ["en", "pt-BR"]],
     ["currency", "Currency", ["USD", "BRL", "EUR"]],
@@ -64,16 +61,10 @@ export function PreferencesSettings() {
     [
       "preferredPeriod",
       "Default period",
-      [
-        "current_month",
-        "last_30_days",
-        "last_90_days",
-        "current_year",
-        "all_time",
-      ],
+      ["current_month", "last_30_days", "last_90_days", "current_year", "all_time"],
     ],
     ["preferredTheme", "Theme", ["system", "light", "dark"]],
-  ] as const
+  ] as const;
   return (
     <Card>
       <CardHeader>
@@ -88,9 +79,7 @@ export function PreferencesSettings() {
             <Label>{label}</Label>
             <Select
               value={values[key]}
-              onValueChange={(value) =>
-                setValues((current) => ({ ...current, [key]: value }))
-              }
+              onValueChange={(value) => setValues((current) => ({ ...current, [key]: value }))}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -111,23 +100,18 @@ export function PreferencesSettings() {
             id="timezone"
             value={values.timezone ?? ""}
             options={timezoneOptions}
-            onChange={(timezone) =>
-              setValues((current) => ({ ...current, timezone }))
-            }
+            onChange={(timezone) => setValues((current) => ({ ...current, timezone }))}
             placeholder="Select timezone"
             searchPlaceholder="Search timezones..."
             emptyMessage="No timezones found."
           />
         </div>
         <div className="flex justify-end sm:col-span-2">
-          <Button
-            isLoading={mutation.isPending}
-            onClick={() => mutation.mutate(values as never)}
-          >
+          <Button isLoading={mutation.isPending} onClick={() => mutation.mutate(values as never)}>
             Save preferences
           </Button>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

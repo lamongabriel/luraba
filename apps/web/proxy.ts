@@ -1,5 +1,5 @@
-import { getSessionCookie } from "better-auth/cookies"
-import { type NextRequest, NextResponse } from "next/server"
+import { getSessionCookie } from "better-auth/cookies";
+import { type NextRequest, NextResponse } from "next/server";
 
 const protectedPrefixes = [
   "/accounts",
@@ -11,31 +11,31 @@ const protectedPrefixes = [
   "/settings",
   "/tags",
   "/transactions",
-]
+];
 
 function isProtectedPath(pathname: string) {
   return protectedPrefixes.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  )
+  );
 }
 
 function isGuestPath(pathname: string) {
-  return pathname === "/login" || pathname === "/register"
+  return pathname === "/login" || pathname === "/register";
 }
 
 export function proxy(request: NextRequest) {
-  const pathname = request.nextUrl.pathname
-  const hasSessionCookie = Boolean(getSessionCookie(request))
+  const pathname = request.nextUrl.pathname;
+  const hasSessionCookie = Boolean(getSessionCookie(request));
 
   if (isGuestPath(pathname) && hasSessionCookie) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   if (isProtectedPath(pathname) && !hasSessionCookie) {
-    return NextResponse.redirect(new URL("/login", request.url))
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  return NextResponse.next()
+  return NextResponse.next();
 }
 
 export const config = {
@@ -52,4 +52,4 @@ export const config = {
     "/tags/:path*",
     "/transactions/:path*",
   ],
-}
+};

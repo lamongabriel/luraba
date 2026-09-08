@@ -1,67 +1,50 @@
-"use client"
+"use client";
 
-import { Add01Icon, CreditCardIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { CreditCard, ListCreditCardsQuery } from "@luraba/contracts"
-import { MAX_PER_PAGE } from "@luraba/contracts"
-import { parseAsString, useQueryState } from "nuqs"
-import * as React from "react"
-import { CreditCardActivity } from "@/components/credit-cards/credit-card-activity"
-import { CreditCardCarousel } from "@/components/credit-cards/credit-card-carousel"
-import { CreditCardKpiGrid } from "@/components/credit-cards/credit-card-kpi-grid"
-import { CreditCardSheet } from "@/components/credit-cards/credit-card-sheet"
-import { DataTableSearchInput } from "@/components/data-table/data-table-search-input"
-import { EmptyState } from "@/components/empty-state"
-import { ErrorState } from "@/components/error-state"
-import { FilterDate } from "@/components/filters/filter-date"
-import { FilterFaceted } from "@/components/filters/filter-faceted"
-import { InternalPageLayout } from "@/components/finance/internal-page-layout"
-import { PERMISSIONS, PermissionButton } from "@/components/permissions"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Typography } from "@/components/ui/typography"
-import { useApiParams } from "@/hooks/use-api-params"
-import { CREDIT_CARD_BRAND_OPTIONS } from "@/lib/credit-cards"
-import { formatDate, parseDateValue } from "@/lib/format"
-import { useAccountsQuery } from "@/queries/accounts/use-accounts-query"
+import { Add01Icon, CreditCardIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { CreditCard, ListCreditCardsQuery } from "@luraba/contracts";
+import { MAX_PER_PAGE } from "@luraba/contracts";
+import { parseAsString, useQueryState } from "nuqs";
+import * as React from "react";
+import { CreditCardActivity } from "@/components/credit-cards/credit-card-activity";
+import { CreditCardCarousel } from "@/components/credit-cards/credit-card-carousel";
+import { CreditCardKpiGrid } from "@/components/credit-cards/credit-card-kpi-grid";
+import { CreditCardSheet } from "@/components/credit-cards/credit-card-sheet";
+import { DataTableSearchInput } from "@/components/data-table/data-table-search-input";
+import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
+import { FilterDate } from "@/components/filters/filter-date";
+import { FilterFaceted } from "@/components/filters/filter-faceted";
+import { InternalPageLayout } from "@/components/finance/internal-page-layout";
+import { PERMISSIONS, PermissionButton } from "@/components/permissions";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
+import { useApiParams } from "@/hooks/use-api-params";
+import { CREDIT_CARD_BRAND_OPTIONS } from "@/lib/credit-cards";
+import { formatDate, parseDateValue } from "@/lib/format";
+import { useAccountsQuery } from "@/queries/accounts/use-accounts-query";
 import {
   useCreditCardCyclesQuery,
   useCreditCardQuery,
   useCreditCardsQuery,
-} from "@/queries/credit-cards/use-credit-cards-query"
-import { useCurrenciesQuery } from "@/queries/currencies/use-currencies-query"
-import { useAuthSessionStore } from "@/stores/auth-session-store"
+} from "@/queries/credit-cards/use-credit-cards-query";
+import { useCurrenciesQuery } from "@/queries/currencies/use-currencies-query";
+import { useAuthSessionStore } from "@/stores/auth-session-store";
 
 const cardFilterConfigs = {
   brands: { type: "stringArray" },
   ownerAccountIds: { type: "stringArray" },
   createdAtFrom: { type: "string" },
   createdAtTo: { type: "string" },
-} as const
+} as const;
 
-const cardSortFields = [
-  "name",
-  "brand",
-  "balance",
-  "creditLimitAmount",
-  "createdAt",
-] as const
+const cardSortFields = ["name", "brand", "balance", "creditLimitAmount", "createdAt"] as const;
 
 function CreditCardsLoading() {
   return (
-    <div
-      className="space-y-4"
-      aria-busy="true"
-      aria-label="Loading credit cards"
-      role="status"
-    >
+    <div className="space-y-4" aria-busy="true" aria-label="Loading credit cards" role="status">
       <div className="grid gap-3 sm:grid-cols-3">
         <Skeleton className="h-8" />
         <Skeleton className="h-8" />
@@ -70,15 +53,15 @@ function CreditCardsLoading() {
       <Skeleton className="h-72" />
       <Skeleton className="h-32" />
     </div>
-  )
+  );
 }
 
 function parseDateRange(value: string | undefined) {
-  return parseDateValue(value)
+  return parseDateValue(value);
 }
 
 function formatDateFilterValue(value: Date | undefined) {
-  return value ? formatDate(value, { formatString: "yyyy-MM-dd" }) : null
+  return value ? formatDate(value, { formatString: "yyyy-MM-dd" }) : null;
 }
 
 function CreditCardFilters({
@@ -86,39 +69,36 @@ function CreditCardFilters({
   ownerOptions,
 }: {
   params: ReturnType<
-    typeof useApiParams<
-      typeof cardFilterConfigs,
-      (typeof cardSortFields)[number]
-    >
-  >
-  ownerOptions: Array<{ value: string; label: string; description?: string }>
+    typeof useApiParams<typeof cardFilterConfigs, (typeof cardSortFields)[number]>
+  >;
+  ownerOptions: Array<{ value: string; label: string; description?: string }>;
 }) {
   const createdRange = React.useMemo(() => {
-    const from = parseDateRange(params.filters.createdAtFrom)
-    const to = parseDateRange(params.filters.createdAtTo)
-    return from || to ? { from, to } : undefined
-  }, [params.filters.createdAtFrom, params.filters.createdAtTo])
+    const from = parseDateRange(params.filters.createdAtFrom);
+    const to = parseDateRange(params.filters.createdAtTo);
+    return from || to ? { from, to } : undefined;
+  }, [params.filters.createdAtFrom, params.filters.createdAtTo]);
 
   const onCreatedRangeChange = React.useCallback(
     (value: Date | { from?: Date; to?: Date } | undefined) => {
       if (!value) {
-        params.setFilters({ createdAtFrom: null, createdAtTo: null })
-        return
+        params.setFilters({ createdAtFrom: null, createdAtTo: null });
+        return;
       }
 
       if (value instanceof Date) {
-        const date = formatDateFilterValue(value)
-        params.setFilters({ createdAtFrom: date, createdAtTo: date })
-        return
+        const date = formatDateFilterValue(value);
+        params.setFilters({ createdAtFrom: date, createdAtTo: date });
+        return;
       }
 
       params.setFilters({
         createdAtFrom: formatDateFilterValue(value.from),
         createdAtTo: formatDateFilterValue(value.to),
-      })
+      });
     },
     [params],
-  )
+  );
 
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -137,9 +117,7 @@ function CreditCardFilters({
         }))}
         multiple
         value={params.filters.brands}
-        onValueChange={(value) =>
-          params.setFilter("brands", Array.isArray(value) ? value : null)
-        }
+        onValueChange={(value) => params.setFilter("brands", Array.isArray(value) ? value : null)}
       />
       <FilterFaceted
         title="Owner account"
@@ -147,10 +125,7 @@ function CreditCardFilters({
         multiple
         value={params.filters.ownerAccountIds}
         onValueChange={(value) =>
-          params.setFilter(
-            "ownerAccountIds",
-            Array.isArray(value) ? value : null,
-          )
+          params.setFilter("ownerAccountIds", Array.isArray(value) ? value : null)
         }
       />
       <FilterDate
@@ -161,17 +136,12 @@ function CreditCardFilters({
         onValueChange={onCreatedRangeChange}
       />
       {params.hasFilters ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={params.clearFilters}
-        >
+        <Button type="button" variant="ghost" size="sm" onClick={params.clearFilters}>
           Clear filters
         </Button>
       ) : null}
     </div>
-  )
+  );
 }
 
 function SelectedCardWorkspace({
@@ -180,10 +150,10 @@ function SelectedCardWorkspace({
   precision,
   onEdit,
 }: {
-  card: CreditCard
-  language: string
-  precision: number
-  onEdit: () => void
+  card: CreditCard;
+  language: string;
+  precision: number;
+  onEdit: () => void;
 }) {
   const cyclesQuery = useCreditCardCyclesQuery(card.id, {
     scope: "default",
@@ -191,7 +161,7 @@ function SelectedCardWorkspace({
     perPage: 12,
     sort: "periodStart",
     sortDirection: "asc",
-  })
+  });
 
   return (
     <div className="space-y-4">
@@ -227,25 +197,19 @@ function SelectedCardWorkspace({
         precision={precision}
       />
 
-      <CreditCardActivity
-        card={card}
-        language={language}
-        precision={precision}
-      />
+      <CreditCardActivity card={card} language={language} precision={precision} />
     </div>
-  )
+  );
 }
 
 export function CreditCardsWorkspace() {
-  const [cardId, setCardId] = useQueryState("cardId", parseAsString)
-  const [sheetOpen, setSheetOpen] = React.useState(false)
-  const [editingCard, setEditingCard] = React.useState<CreditCard | undefined>()
-  const language = useAuthSessionStore(
-    (state) => state.user?.preferences.language ?? "en",
-  )
+  const [cardId, setCardId] = useQueryState("cardId", parseAsString);
+  const [sheetOpen, setSheetOpen] = React.useState(false);
+  const [editingCard, setEditingCard] = React.useState<CreditCard | undefined>();
+  const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
   const defaultCurrencyCode = useAuthSessionStore(
     (state) => state.household?.settings.defaultCurrencyId ?? "USD",
-  )
+  );
   const params = useApiParams({
     pagination: true,
     defaultPerPage: 20,
@@ -255,55 +219,50 @@ export function CreditCardsWorkspace() {
       defaultField: "name",
       defaultDirection: "asc",
     },
-  })
-  const cardsQuery = useCreditCardsQuery(
-    params.apiParams as ListCreditCardsQuery,
-  )
+  });
+  const cardsQuery = useCreditCardsQuery(params.apiParams as ListCreditCardsQuery);
   const accountsQuery = useAccountsQuery({
     types: ["cash"],
     perPage: MAX_PER_PAGE,
     sort: "name",
     sortDirection: "asc",
-  })
-  const currenciesQuery = useCurrenciesQuery({ perPage: MAX_PER_PAGE })
-  const cards = cardsQuery.data?.data ?? []
-  const selectedCardFromList = cards.find((card) => card.id === cardId)
+  });
+  const currenciesQuery = useCurrenciesQuery({ perPage: MAX_PER_PAGE });
+  const cards = cardsQuery.data?.data ?? [];
+  const selectedCardFromList = cards.find((card) => card.id === cardId);
   const selectedCardQuery = useCreditCardQuery(cardId ?? "", {
     enabled: Boolean(cardId && !selectedCardFromList),
-  })
-  const selectedCard = selectedCardFromList ?? selectedCardQuery.data
+  });
+  const selectedCard = selectedCardFromList ?? selectedCardQuery.data;
   const precision =
-    currenciesQuery.data?.data.find(
-      (currency) => currency.code === selectedCard?.currencyCode,
-    )?.precision ?? 2
+    currenciesQuery.data?.data.find((currency) => currency.code === selectedCard?.currencyCode)
+      ?.precision ?? 2;
   const ownerOptions =
     accountsQuery.data?.data.map((account) => ({
       value: account.id,
       label: account.name,
       description: `${account.institutionName ? `${account.institutionName} · ` : ""}${account.currencyCode}`,
-    })) ?? []
+    })) ?? [];
 
   React.useEffect(() => {
-    if (cardsQuery.isPending) return
+    if (cardsQuery.isPending) return;
 
     const nextCardId =
-      cardId && cards.some((card) => card.id === cardId)
-        ? cardId
-        : (cards[0]?.id ?? null)
+      cardId && cards.some((card) => card.id === cardId) ? cardId : (cards[0]?.id ?? null);
 
-    if (nextCardId !== cardId) void setCardId(nextCardId)
-  }, [cardId, cards, cardsQuery.isPending, setCardId])
+    if (nextCardId !== cardId) void setCardId(nextCardId);
+  }, [cardId, cards, cardsQuery.isPending, setCardId]);
 
   const openCreate = React.useCallback(() => {
-    setEditingCard(undefined)
-    setSheetOpen(true)
-  }, [])
+    setEditingCard(undefined);
+    setSheetOpen(true);
+  }, []);
 
   const openEdit = React.useCallback(() => {
-    if (!selectedCard) return
-    setEditingCard(selectedCard)
-    setSheetOpen(true)
-  }, [selectedCard])
+    if (!selectedCard) return;
+    setEditingCard(selectedCard);
+    setSheetOpen(true);
+  }, [selectedCard]);
 
   const pageContent = cardsQuery.isPending ? (
     <CreditCardsLoading />
@@ -335,8 +294,7 @@ export function CreditCardsWorkspace() {
           <div>
             <CardTitle>Your cards</CardTitle>
             <CardDescription className="mt-1">
-              Select a card to review its balance, statements, and recent
-              activity.
+              Select a card to review its balance, statements, and recent activity.
             </CardDescription>
           </div>
           <CreditCardFilters params={params} ownerOptions={ownerOptions} />
@@ -387,9 +345,7 @@ export function CreditCardsWorkspace() {
               type="button"
               variant="outline"
               size="sm"
-              disabled={
-                params.page >= cardsQuery.data.meta.pagination.totalPages
-              }
+              disabled={params.page >= cardsQuery.data.meta.pagination.totalPages}
               onClick={() => params.setPage(params.page + 1)}
             >
               Next
@@ -398,7 +354,7 @@ export function CreditCardsWorkspace() {
         </div>
       ) : null}
     </div>
-  )
+  );
 
   return (
     <InternalPageLayout
@@ -422,5 +378,5 @@ export function CreditCardsWorkspace() {
         onOpenChange={setSheetOpen}
       />
     </InternalPageLayout>
-  )
+  );
 }

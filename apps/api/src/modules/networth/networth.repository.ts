@@ -1,15 +1,15 @@
-import { and, asc, eq, sql } from 'drizzle-orm';
-import { db } from '@/db';
-import { accountsTable } from '@/db/schemas/accounts.schema';
-import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
-import { entriesTable } from '@/db/schemas/entries.schema';
-import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
+import { and, asc, eq, sql } from "drizzle-orm";
+import { db } from "@/db";
+import { accountsTable } from "@/db/schemas/accounts.schema";
+import { creditCardsTable } from "@/db/schemas/credit-cards.schema";
+import { entriesTable } from "@/db/schemas/entries.schema";
+import { ledgerAccountsTable } from "@/db/schemas/ledger-accounts.schema";
 
 export type NetWorthAccountRow = {
   id: string;
   name: string;
   type: string;
-  classification: 'asset' | 'liability';
+  classification: "asset" | "liability";
   currencyCode: string;
   balance: number;
 };
@@ -29,7 +29,7 @@ export async function listAccountBalances(householdId: string): Promise<NetWorth
       ledgerAccountsTable,
       and(
         eq(ledgerAccountsTable.ownerId, accountsTable.id),
-        eq(ledgerAccountsTable.ownerType, 'account'),
+        eq(ledgerAccountsTable.ownerType, "account"),
       ),
     )
     .leftJoin(entriesTable, eq(entriesTable.ledgerAccountId, ledgerAccountsTable.id))
@@ -39,7 +39,7 @@ export async function listAccountBalances(householdId: string): Promise<NetWorth
 
   return rows.map((row) => ({
     ...row,
-    balance: row.classification === 'asset' ? Number(row.rawBalance) : -Number(row.rawBalance),
+    balance: row.classification === "asset" ? Number(row.rawBalance) : -Number(row.rawBalance),
   }));
 }
 
@@ -52,14 +52,14 @@ export async function listNetWorthHistory(
   Array<{
     date: string;
     currencyCode: string;
-    classification: 'asset' | 'liability';
+    classification: "asset" | "liability";
     balance: number;
   }>
 > {
   const result = await db.execute<{
     date: string;
     currencyCode: string;
-    classification: 'asset' | 'liability';
+    classification: "asset" | "liability";
     balance: number;
   }>(sql`
     with points as (
@@ -92,11 +92,11 @@ export async function listCashFlow(
   dateFrom: string,
   dateTo: string,
 ): Promise<
-  Array<{ date: string; type: 'income' | 'expense'; amount: number; currencyCode: string }>
+  Array<{ date: string; type: "income" | "expense"; amount: number; currencyCode: string }>
 > {
   const result = await db.execute<{
     date: string;
-    type: 'income' | 'expense';
+    type: "income" | "expense";
     amount: number;
     currencyCode: string;
   }>(sql`
@@ -156,7 +156,7 @@ export async function listCategoryBreakdown(
   householdId: string,
   dateFrom: string,
   dateTo: string,
-  type: 'expense' | 'income',
+  type: "expense" | "income",
 ): Promise<Array<{ id: string | null; name: string; amount: number; currencyCode: string }>> {
   const result = await db.execute<{
     id: string | null;
@@ -184,7 +184,7 @@ export async function listCategoryBreakdown(
       inner join credit_cards on credit_cards.id = credit_card_installments.credit_card_id
       inner join accounts on accounts.id = credit_cards.ledger_account_id
       left join categories on categories.id = transactions.category_id
-      where ${type === 'expense' ? sql`transactions.household_id = ${householdId} and credit_card_purchases.include_in_budget = true and credit_card_billing_cycles.closing_date between ${dateFrom}::date and ${dateTo}::date` : sql`false`}
+      where ${type === "expense" ? sql`transactions.household_id = ${householdId} and credit_card_purchases.include_in_budget = true and credit_card_billing_cycles.closing_date between ${dateFrom}::date and ${dateTo}::date` : sql`false`}
     )
     select id, name, sum(amount)::integer as amount, "currencyCode"
     from (select * from ordinary union all select * from installments) values
@@ -249,7 +249,7 @@ export async function listCreditCardBalances(householdId: string): Promise<
       ledgerAccountsTable,
       and(
         eq(ledgerAccountsTable.ownerId, accountsTable.id),
-        eq(ledgerAccountsTable.ownerType, 'account'),
+        eq(ledgerAccountsTable.ownerType, "account"),
       ),
     )
     .leftJoin(entriesTable, eq(entriesTable.ledgerAccountId, ledgerAccountsTable.id))

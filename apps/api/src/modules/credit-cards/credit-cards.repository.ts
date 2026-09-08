@@ -1,9 +1,9 @@
-import { and, asc, eq, sql } from 'drizzle-orm';
-import { db } from '@/db';
-import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
-import { buildAccountBalanceSubquery } from '@/modules/ledger-accounts/ledger-accounts.repository';
-import { NotFoundError } from '@/shared/errors';
-import { type DbListPage, getPagination } from '@/shared/list';
+import { and, asc, eq, sql } from "drizzle-orm";
+import { db } from "@/db";
+import { creditCardsTable } from "@/db/schemas/credit-cards.schema";
+import { buildAccountBalanceSubquery } from "@/modules/ledger-accounts/ledger-accounts.repository";
+import { NotFoundError } from "@/shared/errors";
+import { type DbListPage, getPagination } from "@/shared/list";
 import {
   type CreditCardRow,
   type CreditCardSelectRow,
@@ -11,12 +11,12 @@ import {
   creditCardOwnerAccountsTable,
   creditCardSelect,
   toCreditCardRow,
-} from './credit-cards.helpers';
+} from "./credit-cards.helpers";
 import {
   buildCreditCardsListOrder,
   buildCreditCardsListWhere,
   type ListCreditCardsQuery,
-} from './credit-cards.query';
+} from "./credit-cards.query";
 
 export type CreditCardListRow = CreditCardRow & {
   balance: number;
@@ -163,7 +163,7 @@ export async function findByIdOrThrow(
 ): Promise<CreditCardRow> {
   const card = await findById(householdId, creditCardId);
   if (!card) {
-    throw new NotFoundError('Credit card');
+    throw new NotFoundError("Credit card");
   }
 
   return card;

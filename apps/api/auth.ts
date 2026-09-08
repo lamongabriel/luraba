@@ -1,1 +1,1 @@
-export { auth } from './src/shared/lib/auth';
+export { auth } from "./src/shared/lib/auth";

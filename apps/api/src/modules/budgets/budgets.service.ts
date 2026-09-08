@@ -1,13 +1,13 @@
-import type { MonthlyBudget, replaceMonthlyBudgetBodySchema } from '@luraba/contracts/budgets';
-import type { z } from 'zod';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { categoriesRepository } from '@/modules/categories/categories.repository';
-import { fxService } from '@/modules/fx/fx.service';
-import { householdsRepository } from '@/modules/households/households.repository';
-import { NotFoundError, ValidationError } from '@/shared/errors';
-import { budgetsRepository } from './budgets.repository';
-import { formatBudgetMonthKey } from './budgets.types';
+import type { MonthlyBudget, replaceMonthlyBudgetBodySchema } from "@luraba/contracts/budgets";
+import type { z } from "zod";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { categoriesRepository } from "@/modules/categories/categories.repository";
+import { fxService } from "@/modules/fx/fx.service";
+import { householdsRepository } from "@/modules/households/households.repository";
+import { NotFoundError, ValidationError } from "@/shared/errors";
+import { budgetsRepository } from "./budgets.repository";
+import { formatBudgetMonthKey } from "./budgets.types";
 
 type ReplaceMonthlyBudget = z.output<typeof replaceMonthlyBudgetBodySchema>;
 
@@ -18,15 +18,15 @@ type CreditCardActualRow = Awaited<
 >[number];
 type CategorizedActualRow = (ActualRow | CreditCardActualRow) & { categoryId: string };
 
-type BudgetCategoryItem = MonthlyBudget['categories']['income'][number];
+type BudgetCategoryItem = MonthlyBudget["categories"]["income"][number];
 
-function buildCategoryGroupKey(categoryType: 'income' | 'expense', categoryId: string): string {
+function buildCategoryGroupKey(categoryType: "income" | "expense", categoryId: string): string {
   return `${categoryType}:${categoryId}`;
 }
 
 function getOrCreateCategoryBreakdown(
-  categoryMap: Record<'income' | 'expense', Map<string, BudgetCategoryItem>>,
-  row: Pick<BudgetRow, 'categoryId' | 'categoryName' | 'parentId' | 'categoryType'>,
+  categoryMap: Record<"income" | "expense", Map<string, BudgetCategoryItem>>,
+  row: Pick<BudgetRow, "categoryId" | "categoryName" | "parentId" | "categoryType">,
 ): BudgetCategoryItem {
   const target = categoryMap[row.categoryType];
   const existing = target.get(row.categoryId);
@@ -94,7 +94,7 @@ async function buildMonthlyBudgetResponse(params: {
   );
 
   for (const [categoryType, target] of Object.entries(categories) as Array<
-    ['income' | 'expense', Map<string, BudgetCategoryItem>]
+    ["income" | "expense", Map<string, BudgetCategoryItem>]
   >) {
     for (const [categoryId, item] of target.entries()) {
       const groupKey = buildCategoryGroupKey(categoryType, categoryId);
@@ -135,7 +135,7 @@ async function resolveBudgetContext(
   displayCurrencyCode: string;
 }> {
   const household = await householdsRepository.findHouseholdById(householdId);
-  if (!household) throw new NotFoundError('Household');
+  if (!household) throw new NotFoundError("Household");
 
   const budgetCurrencyCode = household.defaultCurrencyId;
   const displayCurrencyCode = (
@@ -203,16 +203,16 @@ export async function replaceMonthlyBudget(
 
   for (const item of dto.income) {
     const category = categoriesById.get(item.categoryId);
-    if (!category) throw new NotFoundError('Category');
-    if (category.type !== 'income') {
+    if (!category) throw new NotFoundError("Category");
+    if (category.type !== "income") {
       throw new ValidationError(`Category ${item.categoryId} must be of type income`);
     }
   }
 
   for (const item of dto.expense) {
     const category = categoriesById.get(item.categoryId);
-    if (!category) throw new NotFoundError('Category');
-    if (category.type !== 'expense') {
+    if (!category) throw new NotFoundError("Category");
+    if (category.type !== "expense") {
       throw new ValidationError(`Category ${item.categoryId} must be of type expense`);
     }
   }

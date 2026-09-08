@@ -1,13 +1,13 @@
-import { tagsEndpoints } from '@luraba/contracts/tags';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
-import { withApiMeta } from '@/shared/response';
-import * as tagsService from './tags.service';
+import { tagsEndpoints } from "@luraba/contracts/tags";
+import { createHouseholdHandler } from "@/shared/controllers/household.controller";
+import { withApiMeta } from "@/shared/response";
+import * as tagsService from "./tags.service";
 
 export const create = createHouseholdHandler({
   body: tagsEndpoints.create.body,
   response: tagsEndpoints.create.response,
   handle: ({ household, body }) => tagsService.createTag(household, body),
-  status: 'created',
+  status: "created",
 });
 
 export const list = createHouseholdHandler({
@@ -29,6 +29,6 @@ export const update = createHouseholdHandler({
 
 export const deleteTag = createHouseholdHandler({
   params: tagsEndpoints.delete.params,
-  status: 'no-content',
+  status: "no-content",
   handle: ({ household, params }) => tagsService.deleteTag(household, params.id),
 });

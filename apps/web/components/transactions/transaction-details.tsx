@@ -1,35 +1,31 @@
-"use client"
+"use client";
 
-import { Delete02Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type {
-  CreditCardPayment,
-  CreditCardPurchase,
-  TransactionFeedRow,
-} from "@luraba/contracts"
-import * as React from "react"
-import { MoneyValue } from "@/components/finance/money-value"
-import { ComboboxControl } from "@/components/forms/form-combobox"
-import { TagSelectControl } from "@/components/forms/form-tag-select"
-import { PERMISSIONS, PermissionButton } from "@/components/permissions"
+import { Delete02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { CreditCardPayment, CreditCardPurchase, TransactionFeedRow } from "@luraba/contracts";
+import * as React from "react";
+import { MoneyValue } from "@/components/finance/money-value";
+import { ComboboxControl } from "@/components/forms/form-combobox";
+import { TagSelectControl } from "@/components/forms/form-tag-select";
+import { PERMISSIONS, PermissionButton } from "@/components/permissions";
 import {
   SidePanelDetailRow,
   SidePanelSection,
   SidePanelSettingCard,
-} from "@/components/side-panel/side-panel-section"
-import { TransactionTypeBadge } from "@/components/tables/transactions/transaction-type-badge"
+} from "@/components/side-panel/side-panel-section";
+import { TransactionTypeBadge } from "@/components/tables/transactions/transaction-type-badge";
 import {
   TransactionLabelChip,
   UncategorizedChip,
-} from "@/components/transactions/transaction-label-chip"
-import { useTransactionInlineUpdates } from "@/components/transactions/use-transaction-inline-updates"
-import { Switch } from "@/components/ui/switch"
-import { Typography } from "@/components/ui/typography"
-import { formatShortDate } from "@/lib/format"
-import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query"
-import { useAuthSessionStore } from "@/stores/auth-session-store"
+} from "@/components/transactions/transaction-label-chip";
+import { useTransactionInlineUpdates } from "@/components/transactions/use-transaction-inline-updates";
+import { Switch } from "@/components/ui/switch";
+import { Typography } from "@/components/ui/typography";
+import { formatShortDate } from "@/lib/format";
+import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
+import { useAuthSessionStore } from "@/stores/auth-session-store";
 
-const CLEAR_CATEGORY = "__uncategorized__"
+const CLEAR_CATEGORY = "__uncategorized__";
 
 export function TransactionDetails({
   lookups,
@@ -38,52 +34,42 @@ export function TransactionDetails({
   purchase,
   row,
 }: {
-  lookups: TransactionLookups
-  onDelete: () => void
-  payment?: CreditCardPayment
-  purchase?: CreditCardPurchase
-  row: TransactionFeedRow
+  lookups: TransactionLookups;
+  onDelete: () => void;
+  payment?: CreditCardPayment;
+  purchase?: CreditCardPurchase;
+  row: TransactionFeedRow;
 }) {
-  const language = useAuthSessionStore(
-    (state) => state.user?.preferences.language ?? "en",
-  )
-  const { isPending, update } = useTransactionInlineUpdates(row)
-  const persistedIncludeInBudget =
-    purchase?.includeInBudget ?? row.includeInBudget
-  const [includeInBudget, setIncludeInBudget] = React.useState(
-    persistedIncludeInBudget,
-  )
-  const categoryId = purchase?.categoryId ?? row.categoryId
+  const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
+  const { isPending, update } = useTransactionInlineUpdates(row);
+  const persistedIncludeInBudget = purchase?.includeInBudget ?? row.includeInBudget;
+  const [includeInBudget, setIncludeInBudget] = React.useState(persistedIncludeInBudget);
+  const categoryId = purchase?.categoryId ?? row.categoryId;
   const persistedTagIds = React.useMemo(
     () => (purchase?.tags ?? row.tags).map((tag) => tag.id),
     [purchase?.tags, row.tags],
-  )
-  const [tagIds, setTagIds] = React.useState(persistedTagIds)
-  const category = lookups.categories.find((item) => item.id === categoryId)
+  );
+  const [tagIds, setTagIds] = React.useState(persistedTagIds);
+  const category = lookups.categories.find((item) => item.id === categoryId);
   const precision =
-    lookups.currencies.find((item) => item.code === row.currencyCode)
-      ?.precision ?? 2
+    lookups.currencies.find((item) => item.code === row.currencyCode)?.precision ?? 2;
   const toPrecision =
-    lookups.currencies.find((item) => item.code === row.toCurrencyCode)
-      ?.precision ?? 2
+    lookups.currencies.find((item) => item.code === row.toCurrencyCode)?.precision ?? 2;
 
   React.useEffect(() => {
-    setIncludeInBudget(persistedIncludeInBudget)
-  }, [persistedIncludeInBudget])
+    setIncludeInBudget(persistedIncludeInBudget);
+  }, [persistedIncludeInBudget]);
 
   React.useEffect(() => {
-    setTagIds(persistedTagIds)
-  }, [persistedTagIds])
+    setTagIds(persistedTagIds);
+  }, [persistedTagIds]);
 
   const categoryOptions = [
     { value: CLEAR_CATEGORY, label: "Uncategorized" },
     ...lookups.categories
-      .filter(
-        (item) =>
-          item.type === (row.originType === "income" ? "income" : "expense"),
-      )
+      .filter((item) => item.type === (row.originType === "income" ? "income" : "expense"))
       .map((item) => ({ value: item.id, label: item.name })),
-  ]
+  ];
 
   return (
     <div className="space-y-7">
@@ -97,9 +83,7 @@ export function TransactionDetails({
         <SidePanelDetailRow label="Posted date">
           {formatShortDate(row.postedDate, language)}
         </SidePanelDetailRow>
-        {row.originType === "transfer" &&
-        row.toAmount !== null &&
-        row.toCurrencyCode ? (
+        {row.originType === "transfer" && row.toAmount !== null && row.toCurrencyCode ? (
           <SidePanelDetailRow label="Received">
             <MoneyValue
               amount={row.toAmount}
@@ -135,19 +119,15 @@ export function TransactionDetails({
                 renderOption={(option) => {
                   const optionCategory = lookups.categories.find(
                     (item) => item.id === option.value,
-                  )
+                  );
                   return optionCategory ? (
                     <TransactionLabelChip entity={optionCategory} />
                   ) : (
                     <UncategorizedChip />
-                  )
+                  );
                 }}
                 renderValue={() =>
-                  category ? (
-                    <TransactionLabelChip entity={category} />
-                  ) : (
-                    <UncategorizedChip />
-                  )
+                  category ? <TransactionLabelChip entity={category} /> : <UncategorizedChip />
                 }
               />
             )}
@@ -160,12 +140,9 @@ export function TransactionDetails({
               id={`transaction-tags-${row.rowId}`}
               value={tagIds}
               onChange={(nextTagIds) => {
-                const previousTagIds = tagIds
-                setTagIds(nextTagIds)
-                update(
-                  { tagIds: nextTagIds },
-                  { onError: () => setTagIds(previousTagIds) },
-                )
+                const previousTagIds = tagIds;
+                setTagIds(nextTagIds);
+                update({ tagIds: nextTagIds }, { onError: () => setTagIds(previousTagIds) });
               }}
               maxVisibleTags={1}
               placeholder="No tags"
@@ -180,7 +157,7 @@ export function TransactionDetails({
         <SidePanelSection title="Installments">
           <div className="max-h-64 overflow-y-auto rounded-lg border border-border/70">
             {purchase.installments.map((installment) => {
-              const selected = installment.installmentId === row.installmentId
+              const selected = installment.installmentId === row.installmentId;
               return (
                 <div
                   key={installment.installmentId}
@@ -201,7 +178,7 @@ export function TransactionDetails({
                     precision={precision}
                   />
                 </div>
-              )
+              );
             })}
           </div>
         </SidePanelSection>
@@ -210,10 +187,7 @@ export function TransactionDetails({
       {payment && payment.allocations.length > 0 ? (
         <SidePanelSection title="Payment allocation">
           {payment.allocations.map((allocation) => (
-            <SidePanelDetailRow
-              key={allocation.billingCycleId}
-              label="Billing cycle"
-            >
+            <SidePanelDetailRow key={allocation.billingCycleId} label="Billing cycle">
               <MoneyValue
                 amount={allocation.amount}
                 currencyCode={row.currencyCode}
@@ -229,21 +203,19 @@ export function TransactionDetails({
         <SidePanelSection title="Settings">
           {row.rowKind !== "credit_card_payment" ? (
             <SidePanelSettingCard
-              title={
-                includeInBudget ? "Included in budget" : "Excluded from budget"
-              }
+              title={includeInBudget ? "Included in budget" : "Excluded from budget"}
               description="Use this transaction in budget calculations."
             >
               <Switch
                 checked={includeInBudget}
                 disabled={isPending}
                 onCheckedChange={(checked) => {
-                  const previousValue = includeInBudget
-                  setIncludeInBudget(checked)
+                  const previousValue = includeInBudget;
+                  setIncludeInBudget(checked);
                   update(
                     { includeInBudget: checked },
                     { onError: () => setIncludeInBudget(previousValue) },
-                  )
+                  );
                 }}
                 aria-label="Include transaction in budget"
               />
@@ -271,5 +243,5 @@ export function TransactionDetails({
         </SidePanelSection>
       ) : null}
     </div>
-  )
+  );
 }

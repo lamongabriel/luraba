@@ -1,3 +1,3 @@
 export default function ReportsPage() {
-  return <div>Reports</div>
+  return <div>Reports</div>;
 }

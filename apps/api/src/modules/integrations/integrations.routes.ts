@@ -1,9 +1,8 @@
-import { getEndpointRouterPath, integrationsEndpoints } from '@luraba/contracts';
-import { Router } from 'express';
-import { PERMISSIONS } from '@/config/permissions';
-import { requireAccess } from '@/middleware/access.middleware';
-import * as brandfetchController from './brandfetch/brandfetch.controller';
-import * as integrationsController from './integrations.controller';
+import { getEndpointRouterPath, integrationsEndpoints, PERMISSIONS } from "@luraba/contracts";
+import { Router } from "express";
+import { requireAccess } from "@/middleware/access.middleware";
+import * as brandfetchController from "./brandfetch/brandfetch.controller";
+import * as integrationsController from "./integrations.controller";
 
 const router = Router();
 

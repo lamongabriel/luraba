@@ -14,10 +14,10 @@ export type MailConfig = {
 export type ConfiguredMailConfig = Required<
   Pick<
     MailConfig,
-    'provider' | 'host' | 'port' | 'secure' | 'username' | 'password' | 'fromName' | 'fromEmail'
+    "provider" | "host" | "port" | "secure" | "username" | "password" | "fromName" | "fromEmail"
   >
 > &
-  Pick<MailConfig, 'replyEmail' | 'tlsCiphers'>;
+  Pick<MailConfig, "replyEmail" | "tlsCiphers">;
 
 export function isMailConfigured(config: MailConfig): config is ConfiguredMailConfig {
   return (

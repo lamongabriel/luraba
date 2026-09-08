@@ -1,8 +1,8 @@
-import { and, asc, eq } from 'drizzle-orm';
-import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { now as _now } from '@/shared/lib/date';
+import { and, asc, eq } from "drizzle-orm";
+import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { now as _now } from "@/shared/lib/date";
 
 type HouseholdScopedTable = PgTable & {
   id: PgColumn;

@@ -1,21 +1,21 @@
-import type { CreateAccountInput } from '@luraba/contracts/accounts';
-import type { CreateCategoryInput } from '@luraba/contracts/categories';
-import type { CreateCreditCardInput } from '@luraba/contracts/credit-cards';
-import type { CreateMerchantInput } from '@luraba/contracts/merchants';
-import type { CreatePaymentMethodInput } from '@luraba/contracts/payment-methods';
-import type { CreateTagInput } from '@luraba/contracts/tags';
-import { and, eq } from 'drizzle-orm';
-import type { HouseholdContext } from '@/config/permissions';
-import { getPermissionsForRole } from '@/config/permissions';
-import { db } from '@/db';
-import { accountsTable } from '@/db/schemas/accounts.schema';
-import { entriesTable } from '@/db/schemas/entries.schema';
-import { householdMembersTable, householdsTable } from '@/db/schemas/households.schema';
-import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
-import { transactionsTable } from '@/db/schemas/transactions.schema';
-import { usersTable } from '@/db/schemas/users.schema';
-import * as accountsService from '@/modules/accounts/accounts.service';
-import { now, parseISODate } from '@/shared/lib/date';
+import { getPermissionsForRole } from "@luraba/contracts";
+import type { CreateAccountInput } from "@luraba/contracts/accounts";
+import type { CreateCategoryInput } from "@luraba/contracts/categories";
+import type { CreateCreditCardInput } from "@luraba/contracts/credit-cards";
+import type { CreateMerchantInput } from "@luraba/contracts/merchants";
+import type { CreatePaymentMethodInput } from "@luraba/contracts/payment-methods";
+import type { CreateTagInput } from "@luraba/contracts/tags";
+import { and, eq } from "drizzle-orm";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { accountsTable } from "@/db/schemas/accounts.schema";
+import { entriesTable } from "@/db/schemas/entries.schema";
+import { householdMembersTable, householdsTable } from "@/db/schemas/households.schema";
+import { ledgerAccountsTable } from "@/db/schemas/ledger-accounts.schema";
+import { transactionsTable } from "@/db/schemas/transactions.schema";
+import { usersTable } from "@/db/schemas/users.schema";
+import * as accountsService from "@/modules/accounts/accounts.service";
+import { now, parseISODate } from "@/shared/lib/date";
 
 function randomSuffix() {
   return Math.random().toString(36).slice(2, 10);
@@ -27,12 +27,12 @@ export async function createUser(overrides: Partial<typeof usersTable.$inferInse
     .values({
       name: `Test User ${randomSuffix()}`,
       email: `user-${randomSuffix()}@example.com`,
-      preferredCurrency: 'BRL',
-      preferredLanguage: 'en',
-      preferredTimezone: 'America/Sao_Paulo',
-      preferredDateFormat: 'DD/MM/YYYY',
-      preferredPeriod: 'current_month',
-      preferredTheme: 'system',
+      preferredCurrency: "BRL",
+      preferredLanguage: "en",
+      preferredTimezone: "America/Sao_Paulo",
+      preferredDateFormat: "DD/MM/YYYY",
+      preferredPeriod: "current_month",
+      preferredTheme: "system",
       ...overrides,
     })
     .returning();
@@ -49,12 +49,12 @@ export async function createHousehold(
     .values({
       name: `Household ${randomSuffix()}`,
       description: null,
-      defaultCurrencyId: 'BRL',
-      countryCode: 'BR',
-      timezone: 'America/Sao_Paulo',
+      defaultCurrencyId: "BRL",
+      countryCode: "BR",
+      timezone: "America/Sao_Paulo",
       budgetMonthStartsOn: 1,
-      creditExpenseTiming: 'spend_month',
-      creditInstallmentBudgetMode: 'per_installment',
+      creditExpenseTiming: "spend_month",
+      creditInstallmentBudgetMode: "per_installment",
       createdByUserId: userId,
       ...overrides,
     })
@@ -66,7 +66,7 @@ export async function createHousehold(
 export async function createHouseholdMembership(
   householdId: string,
   userId: string,
-  role: 'owner' | 'admin' | 'member' | 'viewer' = 'owner',
+  role: "owner" | "admin" | "member" | "viewer" = "owner",
 ) {
   const rows = await db
     .insert(householdMembersTable)
@@ -90,25 +90,25 @@ export async function setDefaultHousehold(userId: string, householdId: string) {
 }
 
 export function buildAccountInput(overrides: Partial<CreateAccountInput> = {}): CreateAccountInput {
-  const type = overrides.type ?? 'cash';
-  const defaultDetails: CreateAccountInput['details'] = (() => {
+  const type = overrides.type ?? "cash";
+  const defaultDetails: CreateAccountInput["details"] = (() => {
     switch (type) {
-      case 'cash':
-        return { kind: 'cash', subtype: 'other' };
-      case 'investment':
-        return { kind: 'investment', subtype: 'other' };
-      case 'crypto':
-        return { kind: 'crypto', subtype: 'other' };
-      case 'property':
-        return { kind: 'property', subtype: 'other' };
-      case 'vehicle':
-        return { kind: 'vehicle', subtype: 'other' };
-      case 'loan':
-        return { kind: 'loan', subtype: 'other' };
-      case 'other_asset':
-        return { kind: 'other_asset', subtype: 'other' };
-      case 'other_liability':
-        return { kind: 'other_liability', subtype: 'other' };
+      case "cash":
+        return { kind: "cash", subtype: "other" };
+      case "investment":
+        return { kind: "investment", subtype: "other" };
+      case "crypto":
+        return { kind: "crypto", subtype: "other" };
+      case "property":
+        return { kind: "property", subtype: "other" };
+      case "vehicle":
+        return { kind: "vehicle", subtype: "other" };
+      case "loan":
+        return { kind: "loan", subtype: "other" };
+      case "other_asset":
+        return { kind: "other_asset", subtype: "other" };
+      case "other_liability":
+        return { kind: "other_liability", subtype: "other" };
     }
   })();
 
@@ -116,7 +116,7 @@ export function buildAccountInput(overrides: Partial<CreateAccountInput> = {}): 
     name: `Account ${randomSuffix()}`,
     type,
     details: overrides.details ?? defaultDetails,
-    currencyCode: 'BRL',
+    currencyCode: "BRL",
     ...overrides,
   };
 }
@@ -136,9 +136,9 @@ export function buildCreditCardInput(
 ): CreateCreditCardInput {
   return {
     name: `Card ${randomSuffix()}`,
-    ownerAccountId: overrides.ownerAccountId ?? '00000000-0000-0000-0000-000000000000',
-    brand: 'Visa',
-    last4: '4242',
+    ownerAccountId: overrides.ownerAccountId ?? "00000000-0000-0000-0000-000000000000",
+    brand: "Visa",
+    last4: "4242",
     closingDay: 25,
     dueDay: 5,
     ...overrides,
@@ -148,13 +148,13 @@ export function buildCreditCardInput(
 export async function createCreditCardOwner(
   context: Pick<
     HouseholdContext,
-    | 'householdId'
-    | 'userId'
-    | 'role'
-    | 'permissions'
-    | 'timezone'
-    | 'creditExpenseTiming'
-    | 'creditInstallmentBudgetMode'
+    | "householdId"
+    | "userId"
+    | "role"
+    | "permissions"
+    | "timezone"
+    | "creditExpenseTiming"
+    | "creditInstallmentBudgetMode"
   >,
   overrides: Partial<CreateAccountInput> = {},
 ) {
@@ -162,8 +162,8 @@ export async function createCreditCardOwner(
     context,
     buildAccountInput({
       name: `Card owner ${randomSuffix()}`,
-      type: 'cash',
-      currencyCode: 'BRL',
+      type: "cash",
+      currencyCode: "BRL",
       ...overrides,
     }),
   );
@@ -174,9 +174,9 @@ export function buildCategoryInput(
 ): CreateCategoryInput {
   return {
     name: `Category ${randomSuffix()}`,
-    type: 'expense',
-    color: '#2563EB',
-    icon: 'ShoppingBag02Icon',
+    type: "expense",
+    color: "#2563EB",
+    icon: "ShoppingBag02Icon",
     ...overrides,
   };
 }
@@ -184,8 +184,8 @@ export function buildCategoryInput(
 export function buildTagInput(overrides: Partial<CreateTagInput> = {}): CreateTagInput {
   return {
     name: `Tag ${randomSuffix()}`,
-    color: '#7C3AED',
-    icon: 'Tag01Icon',
+    color: "#7C3AED",
+    icon: "Tag01Icon",
     ...overrides,
   };
 }
@@ -195,8 +195,8 @@ export function buildPaymentMethodInput(
 ): CreatePaymentMethodInput {
   return {
     name: `Payment Method ${randomSuffix()}`,
-    color: '#0EA5E9',
-    icon: 'CreditCardIcon',
+    color: "#0EA5E9",
+    icon: "CreditCardIcon",
     ...overrides,
   };
 }
@@ -215,7 +215,7 @@ export async function createBalanceEntryForAccount(input: {
     .from(ledgerAccountsTable)
     .where(
       and(
-        eq(ledgerAccountsTable.ownerType, 'account'),
+        eq(ledgerAccountsTable.ownerType, "account"),
         eq(ledgerAccountsTable.ownerId, input.accountId),
       ),
     )
@@ -223,15 +223,15 @@ export async function createBalanceEntryForAccount(input: {
 
   const ledger = ledgerRows[0];
   if (!ledger) {
-    throw new Error('Account ledger not found for test balance setup');
+    throw new Error("Account ledger not found for test balance setup");
   }
 
-  const postedDate = input.postedDate ?? parseISODate('2026-01-15');
+  const postedDate = input.postedDate ?? parseISODate("2026-01-15");
   const transactionRows = await db
     .insert(transactionsTable)
     .values({
       householdId: input.householdId,
-      type: 'adjustment',
+      type: "adjustment",
       description: `Balance setup ${randomSuffix()}`,
       includeInBudget: false,
       purchaseDate: postedDate,
@@ -247,7 +247,7 @@ export async function createBalanceEntryForAccount(input: {
       transactionId: transaction.id,
       ledgerAccountId: ledger.id,
       amount: input.amount,
-      currencyId: input.currencyCode ?? 'BRL',
+      currencyId: input.currencyCode ?? "BRL",
       createdAt: now(),
     })
     .returning();
@@ -258,22 +258,22 @@ export async function createBalanceEntryForAccount(input: {
 export function buildHouseholdContext(input: {
   householdId: string;
   userId: string;
-  role?: HouseholdContext['role'];
-  permissions?: HouseholdContext['permissions'];
-  timezone?: HouseholdContext['timezone'];
-  creditExpenseTiming?: HouseholdContext['creditExpenseTiming'];
-  creditInstallmentBudgetMode?: HouseholdContext['creditInstallmentBudgetMode'];
+  role?: HouseholdContext["role"];
+  permissions?: HouseholdContext["permissions"];
+  timezone?: HouseholdContext["timezone"];
+  creditExpenseTiming?: HouseholdContext["creditExpenseTiming"];
+  creditInstallmentBudgetMode?: HouseholdContext["creditInstallmentBudgetMode"];
 }): HouseholdContext {
-  const role = input.role ?? 'owner';
+  const role = input.role ?? "owner";
 
   return {
     householdId: input.householdId,
     userId: input.userId,
     role,
     permissions: input.permissions ?? getPermissionsForRole(role),
-    timezone: input.timezone ?? 'America/Sao_Paulo',
-    creditExpenseTiming: input.creditExpenseTiming ?? 'spend_month',
-    creditInstallmentBudgetMode: input.creditInstallmentBudgetMode ?? 'per_installment',
+    timezone: input.timezone ?? "America/Sao_Paulo",
+    creditExpenseTiming: input.creditExpenseTiming ?? "spend_month",
+    creditInstallmentBudgetMode: input.creditInstallmentBudgetMode ?? "per_installment",
   };
 }
 

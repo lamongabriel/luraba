@@ -2,8 +2,8 @@ import {
   addDays as addFxDays,
   formatISODate as formatFxDate,
   parseISODate as parseFxDate,
-} from '@/shared/lib/date';
-import type { FxProviderRate, FxResolvedRate } from './fx.types';
+} from "@/shared/lib/date";
+import type { FxProviderRate, FxResolvedRate } from "./fx.types";
 
 const FX_RATE_DECIMAL_SCALE = 12;
 
@@ -27,19 +27,19 @@ function greatestCommonDivisor(left: number, right: number): number {
 
 function trimTrailingDecimalZeros(value: string): string {
   return value
-    .replace(/(\.\d*?[1-9])0+$/u, '$1')
-    .replace(/\.0+$/u, '')
-    .replace(/\.$/u, '');
+    .replace(/(\.\d*?[1-9])0+$/u, "$1")
+    .replace(/\.0+$/u, "")
+    .replace(/\.$/u, "");
 }
 
 function normalizeFxRateDecimal(rate: string | number): string {
-  const numericRate = typeof rate === 'number' ? rate : Number(rate);
+  const numericRate = typeof rate === "number" ? rate : Number(rate);
 
   if (!Number.isFinite(numericRate) || numericRate <= 0) {
     throw new Error(`Invalid FX rate: ${String(rate)}`);
   }
 
-  if (typeof rate === 'string' && /^[0-9]+(?:\.[0-9]+)?$/u.test(rate.trim())) {
+  if (typeof rate === "string" && /^[0-9]+(?:\.[0-9]+)?$/u.test(rate.trim())) {
     return trimTrailingDecimalZeros(rate.trim());
   }
 
@@ -48,12 +48,12 @@ function normalizeFxRateDecimal(rate: string | number): string {
 
 export function toFxFraction(
   rate: string | number,
-): Pick<FxResolvedRate, 'rateNumerator' | 'rateDenominator'> {
+): Pick<FxResolvedRate, "rateNumerator" | "rateDenominator"> {
   const normalized = normalizeFxRateDecimal(rate);
-  const [wholePart, fractionPart = ''] = normalized.split('.');
+  const [wholePart, fractionPart = ""] = normalized.split(".");
   const precision = fractionPart.length;
   const denominator = precision === 0 ? 1 : 10 ** precision;
-  const numerator = Number(wholePart) * denominator + Number(fractionPart || '0');
+  const numerator = Number(wholePart) * denominator + Number(fractionPart || "0");
   const divisor = greatestCommonDivisor(numerator, denominator);
 
   return {
@@ -78,7 +78,7 @@ export function buildFxLookupKey(parts: {
   rateDate: Date;
   provider?: string;
 }): string {
-  return `${parts.provider ?? 'any'}:${parts.fromCurrencyCode}:${parts.toCurrencyCode}:${formatFxDate(parts.rateDate)}`;
+  return `${parts.provider ?? "any"}:${parts.fromCurrencyCode}:${parts.toCurrencyCode}:${formatFxDate(parts.rateDate)}`;
 }
 
 export function invertFxRate(rate: FxResolvedRate): FxResolvedRate {

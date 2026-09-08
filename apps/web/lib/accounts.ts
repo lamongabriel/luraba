@@ -7,15 +7,15 @@ import {
   Home01Icon,
   PieChart02Icon,
   WalletIcon,
-} from "@hugeicons/core-free-icons"
-import type { HugeiconsIcon } from "@hugeicons/react"
+} from "@hugeicons/core-free-icons";
+import type { HugeiconsIcon } from "@hugeicons/react";
 import {
   ACCOUNT_TYPES,
   type AccountSubtype,
   type AccountType,
   type CreatableNonCardAccountType,
-} from "@luraba/contracts"
-import type { ComponentProps } from "react"
+} from "@luraba/contracts";
+import type { ComponentProps } from "react";
 
 export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   cash: "Cash",
@@ -27,32 +27,30 @@ export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   vehicle: "Vehicle",
   other_asset: "Other asset",
   other_liability: "Other liability",
-}
+};
 
-export const ACCOUNT_TYPE_ICONS: Record<
-  AccountType,
-  ComponentProps<typeof HugeiconsIcon>["icon"]
-> = {
-  cash: WalletIcon,
-  investment: PieChart02Icon,
-  crypto: BitcoinCircleIcon,
-  loan: DollarCircleIcon,
-  credit_card: CreditCardIcon,
-  property: Home01Icon,
-  vehicle: DashboardSquare01Icon,
-  other_asset: PieChart02Icon,
-  other_liability: ArrowLeftRightIcon,
-}
+export const ACCOUNT_TYPE_ICONS: Record<AccountType, ComponentProps<typeof HugeiconsIcon>["icon"]> =
+  {
+    cash: WalletIcon,
+    investment: PieChart02Icon,
+    crypto: BitcoinCircleIcon,
+    loan: DollarCircleIcon,
+    credit_card: CreditCardIcon,
+    property: Home01Icon,
+    vehicle: DashboardSquare01Icon,
+    other_asset: PieChart02Icon,
+    other_liability: ArrowLeftRightIcon,
+  };
 
 export const CREATABLE_ACCOUNT_TYPES = ACCOUNT_TYPES.filter(
   (type): type is CreatableNonCardAccountType => type !== "credit_card",
-)
+);
 
 export const ACCOUNT_TYPE_OPTIONS = CREATABLE_ACCOUNT_TYPES.map((type) => ({
   value: type,
   label: ACCOUNT_TYPE_LABELS[type],
-}))
-export const CREATABLE_ACCOUNT_TYPE_OPTIONS = ACCOUNT_TYPE_OPTIONS
+}));
+export const CREATABLE_ACCOUNT_TYPE_OPTIONS = ACCOUNT_TYPE_OPTIONS;
 
 export const ACCOUNT_SUBTYPE_OPTIONS: Record<
   Exclude<AccountType, "credit_card">,
@@ -125,22 +123,22 @@ export const ACCOUNT_SUBTYPE_OPTIONS: Record<
     { value: "legal", label: "Legal" },
     { value: "other", label: "Other" },
   ],
-}
+};
 
 export const AREA_UNIT_OPTIONS = [
   { value: "sqm", label: "Square meters" },
   { value: "sqft", label: "Square feet" },
-] as const
+] as const;
 
 export const MILEAGE_UNIT_OPTIONS = [
   { value: "km", label: "Kilometers" },
   { value: "mi", label: "Miles" },
-] as const
+] as const;
 
 export const INTEREST_RATE_TYPE_OPTIONS = [
   { value: "fixed", label: "Fixed" },
   { value: "variable", label: "Variable" },
-] as const
+] as const;
 
 export const PAYMENT_FREQUENCY_OPTIONS = [
   { value: "weekly", label: "Weekly" },
@@ -149,19 +147,19 @@ export const PAYMENT_FREQUENCY_OPTIONS = [
   { value: "quarterly", label: "Quarterly" },
   { value: "annually", label: "Annually" },
   { value: "other", label: "Other" },
-] as const
+] as const;
 
 export function formatAccountTypeLabel(type: AccountType) {
-  return ACCOUNT_TYPE_LABELS[type]
+  return ACCOUNT_TYPE_LABELS[type];
 }
 
 export function formatAccountSubtypeLabel(subtype: string) {
   return subtype
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ")
+    .join(" ");
 }
 
 export function getAccountTypeIcon(type: AccountType) {
-  return ACCOUNT_TYPE_ICONS[type]
+  return ACCOUNT_TYPE_ICONS[type];
 }

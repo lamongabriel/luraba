@@ -1,41 +1,41 @@
-import type { HouseholdContext } from '@/config/permissions';
-import { SYSTEM_LEDGER_CLASSIFICATIONS } from '@/config/transactions';
-import { db } from '@/db';
-import type { TxClient } from '@/db/types';
-import { accountsRepository } from '@/modules/accounts/accounts.repository';
-import type { AccountRecord } from '@/modules/accounts/accounts.types';
-import { categoriesRepository } from '@/modules/categories/categories.repository';
-import { currenciesRepository } from '@/modules/currencies/currencies.repository';
-import { entriesRepository } from '@/modules/entries/entries.repository';
-import * as entriesService from '@/modules/entries/entries.service';
-import type { EntryDraft } from '@/modules/entries/entries.types';
-import { fxService } from '@/modules/fx/fx.service';
-import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
-import { merchantsRepository } from '@/modules/merchants/merchants.repository';
-import { paymentMethodsRepository } from '@/modules/payment-methods/payment-methods.repository';
+import type { HouseholdContext } from "@/config/permissions";
+import { SYSTEM_LEDGER_CLASSIFICATIONS } from "@/config/transactions";
+import { db } from "@/db";
+import type { TxClient } from "@/db/types";
+import { accountsRepository } from "@/modules/accounts/accounts.repository";
+import type { AccountRecord } from "@/modules/accounts/accounts.types";
+import { categoriesRepository } from "@/modules/categories/categories.repository";
+import { currenciesRepository } from "@/modules/currencies/currencies.repository";
+import { entriesRepository } from "@/modules/entries/entries.repository";
+import * as entriesService from "@/modules/entries/entries.service";
+import type { EntryDraft } from "@/modules/entries/entries.types";
+import { fxService } from "@/modules/fx/fx.service";
+import { ledgerAccountsRepository } from "@/modules/ledger-accounts/ledger-accounts.repository";
+import { merchantsRepository } from "@/modules/merchants/merchants.repository";
+import { paymentMethodsRepository } from "@/modules/payment-methods/payment-methods.repository";
 import {
   addTransactionTags,
   replaceTransactionTags,
   validateTagIds,
-} from '@/modules/tags/tags-associations.service';
-import { NotFoundError, ValidationError } from '@/shared/errors';
-import { startOfMonth as toBudgetMonth } from '@/shared/lib/date';
-import { createListMeta, type ListResult } from '@/shared/list';
+} from "@/modules/tags/tags-associations.service";
+import { NotFoundError, ValidationError } from "@/shared/errors";
+import { startOfMonth as toBudgetMonth } from "@/shared/lib/date";
+import { createListMeta, type ListResult } from "@/shared/list";
 import {
   mapCreditCardInstallmentRowsToFeedRows,
   mapDetailedRows,
   mapTransactionResponsesToFeedRows,
   resolveTransferAmounts,
   toRawLedgerBalance,
-} from './transactions.helpers';
-import type { ListTransactionsQuery } from './transactions.query';
-import * as txRepository from './transactions.repository';
+} from "./transactions.helpers";
+import type { ListTransactionsQuery } from "./transactions.query";
+import * as txRepository from "./transactions.repository";
 import type {
   CreateTransactionDto,
   TransactionFeedRow,
   TransactionResponse,
   UpdateTransactionValues,
-} from './transactions.types';
+} from "./transactions.types";
 
 // -----------------------------------------------------------------------------
 // Scoped Validation + Lookups
@@ -48,17 +48,17 @@ async function validateOptionalMerchant(
   if (!merchantId) return;
 
   const merchant = await merchantsRepository.get(merchantId, context);
-  if (!merchant) throw new NotFoundError('Merchant');
+  if (!merchant) throw new NotFoundError("Merchant");
 }
 
 async function validateCategory(
   context: HouseholdContext,
   categoryId: string | null | undefined,
-  expectedType: 'expense' | 'income',
+  expectedType: "expense" | "income",
 ): Promise<void> {
   if (!categoryId) return;
   const category = await categoriesRepository.get(categoryId, context);
-  if (!category) throw new NotFoundError('Category');
+  if (!category) throw new NotFoundError("Category");
   if (category.type !== expectedType) {
     throw new ValidationError(`Category ${categoryId} must be of type ${expectedType}`);
   }
@@ -69,9 +69,9 @@ async function resolvePaymentMethod(
   paymentMethodCode: string,
   currencyCode: string,
 ) {
-  if (paymentMethodCode === 'credit_card') {
+  if (paymentMethodCode === "credit_card") {
     throw new ValidationError(
-      'Credit card payments must use the dedicated credit card purchase endpoint',
+      "Credit card payments must use the dedicated credit card purchase endpoint",
     );
   }
 
@@ -97,7 +97,7 @@ async function createBaseTransaction(
   tx: TxClient,
   context: HouseholdContext,
   values: {
-    type: CreateTransactionDto['type'];
+    type: CreateTransactionDto["type"];
     paymentMethodId?: string | null;
     categoryId?: string | null;
     description: string;
@@ -130,7 +130,7 @@ async function loadCreatedTransaction(
   const [transaction] = mapDetailedRows(rows);
 
   if (!transaction) {
-    throw new NotFoundError('Transaction');
+    throw new NotFoundError("Transaction");
   }
 
   return transaction;
@@ -142,10 +142,10 @@ async function loadCreatedTransaction(
 
 async function createExpenseOrIncome(
   context: HouseholdContext,
-  dto: Extract<CreateTransactionDto, { type: 'expense' | 'income' }>,
+  dto: Extract<CreateTransactionDto, { type: "expense" | "income" }>,
 ): Promise<TransactionResponse> {
   const currency = await currenciesRepository.findByCode(dto.currencyCode);
-  if (!currency) throw new NotFoundError('Currency');
+  if (!currency) throw new NotFoundError("Currency");
 
   const paymentMethod = await resolvePaymentMethod(
     context,
@@ -158,16 +158,16 @@ async function createExpenseOrIncome(
   const tagIds = await validateTagIds(context, dto.tagIds);
 
   const account = await accountsRepository.get(dto.accountId, context);
-  if (!account) throw new NotFoundError('Account');
-  if (account.type === 'credit_card') {
+  if (!account) throw new NotFoundError("Account");
+  if (account.type === "credit_card") {
     throw new ValidationError(
-      dto.type === 'expense'
-        ? 'Direct expense creation for credit card accounts must use the credit card purchase endpoint'
-        : 'Direct income creation for credit card accounts must use the credit card purchase/payment APIs',
+      dto.type === "expense"
+        ? "Direct expense creation for credit card accounts must use the credit card purchase endpoint"
+        : "Direct income creation for credit card accounts must use the credit card purchase/payment APIs",
     );
   }
   if (account.currencyId !== dto.currencyCode) {
-    throw new ValidationError('Transaction currency must match account currency');
+    throw new ValidationError("Transaction currency must match account currency");
   }
 
   const transactionId = await db.transaction(async (tx) => {
@@ -204,25 +204,25 @@ async function createExpenseOrIncome(
 // itself while still allowing manual or FX-derived destination amounts.
 async function createTransfer(
   context: HouseholdContext,
-  dto: Extract<CreateTransactionDto, { type: 'transfer' }>,
+  dto: Extract<CreateTransactionDto, { type: "transfer" }>,
 ): Promise<TransactionResponse> {
   if (dto.fromAccountId === dto.toAccountId) {
-    throw new ValidationError('Transfer source and destination must be different accounts');
+    throw new ValidationError("Transfer source and destination must be different accounts");
   }
 
   const fromAccount = await accountsRepository.get(dto.fromAccountId, context);
-  if (!fromAccount) throw new NotFoundError('Source account');
-  if (fromAccount.type === 'credit_card') {
+  if (!fromAccount) throw new NotFoundError("Source account");
+  if (fromAccount.type === "credit_card") {
     throw new ValidationError(
-      'Direct transfers from credit card accounts must use the credit card payment endpoint',
+      "Direct transfers from credit card accounts must use the credit card payment endpoint",
     );
   }
 
   const toAccount = await accountsRepository.get(dto.toAccountId, context);
-  if (!toAccount) throw new NotFoundError('Destination account');
-  if (toAccount.type === 'credit_card') {
+  if (!toAccount) throw new NotFoundError("Destination account");
+  if (toAccount.type === "credit_card") {
     throw new ValidationError(
-      'Direct transfers to credit card accounts must use the credit card payment endpoint',
+      "Direct transfers to credit card accounts must use the credit card payment endpoint",
     );
   }
 
@@ -270,7 +270,7 @@ export async function createBalanceAdjustmentInTransaction(
   tx: TxClient,
   context: HouseholdContext,
   input: {
-    account: Pick<AccountRecord, 'id' | 'type' | 'classification' | 'currencyId'>;
+    account: Pick<AccountRecord, "id" | "type" | "classification" | "currencyId">;
     accountLedgerId: string;
     balance: number;
     description: string;
@@ -280,8 +280,8 @@ export async function createBalanceAdjustmentInTransaction(
     tagIds?: string[];
   },
 ): Promise<string> {
-  if (input.account.type === 'credit_card') {
-    throw new ValidationError('Direct adjustments for credit card accounts are not supported');
+  if (input.account.type === "credit_card") {
+    throw new ValidationError("Direct adjustments for credit card accounts are not supported");
   }
 
   const anchorBalance = await ledgerAccountsRepository.getAdjustmentAnchorBalanceInTransaction(
@@ -294,7 +294,7 @@ export async function createBalanceAdjustmentInTransaction(
   const accountAmount = targetBalance - anchorBalance;
 
   if (accountAmount === 0) {
-    throw new ValidationError('Adjustment balance already matches the account balance');
+    throw new ValidationError("Adjustment balance already matches the account balance");
   }
 
   const adjustmentLedger = await ledgerAccountsRepository.findOrCreateSystem(
@@ -304,7 +304,7 @@ export async function createBalanceAdjustmentInTransaction(
     input.account.currencyId,
   );
   const createdTransactionId = await createBaseTransaction(tx, context, {
-    type: 'adjustment',
+    type: "adjustment",
     description: input.description,
     purchaseDate: input.purchaseDate,
     postedDate: input.postedDate,
@@ -330,13 +330,13 @@ export async function createBalanceAdjustmentInTransaction(
 
 async function createAdjustment(
   context: HouseholdContext,
-  dto: Extract<CreateTransactionDto, { type: 'adjustment' }>,
+  dto: Extract<CreateTransactionDto, { type: "adjustment" }>,
 ): Promise<TransactionResponse> {
   const account = await accountsRepository.get(dto.accountId, context);
-  if (!account) throw new NotFoundError('Account');
+  if (!account) throw new NotFoundError("Account");
 
-  const accountLedger = await ledgerAccountsRepository.findByOwner('account', account.id);
-  if (!accountLedger) throw new NotFoundError('Account ledger');
+  const accountLedger = await ledgerAccountsRepository.findByOwner("account", account.id);
+  if (!accountLedger) throw new NotFoundError("Account ledger");
   const tagIds = await validateTagIds(context, dto.tagIds);
 
   const transactionId = await db.transaction(async (tx) => {
@@ -359,7 +359,7 @@ async function createExpenseOrIncomeEntries(
   tx: TxClient,
   input: {
     transactionId: string;
-    type: 'expense' | 'income';
+    type: "expense" | "income";
     accountId: string;
     amount: number;
     currencyCode: string;
@@ -367,20 +367,20 @@ async function createExpenseOrIncomeEntries(
     postedDate: Date;
   },
 ): Promise<void> {
-  const accountLedger = await ledgerAccountsRepository.findByOwner('account', input.accountId);
-  if (!accountLedger) throw new NotFoundError('Account ledger');
+  const accountLedger = await ledgerAccountsRepository.findByOwner("account", input.accountId);
+  if (!accountLedger) throw new NotFoundError("Account ledger");
 
   const systemLedger = await ledgerAccountsRepository.findOrCreateSystem(
     tx,
     `system:${input.type}:${input.currencyCode}`,
-    input.type === 'expense'
+    input.type === "expense"
       ? SYSTEM_LEDGER_CLASSIFICATIONS.expense
       : SYSTEM_LEDGER_CLASSIFICATIONS.income,
     input.currencyCode,
   );
 
-  const accountAmount = input.type === 'expense' ? -input.amount : input.amount;
-  const systemAmount = input.type === 'expense' ? input.amount : -input.amount;
+  const accountAmount = input.type === "expense" ? -input.amount : input.amount;
+  const systemAmount = input.type === "expense" ? input.amount : -input.amount;
 
   await entriesService.createTransactionEntries(tx, input.transactionId, [
     {
@@ -410,9 +410,9 @@ async function createTransferEntries(
     toCurrencyCode: string;
   },
 ): Promise<void> {
-  const fromLedger = await ledgerAccountsRepository.findByOwner('account', input.fromAccountId);
-  const toLedger = await ledgerAccountsRepository.findByOwner('account', input.toAccountId);
-  if (!fromLedger || !toLedger) throw new NotFoundError('Account ledger');
+  const fromLedger = await ledgerAccountsRepository.findByOwner("account", input.fromAccountId);
+  const toLedger = await ledgerAccountsRepository.findByOwner("account", input.toAccountId);
+  if (!fromLedger || !toLedger) throw new NotFoundError("Account ledger");
 
   const sameCurrency = input.fromCurrencyCode === input.toCurrencyCode;
   const entries: EntryDraft[] = [
@@ -468,19 +468,19 @@ export async function createTransaction(
   dto: CreateTransactionDto,
 ): Promise<TransactionResponse> {
   switch (dto.type) {
-    case 'expense':
-    case 'income':
+    case "expense":
+    case "income":
       return createExpenseOrIncome(context, dto);
-    case 'transfer':
+    case "transfer":
       return createTransfer(context, dto);
-    case 'adjustment':
+    case "adjustment":
       return createAdjustment(context, dto);
     default:
-      throw new ValidationError('Invalid transaction type');
+      throw new ValidationError("Invalid transaction type");
   }
 }
 
-function getFeedRowHydrationKey(row: Pick<TransactionFeedRow, 'rowKind' | 'rowId'>): string {
+function getFeedRowHydrationKey(row: Pick<TransactionFeedRow, "rowKind" | "rowId">): string {
   return `${row.rowKind}:${row.rowId}`;
 }
 
@@ -492,7 +492,7 @@ async function hydrateTransactionFeedPage(
   const installmentIds = new Set<string>();
 
   for (const key of page.rows) {
-    if (key.transactionId && key.rowKind !== 'credit_card_installment') {
+    if (key.transactionId && key.rowKind !== "credit_card_installment") {
       transactionIds.add(key.transactionId);
     }
 
@@ -550,7 +550,7 @@ async function hydrateTransactionFeedPage(
   return page.rows.map((key) => {
     const row = rowsByKey.get(getFeedRowHydrationKey(key));
     if (!row) {
-      throw new NotFoundError('Transaction');
+      throw new NotFoundError("Transaction");
     }
 
     return row;
@@ -583,7 +583,7 @@ export async function updateTransaction(
   const [transaction] = mapDetailedRows(rows);
 
   if (!transaction) {
-    throw new NotFoundError('Transaction');
+    throw new NotFoundError("Transaction");
   }
 
   let tagIds: string[] | undefined;
@@ -602,7 +602,7 @@ export async function updateTransaction(
   }> = {};
   let rebuildEntries:
     | {
-        type: 'expense' | 'income';
+        type: "expense" | "income";
         accountId: string;
         amount: number;
         currencyCode: string;
@@ -610,7 +610,7 @@ export async function updateTransaction(
         postedDate: Date;
       }
     | {
-        type: 'transfer';
+        type: "transfer";
         fromAccountId: string;
         toAccountId: string;
         fromAmount: number;
@@ -625,7 +625,7 @@ export async function updateTransaction(
   if (body.postedDate !== undefined) transactionUpdates.postedDate = body.postedDate;
   if (body.includeInBudget !== undefined) transactionUpdates.includeInBudget = body.includeInBudget;
 
-  if (transaction.type === 'expense' || transaction.type === 'income') {
+  if (transaction.type === "expense" || transaction.type === "income") {
     if (body.fromAccountId !== undefined || body.toAccountId !== undefined) {
       throw new ValidationError(
         `Transfer account updates are not supported for ${transaction.type} transactions`,
@@ -643,8 +643,8 @@ export async function updateTransaction(
     }
 
     const account = await accountsRepository.get(nextAccountId, context);
-    if (!account) throw new NotFoundError('Account');
-    if (account.type === 'credit_card') {
+    if (!account) throw new NotFoundError("Account");
+    if (account.type === "credit_card") {
       throw new ValidationError(
         `Direct ${transaction.type} updates for credit card accounts must use the credit card APIs`,
       );
@@ -652,7 +652,7 @@ export async function updateTransaction(
 
     const nextCurrencyCode = body.currencyCode ?? account.currencyId;
     if (account.currencyId !== nextCurrencyCode) {
-      throw new ValidationError('Transaction currency must match account currency');
+      throw new ValidationError("Transaction currency must match account currency");
     }
 
     const nextCategoryId = body.categoryId !== undefined ? body.categoryId : transaction.categoryId;
@@ -694,17 +694,17 @@ export async function updateTransaction(
         postedDate: nextPostedDate,
       };
     }
-  } else if (transaction.type === 'transfer') {
+  } else if (transaction.type === "transfer") {
     if (body.categoryId !== undefined) {
-      throw new ValidationError('Category updates are not supported for transfer transactions');
+      throw new ValidationError("Category updates are not supported for transfer transactions");
     }
     if (body.paymentMethodCode !== undefined) {
       throw new ValidationError(
-        'Payment method updates are not supported for transfer transactions',
+        "Payment method updates are not supported for transfer transactions",
       );
     }
     if (body.merchantId !== undefined) {
-      throw new ValidationError('Merchant updates are not supported for transfer transactions');
+      throw new ValidationError("Merchant updates are not supported for transfer transactions");
     }
     if (
       body.accountId !== undefined ||
@@ -712,32 +712,32 @@ export async function updateTransaction(
       body.currencyCode !== undefined
     ) {
       throw new ValidationError(
-        'Use fromAccountId, toAccountId, fromAmount, and toAmount to update transfer transactions',
+        "Use fromAccountId, toAccountId, fromAmount, and toAmount to update transfer transactions",
       );
     }
 
     const fromAccountId = body.fromAccountId ?? transaction.accountId;
     const toAccountId = body.toAccountId ?? transaction.toAccountId;
     if (!fromAccountId || !toAccountId) {
-      throw new ValidationError('Transfer source and destination accounts are required');
+      throw new ValidationError("Transfer source and destination accounts are required");
     }
     if (fromAccountId === toAccountId) {
-      throw new ValidationError('Transfer source and destination must be different accounts');
+      throw new ValidationError("Transfer source and destination must be different accounts");
     }
 
     const fromAccount = await accountsRepository.get(fromAccountId, context);
-    if (!fromAccount) throw new NotFoundError('Source account');
-    if (fromAccount.type === 'credit_card') {
+    if (!fromAccount) throw new NotFoundError("Source account");
+    if (fromAccount.type === "credit_card") {
       throw new ValidationError(
-        'Direct transfers from credit card accounts must use the credit card payment endpoint',
+        "Direct transfers from credit card accounts must use the credit card payment endpoint",
       );
     }
 
     const toAccount = await accountsRepository.get(toAccountId, context);
-    if (!toAccount) throw new NotFoundError('Destination account');
-    if (toAccount.type === 'credit_card') {
+    if (!toAccount) throw new NotFoundError("Destination account");
+    if (toAccount.type === "credit_card") {
       throw new ValidationError(
-        'Direct transfers to credit card accounts must use the credit card payment endpoint',
+        "Direct transfers to credit card accounts must use the credit card payment endpoint",
       );
     }
 
@@ -760,7 +760,7 @@ export async function updateTransaction(
 
     if (shouldRebuildEntries) {
       rebuildEntries = {
-        type: 'transfer',
+        type: "transfer",
         fromAccountId,
         toAccountId,
         fromAmount,
@@ -796,13 +796,13 @@ export async function updateTransaction(
       transactionUpdates,
     );
     if (!updated) {
-      throw new NotFoundError('Transaction');
+      throw new NotFoundError("Transaction");
     }
 
     if (rebuildEntries) {
       await entriesRepository.deleteByTransactionId(tx, transactionId);
 
-      if (rebuildEntries.type === 'transfer') {
+      if (rebuildEntries.type === "transfer") {
         await createTransferEntries(tx, {
           transactionId,
           fromAccountId: rebuildEntries.fromAccountId,
@@ -839,6 +839,6 @@ export async function deleteTransaction(
 ): Promise<void> {
   const deleted = await txRepository.deleteTransaction(context.householdId, transactionId);
   if (!deleted) {
-    throw new NotFoundError('Transaction');
+    throw new NotFoundError("Transaction");
   }
 }

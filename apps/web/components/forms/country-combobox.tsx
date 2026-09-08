@@ -1,12 +1,9 @@
-"use client"
+"use client";
 
-import type { LocationCountryOption } from "@luraba/contracts"
-import type * as React from "react"
-import type { Control, FieldValues, Path } from "react-hook-form"
-import {
-  FormCombobox,
-  type FormComboboxOption,
-} from "@/components/forms/form-combobox"
+import type { LocationCountryOption } from "@luraba/contracts";
+import type * as React from "react";
+import type { Control, FieldValues, Path } from "react-hook-form";
+import { FormCombobox, type FormComboboxOption } from "@/components/forms/form-combobox";
 
 export function CountryCombobox<TFieldValues extends FieldValues>({
   control,
@@ -17,23 +14,21 @@ export function CountryCombobox<TFieldValues extends FieldValues>({
   className,
   labelAdornment,
 }: {
-  control: Control<TFieldValues>
-  countries: readonly LocationCountryOption[]
-  name: Path<TFieldValues>
-  label: React.ReactNode
-  disabled?: boolean
-  className?: string
-  labelAdornment?: React.ReactNode
+  control: Control<TFieldValues>;
+  countries: readonly LocationCountryOption[];
+  name: Path<TFieldValues>;
+  label: React.ReactNode;
+  disabled?: boolean;
+  className?: string;
+  labelAdornment?: React.ReactNode;
 }) {
   const countryOptions = countries.map((country) => ({
     value: country.code,
     label: country.name,
     description: country.code,
     searchText: `${country.code} ${country.name}`,
-  }))
-  const countriesByCode = new Map(
-    countries.map((country) => [country.code, country]),
-  )
+  }));
+  const countriesByCode = new Map(countries.map((country) => [country.code, country]));
 
   return (
     <FormCombobox
@@ -48,7 +43,7 @@ export function CountryCombobox<TFieldValues extends FieldValues>({
       disabled={disabled}
       className={className}
       renderOption={(option: FormComboboxOption) => {
-        const country = countriesByCode.get(option.value)
+        const country = countriesByCode.get(option.value);
 
         return (
           <>
@@ -56,15 +51,13 @@ export function CountryCombobox<TFieldValues extends FieldValues>({
               {country?.emoji}
             </span>
             <span className="min-w-0 truncate">{option.label}</span>
-            <span className="ml-auto text-[0.65rem] text-muted-foreground">
-              {option.value}
-            </span>
+            <span className="ml-auto text-[0.65rem] text-muted-foreground">{option.value}</span>
           </>
-        )
+        );
       }}
       renderValue={(option) => {
-        if (!option) return undefined
-        const country = countriesByCode.get(option.value)
+        if (!option) return undefined;
+        const country = countriesByCode.get(option.value);
 
         return (
           <span className="flex min-w-0 items-center gap-2">
@@ -72,12 +65,10 @@ export function CountryCombobox<TFieldValues extends FieldValues>({
               {country?.emoji}
             </span>
             <span className="truncate">{option.label}</span>
-            <span className="shrink-0 text-[0.65rem] text-muted-foreground">
-              {option.value}
-            </span>
+            <span className="shrink-0 text-[0.65rem] text-muted-foreground">{option.value}</span>
           </span>
-        )
+        );
       }}
     />
-  )
+  );
 }

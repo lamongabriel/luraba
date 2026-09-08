@@ -1,30 +1,26 @@
-"use client"
+"use client";
 
-import { ColorPickerIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import Color from "color"
-import type * as React from "react"
-import type { Control, FieldValues, Path } from "react-hook-form"
-import { Controller } from "react-hook-form"
-import { Button } from "@/components/ui/button"
+import { ColorPickerIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import Color from "color";
+import type * as React from "react";
+import type { Control, FieldValues, Path } from "react-hook-form";
+import { Controller } from "react-hook-form";
+import { Button } from "@/components/ui/button";
 import {
   ColorPickerEyeDropper,
   ColorPickerHue,
   ColorPicker as ColorPickerPrimitive,
   ColorPickerSelection,
-} from "@/components/ui/color-picker"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/color-picker";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 export type ColorPickerPreset = {
-  label: string
-  value: string
-}
+  label: string;
+  value: string;
+};
 
 const DEFAULT_COLOR_PRESETS = [
   { label: "Neutral", value: "#d4d4d8" },
@@ -33,10 +29,10 @@ const DEFAULT_COLOR_PRESETS = [
   { label: "Blue", value: "#164e63" },
   { label: "Green", value: "#25543d" },
   { label: "Clay", value: "#8c3f2e" },
-] as const satisfies readonly ColorPickerPreset[]
+] as const satisfies readonly ColorPickerPreset[];
 
 function toHex(value: Parameters<typeof Color.rgb>[0]) {
-  return Color.rgb(value).hex().toLowerCase()
+  return Color.rgb(value).hex().toLowerCase();
 }
 
 export function ColorPickerControl({
@@ -49,16 +45,16 @@ export function ColorPickerControl({
   presets = DEFAULT_COLOR_PRESETS,
   value,
 }: {
-  ariaInvalid?: boolean
-  className?: string
-  disabled?: boolean
-  id: string
-  onChange: (value: string) => void
-  placeholder?: string
-  presets?: readonly ColorPickerPreset[]
-  value: string
+  ariaInvalid?: boolean;
+  className?: string;
+  disabled?: boolean;
+  id: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  presets?: readonly ColorPickerPreset[];
+  value: string;
 }) {
-  const selected = value || presets[0]?.value || DEFAULT_COLOR_PRESETS[0].value
+  const selected = value || presets[0]?.value || DEFAULT_COLOR_PRESETS[0].value;
 
   return (
     <Popover>
@@ -97,8 +93,7 @@ export function ColorPickerControl({
               aria-pressed={selected.toLowerCase() === preset.value}
               className={cn(
                 "size-8 rounded-full border border-white/15 outline-none ring-offset-2 ring-offset-popover focus-visible:ring-2 focus-visible:ring-ring",
-                selected.toLowerCase() === preset.value &&
-                  "ring-2 ring-foreground/70",
+                selected.toLowerCase() === preset.value && "ring-2 ring-foreground/70",
               )}
               style={{ backgroundColor: preset.value }}
               onClick={() => onChange(preset.value)}
@@ -118,7 +113,7 @@ export function ColorPickerControl({
         </ColorPickerPrimitive>
       </PopoverContent>
     </Popover>
-  )
+  );
 }
 
 /**
@@ -132,15 +127,15 @@ export function ColorSwatchesControl({
   presets,
   disabled,
 }: {
-  value: string
-  onChange: (value: string) => void
-  presets: readonly string[]
-  disabled?: boolean
+  value: string;
+  onChange: (value: string) => void;
+  presets: readonly string[];
+  disabled?: boolean;
 }) {
   return (
     <div className="flex flex-wrap gap-2">
       {presets.map((color) => {
-        const selected = value.toLowerCase() === color.toLowerCase()
+        const selected = value.toLowerCase() === color.toLowerCase();
 
         return (
           <button
@@ -152,16 +147,14 @@ export function ColorSwatchesControl({
             onClick={() => onChange(color)}
             className={cn(
               "size-7 rounded-full ring-offset-2 ring-offset-background transition-transform outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
-              selected
-                ? "ring-2 ring-foreground/70"
-                : "hover:scale-110 ring-1 ring-foreground/10",
+              selected ? "ring-2 ring-foreground/70" : "hover:scale-110 ring-1 ring-foreground/10",
             )}
             style={{ backgroundColor: color }}
           />
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
 export function FormColorPicker<TFieldValues extends FieldValues>({
@@ -173,13 +166,13 @@ export function FormColorPicker<TFieldValues extends FieldValues>({
   placeholder,
   presets,
 }: {
-  className?: string
-  control: Control<TFieldValues>
-  disabled?: boolean
-  label: React.ReactNode
-  name: Path<TFieldValues>
-  placeholder?: string
-  presets?: readonly ColorPickerPreset[]
+  className?: string;
+  control: Control<TFieldValues>;
+  disabled?: boolean;
+  label: React.ReactNode;
+  name: Path<TFieldValues>;
+  placeholder?: string;
+  presets?: readonly ColorPickerPreset[];
 }) {
   return (
     <Controller
@@ -197,11 +190,9 @@ export function FormColorPicker<TFieldValues extends FieldValues>({
             placeholder={placeholder}
             presets={presets}
           />
-          <FieldError
-            errors={fieldState.error ? [fieldState.error] : undefined}
-          />
+          <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
         </Field>
       )}
     />
-  )
+  );
 }

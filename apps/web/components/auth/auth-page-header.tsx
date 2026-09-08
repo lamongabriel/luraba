@@ -1,22 +1,18 @@
-"use client"
+"use client";
 
-import { motion, useReducedMotion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion";
 
-import { Logo } from "@/components/logo"
-import { Typography } from "@/components/ui/typography"
+import { Logo } from "@/components/logo";
+import { Typography } from "@/components/ui/typography";
 
 type AuthPageHeaderProps = {
-  eyebrow: string
-  title: string
-  description: string
-}
+  eyebrow: string;
+  title: string;
+  description: string;
+};
 
-export function AuthPageHeader({
-  eyebrow,
-  title,
-  description,
-}: AuthPageHeaderProps) {
-  const reduceMotion = useReducedMotion()
+export function AuthPageHeader({ eyebrow, title, description }: AuthPageHeaderProps) {
+  const reduceMotion = useReducedMotion();
 
   return (
     <motion.div
@@ -68,5 +64,5 @@ export function AuthPageHeader({
         </Typography>
       </div>
     </motion.div>
-  )
+  );
 }

@@ -1,17 +1,17 @@
-import { render, screen } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import {
   SidePanel,
   SidePanelBody,
   SidePanelContent,
   SidePanelHeader,
   SidePanelTitle,
-} from "@/components/side-panel/side-panel"
+} from "@/components/side-panel/side-panel";
 import {
   SidePanelDetailRow,
   SidePanelSection,
   SidePanelSettingCard,
-} from "@/components/side-panel/side-panel-section"
+} from "@/components/side-panel/side-panel-section";
 
 describe("SidePanel", () => {
   it("composes a labeled panel with sections and settings", () => {
@@ -29,11 +29,11 @@ describe("SidePanel", () => {
           </SidePanelBody>
         </SidePanelContent>
       </SidePanel>,
-    )
+    );
 
-    expect(screen.getByRole("dialog")).toHaveTextContent("Transaction details")
-    expect(screen.getByText("Overview")).toBeInTheDocument()
-    expect(screen.getByText("Expense")).toBeInTheDocument()
-    expect(screen.getByText("Budget")).toBeInTheDocument()
-  })
-})
+    expect(screen.getByRole("dialog")).toHaveTextContent("Transaction details");
+    expect(screen.getByText("Overview")).toBeInTheDocument();
+    expect(screen.getByText("Expense")).toBeInTheDocument();
+    expect(screen.getByText("Budget")).toBeInTheDocument();
+  });
+});

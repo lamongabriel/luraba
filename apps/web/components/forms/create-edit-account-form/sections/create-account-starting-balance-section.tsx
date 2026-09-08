@@ -1,19 +1,15 @@
-"use client"
+"use client";
 
-import { FormItem } from "@/components/forms/form-item"
-import { Typography } from "@/components/ui/typography"
+import { FormItem } from "@/components/forms/form-item";
+import { Typography } from "@/components/ui/typography";
 
-import type { CreateEditAccountSectionProps } from "./create-edit-account-section.types"
+import type { CreateEditAccountSectionProps } from "./create-edit-account-section.types";
 
 type Props = CreateEditAccountSectionProps & {
-  type: string
-}
+  type: string;
+};
 
-export function CreateAccountStartingBalanceSection({
-  disabled,
-  form,
-  type,
-}: Props) {
+export function CreateAccountStartingBalanceSection({ disabled, form, type }: Props) {
   return (
     <section className="space-y-3">
       <Typography variant="eyebrow">Starting balance</Typography>
@@ -21,11 +17,7 @@ export function CreateAccountStartingBalanceSection({
         <FormItem
           control={form.control}
           name="openingBalance"
-          label={
-            type === "loan" || type === "other_liability"
-              ? "Amount owed"
-              : "Opening balance"
-          }
+          label={type === "loan" || type === "other_liability" ? "Amount owed" : "Opening balance"}
           inputType="number"
           step="0.01"
           disabled={disabled}
@@ -39,5 +31,5 @@ export function CreateAccountStartingBalanceSection({
         />
       </div>
     </section>
-  )
+  );
 }

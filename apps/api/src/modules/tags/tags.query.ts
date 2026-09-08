@@ -1,7 +1,7 @@
-import type { listTagsQuerySchema } from '@luraba/contracts/tags';
-import { eq, type SQL, sql } from 'drizzle-orm';
-import type { z } from 'zod';
-import { tagsTable } from '@/db/schemas/tags.schema';
+import type { listTagsQuerySchema } from "@luraba/contracts/tags";
+import { eq, type SQL, sql } from "drizzle-orm";
+import type { z } from "zod";
+import { tagsTable } from "@/db/schemas/tags.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,
@@ -9,7 +9,7 @@ import {
   inArrayIfAny,
   nullabilityCondition,
   rangeConditions,
-} from '@/shared/list';
+} from "@/shared/list";
 
 export type ListTagsQuery = z.output<typeof listTagsQuerySchema>;
 

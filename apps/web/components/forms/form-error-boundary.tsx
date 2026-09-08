@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { Logo } from "@/components/logo"
-import { Button } from "@/components/ui/button"
-import { Typography } from "@/components/ui/typography"
+import { Logo } from "@/components/logo";
+import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 
 type FormErrorBoundaryProps = {
-  children: React.ReactNode
-}
+  children: React.ReactNode;
+};
 
 type FormErrorBoundaryState = {
-  hasError: boolean
-  resetKey: number
-}
+  hasError: boolean;
+  resetKey: number;
+};
 
 class FormErrorBoundaryRoot extends React.Component<
   FormErrorBoundaryProps,
@@ -22,20 +22,20 @@ class FormErrorBoundaryRoot extends React.Component<
   state: FormErrorBoundaryState = {
     hasError: false,
     resetKey: 0,
-  }
+  };
 
   static getDerivedStateFromError() {
     return {
       hasError: true,
-    }
+    };
   }
 
   handleReset = () => {
     this.setState((currentState) => ({
       hasError: false,
       resetKey: currentState.resetKey + 1,
-    }))
-  }
+    }));
+  };
 
   render() {
     if (this.state.hasError) {
@@ -47,42 +47,26 @@ class FormErrorBoundaryRoot extends React.Component<
             </div>
 
             <div className="space-y-2 text-center">
-              <Typography
-                as="h2"
-                variant="subheading"
-                className="text-[1.45rem]"
-              >
+              <Typography as="h2" variant="subheading" className="text-[1.45rem]">
                 This form hit an unexpected error.
               </Typography>
-              <Typography
-                variant="body-muted"
-                className="leading-6 text-foreground/72"
-              >
-                Try reloading the form. If this keeps happening, refresh the
-                page and try again.
+              <Typography variant="body-muted" className="leading-6 text-foreground/72">
+                Try reloading the form. If this keeps happening, refresh the page and try again.
               </Typography>
             </div>
 
-            <Button
-              type="button"
-              className="h-10 w-full"
-              onClick={this.handleReset}
-            >
+            <Button type="button" className="h-10 w-full" onClick={this.handleReset}>
               Reload form
             </Button>
           </div>
         </div>
-      )
+      );
     }
 
-    return (
-      <React.Fragment key={this.state.resetKey}>
-        {this.props.children}
-      </React.Fragment>
-    )
+    return <React.Fragment key={this.state.resetKey}>{this.props.children}</React.Fragment>;
   }
 }
 
 export function FormErrorBoundary({ children }: FormErrorBoundaryProps) {
-  return <FormErrorBoundaryRoot>{children}</FormErrorBoundaryRoot>
+  return <FormErrorBoundaryRoot>{children}</FormErrorBoundaryRoot>;
 }

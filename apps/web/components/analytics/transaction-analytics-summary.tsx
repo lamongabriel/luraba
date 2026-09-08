@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import type { TransactionAnalytics } from "@luraba/contracts"
-import type { UseQueryResult } from "@tanstack/react-query"
-import { KpiCard, type KpiTrendState } from "@/components/analytics/kpi-card"
-import { ErrorState } from "@/components/error-state"
-import { MoneyValue } from "@/components/finance/money-value"
-import { Skeleton } from "@/components/ui/skeleton"
-import type { AppClientError } from "@/services/error-client"
+import type { TransactionAnalytics } from "@luraba/contracts";
+import type { UseQueryResult } from "@tanstack/react-query";
+import { KpiCard, type KpiTrendState } from "@/components/analytics/kpi-card";
+import { ErrorState } from "@/components/error-state";
+import { MoneyValue } from "@/components/finance/money-value";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { AppClientError } from "@/services/error-client";
 
-type AnalyticsQuery = UseQueryResult<TransactionAnalytics, AppClientError>
+type AnalyticsQuery = UseQueryResult<TransactionAnalytics, AppClientError>;
 
 function comparisonState(value: number | null, inverse = false): KpiTrendState {
-  if (value === null || value === 0) return "neutral"
-  const isPositive = value > 0
-  return isPositive === inverse ? "negative" : "positive"
+  if (value === null || value === 0) return "neutral";
+  const isPositive = value > 0;
+  return isPositive === inverse ? "negative" : "positive";
 }
 
 export function TransactionAnalyticsSummary({
@@ -21,9 +21,9 @@ export function TransactionAnalyticsSummary({
   language = "en",
   precision = 2,
 }: {
-  query: AnalyticsQuery
-  language?: string
-  precision?: number
+  query: AnalyticsQuery;
+  language?: string;
+  precision?: number;
 }) {
   if (query.isPending) {
     return (
@@ -37,22 +37,20 @@ export function TransactionAnalyticsSummary({
         <Skeleton className="h-28" />
         <Skeleton className="h-28" />
       </div>
-    )
+    );
   }
 
   if (query.isError || !query.data) {
     return (
       <ErrorState
         title="Couldn&apos;t load transaction analytics"
-        description={
-          query.error?.message ?? "Try again to load the filtered totals."
-        }
+        description={query.error?.message ?? "Try again to load the filtered totals."}
         onRetry={() => void query.refetch()}
       />
-    )
+    );
   }
 
-  const { currencyCode, metrics } = query.data
+  const { currencyCode, metrics } = query.data;
   const cards = [
     {
       key: "moneyIn",
@@ -67,7 +65,7 @@ export function TransactionAnalyticsSummary({
       inverse: true,
     },
     { key: "net", title: "Net", metric: metrics.net, inverse: false },
-  ] as const
+  ] as const;
 
   return (
     <div className="grid gap-3 md:grid-cols-3">
@@ -92,5 +90,5 @@ export function TransactionAnalyticsSummary({
         />
       ))}
     </div>
-  )
+  );
 }

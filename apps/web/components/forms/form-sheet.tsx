@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import type * as React from "react"
+import type * as React from "react";
 
 import {
   SidePanel,
@@ -9,7 +9,7 @@ import {
   SidePanelDescription,
   SidePanelHeader,
   SidePanelTitle,
-} from "@/components/side-panel/side-panel"
+} from "@/components/side-panel/side-panel";
 
 export function FormSheet({
   open,
@@ -19,24 +19,22 @@ export function FormSheet({
   children,
   className,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  title: string
-  description?: string
-  children: React.ReactNode
-  className?: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  className?: string;
 }) {
   return (
     <SidePanel open={open} onOpenChange={onOpenChange}>
       <SidePanelContent className={className}>
         <SidePanelHeader>
           <SidePanelTitle>{title}</SidePanelTitle>
-          {description ? (
-            <SidePanelDescription>{description}</SidePanelDescription>
-          ) : null}
+          {description ? <SidePanelDescription>{description}</SidePanelDescription> : null}
         </SidePanelHeader>
         <SidePanelBody className="space-y-6">{children}</SidePanelBody>
       </SidePanelContent>
     </SidePanel>
-  )
+  );
 }

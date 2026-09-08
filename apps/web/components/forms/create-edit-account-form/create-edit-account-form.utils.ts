@@ -4,10 +4,10 @@ import type {
   CreateAccountInput,
   UpdateAccountInput,
   UpdateAccountProfile,
-} from "@luraba/contracts"
-import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance"
+} from "@luraba/contracts";
+import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance";
 
-import type { CreateEditAccountFormValues } from "./create-edit-account-form.schema"
+import type { CreateEditAccountFormValues } from "./create-edit-account-form.schema";
 
 export function getCreateEditAccountDefaultValues(
   defaultCurrencyCode: string,
@@ -16,7 +16,7 @@ export function getCreateEditAccountDefaultValues(
   precision = 2,
 ): CreateEditAccountFormValues {
   if (account) {
-    return getAccountEditDefaultValues(account, precision)
+    return getAccountEditDefaultValues(account, precision);
   }
 
   const common = {
@@ -25,8 +25,8 @@ export function getCreateEditAccountDefaultValues(
     institutionName: "",
     name: "",
     notes: "",
-  }
-  const nonCard = { ...common, openingBalance: undefined, balanceAsOfDate: "" }
+  };
+  const nonCard = { ...common, openingBalance: undefined, balanceAsOfDate: "" };
 
   switch (type) {
     case "cash":
@@ -34,13 +34,13 @@ export function getCreateEditAccountDefaultValues(
         ...nonCard,
         type,
         subtype: "checking",
-      }
+      };
     case "investment":
       return {
         ...nonCard,
         type,
         subtype: "brokerage",
-      }
+      };
     case "crypto":
       return {
         ...nonCard,
@@ -48,7 +48,7 @@ export function getCreateEditAccountDefaultValues(
         subtype: "wallet",
         walletAddress: "",
         network: "",
-      }
+      };
     case "property":
       return {
         ...nonCard,
@@ -63,7 +63,7 @@ export function getCreateEditAccountDefaultValues(
         area: undefined,
         areaUnit: "",
         yearBuilt: undefined,
-      }
+      };
     case "vehicle":
       return {
         ...nonCard,
@@ -77,7 +77,7 @@ export function getCreateEditAccountDefaultValues(
         licensePlate: "",
         mileage: undefined,
         mileageUnit: "",
-      }
+      };
     case "loan":
       return {
         ...nonCard,
@@ -92,21 +92,21 @@ export function getCreateEditAccountDefaultValues(
         paymentAmount: undefined,
         paymentFrequency: "",
         securedAssetAccountId: "",
-      }
+      };
     case "other_asset":
-      return { ...nonCard, type, subtype: "other" }
+      return { ...nonCard, type, subtype: "other" };
     case "other_liability":
-      return { ...nonCard, type, subtype: "other" }
+      return { ...nonCard, type, subtype: "other" };
     default:
-      throw new Error("Unsupported account type.")
+      throw new Error("Unsupported account type.");
   }
 }
 
-export const optionalAccountText = (value: string) => value.trim() || undefined
-export const nullableAccountText = (value: string) => value.trim() || null
+export const optionalAccountText = (value: string) => value.trim() || undefined;
+export const nullableAccountText = (value: string) => value.trim() || null;
 
 export const optionalAccountNumber = (value: number | "" | undefined) =>
-  value === "" ? undefined : value
+  value === "" ? undefined : value;
 
 function buildCommonPayload(values: CreateEditAccountFormValues) {
   return {
@@ -115,7 +115,7 @@ function buildCommonPayload(values: CreateEditAccountFormValues) {
     institutionName: optionalAccountText(values.institutionName),
     name: values.name.trim(),
     notes: optionalAccountText(values.notes),
-  }
+  };
 }
 
 function buildCommonUpdatePayload(
@@ -126,14 +126,14 @@ function buildCommonUpdatePayload(
     institutionName: nullableAccountText(values.institutionName),
     name: values.name.trim(),
     notes: nullableAccountText(values.notes),
-  }
+  };
 }
 
 export function buildCreateAccountPayload(
   values: CreateEditAccountFormValues,
   precision: number,
 ): CreateAccountInput {
-  const openingBalance = optionalAccountNumber(values.openingBalance)
+  const openingBalance = optionalAccountNumber(values.openingBalance);
 
   switch (values.type) {
     case "cash":
@@ -145,11 +145,9 @@ export function buildCreateAccountPayload(
           subtype: values.subtype,
         },
         openingBalance:
-          openingBalance === undefined
-            ? undefined
-            : majorToMinorUnits(openingBalance, precision),
+          openingBalance === undefined ? undefined : majorToMinorUnits(openingBalance, precision),
         balanceAsOfDate: optionalAccountText(values.balanceAsOfDate),
-      }
+      };
     case "investment":
       return {
         ...buildCommonPayload(values),
@@ -159,11 +157,9 @@ export function buildCreateAccountPayload(
           subtype: values.subtype,
         },
         openingBalance:
-          openingBalance === undefined
-            ? undefined
-            : majorToMinorUnits(openingBalance, precision),
+          openingBalance === undefined ? undefined : majorToMinorUnits(openingBalance, precision),
         balanceAsOfDate: optionalAccountText(values.balanceAsOfDate),
-      }
+      };
     case "crypto":
       return {
         ...buildCommonPayload(values),
@@ -175,11 +171,9 @@ export function buildCreateAccountPayload(
           network: optionalAccountText(values.network),
         },
         openingBalance:
-          openingBalance === undefined
-            ? undefined
-            : majorToMinorUnits(openingBalance, precision),
+          openingBalance === undefined ? undefined : majorToMinorUnits(openingBalance, precision),
         balanceAsOfDate: optionalAccountText(values.balanceAsOfDate),
-      }
+      };
     case "property":
       return {
         ...buildCommonPayload(values),
@@ -198,11 +192,9 @@ export function buildCreateAccountPayload(
           yearBuilt: optionalAccountNumber(values.yearBuilt),
         },
         openingBalance:
-          openingBalance === undefined
-            ? undefined
-            : majorToMinorUnits(openingBalance, precision),
+          openingBalance === undefined ? undefined : majorToMinorUnits(openingBalance, precision),
         balanceAsOfDate: optionalAccountText(values.balanceAsOfDate),
-      }
+      };
     case "vehicle":
       return {
         ...buildCommonPayload(values),
@@ -220,14 +212,12 @@ export function buildCreateAccountPayload(
           mileageUnit: values.mileageUnit || undefined,
         },
         openingBalance:
-          openingBalance === undefined
-            ? undefined
-            : majorToMinorUnits(openingBalance, precision),
+          openingBalance === undefined ? undefined : majorToMinorUnits(openingBalance, precision),
         balanceAsOfDate: optionalAccountText(values.balanceAsOfDate),
-      }
+      };
     case "loan": {
-      const originalPrincipal = optionalAccountNumber(values.originalPrincipal)
-      const paymentAmount = optionalAccountNumber(values.paymentAmount)
+      const originalPrincipal = optionalAccountNumber(values.originalPrincipal);
+      const paymentAmount = optionalAccountNumber(values.paymentAmount);
 
       return {
         ...buildCommonPayload(values),
@@ -245,20 +235,14 @@ export function buildCreateAccountPayload(
           startDate: optionalAccountText(values.startDate),
           maturityDate: optionalAccountText(values.maturityDate),
           paymentAmount:
-            paymentAmount === undefined
-              ? undefined
-              : majorToMinorUnits(paymentAmount, precision),
+            paymentAmount === undefined ? undefined : majorToMinorUnits(paymentAmount, precision),
           paymentFrequency: values.paymentFrequency || undefined,
-          securedAssetAccountId: optionalAccountText(
-            values.securedAssetAccountId,
-          ),
+          securedAssetAccountId: optionalAccountText(values.securedAssetAccountId),
         },
         openingBalance:
-          openingBalance === undefined
-            ? undefined
-            : majorToMinorUnits(openingBalance, precision),
+          openingBalance === undefined ? undefined : majorToMinorUnits(openingBalance, precision),
         balanceAsOfDate: optionalAccountText(values.balanceAsOfDate),
-      }
+      };
     }
     case "other_asset":
       return {
@@ -266,22 +250,18 @@ export function buildCreateAccountPayload(
         type: values.type,
         details: { kind: values.type, subtype: values.subtype },
         openingBalance:
-          openingBalance === undefined
-            ? undefined
-            : majorToMinorUnits(openingBalance, precision),
+          openingBalance === undefined ? undefined : majorToMinorUnits(openingBalance, precision),
         balanceAsOfDate: optionalAccountText(values.balanceAsOfDate),
-      }
+      };
     case "other_liability":
       return {
         ...buildCommonPayload(values),
         type: values.type,
         details: { kind: values.type, subtype: values.subtype },
         openingBalance:
-          openingBalance === undefined
-            ? undefined
-            : majorToMinorUnits(openingBalance, precision),
+          openingBalance === undefined ? undefined : majorToMinorUnits(openingBalance, precision),
         balanceAsOfDate: optionalAccountText(values.balanceAsOfDate),
-      }
+      };
   }
 }
 
@@ -292,30 +272,30 @@ export function buildUpdateAccountPayload(
   return {
     ...buildCommonUpdatePayload(values),
     details: buildUpdateAccountDetailsPayload(values, precision),
-  }
+  };
 }
 
 function getAccountEditDefaultValues(
   account: AccountDetails,
   precision: number,
 ): CreateEditAccountFormValues {
-  const details = account.details
+  const details = account.details;
   const common = {
     currencyCode: account.currencyCode,
     institutionDomain: account.institutionDomain ?? "",
     institutionName: account.institutionName ?? "",
     name: account.name,
     notes: account.notes ?? "",
-  }
-  const nonCard = { ...common, openingBalance: undefined, balanceAsOfDate: "" }
+  };
+  const nonCard = { ...common, openingBalance: undefined, balanceAsOfDate: "" };
   const money = (value: number | null) =>
-    value === null ? undefined : minorToMajorUnits(value, precision)
+    value === null ? undefined : minorToMajorUnits(value, precision);
 
   switch (details.kind) {
     case "cash":
-      return { ...nonCard, type: "cash", subtype: details.subtype }
+      return { ...nonCard, type: "cash", subtype: details.subtype };
     case "investment":
-      return { ...nonCard, type: "investment", subtype: details.subtype }
+      return { ...nonCard, type: "investment", subtype: details.subtype };
     case "crypto":
       return {
         ...nonCard,
@@ -323,7 +303,7 @@ function getAccountEditDefaultValues(
         subtype: details.subtype,
         walletAddress: details.walletAddress ?? "",
         network: details.network ?? "",
-      }
+      };
     case "property":
       return {
         ...nonCard,
@@ -338,7 +318,7 @@ function getAccountEditDefaultValues(
         area: details.area ?? undefined,
         areaUnit: details.areaUnit ?? "",
         yearBuilt: details.yearBuilt ?? undefined,
-      }
+      };
     case "vehicle":
       return {
         ...nonCard,
@@ -352,7 +332,7 @@ function getAccountEditDefaultValues(
         licensePlate: details.licensePlate ?? "",
         mileage: details.mileage ?? undefined,
         mileageUnit: details.mileageUnit ?? "",
-      }
+      };
     case "loan":
       return {
         ...nonCard,
@@ -367,13 +347,13 @@ function getAccountEditDefaultValues(
         paymentAmount: money(details.paymentAmount),
         paymentFrequency: details.paymentFrequency ?? "",
         securedAssetAccountId: details.securedAssetAccountId ?? "",
-      }
+      };
     case "other_asset":
-      return { ...nonCard, type: "other_asset", subtype: details.subtype }
+      return { ...nonCard, type: "other_asset", subtype: details.subtype };
     case "other_liability":
-      return { ...nonCard, type: "other_liability", subtype: details.subtype }
+      return { ...nonCard, type: "other_liability", subtype: details.subtype };
     default:
-      throw new Error("Unsupported account profile.")
+      throw new Error("Unsupported account profile.");
   }
 }
 
@@ -383,16 +363,16 @@ function buildUpdateAccountDetailsPayload(
 ): UpdateAccountProfile {
   switch (values.type) {
     case "cash":
-      return { kind: "cash", subtype: values.subtype }
+      return { kind: "cash", subtype: values.subtype };
     case "investment":
-      return { kind: "investment", subtype: values.subtype }
+      return { kind: "investment", subtype: values.subtype };
     case "crypto":
       return {
         kind: "crypto",
         subtype: values.subtype,
         walletAddress: nullableAccountText(values.walletAddress),
         network: nullableAccountText(values.network),
-      }
+      };
     case "property":
       return {
         kind: "property",
@@ -402,12 +382,11 @@ function buildUpdateAccountDetailsPayload(
         city: nullableAccountText(values.city),
         region: nullableAccountText(values.region),
         postalCode: nullableAccountText(values.postalCode),
-        countryCode:
-          nullableAccountText(values.countryCode)?.toUpperCase() ?? null,
+        countryCode: nullableAccountText(values.countryCode)?.toUpperCase() ?? null,
         area: optionalAccountNumber(values.area) ?? null,
         areaUnit: values.areaUnit || null,
         yearBuilt: optionalAccountNumber(values.yearBuilt) ?? null,
-      }
+      };
     case "vehicle":
       return {
         kind: "vehicle",
@@ -420,39 +399,32 @@ function buildUpdateAccountDetailsPayload(
         licensePlate: nullableAccountText(values.licensePlate),
         mileage: optionalAccountNumber(values.mileage) ?? null,
         mileageUnit: values.mileageUnit || null,
-      }
+      };
     case "loan": {
-      const originalPrincipal = optionalAccountNumber(values.originalPrincipal)
-      const paymentAmount = optionalAccountNumber(values.paymentAmount)
+      const originalPrincipal = optionalAccountNumber(values.originalPrincipal);
+      const paymentAmount = optionalAccountNumber(values.paymentAmount);
 
       return {
         kind: "loan",
         subtype: values.subtype,
         originalPrincipal:
-          originalPrincipal === undefined
-            ? null
-            : majorToMinorUnits(originalPrincipal, precision),
-        annualInterestRate:
-          optionalAccountNumber(values.annualInterestRate) ?? null,
+          originalPrincipal === undefined ? null : majorToMinorUnits(originalPrincipal, precision),
+        annualInterestRate: optionalAccountNumber(values.annualInterestRate) ?? null,
         interestRateType: values.interestRateType || null,
         termMonths: optionalAccountNumber(values.termMonths) ?? null,
         startDate: nullableAccountText(values.startDate),
         maturityDate: nullableAccountText(values.maturityDate),
         paymentAmount:
-          paymentAmount === undefined
-            ? null
-            : majorToMinorUnits(paymentAmount, precision),
+          paymentAmount === undefined ? null : majorToMinorUnits(paymentAmount, precision),
         paymentFrequency: values.paymentFrequency || null,
-        securedAssetAccountId: nullableAccountText(
-          values.securedAssetAccountId,
-        ),
-      }
+        securedAssetAccountId: nullableAccountText(values.securedAssetAccountId),
+      };
     }
     case "other_asset":
-      return { kind: "other_asset", subtype: values.subtype }
+      return { kind: "other_asset", subtype: values.subtype };
     case "other_liability":
-      return { kind: "other_liability", subtype: values.subtype }
+      return { kind: "other_liability", subtype: values.subtype };
     default:
-      throw new Error("Unsupported account profile.")
+      throw new Error("Unsupported account profile.");
   }
 }

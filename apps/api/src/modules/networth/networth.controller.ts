@@ -1,6 +1,6 @@
-import { netWorthEndpoints } from '@luraba/contracts/networth';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
-import * as service from './networth.service';
+import { netWorthEndpoints } from "@luraba/contracts/networth";
+import { createHouseholdHandler } from "@/shared/controllers/household.controller";
+import * as service from "./networth.service";
 
 export const summary = createHouseholdHandler({
   query: netWorthEndpoints.summary.query,

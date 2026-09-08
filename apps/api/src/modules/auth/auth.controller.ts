@@ -1,8 +1,8 @@
-import { authEndpoints } from '@luraba/contracts/auth';
-import * as householdsService from '@/modules/households/households.service';
-import { createAuthenticatedHandler } from '@/shared/controllers/authenticated.controller';
-import { createHandler } from '@/shared/controllers/controller';
-import * as authService from './auth.service';
+import { authEndpoints } from "@luraba/contracts/auth";
+import * as householdsService from "@/modules/households/households.service";
+import { createAuthenticatedHandler } from "@/shared/controllers/authenticated.controller";
+import { createHandler } from "@/shared/controllers/controller";
+import * as authService from "./auth.service";
 
 export const getProviders = createHandler({
   response: authEndpoints.providers.response,
@@ -12,7 +12,7 @@ export const getProviders = createHandler({
 export const me = createAuthenticatedHandler({
   response: authEndpoints.me.response,
   handle: async ({ req, user }) => {
-    const rawHouseholdId = req.headers['x-household-id'];
+    const rawHouseholdId = req.headers["x-household-id"];
     const selectedHouseholdId = Array.isArray(rawHouseholdId) ? rawHouseholdId[0] : rawHouseholdId;
     const householdId =
       selectedHouseholdId?.trim() || (await householdsService.resolveHouseholdIdForUser(user.id));

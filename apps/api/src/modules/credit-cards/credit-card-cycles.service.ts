@@ -1,15 +1,15 @@
-import { and, asc, desc, eq, gte, inArray, lt, lte, sql } from 'drizzle-orm';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { creditCardBillingCyclesTable } from '@/db/schemas/credit-card-billing-cycles.schema';
-import { creditCardBudgetRecognitionsTable } from '@/db/schemas/credit-card-budget-recognitions.schema';
-import { creditCardInstallmentsTable } from '@/db/schemas/credit-card-installments.schema';
-import { creditCardPurchasesTable } from '@/db/schemas/credit-card-purchases.schema';
-import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
-import { householdsTable } from '@/db/schemas/households.schema';
-import { transactionsTable } from '@/db/schemas/transactions.schema';
-import type { TxClient } from '@/db/types';
-import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
+import { and, asc, desc, eq, gte, inArray, lt, lte, sql } from "drizzle-orm";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { creditCardBillingCyclesTable } from "@/db/schemas/credit-card-billing-cycles.schema";
+import { creditCardBudgetRecognitionsTable } from "@/db/schemas/credit-card-budget-recognitions.schema";
+import { creditCardInstallmentsTable } from "@/db/schemas/credit-card-installments.schema";
+import { creditCardPurchasesTable } from "@/db/schemas/credit-card-purchases.schema";
+import { creditCardsTable } from "@/db/schemas/credit-cards.schema";
+import { householdsTable } from "@/db/schemas/households.schema";
+import { transactionsTable } from "@/db/schemas/transactions.schema";
+import type { TxClient } from "@/db/types";
+import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
 import {
   addDays,
   addMonths,
@@ -21,30 +21,30 @@ import {
   now,
   parseMonthKey,
   startOfMonth,
-} from '@/shared/lib/date';
-import { createListMeta, type ListResult } from '@/shared/list';
+} from "@/shared/lib/date";
+import { createListMeta, type ListResult } from "@/shared/list";
 import {
   deriveCycleDisplayStatus,
   getNextCycleShapeFromPeriodStart,
   getNextPeriodStart,
   hasCycleActivity,
-} from './credit-card-cycle-engine';
-import * as cycleRepository from './credit-card-cycles.repository';
+} from "./credit-card-cycle-engine";
+import * as cycleRepository from "./credit-card-cycles.repository";
 import {
   type CreditCardRow,
   mapCycleItems,
   mapCycleRow,
   splitInstallmentAmounts,
-} from './credit-cards.helpers';
-import type { ListCreditCardCyclesQuery } from './credit-cards.query';
-import * as creditCardsRepository from './credit-cards.repository';
+} from "./credit-cards.helpers";
+import type { ListCreditCardCyclesQuery } from "./credit-cards.query";
+import * as creditCardsRepository from "./credit-cards.repository";
 import type {
   CreditCardCycleDetailResponse,
   CreditCardCycleSummary,
   CreditCardForecastQuery,
   CreditCardForecastResponse,
   UpdateCreditCardCycleDto,
-} from './credit-cards.types';
+} from "./credit-cards.types";
 
 async function findCreditCardCycle(
   tx: TxClient,
@@ -52,7 +52,7 @@ async function findCreditCardCycle(
   cycleId: string,
 ): Promise<typeof creditCardBillingCyclesTable.$inferSelect> {
   const cycle = await cycleRepository.findCycleById(tx, creditCardId, cycleId);
-  if (!cycle) throw new NotFoundError('Billing cycle');
+  if (!cycle) throw new NotFoundError("Billing cycle");
   return cycle;
 }
 
@@ -78,7 +78,7 @@ export async function ensureCycleForClosingDate(
     periodEnd: cycleShape.periodEnd,
     closingDate: cycleShape.closingDate,
     dueDate: cycleShape.dueDate,
-    status: 'open',
+    status: "open",
     statementAmount: 0,
     paidAmount: 0,
     remainingAmount: 0,
@@ -117,7 +117,7 @@ async function ensureNextCycleAfter(
     periodEnd: nextCycleShape.periodEnd,
     closingDate: nextCycleShape.closingDate,
     dueDate: nextCycleShape.dueDate,
-    status: 'open',
+    status: "open",
     statementAmount: 0,
     paidAmount: 0,
     remainingAmount: 0,
@@ -163,7 +163,7 @@ async function validateCycleWindowDoesNotOverlap(
 
   if (overlappingCycle) {
     throw new ValidationError(
-      'Billing cycle dates cannot overlap with another billing cycle on this credit card',
+      "Billing cycle dates cannot overlap with another billing cycle on this credit card",
     );
   }
 }
@@ -222,8 +222,8 @@ export async function recreateBudgetRecognitionsForPurchase(
     id: string;
     purchaseAmount: number;
     installmentCount: number;
-    budgetExpenseTiming: 'spend_month' | 'payment_month';
-    budgetInstallmentMode: 'per_installment' | 'full_amount';
+    budgetExpenseTiming: "spend_month" | "payment_month";
+    budgetInstallmentMode: "per_installment" | "full_amount";
   },
   params: {
     categoryId: string | null;
@@ -254,10 +254,10 @@ export async function recreateBudgetRecognitionsForPurchase(
 
   const shouldIncludeMonth = (date: Date) => !currentMonthStart || date >= currentMonthStart;
 
-  if (purchase.budgetInstallmentMode === 'per_installment') {
+  if (purchase.budgetInstallmentMode === "per_installment") {
     for (const installment of installments) {
       const budgetMonth =
-        purchase.budgetExpenseTiming === 'spend_month'
+        purchase.budgetExpenseTiming === "spend_month"
           ? startOfMonth(installment.closingDate)
           : startOfMonth(installment.dueDate);
 
@@ -275,7 +275,7 @@ export async function recreateBudgetRecognitionsForPurchase(
   } else {
     const firstInstallment = installments[0];
     const budgetMonth =
-      purchase.budgetExpenseTiming === 'spend_month'
+      purchase.budgetExpenseTiming === "spend_month"
         ? startOfMonth(params.purchaseDate)
         : startOfMonth(firstInstallment?.dueDate ?? params.purchaseDate);
 
@@ -312,7 +312,7 @@ export async function syncCardCycles(
   const today = getTodayInTimezone(timezone);
   const installmentTotals = new Map(installmentSums.map((row) => [row.billingCycleId, row.amount]));
   const paymentTotals = new Map(
-    allocationSums.map((row) => [row.billingCycleId ?? '', row.amount]),
+    allocationSums.map((row) => [row.billingCycleId ?? "", row.amount]),
   );
 
   const updatedCycles: Array<typeof creditCardBillingCyclesTable.$inferSelect> = [];
@@ -324,10 +324,10 @@ export async function syncCardCycles(
 
     const status =
       remainingAmount === 0 && cycle.closingDate <= today
-        ? 'paid'
+        ? "paid"
         : cycle.closingDate < today
-          ? 'closed'
-          : 'open';
+          ? "closed"
+          : "open";
 
     const updated = await cycleRepository.updateCycle(tx, cycle.id, {
       statementAmount,
@@ -337,7 +337,7 @@ export async function syncCardCycles(
       updatedAt: now(),
     });
 
-    if (!updated) throw new NotFoundError('Billing cycle');
+    if (!updated) throw new NotFoundError("Billing cycle");
     updatedCycles.push(updated);
   }
 
@@ -544,12 +544,12 @@ export async function updateBillingCycle(
     );
 
     const cycleIndex = orderedCycles.findIndex((cycle) => cycle.id === cycleId);
-    if (cycleIndex < 0) throw new NotFoundError('Billing cycle');
+    if (cycleIndex < 0) throw new NotFoundError("Billing cycle");
 
     const existingCycle = orderedCycles[cycleIndex];
     const today = getTodayInTimezone(context.timezone);
     if (existingCycle.closingDate < today) {
-      throw new ConflictError('Historical billing cycles cannot be edited');
+      throw new ConflictError("Historical billing cycles cannot be edited");
     }
 
     const previousCycle = cycleIndex > 0 ? orderedCycles[cycleIndex - 1] : null;
@@ -559,7 +559,7 @@ export async function updateBillingCycle(
     const closingDate = dto.closingDate ?? existingCycle.closingDate;
 
     if (closingDate < periodStart) {
-      throw new ValidationError('closingDate must be on or after periodStart');
+      throw new ValidationError("closingDate must be on or after periodStart");
     }
 
     const derivedDueDate =
@@ -569,7 +569,7 @@ export async function updateBillingCycle(
         : existingCycle.dueDate);
 
     if (derivedDueDate < closingDate) {
-      throw new ValidationError('dueDate must be on or after closingDate');
+      throw new ValidationError("dueDate must be on or after closingDate");
     }
 
     await validateCycleWindowDoesNotOverlap(tx, creditCardId, cycleId, {
@@ -601,7 +601,7 @@ export async function updateBillingCycle(
         updatedAt: now(),
       });
 
-      if (!updatedCycle) throw new NotFoundError('Billing cycle');
+      if (!updatedCycle) throw new NotFoundError("Billing cycle");
       previousUpdatedCycle = updatedCycle;
     }
 
@@ -667,7 +667,7 @@ export async function getForecast(
     cycles: cycleItems.map(({ cycle, items }) => {
       const enrichedCycle = cyclesById.get(cycle.id);
       if (!enrichedCycle) {
-        throw new NotFoundError('Billing cycle');
+        throw new NotFoundError("Billing cycle");
       }
 
       return {

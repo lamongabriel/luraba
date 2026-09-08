@@ -1,7 +1,7 @@
-import { currenciesEndpoints, getEndpointRouterPath } from '@luraba/contracts';
-import { Router } from 'express';
-import { requireAccess } from '@/middleware/access.middleware';
-import * as currenciesController from './currencies.controller';
+import { currenciesEndpoints, getEndpointRouterPath } from "@luraba/contracts";
+import { Router } from "express";
+import { requireAccess } from "@/middleware/access.middleware";
+import * as currenciesController from "./currencies.controller";
 
 const router = Router();
 

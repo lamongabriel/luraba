@@ -1,24 +1,22 @@
-"use client"
+"use client";
 
-import { useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query";
 
-import type { AppQueryOptions } from "@/queries/query-options"
-import { getCurrencyRate, listCurrencies } from "@/services/currencies.service"
+import type { AppQueryOptions } from "@/queries/query-options";
+import { getCurrencyRate, listCurrencies } from "@/services/currencies.service";
 
-type ListCurrenciesQuery = NonNullable<Parameters<typeof listCurrencies>[0]>
-type ListCurrenciesResponse = Awaited<ReturnType<typeof listCurrencies>>
-type GetCurrencyRateQuery = Parameters<typeof getCurrencyRate>[0]
-type GetCurrencyRateResponse = Awaited<ReturnType<typeof getCurrencyRate>>
+type ListCurrenciesQuery = NonNullable<Parameters<typeof listCurrencies>[0]>;
+type ListCurrenciesResponse = Awaited<ReturnType<typeof listCurrencies>>;
+type GetCurrencyRateQuery = Parameters<typeof getCurrencyRate>[0];
+type GetCurrencyRateResponse = Awaited<ReturnType<typeof getCurrencyRate>>;
 
 export const currencyQueryKeys = {
   all: ["currencies"] as const,
   lists: () => [...currencyQueryKeys.all, "list"] as const,
-  list: (query: ListCurrenciesQuery = {}) =>
-    [...currencyQueryKeys.lists(), query] as const,
+  list: (query: ListCurrenciesQuery = {}) => [...currencyQueryKeys.lists(), query] as const,
   rates: () => [...currencyQueryKeys.all, "rate"] as const,
-  rate: (query: GetCurrencyRateQuery) =>
-    [...currencyQueryKeys.rates(), query] as const,
-}
+  rate: (query: GetCurrencyRateQuery) => [...currencyQueryKeys.rates(), query] as const,
+};
 
 export function useCurrenciesQuery<TData = ListCurrenciesResponse>(
   query: ListCurrenciesQuery = {},
@@ -28,7 +26,7 @@ export function useCurrenciesQuery<TData = ListCurrenciesResponse>(
     queryKey: currencyQueryKeys.list(query),
     queryFn: () => listCurrencies(query),
     ...options,
-  })
+  });
 }
 
 export function useCurrencyRateQuery<TData = GetCurrencyRateResponse>(
@@ -39,8 +37,6 @@ export function useCurrencyRateQuery<TData = GetCurrencyRateResponse>(
     queryKey: currencyQueryKeys.rate(query),
     queryFn: () => getCurrencyRate(query),
     ...options,
-    enabled:
-      Boolean(query.fromCurrencyCode && query.toCurrencyCode) &&
-      (options?.enabled ?? true),
-  })
+    enabled: Boolean(query.fromCurrencyCode && query.toCurrencyCode) && (options?.enabled ?? true),
+  });
 }

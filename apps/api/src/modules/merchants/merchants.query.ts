@@ -1,14 +1,14 @@
-import type { listMerchantsQuerySchema } from '@luraba/contracts/merchants';
-import { eq, type SQL, sql } from 'drizzle-orm';
-import type { z } from 'zod';
-import { merchantsTable } from '@/db/schemas/merchants.schema';
+import type { listMerchantsQuerySchema } from "@luraba/contracts/merchants";
+import { eq, type SQL, sql } from "drizzle-orm";
+import type { z } from "zod";
+import { merchantsTable } from "@/db/schemas/merchants.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,
   combineConditions,
   nullabilityCondition,
   rangeConditions,
-} from '@/shared/list';
+} from "@/shared/list";
 
 export type ListMerchantsQuery = z.output<typeof listMerchantsQuerySchema>;
 

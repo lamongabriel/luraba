@@ -1,13 +1,13 @@
-import { accountsEndpoints } from '@luraba/contracts';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
-import { withApiMeta } from '@/shared/response';
-import * as accountsService from './accounts.service';
+import { accountsEndpoints } from "@luraba/contracts";
+import { createHouseholdHandler } from "@/shared/controllers/household.controller";
+import { withApiMeta } from "@/shared/response";
+import * as accountsService from "./accounts.service";
 
 export const create = createHouseholdHandler({
   body: accountsEndpoints.create.body,
   response: accountsEndpoints.create.response,
   handle: ({ household, body }) => accountsService.createAccount(household, body),
-  status: 'created',
+  status: "created",
 });
 
 export const list = createHouseholdHandler({
@@ -47,6 +47,6 @@ export const update = createHouseholdHandler({
 
 export const deleteAccount = createHouseholdHandler({
   params: accountsEndpoints.delete.params,
-  status: 'no-content',
+  status: "no-content",
   handle: ({ household, params }) => accountsService.deleteAccount(household, params.id),
 });

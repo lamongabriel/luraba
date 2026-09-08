@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { UserShield01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { useRouter } from "next/navigation"
+import { UserShield01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button"
-import { Typography } from "@/components/ui/typography"
-import { useSafeBackHref } from "@/hooks/use-safe-back-href"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
+import { useSafeBackHref } from "@/hooks/use-safe-back-href";
+import { cn } from "@/lib/utils";
 
 interface UnauthorizedProps {
-  title?: string
-  description?: string
-  backHref?: string
-  backLabel?: string
-  fullPage?: boolean
+  title?: string;
+  description?: string;
+  backHref?: string;
+  backLabel?: string;
+  fullPage?: boolean;
 }
 
 export function Unauthorized({
@@ -24,8 +24,8 @@ export function Unauthorized({
   backLabel = "Go back",
   fullPage = true,
 }: UnauthorizedProps) {
-  const router = useRouter()
-  const safeBackHref = useSafeBackHref()
+  const router = useRouter();
+  const safeBackHref = useSafeBackHref();
 
   return (
     <div
@@ -55,5 +55,5 @@ export function Unauthorized({
         ) : null}
       </div>
     </div>
-  )
+  );
 }

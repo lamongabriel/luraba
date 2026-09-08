@@ -1,34 +1,29 @@
-"use client"
+"use client";
 
-import { Alert02Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { TransactionFeedRow } from "@luraba/contracts"
-import {
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-} from "@/components/ui/modal"
-import { Typography } from "@/components/ui/typography"
-import { queryClient } from "@/lib/query-client"
+import { Alert02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { TransactionFeedRow } from "@luraba/contracts";
+import { Modal, ModalBody, ModalContent, ModalFooter } from "@/components/ui/modal";
+import { Typography } from "@/components/ui/typography";
+import { queryClient } from "@/lib/query-client";
 import {
   useDeleteCreditCardPaymentMutation,
   useDeleteCreditCardPurchaseMutation,
-} from "@/mutations/credit-cards/use-credit-card-transaction-mutations"
-import { useDeleteTransactionMutation } from "@/mutations/transactions/use-transaction-mutations"
-import { accountQueryKeys } from "@/queries/accounts/use-accounts-query"
-import { budgetQueryKeys } from "@/queries/budgets/use-monthly-budget-query"
-import { creditCardQueryKeys } from "@/queries/credit-cards/use-credit-cards-query"
-import { transactionQueryKeys } from "@/queries/transactions/use-transactions-query"
+} from "@/mutations/credit-cards/use-credit-card-transaction-mutations";
+import { useDeleteTransactionMutation } from "@/mutations/transactions/use-transaction-mutations";
+import { accountQueryKeys } from "@/queries/accounts/use-accounts-query";
+import { budgetQueryKeys } from "@/queries/budgets/use-monthly-budget-query";
+import { creditCardQueryKeys } from "@/queries/credit-cards/use-credit-cards-query";
+import { transactionQueryKeys } from "@/queries/transactions/use-transactions-query";
 
 export function DeleteTransactionModal({
   onOpenChange,
   open,
   row,
 }: {
-  onOpenChange: (open: boolean) => void
-  open: boolean
-  row?: TransactionFeedRow | null
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+  row?: TransactionFeedRow | null;
 }) {
   const finish = async () => {
     await Promise.all([
@@ -36,54 +31,46 @@ export function DeleteTransactionModal({
       queryClient.invalidateQueries({ queryKey: accountQueryKeys.all }),
       queryClient.invalidateQueries({ queryKey: creditCardQueryKeys.all }),
       queryClient.invalidateQueries({ queryKey: budgetQueryKeys.all }),
-    ])
-    onOpenChange(false)
-  }
+    ]);
+    onOpenChange(false);
+  };
   const transactionMutation = useDeleteTransactionMutation({
     onSuccess: finish,
-  })
+  });
   const purchaseMutation = useDeleteCreditCardPurchaseMutation({
     onSuccess: finish,
-  })
+  });
   const paymentMutation = useDeleteCreditCardPaymentMutation({
     onSuccess: finish,
-  })
+  });
   const mutation =
     row?.rowKind === "credit_card_installment"
       ? purchaseMutation
       : row?.rowKind === "credit_card_payment"
         ? paymentMutation
-        : transactionMutation
+        : transactionMutation;
 
   const handleDelete = () => {
-    if (!row) return
+    if (!row) return;
 
-    if (
-      row.rowKind === "credit_card_installment" &&
-      row.creditCardId &&
-      row.purchaseId
-    ) {
+    if (row.rowKind === "credit_card_installment" && row.creditCardId && row.purchaseId) {
       purchaseMutation.mutate({
         creditCardId: row.creditCardId,
         purchaseId: row.purchaseId,
-      })
-      return
+      });
+      return;
     }
 
-    if (
-      row.rowKind === "credit_card_payment" &&
-      row.creditCardId &&
-      row.paymentId
-    ) {
+    if (row.rowKind === "credit_card_payment" && row.creditCardId && row.paymentId) {
       paymentMutation.mutate({
         creditCardId: row.creditCardId,
         paymentId: row.paymentId,
-      })
-      return
+      });
+      return;
     }
 
-    transactionMutation.mutate(row.id)
-  }
+    transactionMutation.mutate(row.id);
+  };
 
   return (
     <Modal open={open} onOpenChange={onOpenChange}>
@@ -100,14 +87,10 @@ export function DeleteTransactionModal({
         size="sm"
       >
         <ModalBody>
-          {row ? (
-            <Typography variant="small-muted">{row.description}</Typography>
-          ) : null}
+          {row ? <Typography variant="small-muted">{row.description}</Typography> : null}
           {mutation.errorMessage ? (
             <div className="rounded-lg bg-destructive/10 px-3 py-2.5">
-              <Typography variant="small-destructive">
-                {mutation.errorMessage}
-              </Typography>
+              <Typography variant="small-destructive">{mutation.errorMessage}</Typography>
             </div>
           ) : null}
         </ModalBody>
@@ -120,5 +103,5 @@ export function DeleteTransactionModal({
         />
       </ModalContent>
     </Modal>
-  )
+  );
 }

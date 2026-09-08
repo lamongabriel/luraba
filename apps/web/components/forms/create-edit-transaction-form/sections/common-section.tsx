@@ -1,19 +1,19 @@
-import type { Control } from "react-hook-form"
+import type { Control } from "react-hook-form";
 
-import { FormItem } from "@/components/forms/form-item"
+import { FormItem } from "@/components/forms/form-item";
 
-import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema"
-import { TRANSACTION_KIND_OPTIONS } from "../create-edit-transaction-form.utils"
-import { TransactionFormSection } from "./transaction-form-section"
+import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema";
+import { TRANSACTION_KIND_OPTIONS } from "../create-edit-transaction-form.utils";
+import { TransactionFormSection } from "./transaction-form-section";
 
 export function CommonSection({
   control,
   isEdit,
   paymentDateLabel,
 }: {
-  control: Control<CreateEditTransactionFormValues>
-  isEdit: boolean
-  paymentDateLabel?: boolean
+  control: Control<CreateEditTransactionFormValues>;
+  isEdit: boolean;
+  paymentDateLabel?: boolean;
 }) {
   return (
     <TransactionFormSection title="Overview">
@@ -24,9 +24,7 @@ export function CommonSection({
         label="Transaction type"
         options={TRANSACTION_KIND_OPTIONS}
         disabled={isEdit}
-        description={
-          isEdit ? "Transaction type cannot change after creation." : undefined
-        }
+        description={isEdit ? "Transaction type cannot change after creation." : undefined}
       />
       <FormItem
         control={control}
@@ -41,13 +39,8 @@ export function CommonSection({
           label={paymentDateLabel ? "Payment date" : "Purchase date"}
           inputType="date"
         />
-        <FormItem
-          control={control}
-          name="postedDate"
-          label="Posted date"
-          inputType="date"
-        />
+        <FormItem control={control} name="postedDate" label="Posted date" inputType="date" />
       </div>
     </TransactionFormSection>
-  )
+  );
 }

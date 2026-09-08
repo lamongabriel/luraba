@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { Calendar03Icon, RepeatIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { UpcomingTransaction } from "@luraba/contracts"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { formatCurrency } from "@/lib/finance"
-import { formatShortDate } from "@/lib/format"
+import { Calendar03Icon, RepeatIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { UpcomingTransaction } from "@luraba/contracts";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/finance";
+import { formatShortDate } from "@/lib/format";
 
 export function UpcomingTransactionsPanel({
   rows,
@@ -15,19 +15,16 @@ export function UpcomingTransactionsPanel({
   precision = 2,
   onSelect,
 }: {
-  rows: UpcomingTransaction[]
-  language?: string
-  precision?: number
-  onSelect?: (row: UpcomingTransaction) => void
+  rows: UpcomingTransaction[];
+  language?: string;
+  precision?: number;
+  onSelect?: (row: UpcomingTransaction) => void;
 }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-2">
         <CardTitle>Upcoming transactions</CardTitle>
-        <HugeiconsIcon
-          icon={Calendar03Icon}
-          className="size-4 text-muted-foreground"
-        />
+        <HugeiconsIcon icon={Calendar03Icon} className="size-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         {rows.length === 0 ? (
@@ -37,9 +34,7 @@ export function UpcomingTransactionsPanel({
         ) : (
           <ul className="divide-y divide-border">
             {rows.map((row) => (
-              <li
-                key={`${row.sourceType}-${row.sourceId}-${row.effectiveDate}`}
-              >
+              <li key={`${row.sourceType}-${row.sourceId}-${row.effectiveDate}`}>
                 <Button
                   variant="ghost"
                   className="h-auto w-full justify-start gap-3 rounded-none px-0 py-3 text-left hover:bg-transparent"
@@ -50,16 +45,9 @@ export function UpcomingTransactionsPanel({
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5">
-                      <span className="truncate text-xs font-medium">
-                        {row.description}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="h-4 px-1 text-[0.55rem]"
-                      >
-                        {row.sourceType === "recurring_bill"
-                          ? "Recurring"
-                          : "Installment"}
+                      <span className="truncate text-xs font-medium">{row.description}</span>
+                      <Badge variant="outline" className="h-4 px-1 text-[0.55rem]">
+                        {row.sourceType === "recurring_bill" ? "Recurring" : "Installment"}
                       </Badge>
                     </span>
                     <span className="mt-0.5 block text-[0.65rem] text-muted-foreground">
@@ -68,13 +56,7 @@ export function UpcomingTransactionsPanel({
                     </span>
                   </span>
                   <span className="shrink-0 text-xs font-medium">
-                    {formatCurrency(
-                      row.amount,
-                      row.currencyCode,
-                      language,
-                      undefined,
-                      precision,
-                    )}
+                    {formatCurrency(row.amount, row.currencyCode, language, undefined, precision)}
                   </span>
                 </Button>
               </li>
@@ -83,5 +65,5 @@ export function UpcomingTransactionsPanel({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

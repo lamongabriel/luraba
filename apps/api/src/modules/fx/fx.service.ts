@@ -1,9 +1,9 @@
-import { FX_PRIMARY_PROVIDER_ID, FX_PROVIDER_FAILURE_MESSAGES } from '@/config/fx';
-import { currenciesRepository } from '@/modules/currencies/currencies.repository';
-import { DependencyUnavailableError, NotFoundError } from '@/shared/errors';
-import { formatISODate, isAfter, isBefore, now, toStartOfDay } from '@/shared/lib/date';
-import { fxProviderOrder, fxProvidersById } from './fx.providers';
-import { fxRateRepository } from './fx.repository';
+import { FX_PRIMARY_PROVIDER_ID, FX_PROVIDER_FAILURE_MESSAGES } from "@/config/fx";
+import { currenciesRepository } from "@/modules/currencies/currencies.repository";
+import { DependencyUnavailableError, NotFoundError } from "@/shared/errors";
+import { formatISODate, isAfter, isBefore, now, toStartOfDay } from "@/shared/lib/date";
+import { fxProviderOrder, fxProvidersById } from "./fx.providers";
+import { fxRateRepository } from "./fx.repository";
 import type {
   FxConversionInput,
   FxGroupedValuationInput,
@@ -12,14 +12,14 @@ import type {
   FxRateQuery,
   FxResolvedRate,
   FxValuationInput,
-} from './fx.types';
+} from "./fx.types";
 import {
   buildFxLookupKey,
   invertFxRate,
   normalizeProviderRate,
   parseFxDate,
   roundHalfUp,
-} from './fx.utils';
+} from "./fx.utils";
 
 function toStartOfUtcDay(date: Date): Date {
   return toStartOfDay(date);
@@ -37,7 +37,7 @@ function mapStoredRate(rate: {
     provider: rate.provider as FxProviderId,
     fromCurrencyCode: rate.fromCurrencyId,
     toCurrencyCode: rate.toCurrencyId,
-    rateDate: typeof rate.rateDate === 'string' ? parseFxDate(rate.rateDate) : rate.rateDate,
+    rateDate: typeof rate.rateDate === "string" ? parseFxDate(rate.rateDate) : rate.rateDate,
     rateNumerator: rate.rateNumerator,
     rateDenominator: rate.rateDenominator,
   };
@@ -161,7 +161,7 @@ export class FxService {
     const targetPrecision = precisions[input.toCurrencyCode];
 
     if (sourcePrecision === undefined || targetPrecision === undefined) {
-      throw new NotFoundError('Currency');
+      throw new NotFoundError("Currency");
     }
 
     return convertMinorUnitsWithRate(input.amount, rate, sourcePrecision, targetPrecision);
@@ -170,7 +170,7 @@ export class FxService {
   async assertCurrencyExists(currencyCode: string): Promise<void> {
     const currency = await this.currencyRepository.findByCode(currencyCode.toUpperCase());
     if (!currency) {
-      throw new NotFoundError('Currency');
+      throw new NotFoundError("Currency");
     }
   }
 
@@ -257,7 +257,7 @@ export class FxService {
     ]);
 
     if (precisionMap[normalizedTargetCurrencyCode] === undefined) {
-      throw new NotFoundError('Currency');
+      throw new NotFoundError("Currency");
     }
 
     return Promise.all(
@@ -267,7 +267,7 @@ export class FxService {
         const targetPrecision = precisionMap[normalizedTargetCurrencyCode];
 
         if (sourcePrecision === undefined || targetPrecision === undefined) {
-          throw new NotFoundError('Currency');
+          throw new NotFoundError("Currency");
         }
 
         if (normalizedSourceCurrencyCode === normalizedTargetCurrencyCode) {

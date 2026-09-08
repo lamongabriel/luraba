@@ -1,80 +1,80 @@
-"use client"
+"use client";
 
 import {
   ArrowRight01Icon,
   Delete02Icon,
   MoreHorizontalIcon,
   PencilEdit02Icon,
-} from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { Category, CategoryType } from "@luraba/contracts"
-import { MAX_PER_PAGE } from "@luraba/contracts"
-import * as React from "react"
-import { CategorySheet } from "@/components/categories/category-sheet"
-import { DeleteCategoryModal } from "@/components/categories/delete-category-modal"
-import { DataTableSearchInput } from "@/components/data-table/data-table-search-input"
-import { FilterFaceted } from "@/components/filters/filter-faceted"
-import { InternalPageLayout } from "@/components/finance/internal-page-layout"
-import { ItemReveal, SectionReveal } from "@/components/motion/reveal"
-import { PERMISSIONS, PermissionButton, useCan } from "@/components/permissions"
-import { Button } from "@/components/ui/button"
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { Category, CategoryType } from "@luraba/contracts";
+import { MAX_PER_PAGE } from "@luraba/contracts";
+import * as React from "react";
+import { CategorySheet } from "@/components/categories/category-sheet";
+import { DeleteCategoryModal } from "@/components/categories/delete-category-modal";
+import { DataTableSearchInput } from "@/components/data-table/data-table-search-input";
+import { FilterFaceted } from "@/components/filters/filter-faceted";
+import { InternalPageLayout } from "@/components/finance/internal-page-layout";
+import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
+import { PERMISSIONS, PermissionButton, useCan } from "@/components/permissions";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Icon } from "@/components/ui/icon"
-import { Typography } from "@/components/ui/typography"
-import { useApiParams } from "@/hooks/use-api-params"
-import { useEntityDisclosure } from "@/hooks/use-disclosure"
-import { CATEGORY_TYPE_OPTIONS } from "@/lib/categories"
-import { cn } from "@/lib/utils"
-import { useCategoriesQuery } from "@/queries/categories/use-categories-query"
+} from "@/components/ui/dropdown-menu";
+import { Icon } from "@/components/ui/icon";
+import { Typography } from "@/components/ui/typography";
+import { useApiParams } from "@/hooks/use-api-params";
+import { useEntityDisclosure } from "@/hooks/use-disclosure";
+import { CATEGORY_TYPE_OPTIONS } from "@/lib/categories";
+import { cn } from "@/lib/utils";
+import { useCategoriesQuery } from "@/queries/categories/use-categories-query";
 
-import { CategoriesEmpty } from "./_empty"
-import { CategoriesError } from "./_error"
-import { CategoriesLoading } from "./_loading"
+import { CategoriesEmpty } from "./_empty";
+import { CategoriesError } from "./_error";
+import { CategoriesLoading } from "./_loading";
 
-const TYPE_KEY = "type"
+const TYPE_KEY = "type";
 const CATEGORY_API_FILTERS = {
   [TYPE_KEY]: { type: "stringArray" },
-} as const
+} as const;
 
 type CategoryNode = {
-  category: Category
-  children: CategoryNode[]
-}
+  category: Category;
+  children: CategoryNode[];
+};
 
 const TYPE_GROUPS: ReadonlyArray<{ type: CategoryType; title: string }> = [
   { type: "income", title: "Income" },
   { type: "expense", title: "Expense" },
-]
+];
 
 /** Builds a parent→children tree from the flat category list (defensive to orphans). */
 function buildTree(categories: Category[]): CategoryNode[] {
-  const byId = new Map(categories.map((category) => [category.id, category]))
-  const childrenByParent = new Map<string, Category[]>()
-  const roots: Category[] = []
+  const byId = new Map(categories.map((category) => [category.id, category]));
+  const childrenByParent = new Map<string, Category[]>();
+  const roots: Category[] = [];
 
   for (const category of categories) {
-    const parentId = category.parentId
+    const parentId = category.parentId;
     // Treat a parent that is missing from the set as a root (orphan fallback).
     if (parentId && byId.has(parentId)) {
-      const bucket = childrenByParent.get(parentId) ?? []
-      bucket.push(category)
-      childrenByParent.set(parentId, bucket)
+      const bucket = childrenByParent.get(parentId) ?? [];
+      bucket.push(category);
+      childrenByParent.set(parentId, bucket);
     } else {
-      roots.push(category)
+      roots.push(category);
     }
   }
 
   const toNode = (category: Category): CategoryNode => ({
     category,
     children: (childrenByParent.get(category.id) ?? []).map(toNode),
-  })
+  });
 
-  return roots.map(toNode)
+  return roots.map(toNode);
 }
 
 function CategoryRow({
@@ -85,17 +85,17 @@ function CategoryRow({
   onEdit,
   onDelete,
 }: {
-  node: CategoryNode
-  depth: number
-  canUpdate: boolean
-  canDelete: boolean
-  onEdit: (category: Category) => void
-  onDelete: (category: Category) => void
+  node: CategoryNode;
+  depth: number;
+  canUpdate: boolean;
+  canDelete: boolean;
+  onEdit: (category: Category) => void;
+  onDelete: (category: Category) => void;
 }) {
-  const [expanded, setExpanded] = React.useState(true)
-  const { category, children } = node
-  const hasChildren = children.length > 0
-  const hasActions = canUpdate || canDelete
+  const [expanded, setExpanded] = React.useState(true);
+  const { category, children } = node;
+  const hasChildren = children.length > 0;
+  const hasActions = canUpdate || canDelete;
 
   return (
     <>
@@ -114,22 +114,14 @@ function CategoryRow({
             <HugeiconsIcon
               icon={ArrowRight01Icon}
               strokeWidth={2}
-              className={cn(
-                "size-3.5 transition-transform",
-                expanded && "rotate-90",
-              )}
+              className={cn("size-3.5 transition-transform", expanded && "rotate-90")}
             />
           </button>
         ) : (
           <span className="size-4 shrink-0" />
         )}
 
-        <Icon
-          name={category.icon}
-          color={category.color}
-          variant="chip"
-          size="sm"
-        />
+        <Icon name={category.icon} color={category.color} variant="chip" size="sm" />
 
         <button
           type="button"
@@ -160,10 +152,7 @@ function CategoryRow({
                 </DropdownMenuItem>
               ) : null}
               {canDelete ? (
-                <DropdownMenuItem
-                  variant="destructive"
-                  onSelect={() => onDelete(category)}
-                >
+                <DropdownMenuItem variant="destructive" onSelect={() => onDelete(category)}>
                   <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
                   Delete
                 </DropdownMenuItem>
@@ -187,7 +176,7 @@ function CategoryRow({
           ))
         : null}
     </>
-  )
+  );
 }
 
 function CategoryGroup({
@@ -198,15 +187,15 @@ function CategoryGroup({
   onEdit,
   onDelete,
 }: {
-  title: string
-  nodes: CategoryNode[]
-  canUpdate: boolean
-  canDelete: boolean
-  onEdit: (category: Category) => void
-  onDelete: (category: Category) => void
+  title: string;
+  nodes: CategoryNode[];
+  canUpdate: boolean;
+  canDelete: boolean;
+  onEdit: (category: Category) => void;
+  onDelete: (category: Category) => void;
 }) {
   if (nodes.length === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -228,13 +217,13 @@ function CategoryGroup({
         ))}
       </div>
     </SectionReveal>
-  )
+  );
 }
 
 export default function CategoriesPage() {
-  const can = useCan()
-  const canUpdate = can(PERMISSIONS.CATEGORIES_UPDATE)
-  const canDelete = can(PERMISSIONS.CATEGORIES_DELETE)
+  const can = useCan();
+  const canUpdate = can(PERMISSIONS.CATEGORIES_UPDATE);
+  const canDelete = can(PERMISSIONS.CATEGORIES_DELETE);
 
   const {
     filters: { [TYPE_KEY]: typeFilter },
@@ -243,80 +232,71 @@ export default function CategoriesPage() {
     search,
     setFilter,
     setSearch,
-  } = useApiParams({ filters: CATEGORY_API_FILTERS })
+  } = useApiParams({ filters: CATEGORY_API_FILTERS });
 
   const setTypeFilter = React.useCallback(
     (value: string[]) => {
-      setFilter(TYPE_KEY, value)
+      setFilter(TYPE_KEY, value);
     },
     [setFilter],
-  )
+  );
 
-  const createEdit = useEntityDisclosure<Category>()
-  const deleteDisclosure = useEntityDisclosure<Category>()
+  const createEdit = useEntityDisclosure<Category>();
+  const deleteDisclosure = useEntityDisclosure<Category>();
 
-  const query = useCategoriesQuery({ perPage: MAX_PER_PAGE })
-  const categories = React.useMemo(() => query.data?.data ?? [], [query.data])
+  const query = useCategoriesQuery({ perPage: MAX_PER_PAGE });
+  const categories = React.useMemo(() => query.data?.data ?? [], [query.data]);
 
   // Filter for the search term, but keep ancestors of matches so nesting holds.
   const visibleCategories = React.useMemo(() => {
     if (!normalizedSearch) {
-      return categories
+      return categories;
     }
 
-    const byId = new Map(categories.map((category) => [category.id, category]))
-    const keep = new Set<string>()
+    const byId = new Map(categories.map((category) => [category.id, category]));
+    const keep = new Set<string>();
 
     for (const category of categories) {
       if (category.name.toLowerCase().includes(normalizedSearch)) {
-        keep.add(category.id)
-        let parentId = category.parentId
+        keep.add(category.id);
+        let parentId = category.parentId;
         while (parentId && byId.has(parentId) && !keep.has(parentId)) {
-          keep.add(parentId)
-          parentId = byId.get(parentId)?.parentId ?? null
+          keep.add(parentId);
+          parentId = byId.get(parentId)?.parentId ?? null;
         }
       }
     }
 
-    return categories.filter((category) => keep.has(category.id))
-  }, [categories, normalizedSearch])
+    return categories.filter((category) => keep.has(category.id));
+  }, [categories, normalizedSearch]);
 
   const activeTypes =
     typeFilter.length > 0
       ? TYPE_GROUPS.filter((group) => typeFilter.includes(group.type))
-      : TYPE_GROUPS
+      : TYPE_GROUPS;
 
   const groups = activeTypes.map((group) => ({
     ...group,
-    nodes: buildTree(
-      visibleCategories.filter((category) => category.type === group.type),
-    ),
-  }))
+    nodes: buildTree(visibleCategories.filter((category) => category.type === group.type)),
+  }));
 
-  const hasAnyVisible = groups.some((group) => group.nodes.length > 0)
+  const hasAnyVisible = groups.some((group) => group.nodes.length > 0);
 
-  let content: React.ReactNode
+  let content: React.ReactNode;
 
   if (query.isPending) {
-    content = <CategoriesLoading />
+    content = <CategoriesLoading />;
   } else if (query.isError) {
     content = (
       <CategoriesError
-        message={
-          query.error.message ||
-          "An unexpected error occurred while loading this page."
-        }
+        message={query.error.message || "An unexpected error occurred while loading this page."}
         onRetry={() => void query.refetch()}
       />
-    )
+    );
   } else if (categories.length === 0) {
-    content = (
-      <CategoriesEmpty hasFilters={false} onCreate={createEdit.onCreate} />
-    )
+    content = <CategoriesEmpty hasFilters={false} onCreate={createEdit.onCreate} />;
   } else if (!hasAnyVisible) {
-    content = (
-      <CategoriesEmpty hasFilters={hasFilters} onCreate={createEdit.onCreate} />
-    )
+    content = <CategoriesEmpty hasFilters={hasFilters} onCreate={createEdit.onCreate} />;
   } else {
     content = (
       <div className="space-y-6">
@@ -332,7 +312,7 @@ export default function CategoriesPage() {
           />
         ))}
       </div>
-    )
+    );
   }
 
   return (
@@ -382,5 +362,5 @@ export default function CategoriesPage() {
         category={deleteDisclosure.entity}
       />
     </InternalPageLayout>
-  )
+  );
 }

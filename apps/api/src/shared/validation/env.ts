@@ -1,15 +1,15 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const urlEnvSchema = z.preprocess(
-  (value) => (typeof value === 'string' ? value.trim() : value),
+  (value) => (typeof value === "string" ? value.trim() : value),
   z
     .string()
     .min(1)
-    .refine((value) => URL.canParse(value), 'Invalid URL'),
+    .refine((value) => URL.canParse(value), "Invalid URL"),
 );
 
 export const optionalStringEnvSchema = z.preprocess((value) => {
-  if (typeof value !== 'string') {
+  if (typeof value !== "string") {
     return value;
   }
 
@@ -58,11 +58,11 @@ export function hexSecretEnvSchema(key: string, length: number) {
 }
 
 function parseBooleanEnvValue(value: unknown) {
-  if (typeof value === 'boolean') {
+  if (typeof value === "boolean") {
     return value;
   }
 
-  if (typeof value !== 'string') {
+  if (typeof value !== "string") {
     return value;
   }
 
@@ -72,11 +72,11 @@ function parseBooleanEnvValue(value: unknown) {
     return undefined;
   }
 
-  if (['1', 'true', 'yes', 'on'].includes(normalizedValue)) {
+  if (["1", "true", "yes", "on"].includes(normalizedValue)) {
     return true;
   }
 
-  if (['0', 'false', 'no', 'off'].includes(normalizedValue)) {
+  if (["0", "false", "no", "off"].includes(normalizedValue)) {
     return false;
   }
 
@@ -116,9 +116,9 @@ export function validateOptionalCredentialPairs(
   for (const definition of definitions) {
     const clientIdKey = `${definition.prefix}_CLIENT_ID`;
     const clientSecretKey = `${definition.prefix}_CLIENT_SECRET`;
-    const clientId = typeof data[clientIdKey] === 'string' ? data[clientIdKey] : undefined;
+    const clientId = typeof data[clientIdKey] === "string" ? data[clientIdKey] : undefined;
     const clientSecret =
-      typeof data[clientSecretKey] === 'string' ? data[clientSecretKey] : undefined;
+      typeof data[clientSecretKey] === "string" ? data[clientSecretKey] : undefined;
     const hasClientId = Boolean(clientId);
     const hasClientSecret = Boolean(clientSecret);
 
@@ -127,7 +127,7 @@ export function validateOptionalCredentialPairs(
     }
 
     ctx.addIssue({
-      code: 'custom',
+      code: "custom",
       path: [hasClientId ? clientSecretKey : clientIdKey],
       message: `${clientIdKey} and ${clientSecretKey} must both be set to enable ${definition.providerName} auth.`,
     });
@@ -140,9 +140,9 @@ export function getOptionalCredentialPair(
 ) {
   const clientIdKey = `${prefix}_CLIENT_ID`;
   const clientSecretKey = `${prefix}_CLIENT_SECRET`;
-  const clientId = typeof data[clientIdKey] === 'string' ? data[clientIdKey] : undefined;
+  const clientId = typeof data[clientIdKey] === "string" ? data[clientIdKey] : undefined;
   const clientSecret =
-    typeof data[clientSecretKey] === 'string' ? data[clientSecretKey] : undefined;
+    typeof data[clientSecretKey] === "string" ? data[clientSecretKey] : undefined;
 
   return {
     clientId,

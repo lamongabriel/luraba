@@ -6,7 +6,7 @@ import {
   isEqual as dfnsIsEqual,
   startOfMonth as dfnsStartOfMonth,
   subDays as dfnsSubDays,
-} from 'date-fns';
+} from "date-fns";
 
 // ---------------------------------------------------------------------------
 // Primitives - thin wrappers around date-fns + ISO formatting/parsing
@@ -104,17 +104,17 @@ export function getUTCDate(date: Date): number {
  * The result is midnight UTC on that calendar day.
  */
 export function getTodayInTimezone(timezone: string): Date {
-  const formatter = new Intl.DateTimeFormat('en-CA', {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
   });
 
   const parts = formatter.formatToParts(now());
-  const year = Number(parts.find((part) => part.type === 'year')?.value ?? 0);
-  const month = Number(parts.find((part) => part.type === 'month')?.value ?? 1);
-  const day = Number(parts.find((part) => part.type === 'day')?.value ?? 1);
+  const year = Number(parts.find((part) => part.type === "year")?.value ?? 0);
+  const month = Number(parts.find((part) => part.type === "month")?.value ?? 1);
+  const day = Number(parts.find((part) => part.type === "day")?.value ?? 1);
 
   return new Date(Date.UTC(year, month - 1, day));
 }
@@ -177,12 +177,12 @@ export function buildCycleForPurchaseDate(purchaseDate: Date, closingDay: number
 
 /** Formats a Date as a month key: `"YYYY-MM"`. */
 export function formatMonthKey(date: Date): string {
-  return `${getUTCFullYear(date)}-${String(getUTCMonth(date) + 1).padStart(2, '0')}`;
+  return `${getUTCFullYear(date)}-${String(getUTCMonth(date) + 1).padStart(2, "0")}`;
 }
 
 /** Parses a month key (`"YYYY-MM"`) into a UTC midnight Date on the 1st. */
 export function parseMonthKey(monthKey: string): Date {
-  const [year, month] = monthKey.split('-').map(Number);
+  const [year, month] = monthKey.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, 1));
 }
 

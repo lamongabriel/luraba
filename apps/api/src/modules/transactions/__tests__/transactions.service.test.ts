@@ -1,21 +1,21 @@
 import {
   listAccountTransactionsQuerySchema,
   listTransactionsQuerySchema,
-} from '@luraba/contracts/transactions';
-import { eq } from 'drizzle-orm';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { db } from '@/db';
-import { entriesTable } from '@/db/schemas/entries.schema';
-import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
-import * as accountsService from '@/modules/accounts/accounts.service';
-import * as categoriesService from '@/modules/categories/categories.service';
-import * as creditCardsService from '@/modules/credit-cards/credit-cards.service';
-import { fxService } from '@/modules/fx/fx.service';
-import * as merchantsService from '@/modules/merchants/merchants.service';
-import * as paymentMethodsService from '@/modules/payment-methods/payment-methods.service';
-import * as tagsService from '@/modules/tags/tags.service';
-import { NotFoundError, ValidationError } from '@/shared/errors';
-import { createAuthenticatedContext } from '@/test/auth';
+} from "@luraba/contracts/transactions";
+import { eq } from "drizzle-orm";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { db } from "@/db";
+import { entriesTable } from "@/db/schemas/entries.schema";
+import { ledgerAccountsTable } from "@/db/schemas/ledger-accounts.schema";
+import * as accountsService from "@/modules/accounts/accounts.service";
+import * as categoriesService from "@/modules/categories/categories.service";
+import * as creditCardsService from "@/modules/credit-cards/credit-cards.service";
+import { fxService } from "@/modules/fx/fx.service";
+import * as merchantsService from "@/modules/merchants/merchants.service";
+import * as paymentMethodsService from "@/modules/payment-methods/payment-methods.service";
+import * as tagsService from "@/modules/tags/tags.service";
+import { NotFoundError, ValidationError } from "@/shared/errors";
+import { createAuthenticatedContext } from "@/test/auth";
 import {
   buildAccountInput,
   buildCategoryInput,
@@ -23,11 +23,11 @@ import {
   buildMerchantInput,
   buildTagInput,
   createBalanceEntryForAccount,
-} from '@/test/factories';
-import type { ListTransactionsQuery } from '../transactions.query';
-import * as transactionsService from '../transactions.service';
+} from "@/test/factories";
+import type { ListTransactionsQuery } from "../transactions.query";
+import * as transactionsService from "../transactions.service";
 
-describe('transactions service', () => {
+describe("transactions service", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -36,61 +36,61 @@ describe('transactions service', () => {
     return listTransactionsQuerySchema.parse(overrides);
   }
 
-  it('creates an expense transaction with multiple tags', async () => {
+  it("creates an expense transaction with multiple tags", async () => {
     const context = await createAuthenticatedContext();
 
     const account = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
 
     const category = await categoriesService.createCategory(
       context.householdContext,
       buildCategoryInput({
-        name: 'Travel',
-        type: 'expense',
+        name: "Travel",
+        type: "expense",
       }),
     );
 
     const tripTag = await tagsService.createTag(
       context.householdContext,
-      buildTagInput({ name: 'Gramado Trip', color: '#16A34A', icon: 'Ticket01Icon' }),
+      buildTagInput({ name: "Gramado Trip", color: "#16A34A", icon: "Ticket01Icon" }),
     );
     const annualTag = await tagsService.createTag(
       context.householdContext,
-      buildTagInput({ name: '2026 Travel Expenses', color: '#2563EB', icon: 'Calendar03Icon' }),
+      buildTagInput({ name: "2026 Travel Expenses", color: "#2563EB", icon: "Calendar03Icon" }),
     );
     const familyTag = await tagsService.createTag(
       context.householdContext,
-      buildTagInput({ name: 'Family', color: '#F97316', icon: 'UserGroupIcon' }),
+      buildTagInput({ name: "Family", color: "#F97316", icon: "UserGroupIcon" }),
     );
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'expense',
-      description: 'Bus ticket to Gramado',
+      type: "expense",
+      description: "Bus ticket to Gramado",
       amount: 25_000,
-      currencyCode: 'BRL',
-      paymentMethodCode: 'pix',
+      currencyCode: "BRL",
+      paymentMethodCode: "pix",
       accountId: account.id,
       categoryId: category.id,
       tagIds: [tripTag.id, annualTag.id, familyTag.id],
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
 
     expect(transaction.tags).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ name: 'Gramado Trip', color: '#16A34A', icon: 'Ticket01Icon' }),
+        expect.objectContaining({ name: "Gramado Trip", color: "#16A34A", icon: "Ticket01Icon" }),
         expect.objectContaining({
-          name: '2026 Travel Expenses',
-          color: '#2563EB',
-          icon: 'Calendar03Icon',
+          name: "2026 Travel Expenses",
+          color: "#2563EB",
+          icon: "Calendar03Icon",
         }),
-        expect.objectContaining({ name: 'Family', color: '#F97316', icon: 'UserGroupIcon' }),
+        expect.objectContaining({ name: "Family", color: "#F97316", icon: "UserGroupIcon" }),
       ]),
     );
 
@@ -111,20 +111,20 @@ describe('transactions service', () => {
     expect(appended.tags.map((tag) => tag.id)).toEqual([tripTag.id, familyTag.id, annualTag.id]);
   });
 
-  it('hides adjustments from the global feed but keeps them in account history', async () => {
+  it("hides adjustments from the global feed but keeps them in account history", async () => {
     const context = await createAuthenticatedContext();
     const account = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Opening Balance Account', type: 'cash' }),
+      buildAccountInput({ name: "Opening Balance Account", type: "cash" }),
     );
 
     const adjustment = await transactionsService.createTransaction(context.householdContext, {
-      type: 'adjustment',
-      description: 'Opening balance',
+      type: "adjustment",
+      description: "Opening balance",
       balance: 50_000,
       accountId: account.id,
-      purchaseDate: new Date('2026-08-01T00:00:00.000Z'),
-      postedDate: new Date('2026-08-01T00:00:00.000Z'),
+      purchaseDate: new Date("2026-08-01T00:00:00.000Z"),
+      postedDate: new Date("2026-08-01T00:00:00.000Z"),
     });
 
     const globalFeed = await transactionsService.listTransactions(
@@ -139,55 +139,55 @@ describe('transactions service', () => {
       listAccountTransactionsQuerySchema.parse({}),
     );
     expect(accountFeed.data).toEqual([
-      expect.objectContaining({ id: adjustment.id, originType: 'adjustment' }),
+      expect.objectContaining({ id: adjustment.id, originType: "adjustment" }),
     ]);
   });
 
-  it('treats uncategorized as an expense and income category filter, never a transfer filter', async () => {
+  it("treats uncategorized as an expense and income category filter, never a transfer filter", async () => {
     const context = await createAuthenticatedContext();
     const checking = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Category Filter Checking', type: 'cash' }),
+      buildAccountInput({ name: "Category Filter Checking", type: "cash" }),
     );
     const savings = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Category Filter Savings', type: 'cash' }),
+      buildAccountInput({ name: "Category Filter Savings", type: "cash" }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Categorized Food', type: 'expense' }),
+      buildCategoryInput({ name: "Categorized Food", type: "expense" }),
     );
 
     const categorized = await transactionsService.createTransaction(context.householdContext, {
-      type: 'expense',
-      description: 'Categorized expense',
+      type: "expense",
+      description: "Categorized expense",
       amount: 2_000,
-      currencyCode: 'BRL',
-      paymentMethodCode: 'pix',
+      currencyCode: "BRL",
+      paymentMethodCode: "pix",
       accountId: checking.id,
       categoryId: category.id,
-      purchaseDate: new Date('2026-08-02T00:00:00.000Z'),
-      postedDate: new Date('2026-08-02T00:00:00.000Z'),
+      purchaseDate: new Date("2026-08-02T00:00:00.000Z"),
+      postedDate: new Date("2026-08-02T00:00:00.000Z"),
     });
     const uncategorized = await transactionsService.createTransaction(context.householdContext, {
-      type: 'expense',
-      description: 'Uncategorized expense',
+      type: "expense",
+      description: "Uncategorized expense",
       amount: 3_000,
-      currencyCode: 'BRL',
-      paymentMethodCode: 'pix',
+      currencyCode: "BRL",
+      paymentMethodCode: "pix",
       accountId: checking.id,
-      purchaseDate: new Date('2026-08-03T00:00:00.000Z'),
-      postedDate: new Date('2026-08-03T00:00:00.000Z'),
+      purchaseDate: new Date("2026-08-03T00:00:00.000Z"),
+      postedDate: new Date("2026-08-03T00:00:00.000Z"),
     });
     const transfer = await transactionsService.createTransaction(context.householdContext, {
-      type: 'transfer',
-      description: 'Uncategorized transfer',
+      type: "transfer",
+      description: "Uncategorized transfer",
       fromAccountId: checking.id,
       toAccountId: savings.id,
       fromAmount: 4_000,
       toAmount: 4_000,
-      purchaseDate: new Date('2026-08-04T00:00:00.000Z'),
-      postedDate: new Date('2026-08-04T00:00:00.000Z'),
+      purchaseDate: new Date("2026-08-04T00:00:00.000Z"),
+      postedDate: new Date("2026-08-04T00:00:00.000Z"),
     });
 
     const filtered = await transactionsService.listTransactions(
@@ -195,8 +195,8 @@ describe('transactions service', () => {
       buildListQuery({
         categoryIds: [category.id],
         uncategorized: true,
-        dateFrom: '2026-08-01',
-        dateTo: '2026-08-31',
+        dateFrom: "2026-08-01",
+        dateTo: "2026-08-31",
       }),
     );
 
@@ -207,238 +207,238 @@ describe('transactions service', () => {
     expect(filtered.data).toHaveLength(2);
   });
 
-  it('rejects tag ids outside the active household', async () => {
+  it("rejects tag ids outside the active household", async () => {
     const context = await createAuthenticatedContext();
     const otherContext = await createAuthenticatedContext();
 
     const account = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
 
     const category = await categoriesService.createCategory(
       context.householdContext,
       buildCategoryInput({
-        name: 'Travel',
-        type: 'expense',
+        name: "Travel",
+        type: "expense",
       }),
     );
 
     const foreignTag = await tagsService.createTag(
       otherContext.householdContext,
-      buildTagInput({ name: 'Foreign' }),
+      buildTagInput({ name: "Foreign" }),
     );
 
     await expect(
       transactionsService.createTransaction(context.householdContext, {
-        type: 'expense',
-        description: 'Bus ticket to Gramado',
+        type: "expense",
+        description: "Bus ticket to Gramado",
         amount: 25_000,
-        currencyCode: 'BRL',
-        paymentMethodCode: 'pix',
+        currencyCode: "BRL",
+        paymentMethodCode: "pix",
         accountId: account.id,
         categoryId: category.id,
         tagIds: [foreignTag.id],
-        purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-        postedDate: new Date('2026-03-24T00:00:00.000Z'),
+        purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+        postedDate: new Date("2026-03-24T00:00:00.000Z"),
       }),
     ).rejects.toThrow(NotFoundError);
   });
 
-  it('rejects accounts outside the active household', async () => {
+  it("rejects accounts outside the active household", async () => {
     const context = await createAuthenticatedContext();
     const otherContext = await createAuthenticatedContext();
 
     const foreignAccount = await accountsService.createAccount(
       otherContext.householdContext,
       buildAccountInput({
-        name: 'Foreign Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "Foreign Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
 
     const category = await categoriesService.createCategory(
       context.householdContext,
       buildCategoryInput({
-        name: 'Travel',
-        type: 'expense',
+        name: "Travel",
+        type: "expense",
       }),
     );
 
     await expect(
       transactionsService.createTransaction(context.householdContext, {
-        type: 'expense',
-        description: 'Bus ticket to Gramado',
+        type: "expense",
+        description: "Bus ticket to Gramado",
         amount: 25_000,
-        currencyCode: 'BRL',
-        paymentMethodCode: 'pix',
+        currencyCode: "BRL",
+        paymentMethodCode: "pix",
         accountId: foreignAccount.id,
         categoryId: category.id,
-        purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-        postedDate: new Date('2026-03-24T00:00:00.000Z'),
+        purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+        postedDate: new Date("2026-03-24T00:00:00.000Z"),
       }),
     ).rejects.toThrow(NotFoundError);
   });
 
-  it('rejects categories with the wrong transaction type', async () => {
+  it("rejects categories with the wrong transaction type", async () => {
     const context = await createAuthenticatedContext();
 
     const account = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
 
     const incomeCategory = await categoriesService.createCategory(
       context.householdContext,
       buildCategoryInput({
-        name: 'Salary',
-        type: 'income',
+        name: "Salary",
+        type: "income",
       }),
     );
 
     await expect(
       transactionsService.createTransaction(context.householdContext, {
-        type: 'expense',
-        description: 'Bus ticket to Gramado',
+        type: "expense",
+        description: "Bus ticket to Gramado",
         amount: 25_000,
-        currencyCode: 'BRL',
-        paymentMethodCode: 'pix',
+        currencyCode: "BRL",
+        paymentMethodCode: "pix",
         accountId: account.id,
         categoryId: incomeCategory.id,
-        purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-        postedDate: new Date('2026-03-24T00:00:00.000Z'),
+        purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+        postedDate: new Date("2026-03-24T00:00:00.000Z"),
       }),
     ).rejects.toThrow(ValidationError);
   });
 
-  it('creates a transaction with a household custom payment method', async () => {
+  it("creates a transaction with a household custom payment method", async () => {
     const context = await createAuthenticatedContext();
 
     const account = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
       buildCategoryInput({
-        name: 'Food',
-        type: 'expense',
+        name: "Food",
+        type: "expense",
       }),
     );
     await paymentMethodsService.createPaymentMethod(context.householdContext, {
-      name: 'Meal Voucher',
-      code: 'meal_voucher',
+      name: "Meal Voucher",
+      code: "meal_voucher",
     });
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'expense',
-      description: 'Lunch',
+      type: "expense",
+      description: "Lunch",
       amount: 4_500,
-      currencyCode: 'BRL',
-      paymentMethodCode: 'meal_voucher',
+      currencyCode: "BRL",
+      paymentMethodCode: "meal_voucher",
       accountId: account.id,
       categoryId: category.id,
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
 
-    expect(transaction.paymentMethodCode).toBe('meal_voucher');
-    expect(transaction.paymentMethodName).toBe('Meal Voucher');
-    expect(transaction.paymentMethodScope).toBe('household');
+    expect(transaction.paymentMethodCode).toBe("meal_voucher");
+    expect(transaction.paymentMethodName).toBe("Meal Voucher");
+    expect(transaction.paymentMethodScope).toBe("household");
     expect(transaction.paymentMethodTranslationKey).toBeNull();
   });
 
-  it('prefers currency-specific custom payment methods over global custom methods', async () => {
+  it("prefers currency-specific custom payment methods over global custom methods", async () => {
     const context = await createAuthenticatedContext();
 
     const account = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
       buildCategoryInput({
-        name: 'Food',
-        type: 'expense',
+        name: "Food",
+        type: "expense",
       }),
     );
     await paymentMethodsService.createPaymentMethod(context.householdContext, {
-      name: 'Global Voucher',
-      code: 'voucher',
+      name: "Global Voucher",
+      code: "voucher",
     });
     await paymentMethodsService.createPaymentMethod(context.householdContext, {
-      name: 'BRL Voucher',
-      code: 'voucher',
-      currencyCode: 'BRL',
+      name: "BRL Voucher",
+      code: "voucher",
+      currencyCode: "BRL",
     });
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'expense',
-      description: 'Lunch',
+      type: "expense",
+      description: "Lunch",
       amount: 4_500,
-      currencyCode: 'BRL',
-      paymentMethodCode: 'voucher',
+      currencyCode: "BRL",
+      paymentMethodCode: "voucher",
       accountId: account.id,
       categoryId: category.id,
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
 
-    expect(transaction.paymentMethodName).toBe('BRL Voucher');
+    expect(transaction.paymentMethodName).toBe("BRL Voucher");
   });
 
-  it('creates an income transaction and updates the account balance', async () => {
+  it("creates an income transaction and updates the account balance", async () => {
     const context = await createAuthenticatedContext();
 
     const account = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
       buildCategoryInput({
-        name: 'Salary',
-        type: 'income',
+        name: "Salary",
+        type: "income",
       }),
     );
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'income',
-      description: 'Salary',
+      type: "income",
+      description: "Salary",
       amount: 150_000,
-      currencyCode: 'BRL',
-      paymentMethodCode: 'pix',
+      currencyCode: "BRL",
+      paymentMethodCode: "pix",
       accountId: account.id,
       categoryId: category.id,
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
 
     expect(transaction).toMatchObject({
-      type: 'income',
+      type: "income",
       amount: 150_000,
-      currencyCode: 'BRL',
+      currencyCode: "BRL",
       accountId: account.id,
       categoryId: category.id,
     });
@@ -449,48 +449,48 @@ describe('transactions service', () => {
     });
   });
 
-  it('lists only transactions from the active household', async () => {
+  it("lists only transactions from the active household", async () => {
     const context = await createAuthenticatedContext();
     const otherContext = await createAuthenticatedContext();
 
     const account = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Checking", type: "cash", currencyCode: "BRL" }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Food', type: 'expense' }),
+      buildCategoryInput({ name: "Food", type: "expense" }),
     );
     const otherAccount = await accountsService.createAccount(
       otherContext.householdContext,
-      buildAccountInput({ name: 'Other Checking', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Other Checking", type: "cash", currencyCode: "BRL" }),
     );
     const otherCategory = await categoriesService.createCategory(
       otherContext.householdContext,
-      buildCategoryInput({ name: 'Other Food', type: 'expense' }),
+      buildCategoryInput({ name: "Other Food", type: "expense" }),
     );
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'expense',
-      description: 'Lunch',
+      type: "expense",
+      description: "Lunch",
       amount: 4_500,
-      currencyCode: 'BRL',
-      paymentMethodCode: 'pix',
+      currencyCode: "BRL",
+      paymentMethodCode: "pix",
       accountId: account.id,
       categoryId: category.id,
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
     await transactionsService.createTransaction(otherContext.householdContext, {
-      type: 'expense',
-      description: 'Other lunch',
+      type: "expense",
+      description: "Other lunch",
       amount: 9_000,
-      currencyCode: 'BRL',
-      paymentMethodCode: 'pix',
+      currencyCode: "BRL",
+      paymentMethodCode: "pix",
       accountId: otherAccount.id,
       categoryId: otherCategory.id,
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
 
     await expect(
@@ -500,8 +500,8 @@ describe('transactions service', () => {
         expect.objectContaining({
           id: transaction.id,
           rowId: transaction.id,
-          rowKind: 'transaction',
-          description: 'Lunch',
+          rowKind: "transaction",
+          description: "Lunch",
         }),
       ],
       meta: {
@@ -513,15 +513,15 @@ describe('transactions service', () => {
     });
   });
 
-  it('projects credit card purchases as installment rows and payments as payment rows', async () => {
+  it("projects credit card purchases as installment rows and payments as payment rows", async () => {
     const context = await createAuthenticatedContext();
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Electronics', type: 'expense' }),
+      buildCategoryInput({ name: "Electronics", type: "expense" }),
     );
     const sourceAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Checking", type: "cash", currencyCode: "BRL" }),
     );
     await createBalanceEntryForAccount({
       householdId: context.household.id,
@@ -532,7 +532,7 @@ describe('transactions service', () => {
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
-        name: 'Visa Gold',
+        name: "Visa Gold",
         closingDay: 25,
         dueDay: 5,
         ownerAccountId: sourceAccount.id,
@@ -540,24 +540,24 @@ describe('transactions service', () => {
     );
     const tag = await tagsService.createTag(
       context.householdContext,
-      buildTagInput({ name: 'Living room' }),
+      buildTagInput({ name: "Living room" }),
     );
 
     const purchase = await creditCardsService.createPurchase(context.householdContext, card.id, {
-      description: 'TV',
+      description: "TV",
       amount: 120_000,
       categoryId: category.id,
-      purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
-      postedDate: new Date('2026-04-29T00:00:00.000Z'),
+      purchaseDate: new Date("2026-04-20T00:00:00.000Z"),
+      postedDate: new Date("2026-04-29T00:00:00.000Z"),
       installmentCount: 3,
       tagIds: [tag.id],
     });
     const payment = await creditCardsService.createPayment(context.householdContext, card.id, {
       amount: 40_000,
       fromAccountId: sourceAccount.id,
-      paymentDate: new Date('2026-06-01T00:00:00.000Z'),
-      postedDate: new Date('2026-06-01T00:00:00.000Z'),
-      description: 'Visa payment',
+      paymentDate: new Date("2026-06-01T00:00:00.000Z"),
+      postedDate: new Date("2026-06-01T00:00:00.000Z"),
+      description: "Visa payment",
     });
 
     const feed = await transactionsService.listTransactions(
@@ -570,45 +570,45 @@ describe('transactions service', () => {
         expect.objectContaining({
           id: payment.transactionId,
           rowId: payment.transactionId,
-          rowKind: 'credit_card_payment',
-          originType: 'credit_card_payment',
+          rowKind: "credit_card_payment",
+          originType: "credit_card_payment",
           creditCardId: card.id,
           paymentId: payment.paymentId,
         }),
         expect.objectContaining({
           id: purchase.transactionId,
           rowId: purchase.installments[0].installmentId,
-          rowKind: 'credit_card_installment',
-          originType: 'credit_card_installment',
+          rowKind: "credit_card_installment",
+          originType: "credit_card_installment",
           creditCardId: card.id,
           installmentNumber: 1,
           installmentCount: 3,
-          postedDate: '2026-05-25',
+          postedDate: "2026-05-25",
           includeInBudget: true,
           tags: [expect.objectContaining({ id: tag.id })],
         }),
         expect.objectContaining({
           rowId: purchase.installments[1].installmentId,
-          rowKind: 'credit_card_installment',
+          rowKind: "credit_card_installment",
           installmentNumber: 2,
-          postedDate: '2026-06-25',
+          postedDate: "2026-06-25",
         }),
         expect.objectContaining({
           rowId: purchase.installments[2].installmentId,
-          rowKind: 'credit_card_installment',
+          rowKind: "credit_card_installment",
           installmentNumber: 3,
-          postedDate: '2026-07-25',
+          postedDate: "2026-07-25",
         }),
       ]),
     );
     expect(
-      feed.data.find((row) => row.id === purchase.transactionId && row.rowKind === 'transaction'),
+      feed.data.find((row) => row.id === purchase.transactionId && row.rowKind === "transaction"),
     ).toBeUndefined();
 
     const filteredFeed = await transactionsService.listTransactions(
       context.householdContext,
       buildListQuery({
-        originTypes: ['credit_card_installment'],
+        originTypes: ["credit_card_installment"],
         creditCardIds: [card.id],
         tagIds: [tag.id],
         includeInBudget: true,
@@ -626,16 +626,16 @@ describe('transactions service', () => {
     );
   });
 
-  it('filters credit card installments by posted billing date, not creation date', async () => {
+  it("filters credit card installments by posted billing date, not creation date", async () => {
     const context = await createAuthenticatedContext();
     const ownerAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Date Filter Owner', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Date Filter Owner", type: "cash", currencyCode: "BRL" }),
     );
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
-        name: 'Date Filter Card',
+        name: "Date Filter Card",
         closingDay: 25,
         dueDay: 5,
         ownerAccountId: ownerAccount.id,
@@ -643,44 +643,44 @@ describe('transactions service', () => {
     );
 
     await creditCardsService.createPurchase(context.householdContext, card.id, {
-      description: 'Future installments',
+      description: "Future installments",
       amount: 500,
-      purchaseDate: new Date('2026-08-05T00:00:00.000Z'),
-      postedDate: new Date('2026-08-05T00:00:00.000Z'),
+      purchaseDate: new Date("2026-08-05T00:00:00.000Z"),
+      postedDate: new Date("2026-08-05T00:00:00.000Z"),
       installmentCount: 5,
     });
 
     const filteredFeed = await transactionsService.listTransactions(
       context.householdContext,
-      buildListQuery({ dateFrom: '2026-08-01', dateTo: '2026-08-05' }),
+      buildListQuery({ dateFrom: "2026-08-01", dateTo: "2026-08-05" }),
     );
 
     expect(filteredFeed.data).toEqual([]);
   });
 
-  it('creates adjustment transactions by setting the balance at the start of the posted date', async () => {
+  it("creates adjustment transactions by setting the balance at the start of the posted date", async () => {
     const context = await createAuthenticatedContext();
 
     const account = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
       buildCategoryInput({
-        name: 'Food',
-        type: 'expense',
+        name: "Food",
+        type: "expense",
       }),
     );
-    const juneFirst = new Date('2026-06-01T00:00:00.000Z');
+    const juneFirst = new Date("2026-06-01T00:00:00.000Z");
 
     await transactionsService.createTransaction(context.householdContext, {
-      type: 'adjustment',
-      description: 'Opening balance',
+      type: "adjustment",
+      description: "Opening balance",
       balance: 100_000,
       accountId: account.id,
       purchaseDate: juneFirst,
@@ -689,11 +689,11 @@ describe('transactions service', () => {
 
     for (const amount of [5_000, 5_000, 10_000]) {
       await transactionsService.createTransaction(context.householdContext, {
-        type: 'expense',
+        type: "expense",
         description: `Purchase ${amount}`,
         amount,
-        currencyCode: 'BRL',
-        paymentMethodCode: 'pix',
+        currencyCode: "BRL",
+        paymentMethodCode: "pix",
         accountId: account.id,
         categoryId: category.id,
         purchaseDate: juneFirst,
@@ -708,8 +708,8 @@ describe('transactions service', () => {
     });
 
     const adjustment = await transactionsService.createTransaction(context.householdContext, {
-      type: 'adjustment',
-      description: 'Bank statement readjustment',
+      type: "adjustment",
+      description: "Bank statement readjustment",
       balance: 70_000,
       accountId: account.id,
       purchaseDate: juneFirst,
@@ -724,25 +724,25 @@ describe('transactions service', () => {
     });
   });
 
-  it('allows adjustment transactions to set negative balances', async () => {
+  it("allows adjustment transactions to set negative balances", async () => {
     const context = await createAuthenticatedContext();
 
     const account = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
 
     await transactionsService.createTransaction(context.householdContext, {
-      type: 'adjustment',
-      description: 'Overdrawn balance',
+      type: "adjustment",
+      description: "Overdrawn balance",
       balance: -25_000,
       accountId: account.id,
-      purchaseDate: new Date('2026-06-01T00:00:00.000Z'),
-      postedDate: new Date('2026-06-01T00:00:00.000Z'),
+      purchaseDate: new Date("2026-06-01T00:00:00.000Z"),
+      postedDate: new Date("2026-06-01T00:00:00.000Z"),
     });
 
     await expect(
@@ -752,25 +752,25 @@ describe('transactions service', () => {
     });
   });
 
-  it('sets liability adjustment balances using the displayed liability amount', async () => {
+  it("sets liability adjustment balances using the displayed liability amount", async () => {
     const context = await createAuthenticatedContext();
 
     const account = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'Loan',
-        type: 'loan',
-        currencyCode: 'BRL',
+        name: "Loan",
+        type: "loan",
+        currencyCode: "BRL",
       }),
     );
 
     await transactionsService.createTransaction(context.householdContext, {
-      type: 'adjustment',
-      description: 'Loan balance',
+      type: "adjustment",
+      description: "Loan balance",
       balance: 120_000,
       accountId: account.id,
-      purchaseDate: new Date('2026-06-01T00:00:00.000Z'),
-      postedDate: new Date('2026-06-01T00:00:00.000Z'),
+      purchaseDate: new Date("2026-06-01T00:00:00.000Z"),
+      postedDate: new Date("2026-06-01T00:00:00.000Z"),
     });
 
     await expect(
@@ -780,41 +780,41 @@ describe('transactions service', () => {
     });
   });
 
-  it('creates cross-currency transfers with manual source and destination amounts', async () => {
+  it("creates cross-currency transfers with manual source and destination amounts", async () => {
     const context = await createAuthenticatedContext();
 
     const usdAccount = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'USD Checking',
-        type: 'cash',
-        currencyCode: 'USD',
+        name: "USD Checking",
+        type: "cash",
+        currencyCode: "USD",
       }),
     );
     const brlAccount = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'BRL Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "BRL Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'transfer',
-      description: 'International transfer',
+      type: "transfer",
+      description: "International transfer",
       fromAmount: 10_000,
       toAmount: 55_000,
       fromAccountId: usdAccount.id,
       toAccountId: brlAccount.id,
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
 
     expect(transaction.amount).toBe(10_000);
-    expect(transaction.currencyCode).toBe('USD');
+    expect(transaction.currencyCode).toBe("USD");
     expect(transaction.toAmount).toBe(55_000);
-    expect(transaction.toCurrencyCode).toBe('BRL');
+    expect(transaction.toCurrencyCode).toBe("BRL");
 
     const entries = await db
       .select({
@@ -833,52 +833,52 @@ describe('transactions service', () => {
       expect.arrayContaining([
         expect.objectContaining({
           amount: -10_000,
-          currencyCode: 'USD',
-          ownerType: 'account',
+          currencyCode: "USD",
+          ownerType: "account",
           ownerId: usdAccount.id,
         }),
         expect.objectContaining({
           amount: 10_000,
-          currencyCode: 'USD',
-          ownerType: 'system',
-          systemKey: 'system:offshore-transfer:USD',
+          currencyCode: "USD",
+          ownerType: "system",
+          systemKey: "system:offshore-transfer:USD",
         }),
         expect.objectContaining({
           amount: 55_000,
-          currencyCode: 'BRL',
-          ownerType: 'account',
+          currencyCode: "BRL",
+          ownerType: "account",
           ownerId: brlAccount.id,
         }),
         expect.objectContaining({
           amount: -55_000,
-          currencyCode: 'BRL',
-          ownerType: 'system',
-          systemKey: 'system:offshore-transfer:BRL',
+          currencyCode: "BRL",
+          ownerType: "system",
+          systemKey: "system:offshore-transfer:BRL",
         }),
       ]),
     );
   });
 
-  it('creates same-currency transfers with only account entries', async () => {
+  it("creates same-currency transfers with only account entries", async () => {
     const context = await createAuthenticatedContext();
 
     const fromAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Checking", type: "cash", currencyCode: "BRL" }),
     );
     const toAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Savings', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Savings", type: "cash", currencyCode: "BRL" }),
     );
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'transfer',
-      description: 'Move to savings',
+      type: "transfer",
+      description: "Move to savings",
       fromAmount: 10_000,
       fromAccountId: fromAccount.id,
       toAccountId: toAccount.id,
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
 
     const entries = await db
@@ -893,52 +893,52 @@ describe('transactions service', () => {
 
     expect(transaction).toMatchObject({
       amount: 10_000,
-      currencyCode: 'BRL',
+      currencyCode: "BRL",
       toAmount: 10_000,
-      toCurrencyCode: 'BRL',
+      toCurrencyCode: "BRL",
     });
     expect(entries).toHaveLength(2);
     expect(entries).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           amount: -10_000,
-          ownerType: 'account',
+          ownerType: "account",
           ownerId: fromAccount.id,
         }),
         expect.objectContaining({
           amount: 10_000,
-          ownerType: 'account',
+          ownerType: "account",
           ownerId: toAccount.id,
         }),
       ]),
     );
   });
 
-  it('calculates the missing cross-currency transfer amount with FX', async () => {
+  it("calculates the missing cross-currency transfer amount with FX", async () => {
     const context = await createAuthenticatedContext();
-    vi.spyOn(fxService, 'convertAmount').mockResolvedValue(55_000);
+    vi.spyOn(fxService, "convertAmount").mockResolvedValue(55_000);
 
     const usdAccount = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'USD Checking',
-        type: 'cash',
-        currencyCode: 'USD',
+        name: "USD Checking",
+        type: "cash",
+        currencyCode: "USD",
       }),
     );
     const brlAccount = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'BRL Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "BRL Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
-    const postedDate = new Date('2026-03-24T00:00:00.000Z');
+    const postedDate = new Date("2026-03-24T00:00:00.000Z");
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'transfer',
-      description: 'International transfer',
+      type: "transfer",
+      description: "International transfer",
       fromAmount: 10_000,
       fromAccountId: usdAccount.id,
       toAccountId: brlAccount.id,
@@ -948,41 +948,41 @@ describe('transactions service', () => {
 
     expect(fxService.convertAmount).toHaveBeenCalledWith({
       amount: 10_000,
-      fromCurrencyCode: 'USD',
-      toCurrencyCode: 'BRL',
+      fromCurrencyCode: "USD",
+      toCurrencyCode: "BRL",
       date: postedDate,
     });
     expect(transaction.amount).toBe(10_000);
-    expect(transaction.currencyCode).toBe('USD');
+    expect(transaction.currencyCode).toBe("USD");
     expect(transaction.toAmount).toBe(55_000);
-    expect(transaction.toCurrencyCode).toBe('BRL');
+    expect(transaction.toCurrencyCode).toBe("BRL");
   });
 
-  it('calculates the missing source transfer amount with reverse FX', async () => {
+  it("calculates the missing source transfer amount with reverse FX", async () => {
     const context = await createAuthenticatedContext();
-    vi.spyOn(fxService, 'convertAmount').mockResolvedValue(10_000);
+    vi.spyOn(fxService, "convertAmount").mockResolvedValue(10_000);
 
     const usdAccount = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'USD Checking',
-        type: 'cash',
-        currencyCode: 'USD',
+        name: "USD Checking",
+        type: "cash",
+        currencyCode: "USD",
       }),
     );
     const brlAccount = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'BRL Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "BRL Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
-    const postedDate = new Date('2026-03-24T00:00:00.000Z');
+    const postedDate = new Date("2026-03-24T00:00:00.000Z");
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'transfer',
-      description: 'International transfer',
+      type: "transfer",
+      description: "International transfer",
       toAmount: 55_000,
       fromAccountId: usdAccount.id,
       toAccountId: brlAccount.id,
@@ -992,62 +992,62 @@ describe('transactions service', () => {
 
     expect(fxService.convertAmount).toHaveBeenCalledWith({
       amount: 55_000,
-      fromCurrencyCode: 'BRL',
-      toCurrencyCode: 'USD',
+      fromCurrencyCode: "BRL",
+      toCurrencyCode: "USD",
       date: postedDate,
     });
     expect(transaction.amount).toBe(10_000);
-    expect(transaction.currencyCode).toBe('USD');
+    expect(transaction.currencyCode).toBe("USD");
     expect(transaction.toAmount).toBe(55_000);
-    expect(transaction.toCurrencyCode).toBe('BRL');
+    expect(transaction.toCurrencyCode).toBe("BRL");
   });
 
-  it('filters, summarizes, sorts, and paginates the merged feed API-side', async () => {
+  it("filters, summarizes, sorts, and paginates the merged feed API-side", async () => {
     const context = await createAuthenticatedContext();
     const account = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Checking", type: "cash", currencyCode: "BRL" }),
     );
     const expenseCategory = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Food', type: 'expense' }),
+      buildCategoryInput({ name: "Food", type: "expense" }),
     );
     const incomeCategory = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Salary', type: 'income' }),
+      buildCategoryInput({ name: "Salary", type: "income" }),
     );
     const merchant = await merchantsService.createMerchant(
       context.householdContext,
-      buildMerchantInput({ name: 'Central Cafe' }),
+      buildMerchantInput({ name: "Central Cafe" }),
     );
     const tag = await tagsService.createTag(
       context.householdContext,
-      buildTagInput({ name: 'Work Lunch' }),
+      buildTagInput({ name: "Work Lunch" }),
     );
 
     const lunch = await transactionsService.createTransaction(context.householdContext, {
-      type: 'expense',
-      description: 'Lunch at Central',
+      type: "expense",
+      description: "Lunch at Central",
       amount: 4_500,
-      currencyCode: 'BRL',
-      paymentMethodCode: 'pix',
+      currencyCode: "BRL",
+      paymentMethodCode: "pix",
       accountId: account.id,
       categoryId: expenseCategory.id,
       merchantId: merchant.id,
       tagIds: [tag.id],
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
     await transactionsService.createTransaction(context.householdContext, {
-      type: 'income',
-      description: 'Monthly salary',
+      type: "income",
+      description: "Monthly salary",
       amount: 100_000,
-      currencyCode: 'BRL',
-      paymentMethodCode: 'pix',
+      currencyCode: "BRL",
+      paymentMethodCode: "pix",
       accountId: account.id,
       categoryId: incomeCategory.id,
-      purchaseDate: new Date('2026-03-25T00:00:00.000Z'),
-      postedDate: new Date('2026-03-25T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-25T00:00:00.000Z"),
+      postedDate: new Date("2026-03-25T00:00:00.000Z"),
     });
 
     const paginated = await transactionsService.listTransactions(
@@ -1055,8 +1055,8 @@ describe('transactions service', () => {
       buildListQuery({
         page: 1,
         perPage: 1,
-        sort: 'amount',
-        sortDirection: 'asc',
+        sort: "amount",
+        sortDirection: "asc",
       }),
     );
 
@@ -1077,18 +1077,18 @@ describe('transactions service', () => {
     const filtered = await transactionsService.listTransactions(
       context.householdContext,
       buildListQuery({
-        search: 'central',
-        dateFrom: '2026-03-24',
-        dateTo: '2026-03-24',
-        purchaseDateFrom: '2026-03-24',
-        purchaseDateTo: '2026-03-24',
-        originTypes: ['expense', 'income'],
+        search: "central",
+        dateFrom: "2026-03-24",
+        dateTo: "2026-03-24",
+        purchaseDateFrom: "2026-03-24",
+        purchaseDateTo: "2026-03-24",
+        originTypes: ["expense", "income"],
         accountIds: [account.id],
         categoryIds: [expenseCategory.id, incomeCategory.id],
         merchantIds: [merchant.id],
         tagIds: [tag.id],
-        paymentMethodCodes: ['pix'],
-        currencyCodes: ['BRL'],
+        paymentMethodCodes: ["pix"],
+        currencyCodes: ["BRL"],
         amountMin: 4_500,
         amountMax: 4_500,
         includeInBudget: true,
@@ -1098,7 +1098,7 @@ describe('transactions service', () => {
     expect(filtered.data).toEqual([
       expect.objectContaining({
         id: lunch.id,
-        description: 'Lunch at Central',
+        description: "Lunch at Central",
       }),
     ]);
     expect(filtered.meta.summary).toMatchObject({
@@ -1108,35 +1108,35 @@ describe('transactions service', () => {
     });
   });
 
-  it('updates expense amount and account entries instead of only metadata', async () => {
+  it("updates expense amount and account entries instead of only metadata", async () => {
     const context = await createAuthenticatedContext();
     const checking = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Checking", type: "cash", currencyCode: "BRL" }),
     );
     const cash = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Cash', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Cash", type: "cash", currencyCode: "BRL" }),
     );
     const food = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Food', type: 'expense' }),
+      buildCategoryInput({ name: "Food", type: "expense" }),
     );
     const travel = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Travel', type: 'expense' }),
+      buildCategoryInput({ name: "Travel", type: "expense" }),
     );
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'expense',
-      description: 'Lunch',
+      type: "expense",
+      description: "Lunch",
       amount: 4_500,
-      currencyCode: 'BRL',
-      paymentMethodCode: 'pix',
+      currencyCode: "BRL",
+      paymentMethodCode: "pix",
       accountId: checking.id,
       categoryId: food.id,
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
 
     const updated = await transactionsService.updateTransaction(
@@ -1146,7 +1146,7 @@ describe('transactions service', () => {
         accountId: cash.id,
         amount: 7_500,
         categoryId: travel.id,
-        postedDate: new Date('2026-04-01T00:00:00.000Z'),
+        postedDate: new Date("2026-04-01T00:00:00.000Z"),
       },
     );
 
@@ -1154,7 +1154,7 @@ describe('transactions service', () => {
       accountId: cash.id,
       amount: 7_500,
       categoryId: travel.id,
-      postedDate: '2026-04-01',
+      postedDate: "2026-04-01",
     });
     await expect(
       accountsService.getAccountDetails(context.householdContext, checking.id),
@@ -1164,29 +1164,29 @@ describe('transactions service', () => {
     ).resolves.toMatchObject({ balance: -7_500 });
   });
 
-  it('updates transfer accounts and amounts by rebuilding transfer entries', async () => {
+  it("updates transfer accounts and amounts by rebuilding transfer entries", async () => {
     const context = await createAuthenticatedContext();
     const checking = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Checking", type: "cash", currencyCode: "BRL" }),
     );
     const savings = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Savings', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Savings", type: "cash", currencyCode: "BRL" }),
     );
     const reserve = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Reserve', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Reserve", type: "cash", currencyCode: "BRL" }),
     );
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'transfer',
-      description: 'Move money',
+      type: "transfer",
+      description: "Move money",
       fromAmount: 10_000,
       fromAccountId: checking.id,
       toAccountId: savings.id,
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
 
     const updated = await transactionsService.updateTransaction(
@@ -1215,112 +1215,112 @@ describe('transactions service', () => {
     ).resolves.toMatchObject({ balance: 20_000 });
   });
 
-  it('updates expense transaction metadata and tags', async () => {
+  it("updates expense transaction metadata and tags", async () => {
     const context = await createAuthenticatedContext();
 
     const account = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
 
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Travel', type: 'expense' }),
+      buildCategoryInput({ name: "Travel", type: "expense" }),
     );
     const nextCategory = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Food', type: 'expense' }),
+      buildCategoryInput({ name: "Food", type: "expense" }),
     );
     const merchant = await merchantsService.createMerchant(
       context.householdContext,
-      buildMerchantInput({ name: 'Cafe Central' }),
+      buildMerchantInput({ name: "Cafe Central" }),
     );
 
     await paymentMethodsService.createPaymentMethod(context.householdContext, {
-      name: 'Meal Voucher',
-      code: 'meal_voucher',
+      name: "Meal Voucher",
+      code: "meal_voucher",
     });
 
     const initialTag = await tagsService.createTag(
       context.householdContext,
-      buildTagInput({ name: 'Initial', color: '#16A34A', icon: 'Tag01Icon' }),
+      buildTagInput({ name: "Initial", color: "#16A34A", icon: "Tag01Icon" }),
     );
     const updatedTagOne = await tagsService.createTag(
       context.householdContext,
-      buildTagInput({ name: 'Updated 1', color: '#2563EB', icon: 'Tag01Icon' }),
+      buildTagInput({ name: "Updated 1", color: "#2563EB", icon: "Tag01Icon" }),
     );
     const updatedTagTwo = await tagsService.createTag(
       context.householdContext,
-      buildTagInput({ name: 'Updated 2', color: '#F97316', icon: 'Tag01Icon' }),
+      buildTagInput({ name: "Updated 2", color: "#F97316", icon: "Tag01Icon" }),
     );
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'expense',
-      description: 'Lunch',
+      type: "expense",
+      description: "Lunch",
       amount: 4_500,
-      currencyCode: 'BRL',
-      paymentMethodCode: 'pix',
+      currencyCode: "BRL",
+      paymentMethodCode: "pix",
       accountId: account.id,
       categoryId: category.id,
       tagIds: [initialTag.id],
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
 
     const updated = await transactionsService.updateTransaction(
       context.householdContext,
       transaction.id,
       {
-        description: 'Updated lunch',
-        purchaseDate: new Date('2026-04-01T00:00:00.000Z'),
-        postedDate: new Date('2026-04-02T00:00:00.000Z'),
+        description: "Updated lunch",
+        purchaseDate: new Date("2026-04-01T00:00:00.000Z"),
+        postedDate: new Date("2026-04-02T00:00:00.000Z"),
         includeInBudget: false,
         categoryId: nextCategory.id,
         merchantId: merchant.id,
-        paymentMethodCode: 'meal_voucher',
+        paymentMethodCode: "meal_voucher",
         tagIds: [updatedTagOne.id, updatedTagTwo.id],
       },
     );
 
-    expect(updated.description).toBe('Updated lunch');
+    expect(updated.description).toBe("Updated lunch");
     expect(updated.categoryId).toBe(nextCategory.id);
     expect(updated.merchantId).toBe(merchant.id);
-    expect(updated.paymentMethodCode).toBe('meal_voucher');
+    expect(updated.paymentMethodCode).toBe("meal_voucher");
     expect(updated.includeInBudget).toBe(false);
-    expect(updated.purchaseDate).toBe('2026-04-01');
-    expect(updated.postedDate).toBe('2026-04-02');
+    expect(updated.purchaseDate).toBe("2026-04-01");
+    expect(updated.postedDate).toBe("2026-04-02");
     expect(updated.tags).toHaveLength(2);
     expect(updated.tags.map((tag) => tag.id)).toEqual([updatedTagOne.id, updatedTagTwo.id]);
   });
 
-  it('rejects metadata updates not supported for transfer transactions', async () => {
+  it("rejects metadata updates not supported for transfer transactions", async () => {
     const context = await createAuthenticatedContext();
 
     const fromAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Checking", type: "cash", currencyCode: "BRL" }),
     );
     const toAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Savings', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Savings", type: "cash", currencyCode: "BRL" }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Travel', type: 'expense' }),
+      buildCategoryInput({ name: "Travel", type: "expense" }),
     );
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'transfer',
-      description: 'Move to savings',
+      type: "transfer",
+      description: "Move to savings",
       fromAmount: 10_000,
       fromAccountId: fromAccount.id,
       toAccountId: toAccount.id,
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
 
     await expect(
@@ -1330,28 +1330,28 @@ describe('transactions service', () => {
     ).rejects.toThrow(ValidationError);
   });
 
-  it('deletes a transaction', async () => {
+  it("deletes a transaction", async () => {
     const context = await createAuthenticatedContext();
 
     const account = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Checking", type: "cash", currencyCode: "BRL" }),
     );
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Travel', type: 'expense' }),
+      buildCategoryInput({ name: "Travel", type: "expense" }),
     );
 
     const transaction = await transactionsService.createTransaction(context.householdContext, {
-      type: 'expense',
-      description: 'Taxi',
+      type: "expense",
+      description: "Taxi",
       amount: 2_500,
-      currencyCode: 'BRL',
-      paymentMethodCode: 'pix',
+      currencyCode: "BRL",
+      paymentMethodCode: "pix",
       accountId: account.id,
       categoryId: category.id,
-      purchaseDate: new Date('2026-03-24T00:00:00.000Z'),
-      postedDate: new Date('2026-03-24T00:00:00.000Z'),
+      purchaseDate: new Date("2026-03-24T00:00:00.000Z"),
+      postedDate: new Date("2026-03-24T00:00:00.000Z"),
     });
 
     await transactionsService.deleteTransaction(context.householdContext, transaction.id);

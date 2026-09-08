@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   type CreateTagInput,
@@ -9,24 +9,21 @@ import {
   tagsEndpoints,
   type UpdateTagInput,
   type UpdateTagResult,
-} from "@luraba/contracts"
-import { requestContract } from "@/services/contract-client.service"
+} from "@luraba/contracts";
+import { requestContract } from "@/services/contract-client.service";
 
 export function listTags(query: ListTagsQuery = {}): Promise<ListTagsResult> {
-  return requestContract(tagsEndpoints.list, { query })
+  return requestContract(tagsEndpoints.list, { query });
 }
 
 export function createTag(input: CreateTagInput): Promise<CreateTagResult> {
-  return requestContract(tagsEndpoints.create, { body: input })
+  return requestContract(tagsEndpoints.create, { body: input });
 }
 
-export function updateTag(
-  id: string,
-  input: UpdateTagInput,
-): Promise<UpdateTagResult> {
-  return requestContract(tagsEndpoints.update, { params: { id }, body: input })
+export function updateTag(id: string, input: UpdateTagInput): Promise<UpdateTagResult> {
+  return requestContract(tagsEndpoints.update, { params: { id }, body: input });
 }
 
 export function deleteTag(id: string): Promise<DeleteTagResult> {
-  return requestContract(tagsEndpoints.delete, { params: { id } })
+  return requestContract(tagsEndpoints.delete, { params: { id } });
 }

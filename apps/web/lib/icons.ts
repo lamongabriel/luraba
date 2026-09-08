@@ -47,9 +47,9 @@ import {
   Tv01Icon,
   Wallet01Icon,
   Wifi01Icon,
-} from "@hugeicons/core-free-icons"
-import type { HugeiconsIcon } from "@hugeicons/react"
-import type { ComponentProps } from "react"
+} from "@hugeicons/core-free-icons";
+import type { HugeiconsIcon } from "@hugeicons/react";
+import type { ComponentProps } from "react";
 
 /**
  * Shared, domain-agnostic icon + color palette used by any entity that lets
@@ -60,15 +60,15 @@ import type { ComponentProps } from "react"
  * naming so each feature reads naturally at the call site.
  */
 
-export type CuratedIconData = ComponentProps<typeof HugeiconsIcon>["icon"]
+export type CuratedIconData = ComponentProps<typeof HugeiconsIcon>["icon"];
 
 export interface CuratedIconOption {
   /** Persisted icon identifier (a hugeicons export name). */
-  name: string
+  name: string;
   /** Icon data rendered via <HugeiconsIcon />. */
-  icon: CuratedIconData
+  icon: CuratedIconData;
   /** Extra terms to match when searching the picker. */
-  keywords?: string
+  keywords?: string;
 }
 
 /**
@@ -226,27 +226,26 @@ export const CURATED_ICONS: readonly CuratedIconOption[] = [
     keywords: "insurance security protection",
   },
   { name: "TagsIcon", icon: TagsIcon, keywords: "tag label category other" },
-]
+];
 
 /** O(1) lookup from persisted icon name to icon data. */
-export const CURATED_ICON_MAP: Record<string, CuratedIconData> =
-  Object.fromEntries(CURATED_ICONS.map((option) => [option.name, option.icon]))
+export const CURATED_ICON_MAP: Record<string, CuratedIconData> = Object.fromEntries(
+  CURATED_ICONS.map((option) => [option.name, option.icon]),
+);
 
 /** Fallback icon name used when an entity has no icon or an unknown one. */
-export const DEFAULT_CURATED_ICON_NAME = "TagsIcon"
+export const DEFAULT_CURATED_ICON_NAME = "TagsIcon";
 
 /**
  * Resolves a persisted icon name to renderable icon data.
  * Returns `null` when the name is empty or unknown (caller applies a fallback).
  */
-export function resolveCuratedIcon(
-  name: string | null | undefined,
-): CuratedIconData | null {
+export function resolveCuratedIcon(name: string | null | undefined): CuratedIconData | null {
   if (!name) {
-    return null
+    return null;
   }
 
-  return CURATED_ICON_MAP[name] ?? null
+  return CURATED_ICON_MAP[name] ?? null;
 }
 
 /** Curated color presets. All match the API hex color regex `^#[0-9A-Fa-f]{6}$`. */
@@ -263,7 +262,7 @@ export const CURATED_COLOR_PRESETS: readonly string[] = [
   "#FACC15", // yellow
   "#60A5FA", // blue
   "#94A3B8", // slate
-]
+];
 
 /** Default color applied to newly created entities. */
-export const DEFAULT_CURATED_COLOR = CURATED_COLOR_PRESETS[0]
+export const DEFAULT_CURATED_COLOR = CURATED_COLOR_PRESETS[0];

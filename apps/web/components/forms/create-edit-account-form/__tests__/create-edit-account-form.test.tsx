@@ -1,20 +1,20 @@
-import type { AccountDetails } from "@luraba/contracts"
-import { QueryClientProvider } from "@tanstack/react-query"
-import { render, screen, waitFor, within } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
-import { HttpResponse, http } from "msw"
-import type * as React from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
-import { CreateEditAccountForm } from "@/components/forms/create-edit-account-form/create-edit-account-form"
-import { PERMISSIONS } from "@/components/permissions"
-import { TooltipProvider } from "@/components/ui/tooltip"
-import { queryClient } from "@/lib/query-client"
-import { server } from "@/test/msw/server"
+import type { AccountDetails } from "@luraba/contracts";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { HttpResponse, http } from "msw";
+import type * as React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { CreateEditAccountForm } from "@/components/forms/create-edit-account-form/create-edit-account-form";
+import { PERMISSIONS } from "@/components/permissions";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { queryClient } from "@/lib/query-client";
+import { server } from "@/test/msw/server";
 
-const apiUrl = "http://localhost:22677/api/v1"
+const apiUrl = "http://localhost:3001/api/v1";
 
 function apiSuccess<TData>(data: TData) {
-  return HttpResponse.json({ success: true, data })
+  return HttpResponse.json({ success: true, data });
 }
 
 function apiList<TData>(data: TData[]) {
@@ -29,7 +29,7 @@ function apiList<TData>(data: TData[]) {
         totalPages: data.length ? 1 : 0,
       },
     },
-  })
+  });
 }
 
 function renderCreateEditAccountForm(
@@ -46,7 +46,7 @@ function renderCreateEditAccountForm(
         />
       </TooltipProvider>
     </QueryClientProvider>,
-  )
+  );
 }
 
 function buildAccount(
@@ -57,9 +57,7 @@ function buildAccount(
     id: "00000000-0000-4000-8000-000000000001",
     balance: 0,
     classification:
-      details.kind === "loan" || details.kind === "other_liability"
-        ? "liability"
-        : "asset",
+      details.kind === "loan" || details.kind === "other_liability" ? "liability" : "asset",
     createdAt: "2026-01-01T00:00:00.000Z",
     currencyCode: "USD",
     details,
@@ -71,16 +69,16 @@ function buildAccount(
     type: details.kind,
     updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
-  }
+  };
 }
 
 describe("CreateEditAccountForm", () => {
   beforeEach(() => {
-    queryClient.clear()
-    Element.prototype.scrollIntoView = vi.fn()
-    Element.prototype.hasPointerCapture = vi.fn(() => false)
-    Element.prototype.releasePointerCapture = vi.fn()
-    Element.prototype.setPointerCapture = vi.fn()
+    queryClient.clear();
+    Element.prototype.scrollIntoView = vi.fn();
+    Element.prototype.hasPointerCapture = vi.fn(() => false);
+    Element.prototype.releasePointerCapture = vi.fn();
+    Element.prototype.setPointerCapture = vi.fn();
     vi.stubGlobal(
       "ResizeObserver",
       class {
@@ -88,7 +86,7 @@ describe("CreateEditAccountForm", () => {
         unobserve() {}
         disconnect() {}
       },
-    )
+    );
     vi.stubGlobal("matchMedia", () => ({
       addEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
@@ -96,7 +94,7 @@ describe("CreateEditAccountForm", () => {
       media: "",
       onchange: null,
       removeEventListener: vi.fn(),
-    }))
+    }));
     server.use(
       http.get(`${apiUrl}/auth/me`, () =>
         apiSuccess({
@@ -127,36 +125,28 @@ describe("CreateEditAccountForm", () => {
           },
         }),
       ),
-      http.get(`${apiUrl}/currencies`, () =>
-        apiList([{ code: "USD", symbol: "$", precision: 2 }]),
-      ),
+      http.get(`${apiUrl}/currencies`, () => apiList([{ code: "USD", symbol: "$", precision: 2 }])),
       http.get(`${apiUrl}/accounts`, () => apiList([])),
       http.get(`${apiUrl}/reference-data/locations`, () =>
         apiSuccess({ countries: [], timezones: [] }),
       ),
-    )
-  })
+    );
+  });
 
   it("renders loan-specific fields when the selected type is loan", async () => {
-    const user = userEvent.setup()
+    const user = userEvent.setup();
 
-    renderCreateEditAccountForm()
+    renderCreateEditAccountForm();
 
-    await user.click(await screen.findByRole("combobox", { name: "Type" }))
-    await user.click(screen.getByRole("option", { name: "Loan" }))
+    await user.click(await screen.findByRole("combobox", { name: "Type" }));
+    await user.click(screen.getByRole("option", { name: "Loan" }));
 
-    const details = screen.getByText("Account details").closest("section")
-    expect(details).not.toBeNull()
-    expect(
-      within(details as HTMLElement).getByLabelText("Original principal"),
-    ).toBeVisible()
-    expect(
-      within(details as HTMLElement).getByLabelText("Rate type"),
-    ).toBeVisible()
-    expect(
-      within(details as HTMLElement).getByLabelText("Secured asset"),
-    ).toBeVisible()
-  })
+    const details = screen.getByText("Account details").closest("section");
+    expect(details).not.toBeNull();
+    expect(within(details as HTMLElement).getByLabelText("Original principal")).toBeVisible();
+    expect(within(details as HTMLElement).getByLabelText("Rate type")).toBeVisible();
+    expect(within(details as HTMLElement).getByLabelText("Secured asset")).toBeVisible();
+  });
 
   it.each([
     [
@@ -222,26 +212,22 @@ describe("CreateEditAccountForm", () => {
   ] as const)(
     "renders %s edit fields with immutable type and currency context",
     async (_kind, account, labels) => {
-      renderCreateEditAccountForm({ account })
+      renderCreateEditAccountForm({ account });
 
-      expect(
-        await screen.findByText("Type cannot be changed after creation."),
-      ).toBeVisible()
-      expect(
-        screen.getByText("Currency cannot be changed after creation."),
-      ).toBeVisible()
-      expect(screen.queryByLabelText("Opening balance")).not.toBeInTheDocument()
+      expect(await screen.findByText("Type cannot be changed after creation.")).toBeVisible();
+      expect(screen.getByText("Currency cannot be changed after creation.")).toBeVisible();
+      expect(screen.queryByLabelText("Opening balance")).not.toBeInTheDocument();
 
       for (const label of labels) {
-        expect(screen.getByLabelText(label)).toBeVisible()
+        expect(screen.getByLabelText(label)).toBeVisible();
       }
     },
-  )
+  );
 
   it("updates a typed account through the shared edit form", async () => {
-    const user = userEvent.setup()
-    const onSuccess = vi.fn()
-    let submittedBody: unknown
+    const user = userEvent.setup();
+    const onSuccess = vi.fn();
+    let submittedBody: unknown;
     const account = buildAccount({
       kind: "property",
       subtype: "house",
@@ -254,28 +240,28 @@ describe("CreateEditAccountForm", () => {
       postalCode: "01000",
       region: "SP",
       yearBuilt: 2020,
-    })
+    });
 
     server.use(
       http.patch(`${apiUrl}/accounts/${account.id}`, async ({ request }) => {
-        submittedBody = await request.json()
+        submittedBody = await request.json();
 
         return apiSuccess({
           ...account,
           name: "Updated property",
-        })
+        });
       }),
-    )
+    );
 
-    renderCreateEditAccountForm({ account, onSuccess })
+    renderCreateEditAccountForm({ account, onSuccess });
 
-    await user.clear(await screen.findByLabelText("Name"))
-    await user.type(screen.getByLabelText("Name"), "Updated property")
-    await user.clear(screen.getByLabelText("City"))
-    await user.type(screen.getByLabelText("City"), "Rio de Janeiro")
-    await user.click(screen.getByRole("button", { name: "Save changes" }))
+    await user.clear(await screen.findByLabelText("Name"));
+    await user.type(screen.getByLabelText("Name"), "Updated property");
+    await user.clear(screen.getByLabelText("City"));
+    await user.type(screen.getByLabelText("City"), "Rio de Janeiro");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
     expect(submittedBody).toEqual(
       expect.objectContaining({
         name: "Updated property",
@@ -285,6 +271,6 @@ describe("CreateEditAccountForm", () => {
           subtype: "house",
         }),
       }),
-    )
-  })
-})
+    );
+  });
+});

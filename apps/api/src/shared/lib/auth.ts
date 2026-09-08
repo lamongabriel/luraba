@@ -1,47 +1,47 @@
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { createAuthMiddleware } from 'better-auth/api';
-import { betterAuth } from 'better-auth/minimal';
-import type { Auth, BetterAuthOptions } from 'better-auth/types';
-import { env } from '@/config/env';
-import { db } from '@/db';
-import * as schema from '@/db/schema';
-import { authRepository } from '@/modules/auth/auth.repository';
-import * as authService from '@/modules/auth/auth.service';
-import { provisionHouseholdForUser } from '@/modules/households/households.lifecycle';
-import { allowedAuthOrigins } from '@/shared/lib/auth-origins';
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuthMiddleware } from "better-auth/api";
+import { betterAuth } from "better-auth/minimal";
+import type { Auth, BetterAuthOptions } from "better-auth/types";
+import { env } from "@/config/env";
+import { db } from "@/db";
+import * as schema from "@/db/schema";
+import { authRepository } from "@/modules/auth/auth.repository";
+import * as authService from "@/modules/auth/auth.service";
+import { provisionHouseholdForUser } from "@/modules/households/households.lifecycle";
+import { allowedAuthOrigins } from "@/shared/lib/auth-origins";
 import {
   DATE_FORMAT_VALUES,
   LANGUAGE_VALUES,
   PREFERRED_PERIOD_VALUES,
   PREFERRED_THEME_VALUES,
-} from '@/shared/validation/preferences';
+} from "@/shared/validation/preferences";
 
-const authPayloadPaths = new Set(['/sign-up/email', '/sign-in/email']);
+const authPayloadPaths = new Set(["/sign-up/email", "/sign-in/email"]);
 
 const additionalUserFields = {
-  defaultHouseholdId: { type: 'string', required: false, input: false },
-  preferredLanguage: { type: LANGUAGE_VALUES, required: false, defaultValue: 'en' },
-  preferredCurrency: { type: 'string', required: false, defaultValue: 'BRL' },
+  defaultHouseholdId: { type: "string", required: false, input: false },
+  preferredLanguage: { type: LANGUAGE_VALUES, required: false, defaultValue: "en" },
+  preferredCurrency: { type: "string", required: false, defaultValue: "BRL" },
   preferredTimezone: {
-    type: 'string',
+    type: "string",
     input: false,
     required: false,
-    defaultValue: 'America/Sao_Paulo',
+    defaultValue: "America/Sao_Paulo",
   },
   preferredDateFormat: {
     type: DATE_FORMAT_VALUES,
     required: false,
-    defaultValue: 'DD/MM/YYYY',
+    defaultValue: "DD/MM/YYYY",
   },
   preferredPeriod: {
     type: PREFERRED_PERIOD_VALUES,
     required: false,
-    defaultValue: 'current_month',
+    defaultValue: "current_month",
   },
   preferredTheme: {
     type: PREFERRED_THEME_VALUES,
     required: false,
-    defaultValue: 'system',
+    defaultValue: "system",
   },
 } as const;
 
@@ -63,14 +63,14 @@ const socialProviders = {
 function getReturnedUser(returned: unknown): { id: string; email: string } | null {
   if (
     !returned ||
-    typeof returned !== 'object' ||
-    !('user' in returned) ||
+    typeof returned !== "object" ||
+    !("user" in returned) ||
     !returned.user ||
-    typeof returned.user !== 'object' ||
-    !('id' in returned.user) ||
-    typeof returned.user.id !== 'string' ||
-    !('email' in returned.user) ||
-    typeof returned.user.email !== 'string'
+    typeof returned.user !== "object" ||
+    !("id" in returned.user) ||
+    typeof returned.user.id !== "string" ||
+    !("email" in returned.user) ||
+    typeof returned.user.email !== "string"
   ) {
     return null;
   }
@@ -97,27 +97,27 @@ const authOptions: BetterAuthOptions = {
   baseURL: env.baseUrl,
   secret: env.authSecret,
   trustedOrigins: allowedAuthOrigins,
-  database: drizzleAdapter(db, { provider: 'pg', schema }),
+  database: drizzleAdapter(db, { provider: "pg", schema }),
   databaseHooks: {
     user: { create: { after: syncNewUserHousehold } },
   },
-  advanced: { database: { generateId: 'uuid' } },
+  advanced: { database: { generateId: "uuid" } },
   emailAndPassword: { enabled: true },
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
       if (!authPayloadPaths.has(ctx.path)) return;
 
       const user = getReturnedUser(ctx.context.returned);
-      if (!user || !ctx.context.returned || typeof ctx.context.returned !== 'object') return;
+      if (!user || !ctx.context.returned || typeof ctx.context.returned !== "object") return;
 
       ctx.context.returned = await enrichAuthPayload(ctx.context.returned, user);
     }),
   },
   ...(Object.keys(socialProviders).length > 0 ? { socialProviders } : {}),
-  user: { modelName: 'users', additionalFields: additionalUserFields },
-  session: { modelName: 'authSessions' },
-  account: { modelName: 'authAccounts' },
-  verification: { modelName: 'authVerifications' },
+  user: { modelName: "users", additionalFields: additionalUserFields },
+  session: { modelName: "authSessions" },
+  account: { modelName: "authAccounts" },
+  verification: { modelName: "authVerifications" },
 };
 
 export const auth: Auth<BetterAuthOptions> = betterAuth(authOptions);

@@ -1,7 +1,7 @@
-import { Skeleton } from "@/components/ui/skeleton"
-import { Typography } from "@/components/ui/typography"
+import { Skeleton } from "@/components/ui/skeleton";
+import { Typography } from "@/components/ui/typography";
 
-const LOADING_ROW_KEYS = ["first", "second", "third"] as const
+const LOADING_ROW_KEYS = ["first", "second", "third"] as const;
 
 function LoadingGroup({ title }: { title: string }) {
   return (
@@ -41,7 +41,7 @@ function LoadingGroup({ title }: { title: string }) {
         ))}
       </div>
     </section>
-  )
+  );
 }
 
 export function AccountsLoading() {
@@ -50,5 +50,5 @@ export function AccountsLoading() {
       <LoadingGroup title="Assets" />
       <LoadingGroup title="Liabilities" />
     </>
-  )
+  );
 }

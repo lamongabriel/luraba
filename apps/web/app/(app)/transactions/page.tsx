@@ -1,39 +1,37 @@
-"use client"
+"use client";
 
-import { Add01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
+import { Add01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type {
   TransactionAnalyticsQuery,
   TransactionFeedRow,
   UpcomingTransaction,
-} from "@luraba/contracts"
-import * as React from "react"
-import { TransactionsError } from "@/app/(app)/transactions/_error"
-import { TransactionsLoading } from "@/app/(app)/transactions/_loading"
-import { TransactionAnalyticsRail } from "@/components/analytics/transaction-analytics-rail"
-import { TransactionAnalyticsSummary } from "@/components/analytics/transaction-analytics-summary"
-import { InternalPageLayout } from "@/components/finance/internal-page-layout"
-import { PERMISSIONS, PermissionButton } from "@/components/permissions"
-import { TransactionsTable } from "@/components/tables/transactions/transactions-table"
-import { DeleteTransactionModal } from "@/components/transactions/delete-transaction-modal"
+} from "@luraba/contracts";
+import * as React from "react";
+import { TransactionsError } from "@/app/(app)/transactions/_error";
+import { TransactionsLoading } from "@/app/(app)/transactions/_loading";
+import { TransactionAnalyticsRail } from "@/components/analytics/transaction-analytics-rail";
+import { TransactionAnalyticsSummary } from "@/components/analytics/transaction-analytics-summary";
+import { InternalPageLayout } from "@/components/finance/internal-page-layout";
+import { PERMISSIONS, PermissionButton } from "@/components/permissions";
+import { TransactionsTable } from "@/components/tables/transactions/transactions-table";
+import { DeleteTransactionModal } from "@/components/transactions/delete-transaction-modal";
 import {
   TransactionSheet,
   type TransactionSheetMode,
-} from "@/components/transactions/transaction-sheet"
-import { useTransactionParams } from "@/hooks/use-transaction-params"
+} from "@/components/transactions/transaction-sheet";
+import { useTransactionParams } from "@/hooks/use-transaction-params";
 import {
   useTransactionAnalyticsQuery,
   useUpcomingTransactionsQuery,
-} from "@/queries/transactions/use-transaction-analytics-query"
-import { useTransactionLookupsQuery } from "@/queries/transactions/use-transaction-lookups-query"
-import { useAuthSessionStore } from "@/stores/auth-session-store"
+} from "@/queries/transactions/use-transaction-analytics-query";
+import { useTransactionLookupsQuery } from "@/queries/transactions/use-transaction-lookups-query";
+import { useAuthSessionStore } from "@/stores/auth-session-store";
 
 export default function TransactionsPage() {
-  const language = useAuthSessionStore(
-    (state) => state.user?.preferences.language ?? "en",
-  )
-  const params = useTransactionParams()
-  const lookupsQuery = useTransactionLookupsQuery()
+  const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
+  const params = useTransactionParams();
+  const lookupsQuery = useTransactionLookupsQuery();
   const analyticsFilters = React.useMemo(() => {
     const {
       page: _page,
@@ -41,9 +39,9 @@ export default function TransactionsPage() {
       sort: _sort,
       sortDirection: _sortDirection,
       ...filters
-    } = params.apiParams
-    return filters as TransactionAnalyticsQuery
-  }, [params.apiParams])
+    } = params.apiParams;
+    return filters as TransactionAnalyticsQuery;
+  }, [params.apiParams]);
   const upcomingFilters = React.useMemo(() => {
     const {
       dateFrom: _dateFrom,
@@ -51,62 +49,55 @@ export default function TransactionsPage() {
       purchaseDateFrom: _purchaseDateFrom,
       purchaseDateTo: _purchaseDateTo,
       ...filters
-    } = analyticsFilters
+    } = analyticsFilters;
     return {
       ...filters,
       page: 1,
       perPage: 5,
       sort: "effectiveDate" as const,
       sortDirection: "asc" as const,
-    }
-  }, [analyticsFilters])
+    };
+  }, [analyticsFilters]);
   const analyticsQuery = useTransactionAnalyticsQuery(analyticsFilters, {
     enabled: params.ready,
-  })
+  });
   const upcomingQuery = useUpcomingTransactionsQuery(upcomingFilters, {
     enabled: params.ready,
-  })
-  const [sheetOpen, setSheetOpen] = React.useState(false)
-  const [sheetMode, setSheetMode] =
-    React.useState<TransactionSheetMode>("create")
-  const [selectedRow, setSelectedRow] =
-    React.useState<TransactionFeedRow | null>(null)
-  const [deleteRow, setDeleteRow] = React.useState<TransactionFeedRow | null>(
-    null,
-  )
-  const [deleteOpen, setDeleteOpen] = React.useState(false)
+  });
+  const [sheetOpen, setSheetOpen] = React.useState(false);
+  const [sheetMode, setSheetMode] = React.useState<TransactionSheetMode>("create");
+  const [selectedRow, setSelectedRow] = React.useState<TransactionFeedRow | null>(null);
+  const [deleteRow, setDeleteRow] = React.useState<TransactionFeedRow | null>(null);
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
 
   const openCreate = React.useCallback(() => {
-    setSelectedRow(null)
-    setSheetMode("create")
-    setSheetOpen(true)
-  }, [])
+    setSelectedRow(null);
+    setSheetMode("create");
+    setSheetOpen(true);
+  }, []);
 
-  const openRow = React.useCallback(
-    (row: TransactionFeedRow, mode: TransactionSheetMode) => {
-      setSelectedRow(row)
-      setSheetMode(mode)
-      setSheetOpen(true)
-    },
-    [],
-  )
+  const openRow = React.useCallback((row: TransactionFeedRow, mode: TransactionSheetMode) => {
+    setSelectedRow(row);
+    setSheetMode(mode);
+    setSheetOpen(true);
+  }, []);
 
   const openDelete = React.useCallback((row: TransactionFeedRow) => {
-    setDeleteRow(row)
-    setSheetOpen(false)
-    setDeleteOpen(true)
-  }, [])
+    setDeleteRow(row);
+    setSheetOpen(false);
+    setDeleteOpen(true);
+  }, []);
 
   const handleDeleteOpenChange = React.useCallback((open: boolean) => {
-    setDeleteOpen(open)
-    if (!open) setDeleteRow(null)
-  }, [])
+    setDeleteOpen(open);
+    if (!open) setDeleteRow(null);
+  }, []);
 
   const openUpcoming = React.useCallback(
     (row: UpcomingTransaction) => {
       if (row.sourceType === "recurring_bill") {
-        window.location.assign(`/recurring-bills?selected=${row.sourceId}`)
-        return
+        window.location.assign(`/recurring-bills?selected=${row.sourceId}`);
+        return;
       }
 
       const feedRow: TransactionFeedRow = {
@@ -145,16 +136,16 @@ export default function TransactionsPage() {
         installmentId: row.sourceId,
         installmentNumber: row.installmentNumber,
         installmentCount: row.installmentCount,
-      }
-      openRow(feedRow, "view")
+      };
+      openRow(feedRow, "view");
     },
     [openRow],
-  )
+  );
 
   const precision =
     lookupsQuery.data?.currencies.find(
       (currency) => currency.code === analyticsQuery.data?.currencyCode,
-    )?.precision ?? 2
+    )?.precision ?? 2;
 
   const tableContent = lookupsQuery.isPending ? (
     <TransactionsLoading />
@@ -171,7 +162,7 @@ export default function TransactionsPage() {
       onView={(row) => openRow(row, "view")}
       params={params}
     />
-  )
+  );
 
   return (
     <InternalPageLayout
@@ -223,5 +214,5 @@ export default function TransactionsPage() {
         row={deleteRow}
       />
     </InternalPageLayout>
-  )
+  );
 }

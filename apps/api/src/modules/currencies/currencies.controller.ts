@@ -1,7 +1,7 @@
-import { currenciesEndpoints } from '@luraba/contracts/currencies';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
-import { withApiMeta } from '@/shared/response';
-import * as currenciesService from './currencies.service';
+import { currenciesEndpoints } from "@luraba/contracts/currencies";
+import { createHouseholdHandler } from "@/shared/controllers/household.controller";
+import { withApiMeta } from "@/shared/response";
+import * as currenciesService from "./currencies.service";
 
 export const list = createHouseholdHandler({
   query: currenciesEndpoints.list.query,

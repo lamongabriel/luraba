@@ -1,11 +1,7 @@
-import type { ReactNode } from "react"
+import type { ReactNode } from "react";
 
-import { CreditCardsAccess } from "./_access"
+import { CreditCardsAccess } from "./_access";
 
-export default function CreditCardsLayout({
-  children,
-}: {
-  children: ReactNode
-}) {
-  return <CreditCardsAccess>{children}</CreditCardsAccess>
+export default function CreditCardsLayout({ children }: { children: ReactNode }) {
+  return <CreditCardsAccess>{children}</CreditCardsAccess>;
 }

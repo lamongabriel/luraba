@@ -1,11 +1,7 @@
-import type { ReactNode } from "react"
+import type { ReactNode } from "react";
 
-import { CategoriesAccess } from "./_access"
+import { CategoriesAccess } from "./_access";
 
-export default function CategoriesLayout({
-  children,
-}: {
-  children: ReactNode
-}) {
-  return <CategoriesAccess>{children}</CategoriesAccess>
+export default function CategoriesLayout({ children }: { children: ReactNode }) {
+  return <CategoriesAccess>{children}</CategoriesAccess>;
 }

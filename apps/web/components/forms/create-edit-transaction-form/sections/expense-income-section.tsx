@@ -1,13 +1,13 @@
-import type { AccountSummary, Merchant, PaymentMethod } from "@luraba/contracts"
-import type { Control } from "react-hook-form"
-import { FormItem } from "@/components/forms/form-item"
+import type { AccountSummary, Merchant, PaymentMethod } from "@luraba/contracts";
+import type { Control } from "react-hook-form";
+import { FormItem } from "@/components/forms/form-item";
 
 import type {
   CreateEditTransactionFormValues,
   TransactionFormKind,
-} from "../create-edit-transaction-form.schema"
-import { OptionalMerchantField } from "./optional-merchant-field"
-import { TransactionFormSection } from "./transaction-form-section"
+} from "../create-edit-transaction-form.schema";
+import { OptionalMerchantField } from "./optional-merchant-field";
+import { TransactionFormSection } from "./transaction-form-section";
 
 export function ExpenseIncomeSection({
   accounts,
@@ -16,22 +16,22 @@ export function ExpenseIncomeSection({
   merchants,
   paymentMethods,
 }: {
-  accounts: AccountSummary[]
-  control: Control<CreateEditTransactionFormValues>
-  kind: Extract<TransactionFormKind, "expense" | "income">
-  merchants: Merchant[]
-  paymentMethods: PaymentMethod[]
+  accounts: AccountSummary[];
+  control: Control<CreateEditTransactionFormValues>;
+  kind: Extract<TransactionFormKind, "expense" | "income">;
+  merchants: Merchant[];
+  paymentMethods: PaymentMethod[];
 }) {
   const accountOptions = accounts.map((account) => ({
     value: account.id,
     label: account.name,
     description: account.currencyCode,
-  }))
+  }));
   const paymentMethodOptions = paymentMethods.map((method) => ({
     value: method.code,
     label: method.name,
     description: method.currencyCode ?? "All currencies",
-  }))
+  }));
 
   return (
     <TransactionFormSection title={kind === "income" ? "Income" : "Expense"}>
@@ -71,5 +71,5 @@ export function ExpenseIncomeSection({
         placeholder="Choose a payment method"
       />
     </TransactionFormSection>
-  )
+  );
 }

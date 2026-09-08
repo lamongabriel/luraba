@@ -5,38 +5,38 @@ import type {
   HouseholdInviteLink,
   HouseholdInvitePreview,
   HouseholdMember,
-} from '@luraba/contracts/households';
+} from "@luraba/contracts/households";
 import {
   type createHouseholdBodySchema,
   type createHouseholdInviteBodySchema,
   householdInviteComputedStatusSchema,
   type updateHouseholdBodySchema,
   type updateHouseholdMemberBodySchema,
-} from '@luraba/contracts/households';
-import type { z } from 'zod';
-import { env } from '@/config/env';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { budgetsRepository } from '@/modules/budgets/budgets.repository';
-import { currenciesRepository } from '@/modules/currencies/currencies.repository';
-import { fxService } from '@/modules/fx/fx.service';
-import { mailService } from '@/modules/mail/mail.service';
-import { renderHouseholdInvitation } from '@/modules/mail/mail.templates';
-import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from '@/shared/errors';
-import { formatISODateTime } from '@/shared/lib/date';
-import { createListMeta, type ListResult } from '@/shared/list';
-import { logger } from '@/shared/logger';
+} from "@luraba/contracts/households";
+import type { z } from "zod";
+import { env } from "@/config/env";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { budgetsRepository } from "@/modules/budgets/budgets.repository";
+import { currenciesRepository } from "@/modules/currencies/currencies.repository";
+import { fxService } from "@/modules/fx/fx.service";
+import { mailService } from "@/modules/mail/mail.service";
+import { renderHouseholdInvitation } from "@/modules/mail/mail.templates";
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/shared/errors";
+import { formatISODateTime } from "@/shared/lib/date";
+import { createListMeta, type ListResult } from "@/shared/list";
+import { logger } from "@/shared/logger";
 import {
   createHouseholdInvitationToken,
   hashHouseholdInvitationToken,
-} from './household-invitation-token';
+} from "./household-invitation-token";
 import type {
   ListHouseholdInvitesQuery,
   ListHouseholdMembersQuery,
   ListHouseholdsQuery,
   ListMyHouseholdInvitesQuery,
-} from './households.query';
-import { type HouseholdInviteListRow, householdsRepository } from './households.repository';
+} from "./households.query";
+import { type HouseholdInviteListRow, householdsRepository } from "./households.repository";
 
 type CreateHouseholdValues = z.output<typeof createHouseholdBodySchema>;
 type UpdateHouseholdValues = z.output<typeof updateHouseholdBodySchema>;
@@ -49,10 +49,10 @@ function normalizeEmail(email: string): string {
 }
 
 function canManageRole(
-  actorRole: HouseholdContext['role'],
-  targetRole: HouseholdContext['role'],
+  actorRole: HouseholdContext["role"],
+  targetRole: HouseholdContext["role"],
 ): boolean {
-  return actorRole === 'owner' || targetRole !== 'owner';
+  return actorRole === "owner" || targetRole !== "owner";
 }
 
 function inviteExpiresAt(): Date {
@@ -60,7 +60,7 @@ function inviteExpiresAt(): Date {
 }
 
 function invitationUrl(token: string): string {
-  return `${env.frontendOrigin.replace(/\/+$/, '')}/invite/${token}`;
+  return `${env.frontendOrigin.replace(/\/+$/, "")}/invite/${token}`;
 }
 
 function mapHousehold(
@@ -131,7 +131,7 @@ function mapHouseholdInvite(record: HouseholdInviteListRow): HouseholdInvite {
 
 async function getMappedInvite(inviteId: string): Promise<HouseholdInvite> {
   const invite = await householdsRepository.findInviteListRowById(inviteId);
-  if (!invite) throw new NotFoundError('Household invite');
+  if (!invite) throw new NotFoundError("Household invite");
   return mapHouseholdInvite(invite);
 }
 
@@ -155,7 +155,7 @@ async function sendInvitationEmail(invite: HouseholdInviteListRow, token: string
     });
     await mailService.send({ to: invite.email, ...message });
   } catch (error) {
-    logger.warn({ err: error, invitationId: invite.id }, 'Household invitation email failed');
+    logger.warn({ err: error, invitationId: invite.id }, "Household invitation email failed");
   }
 }
 
@@ -163,20 +163,20 @@ function assertInviteRecipient(
   invite: Awaited<ReturnType<typeof householdsRepository.findInviteByTokenHash>>,
   email: string,
 ): asserts invite is NonNullable<typeof invite> {
-  if (!invite) throw new NotFoundError('Household invite');
+  if (!invite) throw new NotFoundError("Household invite");
   if (invite.email !== normalizeEmail(email)) {
-    throw new ForbiddenError('This invitation belongs to another email address');
+    throw new ForbiddenError("This invitation belongs to another email address");
   }
 }
 
 function assertActionableInvite(
   invite: NonNullable<Awaited<ReturnType<typeof householdsRepository.findInviteByTokenHash>>>,
 ): void {
-  if (invite.status !== 'pending') {
+  if (invite.status !== "pending") {
     throw new ConflictError(`This invitation is already ${invite.status}`);
   }
   if (invite.expiresAt <= new Date()) {
-    throw new ConflictError('This invitation has expired');
+    throw new ConflictError("This invitation has expired");
   }
 }
 
@@ -197,20 +197,20 @@ export async function createDefaultHouseholdForUser(userId: string): Promise<str
   if (existing) return existing;
 
   const user = await householdsRepository.findUserDefaults(userId);
-  if (!user) throw new NotFoundError('User');
+  if (!user) throw new NotFoundError("User");
 
   return db.transaction(async (tx) => {
     const household = await householdsRepository.createHousehold(tx, userId, {
       name: `${user.name}'s Household`,
-      description: 'Personal household created during onboarding.',
+      description: "Personal household created during onboarding.",
       defaultCurrencyId: user.preferredCurrency,
-      countryCode: 'BR',
+      countryCode: "BR",
       timezone: user.preferredTimezone,
       budgetMonthStartsOn: 1,
-      creditExpenseTiming: 'spend_month',
-      creditInstallmentBudgetMode: 'per_installment',
+      creditExpenseTiming: "spend_month",
+      creditInstallmentBudgetMode: "per_installment",
     });
-    await householdsRepository.createMembership(tx, household.id, userId, 'owner');
+    await householdsRepository.createMembership(tx, household.id, userId, "owner");
     await householdsRepository.setDefaultHousehold(tx, userId, household.id);
     return household.id;
   });
@@ -243,7 +243,7 @@ export async function getHousehold(
   householdId: string,
 ): Promise<Household> {
   const household = await householdsRepository.findHouseholdForUser(context.userId, householdId);
-  if (!household) throw new NotFoundError('Household');
+  if (!household) throw new NotFoundError("Household");
   return mapHousehold(household);
 }
 
@@ -251,12 +251,12 @@ export async function deleteHousehold(
   context: HouseholdContext,
   householdId: string,
 ): Promise<void> {
-  if (context.role !== 'owner') {
-    throw new ForbiddenError('Only a household owner can delete the household');
+  if (context.role !== "owner") {
+    throw new ForbiddenError("Only a household owner can delete the household");
   }
 
   if (!(await householdsRepository.deleteHousehold(householdId))) {
-    throw new NotFoundError('Household');
+    throw new NotFoundError("Household");
   }
 }
 
@@ -265,14 +265,14 @@ export async function createHousehold(
   body: CreateHouseholdValues,
 ): Promise<Household> {
   const currency = await currenciesRepository.findByCode(body.defaultCurrencyId);
-  if (!currency) throw new NotFoundError('Currency');
+  if (!currency) throw new NotFoundError("Currency");
 
   const user = await householdsRepository.findUserDefaults(userId);
-  if (!user) throw new NotFoundError('User');
+  if (!user) throw new NotFoundError("User");
 
   const householdId = await db.transaction(async (tx) => {
     const household = await householdsRepository.createHousehold(tx, userId, body);
-    await householdsRepository.createMembership(tx, household.id, userId, 'owner');
+    await householdsRepository.createMembership(tx, household.id, userId, "owner");
     if (!user.defaultHouseholdId) {
       await householdsRepository.setDefaultHousehold(tx, userId, household.id);
     }
@@ -282,7 +282,7 @@ export async function createHousehold(
   const household = (await householdsRepository.listHouseholdsForUser(userId)).find(
     (item) => item.id === householdId,
   );
-  if (!household) throw new NotFoundError('Household');
+  if (!household) throw new NotFoundError("Household");
   return mapHousehold(household);
 }
 
@@ -292,11 +292,11 @@ export async function updateHousehold(
   body: UpdateHouseholdValues,
 ): Promise<Household> {
   const current = await householdsRepository.findHouseholdById(householdId);
-  if (!current) throw new NotFoundError('Household');
+  if (!current) throw new NotFoundError("Household");
 
   if (body.defaultCurrencyId) {
     const currency = await currenciesRepository.findByCode(body.defaultCurrencyId);
-    if (!currency) throw new NotFoundError('Currency');
+    if (!currency) throw new NotFoundError("Currency");
   }
 
   if (body.defaultCurrencyId && body.defaultCurrencyId !== current.defaultCurrencyId) {
@@ -324,16 +324,16 @@ export async function updateHousehold(
         householdId,
         body,
       );
-      if (!updated) throw new NotFoundError('Household');
+      if (!updated) throw new NotFoundError("Household");
     });
   } else if (!(await householdsRepository.updateHousehold(householdId, body))) {
-    throw new NotFoundError('Household');
+    throw new NotFoundError("Household");
   }
 
   const household = (await householdsRepository.listHouseholdsForUser(context.userId)).find(
     (item) => item.id === householdId,
   );
-  if (!household) throw new NotFoundError('Household');
+  if (!household) throw new NotFoundError("Household");
   return mapHousehold(household);
 }
 
@@ -353,23 +353,23 @@ export async function updateMemberRole(
   body: UpdateHouseholdMemberValues,
 ): Promise<HouseholdMember> {
   const target = await householdsRepository.findMembership(householdId, userId);
-  if (!target) throw new NotFoundError('Household member');
+  if (!target) throw new NotFoundError("Household member");
   if (!canManageRole(context.role, target.role) || !canManageRole(context.role, body.role)) {
-    throw new ForbiddenError('You do not have permission to manage this member role');
+    throw new ForbiddenError("You do not have permission to manage this member role");
   }
-  if (target.role === 'owner' && body.role !== 'owner') {
+  if (target.role === "owner" && body.role !== "owner") {
     if ((await householdsRepository.countOwners(householdId)) <= 1) {
-      throw new ValidationError('A household must have at least one owner');
+      throw new ValidationError("A household must have at least one owner");
     }
   }
 
   if (!(await householdsRepository.updateMemberRole(householdId, userId, body.role))) {
-    throw new NotFoundError('Household member');
+    throw new NotFoundError("Household member");
   }
   const member = (await householdsRepository.listMembers(householdId)).find(
     (item) => item.userId === userId,
   );
-  if (!member) throw new NotFoundError('Household member');
+  if (!member) throw new NotFoundError("Household member");
   return mapHouseholdMember(member);
 }
 
@@ -379,12 +379,12 @@ export async function removeMember(
   userId: string,
 ): Promise<void> {
   const target = await householdsRepository.findMembership(householdId, userId);
-  if (!target) throw new NotFoundError('Household member');
+  if (!target) throw new NotFoundError("Household member");
   if (!canManageRole(context.role, target.role)) {
-    throw new ForbiddenError('You do not have permission to remove this member');
+    throw new ForbiddenError("You do not have permission to remove this member");
   }
-  if (target.role === 'owner' && (await householdsRepository.countOwners(householdId)) <= 1) {
-    throw new ValidationError('A household must have at least one owner');
+  if (target.role === "owner" && (await householdsRepository.countOwners(householdId)) <= 1) {
+    throw new ValidationError("A household must have at least one owner");
   }
   await householdsRepository.removeMember(householdId, userId);
 }
@@ -395,12 +395,12 @@ export async function createInvite(
   body: CreateHouseholdInviteValues,
 ): Promise<HouseholdInvite> {
   if (!canManageRole(context.role, body.role)) {
-    throw new ForbiddenError('You do not have permission to invite users with this role');
+    throw new ForbiddenError("You do not have permission to invite users with this role");
   }
 
   const email = normalizeEmail(body.email);
   if (await householdsRepository.findMembershipByEmail(householdId, email)) {
-    throw new ConflictError('User is already a member of this household');
+    throw new ConflictError("User is already a member of this household");
   }
 
   const token = issueInvitationToken();
@@ -409,7 +409,7 @@ export async function createInvite(
     email,
   );
   if (pending && pending.expiresAt > new Date()) {
-    throw new ConflictError('An active invitation already exists for this email');
+    throw new ConflictError("An active invitation already exists for this email");
   }
 
   const created = pending
@@ -427,10 +427,10 @@ export async function createInvite(
         tokenHash: token.tokenHash,
         expiresAt: token.expiresAt,
       });
-  if (!created) throw new NotFoundError('Household invite');
+  if (!created) throw new NotFoundError("Household invite");
 
   const invite = await householdsRepository.findInviteListRowById(created.id);
-  if (!invite) throw new NotFoundError('Household invite');
+  if (!invite) throw new NotFoundError("Household invite");
   await sendInvitationEmail(invite, token.token);
   return mapHouseholdInvite(invite);
 }
@@ -459,7 +459,7 @@ export async function previewInvite(token: string): Promise<HouseholdInvitePrevi
   const invite = await householdsRepository.findInvitePreviewByTokenHash(
     hashHouseholdInvitationToken(token),
   );
-  if (!invite) throw new NotFoundError('Household invite');
+  if (!invite) throw new NotFoundError("Household invite");
 
   return {
     email: invite.email,
@@ -483,19 +483,19 @@ export async function acceptInvite(
   assertActionableInvite(invite);
 
   if (await householdsRepository.findMembershipByEmail(invite.householdId, invite.email)) {
-    throw new ConflictError('User is already a member of this household');
+    throw new ConflictError("User is already a member of this household");
   }
 
   await db.transaction(async (tx) => {
     const accepted = await householdsRepository.acceptInvite(tx, invite.id);
-    if (!accepted) throw new ConflictError('This invitation is no longer available');
+    if (!accepted) throw new ConflictError("This invitation is no longer available");
     await householdsRepository.createMembership(tx, invite.householdId, userId, invite.role);
     await householdsRepository.setDefaultHousehold(tx, userId, invite.householdId);
     await householdsRepository.verifyUserEmail(tx, userId);
   });
 
   const membership = await householdsRepository.findMembership(invite.householdId, userId);
-  if (!membership) throw new NotFoundError('Household membership');
+  if (!membership) throw new NotFoundError("Household membership");
 
   return {
     household: {
@@ -515,19 +515,19 @@ async function acceptInviteRecord(
   assertActionableInvite(invite);
 
   if (await householdsRepository.findMembershipByEmail(invite.householdId, invite.email)) {
-    throw new ConflictError('User is already a member of this household');
+    throw new ConflictError("User is already a member of this household");
   }
 
   await db.transaction(async (tx) => {
     const accepted = await householdsRepository.acceptInvite(tx, invite.id);
-    if (!accepted) throw new ConflictError('This invitation is no longer available');
+    if (!accepted) throw new ConflictError("This invitation is no longer available");
     await householdsRepository.createMembership(tx, invite.householdId, userId, invite.role);
     await householdsRepository.setDefaultHousehold(tx, userId, invite.householdId);
     await householdsRepository.verifyUserEmail(tx, userId);
   });
 
   const membership = await householdsRepository.findMembership(invite.householdId, userId);
-  if (!membership) throw new NotFoundError('Household membership');
+  if (!membership) throw new NotFoundError("Household membership");
 
   return {
     household: {
@@ -553,7 +553,7 @@ export async function rejectInvite(userEmail: string, token: string): Promise<vo
   assertInviteRecipient(invite, userEmail);
   assertActionableInvite(invite);
   if (!(await householdsRepository.rejectInvite(invite.id))) {
-    throw new ConflictError('This invitation is no longer available');
+    throw new ConflictError("This invitation is no longer available");
   }
 }
 
@@ -562,7 +562,7 @@ export async function rejectInviteById(userEmail: string, inviteId: string): Pro
   assertInviteRecipient(invite, userEmail);
   assertActionableInvite(invite);
   if (!(await householdsRepository.rejectInvite(invite.id))) {
-    throw new ConflictError('This invitation is no longer available');
+    throw new ConflictError("This invitation is no longer available");
   }
 }
 
@@ -572,8 +572,8 @@ async function rotateManagedInvite(
   inviteId: string,
 ) {
   const invite = await householdsRepository.findInviteById(inviteId);
-  if (!invite || invite.householdId !== householdId || invite.status !== 'pending') {
-    throw new NotFoundError('Household invite');
+  if (!invite || invite.householdId !== householdId || invite.status !== "pending") {
+    throw new NotFoundError("Household invite");
   }
 
   const token = issueInvitationToken();
@@ -581,7 +581,7 @@ async function rotateManagedInvite(
     tokenHash: token.tokenHash,
     expiresAt: token.expiresAt,
   });
-  if (!refreshed) throw new NotFoundError('Household invite');
+  if (!refreshed) throw new NotFoundError("Household invite");
   return { invite: await getMappedInvite(inviteId), rawToken: token.token };
 }
 
@@ -601,7 +601,7 @@ export async function resendInvite(
 ): Promise<void> {
   const { rawToken } = await rotateManagedInvite(context, householdId, inviteId);
   const invite = await householdsRepository.findInviteListRowById(inviteId);
-  if (!invite) throw new NotFoundError('Household invite');
+  if (!invite) throw new NotFoundError("Household invite");
   await sendInvitationEmail(invite, rawToken);
 }
 
@@ -611,6 +611,6 @@ export async function cancelInvite(
   inviteId: string,
 ): Promise<void> {
   if (!(await householdsRepository.cancelInvite(householdId, inviteId))) {
-    throw new NotFoundError('Household invite');
+    throw new NotFoundError("Household invite");
   }
 }

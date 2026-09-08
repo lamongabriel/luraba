@@ -1,8 +1,8 @@
-import { toRawBalance } from '@luraba/domain';
-import { ValidationError } from '@/shared/errors';
-import { formatISODate } from '@/shared/lib/date';
-import type * as txRepository from './transactions.repository';
-import type { TransactionFeedRow, TransactionResponse, TransactionTag } from './transactions.types';
+import { toRawBalance } from "@luraba/domain";
+import { ValidationError } from "@/shared/errors";
+import { formatISODate } from "@/shared/lib/date";
+import type * as txRepository from "./transactions.repository";
+import type { TransactionFeedRow, TransactionResponse, TransactionTag } from "./transactions.types";
 
 export type DetailedTransactionRow = Awaited<
   ReturnType<typeof txRepository.listDetailedByHouseholdId>
@@ -54,11 +54,11 @@ function mapPaymentMethod(
   row: PaymentMethodRow,
 ): Pick<
   TransactionResponse,
-  | 'paymentMethodId'
-  | 'paymentMethodCode'
-  | 'paymentMethodName'
-  | 'paymentMethodScope'
-  | 'paymentMethodTranslationKey'
+  | "paymentMethodId"
+  | "paymentMethodCode"
+  | "paymentMethodName"
+  | "paymentMethodScope"
+  | "paymentMethodTranslationKey"
 > {
   return {
     paymentMethodId: row.paymentMethodId,
@@ -66,8 +66,8 @@ function mapPaymentMethod(
     paymentMethodName: row.paymentMethodName,
     paymentMethodScope: row.paymentMethodId
       ? row.paymentMethodScope
-        ? 'household'
-        : 'system'
+        ? "household"
+        : "system"
       : null,
     paymentMethodTranslationKey: row.paymentMethodTranslationKey,
   };
@@ -77,7 +77,7 @@ export function absoluteAmount(value: number): number {
   return value < 0 ? -value : value;
 }
 
-export function toRawLedgerBalance(balance: number, classification: 'asset' | 'liability'): number {
+export function toRawLedgerBalance(balance: number, classification: "asset" | "liability"): number {
   return toRawBalance(balance, classification);
 }
 
@@ -95,7 +95,7 @@ export async function resolveTransferAmounts(input: {
   if (input.fromCurrencyCode === input.toCurrencyCode) {
     const amount = input.fromAmount ?? input.toAmount;
     if (amount === undefined) {
-      throw new ValidationError('Either fromAmount or toAmount must be provided');
+      throw new ValidationError("Either fromAmount or toAmount must be provided");
     }
 
     if (
@@ -103,7 +103,7 @@ export async function resolveTransferAmounts(input: {
       input.toAmount !== undefined &&
       input.fromAmount !== input.toAmount
     ) {
-      throw new ValidationError('Same-currency transfers must use matching amounts');
+      throw new ValidationError("Same-currency transfers must use matching amounts");
     }
 
     return {
@@ -143,7 +143,7 @@ export async function resolveTransferAmounts(input: {
     };
   }
 
-  throw new ValidationError('Either fromAmount or toAmount must be provided');
+  throw new ValidationError("Either fromAmount or toAmount must be provided");
 }
 
 // The repository returns one row per joined entry/tag. The API needs one object
@@ -168,7 +168,7 @@ export function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResp
     const tags = mapTags(group);
     const accountEntries = group.filter((row) => row.accountId);
 
-    if (first.type === 'transfer') {
+    if (first.type === "transfer") {
       const fromEntry =
         accountEntries.find((row) => row.entryAmount < 0) ?? accountEntries[0] ?? null;
       const toEntry =
@@ -248,8 +248,8 @@ export function mapTransactionResponsesToFeedRows(
     return {
       ...transaction,
       rowId: transaction.id,
-      rowKind: payment ? 'credit_card_payment' : 'transaction',
-      originType: payment ? 'credit_card_payment' : transaction.type,
+      rowKind: payment ? "credit_card_payment" : "transaction",
+      originType: payment ? "credit_card_payment" : transaction.type,
       creditCardId:
         payment?.creditCardId ??
         (transaction.accountId ? creditCardIdsByAccountId.get(transaction.accountId) : undefined) ??
@@ -287,7 +287,7 @@ export function mapCreditCardInstallmentRowsToFeedRows(
 
     return {
       id: first.transactionId,
-      type: 'expense',
+      type: "expense",
       description: first.description,
       amount: first.amount,
       currencyCode: first.currencyCode,
@@ -309,8 +309,8 @@ export function mapCreditCardInstallmentRowsToFeedRows(
       createdAt: first.createdAt,
       updatedAt: first.updatedAt,
       rowId: first.installmentId,
-      rowKind: 'credit_card_installment',
-      originType: 'credit_card_installment',
+      rowKind: "credit_card_installment",
+      originType: "credit_card_installment",
       creditCardId: first.creditCardId,
       purchaseId: first.purchaseId,
       paymentId: null,

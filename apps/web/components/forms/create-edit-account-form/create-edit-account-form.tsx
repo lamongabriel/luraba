@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import type { AccountDetails } from "@luraba/contracts"
-import { FormItem } from "@/components/forms/form-item"
-import { Button } from "@/components/ui/button"
-import { FieldError } from "@/components/ui/field"
-import { Typography } from "@/components/ui/typography"
-import { CreateAccountStartingBalanceSection } from "./sections/create-account-starting-balance-section"
-import { CreateEditAccountCommonSection } from "./sections/create-edit-account-common-section"
-import { CreateEditAccountDetailsSection } from "./sections/create-edit-account-details-section"
-import { useCreateEditAccountForm } from "./use-create-edit-account-form"
+import type { AccountDetails } from "@luraba/contracts";
+import { FormItem } from "@/components/forms/form-item";
+import { Button } from "@/components/ui/button";
+import { FieldError } from "@/components/ui/field";
+import { Typography } from "@/components/ui/typography";
+import { CreateAccountStartingBalanceSection } from "./sections/create-account-starting-balance-section";
+import { CreateEditAccountCommonSection } from "./sections/create-edit-account-common-section";
+import { CreateEditAccountDetailsSection } from "./sections/create-edit-account-details-section";
+import { useCreateEditAccountForm } from "./use-create-edit-account-form";
 
 export function CreateEditAccountForm({
   account,
@@ -16,25 +16,17 @@ export function CreateEditAccountForm({
   onCancel,
   onSuccess,
 }: {
-  account?: AccountDetails
-  defaultCurrencyCode: string
-  onCancel: () => void
-  onSuccess: () => void
+  account?: AccountDetails;
+  defaultCurrencyCode: string;
+  onCancel: () => void;
+  onSuccess: () => void;
 }) {
-  const {
-    currenciesQuery,
-    errorMessage,
-    form,
-    isEdit,
-    isPending,
-    onSubmit,
-    type,
-    typeOptions,
-  } = useCreateEditAccountForm({
-    account,
-    defaultCurrencyCode,
-    onSuccess,
-  })
+  const { currenciesQuery, errorMessage, form, isEdit, isPending, onSubmit, type, typeOptions } =
+    useCreateEditAccountForm({
+      account,
+      defaultCurrencyCode,
+      onSuccess,
+    });
 
   return (
     <form className="space-y-6" onSubmit={onSubmit} noValidate>
@@ -56,11 +48,7 @@ export function CreateEditAccountForm({
       <CreateEditAccountDetailsSection form={form} disabled={isPending} />
 
       {!isEdit ? (
-        <CreateAccountStartingBalanceSection
-          form={form}
-          disabled={isPending}
-          type={type}
-        />
+        <CreateAccountStartingBalanceSection form={form} disabled={isPending} type={type} />
       ) : null}
 
       <FormItem
@@ -75,17 +63,10 @@ export function CreateEditAccountForm({
       {currenciesQuery.isError ? (
         <FieldError>Couldn&apos;t load currencies right now.</FieldError>
       ) : null}
-      {errorMessage ? (
-        <Typography variant="small-destructive">{errorMessage}</Typography>
-      ) : null}
+      {errorMessage ? <Typography variant="small-destructive">{errorMessage}</Typography> : null}
 
       <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onCancel}
-          disabled={isPending}
-        >
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={isPending}>
           Cancel
         </Button>
         <Button
@@ -97,5 +78,5 @@ export function CreateEditAccountForm({
         </Button>
       </div>
     </form>
-  )
+  );
 }

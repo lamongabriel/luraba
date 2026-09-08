@@ -1,27 +1,27 @@
-import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { accountsTable } from '@/db/schemas/accounts.schema';
-import { creditCardBillingCyclesTable } from '@/db/schemas/credit-card-billing-cycles.schema';
-import { creditCardInstallmentsTable } from '@/db/schemas/credit-card-installments.schema';
-import { creditCardPaymentsTable } from '@/db/schemas/credit-card-payments.schema';
-import { creditCardPurchasesTable } from '@/db/schemas/credit-card-purchases.schema';
-import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
-import { entriesTable } from '@/db/schemas/entries.schema';
-import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
-import { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
-import { tagsTable } from '@/db/schemas/tags.schema';
-import { transactionTagsTable } from '@/db/schemas/transaction-tags.schema';
-import { transactionsTable } from '@/db/schemas/transactions.schema';
-import type { TxClient } from '@/db/types';
-import { now } from '@/shared/lib/date';
-import { type DbListPage, getPagination } from '@/shared/list';
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { accountsTable } from "@/db/schemas/accounts.schema";
+import { creditCardBillingCyclesTable } from "@/db/schemas/credit-card-billing-cycles.schema";
+import { creditCardInstallmentsTable } from "@/db/schemas/credit-card-installments.schema";
+import { creditCardPaymentsTable } from "@/db/schemas/credit-card-payments.schema";
+import { creditCardPurchasesTable } from "@/db/schemas/credit-card-purchases.schema";
+import { creditCardsTable } from "@/db/schemas/credit-cards.schema";
+import { entriesTable } from "@/db/schemas/entries.schema";
+import { ledgerAccountsTable } from "@/db/schemas/ledger-accounts.schema";
+import { paymentMethodsTable } from "@/db/schemas/payment-methods.schema";
+import { tagsTable } from "@/db/schemas/tags.schema";
+import { transactionTagsTable } from "@/db/schemas/transaction-tags.schema";
+import { transactionsTable } from "@/db/schemas/transactions.schema";
+import type { TxClient } from "@/db/types";
+import { now } from "@/shared/lib/date";
+import { type DbListPage, getPagination } from "@/shared/list";
 import {
   buildTransactionFeedCte,
   buildTransactionFeedOrder,
   type ListTransactionsQuery,
-} from './transactions.query';
-import type { TransactionFeedRowKind, TransactionListSummary } from './transactions.types';
+} from "./transactions.query";
+import type { TransactionFeedRowKind, TransactionListSummary } from "./transactions.types";
 
 export type TransactionFeedPageKey = {
   rowId: string;
@@ -163,13 +163,13 @@ export async function updateTransaction(
   values: Partial<
     Pick<
       typeof transactionsTable.$inferInsert,
-      | 'description'
-      | 'purchaseDate'
-      | 'postedDate'
-      | 'includeInBudget'
-      | 'paymentMethodId'
-      | 'categoryId'
-      | 'merchantId'
+      | "description"
+      | "purchaseDate"
+      | "postedDate"
+      | "includeInBudget"
+      | "paymentMethodId"
+      | "categoryId"
+      | "merchantId"
     >
   >,
 ): Promise<typeof transactionsTable.$inferSelect | undefined> {
@@ -278,7 +278,7 @@ export async function listDetailedByHouseholdId(householdId: string) {
       accountsTable,
       and(
         eq(accountsTable.id, ledgerAccountsTable.ownerId),
-        eq(ledgerAccountsTable.ownerType, 'account'),
+        eq(ledgerAccountsTable.ownerType, "account"),
       ),
     )
     .leftJoin(paymentMethodsTable, eq(paymentMethodsTable.id, transactionsTable.paymentMethodId))
@@ -312,7 +312,7 @@ export async function listDetailedByTransactionIds(
       accountsTable,
       and(
         eq(accountsTable.id, ledgerAccountsTable.ownerId),
-        eq(ledgerAccountsTable.ownerType, 'account'),
+        eq(ledgerAccountsTable.ownerType, "account"),
       ),
     )
     .leftJoin(paymentMethodsTable, eq(paymentMethodsTable.id, transactionsTable.paymentMethodId))
@@ -347,7 +347,7 @@ export async function listDetailedByAccountId(context: HouseholdContext, account
     .where(
       and(
         eq(transactionsTable.householdId, context.householdId),
-        eq(ledgerAccountsTable.ownerType, 'account'),
+        eq(ledgerAccountsTable.ownerType, "account"),
         eq(ledgerAccountsTable.ownerId, accountId),
       ),
     )

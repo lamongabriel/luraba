@@ -8,11 +8,11 @@ import type {
   transactionTypeSchema,
   upcomingTransactionSchema,
   updateTransactionInputSchema,
-} from '@luraba/contracts/transactions';
-import type { z } from 'zod';
-import type { entriesTable } from '@/db/schemas/entries.schema';
-import type { tagsTable } from '@/db/schemas/tags.schema';
-import type { transactionsTable } from '@/db/schemas/transactions.schema';
+} from "@luraba/contracts/transactions";
+import type { z } from "zod";
+import type { entriesTable } from "@/db/schemas/entries.schema";
+import type { tagsTable } from "@/db/schemas/tags.schema";
+import type { transactionsTable } from "@/db/schemas/transactions.schema";
 
 /** Database records stay API-local; public HTTP schemas come from contracts. */
 export type TransactionRecord = typeof transactionsTable.$inferSelect;
@@ -27,8 +27,8 @@ export type UpdateTransactionValues = z.output<typeof updateTransactionInputSche
 // API services may still hold native Date values until the controller parses the
 // response at the HTTP boundary, so these use schema inputs rather than outputs.
 export type TransactionResponse = z.input<typeof transactionSchema>;
-export type TransactionFeedRowKind = z.output<typeof transactionFeedRowSchema>['rowKind'];
-export type TransactionFeedOriginType = z.output<typeof transactionFeedRowSchema>['originType'];
+export type TransactionFeedRowKind = z.output<typeof transactionFeedRowSchema>["rowKind"];
+export type TransactionFeedOriginType = z.output<typeof transactionFeedRowSchema>["originType"];
 export type TransactionFeedRow = z.input<typeof transactionFeedRowSchema>;
 export type ListTransactionsResponse = TransactionFeedRow[];
 export type TransactionListSummary = z.input<typeof transactionListSummarySchema>;

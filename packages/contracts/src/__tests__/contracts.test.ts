@@ -5,6 +5,8 @@ import {
   buildEndpointPath,
   contractModules,
   creditCardsEndpoints,
+  getPermissionsForRole,
+  hasHouseholdPermission,
   householdPermissionSchema,
   householdsEndpoints,
   PERMISSIONS,
@@ -173,6 +175,12 @@ describe("HTTP contract inventory", () => {
 describe("representative module contracts", () => {
   it("derives the permission schema from the canonical permission map", () => {
     expect(householdPermissionSchema.options).toEqual(Object.values(PERMISSIONS));
+  });
+
+  it("shares the role policy for API enforcement and client capability checks", () => {
+    expect(getPermissionsForRole("owner")).toEqual(Object.values(PERMISSIONS));
+    expect(hasHouseholdPermission("viewer", PERMISSIONS.ACCOUNTS_CREATE)).toBe(false);
+    expect(hasHouseholdPermission("member", PERMISSIONS.ACCOUNTS_CREATE)).toBe(true);
   });
 
   it("coerces account list query defaults", () => {

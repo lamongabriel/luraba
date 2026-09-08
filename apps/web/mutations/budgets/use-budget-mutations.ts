@@ -1,29 +1,25 @@
-"use client"
+"use client";
 
 import {
   createAppMutationDefinition,
   type UseAppMutationOptions,
   useAppMutation,
-} from "@/mutations/app-mutation"
-import { replaceMonthlyBudget } from "@/services/budgets.service"
+} from "@/mutations/app-mutation";
+import { replaceMonthlyBudget } from "@/services/budgets.service";
 
 type ReplaceMonthlyBudgetVariables = {
-  month: string
-  body: Parameters<typeof replaceMonthlyBudget>[1]
-}
-type ReplaceMonthlyBudgetResponse = Awaited<
-  ReturnType<typeof replaceMonthlyBudget>
->
-export const replaceMonthlyBudgetMutationDefinition =
-  createAppMutationDefinition<
-    ReplaceMonthlyBudgetResponse,
-    ReplaceMonthlyBudgetVariables
-  >({
-    defaultErrorMessage:
-      "We couldn't save this monthly budget. Please try again.",
-    mutationFn: ({ month, body }) => replaceMonthlyBudget(month, body),
-    mutationKey: ["budgets", "replace-month"],
-  })
+  month: string;
+  body: Parameters<typeof replaceMonthlyBudget>[1];
+};
+type ReplaceMonthlyBudgetResponse = Awaited<ReturnType<typeof replaceMonthlyBudget>>;
+export const replaceMonthlyBudgetMutationDefinition = createAppMutationDefinition<
+  ReplaceMonthlyBudgetResponse,
+  ReplaceMonthlyBudgetVariables
+>({
+  defaultErrorMessage: "We couldn't save this monthly budget. Please try again.",
+  mutationFn: ({ month, body }) => replaceMonthlyBudget(month, body),
+  mutationKey: ["budgets", "replace-month"],
+});
 export function useReplaceMonthlyBudgetMutation<TContext = unknown>(
   options?: UseAppMutationOptions<
     ReplaceMonthlyBudgetResponse,
@@ -31,5 +27,5 @@ export function useReplaceMonthlyBudgetMutation<TContext = unknown>(
     TContext
   >,
 ) {
-  return useAppMutation(replaceMonthlyBudgetMutationDefinition, options)
+  return useAppMutation(replaceMonthlyBudgetMutationDefinition, options);
 }

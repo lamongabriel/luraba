@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import type {
   GetAccountResult,
@@ -6,25 +6,20 @@ import type {
   ListAccountsResult,
   ListAccountTransactionsQuery,
   ListAccountTransactionsResult,
-} from "@luraba/contracts"
-import { useQuery } from "@tanstack/react-query"
-import type { AppQueryOptions } from "@/queries/query-options"
-import {
-  getAccount,
-  listAccounts,
-  listAccountTransactions,
-} from "@/services/accounts.service"
+} from "@luraba/contracts";
+import { useQuery } from "@tanstack/react-query";
+import type { AppQueryOptions } from "@/queries/query-options";
+import { getAccount, listAccounts, listAccountTransactions } from "@/services/accounts.service";
 
 export const accountQueryKeys = {
   all: ["accounts"] as const,
   lists: () => [...accountQueryKeys.all, "list"] as const,
-  list: (query: ListAccountsQuery = {}) =>
-    [...accountQueryKeys.lists(), query] as const,
+  list: (query: ListAccountsQuery = {}) => [...accountQueryKeys.lists(), query] as const,
   details: () => [...accountQueryKeys.all, "detail"] as const,
   detail: (id: string) => [...accountQueryKeys.details(), id] as const,
   transactions: (id: string, query: ListAccountTransactionsQuery = {}) =>
     [...accountQueryKeys.detail(id), "transactions", query] as const,
-}
+};
 
 export function useAccountsQuery<TData = ListAccountsResult>(
   query: ListAccountsQuery = {},
@@ -34,7 +29,7 @@ export function useAccountsQuery<TData = ListAccountsResult>(
     queryKey: accountQueryKeys.list(query),
     queryFn: () => listAccounts(query),
     ...options,
-  })
+  });
 }
 
 export function useAccountQuery<TData = GetAccountResult>(
@@ -46,12 +41,10 @@ export function useAccountQuery<TData = GetAccountResult>(
     queryFn: () => getAccount(id),
     ...options,
     enabled: Boolean(id) && (options?.enabled ?? true),
-  })
+  });
 }
 
-export function useAccountTransactionsQuery<
-  TData = ListAccountTransactionsResult,
->(
+export function useAccountTransactionsQuery<TData = ListAccountTransactionsResult>(
   id: string,
   query: ListAccountTransactionsQuery = {},
   options?: AppQueryOptions<ListAccountTransactionsResult, TData>,
@@ -62,5 +55,5 @@ export function useAccountTransactionsQuery<
     placeholderData: (previousData) => previousData,
     ...options,
     enabled: Boolean(id) && (options?.enabled ?? true),
-  })
+  });
 }

@@ -1,5 +1,5 @@
-import { InternalPageLayout } from "@/components/finance/internal-page-layout"
-import { Skeleton } from "@/components/ui/skeleton"
+import { InternalPageLayout } from "@/components/finance/internal-page-layout";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function AccountDetailsLoading() {
   return (
@@ -15,5 +15,5 @@ export function AccountDetailsLoading() {
         </div>
       </div>
     </InternalPageLayout>
-  )
+  );
 }

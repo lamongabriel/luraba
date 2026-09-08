@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 import {
   creditExpenseTimingEnum,
   creditInstallmentBudgetModeEnum,
@@ -7,13 +7,13 @@ import {
   preferredDateFormatEnum,
   preferredLanguageEnum,
   themePreferenceEnum,
-} from '@/db/schemas/enums.schema';
+} from "@/db/schemas/enums.schema";
 import {
   isCountryCode,
   isTimezone,
   listCountryCodes,
   listTimezoneValues,
-} from '@/shared/data/location-data';
+} from "@/shared/data/location-data";
 
 export const LANGUAGE_VALUES = preferredLanguageEnum.enumValues;
 export const TIMEZONE_VALUES = listTimezoneValues();
@@ -34,7 +34,7 @@ export const currencySchema = z
 export const timezoneSchema = z
   .string()
   .trim()
-  .refine(isTimezone, 'Timezone must be a supported IANA timezone.');
+  .refine(isTimezone, "Timezone must be a supported IANA timezone.");
 export const dateFormatSchema = z.enum(preferredDateFormatEnum.enumValues);
 export const preferredPeriodSchema = z.enum(defaultPeriodEnum.enumValues);
 export const accountOrderSchema = z.enum(defaultAccountOrderEnum.enumValues);
@@ -42,7 +42,7 @@ export const countryCodeSchema = z
   .string()
   .trim()
   .toUpperCase()
-  .refine(isCountryCode, 'Country code must be a supported ISO 3166-1 alpha-2 code.');
+  .refine(isCountryCode, "Country code must be a supported ISO 3166-1 alpha-2 code.");
 export const preferredThemeSchema = z.enum(themePreferenceEnum.enumValues);
 export const creditExpenseTimingSchema = z.enum(creditExpenseTimingEnum.enumValues);
 export const creditInstallmentBudgetModeSchema = z.enum(creditInstallmentBudgetModeEnum.enumValues);

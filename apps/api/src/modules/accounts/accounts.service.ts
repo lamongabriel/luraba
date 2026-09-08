@@ -1,36 +1,36 @@
-import type { CreateAccountProfile, UpdateAccountProfile } from '@luraba/contracts/accounts';
-import { toDisplayedBalance } from '@luraba/domain';
-import { ACCOUNT_TYPE_TO_CLASSIFICATION } from '@/config/accounts';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import * as creditCardsRepository from '@/modules/credit-cards/credit-cards.repository';
-import { currenciesRepository } from '@/modules/currencies/currencies.repository';
-import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
+import type { CreateAccountProfile, UpdateAccountProfile } from "@luraba/contracts/accounts";
+import { toDisplayedBalance } from "@luraba/domain";
+import { ACCOUNT_TYPE_TO_CLASSIFICATION } from "@/config/accounts";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import * as creditCardsRepository from "@/modules/credit-cards/credit-cards.repository";
+import { currenciesRepository } from "@/modules/currencies/currencies.repository";
+import * as brandfetchService from "@/modules/integrations/brandfetch/brandfetch.service";
 import {
   buildBrandfetchLogoUrl,
   normalizeBrandDomain,
-} from '@/modules/integrations/brandfetch/brandfetch.utils';
-import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
+} from "@/modules/integrations/brandfetch/brandfetch.utils";
+import { ledgerAccountsRepository } from "@/modules/ledger-accounts/ledger-accounts.repository";
 import type {
   ListAccountTransactionsQuery,
   ListTransactionsQuery,
-} from '@/modules/transactions/transactions.query';
-import * as transactionsRepository from '@/modules/transactions/transactions.repository';
+} from "@/modules/transactions/transactions.query";
+import * as transactionsRepository from "@/modules/transactions/transactions.repository";
 import {
   createBalanceAdjustmentInTransaction,
   listTransactions as listTransactionFeed,
-} from '@/modules/transactions/transactions.service';
-import type { TransactionFeedRow } from '@/modules/transactions/transactions.types';
-import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
-import { formatISODateTime, getTodayInTimezone, parseISODate } from '@/shared/lib/date';
-import { createListMeta, type ListResult } from '@/shared/list';
+} from "@/modules/transactions/transactions.service";
+import type { TransactionFeedRow } from "@/modules/transactions/transactions.types";
+import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
+import { formatISODateTime, getTodayInTimezone, parseISODate } from "@/shared/lib/date";
+import { createListMeta, type ListResult } from "@/shared/list";
 import {
   createAccountProfile,
   getAccountProfile,
   updateAccountProfile,
-} from './accounts.profiles.repository';
-import type { ListAccountsQuery } from './accounts.query';
-import { accountsRepository } from './accounts.repository';
+} from "./accounts.profiles.repository";
+import type { ListAccountsQuery } from "./accounts.query";
+import { accountsRepository } from "./accounts.repository";
 import type {
   Account,
   AccountClassification,
@@ -40,7 +40,7 @@ import type {
   AccountType,
   CreateAccountValues,
   UpdateAccountValues,
-} from './accounts.types';
+} from "./accounts.types";
 
 function mapAccountRecord(account: AccountRecord): Account {
   return {
@@ -61,7 +61,7 @@ function mapAccountRecord(account: AccountRecord): Account {
 function mapAccountWithProfile(
   account: AccountRecord,
   balance: number,
-  details: AccountDetails['details'],
+  details: AccountDetails["details"],
 ): AccountDetails {
   return {
     ...mapAccountRecord(account),
@@ -148,14 +148,14 @@ async function validateSecuredAsset(
   details: CreateAccountProfile | UpdateAccountProfile,
   accountId: string | undefined,
 ): Promise<void> {
-  if (details.kind !== 'loan' || !details.securedAssetAccountId) return;
+  if (details.kind !== "loan" || !details.securedAssetAccountId) return;
   if (details.securedAssetAccountId === accountId) {
-    throw new ValidationError('A loan cannot be secured by itself');
+    throw new ValidationError("A loan cannot be secured by itself");
   }
 
   const securedAsset = await accountsRepository.get(details.securedAssetAccountId, context);
-  if (securedAsset?.classification !== 'asset') {
-    throw new NotFoundError('Secured asset account');
+  if (securedAsset?.classification !== "asset") {
+    throw new NotFoundError("Secured asset account");
   }
 }
 
@@ -192,10 +192,10 @@ export async function createAccount(
   dto: CreateAccountValues,
 ): Promise<AccountDetails> {
   const currency = await currenciesRepository.findByCode(dto.currencyCode);
-  if (!currency) throw new NotFoundError('Currency');
+  if (!currency) throw new NotFoundError("Currency");
 
   const existing = await accountsRepository.findByHouseholdAndName(context, dto.name);
-  if (existing) throw new ConflictError('An account with this name already exists');
+  if (existing) throw new ConflictError("An account with this name already exists");
   const classification = ACCOUNT_TYPE_TO_CLASSIFICATION[dto.type];
 
   await validateSecuredAsset(context, dto.details, undefined);
@@ -228,7 +228,7 @@ export async function createAccount(
         account,
         accountLedgerId: ledger.id,
         balance: dto.openingBalance,
-        description: 'Opening balance',
+        description: "Opening balance",
         includeInBudget: false,
         purchaseDate: postedDate,
         postedDate,
@@ -264,15 +264,15 @@ export async function getAccountDetails(
   accountId: string,
 ): Promise<AccountDetails> {
   const account = await accountsRepository.get(accountId, context);
-  if (!account) throw new NotFoundError('Account');
-  if (account.type === 'credit_card') throw new NotFoundError('Account');
+  if (!account) throw new NotFoundError("Account");
+  if (account.type === "credit_card") throw new NotFoundError("Account");
 
-  const ledger = await ledgerAccountsRepository.findByOwner('account', account.id);
-  if (!ledger) throw new NotFoundError('Account ledger');
+  const ledger = await ledgerAccountsRepository.findByOwner("account", account.id);
+  if (!ledger) throw new NotFoundError("Account ledger");
 
   const balance = await ledgerAccountsRepository.getBalance(ledger.id);
   const profile = await getAccountProfile(account.id, account.type);
-  if (!profile) throw new NotFoundError('Account profile');
+  if (!profile) throw new NotFoundError("Account profile");
 
   return mapAccountWithProfile(account, balance, profile);
 }
@@ -283,9 +283,9 @@ export async function listAccountTransactions(
   query: ListAccountTransactionsQuery,
 ): Promise<ListResult<TransactionFeedRow>> {
   const account = await accountsRepository.get(accountId, context);
-  if (!account) throw new NotFoundError('Account');
-  if (account.type === 'credit_card') {
-    throw new NotFoundError('Account');
+  if (!account) throw new NotFoundError("Account");
+  if (account.type === "credit_card") {
+    throw new NotFoundError("Account");
   }
 
   const transactionsQuery: ListTransactionsQuery = {
@@ -304,24 +304,24 @@ export async function updateAccount(
 ): Promise<AccountDetails> {
   const account = await accountsRepository.get(accountId, context);
   if (!account) {
-    throw new NotFoundError('Account');
+    throw new NotFoundError("Account");
   }
 
   if (dto.name && dto.name !== account.name) {
     const existing = await accountsRepository.findByHouseholdAndName(context, dto.name);
     if (existing && existing.id !== accountId) {
-      throw new ConflictError('An account with this name already exists');
+      throw new ConflictError("An account with this name already exists");
     }
   }
 
   if (dto.details && dto.details.kind !== account.type) {
-    throw new ValidationError('Account details must match the existing account type');
+    throw new ValidationError("Account details must match the existing account type");
   }
   if (dto.details) {
     await validateSecuredAsset(context, dto.details, account.id);
-    if (dto.details.kind === 'loan') {
+    if (dto.details.kind === "loan") {
       const currentProfile = await getAccountProfile(account.id, account.type);
-      if (currentProfile?.kind !== 'loan') throw new NotFoundError('Account profile');
+      if (currentProfile?.kind !== "loan") throw new NotFoundError("Account profile");
       const startDate =
         dto.details.startDate === undefined ? currentProfile.startDate : dto.details.startDate;
       const maturityDate =
@@ -329,7 +329,7 @@ export async function updateAccount(
           ? currentProfile.maturityDate
           : dto.details.maturityDate;
       if (startDate && maturityDate && startDate > maturityDate) {
-        throw new ValidationError('Maturity date must be on or after the start date');
+        throw new ValidationError("Maturity date must be on or after the start date");
       }
     }
   }
@@ -350,7 +350,7 @@ export async function updateAccount(
   });
 
   if (!updated) {
-    throw new NotFoundError('Account');
+    throw new NotFoundError("Account");
   }
 
   return getAccountDetails(context, updated.id);
@@ -359,16 +359,16 @@ export async function updateAccount(
 export async function deleteAccount(context: HouseholdContext, accountId: string): Promise<void> {
   const account = await accountsRepository.get(accountId, context);
   if (!account) {
-    throw new NotFoundError('Account');
+    throw new NotFoundError("Account");
   }
 
-  const ledger = await ledgerAccountsRepository.findByOwner('account', account.id);
+  const ledger = await ledgerAccountsRepository.findByOwner("account", account.id);
   if (!ledger) {
-    throw new NotFoundError('Account ledger');
+    throw new NotFoundError("Account ledger");
   }
 
   const ownedCardLedgerIds =
-    account.type === 'cash'
+    account.type === "cash"
       ? await creditCardsRepository.findLedgerAccountIdsByOwnerAccountId(
           context.householdId,
           account.id,
@@ -377,18 +377,18 @@ export async function deleteAccount(context: HouseholdContext, accountId: string
 
   await db.transaction(async (tx) => {
     await transactionsRepository.deleteByLedgerId(tx, context.householdId, ledger.id);
-    await ledgerAccountsRepository.deleteByOwner(tx, 'account', account.id);
+    await ledgerAccountsRepository.deleteByOwner(tx, "account", account.id);
 
     for (const cardLedgerAccountId of ownedCardLedgerIds) {
       await transactionsRepository.deleteByLedgerId(tx, context.householdId, cardLedgerAccountId);
-      await ledgerAccountsRepository.deleteByOwner(tx, 'account', cardLedgerAccountId);
+      await ledgerAccountsRepository.deleteByOwner(tx, "account", cardLedgerAccountId);
       await accountsRepository.deleteInTransaction(tx, context, cardLedgerAccountId);
     }
 
     const deleted = await accountsRepository.deleteInTransaction(tx, context, account.id);
 
     if (!deleted) {
-      throw new NotFoundError('Account');
+      throw new NotFoundError("Account");
     }
   });
 }

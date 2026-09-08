@@ -1,17 +1,17 @@
 import {
   listCreditCardCyclesQuerySchema,
   listCreditCardsQuerySchema,
-} from '@luraba/contracts/credit-cards';
-import { eq } from 'drizzle-orm';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { db } from '@/db';
-import { creditCardBudgetRecognitionsTable } from '@/db/schemas/credit-card-budget-recognitions.schema';
-import * as accountsService from '@/modules/accounts/accounts.service';
-import * as categoriesService from '@/modules/categories/categories.service';
-import * as brandfetchService from '@/modules/integrations/brandfetch/brandfetch.service';
-import * as tagsService from '@/modules/tags/tags.service';
-import { ValidationError } from '@/shared/errors';
-import { createAuthenticatedContext } from '@/test/auth';
+} from "@luraba/contracts/credit-cards";
+import { eq } from "drizzle-orm";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { db } from "@/db";
+import { creditCardBudgetRecognitionsTable } from "@/db/schemas/credit-card-budget-recognitions.schema";
+import * as accountsService from "@/modules/accounts/accounts.service";
+import * as categoriesService from "@/modules/categories/categories.service";
+import * as brandfetchService from "@/modules/integrations/brandfetch/brandfetch.service";
+import * as tagsService from "@/modules/tags/tags.service";
+import { ValidationError } from "@/shared/errors";
+import { createAuthenticatedContext } from "@/test/auth";
 import {
   buildAccountInput,
   buildCategoryInput,
@@ -19,47 +19,47 @@ import {
   buildTagInput,
   createBalanceEntryForAccount,
   createCreditCardOwner,
-} from '@/test/factories';
-import * as creditCardsService from '../credit-cards.service';
+} from "@/test/factories";
+import * as creditCardsService from "../credit-cards.service";
 
-describe('credit cards service', () => {
+describe("credit cards service", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
-  function buildCyclesQuery(scope: 'default' | 'all' = 'default') {
+  function buildCyclesQuery(scope: "default" | "all" = "default") {
     return listCreditCardCyclesQuerySchema.parse({ scope });
   }
 
-  it('creates a card with normalized institution branding from the account flow', async () => {
+  it("creates a card with normalized institution branding from the account flow", async () => {
     const context = await createAuthenticatedContext();
     const ownerAccount = await createCreditCardOwner(context.householdContext);
-    vi.spyOn(global, 'fetch').mockResolvedValue(new Response('ok', { status: 200 }));
+    vi.spyOn(global, "fetch").mockResolvedValue(new Response("ok", { status: 200 }));
 
     await brandfetchService.updateBrandfetchIntegration(context.householdContext, {
-      clientId: 'brandfetch-client-id',
+      clientId: "brandfetch-client-id",
     });
 
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
         ownerAccountId: ownerAccount.id,
-        name: 'Nu Card',
-        institutionName: 'Nubank',
-        institutionDomain: 'https://www.nubank.com.br/cartao',
+        name: "Nu Card",
+        institutionName: "Nubank",
+        institutionDomain: "https://www.nubank.com.br/cartao",
       }),
     );
 
-    expect(card.institutionDomain).toBe('nubank.com.br');
+    expect(card.institutionDomain).toBe("nubank.com.br");
     expect(card.institutionLogoUrl).toBe(
-      'https://cdn.brandfetch.io/nubank.com.br/icon.png?c=brandfetch-client-id',
+      "https://cdn.brandfetch.io/nubank.com.br/icon.png?c=brandfetch-client-id",
     );
   });
 
-  it('creates a card with current and next billing cycles available by default', async () => {
+  it("creates a card with current and next billing cycles available by default", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-04-10T12:00:00.000Z'));
+    vi.setSystemTime(new Date("2026-04-10T12:00:00.000Z"));
 
     const context = await createAuthenticatedContext();
     const ownerAccount = await createCreditCardOwner(context.householdContext);
@@ -67,7 +67,7 @@ describe('credit cards service', () => {
       context.householdContext,
       buildCreditCardInput({
         ownerAccountId: ownerAccount.id,
-        name: 'Nubank',
+        name: "Nubank",
         closingDay: 25,
         dueDay: 5,
       }),
@@ -82,87 +82,87 @@ describe('credit cards service', () => {
     expect(cycles.data).toHaveLength(2);
     expect(cycles.data[0]).toEqual(
       expect.objectContaining({
-        displayStatus: 'upcoming',
+        displayStatus: "upcoming",
         isNext: true,
         hasActivity: false,
       }),
     );
     expect(cycles.data[1]).toEqual(
       expect.objectContaining({
-        displayStatus: 'current',
+        displayStatus: "current",
         isCurrent: true,
       }),
     );
   });
 
-  it('assigns purchases to billing cycles using postedDate', async () => {
+  it("assigns purchases to billing cycles using postedDate", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-04-10T12:00:00.000Z'));
+    vi.setSystemTime(new Date("2026-04-10T12:00:00.000Z"));
 
     const context = await createAuthenticatedContext();
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Electronics', type: 'expense' }),
+      buildCategoryInput({ name: "Electronics", type: "expense" }),
     );
     const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
         ownerAccountId: ownerAccount.id,
-        name: 'Mastercard',
+        name: "Mastercard",
         closingDay: 25,
         dueDay: 5,
       }),
     );
 
     const purchase = await creditCardsService.createPurchase(context.householdContext, card.id, {
-      description: 'Laptop',
+      description: "Laptop",
       amount: 120_000,
       categoryId: category.id,
-      purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
-      postedDate: new Date('2026-04-29T00:00:00.000Z'),
+      purchaseDate: new Date("2026-04-20T00:00:00.000Z"),
+      postedDate: new Date("2026-04-29T00:00:00.000Z"),
       installmentCount: 3,
     });
 
     expect(purchase.installments[0]).toEqual(
       expect.objectContaining({
         installmentNumber: 1,
-        closingDate: '2026-05-25',
-        dueDate: '2026-06-05',
+        closingDate: "2026-05-25",
+        dueDate: "2026-06-05",
       }),
     );
 
     const cycles = await creditCardsService.listBillingCycles(
       context.householdContext,
       card.id,
-      buildCyclesQuery('all'),
+      buildCyclesQuery("all"),
     );
 
     expect(cycles.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          closingDate: '2026-05-25',
+          closingDate: "2026-05-25",
           hasActivity: true,
         }),
       ]),
     );
   });
 
-  it('updates cycle display status from due to paid after a payment', async () => {
+  it("updates cycle display status from due to paid after a payment", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-04-30T12:00:00.000Z'));
+    vi.setSystemTime(new Date("2026-04-30T12:00:00.000Z"));
 
     const context = await createAuthenticatedContext();
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Food', type: 'expense' }),
+      buildCategoryInput({ name: "Food", type: "expense" }),
     );
     const sourceAccount = await accountsService.createAccount(
       context.householdContext,
       buildAccountInput({
-        name: 'Checking',
-        type: 'cash',
-        currencyCode: 'BRL',
+        name: "Checking",
+        type: "cash",
+        currencyCode: "BRL",
       }),
     );
     await createBalanceEntryForAccount({
@@ -175,31 +175,31 @@ describe('credit cards service', () => {
       context.householdContext,
       buildCreditCardInput({
         ownerAccountId: sourceAccount.id,
-        name: 'Visa Gold',
+        name: "Visa Gold",
         closingDay: 25,
         dueDay: 5,
       }),
     );
 
     await creditCardsService.createPurchase(context.householdContext, card.id, {
-      description: 'Groceries',
+      description: "Groceries",
       amount: 15_000,
       categoryId: category.id,
-      purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
-      postedDate: new Date('2026-04-20T00:00:00.000Z'),
+      purchaseDate: new Date("2026-04-20T00:00:00.000Z"),
+      postedDate: new Date("2026-04-20T00:00:00.000Z"),
       installmentCount: 1,
     });
 
     let cycles = await creditCardsService.listBillingCycles(
       context.householdContext,
       card.id,
-      buildCyclesQuery('all'),
+      buildCyclesQuery("all"),
     );
-    const dueCycle = cycles.data.find((cycle) => cycle.closingDate === '2026-04-25');
+    const dueCycle = cycles.data.find((cycle) => cycle.closingDate === "2026-04-25");
 
     expect(dueCycle).toEqual(
       expect.objectContaining({
-        displayStatus: 'due',
+        displayStatus: "due",
         remainingAmount: 15_000,
       }),
     );
@@ -207,44 +207,44 @@ describe('credit cards service', () => {
     await creditCardsService.createPayment(context.householdContext, card.id, {
       amount: 15_000,
       fromAccountId: sourceAccount.id,
-      paymentDate: new Date('2026-04-30T00:00:00.000Z'),
+      paymentDate: new Date("2026-04-30T00:00:00.000Z"),
     });
 
     cycles = await creditCardsService.listBillingCycles(
       context.householdContext,
       card.id,
-      buildCyclesQuery('all'),
+      buildCyclesQuery("all"),
     );
-    const paidCycle = cycles.data.find((cycle) => cycle.closingDate === '2026-04-25');
+    const paidCycle = cycles.data.find((cycle) => cycle.closingDate === "2026-04-25");
 
     expect(paidCycle).toEqual(
       expect.objectContaining({
-        displayStatus: 'paid',
+        displayStatus: "paid",
         remainingAmount: 0,
         paidAmount: 15_000,
       }),
     );
   });
 
-  it('gets and updates a credit card purchase through the credit card module', async () => {
+  it("gets and updates a credit card purchase through the credit card module", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-04-10T12:00:00.000Z'));
+    vi.setSystemTime(new Date("2026-04-10T12:00:00.000Z"));
 
     const context = await createAuthenticatedContext();
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Electronics', type: 'expense' }),
+      buildCategoryInput({ name: "Electronics", type: "expense" }),
     );
     const updatedCategory = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Home Office', type: 'expense' }),
+      buildCategoryInput({ name: "Home Office", type: "expense" }),
     );
     const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
         ownerAccountId: ownerAccount.id,
-        name: 'Amex',
+        name: "Amex",
         closingDay: 25,
         dueDay: 5,
       }),
@@ -254,11 +254,11 @@ describe('credit cards service', () => {
       context.householdContext,
       card.id,
       {
-        description: 'Monitor',
+        description: "Monitor",
         amount: 80_000,
         categoryId: category.id,
-        purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
-        postedDate: new Date('2026-04-20T00:00:00.000Z'),
+        purchaseDate: new Date("2026-04-20T00:00:00.000Z"),
+        postedDate: new Date("2026-04-20T00:00:00.000Z"),
         installmentCount: 1,
       },
     );
@@ -271,9 +271,9 @@ describe('credit cards service', () => {
 
     expect(loadedPurchase).toEqual(
       expect.objectContaining({
-        description: 'Monitor',
+        description: "Monitor",
         categoryId: category.id,
-        postedDate: '2026-04-20',
+        postedDate: "2026-04-20",
         installmentCount: 1,
       }),
     );
@@ -283,53 +283,53 @@ describe('credit cards service', () => {
       card.id,
       createdPurchase.purchaseId,
       {
-        description: 'Ultrawide Monitor',
+        description: "Ultrawide Monitor",
         amount: 90_000,
         categoryId: updatedCategory.id,
-        postedDate: new Date('2026-04-29T00:00:00.000Z'),
+        postedDate: new Date("2026-04-29T00:00:00.000Z"),
         installmentCount: 2,
       },
     );
 
     expect(updatedPurchase).toEqual(
       expect.objectContaining({
-        description: 'Ultrawide Monitor',
+        description: "Ultrawide Monitor",
         amount: 90_000,
         categoryId: updatedCategory.id,
-        postedDate: '2026-04-29',
+        postedDate: "2026-04-29",
         installmentCount: 2,
       }),
     );
     expect(updatedPurchase.installments[0]).toEqual(
       expect.objectContaining({
         installmentNumber: 1,
-        closingDate: '2026-05-25',
+        closingDate: "2026-05-25",
       }),
     );
   });
 
-  it('updates purchase tags, budget inclusion, and the installment schedule atomically', async () => {
+  it("updates purchase tags, budget inclusion, and the installment schedule atomically", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-04-10T12:00:00.000Z'));
+    vi.setSystemTime(new Date("2026-04-10T12:00:00.000Z"));
 
     const context = await createAuthenticatedContext();
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Home', type: 'expense' }),
+      buildCategoryInput({ name: "Home", type: "expense" }),
     );
     const initialTag = await tagsService.createTag(
       context.householdContext,
-      buildTagInput({ name: 'Initial purchase tag' }),
+      buildTagInput({ name: "Initial purchase tag" }),
     );
     const updatedTag = await tagsService.createTag(
       context.householdContext,
-      buildTagInput({ name: 'Updated purchase tag' }),
+      buildTagInput({ name: "Updated purchase tag" }),
     );
     const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
-        name: 'Budget Card',
+        name: "Budget Card",
         closingDay: 25,
         dueDay: 5,
         ownerAccountId: ownerAccount.id,
@@ -337,11 +337,11 @@ describe('credit cards service', () => {
     );
 
     const purchase = await creditCardsService.createPurchase(context.householdContext, card.id, {
-      description: 'Furniture',
+      description: "Furniture",
       amount: 90_000,
       categoryId: category.id,
-      purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
-      postedDate: new Date('2026-04-20T00:00:00.000Z'),
+      purchaseDate: new Date("2026-04-20T00:00:00.000Z"),
+      postedDate: new Date("2026-04-20T00:00:00.000Z"),
       installmentCount: 2,
       includeInBudget: false,
       tagIds: [initialTag.id],
@@ -399,21 +399,21 @@ describe('credit cards service', () => {
     ).resolves.toHaveLength(0);
   });
 
-  it('marks a zeroed closing-day cycle as paid after deleting the only purchase', async () => {
+  it("marks a zeroed closing-day cycle as paid after deleting the only purchase", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-04-25T12:00:00.000Z'));
+    vi.setSystemTime(new Date("2026-04-25T12:00:00.000Z"));
 
     const context = await createAuthenticatedContext();
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Subscriptions', type: 'expense' }),
+      buildCategoryInput({ name: "Subscriptions", type: "expense" }),
     );
     const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
         ownerAccountId: ownerAccount.id,
-        name: 'Delete Card',
+        name: "Delete Card",
         closingDay: 25,
         dueDay: 5,
       }),
@@ -423,11 +423,11 @@ describe('credit cards service', () => {
       context.householdContext,
       card.id,
       {
-        description: 'Streaming',
+        description: "Streaming",
         amount: 3_000,
         categoryId: category.id,
-        purchaseDate: new Date('2026-04-24T00:00:00.000Z'),
-        postedDate: new Date('2026-04-24T00:00:00.000Z'),
+        purchaseDate: new Date("2026-04-24T00:00:00.000Z"),
+        postedDate: new Date("2026-04-24T00:00:00.000Z"),
         installmentCount: 1,
       },
     );
@@ -441,36 +441,36 @@ describe('credit cards service', () => {
     const cycles = await creditCardsService.listBillingCycles(
       context.householdContext,
       card.id,
-      buildCyclesQuery('all'),
+      buildCyclesQuery("all"),
     );
-    const closingDayCycle = cycles.data.find((cycle) => cycle.closingDate === '2026-04-25');
+    const closingDayCycle = cycles.data.find((cycle) => cycle.closingDate === "2026-04-25");
 
     expect(closingDayCycle).toEqual(
       expect.objectContaining({
-        status: 'paid',
-        displayStatus: 'paid',
+        status: "paid",
+        displayStatus: "paid",
         remainingAmount: 0,
         statementAmount: 0,
       }),
     );
   });
 
-  it('gets, updates, and deletes a credit card payment through the credit card module', async () => {
+  it("gets, updates, and deletes a credit card payment through the credit card module", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-04-30T12:00:00.000Z'));
+    vi.setSystemTime(new Date("2026-04-30T12:00:00.000Z"));
 
     const context = await createAuthenticatedContext();
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Bills', type: 'expense' }),
+      buildCategoryInput({ name: "Bills", type: "expense" }),
     );
     const sourceAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking A', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Checking A", type: "cash", currencyCode: "BRL" }),
     );
     const secondSourceAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking B', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Checking B", type: "cash", currencyCode: "BRL" }),
     );
     await createBalanceEntryForAccount({
       householdId: context.household.id,
@@ -486,7 +486,7 @@ describe('credit cards service', () => {
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
-        name: 'Payment Card',
+        name: "Payment Card",
         closingDay: 25,
         dueDay: 5,
         ownerAccountId: sourceAccount.id,
@@ -494,11 +494,11 @@ describe('credit cards service', () => {
     );
 
     await creditCardsService.createPurchase(context.householdContext, card.id, {
-      description: 'Phone',
+      description: "Phone",
       amount: 10_000,
       categoryId: category.id,
-      purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
-      postedDate: new Date('2026-04-20T00:00:00.000Z'),
+      purchaseDate: new Date("2026-04-20T00:00:00.000Z"),
+      postedDate: new Date("2026-04-20T00:00:00.000Z"),
       installmentCount: 1,
     });
 
@@ -508,8 +508,8 @@ describe('credit cards service', () => {
       {
         amount: 10_000,
         fromAccountId: sourceAccount.id,
-        paymentDate: new Date('2026-04-30T00:00:00.000Z'),
-        description: 'Card payment',
+        paymentDate: new Date("2026-04-30T00:00:00.000Z"),
+        description: "Card payment",
       },
     );
 
@@ -521,11 +521,11 @@ describe('credit cards service', () => {
 
     expect(loadedPayment).toEqual(
       expect.objectContaining({
-        description: 'Card payment',
+        description: "Card payment",
         amount: 10_000,
         fromAccountId: sourceAccount.id,
-        paymentDate: '2026-04-30',
-        postedDate: '2026-04-30',
+        paymentDate: "2026-04-30",
+        postedDate: "2026-04-30",
       }),
     );
 
@@ -536,13 +536,13 @@ describe('credit cards service', () => {
       {
         amount: 8_000,
         fromAccountId: secondSourceAccount.id,
-        description: 'Updated payment',
+        description: "Updated payment",
       },
     );
 
     expect(updatedPayment).toEqual(
       expect.objectContaining({
-        description: 'Updated payment',
+        description: "Updated payment",
         amount: 8_000,
         fromAccountId: secondSourceAccount.id,
       }),
@@ -551,9 +551,9 @@ describe('credit cards service', () => {
     let cycles = await creditCardsService.listBillingCycles(
       context.householdContext,
       card.id,
-      buildCyclesQuery('all'),
+      buildCyclesQuery("all"),
     );
-    let dueCycle = cycles.data.find((cycle) => cycle.closingDate === '2026-04-25');
+    let dueCycle = cycles.data.find((cycle) => cycle.closingDate === "2026-04-25");
     expect(dueCycle).toEqual(expect.objectContaining({ remainingAmount: 2_000 }));
 
     await creditCardsService.deletePayment(
@@ -565,24 +565,24 @@ describe('credit cards service', () => {
     cycles = await creditCardsService.listBillingCycles(
       context.householdContext,
       card.id,
-      buildCyclesQuery('all'),
+      buildCyclesQuery("all"),
     );
-    dueCycle = cycles.data.find((cycle) => cycle.closingDate === '2026-04-25');
+    dueCycle = cycles.data.find((cycle) => cycle.closingDate === "2026-04-25");
     expect(dueCycle).toEqual(expect.objectContaining({ remainingAmount: 10_000 }));
   });
 
-  it('rejects payments greater than the current used credit amount', async () => {
+  it("rejects payments greater than the current used credit amount", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-04-30T12:00:00.000Z'));
+    vi.setSystemTime(new Date("2026-04-30T12:00:00.000Z"));
 
     const context = await createAuthenticatedContext();
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Bills', type: 'expense' }),
+      buildCategoryInput({ name: "Bills", type: "expense" }),
     );
     const sourceAccount = await accountsService.createAccount(
       context.householdContext,
-      buildAccountInput({ name: 'Checking', type: 'cash', currencyCode: 'BRL' }),
+      buildAccountInput({ name: "Checking", type: "cash", currencyCode: "BRL" }),
     );
     await createBalanceEntryForAccount({
       householdId: context.household.id,
@@ -593,7 +593,7 @@ describe('credit cards service', () => {
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
-        name: 'Payment Limit Card',
+        name: "Payment Limit Card",
         closingDay: 25,
         dueDay: 5,
         ownerAccountId: sourceAccount.id,
@@ -601,11 +601,11 @@ describe('credit cards service', () => {
     );
 
     await creditCardsService.createPurchase(context.householdContext, card.id, {
-      description: 'Phone',
+      description: "Phone",
       amount: 10_000,
       categoryId: category.id,
-      purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
-      postedDate: new Date('2026-04-20T00:00:00.000Z'),
+      purchaseDate: new Date("2026-04-20T00:00:00.000Z"),
+      postedDate: new Date("2026-04-20T00:00:00.000Z"),
       installmentCount: 1,
     });
 
@@ -613,23 +613,23 @@ describe('credit cards service', () => {
       creditCardsService.createPayment(context.householdContext, card.id, {
         amount: 15_000,
         fromAccountId: sourceAccount.id,
-        paymentDate: new Date('2026-04-30T00:00:00.000Z'),
+        paymentDate: new Date("2026-04-30T00:00:00.000Z"),
       }),
     ).rejects.toThrow(ValidationError);
   });
 
-  it('blocks purchases that exceed the remaining credit limit', async () => {
+  it("blocks purchases that exceed the remaining credit limit", async () => {
     const context = await createAuthenticatedContext();
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Electronics', type: 'expense' }),
+      buildCategoryInput({ name: "Electronics", type: "expense" }),
     );
     const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
         ownerAccountId: ownerAccount.id,
-        name: 'Limit Card',
+        name: "Limit Card",
         closingDay: 25,
         dueDay: 5,
         creditLimitAmount: 50_000,
@@ -645,78 +645,78 @@ describe('credit cards service', () => {
     );
 
     await creditCardsService.createPurchase(context.householdContext, card.id, {
-      description: 'Laptop',
+      description: "Laptop",
       amount: 40_000,
       categoryId: category.id,
-      purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
-      postedDate: new Date('2026-04-20T00:00:00.000Z'),
+      purchaseDate: new Date("2026-04-20T00:00:00.000Z"),
+      postedDate: new Date("2026-04-20T00:00:00.000Z"),
       installmentCount: 4,
     });
 
     await expect(
       creditCardsService.createPurchase(context.householdContext, card.id, {
-        description: 'Headphones',
+        description: "Headphones",
         amount: 15_000,
         categoryId: category.id,
-        purchaseDate: new Date('2026-04-21T00:00:00.000Z'),
-        postedDate: new Date('2026-04-21T00:00:00.000Z'),
+        purchaseDate: new Date("2026-04-21T00:00:00.000Z"),
+        postedDate: new Date("2026-04-21T00:00:00.000Z"),
         installmentCount: 1,
       }),
     ).rejects.toThrow(ValidationError);
   });
 });
 
-describe('credit card DB list filters', () => {
-  it('filters card rows and computed cycle amounts before pagination', async () => {
+describe("credit card DB list filters", () => {
+  it("filters card rows and computed cycle amounts before pagination", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-04-20T12:00:00.000Z'));
+    vi.setSystemTime(new Date("2026-04-20T12:00:00.000Z"));
 
     const context = await createAuthenticatedContext();
     const category = await categoriesService.createCategory(
       context.householdContext,
-      buildCategoryInput({ name: 'Card Query Category', type: 'expense' }),
+      buildCategoryInput({ name: "Card Query Category", type: "expense" }),
     );
     const ownerAccount = await createCreditCardOwner(context.householdContext);
     const card = await creditCardsService.createCreditCard(
       context.householdContext,
       buildCreditCardInput({
         ownerAccountId: ownerAccount.id,
-        name: 'Card Query Target',
-        institutionName: 'Query Bank',
-        brand: 'Visa',
+        name: "Card Query Target",
+        institutionName: "Query Bank",
+        brand: "Visa",
         closingDay: 25,
         dueDay: 5,
         creditLimitAmount: 50_000,
       }),
     );
     await creditCardsService.createPurchase(context.householdContext, card.id, {
-      description: 'Card Query Purchase',
+      description: "Card Query Purchase",
       amount: 10_000,
       categoryId: category.id,
-      purchaseDate: new Date('2026-04-20T00:00:00.000Z'),
-      postedDate: new Date('2026-04-20T00:00:00.000Z'),
+      purchaseDate: new Date("2026-04-20T00:00:00.000Z"),
+      postedDate: new Date("2026-04-20T00:00:00.000Z"),
       installmentCount: 1,
     });
 
     const cards = await creditCardsService.listCreditCards(
       context.householdContext,
       listCreditCardsQuerySchema.parse({
-        search: 'Query Target',
-        brands: 'Visa,Mastercard',
-        currencyCodes: 'BRL',
+        search: "Query Target",
+        brands: "Visa,Mastercard",
+        currencyCodes: "BRL",
         ownerAccountIds: card.ownerAccountId,
-        closingDays: '25',
-        dueDays: '5',
+        closingDays: "25",
+        dueDays: "5",
         balanceMin: 10_000,
         balanceMax: 10_000,
         creditLimitMin: 50_000,
         creditLimitMax: 50_000,
         hasCreditLimit: true,
-        createdAtFrom: '2020-01-01',
-        createdAtTo: '2030-01-01',
-        updatedAtFrom: '2020-01-01',
-        updatedAtTo: '2030-01-01',
-        sort: 'balance',
+        createdAtFrom: "2020-01-01",
+        createdAtTo: "2030-01-01",
+        updatedAtFrom: "2020-01-01",
+        updatedAtTo: "2030-01-01",
+        sort: "balance",
         perPage: 1,
       }),
     );
@@ -725,7 +725,7 @@ describe('credit card DB list filters', () => {
     const allCycles = await creditCardsService.listBillingCycles(
       context.householdContext,
       card.id,
-      listCreditCardCyclesQuerySchema.parse({ scope: 'all' }),
+      listCreditCardCyclesQuerySchema.parse({ scope: "all" }),
     );
     const activeCycle = allCycles.data.find((cycle) => cycle.statementAmount === 10_000);
     expect(activeCycle).toBeDefined();
@@ -734,7 +734,7 @@ describe('credit card DB list filters', () => {
       context.householdContext,
       card.id,
       listCreditCardCyclesQuerySchema.parse({
-        scope: 'all',
+        scope: "all",
         search: activeCycle?.status,
         statuses: activeCycle?.status,
         displayStatuses: activeCycle?.displayStatus,
@@ -748,7 +748,7 @@ describe('credit card DB list filters', () => {
         paidAmountMax: 0,
         remainingAmountMin: 10_000,
         remainingAmountMax: 10_000,
-        sort: 'closingDate',
+        sort: "closingDate",
         perPage: 1,
       }),
     );

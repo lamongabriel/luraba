@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import type { PermissionInput, PermissionMatch } from "@luraba/contracts"
-import type { ReactNode } from "react"
+import type { PermissionInput, PermissionMatch } from "@luraba/contracts";
+import type { ReactNode } from "react";
 
-import { Unauthorized } from "./unauthorized"
-import { useCan } from "./use-can"
+import { Unauthorized } from "./unauthorized";
+import { useCan } from "./use-can";
 
 interface CanProps {
-  permission: PermissionInput
-  match?: PermissionMatch
-  fallback?: ReactNode
-  children: ReactNode
+  permission: PermissionInput;
+  match?: PermissionMatch;
+  fallback?: ReactNode;
+  children: ReactNode;
 }
 
 export function Can({
@@ -19,7 +19,7 @@ export function Can({
   fallback = <Unauthorized fullPage={false} />,
   children,
 }: CanProps) {
-  const can = useCan()
+  const can = useCan();
 
-  return <>{can(permission, match) ? children : fallback}</>
+  return <>{can(permission, match) ? children : fallback}</>;
 }

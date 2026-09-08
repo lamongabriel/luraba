@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { transactionTypeEnum } from '@/db/schemas/enums.schema';
+import { z } from "zod";
+import { transactionTypeEnum } from "@/db/schemas/enums.schema";
 
 export const transactionTypeSchema = z.enum(transactionTypeEnum.enumValues);
 

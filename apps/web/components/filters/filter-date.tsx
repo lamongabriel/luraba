@@ -1,163 +1,152 @@
-"use client"
+"use client";
 
-import { CalendarIcon, CancelCircleIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { Column } from "@tanstack/react-table"
-import * as React from "react"
-import type { DateRange } from "react-day-picker"
+import { CalendarIcon, CancelCircleIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { Column } from "@tanstack/react-table";
+import * as React from "react";
+import type { DateRange } from "react-day-picker";
 
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { Separator } from "@/components/ui/separator"
-import { formatDate } from "@/lib/format"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
+import { formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 type FilterDateProps<TData> =
   | {
-      column: Column<TData, unknown>
-      disabled?: React.ComponentProps<typeof Calendar>["disabled"]
-      title?: string
-      multiple?: boolean
+      column: Column<TData, unknown>;
+      disabled?: React.ComponentProps<typeof Calendar>["disabled"];
+      title?: string;
+      multiple?: boolean;
     }
   | {
-      disabled?: React.ComponentProps<typeof Calendar>["disabled"]
-      value?: Date | DateRange
-      onValueChange?: (value: Date | DateRange | undefined) => void
-      title?: string
-      multiple?: boolean
-    }
+      disabled?: React.ComponentProps<typeof Calendar>["disabled"];
+      value?: Date | DateRange;
+      onValueChange?: (value: Date | DateRange | undefined) => void;
+      title?: string;
+      multiple?: boolean;
+    };
 
 function isTableFilterProps<TData>(
   props: FilterDateProps<TData>,
-): props is Extract<
-  FilterDateProps<TData>,
-  { column: Column<TData, unknown> }
-> {
-  return "column" in props
+): props is Extract<FilterDateProps<TData>, { column: Column<TData, unknown> }> {
+  return "column" in props;
 }
 
 function parseAsDate(timestamp: number | string | undefined): Date | undefined {
-  if (!timestamp) return undefined
+  if (!timestamp) return undefined;
 
-  const numericTimestamp =
-    typeof timestamp === "string" ? Number(timestamp) : timestamp
-  const date = new Date(numericTimestamp)
+  const numericTimestamp = typeof timestamp === "string" ? Number(timestamp) : timestamp;
+  const date = new Date(numericTimestamp);
 
-  return !Number.isNaN(date.getTime()) ? date : undefined
+  return !Number.isNaN(date.getTime()) ? date : undefined;
 }
 
 function parseColumnFilterValue(value: unknown) {
-  if (value === null || value === undefined) return []
+  if (value === null || value === undefined) return [];
 
   if (Array.isArray(value)) {
     return value.map((item) => {
       if (typeof item === "number" || typeof item === "string") {
-        return item
+        return item;
       }
 
-      return undefined
-    })
+      return undefined;
+    });
   }
 
   if (typeof value === "string" || typeof value === "number") {
-    return [value]
+    return [value];
   }
 
-  return []
+  return [];
 }
 
 function formatDateRange(range: DateRange) {
-  if (!range.from && !range.to) return ""
+  if (!range.from && !range.to) return "";
   if (range.from && range.to) {
-    return `${formatDate(range.from, { formatString: "MMM do, yyyy" })} - ${formatDate(range.to, { formatString: "MMM do, yyyy" })}`
+    return `${formatDate(range.from, { formatString: "MMM do, yyyy" })} - ${formatDate(range.to, { formatString: "MMM do, yyyy" })}`;
   }
 
-  return formatDate(range.from ?? range.to, { formatString: "MMM do, yyyy" })
+  return formatDate(range.from ?? range.to, { formatString: "MMM do, yyyy" });
 }
 
 export function FilterDate<TData>(props: FilterDateProps<TData>) {
-  const { disabled, title, multiple = false } = props
-  const [open, setOpen] = React.useState(false)
+  const { disabled, title, multiple = false } = props;
+  const [open, setOpen] = React.useState(false);
 
   const selectedValue = React.useMemo(() => {
     if (isTableFilterProps(props)) {
-      const columnFilterValue = props.column.getFilterValue()
+      const columnFilterValue = props.column.getFilterValue();
 
-      if (!columnFilterValue) return undefined
+      if (!columnFilterValue) return undefined;
 
       if (multiple) {
-        const timestamps = parseColumnFilterValue(columnFilterValue)
+        const timestamps = parseColumnFilterValue(columnFilterValue);
         return {
           from: parseAsDate(timestamps[0]),
           to: parseAsDate(timestamps[1]),
-        } satisfies DateRange
+        } satisfies DateRange;
       }
 
-      const timestamps = parseColumnFilterValue(columnFilterValue)
-      return parseAsDate(timestamps[0])
+      const timestamps = parseColumnFilterValue(columnFilterValue);
+      return parseAsDate(timestamps[0]);
     }
 
-    return props.value
-  }, [multiple, props])
+    return props.value;
+  }, [multiple, props]);
 
   const onValueChange = React.useCallback(
     (value: Date | DateRange | undefined) => {
       if (isTableFilterProps(props)) {
         if (!value) {
-          props.column.setFilterValue(undefined)
-          return
+          props.column.setFilterValue(undefined);
+          return;
         }
 
         if (multiple && !("getTime" in value)) {
-          const from = value.from?.getTime()
-          const to = value.to?.getTime()
-          props.column.setFilterValue(from || to ? [from, to] : undefined)
-          return
+          const from = value.from?.getTime();
+          const to = value.to?.getTime();
+          props.column.setFilterValue(from || to ? [from, to] : undefined);
+          return;
         }
 
         if (!multiple && "getTime" in value) {
-          props.column.setFilterValue(value.getTime())
+          props.column.setFilterValue(value.getTime());
         }
 
-        return
+        return;
       }
 
-      props.onValueChange?.(value)
+      props.onValueChange?.(value);
     },
     [multiple, props],
-  )
+  );
 
   const onReset = React.useCallback(
     (event: React.MouseEvent) => {
-      event.preventDefault()
-      event.stopPropagation()
-      setOpen(false)
-      onValueChange(undefined)
+      event.preventDefault();
+      event.stopPropagation();
+      setOpen(false);
+      onValueChange(undefined);
     },
     [onValueChange],
-  )
+  );
 
   const hasValue = React.useMemo(() => {
     if (multiple) {
-      if (!selectedValue || "getTime" in selectedValue) return false
-      return Boolean(selectedValue.from || selectedValue.to)
+      if (!selectedValue || "getTime" in selectedValue) return false;
+      return Boolean(selectedValue.from || selectedValue.to);
     }
 
-    return selectedValue instanceof Date
-  }, [multiple, selectedValue])
+    return selectedValue instanceof Date;
+  }, [multiple, selectedValue]);
 
   const label = React.useMemo(() => {
     if (multiple) {
-      const range =
-        selectedValue && !("getTime" in selectedValue)
-          ? selectedValue
-          : undefined
-      const dateText = range ? formatDateRange(range) : "Select date range"
+      const range = selectedValue && !("getTime" in selectedValue) ? selectedValue : undefined;
+      const dateText = range ? formatDateRange(range) : "Select date range";
 
       return (
         <span className="flex items-center gap-2">
@@ -176,13 +165,11 @@ export function FilterDate<TData>(props: FilterDateProps<TData>) {
             <span>{dateText}</span>
           ) : null}
         </span>
-      )
+      );
     }
 
-    const date = selectedValue instanceof Date ? selectedValue : undefined
-    const dateText = date
-      ? formatDate(date, { formatString: "MMM do, yyyy" })
-      : "Select date"
+    const date = selectedValue instanceof Date ? selectedValue : undefined;
+    const dateText = date ? formatDate(date, { formatString: "MMM do, yyyy" }) : "Select date";
 
     return (
       <span className="flex items-center gap-2">
@@ -201,17 +188,14 @@ export function FilterDate<TData>(props: FilterDateProps<TData>) {
           <span>{dateText}</span>
         ) : null}
       </span>
-    )
-  }, [multiple, selectedValue, title])
+    );
+  }, [multiple, selectedValue, title]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <div className="relative inline-flex">
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className={cn("border-dashed font-normal", hasValue && "pr-8")}
-          >
+          <Button variant="outline" className={cn("border-dashed font-normal", hasValue && "pr-8")}>
             <HugeiconsIcon icon={CalendarIcon} strokeWidth={2} />
             {label}
           </Button>
@@ -235,11 +219,7 @@ export function FilterDate<TData>(props: FilterDateProps<TData>) {
             autoFocus
             captionLayout="dropdown"
             mode="range"
-            selected={
-              selectedValue && !("getTime" in selectedValue)
-                ? selectedValue
-                : undefined
-            }
+            selected={selectedValue && !("getTime" in selectedValue) ? selectedValue : undefined}
             disabled={disabled}
             onSelect={onValueChange}
           />
@@ -255,5 +235,5 @@ export function FilterDate<TData>(props: FilterDateProps<TData>) {
         )}
       </PopoverContent>
     </Popover>
-  )
+  );
 }

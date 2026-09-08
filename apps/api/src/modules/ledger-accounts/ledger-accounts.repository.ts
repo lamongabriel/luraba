@@ -1,11 +1,11 @@
-import { and, eq, lt, or, sql } from 'drizzle-orm';
-import { db } from '@/db';
-import { entriesTable } from '@/db/schemas/entries.schema';
-import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
-import { transactionsTable } from '@/db/schemas/transactions.schema';
-import type { TxClient } from '@/db/types';
+import { and, eq, lt, or, sql } from "drizzle-orm";
+import { db } from "@/db";
+import { entriesTable } from "@/db/schemas/entries.schema";
+import { ledgerAccountsTable } from "@/db/schemas/ledger-accounts.schema";
+import { transactionsTable } from "@/db/schemas/transactions.schema";
+import type { TxClient } from "@/db/types";
 
-const SYSTEM_OWNER_ID = '00000000-0000-0000-0000-000000000000';
+const SYSTEM_OWNER_ID = "00000000-0000-0000-0000-000000000000";
 
 type LedgerOwnerType = typeof ledgerAccountsTable.$inferSelect.ownerType;
 type LedgerClassification = typeof ledgerAccountsTable.$inferSelect.classification;
@@ -17,15 +17,15 @@ export type LedgerAccountSummary = {
   systemKey: string | null;
 };
 
-export function buildAccountBalanceSubquery(alias = 'account_balances') {
+export function buildAccountBalanceSubquery(alias = "account_balances") {
   return db
     .select({
       accountId: ledgerAccountsTable.ownerId,
-      balance: sql<number>`coalesce(sum(${entriesTable.amount}), 0)::integer`.as('balance'),
+      balance: sql<number>`coalesce(sum(${entriesTable.amount}), 0)::integer`.as("balance"),
     })
     .from(ledgerAccountsTable)
     .leftJoin(entriesTable, eq(entriesTable.ledgerAccountId, ledgerAccountsTable.id))
-    .where(eq(ledgerAccountsTable.ownerType, 'account'))
+    .where(eq(ledgerAccountsTable.ownerType, "account"))
     .groupBy(ledgerAccountsTable.ownerId)
     .as(alias);
 }
@@ -55,7 +55,7 @@ class LedgerAccountsRepository {
     key: string,
     classification: LedgerClassification,
     currencyCode: string,
-  ): Promise<Omit<LedgerAccountSummary, 'systemKey'>> {
+  ): Promise<Omit<LedgerAccountSummary, "systemKey">> {
     const rows = await tx
       .select({
         id: ledgerAccountsTable.id,
@@ -73,7 +73,7 @@ class LedgerAccountsRepository {
       .insert(ledgerAccountsTable)
       .values({
         classification,
-        ownerType: 'system',
+        ownerType: "system",
         ownerId: SYSTEM_OWNER_ID,
         currencyId: currencyCode,
         systemKey: key,
@@ -99,7 +99,7 @@ class LedgerAccountsRepository {
       .insert(ledgerAccountsTable)
       .values({
         classification: values.classification,
-        ownerType: 'account',
+        ownerType: "account",
         ownerId: values.accountId,
         currencyId: values.currencyCode,
       })
@@ -144,7 +144,7 @@ class LedgerAccountsRepository {
             lt(transactionsTable.postedDate, postedDate),
             and(
               eq(transactionsTable.postedDate, postedDate),
-              eq(transactionsTable.type, 'adjustment'),
+              eq(transactionsTable.type, "adjustment"),
             ),
           ),
         ),

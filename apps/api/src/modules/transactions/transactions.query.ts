@@ -2,30 +2,30 @@ import type {
   listAccountTransactionsQuerySchema,
   listTransactionsQuerySchema,
   transactionAnalyticsQuerySchema,
-} from '@luraba/contracts/transactions';
-import { type SQL, sql } from 'drizzle-orm';
-import type { z } from 'zod';
-import { accountsTable } from '@/db/schemas/accounts.schema';
-import { categoriesTable } from '@/db/schemas/categories.schema';
-import { creditCardBillingCyclesTable } from '@/db/schemas/credit-card-billing-cycles.schema';
-import { creditCardInstallmentsTable } from '@/db/schemas/credit-card-installments.schema';
-import { creditCardPaymentsTable } from '@/db/schemas/credit-card-payments.schema';
-import { creditCardPurchasesTable } from '@/db/schemas/credit-card-purchases.schema';
-import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
-import { entriesTable } from '@/db/schemas/entries.schema';
-import { ledgerAccountsTable } from '@/db/schemas/ledger-accounts.schema';
-import { merchantsTable } from '@/db/schemas/merchants.schema';
-import { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
-import { tagsTable } from '@/db/schemas/tags.schema';
-import { transactionTagsTable } from '@/db/schemas/transaction-tags.schema';
-import { transactionsTable } from '@/db/schemas/transactions.schema';
-import { buildIlikeSearch, buildOrderBy, combineConditions, rangeConditions } from '@/shared/list';
+} from "@luraba/contracts/transactions";
+import { type SQL, sql } from "drizzle-orm";
+import type { z } from "zod";
+import { accountsTable } from "@/db/schemas/accounts.schema";
+import { categoriesTable } from "@/db/schemas/categories.schema";
+import { creditCardBillingCyclesTable } from "@/db/schemas/credit-card-billing-cycles.schema";
+import { creditCardInstallmentsTable } from "@/db/schemas/credit-card-installments.schema";
+import { creditCardPaymentsTable } from "@/db/schemas/credit-card-payments.schema";
+import { creditCardPurchasesTable } from "@/db/schemas/credit-card-purchases.schema";
+import { creditCardsTable } from "@/db/schemas/credit-cards.schema";
+import { entriesTable } from "@/db/schemas/entries.schema";
+import { ledgerAccountsTable } from "@/db/schemas/ledger-accounts.schema";
+import { merchantsTable } from "@/db/schemas/merchants.schema";
+import { paymentMethodsTable } from "@/db/schemas/payment-methods.schema";
+import { tagsTable } from "@/db/schemas/tags.schema";
+import { transactionTagsTable } from "@/db/schemas/transaction-tags.schema";
+import { transactionsTable } from "@/db/schemas/transactions.schema";
+import { buildIlikeSearch, buildOrderBy, combineConditions, rangeConditions } from "@/shared/list";
 
 export type ListTransactionsQuery = z.output<typeof listTransactionsQuerySchema>;
 export type TransactionFilterQuery = z.output<typeof transactionAnalyticsQuerySchema>;
 export type ListAccountTransactionsQuery = z.output<typeof listAccountTransactionsQuerySchema>;
 
-function sqlArray(values: string[], cast: 'text' | 'uuid'): SQL {
+function sqlArray(values: string[], cast: "text" | "uuid"): SQL {
   return sql`array[${sql.join(
     values.map((value) => sql`${value}`),
     sql`, `,
@@ -44,33 +44,33 @@ export function buildTransactionFeedWhere(query: TransactionFilterQuery): SQL | 
     query.purchaseDateFrom ? sql`purchase_date >= ${query.purchaseDateFrom}::date` : undefined,
     query.purchaseDateTo ? sql`purchase_date <= ${query.purchaseDateTo}::date` : undefined,
     query.originTypes.length > 0
-      ? sql`origin_type = any(${sqlArray(query.originTypes, 'text')})`
+      ? sql`origin_type = any(${sqlArray(query.originTypes, "text")})`
       : undefined,
     query.accountIds.length > 0
-      ? sql`account_ids && ${sqlArray(query.accountIds, 'uuid')}`
+      ? sql`account_ids && ${sqlArray(query.accountIds, "uuid")}`
       : undefined,
     query.creditCardIds.length > 0
-      ? sql`credit_card_id = any(${sqlArray(query.creditCardIds, 'uuid')})`
+      ? sql`credit_card_id = any(${sqlArray(query.creditCardIds, "uuid")})`
       : undefined,
     query.categoryIds.length > 0 || query.uncategorized === true
       ? sql`origin_type in ('expense', 'income', 'credit_card_installment') and (
           ${
             query.categoryIds.length > 0
-              ? sql`category_id = any(${sqlArray(query.categoryIds, 'uuid')})`
+              ? sql`category_id = any(${sqlArray(query.categoryIds, "uuid")})`
               : sql`false`
           }
           or ${query.uncategorized === true ? sql`category_id is null` : sql`false`}
         )`
       : undefined,
     query.merchantIds.length > 0
-      ? sql`merchant_id = any(${sqlArray(query.merchantIds, 'uuid')})`
+      ? sql`merchant_id = any(${sqlArray(query.merchantIds, "uuid")})`
       : undefined,
-    query.tagIds.length > 0 ? sql`tag_ids && ${sqlArray(query.tagIds, 'uuid')}` : undefined,
+    query.tagIds.length > 0 ? sql`tag_ids && ${sqlArray(query.tagIds, "uuid")}` : undefined,
     query.paymentMethodCodes.length > 0
-      ? sql`payment_method_code = any(${sqlArray(query.paymentMethodCodes, 'text')})`
+      ? sql`payment_method_code = any(${sqlArray(query.paymentMethodCodes, "text")})`
       : undefined,
     query.currencyCodes.length > 0
-      ? sql`currency_codes && ${sqlArray(query.currencyCodes, 'text')}`
+      ? sql`currency_codes && ${sqlArray(query.currencyCodes, "text")}`
       : undefined,
     ...rangeConditions(sql`amount`, query.amountMin, query.amountMax),
     query.includeInBudget === undefined

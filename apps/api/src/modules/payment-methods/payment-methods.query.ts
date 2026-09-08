@@ -1,7 +1,7 @@
-import type { listPaymentMethodsQuerySchema } from '@luraba/contracts/payment-methods';
-import { eq, isNull, or, type SQL, sql } from 'drizzle-orm';
-import type { z } from 'zod';
-import { paymentMethodsTable } from '@/db/schemas/payment-methods.schema';
+import type { listPaymentMethodsQuerySchema } from "@luraba/contracts/payment-methods";
+import { eq, isNull, or, type SQL, sql } from "drizzle-orm";
+import type { z } from "zod";
+import { paymentMethodsTable } from "@/db/schemas/payment-methods.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,
@@ -9,7 +9,7 @@ import {
   inArrayIfAny,
   nullabilityCondition,
   rangeConditions,
-} from '@/shared/list';
+} from "@/shared/list";
 
 export type ListPaymentMethodsQuery = z.output<typeof listPaymentMethodsQuerySchema>;
 

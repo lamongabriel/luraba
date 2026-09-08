@@ -1,56 +1,51 @@
-"use client"
+"use client";
 
-import { Alert02Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { Tag } from "@luraba/contracts"
-import * as React from "react"
-import {
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-} from "@/components/ui/modal"
-import { Typography } from "@/components/ui/typography"
-import { queryClient } from "@/lib/query-client"
-import { useDeleteTagMutation } from "@/mutations/tags/use-tag-mutations"
-import { tagQueryKeys } from "@/queries/tags/use-tags-query"
+import { Alert02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { Tag } from "@luraba/contracts";
+import * as React from "react";
+import { Modal, ModalBody, ModalContent, ModalFooter } from "@/components/ui/modal";
+import { Typography } from "@/components/ui/typography";
+import { queryClient } from "@/lib/query-client";
+import { useDeleteTagMutation } from "@/mutations/tags/use-tag-mutations";
+import { tagQueryKeys } from "@/queries/tags/use-tags-query";
 
 export function DeleteTagModal({
   open,
   onOpenChange,
   tag,
 }: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  tag?: Tag
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  tag?: Tag;
 }) {
   const deleteMutation = useDeleteTagMutation({
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: tagQueryKeys.lists() })
-      onOpenChange(false)
+      await queryClient.invalidateQueries({ queryKey: tagQueryKeys.lists() });
+      onOpenChange(false);
     },
     successToast: {
       title: "Tag deleted",
     },
-  })
+  });
 
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
-        deleteMutation.reset()
+        deleteMutation.reset();
       }
-      onOpenChange(nextOpen)
+      onOpenChange(nextOpen);
     },
     [deleteMutation, onOpenChange],
-  )
+  );
 
   const handleConfirm = React.useCallback(() => {
     if (!tag) {
-      return
+      return;
     }
-    deleteMutation.reset()
-    deleteMutation.mutate(tag.id)
-  }, [tag, deleteMutation])
+    deleteMutation.reset();
+    deleteMutation.mutate(tag.id);
+  }, [tag, deleteMutation]);
 
   return (
     <Modal open={open} onOpenChange={handleOpenChange}>
@@ -69,9 +64,7 @@ export function DeleteTagModal({
         <ModalBody>
           {deleteMutation.errorMessage ? (
             <div className="rounded-lg bg-destructive/10 px-3 py-2.5">
-              <Typography variant="small-destructive">
-                {deleteMutation.errorMessage}
-              </Typography>
+              <Typography variant="small-destructive">{deleteMutation.errorMessage}</Typography>
             </div>
           ) : null}
         </ModalBody>
@@ -85,5 +78,5 @@ export function DeleteTagModal({
         />
       </ModalContent>
     </Modal>
-  )
+  );
 }

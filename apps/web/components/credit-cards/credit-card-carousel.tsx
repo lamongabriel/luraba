@@ -1,31 +1,31 @@
-"use client"
+"use client";
 
-import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { CreditCard } from "@luraba/contracts"
-import { CreditCardPreview } from "@/components/credit-cards/credit-card-preview"
-import { Button } from "@/components/ui/button"
-import { Typography } from "@/components/ui/typography"
+import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { CreditCard } from "@luraba/contracts";
+import { CreditCardPreview } from "@/components/credit-cards/credit-card-preview";
+import { Button } from "@/components/ui/button";
+import { Typography } from "@/components/ui/typography";
 
 export function CreditCardCarousel({
   cards,
   selectedCardId,
   onSelect,
 }: {
-  cards: CreditCard[]
-  selectedCardId: string
-  onSelect: (cardId: string) => void
+  cards: CreditCard[];
+  selectedCardId: string;
+  onSelect: (cardId: string) => void;
 }) {
   const selectedIndex = Math.max(
     0,
     cards.findIndex((card) => card.id === selectedCardId),
-  )
-  const selectedCard = cards[selectedIndex]
+  );
+  const selectedCard = cards[selectedIndex];
 
-  if (!selectedCard) return null
+  if (!selectedCard) return null;
 
-  const previousCard = cards[selectedIndex - 1]
-  const nextCard = cards[selectedIndex + 1]
+  const previousCard = cards[selectedIndex - 1];
+  const nextCard = cards[selectedIndex + 1];
 
   return (
     <div className="space-y-3">
@@ -96,8 +96,7 @@ export function CreditCardCarousel({
       <div className="text-center">
         <Typography variant="small-strong">{selectedCard.name}</Typography>
         <Typography variant="small-muted">
-          {selectedCard.brand} · {selectedCard.ownerAccount.name} ·{" "}
-          {selectedCard.currencyCode}
+          {selectedCard.brand} · {selectedCard.ownerAccount.name} · {selectedCard.currencyCode}
         </Typography>
       </div>
 
@@ -117,5 +116,5 @@ export function CreditCardCarousel({
         ))}
       </fieldset>
     </div>
-  )
+  );
 }

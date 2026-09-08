@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { Home01Icon, Search01Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import { usePathname, useRouter } from "next/navigation"
-import * as React from "react"
-import { type PermissionKey, useCan } from "@/components/permissions"
-import { Button } from "@/components/ui/button"
+import { Home01Icon, Search01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { usePathname, useRouter } from "next/navigation";
+import * as React from "react";
+import { type PermissionKey, useCan } from "@/components/permissions";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandDialog,
@@ -16,20 +16,20 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from "@/components/ui/command"
-import { Kbd, KbdGroup } from "@/components/ui/kbd"
-import { Typography } from "@/components/ui/typography"
-import { mainNav, userMenuLinks } from "@/lib/navigation"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/command";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import { Typography } from "@/components/ui/typography";
+import { mainNav, userMenuLinks } from "@/lib/navigation";
+import { cn } from "@/lib/utils";
 
 type CommandEntry = {
-  label: string
-  href: string
-  icon: typeof Home01Icon
-  group: "Navigation" | "Preferences"
-  keywords?: string[]
-  permission?: PermissionKey
-}
+  label: string;
+  href: string;
+  icon: typeof Home01Icon;
+  group: "Navigation" | "Preferences";
+  keywords?: string[];
+  permission?: PermissionKey;
+};
 
 const commandEntries: CommandEntry[] = [
   {
@@ -56,72 +56,64 @@ const commandEntries: CommandEntry[] = [
     group: "Preferences" as const,
     keywords: [item.label.toLowerCase()],
   })),
-]
+];
 
 export function AppCommandMenu({ className }: { className?: string }) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const can = useCan()
+  const router = useRouter();
+  const pathname = usePathname();
+  const can = useCan();
 
-  const [open, setOpen] = React.useState(false)
-  const [query, setQuery] = React.useState("")
+  const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState("");
   const modifierKey = React.useMemo(() => {
     if (typeof window === "undefined") {
-      return "⌘"
+      return "⌘";
     }
 
-    return window.navigator.platform.toLowerCase().includes("mac")
-      ? "⌘"
-      : "Ctrl"
-  }, [])
+    return window.navigator.platform.toLowerCase().includes("mac") ? "⌘" : "Ctrl";
+  }, []);
 
   React.useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault()
-        setOpen((current) => !current)
+        event.preventDefault();
+        setOpen((current) => !current);
       }
-    }
+    };
 
-    window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
-  }, [])
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const filteredEntries = React.useMemo(() => {
-    const value = query.trim().toLowerCase()
+    const value = query.trim().toLowerCase();
     const availableEntries = commandEntries.filter(
       ({ permission }) => !permission || can(permission),
-    )
+    );
 
-    if (!value) return availableEntries
+    if (!value) return availableEntries;
 
     return availableEntries.filter((item) => {
-      const haystack = [item.label, item.href, ...(item.keywords ?? [])]
-        .join(" ")
-        .toLowerCase()
-      return haystack.includes(value)
-    })
-  }, [can, query])
+      const haystack = [item.label, item.href, ...(item.keywords ?? [])].join(" ").toLowerCase();
+      return haystack.includes(value);
+    });
+  }, [can, query]);
 
-  const navigationEntries = filteredEntries.filter(
-    (item) => item.group === "Navigation",
-  )
-  const preferenceEntries = filteredEntries.filter(
-    (item) => item.group === "Preferences",
-  )
+  const navigationEntries = filteredEntries.filter((item) => item.group === "Navigation");
+  const preferenceEntries = filteredEntries.filter((item) => item.group === "Preferences");
 
   const handleSelect = (href: string) => {
-    setOpen(false)
-    setQuery("")
-    router.push(href)
-  }
+    setOpen(false);
+    setQuery("");
+    router.push(href);
+  };
 
   const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && filteredEntries[0]) {
-      event.preventDefault()
-      handleSelect(filteredEntries[0].href)
+      event.preventDefault();
+      handleSelect(filteredEntries[0].href);
     }
-  }
+  };
 
   return (
     <>
@@ -141,12 +133,7 @@ export function AppCommandMenu({ className }: { className?: string }) {
             strokeWidth={2}
             className="size-4 text-muted-foreground"
           />
-          <Typography
-            as="span"
-            truncate
-            variant="small-muted"
-            className="text-[0.78rem]"
-          >
+          <Typography as="span" truncate variant="small-muted" className="text-[0.78rem]">
             Search
           </Typography>
         </span>
@@ -167,17 +154,12 @@ export function AppCommandMenu({ className }: { className?: string }) {
             aria-autocomplete="none"
           />
           <CommandList>
-            {filteredEntries.length === 0 ? (
-              <CommandEmpty>No results found.</CommandEmpty>
-            ) : null}
+            {filteredEntries.length === 0 ? <CommandEmpty>No results found.</CommandEmpty> : null}
 
             {navigationEntries.length > 0 ? (
               <CommandGroup heading="Navigation">
                 {navigationEntries.map((item) => (
-                  <CommandItem
-                    key={item.href}
-                    onSelect={() => handleSelect(item.href)}
-                  >
+                  <CommandItem key={item.href} onSelect={() => handleSelect(item.href)}>
                     <span className="flex min-w-0 items-center gap-3">
                       <HugeiconsIcon
                         icon={item.icon}
@@ -201,10 +183,7 @@ export function AppCommandMenu({ className }: { className?: string }) {
             {preferenceEntries.length > 0 ? (
               <CommandGroup heading="Preferences">
                 {preferenceEntries.map((item) => (
-                  <CommandItem
-                    key={item.href}
-                    onSelect={() => handleSelect(item.href)}
-                  >
+                  <CommandItem key={item.href} onSelect={() => handleSelect(item.href)}>
                     <span className="flex min-w-0 items-center gap-3">
                       <HugeiconsIcon
                         icon={item.icon}
@@ -224,5 +203,5 @@ export function AppCommandMenu({ className }: { className?: string }) {
         </Command>
       </CommandDialog>
     </>
-  )
+  );
 }

@@ -1,32 +1,23 @@
-"use client"
+"use client";
 
-import type {
-  AuthSession,
-  HouseholdContext,
-  HouseholdSummary,
-  User,
-} from "@luraba/contracts"
-import { create } from "zustand"
-import { STORAGE_KEYS } from "@/config/storage"
-import { readStorage, removeStorage, writeStorage } from "@/lib/local-storage"
+import type { AuthSession, HouseholdContext, HouseholdSummary, User } from "@luraba/contracts";
+import { create } from "zustand";
+import { STORAGE_KEYS } from "@/config/storage";
+import { readStorage, removeStorage, writeStorage } from "@/lib/local-storage";
 
-export type AuthBootstrapStatus =
-  | "idle"
-  | "loading"
-  | "authenticated"
-  | "anonymous"
+export type AuthBootstrapStatus = "idle" | "loading" | "authenticated" | "anonymous";
 
 type AuthSessionState = {
-  activeHouseholdId: string
-  bootstrapStatus: AuthBootstrapStatus
-  household: HouseholdContext | null
-  households: HouseholdSummary[]
-  user: User | null
-  clear: () => void
-  hydrate: (session: AuthSession, households: HouseholdSummary[]) => void
-  setActiveHouseholdId: (householdId: string) => void
-  setBootstrapStatus: (status: AuthBootstrapStatus) => void
-}
+  activeHouseholdId: string;
+  bootstrapStatus: AuthBootstrapStatus;
+  household: HouseholdContext | null;
+  households: HouseholdSummary[];
+  user: User | null;
+  clear: () => void;
+  hydrate: (session: AuthSession, households: HouseholdSummary[]) => void;
+  setActiveHouseholdId: (householdId: string) => void;
+  setBootstrapStatus: (status: AuthBootstrapStatus) => void;
+};
 
 export const useAuthSessionStore = create<AuthSessionState>((set) => ({
   activeHouseholdId: readStorage(STORAGE_KEYS.activeHouseholdId),
@@ -35,20 +26,19 @@ export const useAuthSessionStore = create<AuthSessionState>((set) => ({
   households: [],
   user: null,
   clear: () => {
-    removeStorage(STORAGE_KEYS.activeHouseholdId)
+    removeStorage(STORAGE_KEYS.activeHouseholdId);
     set({
       activeHouseholdId: "",
       bootstrapStatus: "anonymous",
       household: null,
       households: [],
       user: null,
-    })
+    });
   },
   hydrate: (session, households) => {
-    const storedHouseholdId = readStorage(STORAGE_KEYS.activeHouseholdId)
+    const storedHouseholdId = readStorage(STORAGE_KEYS.activeHouseholdId);
     const activeHouseholdId =
-      (storedHouseholdId &&
-      households.some(({ id }) => id === storedHouseholdId)
+      (storedHouseholdId && households.some(({ id }) => id === storedHouseholdId)
         ? storedHouseholdId
         : "") ||
       (session.user.defaultHouseholdId &&
@@ -57,10 +47,9 @@ export const useAuthSessionStore = create<AuthSessionState>((set) => ({
         : "") ||
       session.household?.id ||
       households[0]?.id ||
-      ""
+      "";
 
-    if (activeHouseholdId)
-      writeStorage(STORAGE_KEYS.activeHouseholdId, activeHouseholdId)
+    if (activeHouseholdId) writeStorage(STORAGE_KEYS.activeHouseholdId, activeHouseholdId);
 
     set({
       activeHouseholdId,
@@ -68,11 +57,11 @@ export const useAuthSessionStore = create<AuthSessionState>((set) => ({
       household: session.household,
       households,
       user: session.user,
-    })
+    });
   },
   setActiveHouseholdId: (activeHouseholdId) => {
-    writeStorage(STORAGE_KEYS.activeHouseholdId, activeHouseholdId)
-    set({ activeHouseholdId })
+    writeStorage(STORAGE_KEYS.activeHouseholdId, activeHouseholdId);
+    set({ activeHouseholdId });
   },
   setBootstrapStatus: (bootstrapStatus) => set({ bootstrapStatus }),
-}))
+}));

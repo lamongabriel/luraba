@@ -1,20 +1,20 @@
-import { eq } from 'drizzle-orm';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { creditCardsTable } from '@/db/schemas/credit-cards.schema';
-import { accountsRepository } from '@/modules/accounts/accounts.repository';
-import * as accountsService from '@/modules/accounts/accounts.service';
-import { ledgerAccountsRepository } from '@/modules/ledger-accounts/ledger-accounts.repository';
-import { ConflictError, ValidationError } from '@/shared/errors';
-import { now } from '@/shared/lib/date';
-import { createListMeta, type ListResult } from '@/shared/list';
-import * as cycleService from './credit-card-cycles.service';
-import * as paymentService from './credit-card-payments.service';
-import * as purchaseService from './credit-card-purchases.service';
-import type { CreditCardRow } from './credit-cards.helpers';
-import type { ListCreditCardCyclesQuery, ListCreditCardsQuery } from './credit-cards.query';
-import * as creditCardsRepository from './credit-cards.repository';
-import { computeRemainingCreditAmount, mapCreditCard } from './credit-cards.shared';
+import { eq } from "drizzle-orm";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { creditCardsTable } from "@/db/schemas/credit-cards.schema";
+import { accountsRepository } from "@/modules/accounts/accounts.repository";
+import * as accountsService from "@/modules/accounts/accounts.service";
+import { ledgerAccountsRepository } from "@/modules/ledger-accounts/ledger-accounts.repository";
+import { ConflictError, ValidationError } from "@/shared/errors";
+import { now } from "@/shared/lib/date";
+import { createListMeta, type ListResult } from "@/shared/list";
+import * as cycleService from "./credit-card-cycles.service";
+import * as paymentService from "./credit-card-payments.service";
+import * as purchaseService from "./credit-card-purchases.service";
+import type { CreditCardRow } from "./credit-cards.helpers";
+import type { ListCreditCardCyclesQuery, ListCreditCardsQuery } from "./credit-cards.query";
+import * as creditCardsRepository from "./credit-cards.repository";
+import { computeRemainingCreditAmount, mapCreditCard } from "./credit-cards.shared";
 import type {
   CreateCreditCardDto,
   CreateCreditCardPaymentDto,
@@ -31,7 +31,7 @@ import type {
   UpdateCreditCardDto,
   UpdateCreditCardPaymentDto,
   UpdateCreditCardPurchaseDto,
-} from './credit-cards.types';
+} from "./credit-cards.types";
 
 export async function listCreditCards(
   context: HouseholdContext,
@@ -53,9 +53,9 @@ export async function createCreditCard(
   dto: CreateCreditCardDto,
 ): Promise<CreditCardResponse> {
   const ownerAccount = await accountsRepository.get(dto.ownerAccountId, context);
-  if (!ownerAccount) throw new ValidationError('Owner account must belong to this household');
-  if (ownerAccount.type !== 'cash' || ownerAccount.classification !== 'asset') {
-    throw new ValidationError('Credit cards can only belong to cash asset accounts');
+  if (!ownerAccount) throw new ValidationError("Owner account must belong to this household");
+  if (ownerAccount.type !== "cash" || ownerAccount.classification !== "asset") {
+    throw new ValidationError("Credit cards can only belong to cash asset accounts");
   }
 
   const existing = await creditCardsRepository.findByHouseholdAndName(
@@ -63,7 +63,7 @@ export async function createCreditCard(
     dto.name,
   );
   if (existing) {
-    throw new ConflictError('A credit card with this name already exists');
+    throw new ConflictError("A credit card with this name already exists");
   }
 
   const institution = await accountsService.resolveInstitutionBranding(
@@ -74,14 +74,14 @@ export async function createCreditCard(
   const card = await db.transaction(async (tx) => {
     const account = await accountsService.createAccountRecordInTransaction(tx, context, {
       name: `Credit card ledger: ${dto.name}`,
-      classification: 'liability',
-      type: 'credit_card',
+      classification: "liability",
+      type: "credit_card",
       currencyId: ownerAccount.currencyId,
     });
 
     await ledgerAccountsRepository.createForAccount(tx, {
       accountId: account.id,
-      classification: 'liability',
+      classification: "liability",
       currencyCode: account.currencyId,
     });
 
@@ -120,12 +120,12 @@ export async function createCreditCard(
         name: ownerAccount.name,
         institutionName: ownerAccount.institutionName ?? null,
         institutionLogoUrl: ownerAccount.institutionLogoUrl ?? null,
-        type: 'cash',
-        classification: 'asset',
+        type: "cash",
+        classification: "asset",
         currencyCode: ownerAccount.currencyId,
       },
-      classification: 'liability',
-      type: 'credit_card',
+      classification: "liability",
+      type: "credit_card",
       currencyCode: ownerAccount.currencyId,
       brand: createdCard.brand,
       productType: createdCard.productType,
@@ -177,7 +177,7 @@ export async function updateCreditCard(
       dto.name,
     );
     if (duplicate) {
-      throw new ConflictError('A credit card with this name already exists');
+      throw new ConflictError("A credit card with this name already exists");
     }
   }
 

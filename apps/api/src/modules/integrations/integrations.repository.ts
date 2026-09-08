@@ -1,15 +1,15 @@
-import type { Integration } from '@luraba/contracts/integrations';
-import { sql } from 'drizzle-orm';
-import { db } from '@/db';
-import { type DbListPage, getPagination } from '@/shared/list';
+import type { Integration } from "@luraba/contracts/integrations";
+import { sql } from "drizzle-orm";
+import { db } from "@/db";
+import { type DbListPage, getPagination } from "@/shared/list";
 import {
   buildIntegrationRowsCte,
   buildIntegrationsListOrder,
   buildIntegrationsListWhere,
   type ListIntegrationsQuery,
-} from './integrations.query';
+} from "./integrations.query";
 
-type IntegrationListRow = Omit<Integration, 'lastCheckedAt'> & {
+type IntegrationListRow = Omit<Integration, "lastCheckedAt"> & {
   lastCheckedAt: Date | string | null;
 };
 

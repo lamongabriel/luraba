@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from "react";
 
 import {
   Empty,
@@ -7,15 +7,14 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "@/components/ui/empty"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/empty";
+import { cn } from "@/lib/utils";
 
-interface EmptyStateProps
-  extends Omit<React.ComponentProps<typeof Empty>, "title"> {
-  title: React.ReactNode
-  description?: React.ReactNode
-  icon?: React.ReactNode
-  action?: React.ReactNode
+interface EmptyStateProps extends Omit<React.ComponentProps<typeof Empty>, "title"> {
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  icon?: React.ReactNode;
+  action?: React.ReactNode;
 }
 
 export function EmptyState({
@@ -26,8 +25,8 @@ export function EmptyState({
   className,
   ...props
 }: EmptyStateProps) {
-  const titleId = React.useId()
-  const descriptionId = React.useId()
+  const titleId = React.useId();
+  const descriptionId = React.useId();
 
   return (
     <Empty
@@ -57,17 +56,12 @@ export function EmptyState({
           {title}
         </EmptyTitle>
         {description ? (
-          <EmptyDescription
-            id={descriptionId}
-            className="max-w-sm text-sm/6 text-muted-foreground"
-          >
+          <EmptyDescription id={descriptionId} className="max-w-sm text-sm/6 text-muted-foreground">
             {description}
           </EmptyDescription>
         ) : null}
       </EmptyHeader>
-      {action ? (
-        <EmptyContent className="mt-2 max-w-none">{action}</EmptyContent>
-      ) : null}
+      {action ? <EmptyContent className="mt-2 max-w-none">{action}</EmptyContent> : null}
     </Empty>
-  )
+  );
 }

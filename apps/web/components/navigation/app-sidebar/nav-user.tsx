@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { MoreVerticalIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import Link from "next/link"
+import { MoreVerticalIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import Link from "next/link";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,29 +13,29 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { Typography } from "@/components/ui/typography"
-import { userMenuLinks } from "@/lib/navigation"
+} from "@/components/ui/sidebar";
+import { Typography } from "@/components/ui/typography";
+import { userMenuLinks } from "@/lib/navigation";
 
 interface NavUserProps {
   user: {
-    name: string
-    email: string
-    role?: string
-  } | null
-  onSignOut?: () => void
+    name: string;
+    email: string;
+    role?: string;
+  } | null;
+  onSignOut?: () => void;
 }
 
 export function NavUser({ user, onSignOut }: NavUserProps) {
-  const { isMobile } = useSidebar()
+  const { isMobile } = useSidebar();
 
-  if (!user) return null
+  if (!user) return null;
 
   const initials = user.name
     .trim()
@@ -44,7 +44,7 @@ export function NavUser({ user, onSignOut }: NavUserProps) {
     .map((part) => part[0] ?? "")
     .join("")
     .toUpperCase()
-    .slice(0, 2)
+    .slice(0, 2);
 
   return (
     <SidebarMenu>
@@ -53,9 +53,7 @@ export function NavUser({ user, onSignOut }: NavUserProps) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg" className="rounded-xl px-3 py-2.5">
               <Avatar className="size-8 rounded-lg">
-                <AvatarFallback className="rounded-lg">
-                  {initials}
-                </AvatarFallback>
+                <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
               </Avatar>
 
               <div className="grid min-w-0 flex-1 gap-0.5 text-left leading-tight">
@@ -84,17 +82,11 @@ export function NavUser({ user, onSignOut }: NavUserProps) {
             </SidebarMenuButton>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent
-            side={isMobile ? "bottom" : "right"}
-            align="end"
-            sideOffset={8}
-          >
+          <DropdownMenuContent side={isMobile ? "bottom" : "right"} align="end" sideOffset={8}>
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="size-8 rounded-lg">
-                  <AvatarFallback className="rounded-lg">
-                    {initials}
-                  </AvatarFallback>
+                  <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
                 </Avatar>
                 <div className="grid min-w-0 flex-1 gap-0.5 text-left leading-tight">
                   <Typography
@@ -134,8 +126,8 @@ export function NavUser({ user, onSignOut }: NavUserProps) {
 
             <DropdownMenuItem
               onSelect={(event) => {
-                event.preventDefault()
-                onSignOut?.()
+                event.preventDefault();
+                onSignOut?.();
               }}
             >
               Sign out
@@ -144,5 +136,5 @@ export function NavUser({ user, onSignOut }: NavUserProps) {
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

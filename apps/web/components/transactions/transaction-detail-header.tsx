@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { PencilEdit02Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type { TransactionFeedRow } from "@luraba/contracts"
-import { MoneyValue } from "@/components/finance/money-value"
-import { PERMISSIONS, PermissionButton } from "@/components/permissions"
-import { SidePanelTitle } from "@/components/side-panel/side-panel"
-import { SidePanelEntityRow } from "@/components/side-panel/side-panel-entity-row"
+import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { TransactionFeedRow } from "@luraba/contracts";
+import { MoneyValue } from "@/components/finance/money-value";
+import { PERMISSIONS, PermissionButton } from "@/components/permissions";
+import { SidePanelTitle } from "@/components/side-panel/side-panel";
+import { SidePanelEntityRow } from "@/components/side-panel/side-panel-entity-row";
 import {
   TransactionAccountPanelDisplay,
   TransactionMerchantPanelDisplay,
-} from "@/components/tables/transactions/transaction-resource-display"
-import { TransactionTypeBadge } from "@/components/tables/transactions/transaction-type-badge"
-import { formatShortDate } from "@/lib/format"
-import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query"
+} from "@/components/tables/transactions/transaction-resource-display";
+import { TransactionTypeBadge } from "@/components/tables/transactions/transaction-type-badge";
+import { formatShortDate } from "@/lib/format";
+import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
 
 export function TransactionDetailHeader({
   language,
@@ -22,15 +22,14 @@ export function TransactionDetailHeader({
   onEdit,
   row,
 }: {
-  language: string
-  lookups: TransactionLookups
-  merchantId: string | null
-  onEdit: () => void
-  row: TransactionFeedRow
+  language: string;
+  lookups: TransactionLookups;
+  merchantId: string | null;
+  onEdit: () => void;
+  row: TransactionFeedRow;
 }) {
   const precision =
-    lookups.currencies.find((item) => item.code === row.currencyCode)
-      ?.precision ?? 2
+    lookups.currencies.find((item) => item.code === row.currencyCode)?.precision ?? 2;
 
   return (
     <div className="space-y-4">
@@ -66,9 +65,7 @@ export function TransactionDetailHeader({
       </div>
 
       <div className="space-y-1">
-        <SidePanelEntityRow
-          label={row.originType === "transfer" ? "From" : "Account"}
-        >
+        <SidePanelEntityRow label={row.originType === "transfer" ? "From" : "Account"}>
           <TransactionAccountPanelDisplay row={row} lookups={lookups} />
         </SidePanelEntityRow>
         {row.originType === "transfer" ? (
@@ -82,13 +79,10 @@ export function TransactionDetailHeader({
           </SidePanelEntityRow>
         ) : (
           <SidePanelEntityRow label="Merchant">
-            <TransactionMerchantPanelDisplay
-              merchantId={merchantId}
-              lookups={lookups}
-            />
+            <TransactionMerchantPanelDisplay merchantId={merchantId} lookups={lookups} />
           </SidePanelEntityRow>
         )}
       </div>
     </div>
-  )
+  );
 }

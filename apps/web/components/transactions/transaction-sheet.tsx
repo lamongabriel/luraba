@@ -1,29 +1,26 @@
-"use client"
+"use client";
 
-import type { TransactionFeedRow } from "@luraba/contracts"
-import { useQuery } from "@tanstack/react-query"
-import * as React from "react"
-import { ErrorState } from "@/components/error-state"
-import { CreateEditTransactionForm } from "@/components/forms/create-edit-transaction-form/create-edit-transaction-form"
-import { FormSheet } from "@/components/forms/form-sheet"
+import type { TransactionFeedRow } from "@luraba/contracts";
+import { useQuery } from "@tanstack/react-query";
+import * as React from "react";
+import { ErrorState } from "@/components/error-state";
+import { CreateEditTransactionForm } from "@/components/forms/create-edit-transaction-form/create-edit-transaction-form";
+import { FormSheet } from "@/components/forms/form-sheet";
 import {
   SidePanel,
   SidePanelBody,
   SidePanelContent,
   SidePanelDescription,
   SidePanelHeader,
-} from "@/components/side-panel/side-panel"
-import { TransactionDetailHeader } from "@/components/transactions/transaction-detail-header"
-import { TransactionDetails } from "@/components/transactions/transaction-details"
-import { Skeleton } from "@/components/ui/skeleton"
-import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query"
-import {
-  getCreditCardPayment,
-  getCreditCardPurchase,
-} from "@/services/credit-cards.service"
-import { useAuthSessionStore } from "@/stores/auth-session-store"
+} from "@/components/side-panel/side-panel";
+import { TransactionDetailHeader } from "@/components/transactions/transaction-detail-header";
+import { TransactionDetails } from "@/components/transactions/transaction-details";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
+import { getCreditCardPayment, getCreditCardPurchase } from "@/services/credit-cards.service";
+import { useAuthSessionStore } from "@/stores/auth-session-store";
 
-export type TransactionSheetMode = "create" | "edit" | "view"
+export type TransactionSheetMode = "create" | "edit" | "view";
 
 export function TransactionSheet({
   lookups,
@@ -34,45 +31,41 @@ export function TransactionSheet({
   open,
   row,
 }: {
-  lookups: TransactionLookups
-  mode: TransactionSheetMode
-  onDelete: (row: TransactionFeedRow) => void
-  onModeChange: (mode: TransactionSheetMode) => void
-  onOpenChange: (open: boolean) => void
-  open: boolean
-  row?: TransactionFeedRow | null
+  lookups: TransactionLookups;
+  mode: TransactionSheetMode;
+  onDelete: (row: TransactionFeedRow) => void;
+  onModeChange: (mode: TransactionSheetMode) => void;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+  row?: TransactionFeedRow | null;
 }) {
-  const language = useAuthSessionStore(
-    (state) => state.user?.preferences.language ?? "en",
-  )
+  const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
   const purchaseQuery = useQuery({
     enabled: open && Boolean(row?.creditCardId && row?.purchaseId),
     queryKey: ["credit-cards", row?.creditCardId, "purchases", row?.purchaseId],
-    queryFn: () =>
-      getCreditCardPurchase(row?.creditCardId ?? "", row?.purchaseId ?? ""),
-  })
+    queryFn: () => getCreditCardPurchase(row?.creditCardId ?? "", row?.purchaseId ?? ""),
+  });
   const paymentQuery = useQuery({
     enabled: open && Boolean(row?.creditCardId && row?.paymentId),
     queryKey: ["credit-cards", row?.creditCardId, "payments", row?.paymentId],
-    queryFn: () =>
-      getCreditCardPayment(row?.creditCardId ?? "", row?.paymentId ?? ""),
-  })
+    queryFn: () => getCreditCardPayment(row?.creditCardId ?? "", row?.paymentId ?? ""),
+  });
   const detailQuery =
     row?.rowKind === "credit_card_installment"
       ? purchaseQuery
       : row?.rowKind === "credit_card_payment"
         ? paymentQuery
-        : null
+        : null;
   const details = React.useMemo(
     () => ({ purchase: purchaseQuery.data, payment: paymentQuery.data }),
     [paymentQuery.data, purchaseQuery.data],
-  )
+  );
   const title =
     mode === "create"
       ? "New transaction"
       : mode === "edit"
         ? "Edit transaction"
-        : "Transaction details"
+        : "Transaction details";
 
   if (mode === "view" && row) {
     return (
@@ -115,7 +108,7 @@ export function TransactionSheet({
           </SidePanelBody>
         </SidePanelContent>
       </SidePanel>
-    )
+    );
   }
 
   return (
@@ -147,5 +140,5 @@ export function TransactionSheet({
         />
       )}
     </FormSheet>
-  )
+  );
 }

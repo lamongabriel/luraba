@@ -1,7 +1,7 @@
-import YahooFinance from 'yahoo-finance2';
-import { ValidationError } from '@/shared/errors';
-import { addDays as addFxDays, isAfter, isBefore, now, toStartOfDay } from '@/shared/lib/date';
-import type { FxProvider, FxProviderRate } from '../fx.types';
+import YahooFinance from "yahoo-finance2";
+import { ValidationError } from "@/shared/errors";
+import { addDays as addFxDays, isAfter, isBefore, now, toStartOfDay } from "@/shared/lib/date";
+import type { FxProvider, FxProviderRate } from "../fx.types";
 
 type YahooChartRow = {
   date: Date;
@@ -16,8 +16,8 @@ type YahooFinanceClient = {
     options: {
       period1: Date;
       period2: Date;
-      interval: '1d';
-      return: 'array';
+      interval: "1d";
+      return: "array";
     },
   ) => Promise<YahooChartResult>;
 };
@@ -49,8 +49,8 @@ async function getHistoricalChartRate(
   const chartResult = await client.chart(buildFxSymbol(baseCurrencyCode, quoteCurrencyCode), {
     period1: addFxDays(date, -7),
     period2: addFxDays(date, 1),
-    interval: '1d',
-    return: 'array',
+    interval: "1d",
+    return: "array",
   });
   const quotes = toChartRows(chartResult);
 
@@ -65,7 +65,7 @@ async function getHistoricalChartRate(
   }
 
   return {
-    provider: 'yahoo-finance2',
+    provider: "yahoo-finance2",
     fromCurrencyCode: baseCurrencyCode,
     toCurrencyCode: quoteCurrencyCode,
     rateDate: toStartOfDay(row.date),
@@ -74,14 +74,14 @@ async function getHistoricalChartRate(
 }
 
 export class YahooFinanceFxProvider implements FxProvider {
-  readonly id = 'yahoo-finance2' as const;
+  readonly id = "yahoo-finance2" as const;
 
   constructor(private readonly client: YahooFinanceClient = createYahooFinanceClient()) {}
 
   async healthCheck(): Promise<void> {
-    const rates = await this.getLatestRates('USD', ['BRL']);
+    const rates = await this.getLatestRates("USD", ["BRL"]);
     if (rates.length === 0) {
-      throw new ValidationError('Yahoo Finance did not return any rates during health check');
+      throw new ValidationError("Yahoo Finance did not return any rates during health check");
     }
   }
 
@@ -121,7 +121,7 @@ export class YahooFinanceFxProvider implements FxProvider {
   ): Promise<FxProviderRate[]> {
     if (quoteCurrencyCodes.length !== 1) {
       throw new ValidationError(
-        'Yahoo Finance time-series sync supports one quote currency at a time',
+        "Yahoo Finance time-series sync supports one quote currency at a time",
       );
     }
 
@@ -131,8 +131,8 @@ export class YahooFinanceFxProvider implements FxProvider {
       {
         period1: from,
         period2: addFxDays(to, 1),
-        interval: '1d',
-        return: 'array',
+        interval: "1d",
+        return: "array",
       },
     );
     const quotes = toChartRows(chartResult);

@@ -1,19 +1,15 @@
-"use client"
+"use client";
 
-import { ErrorState } from "@/components/error-state"
+import { ErrorState } from "@/components/error-state";
 
 export default function CreditCardsErrorPage({
   error,
   reset,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & { digest?: string };
+  reset: () => void;
 }) {
   return (
-    <ErrorState
-      title="Couldn’t load credit cards"
-      description={error.message}
-      onRetry={reset}
-    />
-  )
+    <ErrorState title="Couldn’t load credit cards" description={error.message} onRetry={reset} />
+  );
 }

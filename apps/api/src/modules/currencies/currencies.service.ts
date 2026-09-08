@@ -2,14 +2,14 @@ import type {
   Currency,
   CurrencyRate,
   getCurrencyRateQuerySchema,
-} from '@luraba/contracts/currencies';
-import type { z } from 'zod';
-import { fxService } from '@/modules/fx/fx.service';
-import { NotFoundError } from '@/shared/errors';
-import { formatISODate, now } from '@/shared/lib/date';
-import { createListMeta, type ListResult } from '@/shared/list';
-import type { ListCurrenciesQuery } from './currencies.query';
-import { currenciesRepository } from './currencies.repository';
+} from "@luraba/contracts/currencies";
+import type { z } from "zod";
+import { fxService } from "@/modules/fx/fx.service";
+import { NotFoundError } from "@/shared/errors";
+import { formatISODate, now } from "@/shared/lib/date";
+import { createListMeta, type ListResult } from "@/shared/list";
+import type { ListCurrenciesQuery } from "./currencies.query";
+import { currenciesRepository } from "./currencies.repository";
 
 type CurrencyRateQuery = z.output<typeof getCurrencyRateQuerySchema>;
 
@@ -34,11 +34,11 @@ export async function getCurrencyRate(query: CurrencyRateQuery): Promise<Currenc
   ]);
 
   if (!fromCurrency) {
-    throw new NotFoundError('Currency');
+    throw new NotFoundError("Currency");
   }
 
   if (!toCurrency) {
-    throw new NotFoundError('Currency');
+    throw new NotFoundError("Currency");
   }
 
   const date = query.date ?? now();

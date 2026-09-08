@@ -1,5 +1,5 @@
-import { isValid, parseISO } from "date-fns"
-import { z } from "zod"
+import { isValid, parseISO } from "date-fns";
+import { z } from "zod";
 
 export const TRANSACTION_FORM_KINDS = [
   "expense",
@@ -7,7 +7,7 @@ export const TRANSACTION_FORM_KINDS = [
   "transfer",
   "credit_card_purchase",
   "credit_card_payment",
-] as const
+] as const;
 
 const amountSchema = z.union([
   z
@@ -15,16 +15,11 @@ const amountSchema = z.union([
     .finite()
     .positive("Amount must be greater than zero."),
   z.literal(""),
-])
+]);
 const optionalId = z
   .string()
-  .refine(
-    (value) => value === "" || z.uuid().safeParse(value).success,
-    "Choose a valid option.",
-  )
-const dateSchema = z
-  .string()
-  .refine((value) => isValid(parseISO(value)), "Enter a valid date.")
+  .refine((value) => value === "" || z.uuid().safeParse(value).success, "Choose a valid option.");
+const dateSchema = z.string().refine((value) => isValid(parseISO(value)), "Enter a valid date.");
 
 export const createEditTransactionFormSchema = z
   .object({
@@ -56,59 +51,57 @@ export const createEditTransactionFormSchema = z
   .superRefine((values, context) => {
     const requireId = (field: keyof typeof values, message: string) => {
       if (!values[field]) {
-        context.addIssue({ code: "custom", path: [field], message })
+        context.addIssue({ code: "custom", path: [field], message });
       }
-    }
+    };
 
     if (values.amount === "") {
       context.addIssue({
         code: "custom",
         path: ["amount"],
         message: "Enter an amount greater than zero.",
-      })
+      });
     }
 
     if (values.kind === "expense" || values.kind === "income") {
-      requireId("accountId", "Choose an account.")
+      requireId("accountId", "Choose an account.");
       if (!values.paymentMethodCode) {
         context.addIssue({
           code: "custom",
           path: ["paymentMethodCode"],
           message: "Choose a payment method.",
-        })
+        });
       }
     }
 
     if (values.kind === "transfer") {
-      requireId("fromAccountId", "Choose a source account.")
-      requireId("toAccountId", "Choose a destination account.")
+      requireId("fromAccountId", "Choose a source account.");
+      requireId("toAccountId", "Choose a destination account.");
       if (values.fromAccountId && values.fromAccountId === values.toAccountId) {
         context.addIssue({
           code: "custom",
           path: ["toAccountId"],
           message: "Choose a different destination account.",
-        })
+        });
       }
       if (values.toAmount === "") {
         context.addIssue({
           code: "custom",
           path: ["toAmount"],
           message: "Enter or quote a destination amount.",
-        })
+        });
       }
     }
 
     if (values.kind === "credit_card_purchase") {
-      requireId("creditCardId", "Choose a credit card.")
+      requireId("creditCardId", "Choose a credit card.");
     }
 
     if (values.kind === "credit_card_payment") {
-      requireId("creditCardId", "Choose a credit card.")
-      requireId("fromAccountId", "Choose a source account.")
+      requireId("creditCardId", "Choose a credit card.");
+      requireId("fromAccountId", "Choose a source account.");
     }
-  })
+  });
 
-export type CreateEditTransactionFormValues = z.infer<
-  typeof createEditTransactionFormSchema
->
-export type TransactionFormKind = CreateEditTransactionFormValues["kind"]
+export type CreateEditTransactionFormValues = z.infer<typeof createEditTransactionFormSchema>;
+export type TransactionFormKind = CreateEditTransactionFormValues["kind"];

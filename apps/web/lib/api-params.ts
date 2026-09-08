@@ -1,12 +1,6 @@
-import {
-  parseAsArrayOf,
-  parseAsBoolean,
-  parseAsFloat,
-  parseAsInteger,
-  parseAsString,
-} from "nuqs"
+import { parseAsArrayOf, parseAsBoolean, parseAsFloat, parseAsInteger, parseAsString } from "nuqs";
 
-export const DEFAULT_ARRAY_SEPARATOR = ","
+export const DEFAULT_ARRAY_SEPARATOR = ",";
 
 export type ApiParamFilterConfig =
   | { type: "boolean"; defaultValue?: boolean }
@@ -15,9 +9,9 @@ export type ApiParamFilterConfig =
   | { type: "integer"; defaultValue?: number }
   | { type: "integerArray"; defaultValue?: number[]; separator?: string }
   | { type: "string"; defaultValue?: string }
-  | { type: "stringArray"; defaultValue?: string[]; separator?: string }
+  | { type: "stringArray"; defaultValue?: string[]; separator?: string };
 
-export type ApiParamFilterConfigs = Record<string, ApiParamFilterConfig>
+export type ApiParamFilterConfigs = Record<string, ApiParamFilterConfig>;
 
 export type ApiParamFilterValue<TConfig extends ApiParamFilterConfig> =
   TConfig["type"] extends "string"
@@ -30,83 +24,78 @@ export type ApiParamFilterValue<TConfig extends ApiParamFilterConfig> =
           ? number | null
           : TConfig["type"] extends "boolean"
             ? boolean | null
-            : never
+            : never;
 
 export type ApiParamFilterValues<TFilters extends ApiParamFilterConfigs> = {
-  [Key in keyof TFilters]: ApiParamFilterValue<TFilters[Key]>
-}
+  [Key in keyof TFilters]: ApiParamFilterValue<TFilters[Key]>;
+};
 
-export type ApiParamFilterUpdates<TFilters extends ApiParamFilterConfigs> =
-  Partial<{
-    [Key in keyof TFilters]: ApiParamFilterValues<TFilters>[Key] | null
-  }>
+export type ApiParamFilterUpdates<TFilters extends ApiParamFilterConfigs> = Partial<{
+  [Key in keyof TFilters]: ApiParamFilterValues<TFilters>[Key] | null;
+}>;
 
-export type ApiParamValue = boolean | number | number[] | string | string[]
+export type ApiParamValue = boolean | number | number[] | string | string[];
 
 export function createApiFilterParser(config: ApiParamFilterConfig) {
   switch (config.type) {
     case "boolean":
       return config.defaultValue === undefined
         ? parseAsBoolean
-        : parseAsBoolean.withDefault(config.defaultValue)
+        : parseAsBoolean.withDefault(config.defaultValue);
     case "float":
       return config.defaultValue === undefined
         ? parseAsFloat
-        : parseAsFloat.withDefault(config.defaultValue)
+        : parseAsFloat.withDefault(config.defaultValue);
     case "floatArray":
-      return parseAsArrayOf(
-        parseAsFloat,
-        config.separator ?? DEFAULT_ARRAY_SEPARATOR,
-      ).withDefault(config.defaultValue ?? [])
+      return parseAsArrayOf(parseAsFloat, config.separator ?? DEFAULT_ARRAY_SEPARATOR).withDefault(
+        config.defaultValue ?? [],
+      );
     case "integer":
       return config.defaultValue === undefined
         ? parseAsInteger
-        : parseAsInteger.withDefault(config.defaultValue)
+        : parseAsInteger.withDefault(config.defaultValue);
     case "integerArray":
       return parseAsArrayOf(
         parseAsInteger,
         config.separator ?? DEFAULT_ARRAY_SEPARATOR,
-      ).withDefault(config.defaultValue ?? [])
+      ).withDefault(config.defaultValue ?? []);
     case "string":
-      return parseAsString.withDefault(config.defaultValue ?? "")
+      return parseAsString.withDefault(config.defaultValue ?? "");
     case "stringArray":
-      return parseAsArrayOf(
-        parseAsString,
-        config.separator ?? DEFAULT_ARRAY_SEPARATOR,
-      ).withDefault(config.defaultValue ?? [])
+      return parseAsArrayOf(parseAsString, config.separator ?? DEFAULT_ARRAY_SEPARATOR).withDefault(
+        config.defaultValue ?? [],
+      );
   }
 }
 
-export function normalizeFilterUpdateValue(
-  value: unknown,
-): ApiParamValue | null {
+export function normalizeFilterUpdateValue(value: unknown): ApiParamValue | null {
   if (Array.isArray(value)) {
-    return value.length > 0 ? value : null
+    return value.length > 0 ? value : null;
   }
 
   if (typeof value === "string") {
-    return value.trim().length > 0 ? value : null
+    return value.trim().length > 0 ? value : null;
   }
 
-  return (value as ApiParamValue | null | undefined) ?? null
+  return (value as ApiParamValue | null | undefined) ?? null;
 }
 
 export function getEmptyFilterValue(value: unknown) {
-  if (Array.isArray(value)) return []
-  if (typeof value === "string") return ""
-  return null
+  if (Array.isArray(value)) return [];
+  if (typeof value === "string") return "";
+  return null;
 }
 
 export function isActiveFilterValue(value: unknown, defaultValue: unknown) {
   if (Array.isArray(value)) {
-    return value.length > 0 && !arraysEqual(value, defaultValue)
+    return value.length > 0 && !arraysEqual(value, defaultValue);
   }
 
   if (typeof value === "string") {
-    return value.trim().length > 0 && value !== defaultValue
+    return value.trim().length > 0 && value !== defaultValue;
   }
 
-  return value !== null && value !== undefined && value !== defaultValue
+  return value !== null && value !== undefined && value !== defaultValue;
 }
 
 export function arraysEqual(left: unknown[], right: unknown) {
@@ -114,5 +103,5 @@ export function arraysEqual(left: unknown[], right: unknown) {
     Array.isArray(right) &&
     left.length === right.length &&
     left.every((value, index) => value === right[index])
-  )
+  );
 }

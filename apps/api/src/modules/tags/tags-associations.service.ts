@@ -1,12 +1,12 @@
-import type { TagSummary } from '@luraba/contracts/tags';
-import { asc, eq } from 'drizzle-orm';
-import type { HouseholdContext } from '@/config/permissions';
-import { db } from '@/db';
-import { tagsTable } from '@/db/schemas/tags.schema';
-import { transactionTagsTable } from '@/db/schemas/transaction-tags.schema';
-import type { TxClient } from '@/db/types';
-import { NotFoundError } from '@/shared/errors';
-import { tagsRepository } from './tags.repository';
+import type { TagSummary } from "@luraba/contracts/tags";
+import { asc, eq } from "drizzle-orm";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
+import { tagsTable } from "@/db/schemas/tags.schema";
+import { transactionTagsTable } from "@/db/schemas/transaction-tags.schema";
+import type { TxClient } from "@/db/types";
+import { NotFoundError } from "@/shared/errors";
+import { tagsRepository } from "./tags.repository";
 
 export async function validateTagIds(
   context: HouseholdContext,
@@ -16,7 +16,7 @@ export async function validateTagIds(
   if (normalizedTagIds.length === 0) return [];
 
   const tags = await tagsRepository.findByIds(context, normalizedTagIds);
-  if (tags.length !== normalizedTagIds.length) throw new NotFoundError('Tag');
+  if (tags.length !== normalizedTagIds.length) throw new NotFoundError("Tag");
 
   return normalizedTagIds;
 }

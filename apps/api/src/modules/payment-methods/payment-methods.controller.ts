@@ -1,7 +1,7 @@
-import { paymentMethodsEndpoints } from '@luraba/contracts/payment-methods';
-import { createHouseholdHandler } from '@/shared/controllers/household.controller';
-import { withApiMeta } from '@/shared/response';
-import * as paymentMethodsService from './payment-methods.service';
+import { paymentMethodsEndpoints } from "@luraba/contracts/payment-methods";
+import { createHouseholdHandler } from "@/shared/controllers/household.controller";
+import { withApiMeta } from "@/shared/response";
+import * as paymentMethodsService from "./payment-methods.service";
 
 export const list = createHouseholdHandler({
   query: paymentMethodsEndpoints.list.query,
@@ -17,7 +17,7 @@ export const create = createHouseholdHandler({
   body: paymentMethodsEndpoints.create.body,
   response: paymentMethodsEndpoints.create.response,
   handle: ({ household, body }) => paymentMethodsService.createPaymentMethod(household, body),
-  status: 'created',
+  status: "created",
 });
 
 export const update = createHouseholdHandler({
@@ -30,7 +30,7 @@ export const update = createHouseholdHandler({
 
 export const deletePaymentMethod = createHouseholdHandler({
   params: paymentMethodsEndpoints.delete.params,
-  status: 'no-content',
+  status: "no-content",
   handle: ({ household, params }) =>
     paymentMethodsService.deletePaymentMethod(household, params.id),
 });

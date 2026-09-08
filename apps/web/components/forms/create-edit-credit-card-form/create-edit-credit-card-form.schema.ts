@@ -1,16 +1,10 @@
-import { z } from "zod"
+import { z } from "zod";
 
-import {
-  CREDIT_CARD_BRAND_VALUES,
-  CREDIT_CARD_COLOR_PRESETS,
-} from "@/lib/credit-cards"
-import {
-  INSTITUTION_DOMAIN_ERROR,
-  isValidInstitutionDomain,
-} from "@/lib/domains"
+import { CREDIT_CARD_BRAND_VALUES, CREDIT_CARD_COLOR_PRESETS } from "@/lib/credit-cards";
+import { INSTITUTION_DOMAIN_ERROR, isValidInstitutionDomain } from "@/lib/domains";
 
 const optionalText = (label: string, max: number) =>
-  z.string().trim().max(max, `${label} must be ${max} characters or fewer.`)
+  z.string().trim().max(max, `${label} must be ${max} characters or fewer.`);
 
 const optionalAmount = z.union([
   z
@@ -18,7 +12,7 @@ const optionalAmount = z.union([
     .finite()
     .nonnegative("Credit limit cannot be negative."),
   z.literal(""),
-])
+]);
 
 export const createEditCreditCardFormSchema = z.object({
   name: z
@@ -60,10 +54,8 @@ export const createEditCreditCardFormSchema = z.object({
     .min(1, "Due day must be between 1 and 31.")
     .max(31, "Due day must be between 1 and 31."),
   creditLimitAmount: optionalAmount,
-})
+});
 
-export type CreateEditCreditCardFormValues = z.infer<
-  typeof createEditCreditCardFormSchema
->
+export type CreateEditCreditCardFormValues = z.infer<typeof createEditCreditCardFormSchema>;
 
-export const creditCardColorPresets = CREDIT_CARD_COLOR_PRESETS
+export const creditCardColorPresets = CREDIT_CARD_COLOR_PRESETS;

@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { FieldInfoHint } from "@/components/forms/field-info-hint"
-import { FormItem } from "@/components/forms/form-item"
+import { FieldInfoHint } from "@/components/forms/field-info-hint";
+import { FormItem } from "@/components/forms/form-item";
 
-import type { CreateEditAccountCommonSectionProps } from "./create-edit-account-section.types"
+import type { CreateEditAccountCommonSectionProps } from "./create-edit-account-section.types";
 
 export function CreateEditAccountCommonSection({
   currenciesArePending,
@@ -29,9 +29,7 @@ export function CreateEditAccountCommonSection({
         label="Type"
         disabled={disabled || isEdit}
         options={typeOptions}
-        description={
-          isEdit ? "Type cannot be changed after creation." : undefined
-        }
+        description={isEdit ? "Type cannot be changed after creation." : undefined}
       />
       <FormItem
         type="combobox"
@@ -43,9 +41,7 @@ export function CreateEditAccountCommonSection({
         emptyMessage="No currencies found."
         disabled={disabled || currenciesArePending || isEdit}
         options={currencyOptions}
-        description={
-          isEdit ? "Currency cannot be changed after creation." : undefined
-        }
+        description={isEdit ? "Currency cannot be changed after creation." : undefined}
       />
       <FormItem
         control={form.control}
@@ -67,5 +63,5 @@ export function CreateEditAccountCommonSection({
         }
       />
     </div>
-  )
+  );
 }

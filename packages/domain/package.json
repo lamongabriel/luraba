@@ -1,6 +1,6 @@
 {
   "name": "@luraba/domain",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Framework-free Luraba finance primitives",
   "type": "module",
@@ -30,16 +30,10 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsc -p tsconfig.build.json --watch",
-    "check": "biome check .",
-    "lint": "biome lint .",
-    "format": "biome format --write .",
-    "format:check": "biome format .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run",
     "test:unit": "vitest run"
   },
   "devDependencies": {
-    "@biomejs/biome": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

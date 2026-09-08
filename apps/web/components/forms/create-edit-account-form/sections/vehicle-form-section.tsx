@@ -1,14 +1,11 @@
-"use client"
+"use client";
 
-import { FormItem } from "@/components/forms/form-item"
-import { MILEAGE_UNIT_OPTIONS } from "@/lib/accounts"
+import { FormItem } from "@/components/forms/form-item";
+import { MILEAGE_UNIT_OPTIONS } from "@/lib/accounts";
 
-import type { CreateEditAccountSectionProps } from "./create-edit-account-section.types"
+import type { CreateEditAccountSectionProps } from "./create-edit-account-section.types";
 
-export function VehicleFormSection({
-  disabled,
-  form,
-}: CreateEditAccountSectionProps) {
+export function VehicleFormSection({ disabled, form }: CreateEditAccountSectionProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <FormItem
@@ -25,25 +22,9 @@ export function VehicleFormSection({
         placeholder="Corolla"
         disabled={disabled}
       />
-      <FormItem
-        type="int"
-        control={form.control}
-        name="year"
-        label="Year"
-        disabled={disabled}
-      />
-      <FormItem
-        control={form.control}
-        name="trim"
-        label="Trim"
-        disabled={disabled}
-      />
-      <FormItem
-        control={form.control}
-        name="vin"
-        label="VIN"
-        disabled={disabled}
-      />
+      <FormItem type="int" control={form.control} name="year" label="Year" disabled={disabled} />
+      <FormItem control={form.control} name="trim" label="Trim" disabled={disabled} />
+      <FormItem control={form.control} name="vin" label="VIN" disabled={disabled} />
       <FormItem
         control={form.control}
         name="licensePlate"
@@ -67,5 +48,5 @@ export function VehicleFormSection({
         options={MILEAGE_UNIT_OPTIONS}
       />
     </div>
-  )
+  );
 }

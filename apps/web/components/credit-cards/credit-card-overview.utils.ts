@@ -1,22 +1,19 @@
-import type { CreditCard, CreditCardCycle } from "@luraba/contracts"
+import type { CreditCard, CreditCardCycle } from "@luraba/contracts";
 
 export function getCreditCardUtilization(card: CreditCard) {
-  if (card.creditLimitAmount <= 0) return null
+  if (card.creditLimitAmount <= 0) return null;
 
-  return Math.min(
-    100,
-    Math.max(0, (card.balance / card.creditLimitAmount) * 100),
-  )
+  return Math.min(100, Math.max(0, (card.balance / card.creditLimitAmount) * 100));
 }
 
 export function getCurrentCreditCardCycle(cycles: CreditCardCycle[]) {
-  return cycles.find((cycle) => cycle.isCurrent)
+  return cycles.find((cycle) => cycle.isCurrent);
 }
 
 export function getNextCreditCardCycle(cycles: CreditCardCycle[]) {
-  return cycles.find((cycle) => cycle.isNext)
+  return cycles.find((cycle) => cycle.isNext);
 }
 
 export function getCycleAmount(cycle: CreditCardCycle | undefined) {
-  return cycle?.remainingAmount ?? 0
+  return cycle?.remainingAmount ?? 0;
 }

@@ -1,14 +1,10 @@
-"use client"
+"use client";
 
-import { ArrowRight01Icon, Settings02Icon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
-import type {
-  HouseholdContext,
-  HouseholdSummary,
-  User,
-} from "@luraba/contracts"
-import Link from "next/link"
-import * as React from "react"
+import { ArrowRight01Icon, Settings02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { HouseholdContext, HouseholdSummary, User } from "@luraba/contracts";
+import Link from "next/link";
+import * as React from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,28 +14,28 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { Typography } from "@/components/ui/typography"
-import { STORAGE_KEYS } from "@/config/storage"
-import { readStorage, writeStorage } from "@/lib/local-storage"
+} from "@/components/ui/sidebar";
+import { Typography } from "@/components/ui/typography";
+import { STORAGE_KEYS } from "@/config/storage";
+import { readStorage, writeStorage } from "@/lib/local-storage";
 
-const HOUSEHOLD_CHANGED_EVENT = "luraba:household-change"
+const HOUSEHOLD_CHANGED_EVENT = "luraba:household-change";
 
 type HouseholdWorkspace = HouseholdSummary & {
-  permissions?: string[]
-}
+  permissions?: string[];
+};
 
 interface HouseholdSwitcherProps {
-  user: User
-  initialHousehold: HouseholdContext
-  households: HouseholdSummary[]
-  onHouseholdChange?: (householdId: string) => void
+  user: User;
+  initialHousehold: HouseholdContext;
+  households: HouseholdSummary[];
+  onHouseholdChange?: (householdId: string) => void;
 }
 
 function getInitials(name: string) {
@@ -50,24 +46,24 @@ function getInitials(name: string) {
     .map((part) => part[0] ?? "")
     .join("")
     .toUpperCase()
-    .slice(0, 2)
+    .slice(0, 2);
 }
 
 function createFallbackDescription(household: HouseholdWorkspace) {
-  return `${household.defaultCurrencyId} budgeting for ${household.countryCode} in ${household.timezone.replaceAll("_", " ")}.`
+  return `${household.defaultCurrencyId} budgeting for ${household.countryCode} in ${household.timezone.replaceAll("_", " ")}.`;
 }
 
 function mergeHouseholds(
   initialHousehold: HouseholdContext,
   households: HouseholdSummary[],
 ): HouseholdWorkspace[] {
-  const map = new Map<string, HouseholdWorkspace>()
+  const map = new Map<string, HouseholdWorkspace>();
 
   for (const household of households) {
-    map.set(household.id, { ...household })
+    map.set(household.id, { ...household });
   }
 
-  const existing = map.get(initialHousehold.id)
+  const existing = map.get(initialHousehold.id);
 
   map.set(initialHousehold.id, {
     id: initialHousehold.id,
@@ -75,21 +71,18 @@ function mergeHouseholds(
     description: existing?.description ?? "Primary household workspace.",
     role: initialHousehold.role,
     createdByUserId: existing?.createdByUserId ?? initialHousehold.id,
-    createdAt:
-      existing?.createdAt ?? new Date("2026-06-11T01:38:36.604Z").toISOString(),
-    updatedAt:
-      existing?.updatedAt ?? new Date("2026-06-11T01:38:36.604Z").toISOString(),
+    createdAt: existing?.createdAt ?? new Date("2026-06-11T01:38:36.604Z").toISOString(),
+    updatedAt: existing?.updatedAt ?? new Date("2026-06-11T01:38:36.604Z").toISOString(),
     defaultCurrencyId: initialHousehold.settings.defaultCurrencyId,
     countryCode: initialHousehold.settings.countryCode,
     timezone: initialHousehold.settings.timezone,
     budgetMonthStartsOn: initialHousehold.settings.budgetMonthStartsOn,
     creditExpenseTiming: initialHousehold.settings.creditExpenseTiming,
-    creditInstallmentBudgetMode:
-      initialHousehold.settings.creditInstallmentBudgetMode,
+    creditInstallmentBudgetMode: initialHousehold.settings.creditInstallmentBudgetMode,
     permissions: initialHousehold.permissions,
-  })
+  });
 
-  return Array.from(map.values())
+  return Array.from(map.values());
 }
 
 export function HouseholdSwitcher({
@@ -98,38 +91,29 @@ export function HouseholdSwitcher({
   households: initialHouseholds,
   onHouseholdChange,
 }: HouseholdSwitcherProps) {
-  const { isMobile } = useSidebar()
+  const { isMobile } = useSidebar();
   const households = React.useMemo(
     () => mergeHouseholds(initialHousehold, initialHouseholds),
     [initialHousehold, initialHouseholds],
-  )
+  );
   const [selectedHouseholdId, setSelectedHouseholdId] = React.useState(
     () =>
-      readStorage(STORAGE_KEYS.activeHouseholdId) ||
-      user.defaultHouseholdId ||
-      initialHousehold.id,
-  )
+      readStorage(STORAGE_KEYS.activeHouseholdId) || user.defaultHouseholdId || initialHousehold.id,
+  );
 
   const selectedHousehold = React.useMemo(() => {
     return (
       households.find((household) => household.id === selectedHouseholdId) ??
       households.find((household) => household.id === initialHousehold.id) ??
-      households.find(
-        (household) => household.id === user.defaultHouseholdId,
-      ) ??
+      households.find((household) => household.id === user.defaultHouseholdId) ??
       households[0]
-    )
-  }, [
-    households,
-    initialHousehold.id,
-    selectedHouseholdId,
-    user.defaultHouseholdId,
-  ])
+    );
+  }, [households, initialHousehold.id, selectedHouseholdId, user.defaultHouseholdId]);
 
   React.useEffect(() => {
-    if (!selectedHousehold || typeof window === "undefined") return
+    if (!selectedHousehold || typeof window === "undefined") return;
 
-    writeStorage(STORAGE_KEYS.activeHouseholdId, selectedHousehold.id)
+    writeStorage(STORAGE_KEYS.activeHouseholdId, selectedHousehold.id);
     window.dispatchEvent(
       new CustomEvent(HOUSEHOLD_CHANGED_EVENT, {
         detail: {
@@ -137,14 +121,14 @@ export function HouseholdSwitcher({
           household: selectedHousehold,
         },
       }),
-    )
-  }, [selectedHousehold])
+    );
+  }, [selectedHousehold]);
 
   if (!selectedHousehold) {
-    return null
+    return null;
   }
 
-  const initials = getInitials(selectedHousehold.name)
+  const initials = getInitials(selectedHousehold.name);
 
   return (
     <SidebarMenu>
@@ -203,8 +187,8 @@ export function HouseholdSwitcher({
             <DropdownMenuRadioGroup
               value={selectedHousehold.id}
               onValueChange={(householdId) => {
-                setSelectedHouseholdId(householdId)
-                onHouseholdChange?.(householdId)
+                setSelectedHouseholdId(householdId);
+                onHouseholdChange?.(householdId);
               }}
             >
               {households.map((household) => (
@@ -236,8 +220,7 @@ export function HouseholdSwitcher({
                       variant="small-muted"
                       className="block truncate text-[0.68rem] text-muted-foreground/72"
                     >
-                      {household.description ??
-                        createFallbackDescription(household)}
+                      {household.description ?? createFallbackDescription(household)}
                     </Typography>
                   </div>
                 </DropdownMenuRadioItem>
@@ -254,5 +237,5 @@ export function HouseholdSwitcher({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

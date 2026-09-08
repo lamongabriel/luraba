@@ -1,11 +1,11 @@
-import type { HouseholdContext } from '@/config/permissions';
-import { brandfetchIntegrationsTable } from '@/db/schemas/brandfetch-integrations.schema';
-import { HouseholdScopedRepository } from '@/shared/repositories/household-scoped.repository';
+import type { HouseholdContext } from "@/config/permissions";
+import { brandfetchIntegrationsTable } from "@/db/schemas/brandfetch-integrations.schema";
+import { HouseholdScopedRepository } from "@/shared/repositories/household-scoped.repository";
 
 export type BrandfetchIntegrationRecord = typeof brandfetchIntegrationsTable.$inferSelect;
 type CreateBrandfetchIntegrationValues = Omit<
   typeof brandfetchIntegrationsTable.$inferInsert,
-  'id' | 'householdId' | 'createdAt' | 'updatedAt'
+  "id" | "householdId" | "createdAt" | "updatedAt"
 >;
 
 class BrandfetchRepository extends HouseholdScopedRepository<

@@ -1,4 +1,4 @@
-import * as householdsService from './households.service';
+import * as householdsService from "./households.service";
 
 export async function provisionHouseholdForUser(user: {
   id: string;

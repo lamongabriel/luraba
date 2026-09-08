@@ -4,17 +4,17 @@ import {
   recurringBillSchema,
   recurringOccurrenceSchema,
   type updateRecurringBillBodySchema,
-} from '@luraba/contracts/recurring-bills';
-import { isAfter, isBefore, parseISO } from 'date-fns';
-import type { z } from 'zod';
-import type { HouseholdContext } from '@/config/permissions';
-import { paymentMethodsRepository } from '@/modules/payment-methods/payment-methods.repository';
-import * as transactionsService from '@/modules/transactions/transactions.service';
-import { ConflictError, NotFoundError, ValidationError } from '@/shared/errors';
-import { formatISODate } from '@/shared/lib/date';
-import { createListMeta } from '@/shared/list';
-import * as repository from './recurring-bills.repository';
-import type { RecurringBillRecord } from './recurring-bills.types';
+} from "@luraba/contracts/recurring-bills";
+import { isAfter, isBefore, parseISO } from "date-fns";
+import type { z } from "zod";
+import type { HouseholdContext } from "@/config/permissions";
+import { paymentMethodsRepository } from "@/modules/payment-methods/payment-methods.repository";
+import * as transactionsService from "@/modules/transactions/transactions.service";
+import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
+import { formatISODate } from "@/shared/lib/date";
+import { createListMeta } from "@/shared/list";
+import * as repository from "./recurring-bills.repository";
+import type { RecurringBillRecord } from "./recurring-bills.types";
 
 type CreateRecurringBillValues = z.output<typeof createRecurringBillBodySchema>;
 type UpdateRecurringBillValues = z.output<typeof updateRecurringBillBodySchema>;
@@ -36,16 +36,16 @@ function mapBill(row: RecurringBillRecord) {
 
 function nextDate(
   date: Date,
-  frequency: CreateRecurringBillValues['frequency'],
+  frequency: CreateRecurringBillValues["frequency"],
   dayOfMonth?: number | null,
 ): Date {
   const year = date.getUTCFullYear();
   const month = date.getUTCMonth();
   const day = date.getUTCDate();
-  if (frequency === 'weekly' || frequency === 'biweekly') {
-    return new Date(Date.UTC(year, month, day + (frequency === 'weekly' ? 7 : 14)));
+  if (frequency === "weekly" || frequency === "biweekly") {
+    return new Date(Date.UTC(year, month, day + (frequency === "weekly" ? 7 : 14)));
   }
-  const monthStep = frequency === 'quarterly' ? 3 : frequency === 'yearly' ? 12 : 1;
+  const monthStep = frequency === "quarterly" ? 3 : frequency === "yearly" ? 12 : 1;
   const targetMonth = month + monthStep;
   const targetYear = year + Math.floor(targetMonth / 12);
   const normalizedMonth = targetMonth % 12;
@@ -62,14 +62,14 @@ export function getOccurrenceDates(bill: RecurringBillRecord, from: Date, to: Da
   while (isBefore(current, from))
     current = nextDate(
       current,
-      bill.frequency as CreateRecurringBillValues['frequency'],
+      bill.frequency as CreateRecurringBillValues["frequency"],
       dayOfMonth,
     );
   while (!isAfter(current, limit)) {
     dates.push(current);
     current = nextDate(
       current,
-      bill.frequency as CreateRecurringBillValues['frequency'],
+      bill.frequency as CreateRecurringBillValues["frequency"],
       dayOfMonth,
     );
   }
@@ -99,7 +99,7 @@ export async function list(context: HouseholdContext, query: ListRecurringBillsQ
 
 export async function get(context: HouseholdContext, id: string) {
   const row = await repository.get(context, id);
-  if (!row) throw new NotFoundError('Recurring bill');
+  if (!row) throw new NotFoundError("Recurring bill");
   return mapBill(row);
 }
 
@@ -115,7 +115,7 @@ export async function update(
   body: UpdateRecurringBillValues,
 ) {
   const existing = await repository.get(context, id);
-  if (!existing) throw new NotFoundError('Recurring bill');
+  if (!existing) throw new NotFoundError("Recurring bill");
   const method =
     body.paymentMethodCode !== undefined
       ? await resolvePaymentMethod(
@@ -125,12 +125,12 @@ export async function update(
         )
       : undefined;
   const row = await repository.update(context, id, body, method?.id ?? null);
-  if (!row) throw new NotFoundError('Recurring bill');
+  if (!row) throw new NotFoundError("Recurring bill");
   return mapBill(row);
 }
 
 export async function remove(context: HouseholdContext, id: string) {
-  if (!(await repository.get(context, id))) throw new NotFoundError('Recurring bill');
+  if (!(await repository.get(context, id))) throw new NotFoundError("Recurring bill");
   await repository.remove(context, id);
 }
 
@@ -141,7 +141,7 @@ export async function listOccurrences(
   to: string,
 ) {
   const bill = await repository.get(context, id);
-  if (!bill) throw new NotFoundError('Recurring bill');
+  if (!bill) throw new NotFoundError("Recurring bill");
   const dates = getOccurrenceDates(bill, parseISO(from), parseISO(to));
   const rows = await Promise.all(
     dates.map(async (date) => {
@@ -151,7 +151,7 @@ export async function listOccurrences(
         recurringBillId: id,
         occurrenceDate: formatISODate(date),
         effectiveDate: formatISODate(stored?.rescheduledDate ?? date),
-        status: stored?.status ?? 'scheduled',
+        status: stored?.status ?? "scheduled",
         rescheduledDate: stored?.rescheduledDate ? formatISODate(stored.rescheduledDate) : null,
         transactionId: stored?.transactionId ?? null,
       });
@@ -166,12 +166,12 @@ async function saveOccurrenceAction(
   date: string,
   values: Parameters<typeof repository.saveOccurrence>[2],
 ) {
-  if (!(await repository.get(context, id))) throw new NotFoundError('Recurring bill');
+  if (!(await repository.get(context, id))) throw new NotFoundError("Recurring bill");
   return repository.saveOccurrence(id, parseISO(date), values);
 }
 
 export async function skipOccurrence(context: HouseholdContext, id: string, date: string) {
-  await saveOccurrenceAction(context, id, date, { status: 'skipped' });
+  await saveOccurrenceAction(context, id, date, { status: "skipped" });
 }
 
 export async function rescheduleOccurrence(
@@ -181,24 +181,24 @@ export async function rescheduleOccurrence(
   next: string,
 ) {
   await saveOccurrenceAction(context, id, date, {
-    status: 'rescheduled',
+    status: "rescheduled",
     rescheduledDate: parseISO(next),
   });
 }
 
 export async function createOccurrence(context: HouseholdContext, id: string, date: string) {
   const bill = await repository.get(context, id);
-  if (!bill) throw new NotFoundError('Recurring bill');
+  if (!bill) throw new NotFoundError("Recurring bill");
   const existing = await repository.getOccurrence(context, id, parseISO(date));
   if (existing?.transactionId)
-    throw new ConflictError('This recurring occurrence already created a transaction');
+    throw new ConflictError("This recurring occurrence already created a transaction");
   const paymentMethod = bill.paymentMethodId
     ? await paymentMethodsRepository.get(bill.paymentMethodId, context)
     : null;
   if (!paymentMethod)
-    throw new ValidationError('A payment method is required to create a transaction');
+    throw new ValidationError("A payment method is required to create a transaction");
   const transaction = await transactionsService.createTransaction(context, {
-    type: bill.type as 'income' | 'expense',
+    type: bill.type as "income" | "expense",
     description: bill.name,
     amount: bill.amount,
     currencyCode: bill.currencyCode,
@@ -210,7 +210,7 @@ export async function createOccurrence(context: HouseholdContext, id: string, da
     postedDate: parseISO(date),
   });
   await saveOccurrenceAction(context, id, date, {
-    status: 'created',
+    status: "created",
     transactionId: transaction.id,
   });
   return transaction;
