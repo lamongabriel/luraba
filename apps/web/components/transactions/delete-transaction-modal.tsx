@@ -12,7 +12,6 @@ import {
 } from "@/mutations/credit-cards/use-credit-card-transaction-mutations";
 import { useDeleteTransactionMutation } from "@/mutations/transactions/use-transaction-mutations";
 import { accountQueryKeys } from "@/queries/accounts/use-accounts-query";
-import { budgetQueryKeys } from "@/queries/budgets/use-monthly-budget-query";
 import { creditCardQueryKeys } from "@/queries/credit-cards/use-credit-cards-query";
 import { transactionQueryKeys } from "@/queries/transactions/use-transactions-query";
 
@@ -30,7 +29,6 @@ export function DeleteTransactionModal({
       queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all }),
       queryClient.invalidateQueries({ queryKey: accountQueryKeys.all }),
       queryClient.invalidateQueries({ queryKey: creditCardQueryKeys.all }),
-      queryClient.invalidateQueries({ queryKey: budgetQueryKeys.all }),
     ]);
     onOpenChange(false);
   };

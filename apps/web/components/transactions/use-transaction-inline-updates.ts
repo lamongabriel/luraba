@@ -6,7 +6,6 @@ import { queryClient } from "@/lib/query-client";
 import { useUpdateCreditCardPurchaseMutation } from "@/mutations/credit-cards/use-credit-card-transaction-mutations";
 import { useUpdateTransactionMutation } from "@/mutations/transactions/use-transaction-mutations";
 import { accountQueryKeys } from "@/queries/accounts/use-accounts-query";
-import { budgetQueryKeys } from "@/queries/budgets/use-monthly-budget-query";
 import { creditCardQueryKeys } from "@/queries/credit-cards/use-credit-cards-query";
 import { transactionAnalyticsQueryKeys } from "@/queries/transactions/use-transaction-analytics-query";
 import { transactionQueryKeys } from "@/queries/transactions/use-transactions-query";
@@ -30,7 +29,6 @@ export function useTransactionInlineUpdates(row: TransactionFeedRow) {
       }),
       queryClient.invalidateQueries({ queryKey: accountQueryKeys.all }),
       queryClient.invalidateQueries({ queryKey: creditCardQueryKeys.all }),
-      queryClient.invalidateQueries({ queryKey: budgetQueryKeys.all }),
     ]);
   }, []);
 

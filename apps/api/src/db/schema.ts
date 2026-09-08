@@ -28,7 +28,6 @@ export {
 export * from "./schemas/ledger-accounts.schema";
 export * from "./schemas/merchants.schema";
 export * from "./schemas/payment-methods.schema";
-export * from "./schemas/recurring-bills.schema";
 export * from "./schemas/tags.schema";
 export * from "./schemas/transaction-tags.schema";
 export * from "./schemas/transactions.schema";

@@ -88,10 +88,7 @@ export const transactionAnalyticsSchema = z.object({
     ),
   }),
 });
-export const upcomingTransactionSourceSchema = z.enum([
-  "credit_card_installment",
-  "recurring_bill",
-]);
+export const upcomingTransactionSourceSchema = z.literal("credit_card_installment");
 export const upcomingTransactionSchema = z.object({
   sourceType: upcomingTransactionSourceSchema,
   sourceId: z.uuid(),
@@ -110,7 +107,6 @@ export const upcomingTransactionSchema = z.object({
   merchantName: z.string().nullable(),
   installmentNumber: z.number().int().nullable(),
   installmentCount: z.number().int().nullable(),
-  recurringFrequency: z.string().nullable(),
 });
 
 export type Transaction = z.output<typeof transactionSchema>;

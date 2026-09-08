@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar03Icon, RepeatIcon } from "@hugeicons/core-free-icons";
+import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { UpcomingTransaction } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
@@ -41,13 +41,13 @@ export function UpcomingTransactionsPanel({
                   onClick={() => onSelect?.(row)}
                 >
                   <span className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground">
-                    <HugeiconsIcon icon={RepeatIcon} className="size-3.5" />
+                    <HugeiconsIcon icon={Calendar03Icon} className="size-3.5" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5">
                       <span className="truncate text-xs font-medium">{row.description}</span>
                       <Badge variant="outline" className="h-4 px-1 text-[0.55rem]">
-                        {row.sourceType === "recurring_bill" ? "Recurring" : "Installment"}
+                        Installment
                       </Badge>
                     </span>
                     <span className="mt-0.5 block text-[0.65rem] text-muted-foreground">

@@ -75,10 +75,6 @@
       "types": "./dist/merchants/index.d.ts",
       "import": "./dist/merchants/index.js"
     },
-    "./networth": {
-      "types": "./dist/networth/index.d.ts",
-      "import": "./dist/networth/index.js"
-    },
     "./payment-methods": {
       "types": "./dist/payment-methods/index.d.ts",
       "import": "./dist/payment-methods/index.js"
@@ -90,10 +86,6 @@
     "./reference-data": {
       "types": "./dist/reference-data/index.d.ts",
       "import": "./dist/reference-data/index.js"
-    },
-    "./recurring-bills": {
-      "types": "./dist/recurring-bills/index.d.ts",
-      "import": "./dist/recurring-bills/index.js"
     },
     "./tags": {
       "types": "./dist/tags/index.d.ts",

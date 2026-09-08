@@ -9,10 +9,8 @@ import {
   householdsEndpoints,
   integrationsEndpoints,
   merchantsEndpoints,
-  netWorthEndpoints,
   onboardingEndpoints,
   paymentMethodsEndpoints,
-  recurringBillsEndpoints,
   referenceDataEndpoints,
   tagsEndpoints,
   transactionsEndpoints,
@@ -28,10 +26,8 @@ import currenciesRouter from "@/modules/currencies/currencies.routes";
 import householdsRouter from "@/modules/households/households.routes";
 import integrationsRouter from "@/modules/integrations/integrations.routes";
 import merchantsRouter from "@/modules/merchants/merchants.routes";
-import networthRouter from "@/modules/networth/networth.routes";
 import onboardingRouter from "@/modules/onboarding/onboarding.routes";
 import paymentMethodsRouter from "@/modules/payment-methods/payment-methods.routes";
-import recurringBillsRouter from "@/modules/recurring-bills/recurring-bills.routes";
 import referenceDataRouter from "@/modules/reference-data/reference-data.routes";
 import tagsRouter from "@/modules/tags/tags.routes";
 import transactionsRouter from "@/modules/transactions/transactions.routes";
@@ -47,11 +43,9 @@ router.use(getEndpointBasePath(budgetsEndpoints.getMonth), budgetsRouter);
 router.use(getEndpointBasePath(categoriesEndpoints.list), categoriesRouter);
 router.use(getEndpointBasePath(creditCardsEndpoints.list), creditCardsRouter);
 router.use(getEndpointBasePath(merchantsEndpoints.list), merchantsRouter);
-router.use(getEndpointBasePath(netWorthEndpoints.summary), networthRouter);
 router.use(getEndpointBasePath(onboardingEndpoints.getOptions), onboardingRouter);
 router.use(getEndpointBasePath(paymentMethodsEndpoints.list), paymentMethodsRouter);
 router.use(getEndpointBasePath(referenceDataEndpoints.getLocations), referenceDataRouter);
-router.use(getEndpointBasePath(recurringBillsEndpoints.list), recurringBillsRouter);
 router.use(getEndpointBasePath(tagsEndpoints.list), tagsRouter);
 router.use(getEndpointBasePath(transactionsEndpoints.list), transactionsRouter);
 

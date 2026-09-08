@@ -9,10 +9,8 @@ import { healthEndpoints } from "./health/endpoints.js";
 import { householdsEndpoints } from "./households/endpoints.js";
 import { integrationsEndpoints } from "./integrations/endpoints.js";
 import { merchantsEndpoints } from "./merchants/endpoints.js";
-import { netWorthEndpoints } from "./networth/endpoints.js";
 import { onboardingEndpoints } from "./onboarding/endpoints.js";
 import { paymentMethodsEndpoints } from "./payment-methods/endpoints.js";
-import { recurringBillsEndpoints } from "./recurring-bills/endpoints.js";
 import { referenceDataEndpoints } from "./reference-data/endpoints.js";
 import { tagsEndpoints } from "./tags/endpoints.js";
 import { transactionsEndpoints } from "./transactions/endpoints.js";
@@ -30,10 +28,8 @@ export const contractModules = {
   households: householdsEndpoints,
   integrations: integrationsEndpoints,
   merchants: merchantsEndpoints,
-  netWorth: netWorthEndpoints,
   onboarding: onboardingEndpoints,
   paymentMethods: paymentMethodsEndpoints,
-  recurringBills: recurringBillsEndpoints,
   referenceData: referenceDataEndpoints,
   tags: tagsEndpoints,
   transactions: transactionsEndpoints,

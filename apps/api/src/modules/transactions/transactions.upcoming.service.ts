@@ -3,16 +3,9 @@ import {
   upcomingTransactionSchema,
   type upcomingTransactionsQuerySchema,
 } from "@luraba/contracts/transactions";
-import {
-  addDays,
-  formatISODate,
-  getRecurrencyDates,
-  getTodayInTimezone,
-  type RecurrencyFrequency,
-} from "@luraba/domain";
+import { addDays, formatISODate, getTodayInTimezone } from "@luraba/domain";
 import type { z } from "zod";
 import type { HouseholdContext } from "@/config/permissions";
-import * as recurringBillsRepository from "@/modules/recurring-bills/recurring-bills.repository";
 import { createListMeta } from "@/shared/list";
 import * as repository from "./transactions.analytics.repository";
 import type { TransactionFilterQuery } from "./transactions.query";
@@ -64,70 +57,10 @@ export async function listUpcomingTransactions(context: HouseholdContext, query:
       merchantName: row.merchantName,
       installmentNumber: row.installmentNumber,
       installmentCount: row.installmentCount,
-      recurringFrequency: null,
     }),
   );
 
-  const recurringCandidates = await recurringBillsRepository.listUpcomingCandidates(
-    context,
-    filters,
-  );
-  const recurring = (
-    await Promise.all(
-      recurringCandidates.map(async ({ bill, accountName, categoryName, merchantName }) => {
-        const dates = getRecurrencyDates(
-          {
-            startDate: bill.startDate,
-            endDate: bill.endDate,
-            frequency: bill.frequency as RecurrencyFrequency,
-            dayOfMonth: bill.dayOfMonth,
-            dayOfWeek: bill.dayOfWeek,
-          },
-          { from: tomorrow, to: end },
-        );
-        const rows = await Promise.all(
-          dates.map(async (date) => {
-            const occurrence = await recurringBillsRepository.getOccurrence(context, bill.id, date);
-            return { date, occurrence };
-          }),
-        );
-        return rows
-          .filter(
-            ({ occurrence }) =>
-              !occurrence ||
-              ((occurrence.status === "scheduled" || occurrence.status === "rescheduled") &&
-                !occurrence.transactionId),
-          )
-          .map(({ date, occurrence }) => {
-            const effectiveDate = occurrence?.rescheduledDate ?? date;
-            if (effectiveDate < tomorrow || effectiveDate > end) return null;
-            return upcomingTransactionSchema.parse({
-              sourceType: "recurring_bill",
-              sourceId: bill.id,
-              parentId: bill.id,
-              description: bill.name,
-              effectiveDate: formatISODate(effectiveDate),
-              amount: bill.amount,
-              currencyCode: bill.currencyCode,
-              accountId: bill.accountId,
-              accountName,
-              creditCardId: null,
-              creditCardName: null,
-              categoryId: bill.categoryId,
-              categoryName,
-              merchantId: bill.merchantId,
-              merchantName,
-              installmentNumber: null,
-              installmentCount: null,
-              recurringFrequency: bill.frequency,
-            });
-          })
-          .filter((row): row is UpcomingTransaction => row !== null);
-      }),
-    )
-  ).flat();
-
-  const data = [...installments, ...recurring].sort(
+  const data = installments.sort(
     (a, b) =>
       (query.sortDirection === "desc" ? -1 : 1) *
       (a.effectiveDate.localeCompare(b.effectiveDate) || a.sourceId.localeCompare(b.sourceId)),

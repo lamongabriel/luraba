@@ -3,11 +3,8 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const protectedPrefixes = [
   "/accounts",
-  "/budgets",
-  "/bugdets",
   "/categories",
   "/dashboard",
-  "/reports",
   "/settings",
   "/tags",
   "/transactions",
@@ -41,13 +38,10 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/accounts/:path*",
-    "/budgets/:path*",
-    "/bugdets/:path*",
     "/categories/:path*",
     "/dashboard/:path*",
     "/login",
     "/register",
-    "/reports/:path*",
     "/settings/:path*",
     "/tags/:path*",
     "/transactions/:path*",

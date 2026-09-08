@@ -2,10 +2,7 @@ import {
   ArrowLeftRightIcon,
   CreditCardIcon,
   DashboardSquare01Icon,
-  DollarCircleIcon,
   Layers01Icon,
-  PieChart02Icon,
-  RepeatIcon,
   Settings02Icon,
   TagsIcon,
   UserGroupIcon,
@@ -46,18 +43,6 @@ export const mainNav: NavigationItem[] = [
     permission: PERMISSIONS.CREDIT_CARDS_READ,
   },
   {
-    title: "Reports",
-    href: "/reports",
-    icon: PieChart02Icon,
-    permission: PERMISSIONS.TRANSACTIONS_READ,
-  },
-  {
-    title: "Budgets",
-    href: "/budgets",
-    icon: DollarCircleIcon,
-    permission: PERMISSIONS.BUDGETS_READ,
-  },
-  {
     title: "Categories",
     href: "/categories",
     icon: Layers01Icon,
@@ -68,12 +53,6 @@ export const mainNav: NavigationItem[] = [
     href: "/tags",
     icon: TagsIcon,
     permission: PERMISSIONS.TAGS_READ,
-  },
-  {
-    title: "Recurring bills",
-    href: "/recurring-bills",
-    icon: RepeatIcon,
-    permission: PERMISSIONS.RECURRING_BILLS_READ,
   },
 ];
 

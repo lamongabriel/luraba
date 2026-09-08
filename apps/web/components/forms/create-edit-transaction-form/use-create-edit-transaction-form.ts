@@ -17,7 +17,6 @@ import {
   useUpdateTransactionMutation,
 } from "@/mutations/transactions/use-transaction-mutations";
 import { accountQueryKeys } from "@/queries/accounts/use-accounts-query";
-import { budgetQueryKeys } from "@/queries/budgets/use-monthly-budget-query";
 import { creditCardQueryKeys } from "@/queries/credit-cards/use-credit-cards-query";
 import {
   type TransactionLookups,
@@ -88,7 +87,6 @@ export function useCreateEditTransactionForm({
       queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all }),
       queryClient.invalidateQueries({ queryKey: accountQueryKeys.all }),
       queryClient.invalidateQueries({ queryKey: creditCardQueryKeys.all }),
-      queryClient.invalidateQueries({ queryKey: budgetQueryKeys.all }),
       queryClient.invalidateQueries({
         queryKey: transactionLookupQueryKeys.all,
       }),

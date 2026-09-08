@@ -95,11 +95,6 @@ export default function TransactionsPage() {
 
   const openUpcoming = React.useCallback(
     (row: UpcomingTransaction) => {
-      if (row.sourceType === "recurring_bill") {
-        window.location.assign(`/recurring-bills?selected=${row.sourceId}`);
-        return;
-      }
-
       const feedRow: TransactionFeedRow = {
         id: row.parentId,
         type: "expense",
