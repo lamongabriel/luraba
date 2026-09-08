@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [main]
   push:
@@ -46,7 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - uses: ./.github/actions/setup-workspace
-      - run: turbo run test:unit
+      - run: pnpm exec turbo run test:unit
 
   integration:
     name: API integration tests
@@ -74,6 +75,8 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - uses: ./.github/actions/setup-workspace
+      - name: Build API workspace dependencies
+        run: pnpm exec turbo run build --filter=@luraba/api^...
       - run: pnpm --filter @luraba/api test:integration
 
   build:
