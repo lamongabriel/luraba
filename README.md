@@ -45,16 +45,21 @@ Run a package-specific command with pnpm filtering, for example
 
 ## Self-hosting
 
-The root [`compose.yaml`](compose.yaml) is the only container deployment
-definition. It runs Postgres, migrations, API, and web in production mode:
+The root [`compose.yaml`](compose.yaml) runs Postgres, migrations, API, and web
+in production mode:
 
 ```sh
 docker compose up --build -d
 ```
 
-The API environment file is required for container deployments. Set public
+The API environment file is required for this Compose setup. Set public
 origins and optional host-port overrides with `BASE_URL`, `FRONTEND_ORIGIN`,
 `NEXT_PUBLIC_API_URL`, `API_PORT`, `WEB_PORT`, and `POSTGRES_PORT` as needed.
+
+For Coolify, use [`compose.coolify.yaml`](compose.coolify.yaml). It generates
+database and application secrets, exposes optional email/OAuth settings, and
+serves the web app and API on one HTTPS domain. Follow the
+[Coolify deployment guide](docs/coolify.md).
 
 See [development](docs/development.md), [deployment](docs/deployment.md), and
 [architecture](docs/architecture.md) for the complete guide. Contributions are

@@ -1,8 +1,12 @@
 # Deployment
 
-Luraba ships one production-style Compose definition at the repository root.
+Luraba ships a production-style `compose.yaml` at the repository root.
 It starts the database, executes migrations once, then starts the API and web
 services after their dependencies are healthy.
+
+For Coolify, use [`compose.coolify.yaml`](../compose.coolify.yaml) and the
+[Coolify deployment guide](coolify.md) for generated secrets and one-domain
+routing.
 
 ## Start the stack
 

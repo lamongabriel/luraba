@@ -1,0 +1,146 @@
+# Coolify Docker Compose build pack (Git source), v4.0.0-beta.411 or newer.
+# Assign the public HTTPS domain to luraba before building. See docs/coolify.md.
+x-api-environment: &api-environment
+  NODE_ENV: production
+  PORT: 3001
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  BASE_URL: ${SERVICE_URL_LURABA}
+  FRONTEND_ORIGIN: ${SERVICE_URL_LURABA}
+  DB_HOST: db
+  DB_PORT: 5432
+  DB_NAME: ${DB_NAME:-luraba_db}
+  DB_USER: ${SERVICE_USER_POSTGRES}
+  DB_PASSWORD: ${SERVICE_PASSWORD_64_POSTGRES}
+  DB_SSL: "false"
+  AUTH_SECRET: ${SERVICE_PASSWORD_64_AUTH}
+  # AES-256 requires exactly 64 hexadecimal characters (32 bytes).
+  INTEGRATIONS_ENCRYPTION_KEY: ${SERVICE_HEX_64_INTEGRATIONS}
+
+services:
+  luraba:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      - SERVICE_URL_LURABA
+    expose:
+      - "80"
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD-SHELL", "wget -q -T 5 -O - http://127.0.0.1/health >/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-luraba_db}
+      POSTGRES_USER: ${SERVICE_USER_POSTGRES}
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_64_POSTGRES}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        ["CMD-SHELL", 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: migrate
+    restart: "no"
+    # Coolify must not expect this successful, one-shot container to stay running.
+    exclude_from_hc: true
+    environment: *api-environment
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *api-environment
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      SMTP_PROVIDER: ${SMTP_PROVIDER:-resend}
+      SMTP_HOST: ${SMTP_HOST:-smtp.resend.com}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_SECURE: ${SMTP_SECURE:-true}
+      SMTP_USERNAME: ${SMTP_USERNAME:-resend}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Luraba}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      SMTP_REPLY_EMAIL: ${SMTP_REPLY_EMAIL:-}
+      SMTP_TLS_CIPHERS: ${SMTP_TLS_CIPHERS:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        ["CMD-SHELL", "wget -q -T 5 -O - http://127.0.0.1:3001/health >/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${SERVICE_URL_LURABA}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_PUBLIC_API_URL: ${SERVICE_URL_LURABA}
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD-SHELL", "wget -q -T 5 -O - http://127.0.0.1:3000/login >/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
+
+configs:
+  caddyfile:
+    content: |
+      {
+        servers {
+          trusted_proxies static private_ranges
+        }
+      }
+      :80 {
+        @api path /api/* /health
+        handle @api {
+          reverse_proxy api:3001
+        }
+        handle {
+          reverse_proxy web:3000
+        }
+      }
+
+volumes:
+  postgres_data:
