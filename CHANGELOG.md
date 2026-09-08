@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.0](https://github.com/lamongabriel/luraba/compare/v1.2.1...v1.3.0) (2026-09-08)
+
+
+### Features
+
+* add Coolify Docker Compose deployment configuration ([8034f87](https://github.com/lamongabriel/luraba/commit/8034f87296a1d85f5ed160769c13b33088eb5324))
+
+
+### Documentation
+
+* clarify Coolify setup and hardcode DB name in compose ([3c71641](https://github.com/lamongabriel/luraba/commit/3c71641aafcedf7f8c581850862e22bfbb925e90))
+
 ## [1.2.1](https://github.com/lamongabriel/luraba/compare/v1.2.0...v1.2.1) (2026-09-08)
 
 
