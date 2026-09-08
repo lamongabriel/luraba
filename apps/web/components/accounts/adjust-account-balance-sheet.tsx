@@ -1,7 +1,7 @@
 "use client";
 
 import type { AccountDetails } from "@luraba/contracts";
-import { format } from "date-fns";
+import { formatDatePattern as format, now } from "@luraba/domain";
 import * as React from "react";
 import { FormSheet } from "@/components/forms/form-sheet";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ export function AdjustAccountBalanceSheet({
   const [balance, setBalance] = React.useState(
     String(minorToMajorUnits(account.balance, precision)),
   );
-  const [date, setDate] = React.useState(format(new Date(), "yyyy-MM-dd"));
+  const [date, setDate] = React.useState(format(now(), "yyyy-MM-dd"));
   const mutation = useCreateTransactionMutation({
     onSuccess: async () => {
       await Promise.all([

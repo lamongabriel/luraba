@@ -1,12 +1,23 @@
 import {
   addDays as dfnsAddDays,
+  addMilliseconds as dfnsAddMilliseconds,
   addMonths as dfnsAddMonths,
+  differenceInCalendarDays as dfnsDifferenceInCalendarDays,
+  endOfMonth as dfnsEndOfMonth,
+  format as dfnsFormat,
   isAfter as dfnsIsAfter,
   isBefore as dfnsIsBefore,
   isEqual as dfnsIsEqual,
+  isValid as dfnsIsValid,
+  parseISO as dfnsParseISO,
   startOfMonth as dfnsStartOfMonth,
+  startOfWeek as dfnsStartOfWeek,
+  startOfYear as dfnsStartOfYear,
   subDays as dfnsSubDays,
+  subMonths as dfnsSubMonths,
+  subYears as dfnsSubYears,
 } from "date-fns";
+import { enUS, ptBR } from "date-fns/locale";
 
 // ---------------------------------------------------------------------------
 // Primitives - thin wrappers around date-fns + ISO formatting/parsing
@@ -37,9 +48,23 @@ export function parseISODateTime(value: string): Date {
   return new Date(value);
 }
 
+/** Converts a Date, ISO string, or timestamp into a Date. */
+export function toDate(value: Date | string | number): Date {
+  if (value instanceof Date) return value;
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/u.test(value)) {
+    return parseISODate(value);
+  }
+  return new Date(value);
+}
+
 /** Add days to a date. */
 export function addDays(date: Date, days: number): Date {
   return dfnsAddDays(date, days);
+}
+
+/** Add milliseconds to a date. */
+export function addMilliseconds(date: Date, milliseconds: number): Date {
+  return dfnsAddMilliseconds(date, milliseconds);
 }
 
 /**
@@ -190,3 +215,97 @@ export function parseMonthKey(monthKey: string): Date {
 export function toStartOfDay(date: Date): Date {
   return parseISODate(formatISODate(date));
 }
+/** Date-fns operations exposed through the shared domain package. */
+export function differenceInCalendarDays(dateLeft: Date, dateRight: Date): number {
+  return dfnsDifferenceInCalendarDays(dateLeft, dateRight);
+}
+
+export function endOfMonth(date: Date): Date {
+  return dfnsEndOfMonth(date);
+}
+
+export function startOfWeek(
+  date: Date,
+  options?: { weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6 },
+): Date {
+  return dfnsStartOfWeek(date, options);
+}
+
+export function startOfYear(date: Date): Date {
+  return dfnsStartOfYear(date);
+}
+
+export function subMonths(date: Date, months: number): Date {
+  return dfnsSubMonths(date, months);
+}
+
+export function subYears(date: Date, years: number): Date {
+  return dfnsSubYears(date, years);
+}
+
+export function formatDatePattern(
+  date: Date,
+  pattern: string,
+  options?: Parameters<typeof dfnsFormat>[2],
+): string {
+  return dfnsFormat(date, pattern, options);
+}
+
+export function isValidDate(date: Date): boolean {
+  return dfnsIsValid(date);
+}
+
+export function parseDate(value: string): Date {
+  return dfnsParseISO(value);
+}
+
+type DisplayDateInput = Date | string | number | null | undefined;
+type DisplayDateLanguage = "en" | "pt-BR";
+
+const DISPLAY_DATE_LOCALES = { en: enUS, "pt-BR": ptBR } as const;
+
+function resolveDisplayDateLanguage(language: string | undefined): DisplayDateLanguage {
+  return language === "pt-BR" ? "pt-BR" : "en";
+}
+
+function parseDisplayDate(value: DisplayDateInput): Date | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+
+  const date =
+    value instanceof Date
+      ? value
+      : typeof value === "string"
+        ? dfnsParseISO(/^\d{4}-\d{2}-\d{2}$/u.test(value) ? `${value}T12:00:00` : value)
+        : new Date(value);
+
+  return dfnsIsValid(date) ? date : undefined;
+}
+
+/** Formats a date for display using the requested language and pattern. */
+export function formatDisplayDate(
+  value: DisplayDateInput,
+  options: {
+    formatString?: string;
+    language?: string;
+    fallback?: string;
+  } = {},
+): string {
+  const date = parseDisplayDate(value);
+  if (!date) return options.fallback ?? "";
+
+  return dfnsFormat(date, options.formatString ?? "MMMM d, yyyy", {
+    locale: DISPLAY_DATE_LOCALES[resolveDisplayDateLanguage(options.language)],
+  });
+}
+
+export function formatShortDisplayDate(value: DisplayDateInput, language = "en") {
+  return formatDisplayDate(value, {
+    language: resolveDisplayDateLanguage(language),
+    formatString: "dd MMM yyyy",
+  });
+}
+
+export { parseDisplayDate };
+export const formatDate = formatDisplayDate;
+export const formatShortDate = formatShortDisplayDate;
+export const parseDateValue = parseDisplayDate;

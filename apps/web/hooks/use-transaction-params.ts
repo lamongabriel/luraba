@@ -1,6 +1,7 @@
 "use client";
 
 import type { TransactionSortField } from "@luraba/contracts";
+import { getPreferredDateRange } from "@luraba/domain";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import {
@@ -10,7 +11,6 @@ import {
   type TransactionTableFilterUpdates,
 } from "@/components/tables/transactions/transactions-table-filters";
 import { useApiParams } from "@/hooks/use-api-params";
-import { getPreferredTransactionDateRange } from "@/lib/transaction-period";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
 
 export function useTransactionParams() {
@@ -39,7 +39,7 @@ export function useTransactionParams() {
   const preferredRange = React.useMemo(() => {
     if (!preferredPeriod || !preferredTimezone) return undefined;
 
-    return getPreferredTransactionDateRange(preferredPeriod, preferredTimezone);
+    return getPreferredDateRange(preferredPeriod, preferredTimezone);
   }, [preferredPeriod, preferredTimezone]);
 
   const isUsingDefaultPeriod =

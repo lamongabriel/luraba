@@ -7,6 +7,7 @@ import {
   Wallet01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { getPreferredDateRange } from "@luraba/domain";
 import * as React from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
@@ -17,7 +18,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApiParams } from "@/hooks/use-api-params";
-import { getPreferredTransactionDateRange } from "@/lib/transaction-period";
 import { useCurrentUserQuery } from "@/queries/auth/use-current-user-query";
 import {
   useNetWorthAccountsQuery,
@@ -70,7 +70,7 @@ export function DashboardWorkspace() {
       setReady(true);
       return;
     }
-    const range = getPreferredTransactionDateRange(
+    const range = getPreferredDateRange(
       session.data.user.preferences.preferredPeriod,
       session.data.user.preferences.timezone,
     );

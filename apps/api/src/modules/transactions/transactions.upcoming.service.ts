@@ -3,11 +3,16 @@ import {
   upcomingTransactionSchema,
   type upcomingTransactionsQuerySchema,
 } from "@luraba/contracts/transactions";
+import {
+  addDays,
+  formatISODate,
+  getRecurrencyDates,
+  getTodayInTimezone,
+  type RecurrencyFrequency,
+} from "@luraba/domain";
 import type { z } from "zod";
 import type { HouseholdContext } from "@/config/permissions";
 import * as recurringBillsRepository from "@/modules/recurring-bills/recurring-bills.repository";
-import { getOccurrenceDates } from "@/modules/recurring-bills/recurring-bills.service";
-import { addDays, formatISODate, getTodayInTimezone } from "@/shared/lib/date";
 import { createListMeta } from "@/shared/list";
 import * as repository from "./transactions.analytics.repository";
 import type { TransactionFilterQuery } from "./transactions.query";
@@ -70,7 +75,16 @@ export async function listUpcomingTransactions(context: HouseholdContext, query:
   const recurring = (
     await Promise.all(
       recurringCandidates.map(async ({ bill, accountName, categoryName, merchantName }) => {
-        const dates = getOccurrenceDates(bill, tomorrow, end);
+        const dates = getRecurrencyDates(
+          {
+            startDate: bill.startDate,
+            endDate: bill.endDate,
+            frequency: bill.frequency as RecurrencyFrequency,
+            dayOfMonth: bill.dayOfMonth,
+            dayOfWeek: bill.dayOfWeek,
+          },
+          { from: tomorrow, to: end },
+        );
         const rows = await Promise.all(
           dates.map(async (date) => {
             const occurrence = await recurringBillsRepository.getOccurrence(context, bill.id, date);

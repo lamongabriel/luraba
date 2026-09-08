@@ -3,7 +3,13 @@
 import { ArrowLeft01Icon, ArrowRight01Icon, Settings02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MAX_PER_PAGE, PERMISSIONS } from "@luraba/contracts";
-import { addMonths, format, parseISO } from "date-fns";
+import {
+  addMonths,
+  formatDatePattern as format,
+  formatMonthKey,
+  now,
+  parseDate as parseISO,
+} from "@luraba/domain";
 import { useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
@@ -37,12 +43,8 @@ import { useCategoriesQuery } from "@/queries/categories/use-categories-query";
 import { useHouseholdsQuery } from "@/queries/households/use-households-query";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
 
-function monthKey(value: Date) {
-  return format(value, "yyyy-MM");
-}
-
 export function BudgetsWorkspace() {
-  const [month, setMonth] = useState(monthKey(new Date()));
+  const [month, setMonth] = useState(formatMonthKey(now()));
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [monthStart, setMonthStart] = useState("1");
@@ -146,7 +148,7 @@ export function BudgetsWorkspace() {
             aria-label="Previous month"
             variant="ghost"
             size="icon-sm"
-            onClick={() => setMonth(monthKey(addMonths(parseISO(`${month}-01`), -1)))}
+            onClick={() => setMonth(formatMonthKey(addMonths(parseISO(`${month}-01`), -1)))}
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} />
           </Button>
@@ -157,7 +159,7 @@ export function BudgetsWorkspace() {
             aria-label="Next month"
             variant="ghost"
             size="icon-sm"
-            onClick={() => setMonth(monthKey(addMonths(parseISO(`${month}-01`), 1)))}
+            onClick={() => setMonth(formatMonthKey(addMonths(parseISO(`${month}-01`), 1)))}
           >
             <HugeiconsIcon icon={ArrowRight01Icon} />
           </Button>

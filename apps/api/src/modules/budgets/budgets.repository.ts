@@ -1,3 +1,4 @@
+import { now } from "@luraba/domain";
 import { and, asc, eq, sql } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
@@ -10,7 +11,6 @@ import { entriesTable } from "@/db/schemas/entries.schema";
 import { ledgerAccountsTable } from "@/db/schemas/ledger-accounts.schema";
 import { transactionsTable } from "@/db/schemas/transactions.schema";
 import type { TxClient } from "@/db/types";
-import { now } from "@/shared/lib/date";
 import { HouseholdScopedRepository } from "@/shared/repositories/household-scoped.repository";
 import type { BudgetRecord } from "./budgets.types";
 

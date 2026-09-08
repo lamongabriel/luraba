@@ -2,6 +2,7 @@ import type {
   createHouseholdBodySchema,
   updateHouseholdBodySchema,
 } from "@luraba/contracts/households";
+import { now } from "@luraba/domain";
 import { and, asc, eq, gt, type SQL, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "@/db";
@@ -12,7 +13,6 @@ import {
 } from "@/db/schemas/households.schema";
 import { usersTable } from "@/db/schemas/users.schema";
 import type { TxClient } from "@/db/types";
-import { now } from "@/shared/lib/date";
 import { type DbListPage, getPagination } from "@/shared/list";
 import type { Currency, Timezone } from "@/shared/validation/preferences";
 import { currencySchema } from "@/shared/validation/preferences";

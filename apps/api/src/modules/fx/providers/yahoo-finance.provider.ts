@@ -1,6 +1,6 @@
+import { addDays as addFxDays, isAfter, isBefore, now, toStartOfDay } from "@luraba/domain";
 import YahooFinance from "yahoo-finance2";
 import { ValidationError } from "@/shared/errors";
-import { addDays as addFxDays, isAfter, isBefore, now, toStartOfDay } from "@/shared/lib/date";
 import type { FxProvider, FxProviderRate } from "../fx.types";
 
 type YahooChartRow = {

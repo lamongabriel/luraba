@@ -1,13 +1,13 @@
 "use client";
 
 import type { CreditCard, CreditCardCycle } from "@luraba/contracts";
+import { formatDate } from "@luraba/domain";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { ErrorState } from "@/components/error-state";
 import { MoneyValue } from "@/components/finance/money-value";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { formatDate } from "@/lib/format";
 import type { AppClientError } from "@/services/error-client";
 
 import {

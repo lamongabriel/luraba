@@ -3,11 +3,11 @@
 import { Tick02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { HouseholdMember, HouseholdRole } from "@luraba/contracts";
+import { formatDate } from "@luraba/domain";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Typography } from "@/components/ui/typography";
-import { formatDate } from "@/lib/format";
 import { getHouseholdRoleLabel } from "@/lib/households";
 import { cn } from "@/lib/utils";
 import { useHouseholdRolesQuery } from "@/queries/households/use-households-query";

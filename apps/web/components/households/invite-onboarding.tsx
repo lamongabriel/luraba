@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { HouseholdInvitePreview, HouseholdInviteStatus } from "@luraba/contracts";
+import { formatDate } from "@luraba/domain";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useForm } from "react-hook-form";
@@ -20,7 +21,6 @@ import { Button } from "@/components/ui/button";
 import { Loader } from "@/components/ui/loader";
 import { Typography } from "@/components/ui/typography";
 import { logout } from "@/lib/auth/logout";
-import { formatDate } from "@/lib/format";
 import { queryClient } from "@/lib/query-client";
 import { useLoginMutation } from "@/mutations/auth/use-login-mutation";
 import { useRegisterMutation } from "@/mutations/auth/use-register-mutation";

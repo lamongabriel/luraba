@@ -1,9 +1,9 @@
-import { isValid, parseISO } from "date-fns";
+import { getUTCFullYear, isValidDate as isValid, now, parseDate as parseISO } from "@luraba/domain";
 import { z } from "zod";
 
 import { INSTITUTION_DOMAIN_ERROR, isValidInstitutionDomain } from "@/lib/domains";
 
-const nextCalendarYear = new Date().getUTCFullYear() + 1;
+const nextCalendarYear = getUTCFullYear(now()) + 1;
 
 const optionalNumber = (schema: z.ZodNumber) => z.union([schema, z.literal("")]).optional();
 const optionalDate = (label: string) =>

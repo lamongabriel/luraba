@@ -1,5 +1,5 @@
 import type { CreditCardPayment, CreditCardPurchase, TransactionFeedRow } from "@luraba/contracts";
-import { format } from "date-fns";
+import { formatDatePattern as format, now } from "@luraba/domain";
 import { minorToMajorUnits } from "@/lib/finance";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
 
@@ -53,7 +53,7 @@ export function getTransactionFormDefaultValues(
   row?: TransactionFeedRow | null,
   details: TransactionFormDetails = {},
 ): CreateEditTransactionFormValues {
-  const today = format(new Date(), "yyyy-MM-dd");
+  const today = format(now(), "yyyy-MM-dd");
   const kind = getTransactionFormKind(row);
   const purchase = details.purchase;
   const payment = details.payment;

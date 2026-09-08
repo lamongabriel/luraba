@@ -1,4 +1,5 @@
 import type { LocationTimezoneOption } from "@luraba/contracts";
+import { now } from "@luraba/domain";
 import type { FormComboboxOption } from "@/components/forms/form-combobox";
 
 export function formatTimezoneLabel(timezone: string) {
@@ -11,7 +12,7 @@ export function formatTimezoneLabel(timezone: string) {
       timeZone: timezone,
       timeZoneName: "shortOffset",
     })
-      .formatToParts(new Date())
+      .formatToParts(now())
       .find((part) => part.type === "timeZoneName")?.value;
 
     return offset ? `${city} (${offset})` : city;

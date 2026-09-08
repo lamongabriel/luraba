@@ -26,6 +26,7 @@ import { STORAGE_KEYS } from "@/config/storage";
 import { readStorage, writeStorage } from "@/lib/local-storage";
 
 const HOUSEHOLD_CHANGED_EVENT = "luraba:household-change";
+const FALLBACK_HOUSEHOLD_TIMESTAMP = "2026-06-11T01:38:36.604Z";
 
 type HouseholdWorkspace = HouseholdSummary & {
   permissions?: string[];
@@ -71,8 +72,8 @@ function mergeHouseholds(
     description: existing?.description ?? "Primary household workspace.",
     role: initialHousehold.role,
     createdByUserId: existing?.createdByUserId ?? initialHousehold.id,
-    createdAt: existing?.createdAt ?? new Date("2026-06-11T01:38:36.604Z").toISOString(),
-    updatedAt: existing?.updatedAt ?? new Date("2026-06-11T01:38:36.604Z").toISOString(),
+    createdAt: existing?.createdAt ?? FALLBACK_HOUSEHOLD_TIMESTAMP,
+    updatedAt: existing?.updatedAt ?? FALLBACK_HOUSEHOLD_TIMESTAMP,
     defaultCurrencyId: initialHousehold.settings.defaultCurrencyId,
     countryCode: initialHousehold.settings.countryCode,
     timezone: initialHousehold.settings.timezone,

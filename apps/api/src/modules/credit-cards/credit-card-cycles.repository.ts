@@ -1,3 +1,4 @@
+import { toDate } from "@luraba/domain";
 import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { creditCardBillingCyclesTable } from "@/db/schemas/credit-card-billing-cycles.schema";
@@ -16,10 +17,6 @@ import {
   type ListCreditCardCyclesQuery,
 } from "./credit-cards.query";
 import type { CreditCardCycleSummary } from "./credit-cards.types";
-
-function toDate(value: Date | string): Date {
-  return value instanceof Date ? value : new Date(`${value}T00:00:00.000Z`);
-}
 
 export async function findCycleById(tx: TxClient, creditCardId: string, cycleId: string) {
   const rows = await tx

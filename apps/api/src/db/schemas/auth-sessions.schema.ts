@@ -1,3 +1,4 @@
+import { now } from "@luraba/domain";
 import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { usersTable } from "./users.schema";
 
@@ -8,10 +9,7 @@ export const authSessionsTable = pgTable(
     expiresAt: timestamp("expires_at").notNull(),
     token: text().notNull().unique(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at")
-      .notNull()
-      .defaultNow()
-      .$onUpdate(() => new Date()),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(now),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
     userId: uuid("user_id")

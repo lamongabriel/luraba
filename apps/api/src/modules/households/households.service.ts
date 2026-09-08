@@ -13,6 +13,7 @@ import {
   type updateHouseholdBodySchema,
   type updateHouseholdMemberBodySchema,
 } from "@luraba/contracts/households";
+import { addMilliseconds, formatISODateTime, now } from "@luraba/domain";
 import type { z } from "zod";
 import { env } from "@/config/env";
 import type { HouseholdContext } from "@/config/permissions";
@@ -23,7 +24,6 @@ import { fxService } from "@/modules/fx/fx.service";
 import { mailService } from "@/modules/mail/mail.service";
 import { renderHouseholdInvitation } from "@/modules/mail/mail.templates";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/shared/errors";
-import { formatISODateTime } from "@/shared/lib/date";
 import { createListMeta, type ListResult } from "@/shared/list";
 import { logger } from "@/shared/logger";
 import {
@@ -56,7 +56,7 @@ function canManageRole(
 }
 
 function inviteExpiresAt(): Date {
-  return new Date(Date.now() + INVITATION_LIFETIME_MS);
+  return addMilliseconds(now(), INVITATION_LIFETIME_MS);
 }
 
 function invitationUrl(token: string): string {
@@ -175,7 +175,7 @@ function assertActionableInvite(
   if (invite.status !== "pending") {
     throw new ConflictError(`This invitation is already ${invite.status}`);
   }
-  if (invite.expiresAt <= new Date()) {
+  if (invite.expiresAt <= now()) {
     throw new ConflictError("This invitation has expired");
   }
 }
@@ -408,7 +408,7 @@ export async function createInvite(
     householdId,
     email,
   );
-  if (pending && pending.expiresAt > new Date()) {
+  if (pending && pending.expiresAt > now()) {
     throw new ConflictError("An active invitation already exists for this email");
   }
 

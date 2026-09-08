@@ -1,5 +1,13 @@
 import type { CreditCardCycleDisplayStatus } from "@luraba/contracts/credit-cards";
-import { addDays, dateWithClampedDay, isAfter, isBefore, isEqual } from "@/shared/lib/date";
+import {
+  addDays,
+  dateWithClampedDay,
+  getUTCFullYear,
+  getUTCMonth,
+  isAfter,
+  isBefore,
+  isEqual,
+} from "@luraba/domain";
 
 export type BillingCycleLike = {
   periodStart: Date;
@@ -17,8 +25,8 @@ export function isDateWithinCycle(date: Date, cycle: { periodStart: Date; period
 
 export function getNextClosingDateOnOrAfter(startDate: Date, closingDay: number): Date {
   const sameMonthClosing = dateWithClampedDay(
-    startDate.getUTCFullYear(),
-    startDate.getUTCMonth(),
+    getUTCFullYear(startDate),
+    getUTCMonth(startDate),
     closingDay,
   );
 
@@ -26,7 +34,7 @@ export function getNextClosingDateOnOrAfter(startDate: Date, closingDay: number)
     return sameMonthClosing;
   }
 
-  return dateWithClampedDay(startDate.getUTCFullYear(), startDate.getUTCMonth() + 1, closingDay);
+  return dateWithClampedDay(getUTCFullYear(startDate), getUTCMonth(startDate) + 1, closingDay);
 }
 
 export function getNextCycleShapeFromPeriodStart(
@@ -35,14 +43,10 @@ export function getNextCycleShapeFromPeriodStart(
   dueDay: number,
 ) {
   const closingDate = getNextClosingDateOnOrAfter(periodStart, closingDay);
-  let dueDate = dateWithClampedDay(closingDate.getUTCFullYear(), closingDate.getUTCMonth(), dueDay);
+  let dueDate = dateWithClampedDay(getUTCFullYear(closingDate), getUTCMonth(closingDate), dueDay);
 
   if (!isAfter(dueDate, closingDate)) {
-    dueDate = dateWithClampedDay(
-      closingDate.getUTCFullYear(),
-      closingDate.getUTCMonth() + 1,
-      dueDay,
-    );
+    dueDate = dateWithClampedDay(getUTCFullYear(closingDate), getUTCMonth(closingDate) + 1, dueDay);
   }
 
   return {

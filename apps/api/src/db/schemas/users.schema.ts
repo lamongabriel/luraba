@@ -1,3 +1,4 @@
+import { now } from "@luraba/domain";
 import { boolean, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { currenciesTable } from "./currencies.schema";
 import {
@@ -29,8 +30,5 @@ export const usersTable = pgTable("users", {
   preferredTheme: themePreferenceEnum("preferred_theme").notNull().default("system"),
   lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at")
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
+  updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(now),
 });

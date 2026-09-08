@@ -1,9 +1,9 @@
 import type { AccountDetails } from "@luraba/contracts";
+import { formatShortDate } from "@luraba/domain";
 import type { ReactNode } from "react";
 import { MoneyValue } from "@/components/finance/money-value";
 import { Typography } from "@/components/ui/typography";
 import { formatAccountSubtypeLabel } from "@/lib/accounts";
-import { formatShortDate } from "@/lib/format";
 
 function Detail({ label, value }: { label: string; value: ReactNode }) {
   if (value === null || value === undefined || value === "") return null;

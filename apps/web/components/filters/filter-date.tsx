@@ -2,15 +2,14 @@
 
 import { CalendarIcon, CancelCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { formatDate, toDate } from "@luraba/domain";
 import type { Column } from "@tanstack/react-table";
 import * as React from "react";
 import type { DateRange } from "react-day-picker";
-
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type FilterDateProps<TData> =
@@ -38,7 +37,7 @@ function parseAsDate(timestamp: number | string | undefined): Date | undefined {
   if (!timestamp) return undefined;
 
   const numericTimestamp = typeof timestamp === "string" ? Number(timestamp) : timestamp;
-  const date = new Date(numericTimestamp);
+  const date = toDate(numericTimestamp);
 
   return !Number.isNaN(date.getTime()) ? date : undefined;
 }

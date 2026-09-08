@@ -3,6 +3,7 @@ import type {
   listRecurringBillsQuerySchema,
   updateRecurringBillBodySchema,
 } from "@luraba/contracts/recurring-bills";
+import { now } from "@luraba/domain";
 import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import type { z } from "zod";
 import type { HouseholdContext } from "@/config/permissions";
@@ -173,7 +174,7 @@ export async function update(
     ...(body.endDate !== undefined ? { endDate: body.endDate } : {}),
     ...(body.categoryId !== undefined ? { categoryId: body.categoryId } : {}),
     ...(body.merchantId !== undefined ? { merchantId: body.merchantId } : {}),
-    updatedAt: new Date(),
+    updatedAt: now(),
   } as Record<string, unknown>;
   delete values.paymentMethodCode;
   return (
@@ -232,7 +233,7 @@ export async function saveOccurrence(
           recurringBillOccurrencesTable.recurringBillId,
           recurringBillOccurrencesTable.occurrenceDate,
         ],
-        set: { ...values, updatedAt: new Date() },
+        set: { ...values, updatedAt: now() },
       })
       .returning()
   )[0];

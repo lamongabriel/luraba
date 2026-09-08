@@ -1,3 +1,4 @@
+import { now } from "@luraba/domain";
 import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 export const authVerificationsTable = pgTable(
@@ -8,10 +9,7 @@ export const authVerificationsTable = pgTable(
     value: text().notNull(),
     expiresAt: timestamp("expires_at").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at")
-      .notNull()
-      .defaultNow()
-      .$onUpdate(() => new Date()),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(now),
   },
   (table) => [index("auth_verifications_identifier_idx").on(table.identifier)],
 );

@@ -7,6 +7,7 @@ import type {
   UpdateUserPreferencesInput,
   UserPreferences,
 } from "@luraba/contracts/auth";
+import { formatISODateTime } from "@luraba/domain";
 import { env } from "@/config/env";
 import { currenciesRepository } from "@/modules/currencies/currencies.repository";
 import { householdsRepository } from "@/modules/households/households.repository";
@@ -29,8 +30,8 @@ function mapUserRecordToSessionUser(user: UserRecord): SessionUser {
       preferredPeriod: user.preferredPeriod,
       preferredTheme: user.preferredTheme,
     },
-    createdAt: user.createdAt.toISOString(),
-    updatedAt: user.updatedAt.toISOString(),
+    createdAt: formatISODateTime(user.createdAt),
+    updatedAt: formatISODateTime(user.updatedAt),
   };
 }
 

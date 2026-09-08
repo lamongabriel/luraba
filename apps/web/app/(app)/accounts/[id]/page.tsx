@@ -3,6 +3,7 @@
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { TransactionFeedRow } from "@luraba/contracts";
+import { formatShortDate } from "@luraba/domain";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 import { AccountProfileDetails } from "@/components/accounts/account-profile-details";
@@ -14,7 +15,6 @@ import { PERMISSIONS, PermissionButton, ResourceAccessBoundary } from "@/compone
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { formatAccountSubtypeLabel, formatAccountTypeLabel } from "@/lib/accounts";
-import { formatShortDate } from "@/lib/format";
 import { queryClient } from "@/lib/query-client";
 import { useDeleteAccountMutation } from "@/mutations/accounts/use-account-mutations";
 import {

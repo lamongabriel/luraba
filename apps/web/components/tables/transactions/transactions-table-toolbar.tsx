@@ -3,8 +3,13 @@
 import { Cancel01Icon, FilterIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { TransactionFeedRow } from "@luraba/contracts";
+import {
+  formatDatePattern as format,
+  isValidDate as isValid,
+  now,
+  parseDate as parseISO,
+} from "@luraba/domain";
 import type { Table } from "@tanstack/react-table";
-import { format, isValid, parseISO } from "date-fns";
 import * as React from "react";
 import type { DateRange } from "react-day-picker";
 import { DataTableSearchInput } from "@/components/data-table/data-table-search-input";
@@ -91,7 +96,7 @@ export function TransactionsTableToolbar({
   setSearch: (value: string) => void;
   table: Table<TransactionFeedRow>;
 }) {
-  const datePickerDisabled = React.useMemo(() => ({ after: new Date() }), []);
+  const datePickerDisabled = React.useMemo(() => ({ after: now() }), []);
   const setDateRange = (
     fromKey: keyof TransactionTableFilters,
     toKey: keyof TransactionTableFilters,

@@ -2,7 +2,7 @@
   "name": "@luraba/domain",
   "version": "1.1.0",
   "private": true,
-  "description": "Framework-free Luraba finance primitives",
+  "description": "Framework-free Luraba finance, date, and recurrency primitives",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,6 +22,14 @@
     "./periods": {
       "types": "./dist/periods.d.ts",
       "import": "./dist/periods.js"
+    },
+    "./date": {
+      "types": "./dist/date.d.ts",
+      "import": "./dist/date.js"
+    },
+    "./recurrency": {
+      "types": "./dist/recurrency.d.ts",
+      "import": "./dist/recurrency.js"
     }
   },
   "files": [
@@ -36,5 +44,8 @@
   "devDependencies": {
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "dependencies": {
+    "date-fns": "catalog:"
   }
 }

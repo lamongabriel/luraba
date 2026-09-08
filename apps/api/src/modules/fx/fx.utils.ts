@@ -2,13 +2,12 @@ import {
   addDays as addFxDays,
   formatISODate as formatFxDate,
   parseISODate as parseFxDate,
-} from "@/shared/lib/date";
+} from "@luraba/domain";
 import type { FxProviderRate, FxResolvedRate } from "./fx.types";
 
 const FX_RATE_DECIMAL_SCALE = 12;
 
-// formatFxDate and parseFxDate are imported from @/shared/lib/date
-// addFxDays is imported from @/shared/lib/date
+// Keep provider-specific aliases at this boundary while using shared domain date functions.
 
 export { addFxDays, formatFxDate, parseFxDate };
 

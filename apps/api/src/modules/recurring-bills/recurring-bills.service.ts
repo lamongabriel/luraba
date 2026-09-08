@@ -5,13 +5,18 @@ import {
   recurringOccurrenceSchema,
   type updateRecurringBillBodySchema,
 } from "@luraba/contracts/recurring-bills";
-import { isAfter, isBefore, parseISO } from "date-fns";
+import {
+  formatISODate,
+  formatISODateTime,
+  getRecurrencyDates,
+  parseISODate,
+  type RecurrencyFrequency,
+} from "@luraba/domain";
 import type { z } from "zod";
 import type { HouseholdContext } from "@/config/permissions";
 import { paymentMethodsRepository } from "@/modules/payment-methods/payment-methods.repository";
 import * as transactionsService from "@/modules/transactions/transactions.service";
 import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
-import { formatISODate } from "@/shared/lib/date";
 import { createListMeta } from "@/shared/list";
 import * as repository from "./recurring-bills.repository";
 import type { RecurringBillRecord } from "./recurring-bills.types";
@@ -20,60 +25,14 @@ type CreateRecurringBillValues = z.output<typeof createRecurringBillBodySchema>;
 type UpdateRecurringBillValues = z.output<typeof updateRecurringBillBodySchema>;
 type ListRecurringBillsQuery = z.output<typeof listRecurringBillsQuerySchema>;
 
-function daysInMonth(year: number, month: number): number {
-  return new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-}
-
 function mapBill(row: RecurringBillRecord) {
   return recurringBillSchema.parse({
     ...row,
     startDate: formatISODate(row.startDate),
     endDate: row.endDate ? formatISODate(row.endDate) : null,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
+    createdAt: formatISODateTime(row.createdAt),
+    updatedAt: formatISODateTime(row.updatedAt),
   });
-}
-
-function nextDate(
-  date: Date,
-  frequency: CreateRecurringBillValues["frequency"],
-  dayOfMonth?: number | null,
-): Date {
-  const year = date.getUTCFullYear();
-  const month = date.getUTCMonth();
-  const day = date.getUTCDate();
-  if (frequency === "weekly" || frequency === "biweekly") {
-    return new Date(Date.UTC(year, month, day + (frequency === "weekly" ? 7 : 14)));
-  }
-  const monthStep = frequency === "quarterly" ? 3 : frequency === "yearly" ? 12 : 1;
-  const targetMonth = month + monthStep;
-  const targetYear = year + Math.floor(targetMonth / 12);
-  const normalizedMonth = targetMonth % 12;
-  const targetDay = Math.min(dayOfMonth ?? day, daysInMonth(targetYear, normalizedMonth));
-  return new Date(Date.UTC(targetYear, normalizedMonth, targetDay));
-}
-
-export function getOccurrenceDates(bill: RecurringBillRecord, from: Date, to: Date): Date[] {
-  const dates: Date[] = [];
-  const dayOfMonth = bill.dayOfMonth ?? Number(formatISODate(bill.startDate).slice(-2));
-  let current = new Date(`${formatISODate(bill.startDate)}T00:00:00.000Z`);
-  const endDate = bill.endDate ? new Date(`${formatISODate(bill.endDate)}T00:00:00.000Z`) : null;
-  const limit = endDate && isBefore(endDate, to) ? endDate : to;
-  while (isBefore(current, from))
-    current = nextDate(
-      current,
-      bill.frequency as CreateRecurringBillValues["frequency"],
-      dayOfMonth,
-    );
-  while (!isAfter(current, limit)) {
-    dates.push(current);
-    current = nextDate(
-      current,
-      bill.frequency as CreateRecurringBillValues["frequency"],
-      dayOfMonth,
-    );
-  }
-  return dates;
 }
 
 async function resolvePaymentMethod(
@@ -142,7 +101,16 @@ export async function listOccurrences(
 ) {
   const bill = await repository.get(context, id);
   if (!bill) throw new NotFoundError("Recurring bill");
-  const dates = getOccurrenceDates(bill, parseISO(from), parseISO(to));
+  const dates = getRecurrencyDates(
+    {
+      startDate: bill.startDate,
+      endDate: bill.endDate,
+      frequency: bill.frequency as RecurrencyFrequency,
+      dayOfMonth: bill.dayOfMonth,
+      dayOfWeek: bill.dayOfWeek,
+    },
+    { from: parseISODate(from), to: parseISODate(to) },
+  );
   const rows = await Promise.all(
     dates.map(async (date) => {
       const stored = await repository.getOccurrence(context, id, date);
@@ -167,7 +135,7 @@ async function saveOccurrenceAction(
   values: Parameters<typeof repository.saveOccurrence>[2],
 ) {
   if (!(await repository.get(context, id))) throw new NotFoundError("Recurring bill");
-  return repository.saveOccurrence(id, parseISO(date), values);
+  return repository.saveOccurrence(id, parseISODate(date), values);
 }
 
 export async function skipOccurrence(context: HouseholdContext, id: string, date: string) {
@@ -182,14 +150,14 @@ export async function rescheduleOccurrence(
 ) {
   await saveOccurrenceAction(context, id, date, {
     status: "rescheduled",
-    rescheduledDate: parseISO(next),
+    rescheduledDate: parseISODate(next),
   });
 }
 
 export async function createOccurrence(context: HouseholdContext, id: string, date: string) {
   const bill = await repository.get(context, id);
   if (!bill) throw new NotFoundError("Recurring bill");
-  const existing = await repository.getOccurrence(context, id, parseISO(date));
+  const existing = await repository.getOccurrence(context, id, parseISODate(date));
   if (existing?.transactionId)
     throw new ConflictError("This recurring occurrence already created a transaction");
   const paymentMethod = bill.paymentMethodId
@@ -206,8 +174,8 @@ export async function createOccurrence(context: HouseholdContext, id: string, da
     categoryId: bill.categoryId,
     merchantId: bill.merchantId ?? undefined,
     paymentMethodCode: paymentMethod.code,
-    purchaseDate: parseISO(date),
-    postedDate: parseISO(date),
+    purchaseDate: parseISODate(date),
+    postedDate: parseISODate(date),
   });
   await saveOccurrenceAction(context, id, date, {
     status: "created",

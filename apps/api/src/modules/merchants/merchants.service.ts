@@ -3,6 +3,7 @@ import type {
   Merchant,
   UpdateMerchantInput,
 } from "@luraba/contracts/merchants";
+import { formatISODateTime } from "@luraba/domain";
 import type { HouseholdContext } from "@/config/permissions";
 import { getBrandfetchClientId } from "@/modules/integrations/brandfetch/brandfetch.service";
 import {
@@ -10,7 +11,6 @@ import {
   normalizeBrandDomain,
 } from "@/modules/integrations/brandfetch/brandfetch.utils";
 import { ConflictError, NotFoundError } from "@/shared/errors";
-import { formatISODateTime } from "@/shared/lib/date";
 import { createListMeta, type ListResult } from "@/shared/list";
 import type { ListMerchantsQuery } from "./merchants.query";
 import { merchantsRepository } from "./merchants.repository";

@@ -1,6 +1,6 @@
 import type { Integration, UpdateBrandfetchIntegrationInput } from "@luraba/contracts/integrations";
+import { now } from "@luraba/domain";
 import type { HouseholdContext } from "@/config/permissions";
-import { now } from "@/shared/lib/date";
 import { decryptIntegrationSecret, encryptIntegrationSecret } from "../integration-crypto";
 import { buildIntegrationSummary } from "../integrations.utils";
 import { brandfetchRepository } from "./brandfetch.repository";

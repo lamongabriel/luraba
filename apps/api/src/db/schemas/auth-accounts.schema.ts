@@ -1,3 +1,4 @@
+import { now } from "@luraba/domain";
 import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { usersTable } from "./users.schema";
 
@@ -18,10 +19,7 @@ export const authAccountsTable = pgTable(
     scope: text(),
     password: text(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at")
-      .notNull()
-      .defaultNow()
-      .$onUpdate(() => new Date()),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(now),
   },
   (table) => [index("auth_accounts_user_id_idx").on(table.userId)],
 );

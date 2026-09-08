@@ -1,4 +1,5 @@
 import { getPermissionsForRole } from "@luraba/contracts";
+import { addDays, formatISODate, getTodayInTimezone, parseISODate } from "@luraba/domain";
 import { hashPassword } from "better-auth/crypto";
 import { eq, inArray } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
@@ -17,7 +18,6 @@ import * as householdsService from "@/modules/households/households.service";
 import * as merchantsService from "@/modules/merchants/merchants.service";
 import * as tagsService from "@/modules/tags/tags.service";
 import * as transactionsService from "@/modules/transactions/transactions.service";
-import { addDays, formatISODate, getTodayInTimezone, parseISODate } from "@/shared/lib/date";
 import { logger } from "@/shared/logger";
 
 const DEFAULT_EMAIL = "demo@luraba.local";

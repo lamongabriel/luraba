@@ -1,6 +1,6 @@
 import { transactionsEndpoints } from "@luraba/contracts";
+import { formatISODate, getTodayInTimezone } from "@luraba/domain";
 import { createHouseholdHandler } from "@/shared/controllers/household.controller";
-import { getTodayInTimezone } from "@/shared/lib/date";
 import { withApiMeta } from "@/shared/response";
 import * as analyticsService from "./transactions.analytics.service";
 import * as transactionsService from "./transactions.service";
@@ -12,7 +12,7 @@ export const list = createHouseholdHandler({
   meta: transactionsEndpoints.list.meta,
   handle: async ({ household, query }) => {
     const result = await transactionsService.listTransactions(household, query, {
-      maxPostedDate: getTodayInTimezone(household.timezone).toISOString().slice(0, 10),
+      maxPostedDate: formatISODate(getTodayInTimezone(household.timezone)),
     });
     return withApiMeta(result.data, result.meta);
   },

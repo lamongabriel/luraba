@@ -1,7 +1,7 @@
 import type { CreateTagInput, Tag, UpdateTagInput } from "@luraba/contracts/tags";
+import { formatISODateTime } from "@luraba/domain";
 import type { HouseholdContext } from "@/config/permissions";
 import { ConflictError, NotFoundError } from "@/shared/errors";
-import { formatISODateTime } from "@/shared/lib/date";
 import { createListMeta, type ListResult } from "@/shared/list";
 import type { ListTagsQuery } from "./tags.query";
 import { tagsRepository } from "./tags.repository";

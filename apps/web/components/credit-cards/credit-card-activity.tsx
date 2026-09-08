@@ -3,6 +3,7 @@
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { CreditCard } from "@luraba/contracts";
+import { formatDate } from "@luraba/domain";
 import Link from "next/link";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
@@ -12,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { formatDate } from "@/lib/format";
 import { useTransactionsQuery } from "@/queries/transactions/use-transactions-query";
 
 export function CreditCardActivity({

@@ -1,14 +1,14 @@
 import type { netWorthQuerySchema } from "@luraba/contracts/networth";
 import { listTransactionsQuerySchema } from "@luraba/contracts/transactions";
 import {
-  endOfMonth,
-  startOfMonth,
-  startOfWeek,
-  startOfYear,
-  subDays,
-  subMonths,
-  subYears,
-} from "date-fns";
+  type DateRange,
+  differenceInCalendarDays,
+  formatISODate,
+  getPreferredDateRange,
+  getTodayInTimezone,
+  type PreferredPeriod,
+  parseISODate,
+} from "@luraba/domain";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import type { HouseholdContext } from "@/config/permissions";
@@ -18,44 +18,17 @@ import { authRepository } from "@/modules/auth/auth.repository";
 import { fxService } from "@/modules/fx/fx.service";
 import { listTransactions } from "@/modules/transactions/transactions.service";
 import { NotFoundError } from "@/shared/errors";
-import { formatISODate, getTodayInTimezone, parseISODate } from "@/shared/lib/date";
 import * as repository from "./networth.repository";
 
 type NetWorthQuery = z.output<typeof netWorthQuerySchema>;
 
-type DateRange = { dateFrom: string; dateTo: string };
-
-function rangeForPeriod(period: string, timezone: string): DateRange {
+function rangeForPeriod(period: PreferredPeriod, timezone: string): DateRange {
   const today = getTodayInTimezone(timezone);
-  const format = (date: Date) => formatISODate(date);
-  switch (period) {
-    case "last_day":
-      return { dateFrom: format(today), dateTo: format(today) };
-    case "current_week":
-      return { dateFrom: format(startOfWeek(today, { weekStartsOn: 1 })), dateTo: format(today) };
-    case "last_7_days":
-      return { dateFrom: format(subDays(today, 6)), dateTo: format(today) };
-    case "last_month": {
-      const month = subMonths(today, 1);
-      return { dateFrom: format(startOfMonth(month)), dateTo: format(endOfMonth(month)) };
-    }
-    case "last_30_days":
-      return { dateFrom: format(subDays(today, 29)), dateTo: format(today) };
-    case "last_90_days":
-      return { dateFrom: format(subDays(today, 89)), dateTo: format(today) };
-    case "current_year":
-      return { dateFrom: format(startOfYear(today)), dateTo: format(today) };
-    case "last_365_days":
-      return { dateFrom: format(subDays(today, 364)), dateTo: format(today) };
-    case "last_5_years":
-      return { dateFrom: format(startOfYear(subYears(today, 4))), dateTo: format(today) };
-    case "last_10_years":
-      return { dateFrom: format(startOfYear(subYears(today, 9))), dateTo: format(today) };
-    case "all_time":
-      return { dateFrom: "2000-01-01", dateTo: format(today) };
-    default:
-      return { dateFrom: format(startOfMonth(today)), dateTo: format(today) };
-  }
+  const range = getPreferredDateRange(period, timezone);
+  return {
+    dateFrom: range.dateFrom ?? "2000-01-01",
+    dateTo: range.dateTo ?? formatISODate(today),
+  };
 }
 
 async function resolveQuery(
@@ -123,9 +96,7 @@ function chooseGranularity(
   requested?: NetWorthQuery["granularity"],
 ): "day" | "week" | "month" {
   if (requested) return requested;
-  const days = Math.round(
-    (parseISODate(dateTo).getTime() - parseISODate(dateFrom).getTime()) / 86_400_000,
-  );
+  const days = differenceInCalendarDays(parseISODate(dateTo), parseISODate(dateFrom));
   return days <= 45 ? "day" : days <= 240 ? "week" : "month";
 }
 

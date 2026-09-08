@@ -3,6 +3,7 @@
 import { Delete02Icon, UserGroupIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { HouseholdMember, HouseholdRole, ListHouseholdMembersQuery } from "@luraba/contracts";
+import { formatDate } from "@luraba/domain";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import * as React from "react";
@@ -24,7 +25,6 @@ import {
 import { householdMemberToUserDisplay, UserDisplay } from "@/components/users/user-display";
 import { useApiParams } from "@/hooks/use-api-params";
 import { useDataTable } from "@/hooks/use-data-table";
-import { formatDate } from "@/lib/format";
 import { canManageHousehold } from "@/lib/households";
 import {
   useRemoveHouseholdMemberMutation,

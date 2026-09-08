@@ -4,6 +4,7 @@ import { Add01Icon, CreditCardIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { CreditCard, ListCreditCardsQuery } from "@luraba/contracts";
 import { MAX_PER_PAGE } from "@luraba/contracts";
+import { formatDate, now, parseDateValue } from "@luraba/domain";
 import { parseAsString, useQueryState } from "nuqs";
 import * as React from "react";
 import { CreditCardActivity } from "@/components/credit-cards/credit-card-activity";
@@ -23,7 +24,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useApiParams } from "@/hooks/use-api-params";
 import { CREDIT_CARD_BRAND_OPTIONS } from "@/lib/credit-cards";
-import { formatDate, parseDateValue } from "@/lib/format";
 import { useAccountsQuery } from "@/queries/accounts/use-accounts-query";
 import {
   useCreditCardCyclesQuery,
@@ -132,7 +132,7 @@ function CreditCardFilters({
         title="Added"
         multiple
         value={createdRange}
-        disabled={{ after: new Date() }}
+        disabled={{ after: now() }}
         onValueChange={onCreatedRangeChange}
       />
       {params.hasFilters ? (

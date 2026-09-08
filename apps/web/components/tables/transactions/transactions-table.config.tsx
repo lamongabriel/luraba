@@ -1,6 +1,7 @@
 "use client";
 
 import type { TransactionFeedRow } from "@luraba/contracts";
+import { formatShortDate } from "@luraba/domain";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { MoneyValue } from "@/components/finance/money-value";
@@ -10,7 +11,6 @@ import {
   TransactionMerchantDisplay,
 } from "@/components/tables/transactions/transaction-resource-display";
 import { TransactionTypeBadge } from "@/components/tables/transactions/transaction-type-badge";
-import { formatShortDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
 

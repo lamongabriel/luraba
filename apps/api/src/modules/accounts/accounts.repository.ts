@@ -1,4 +1,5 @@
 import type { AccountSubtype } from "@luraba/contracts/accounts";
+import { now } from "@luraba/domain";
 import { and, eq, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import type { HouseholdContext } from "@/config/permissions";
@@ -16,7 +17,6 @@ import {
 import { accountsTable } from "@/db/schemas/accounts.schema";
 import type { TxClient } from "@/db/types";
 import { buildAccountBalanceSubquery } from "@/modules/ledger-accounts/ledger-accounts.repository";
-import { now } from "@/shared/lib/date";
 import { type DbListPage, getPagination } from "@/shared/list";
 import { HouseholdScopedRepository } from "@/shared/repositories/household-scoped.repository";
 import {

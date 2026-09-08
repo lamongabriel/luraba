@@ -1,3 +1,4 @@
+import { parseISODate, startOfMonth as toBudgetMonth } from "@luraba/domain";
 import type { HouseholdContext } from "@/config/permissions";
 import { SYSTEM_LEDGER_CLASSIFICATIONS } from "@/config/transactions";
 import { db } from "@/db";
@@ -19,7 +20,6 @@ import {
   validateTagIds,
 } from "@/modules/tags/tags-associations.service";
 import { NotFoundError, ValidationError } from "@/shared/errors";
-import { startOfMonth as toBudgetMonth } from "@/shared/lib/date";
 import { createListMeta, type ListResult } from "@/shared/list";
 import {
   mapCreditCardInstallmentRowsToFeedRows,
@@ -669,7 +669,7 @@ export async function updateTransaction(
     }
 
     const paymentMethod = await resolvePaymentMethod(context, paymentMethodCode, nextCurrencyCode);
-    const nextPostedDate = body.postedDate ?? new Date(`${transaction.postedDate}T00:00:00.000Z`);
+    const nextPostedDate = body.postedDate ?? parseISODate(transaction.postedDate);
     const nextAmount = body.amount ?? transaction.amount;
 
     if (body.categoryId !== undefined) transactionUpdates.categoryId = nextCategoryId;
@@ -742,7 +742,7 @@ export async function updateTransaction(
     }
 
     const amountChanged = body.fromAmount !== undefined || body.toAmount !== undefined;
-    const nextPostedDate = body.postedDate ?? new Date(`${transaction.postedDate}T00:00:00.000Z`);
+    const nextPostedDate = body.postedDate ?? parseISODate(transaction.postedDate);
     const { fromAmount, toAmount } = await resolveTransferAmounts({
       fromCurrencyCode: fromAccount.currencyId,
       toCurrencyCode: toAccount.currencyId,

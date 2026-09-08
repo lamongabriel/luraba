@@ -10,8 +10,8 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { RecurringBill } from "@luraba/contracts";
 import { PERMISSIONS } from "@luraba/contracts";
+import { endOfMonth, formatDatePattern as format, now, startOfMonth } from "@luraba/domain";
 import { useQueryClient } from "@tanstack/react-query";
-import { endOfMonth, format, startOfMonth } from "date-fns";
 import { useEffect, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
@@ -78,7 +78,7 @@ export function RecurringBillsWorkspace() {
   const [accountId, setAccountId] = useState("");
   const [paymentMethodCode, setPaymentMethodCode] = useState("");
   const [amount, setAmount] = useState("");
-  const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [startDate, setStartDate] = useState(format(now(), "yyyy-MM-dd"));
   const [frequency, setFrequency] = useState<Frequency>("monthly");
   const [rescheduleDates, setRescheduleDates] = useState<Record<string, string>>({});
 
@@ -115,8 +115,8 @@ export function RecurringBillsWorkspace() {
   }, [rows, selectedId]);
 
   const forecast = useRecurringOccurrencesQuery(selectedId ?? "", {
-    from: format(startOfMonth(new Date()), "yyyy-MM-dd"),
-    to: format(endOfMonth(new Date()), "yyyy-MM-dd"),
+    from: format(startOfMonth(now()), "yyyy-MM-dd"),
+    to: format(endOfMonth(now()), "yyyy-MM-dd"),
   });
 
   function resetForm() {
@@ -127,7 +127,7 @@ export function RecurringBillsWorkspace() {
     setAccountId("");
     setPaymentMethodCode("");
     setAmount("");
-    setStartDate(format(new Date(), "yyyy-MM-dd"));
+    setStartDate(format(now(), "yyyy-MM-dd"));
     setFrequency("monthly");
   }
 

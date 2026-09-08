@@ -1,3 +1,4 @@
+import { now } from "@luraba/domain";
 import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
@@ -14,7 +15,6 @@ import { tagsTable } from "@/db/schemas/tags.schema";
 import { transactionTagsTable } from "@/db/schemas/transaction-tags.schema";
 import { transactionsTable } from "@/db/schemas/transactions.schema";
 import type { TxClient } from "@/db/types";
-import { now } from "@/shared/lib/date";
 import { type DbListPage, getPagination } from "@/shared/list";
 import {
   buildTransactionFeedCte,

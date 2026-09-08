@@ -8,6 +8,7 @@ import type {
   ListHouseholdsQuery,
 } from "@luraba/contracts";
 import { PERMISSIONS } from "@luraba/contracts";
+import { formatDate } from "@luraba/domain";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
@@ -25,7 +26,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useApiParams } from "@/hooks/use-api-params";
 import { useDataTable } from "@/hooks/use-data-table";
-import { formatDate } from "@/lib/format";
 import { getHouseholdRoleLabel } from "@/lib/households";
 import { formatTimezoneLabel } from "@/lib/timezones";
 import {

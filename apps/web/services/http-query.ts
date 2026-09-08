@@ -1,3 +1,5 @@
+import { formatISODateTime } from "@luraba/domain";
+
 type QueryValue =
   | boolean
   | Date
@@ -8,7 +10,7 @@ type QueryValue =
   | undefined;
 
 function serializeValue(value: Exclude<QueryValue, readonly unknown[] | null | undefined>) {
-  if (value instanceof Date) return value.toISOString();
+  if (value instanceof Date) return formatISODateTime(value);
   return value;
 }
 

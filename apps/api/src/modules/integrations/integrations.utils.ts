@@ -1,6 +1,6 @@
 import type { Integration } from "@luraba/contracts/integrations";
+import { formatISODateTime } from "@luraba/domain";
 import type { IntegrationProviderId } from "@/config/integrations";
-import { formatISODateTime } from "@/shared/lib/date";
 
 export function buildIntegrationSummary(
   provider: IntegrationProviderId,

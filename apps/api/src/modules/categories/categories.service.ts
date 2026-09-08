@@ -3,9 +3,9 @@ import type {
   CreateCategoryInput,
   UpdateCategoryInput,
 } from "@luraba/contracts/categories";
+import { formatISODateTime } from "@luraba/domain";
 import type { HouseholdContext } from "@/config/permissions";
 import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
-import { formatISODateTime } from "@/shared/lib/date";
 import { createListMeta, type ListResult } from "@/shared/list";
 import type { ListCategoriesQuery } from "./categories.query";
 import { categoriesRepository } from "./categories.repository";

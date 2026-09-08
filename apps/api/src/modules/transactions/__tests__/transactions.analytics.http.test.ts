@@ -1,3 +1,4 @@
+import { formatISODate, getTodayInTimezone } from "@luraba/domain";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import app from "@/app";
@@ -5,7 +6,6 @@ import * as accountsService from "@/modules/accounts/accounts.service";
 import * as categoriesService from "@/modules/categories/categories.service";
 import * as creditCardsService from "@/modules/credit-cards/credit-cards.service";
 import * as transactionsService from "@/modules/transactions/transactions.service";
-import { getTodayInTimezone } from "@/shared/lib/date";
 import { createAuthenticatedContext, createAuthHeaders } from "@/test/auth";
 import {
   buildAccountInput,
@@ -75,7 +75,7 @@ describe("transaction analytics routes", () => {
     expect(response.body.data).toMatchObject({
       currencyCode: "BRL",
       dateFrom: "2026-08-01",
-      dateTo: getTodayInTimezone(context.householdContext.timezone).toISOString().slice(0, 10),
+      dateTo: formatISODate(getTodayInTimezone(context.householdContext.timezone)),
       metrics: {
         moneyIn: { value: 0 },
         moneyOut: { value: 12_500 },

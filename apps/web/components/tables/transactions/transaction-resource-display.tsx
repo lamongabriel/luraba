@@ -9,6 +9,7 @@ import type {
   Merchant,
   TransactionFeedRow,
 } from "@luraba/contracts";
+import { formatDisplayDate } from "@luraba/domain";
 import * as React from "react";
 import { CreditCardBrandMark } from "@/components/credit-cards/credit-card-brand";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -254,7 +255,7 @@ function MerchantHoverDetails({
       <dl className="grid gap-2 border-t border-border pt-3 text-xs">
         <div className="flex items-center justify-between gap-3">
           <dt className="text-muted-foreground">Created</dt>
-          <dd>{new Date(merchant.createdAt).toLocaleDateString()}</dd>
+          <dd>{formatDisplayDate(merchant.createdAt, { formatString: "P" })}</dd>
         </div>
       </dl>
     </div>

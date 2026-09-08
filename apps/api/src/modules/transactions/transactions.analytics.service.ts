@@ -2,14 +2,22 @@ import {
   transactionAnalyticsQuerySchema,
   transactionAnalyticsSchema,
 } from "@luraba/contracts/transactions";
-import { differenceInCalendarDays, startOfMonth, startOfWeek, subDays } from "date-fns";
+import {
+  clampDateToToday,
+  differenceInCalendarDays,
+  formatISODate,
+  getTodayInTimezone,
+  parseISODate,
+  startOfMonth,
+  startOfWeek,
+  subDays,
+} from "@luraba/domain";
 import { eq } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
 import { householdsTable } from "@/db/schemas/households.schema";
 import { authRepository } from "@/modules/auth/auth.repository";
 import { fxService } from "@/modules/fx/fx.service";
-import { formatISODate, getTodayInTimezone, parseISODate } from "@/shared/lib/date";
 import * as repository from "./transactions.analytics.repository";
 import type { TransactionFilterQuery } from "./transactions.query";
 
@@ -18,7 +26,7 @@ type ConvertedRow = repository.TransactionAnalyticsAggregateRow & { amount: numb
 function clampDates(query: TransactionFilterQuery, today: string) {
   return {
     ...query,
-    dateTo: query.dateTo && query.dateTo < today ? query.dateTo : today,
+    dateTo: query.dateTo ? clampDateToToday(query.dateTo, today) : today,
   };
 }
 
