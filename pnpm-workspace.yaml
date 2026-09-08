@@ -4,7 +4,7 @@ packages:
 
 catalog:
   '@biomejs/biome': 2.5.6
-  '@types/node': ^25.3.3
+  '@types/node': ^26.4.1
   date-fns: ^4.4.0
   turbo: 2.10.9
   typescript: ^5.9.3
