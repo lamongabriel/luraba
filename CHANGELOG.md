@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/lamongabriel/luraba/compare/v1.2.0...v1.2.1) (2026-09-08)
+
+
+### Documentation
+
+* add architecture, deployment, and development guides ([caee92b](https://github.com/lamongabriel/luraba/commit/caee92bdcf1d5860c30384282a99c6084c25e925))
+
 ## [1.2.0](https://github.com/lamongabriel/luraba/compare/v1.1.0...v1.2.0) (2026-09-04)
 
 
