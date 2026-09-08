@@ -6,45 +6,15 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
-    },
-    "build:watch": {
-      "cache": false,
-      "persistent": true
-    },
-    "check": {
-      "dependsOn": ["^build"]
-    },
-    "lint": {
-      "dependsOn": ["^build"]
     },
     "typecheck": {
       "dependsOn": ["^build"]
     },
-    "test": {
-      "dependsOn": ["^build"],
-      "env": [
-        "BASE_URL",
-        "DB_HOST",
-        "DB_NAME",
-        "DB_PASSWORD",
-        "DB_PORT",
-        "DB_USER",
-        "DOTENV_CONFIG_PATH",
-        "FRONTEND_ORIGIN",
-        "NODE_ENV",
-        "RUN_DB_TESTS"
-      ]
-    },
     "test:unit": {
       "dependsOn": ["^build"]
-    },
-    "format": {
-      "cache": false
-    },
-    "format:check": {
-      "cache": true
     }
   }
 }

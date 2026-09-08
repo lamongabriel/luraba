@@ -1,62 +1,61 @@
 # Luraba
 
-Luraba is a self-hosted personal finance workspace built as a pnpm/Turborepo
-monorepo.
+Luraba is a self-hosted personal-finance workspace. It is a pnpm workspace and
+Turborepo containing an Express API, a Next.js web application, and shared
+contracts/domain packages.
 
-## Workspace
+## Quick start
 
-```text
-apps/api             @luraba/api       Express API, database, migrations, seeds
-apps/web             @luraba/web       Next.js application
-packages/contracts   @luraba/contracts Public HTTP schemas and stable wire types
-packages/domain      @luraba/domain    Framework-free finance primitives
-```
-
-The root `pnpm-lock.yaml` is authoritative. Applications must consume shared
-code through the package exports rather than source-path aliases.
-
-## Local Development
-
-Requirements: Node.js 22+, pnpm 10.28.2+, and Docker with Compose v2.
+Requirements: Node.js 22+, pnpm 10.28.2+, and Docker Compose v2.
 
 ```sh
 pnpm install
-pnpm setup
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env.local
 pnpm dev
 ```
 
-`pnpm dev` starts Postgres, applies API migrations, and runs the API, web app,
-and shared-package watchers through Turbo. The default host ports are:
+Set `AUTH_SECRET` and `INTEGRATIONS_ENCRYPTION_KEY` in `apps/api/.env` before
+starting the API. Generate them with `openssl rand -base64 32` and
+`openssl rand -hex 32`, respectively. `pnpm dev` starts Postgres, applies all
+migrations (including required reference data), and starts the API, web app,
+and shared-package watchers.
 
-- Web: `http://localhost:29670`
-- API: `http://localhost:22677`
-- Postgres: `localhost:29762`
+- Web: <http://localhost:3000>
+- API: <http://localhost:3001>
+- Postgres: `localhost:5432`
 
-Use `pnpm dev:docker` for the fully containerized development stack. Use
-`pnpm db:seed:mock` to load the local demo fixture.
+Use `pnpm seed:mock` only when you want optional demo data.
 
-## Commands
+## Workspace commands
 
 ```sh
-pnpm check                 # workspace Biome checks through Turbo
-pnpm lint                  # workspace linting through Turbo
-pnpm typecheck             # workspace TypeScript checks through Turbo
-pnpm test                  # fast unit tests
-pnpm test:api:integration  # API integration/database tests with Postgres
-pnpm build                 # production builds in dependency order
-pnpm validate              # check, typecheck, unit tests, and builds
-pnpm --filter @luraba/api typecheck
-pnpm --filter @luraba/web test
+pnpm lint       # lint the complete workspace
+pnpm format     # verify formatting
+pnpm fix        # apply safe Biome fixes and formatting
+pnpm check      # run all Biome checks
+pnpm typecheck  # typecheck every package
+pnpm test       # unit suites plus API integration tests
+pnpm build      # production builds in dependency order
+pnpm verify     # check, typecheck, test, and build
 ```
 
-## Ownership
+Run a package-specific command with pnpm filtering, for example
+`pnpm --filter @luraba/api test:integration`.
 
-The API owns authentication integration, authorization policy, persistence,
-database migrations, seeds, and internal domain services. The web app owns
-presentation and browser state. Contracts contains only public HTTP boundaries,
-stable enums, and runtime schemas. Domain contains framework-free finance
-logic that is safe for both applications to consume.
+## Self-hosting
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for pull request checks and
-[`docs/adr/0001-root-orchestration.md`](docs/adr/0001-root-orchestration.md)
-for the workspace decision.
+The root [`compose.yaml`](compose.yaml) is the only container deployment
+definition. It runs Postgres, migrations, API, and web in production mode:
+
+```sh
+docker compose up --build -d
+```
+
+The API environment file is required for container deployments. Set public
+origins and optional host-port overrides with `BASE_URL`, `FRONTEND_ORIGIN`,
+`NEXT_PUBLIC_API_URL`, `API_PORT`, `WEB_PORT`, and `POSTGRES_PORT` as needed.
+
+See [development](docs/development.md), [deployment](docs/deployment.md), and
+[architecture](docs/architecture.md) for the complete guide. Contributions are
+welcome—start with [CONTRIBUTING.md](CONTRIBUTING.md).

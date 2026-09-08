@@ -9,4 +9,8 @@
 **/build
 **/coverage
 **/.pnpm-store
+.turbo
+**/.turbo
+apps/web/.next
+apps/web/.pnpm-store
 .kilo

@@ -1,50 +1,48 @@
-# Contributing
+# Contributing to Luraba
 
-Thanks for helping make Luraba better.
+Thanks for contributing. Please read the [Code of Conduct](CODE_OF_CONDUCT.md)
+before participating.
 
-## Commit Messages
+## Development workflow
 
-Luraba uses Conventional Commits. Commit messages and squash-merge PR titles should follow this shape:
-
-```text
-type(scope): short description
-```
-
-Examples:
-
-```text
-feat(api): add transaction tags
-fix(fx): use exact frankfurter date
-docs(readme): add setup notes
-ci(github): add release automation
-```
-
-Use `feat:` for user-facing additions, `fix:` for bug fixes, and `BREAKING CHANGE:` in the footer for incompatible changes.
-
-## Pull Requests
-
-- Keep PRs focused.
-- Make the PR title a valid Conventional Commit.
-- Run the relevant checks before opening a PR.
+Follow the [local setup guide](docs/development.md), create a focused branch,
+and use the root commands to validate the whole workspace:
 
 ```sh
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
+pnpm fix
+pnpm verify
 ```
 
-The default test command runs fast unit suites through Turbo. API integration and
-database tests require a ready Postgres instance and are run explicitly with
-`pnpm test:api:integration`.
+Use package-local commands through pnpm filters when iterating on one area.
+Do not commit generated output, local environment files, or database volumes.
+
+## Commits and pull requests
+
+Luraba uses Conventional Commits. Use a concise imperative title, such as:
+
+```text
+feat(transactions): support receipt attachments
+fix(api): reject malformed invitation tokens
+docs(contributing): clarify migration policy
+```
+
+Use one focused pull request, explain user-visible changes, include tests for
+behavior changes, and ensure its title passes commitlint. Squash merge is the
+default so the pull-request title becomes the release input.
+
+## Database and dependencies
+
+- Create an immutable Drizzle migration for every schema or required reference
+  data change. Never alter an applied migration.
+- Required product data belongs in a migration; mock data remains optional.
+- Keep public HTTP schemas in `@luraba/contracts`, framework-free financial
+  logic in `@luraba/domain`, persistence/service internals in the API, and UI
+  state in the web app.
+- Add a dependency only to the package that imports it. Runtime dependencies
+  belong in `dependencies`; build/test/CLI tooling belongs in `devDependencies`.
 
 ## Releases
 
-Releases are automated with Release Please.
-
-- Normal PRs land on `main`.
-- Release Please opens or updates a release PR.
-- The release PR updates package versions and `CHANGELOG.md`.
-- Merging the release PR creates a `vX.Y.Z` tag and GitHub Release.
-
-Do not manually edit package versions for normal releases.
+Release Please owns versions and `CHANGELOG.md`. Luraba has one product version:
+the root, API, web, contracts, and domain manifests are updated together. Do
+not manually bump versions for normal changes.
