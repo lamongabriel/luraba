@@ -1,0 +1,4 @@
+interface:
+  display_name: "Luraba Start Ticket"
+  short_description: "Start a Luraba GitHub issue workflow"
+  default_prompt: "Use $luraba-start-ticket to start work on a Luraba issue."

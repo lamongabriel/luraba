@@ -9,5 +9,6 @@
 .pnpm-
 .kilo
 .pnpm-store
+.claude/
 .cyboflow/worktrees/
 worktrees/
