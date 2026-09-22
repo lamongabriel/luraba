@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/lamongabriel/luraba/compare/v1.2.1...v1.3.0) (2026-09-22)
+
+
+### Features
+
+* add Coolify Docker Compose deployment configuration ([8034f87](https://github.com/lamongabriel/luraba/commit/8034f87296a1d85f5ed160769c13b33088eb5324))
+* **charts:** add reusable chart components with state handling ([b7d9ce8](https://github.com/lamongabriel/luraba/commit/b7d9ce8454a73d237e0834b7373c549ef8f26fdc))
+
+
+### Documentation
+
+* add agent skills for React composition and view transitions ([248a2b7](https://github.com/lamongabriel/luraba/commit/248a2b7374ad55398735f82a65c1dd3b2d2f2637))
+* clarify Coolify setup and hardcode DB name in compose ([3c71641](https://github.com/lamongabriel/luraba/commit/3c71641aafcedf7f8c581850862e22bfbb925e90))
+
 ## [1.2.1](https://github.com/lamongabriel/luraba/compare/v1.2.0...v1.2.1) (2026-09-08)
 
 
