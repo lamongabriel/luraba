@@ -1,6 +1,6 @@
 {
   "name": "@luraba/domain",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "private": true,
   "description": "Framework-free Luraba finance, date, and recurrency primitives",
   "type": "module",
