@@ -1,20 +1,8 @@
 "use client";
 
 import Color from "color";
-import type { ComponentProps } from "react";
 
-import {
-  CreditCard,
-  CreditCardBack,
-  CreditCardChip,
-  CreditCardFlipper,
-  CreditCardFront,
-  CreditCardMagStripe,
-  CreditCardName,
-  CreditCardNumber,
-  CreditCardServiceProvider,
-} from "@/components/ui/credit-card";
-import { getCreditCardBrand } from "@/lib/credit-cards";
+import { CreditCardBrand } from "@/components/credit-cards/credit-card-brand";
 import { cn } from "@/lib/utils";
 
 const fallbackColor = "#d4d4d8";
@@ -27,14 +15,13 @@ function safeColor(value: string | undefined) {
   }
 }
 
+/** A flat, rounded card in the card's color with its brand, name and last four digits. */
 export function CreditCardPreview({
   brand,
   color,
   institutionName,
   last4,
   name,
-  onClick,
-  selected = false,
   className,
 }: {
   brand?: string;
@@ -42,50 +29,30 @@ export function CreditCardPreview({
   institutionName?: string;
   last4?: string;
   name?: string;
-  onClick?: ComponentProps<typeof CreditCardFlipper>["onClick"];
-  selected?: boolean;
   className?: string;
 }) {
   const cardColor = safeColor(color);
   const foreground = cardColor.isLight() ? "#111827" : "#ffffff";
-  const provider = getCreditCardBrand(brand);
   const displayedLast4 = /^\d{4}$/.test(last4 ?? "") ? last4 : "••••";
 
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border/70 bg-muted/15 p-4 transition-colors",
-        selected && "border-primary/70 bg-primary/5",
+        "flex aspect-[1.586/1] w-full flex-col justify-between rounded-2xl p-5 shadow-sm",
         className,
       )}
+      style={{ backgroundColor: cardColor.hex(), color: foreground }}
     >
-      <CreditCard className="mx-auto max-w-sm">
-        <CreditCardFlipper aria-label={`Select ${name?.trim() || "credit card"}`} onClick={onClick}>
-          <CreditCardFront style={{ backgroundColor: cardColor.hex(), color: foreground }}>
-            <CreditCardName className="absolute top-0 left-0 max-w-[70%] truncate text-xs tracking-[0.16em] opacity-75">
-              {institutionName?.trim() || "\u00a0"}
-            </CreditCardName>
-            <CreditCardChip />
-            <CreditCardNumber className="absolute bottom-[20%] left-0 text-lg tracking-[0.12em]">
-              •••• •••• •••• {displayedLast4}
-            </CreditCardNumber>
-            <CreditCardName className="absolute bottom-0 left-0 max-w-[60%] truncate text-xs opacity-75">
-              {name?.trim() || "\u00a0"}
-            </CreditCardName>
-            <CreditCardServiceProvider
-              className="top-0 right-0 bottom-auto max-h-[18%] max-w-[24%]"
-              format="logo"
-              type={provider.paymentType}
-            />
-          </CreditCardFront>
-          <CreditCardBack style={{ backgroundColor: cardColor.hex(), color: foreground }}>
-            <CreditCardMagStripe />
-            <CreditCardNumber className="absolute bottom-0 left-0 text-base tracking-[0.12em]">
-              •••• •••• •••• {displayedLast4}
-            </CreditCardNumber>
-          </CreditCardBack>
-        </CreditCardFlipper>
-      </CreditCard>
+      <div className="flex items-start justify-between gap-3">
+        <span className="truncate text-xs font-medium tracking-wide opacity-80">
+          {institutionName?.trim() || " "}
+        </span>
+        {brand ? <CreditCardBrand brand={brand} className="shrink-0" /> : null}
+      </div>
+      <div>
+        <div className="text-base font-medium tracking-[0.14em]">•••• {displayedLast4}</div>
+        <div className="mt-1 truncate text-sm opacity-80">{name?.trim() || " "}</div>
+      </div>
     </div>
   );
 }

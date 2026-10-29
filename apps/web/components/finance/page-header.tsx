@@ -6,47 +6,50 @@ import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
+export type PageBackLink = {
+  href: string;
+  /** Where it goes, e.g. "Credit cards" renders "Back to Credit cards". */
+  label: string;
+};
+
+/**
+ * The title block every page of the app uses: optional back link, a title, a mandatory subtitle,
+ * and a right-hand slot (aligned with the title) for actions.
+ */
 export function PageHeader({
   title,
-  description,
+  subtitle,
   actions,
+  back,
   className,
-  backHref,
-  backText,
 }: {
   title: string;
-  description?: React.ReactNode;
+  subtitle: React.ReactNode;
   actions?: React.ReactNode;
+  back?: PageBackLink;
   className?: string;
-  backHref?: string;
-  backText?: string;
 }) {
   return (
-    <section
-      className={cn(
-        "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
-        className,
-      )}
-    >
-      <div className="min-w-0">
-        {backHref ? (
-          <Button asChild variant="link" className="mb-2 -ml-2 h-6 px-2">
-            <Link href={backHref}>
-              <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} />
-              {backText ?? "Back"}
-            </Link>
-          </Button>
-        ) : null}
-        <Typography as="h1" variant="page-title" className="max-w-3xl">
-          {title}
-        </Typography>
-        {description ? (
-          <Typography variant="body-muted" className="mt-1 max-w-3xl">
-            {description}
+    <header className={cn("space-y-2", className)}>
+      {back ? (
+        <Button asChild variant="link" className="-ml-2 h-6 px-2">
+          <Link href={back.href}>
+            <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} />
+            Back to {back.label}
+          </Link>
+        </Button>
+      ) : null}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0">
+          <Typography as="h1" variant="page-title" className="max-w-3xl">
+            {title}
           </Typography>
-        ) : null}
+          <Typography variant="body-muted" className="mt-1 max-w-3xl">
+            {subtitle}
+          </Typography>
+        </div>
+        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
-    </section>
+    </header>
   );
 }

@@ -8,12 +8,14 @@ import {
   type CreateCreditCardPurchaseResult,
   type CreateCreditCardResult,
   type CreditCardForecastQuery,
+  type CreditCardOverviewQuery,
   creditCardsEndpoints,
   type DeleteCreditCardPaymentResult,
   type DeleteCreditCardPurchaseResult,
   type DeleteCreditCardResult,
   type GetCreditCardCycleResult,
   type GetCreditCardForecastResult,
+  type GetCreditCardOverviewResult,
   type GetCreditCardPaymentResult,
   type GetCreditCardPurchaseResult,
   type GetCreditCardResult,
@@ -34,6 +36,12 @@ import { requestContract } from "@/services/contract-client.service";
 
 export function listCreditCards(query: ListCreditCardsQuery = {}): Promise<ListCreditCardsResult> {
   return requestContract(creditCardsEndpoints.list, { query });
+}
+
+export function getCreditCardOverview(
+  query: CreditCardOverviewQuery = {},
+): Promise<GetCreditCardOverviewResult> {
+  return requestContract(creditCardsEndpoints.overview, { query });
 }
 
 export function createCreditCard(input: CreateCreditCardInput): Promise<CreateCreditCardResult> {
