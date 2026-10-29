@@ -67,6 +67,10 @@
       "types": "./dist/list.d.ts",
       "import": "./dist/list.js"
     },
+    "./notifications": {
+      "types": "./dist/notifications/index.d.ts",
+      "import": "./dist/notifications/index.js"
+    },
     "./onboarding": {
       "types": "./dist/onboarding/index.d.ts",
       "import": "./dist/onboarding/index.js"

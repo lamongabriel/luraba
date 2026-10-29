@@ -7,6 +7,7 @@ import Link from "next/link";
 import { AuthGate } from "@/components/auth/auth-gate";
 import { AppCommandMenu } from "@/components/navigation/app-command-menu";
 import { AppSidebar } from "@/components/navigation/app-sidebar";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
@@ -30,6 +31,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </div>
 
               <AppCommandMenu />
+              <NotificationBell />
             </div>
           </header>
 

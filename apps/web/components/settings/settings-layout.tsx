@@ -1,6 +1,11 @@
 "use client";
 
-import { Settings02Icon, Shield01Icon, UserCircleIcon } from "@hugeicons/core-free-icons";
+import {
+  Notification01Icon,
+  Settings02Icon,
+  Shield01Icon,
+  UserCircleIcon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,6 +15,7 @@ import { cn } from "@/lib/utils";
 const links = [
   { href: "/settings/profile", label: "Profile", icon: UserCircleIcon },
   { href: "/settings/preferences", label: "Preferences", icon: Settings02Icon },
+  { href: "/settings/notifications", label: "Notifications", icon: Notification01Icon },
   { href: "/settings/security", label: "Security", icon: Shield01Icon },
 ] as const;
 

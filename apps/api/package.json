@@ -39,7 +39,10 @@
   "type": "module",
   "dependencies": {
     "@luraba/contracts": "workspace:*",
+    "@luraba/db": "workspace:*",
     "@luraba/domain": "workspace:*",
+    "@luraba/queue": "workspace:*",
+    "ioredis": "^6.0.0",
     "better-auth": "^1.6.19",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

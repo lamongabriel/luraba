@@ -11,6 +11,7 @@ export * from "./households/index.js";
 export * from "./integrations/index.js";
 export * from "./list.js";
 export * from "./merchants/index.js";
+export * from "./notifications/index.js";
 export * from "./onboarding/index.js";
 export * from "./payment-methods/index.js";
 export * from "./permissions.js";
