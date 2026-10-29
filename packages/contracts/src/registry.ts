@@ -6,6 +6,7 @@ import { budgetsEndpoints } from "./budgets/endpoints.js";
 import { categoriesEndpoints } from "./categories/endpoints.js";
 import { creditCardsEndpoints } from "./credit-cards/endpoints.js";
 import { currenciesEndpoints } from "./currencies/endpoints.js";
+import { goalsEndpoints } from "./goals/endpoints.js";
 import { healthEndpoints } from "./health/endpoints.js";
 import { householdsEndpoints } from "./households/endpoints.js";
 import { integrationsEndpoints } from "./integrations/endpoints.js";
@@ -29,6 +30,7 @@ export const contractModules = {
   categories: categoriesEndpoints,
   currencies: currenciesEndpoints,
   creditCards: creditCardsEndpoints,
+  goals: goalsEndpoints,
   health: healthEndpoints,
   households: householdsEndpoints,
   integrations: integrationsEndpoints,

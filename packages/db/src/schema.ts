@@ -20,6 +20,7 @@ export * from "./schemas/currencies.schema.js";
 export * from "./schemas/entries.schema.js";
 export * from "./schemas/enums.schema.js";
 export * from "./schemas/exchange-rates.schema.js";
+export * from "./schemas/goals.schema.js";
 export * from "./schemas/households.schema.js";
 export {
   householdInvitesTable as householdInvites,

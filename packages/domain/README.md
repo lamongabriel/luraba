@@ -9,5 +9,6 @@ No I/O, no framework imports.
 - `recurrency.ts` generic schedules (monthly/weekly/...), bounded by occurrences, end date or a
   requested range, mapped into a module-specific result. Bills use it.
 - `bills.ts`, `classification.ts`, `periods.ts` domain rules built on the above.
+- `goals.ts` savings/investment goal maths: required monthly amount, completion projection with optional compounding, on-track pace, and the progress timeline.
 
 Add tests in `src/__tests__` for anything with edge cases (month ends, DST, rounding).

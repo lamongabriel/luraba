@@ -61,6 +61,15 @@ and grace period pass, otherwise scheduled. Per-person and per-split totals
 (received, outstanding, written off) are computed on read. Splits send no
 notifications.
 
+### Goals
+
+A goal (`goals`) is an amount to save or invest, optionally by a date and at a planned monthly
+amount. Progress is the sum of its contributions (`goal_contributions`; a negative amount is a
+withdrawal), each entered by hand or backed by a transaction. Nothing about progress is stored:
+saved, achieved, on track or behind, and the estimate (the monthly amount needed, when the plan
+finishes, and with an expected yearly return for investments, what it grows to) are computed on
+read by `@luraba/domain`. Goals send no notifications.
+
 ## File storage
 
 Files are stored as objects in an S3-compatible bucket (`@luraba/storage`), by default a bundled

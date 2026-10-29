@@ -35,6 +35,10 @@
       "types": "./dist/uploads/index.d.ts",
       "import": "./dist/uploads/index.js"
     },
+    "./goals": {
+      "types": "./dist/goals/index.d.ts",
+      "import": "./dist/goals/index.js"
+    },
     "./splits": {
       "types": "./dist/splits/index.d.ts",
       "import": "./dist/splits/index.js"

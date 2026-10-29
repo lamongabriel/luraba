@@ -9,7 +9,7 @@
 | `repositories/repository.ts` | `Repository`: the same without a household filter, for global tables (currencies, reference data). |
 | `list.ts` | Pagination and list-query helpers: `getPagination`, `createListMeta`, `buildIlikeSearch`, `inArrayIfAny`, `rangeConditions`, `nullabilityCondition`, `buildOrderBy`, `combineConditions`; types `ListResult`, `DbListPage`. |
 | `response.ts` | Envelope helpers (`sendSuccess`, `sendCreated`, `withApiMeta`). A handler returns `withApiMeta(data, meta)` for list responses. |
-| `errors.ts` | `AppError` subclasses: `NotFoundError`(404), `ValidationError`(422), `ConflictError`(409), `UnauthorizedError`(401), `ForbiddenError`(403), `DependencyUnavailableError`(503). Throw these from services; `middleware/error.middleware.ts` renders them. |
+| `errors.ts` | `AppError` subclasses: `NotFoundError`(404), `ValidationError`(422), `ConflictError`(409), `UnauthorizedError`(401), `ForbiddenError`(403), `DependencyUnavailableError`(503), plus `isUniqueViolation(error)` for catching a Postgres unique-index violation (Drizzle wraps the driver error, so the SQLSTATE is on `cause`; never test `error.code` directly). Throw these from services; `middleware/error.middleware.ts` renders them. |
 | `logger.ts` | pino logger. |
 | `lib/` | Better Auth instance and auth origins. |
 | `data/` | Static location data (countries, timezones). |

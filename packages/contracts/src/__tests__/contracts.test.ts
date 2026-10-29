@@ -21,6 +21,7 @@ const EXPECTED_MODULE_COUNTS = {
   budgets: 2,
   categories: 4,
   creditCards: 17,
+  goals: 8,
   currencies: 2,
   health: 1,
   households: 22,
@@ -87,6 +88,14 @@ const EXPECTED_ENDPOINTS = [
   "PATCH /credit-cards/:id/payments/:paymentId",
   "DELETE /credit-cards/:id/payments/:paymentId",
   "GET /credit-cards/:id/forecast",
+  "GET /goals",
+  "GET /goals/:id",
+  "POST /goals",
+  "PATCH /goals/:id",
+  "DELETE /goals/:id",
+  "POST /goals/:id/contributions",
+  "PATCH /goals/:id/contributions/:contributionId",
+  "DELETE /goals/:id/contributions/:contributionId",
   "GET /health",
   "GET /households",
   "POST /households",
@@ -175,7 +184,7 @@ const EXPECTED_ENDPOINTS = [
 ] as const;
 
 describe("HTTP contract inventory", () => {
-  it("contains the complete 135-route inventory by module", () => {
+  it("contains the complete 143-route inventory by module", () => {
     expect(
       Object.fromEntries(
         Object.entries(contractModules).map(([module, endpoints]) => [
@@ -184,7 +193,7 @@ describe("HTTP contract inventory", () => {
         ]),
       ),
     ).toEqual(EXPECTED_MODULE_COUNTS);
-    expect(allEndpoints).toHaveLength(135);
+    expect(allEndpoints).toHaveLength(143);
     expect(allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`)).toEqual(
       EXPECTED_ENDPOINTS,
     );
@@ -193,7 +202,7 @@ describe("HTTP contract inventory", () => {
   it("has unique method/path pairs and complete endpoint schemas", () => {
     const identities = allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`);
 
-    expect(new Set(identities).size).toBe(135);
+    expect(new Set(identities).size).toBe(143);
 
     for (const endpoint of allEndpoints) {
       expect(endpoint.path).toMatch(/^\/[a-z][a-z0-9/-]*(?::[A-Za-z][A-Za-z0-9_]*)?/);
@@ -233,7 +242,7 @@ describe("representative module contracts", () => {
       transactionsEndpoints.create.body.safeParse({
         type: "expense",
         accountId: crypto.randomUUID(),
-        amount: 1350,
+        amount: 1430,
         currencyCode: "BRL",
         description: "Groceries",
         paymentMethodCode: "pix",

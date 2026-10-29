@@ -69,6 +69,13 @@ describe("splits routes", () => {
     expect(linked.status).toBe(200);
     expect(linked.body.data).toMatchObject({ state: "received", transaction: { amount: 15_000 } });
 
+    // One transaction can only settle one installment.
+    const duplicate = await request(app)
+      .post(`${base}/${second.id}/link`)
+      .set(headers)
+      .send({ transactionId: income.id });
+    expect(duplicate.status).toBe(409);
+
     const skipped = await request(app).post(`${base}/${second.id}/skip`).set(headers);
     expect(skipped.body.data.state).toBe("skipped");
     const writtenOff = await request(app).post(`${base}/${third.id}/write-off`).set(headers);

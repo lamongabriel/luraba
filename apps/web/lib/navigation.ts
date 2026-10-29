@@ -3,6 +3,7 @@ import {
   Calendar03Icon,
   CreditCardIcon,
   DashboardSquare01Icon,
+  GoalIcon,
   Layers01Icon,
   Settings02Icon,
   TagsIcon,
@@ -55,6 +56,12 @@ export const mainNav: NavigationItem[] = [
     href: "/splits",
     icon: UserMultiple02Icon,
     permission: PERMISSIONS.SPLITS_READ,
+  },
+  {
+    title: "Goals",
+    href: "/goals",
+    icon: GoalIcon,
+    permission: PERMISSIONS.GOALS_READ,
   },
   {
     title: "Categories",

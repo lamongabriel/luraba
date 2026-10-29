@@ -69,6 +69,7 @@ A scoped `update`/`delete` returns `undefined` when nothing matched: turn that i
 | [currencies](currencies/README.md) | Currency list and rates |
 | [entries](entries/README.md) | Double-entry ledger entries |
 | [fx](fx/README.md) | Exchange-rate providers and sync |
+| [goals](goals/README.md) | Savings and investment goals, contributions and completion estimates |
 | [health](health/README.md) | Health check |
 | [households](households/README.md) | Households, members, roles, invitations |
 | [integrations](integrations/README.md) | Third-party credentials (Brandfetch) |

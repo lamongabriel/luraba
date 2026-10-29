@@ -23,7 +23,7 @@ import { categoriesRepository } from "@/modules/categories/categories.repository
 import { merchantsRepository } from "@/modules/merchants/merchants.repository";
 import { mapDetailedRows } from "@/modules/transactions/transactions.helpers";
 import * as transactionsRepository from "@/modules/transactions/transactions.repository";
-import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
+import { ConflictError, isUniqueViolation, NotFoundError, ValidationError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
 import { billsRepository, type ListBillsQuery } from "./bills.repository";
 import type { BillRecord, OccurrenceRecord } from "./bills.types";
@@ -492,7 +492,7 @@ export async function linkTransaction(
     );
   } catch (error) {
     // The partial unique index allows one occurrence per transaction.
-    if (typeof error === "object" && error !== null && "code" in error && error.code === "23505") {
+    if (isUniqueViolation(error)) {
       throw new ConflictError("This transaction is already linked to a bill payment");
     }
     throw error;

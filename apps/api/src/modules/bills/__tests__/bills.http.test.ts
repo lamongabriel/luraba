@@ -70,6 +70,17 @@ describe("bills routes", () => {
     expect(linked.status).toBe(200);
     expect(linked.body.data).toMatchObject({ state: "paid", transaction: { amount: 8_350 } });
 
+    // One transaction can only pay one occurrence.
+    const other = occurrences.body.data.find(
+      (row: { id: string; state: string }) =>
+        row.id !== open.id && (row.state === "overdue" || row.state === "scheduled"),
+    );
+    const duplicate = await request(app)
+      .post(`/api/v1/bills/${bill.id}/occurrences/${other.id}/link`)
+      .set(headers)
+      .send({ transactionId: transaction.id });
+    expect(duplicate.status).toBe(409);
+
     const detail = await request(app).get(`/api/v1/bills/${bill.id}`).set(headers);
     expect(detail.body.data.summary).toMatchObject({ paidCount: 2, totalPaid: 8_350 });
 

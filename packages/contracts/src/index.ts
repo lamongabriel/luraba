@@ -7,6 +7,7 @@ export * from "./categories/index.js";
 export * from "./common.js";
 export * from "./credit-cards/index.js";
 export * from "./currencies/index.js";
+export * from "./goals/index.js";
 export * from "./health/index.js";
 export * from "./households/index.js";
 export * from "./integrations/index.js";

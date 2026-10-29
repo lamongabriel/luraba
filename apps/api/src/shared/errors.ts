@@ -45,3 +45,18 @@ export class DependencyUnavailableError extends AppError {
     super(message, 503, "DEPENDENCY_UNAVAILABLE");
   }
 }
+
+const UNIQUE_VIOLATION = "23505";
+
+/**
+ * True for a Postgres unique-constraint violation. Drizzle wraps the driver error, so the
+ * SQLSTATE code sits on `cause`; checking only the thrown error misses it and returns a 500.
+ */
+export function isUniqueViolation(error: unknown): boolean {
+  for (let current = error, depth = 0; current && depth < 3; depth += 1) {
+    if (typeof current !== "object") return false;
+    if ("code" in current && current.code === UNIQUE_VIOLATION) return true;
+    current = "cause" in current ? current.cause : undefined;
+  }
+  return false;
+}

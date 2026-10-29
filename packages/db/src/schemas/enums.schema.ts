@@ -1,4 +1,5 @@
 import { BILL_AUDIENCES, BILL_FREQUENCIES, BILL_STATUSES } from "@luraba/contracts/bills";
+import { GOAL_KINDS, GOAL_STATUSES } from "@luraba/contracts/goals";
 import {
   CREDIT_EXPENSE_TIMING_VALUES,
   CREDIT_INSTALLMENT_BUDGET_MODE_VALUES,
@@ -162,6 +163,10 @@ export const notificationDeliveryStatusEnum = pgEnum("notification_delivery_stat
 export const billFrequencyEnum = pgEnum("bill_frequency", BILL_FREQUENCIES);
 export const billStatusEnum = pgEnum("bill_status", BILL_STATUSES);
 export const billAudienceEnum = pgEnum("bill_audience", BILL_AUDIENCES);
+
+// ─── Goal Enums ──────────────────────────────────────────────────────────
+export const goalKindEnum = pgEnum("goal_kind", GOAL_KINDS);
+export const goalStatusEnum = pgEnum("goal_status", GOAL_STATUSES);
 
 // ─── Split Enums ─────────────────────────────────────────────────────────
 export const splitStatusEnum = pgEnum("split_status", SPLIT_STATUSES);

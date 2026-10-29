@@ -14,7 +14,7 @@ import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
 import { mapDetailedRows } from "@/modules/transactions/transactions.helpers";
 import * as transactionsRepository from "@/modules/transactions/transactions.repository";
-import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
+import { ConflictError, isUniqueViolation, NotFoundError, ValidationError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
 import { splitsRepository } from "./splits.repository";
 import type { InstallmentRecord, ParticipantRecord, SplitRecord } from "./splits.types";
@@ -463,7 +463,7 @@ export async function linkInstallment(
       }),
     );
   } catch (error) {
-    if (typeof error === "object" && error !== null && "code" in error && error.code === "23505") {
+    if (isUniqueViolation(error)) {
       throw new ConflictError("This transaction is already linked to a split payment");
     }
     throw error;
