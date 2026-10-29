@@ -75,9 +75,63 @@ export const creditCardSchema = z.object({
   createdAt: wireDateTimeSchema,
   updatedAt: wireDateTimeSchema,
 });
+export const creditCardCyclePaymentSchema = z.object({
+  paymentId: z.uuid(),
+  transactionId: z.uuid(),
+  description: z.string(),
+  paymentDate: z.iso.date(),
+  /** The part of the payment applied to this invoice, in minor units. */
+  amount: z.number().int(),
+});
 export const creditCardCycleDetailsSchema = z.object({
   cycle: creditCardCycleSchema,
   items: z.array(creditCardCycleItemSchema),
+  payments: z.array(creditCardCyclePaymentSchema),
+});
+export const creditCardLimitBreakdownSchema = z.object({
+  /** `null` when the card has no limit. */
+  limit: z.number().int().nullable(),
+  closedInvoice: z.number().int(),
+  openInvoice: z.number().int(),
+  futureInvoices: z.number().int(),
+  used: z.number().int(),
+  available: z.number().int().nullable(),
+});
+export const creditCardOverviewInvoiceSchema = z.object({
+  cycleId: z.uuid(),
+  displayStatus: creditCardCycleDisplayStatusSchema,
+  closingDate: z.iso.date(),
+  dueDate: z.iso.date(),
+  statementAmount: z.number().int(),
+  paidAmount: z.number().int(),
+  remainingAmount: z.number().int(),
+});
+export const creditCardOverviewCardSchema = z.object({
+  creditCardId: z.uuid(),
+  name: z.string(),
+  institutionName: z.string().nullable(),
+  brand: z.string(),
+  last4: z.string(),
+  color: z.string().nullable(),
+  currencyCode: currencyCodeSchema,
+  closingDay: z.number().int(),
+  dueDay: z.number().int(),
+  /** The invoice due in the requested month, if the card has one. */
+  invoice: creditCardOverviewInvoiceSchema.nullable(),
+  limit: creditCardLimitBreakdownSchema,
+});
+export const creditCardOverviewTotalsSchema = z.object({
+  currencyCode: currencyCodeSchema,
+  invoiceAmount: z.number().int(),
+  invoicePaidAmount: z.number().int(),
+  invoiceRemainingAmount: z.number().int(),
+  limit: creditCardLimitBreakdownSchema,
+});
+export const creditCardOverviewSchema = z.object({
+  month: z.string().regex(/^\d{4}-\d{2}$/),
+  cards: z.array(creditCardOverviewCardSchema),
+  /** One entry per currency; amounts in different currencies are never added together. */
+  totals: z.array(creditCardOverviewTotalsSchema),
 });
 export const creditCardPurchaseSchema = z.object({
   purchaseId: z.uuid(),
@@ -130,6 +184,11 @@ export type CreditCardCycle = z.output<typeof creditCardCycleSchema>;
 export type CreditCardCycleDetails = z.output<typeof creditCardCycleDetailsSchema>;
 export type CreditCardPurchase = z.output<typeof creditCardPurchaseSchema>;
 export type CreditCardPayment = z.output<typeof creditCardPaymentSchema>;
+export type CreditCardCyclePayment = z.output<typeof creditCardCyclePaymentSchema>;
+export type CreditCardLimitBreakdown = z.output<typeof creditCardLimitBreakdownSchema>;
+export type CreditCardOverview = z.output<typeof creditCardOverviewSchema>;
+export type CreditCardOverviewCard = z.output<typeof creditCardOverviewCardSchema>;
+export type CreditCardOverviewTotals = z.output<typeof creditCardOverviewTotalsSchema>;
 export type CreditCardForecast = z.output<typeof creditCardForecastSchema>;
 export type CreditCardCycleStatus = z.output<typeof creditCardCycleStatusSchema>;
 export type CreditCardCycleDisplayStatus = z.output<typeof creditCardCycleDisplayStatusSchema>;

@@ -5,6 +5,7 @@ export const merchantSchema = z.object({
   name: z.string(),
   domain: z.string().nullable(),
   logoUrl: z.string().nullable(),
+  imageUploadId: z.uuid().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });

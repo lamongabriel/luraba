@@ -31,6 +31,14 @@
       "types": "./dist/auth/index.d.ts",
       "import": "./dist/auth/index.js"
     },
+    "./imports": {
+      "types": "./dist/imports/index.d.ts",
+      "import": "./dist/imports/index.js"
+    },
+    "./exports": {
+      "types": "./dist/exports/index.d.ts",
+      "import": "./dist/exports/index.js"
+    },
     "./uploads": {
       "types": "./dist/uploads/index.d.ts",
       "import": "./dist/uploads/index.js"

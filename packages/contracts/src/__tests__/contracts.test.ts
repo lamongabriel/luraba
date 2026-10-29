@@ -20,11 +20,13 @@ const EXPECTED_MODULE_COUNTS = {
   bills: 15,
   budgets: 2,
   categories: 4,
-  creditCards: 17,
+  creditCards: 18,
+  exports: 1,
   goals: 8,
   currencies: 2,
   health: 1,
   households: 22,
+  imports: 11,
   integrations: 3,
   merchants: 5,
   notifications: 12,
@@ -72,6 +74,7 @@ const EXPECTED_ENDPOINTS = [
   "GET /currencies",
   "GET /currencies/rate",
   "GET /credit-cards",
+  "GET /credit-cards/overview",
   "POST /credit-cards",
   "GET /credit-cards/:id",
   "PATCH /credit-cards/:id",
@@ -88,6 +91,7 @@ const EXPECTED_ENDPOINTS = [
   "PATCH /credit-cards/:id/payments/:paymentId",
   "DELETE /credit-cards/:id/payments/:paymentId",
   "GET /credit-cards/:id/forecast",
+  "GET /exports",
   "GET /goals",
   "GET /goals/:id",
   "POST /goals",
@@ -119,6 +123,17 @@ const EXPECTED_ENDPOINTS = [
   "POST /households/:id/invites/:inviteId/link",
   "POST /households/:id/invites/:inviteId/resend",
   "DELETE /households/:id/invites/:inviteId",
+  "GET /imports/parsers",
+  "GET /imports",
+  "GET /imports/:id",
+  "PATCH /imports/:id",
+  "DELETE /imports/:id",
+  "GET /imports/:id/rows",
+  "PATCH /imports/:id/rows",
+  "GET /imports/:id/groups",
+  "PUT /imports/:id/mappings",
+  "POST /imports/:id/start",
+  "GET /imports/:id/reconciliation",
   "GET /integrations",
   "PUT /integrations/brandfetch",
   "DELETE /integrations/brandfetch",
@@ -184,7 +199,7 @@ const EXPECTED_ENDPOINTS = [
 ] as const;
 
 describe("HTTP contract inventory", () => {
-  it("contains the complete 143-route inventory by module", () => {
+  it("contains the complete 144-route inventory by module", () => {
     expect(
       Object.fromEntries(
         Object.entries(contractModules).map(([module, endpoints]) => [
@@ -193,7 +208,7 @@ describe("HTTP contract inventory", () => {
         ]),
       ),
     ).toEqual(EXPECTED_MODULE_COUNTS);
-    expect(allEndpoints).toHaveLength(143);
+    expect(allEndpoints).toHaveLength(156);
     expect(allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`)).toEqual(
       EXPECTED_ENDPOINTS,
     );
@@ -202,7 +217,7 @@ describe("HTTP contract inventory", () => {
   it("has unique method/path pairs and complete endpoint schemas", () => {
     const identities = allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`);
 
-    expect(new Set(identities).size).toBe(143);
+    expect(new Set(identities).size).toBe(156);
 
     for (const endpoint of allEndpoints) {
       expect(endpoint.path).toMatch(/^\/[a-z][a-z0-9/-]*(?::[A-Za-z][A-Za-z0-9_]*)?/);
@@ -242,7 +257,7 @@ describe("representative module contracts", () => {
       transactionsEndpoints.create.body.safeParse({
         type: "expense",
         accountId: crypto.randomUUID(),
-        amount: 1430,
+        amount: 1440,
         currencyCode: "BRL",
         description: "Groceries",
         paymentMethodCode: "pix",

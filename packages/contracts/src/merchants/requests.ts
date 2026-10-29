@@ -15,6 +15,7 @@ export const updateMerchantBodySchema = z
   .object({
     name: z.string().min(1).max(255).optional(),
     domain: institutionDomainInputSchema.nullable().optional(),
+    imageUploadId: z.uuid().nullable().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, "At least one field must be provided");
 export const listMerchantsQuerySchema = createListQuerySchema(

@@ -24,7 +24,7 @@ const goalFields = {
   /** Defaults to today. Contributions before this date still count. */
   startDate: dateInputSchema.optional(),
   targetDate: dateInputSchema.nullable().optional(),
-  /** What you plan to put in every month; drives the completion estimate. */
+  /** What you plan to put in every month; the estimate then gives the finish date. Not with a target date. */
   monthlyContribution: moneyAmountSchema.nullable().optional(),
   /** Investment goals only. */
   expectedReturnBps: expectedReturnBpsSchema.nullable().optional(),
@@ -38,9 +38,17 @@ function refineGoal(
     expectedReturnBps?: number | null;
     startDate?: unknown;
     targetDate?: unknown;
+    monthlyContribution?: number | null;
   },
   ctx: z.RefinementCtx,
 ) {
+  if (value.monthlyContribution && value.targetDate) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["monthlyContribution"],
+      message: "Plan with a monthly amount or a target date, not both",
+    });
+  }
   if (value.expectedReturnBps && value.kind === "savings") {
     ctx.addIssue({
       code: "custom",

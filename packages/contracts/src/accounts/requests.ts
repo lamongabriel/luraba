@@ -73,6 +73,7 @@ export const updateAccountInputSchema = z
     name: z.string().trim().min(1).max(255).optional(),
     institutionName: z.string().trim().min(1).max(255).nullable().optional(),
     institutionDomain: institutionDomainInputSchema.nullable().optional(),
+    imageUploadId: z.uuid().nullable().optional(),
     notes: z.string().trim().max(4000).nullable().optional(),
     details: updateAccountProfileSchema.optional(),
   })

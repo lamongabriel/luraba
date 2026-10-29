@@ -18,6 +18,8 @@ export const accountSchema = z.object({
   institutionName: z.string().nullable(),
   institutionDomain: z.string().nullable(),
   institutionLogoUrl: z.string().nullable(),
+  /** An uploaded picture; shown instead of the institution logo or the type icon. */
+  imageUploadId: z.uuid().nullable(),
   notes: z.string().nullable(),
   classification: accountClassificationSchema,
   type: accountTypeSchema,

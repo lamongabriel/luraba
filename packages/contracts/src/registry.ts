@@ -6,9 +6,11 @@ import { budgetsEndpoints } from "./budgets/endpoints.js";
 import { categoriesEndpoints } from "./categories/endpoints.js";
 import { creditCardsEndpoints } from "./credit-cards/endpoints.js";
 import { currenciesEndpoints } from "./currencies/endpoints.js";
+import { exportsEndpoints } from "./exports/endpoints.js";
 import { goalsEndpoints } from "./goals/endpoints.js";
 import { healthEndpoints } from "./health/endpoints.js";
 import { householdsEndpoints } from "./households/endpoints.js";
+import { importsEndpoints } from "./imports/endpoints.js";
 import { integrationsEndpoints } from "./integrations/endpoints.js";
 import { merchantsEndpoints } from "./merchants/endpoints.js";
 import { notificationsEndpoints } from "./notifications/endpoints.js";
@@ -30,9 +32,11 @@ export const contractModules = {
   categories: categoriesEndpoints,
   currencies: currenciesEndpoints,
   creditCards: creditCardsEndpoints,
+  exports: exportsEndpoints,
   goals: goalsEndpoints,
   health: healthEndpoints,
   households: householdsEndpoints,
+  imports: importsEndpoints,
   integrations: integrationsEndpoints,
   merchants: merchantsEndpoints,
   notifications: notificationsEndpoints,
