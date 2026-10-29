@@ -281,6 +281,13 @@
       "when": 1789018200000,
       "tag": "0039_imports",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1789104600000,
+      "tag": "0040_budget_month_settings",
+      "breakpoints": true
     }
   ]
 }

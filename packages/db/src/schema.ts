@@ -7,6 +7,7 @@ export { authSessionsTable as authSessions } from "./schemas/auth-sessions.schem
 export * from "./schemas/auth-verifications.schema.js";
 export { authVerificationsTable as authVerifications } from "./schemas/auth-verifications.schema.js";
 export * from "./schemas/bills.schema.js";
+export * from "./schemas/budget-month-settings.schema.js";
 export * from "./schemas/budgets.schema.js";
 export * from "./schemas/categories.schema.js";
 export * from "./schemas/credit-card-billing-cycles.schema.js";
