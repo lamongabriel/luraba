@@ -33,6 +33,7 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | Money, dates, recurrence | [packages/domain/README.md](packages/domain/README.md) |
 | Formatting numbers, money, dates; number and date inputs | [docs/formatting.md](docs/formatting.md) (**mandatory**) |
 | Notifications, queues, the worker | [packages/notifications/README.md](packages/notifications/README.md), [packages/queue/README.md](packages/queue/README.md), [apps/worker/README.md](apps/worker/README.md) |
+| Budget page (monthly plan, card settings) | [apps/web/components/budgets/README.md](apps/web/components/budgets/README.md), [apps/api/src/modules/budgets/README.md](apps/api/src/modules/budgets/README.md) |
 | Credit cards UI (overview, card detail, invoices) | [apps/web/components/credit-cards/README.md](apps/web/components/credit-cards/README.md) |
 | The web app | [apps/web/README.md](apps/web/README.md) (data layer, components, forms, permissions) |
 | Showing an account, card, transaction type, merchant, amount, category or tag | [apps/web/components/display/README.md](apps/web/components/display/README.md) (**mandatory**) |

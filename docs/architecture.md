@@ -61,6 +61,14 @@ and grace period pass, otherwise scheduled. Per-person and per-split totals
 (received, outstanding, written off) are computed on read. Splits send no
 notifications.
 
+### Budgets
+
+A month's budget (`budgets`) is a planned amount per income or expense category; actuals are computed on
+read from transactions plus credit-card budget recognitions. How card purchases count (purchase month,
+bill due month or the month after; each installment or the full purchase) defaults on the household and
+can be overridden per month (`budget_month_settings`); purchases are stamped with the resolved setting.
+Details: `apps/api/src/modules/budgets/README.md`, `apps/web/components/budgets/README.md`.
+
 ### Goals
 
 A goal (`goals`) is an amount to save or invest, optionally by a date and at a planned monthly
