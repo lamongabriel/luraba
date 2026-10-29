@@ -106,6 +106,19 @@ export function monthsToReach(
   return null;
 }
 
+/** Monthly amount that grows to the target in `months`, counting the expected return. */
+function requiredMonthlyFor(
+  plan: Pick<GoalPlan, "targetAmount" | "saved" | "expectedReturnBps">,
+  months: number,
+): number {
+  const rate = monthlyRate(plan.expectedReturnBps);
+  if (rate <= 0) return Math.ceil(Math.max(0, plan.targetAmount - plan.saved) / months);
+
+  const growth = (1 + rate) ** months;
+  const needed = (plan.targetAmount - plan.saved * growth) * (rate / (growth - 1));
+  return Math.max(0, Math.ceil(needed));
+}
+
 export function estimateGoal(plan: GoalPlan): GoalEstimate {
   const remaining = Math.max(0, plan.targetAmount - plan.saved);
   const percent =
@@ -119,7 +132,7 @@ export function estimateGoal(plan: GoalPlan): GoalEstimate {
   const dateIsAhead = plan.targetDate !== null && plan.targetDate > plan.today;
   const requiredMonthly =
     remaining > 0 && monthsLeft !== null && dateIsAhead
-      ? Math.ceil(remaining / Math.max(1, monthsLeft))
+      ? requiredMonthlyFor(plan, Math.max(1, monthsLeft))
       : null;
 
   const monthsNeeded = monthsToReach({ ...plan, monthlyContribution: monthly });

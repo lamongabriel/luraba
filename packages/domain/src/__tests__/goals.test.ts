@@ -188,3 +188,20 @@ describe("buildGoalTimeline", () => {
     expect(timeline.length).toBeLessThanOrEqual(121);
   });
 });
+
+describe("required monthly with returns", () => {
+  it("asks for less each month when the money grows", () => {
+    const plan = { ...base, targetAmount: 120_000, targetDate: d("2027-01-15") };
+    const flat = estimateGoal(plan).requiredMonthly as number;
+    const growing = estimateGoal({ ...plan, expectedReturnBps: 1200 }).requiredMonthly as number;
+
+    expect(flat).toBe(10_000);
+    expect(growing).toBeLessThan(flat);
+    // Putting that amount in really does reach the target.
+    const balances = projectBalances(
+      { saved: 0, monthlyContribution: growing, expectedReturnBps: 1200 },
+      12,
+    );
+    expect(balances[12]).toBeGreaterThanOrEqual(120_000);
+  });
+});

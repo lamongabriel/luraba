@@ -120,6 +120,16 @@ export function getUTCDate(date: Date): number {
   return date.getUTCDate();
 }
 
+/** Get UTC day of week (0 = Sunday) from a date. */
+export function getUTCDay(date: Date): number {
+  return date.getUTCDay();
+}
+
+/** Today as `YYYY-MM-DD` in UTC. The one way to default a date field to "today". */
+export function todayISODate(): string {
+  return formatISODate(now());
+}
+
 // ---------------------------------------------------------------------------
 // Timezone
 // ---------------------------------------------------------------------------
