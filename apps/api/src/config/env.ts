@@ -77,6 +77,10 @@ const envSchema = z
     VAPID_SUBJECT: optionalStringEnvSchema,
     SMS_PROVIDER: optionalStringEnvSchema,
     REDIS_URL: optionalStringEnvSchema,
+    IMPORT_WORKER_ENABLED: z
+      .enum(["true", "false"])
+      .default("true")
+      .transform((value) => value === "true"),
     USE_MINIO: booleanEnvSchema.default(true),
     MINIO_ENDPOINT: z.string().default("http://localhost:9000"),
     MINIO_BUCKET: z.string().default("luraba"),
@@ -180,6 +184,7 @@ export const env = {
   push: pushConfig,
   smsProvider: parsedEnv.data.SMS_PROVIDER,
   redisUrl: parsedEnv.data.REDIS_URL,
+  importWorkerEnabled: parsedEnv.data.IMPORT_WORKER_ENABLED,
   storage: storageConfig,
   maxUploadBytes: parsedEnv.data.STORAGE_MAX_UPLOAD_MB * 1024 * 1024,
   integrationsEncryptionKey: parsedEnv.data.INTEGRATIONS_ENCRYPTION_KEY,
