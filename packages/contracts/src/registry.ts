@@ -17,6 +17,7 @@ import { referenceDataEndpoints } from "./reference-data/endpoints.js";
 import { splitsEndpoints } from "./splits/endpoints.js";
 import { tagsEndpoints } from "./tags/endpoints.js";
 import { transactionsEndpoints } from "./transactions/endpoints.js";
+import { uploadsEndpoints } from "./uploads/endpoints.js";
 
 type EndpointGroup = Readonly<Record<string, EndpointContract>>;
 
@@ -39,6 +40,7 @@ export const contractModules = {
   splits: splitsEndpoints,
   tags: tagsEndpoints,
   transactions: transactionsEndpoints,
+  uploads: uploadsEndpoints,
 } as const satisfies Readonly<Record<string, EndpointGroup>>;
 
 export const allEndpoints = Object.values(contractModules).flatMap((endpoints) =>

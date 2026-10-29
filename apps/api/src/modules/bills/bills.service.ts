@@ -25,7 +25,7 @@ import { mapDetailedRows } from "@/modules/transactions/transactions.helpers";
 import * as transactionsRepository from "@/modules/transactions/transactions.repository";
 import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
-import * as repository from "./bills.repository";
+import { billsRepository, type ListBillsQuery } from "./bills.repository";
 import type { BillRecord, OccurrenceRecord } from "./bills.types";
 
 type CreateBillBody = z.output<typeof import("@luraba/contracts/bills").createBillBodySchema>;
@@ -101,9 +101,9 @@ async function buildSummaries(
 ): Promise<Map<string, BillSummary>> {
   const billIds = bills.map((bill) => bill.id);
   const [stats, nextRows, linked] = await Promise.all([
-    repository.getBillStats(billIds, formatISODate(today)),
-    repository.getNextOccurrences(billIds),
-    repository.listLinkedOccurrences(billIds),
+    billsRepository.getBillStats(billIds, formatISODate(today)),
+    billsRepository.getNextOccurrences(billIds),
+    billsRepository.listLinkedOccurrences(billIds),
   ]);
   const transactions = await loadLinkedTransactions(
     context,
@@ -189,7 +189,19 @@ async function presentBills(
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
 async function requireBill(context: HouseholdContext, id: string): Promise<BillRecord> {
-  const bill = await repository.getBill(context, id);
+  const bill = await billsRepository.get(id, context);
+  if (!bill) throw new NotFoundError("Bill");
+  return bill;
+}
+
+/** Scoped update that fails loudly: the bill was just loaded, so a miss means a concurrent delete. */
+async function updateBillRow(
+  context: HouseholdContext,
+  id: string,
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  values: Parameters<typeof billsRepository.update>[2],
+): Promise<BillRecord> {
+  const bill = await billsRepository.update(id, context, values, tx);
   if (!bill) throw new NotFoundError("Bill");
   return bill;
 }
@@ -200,7 +212,7 @@ async function requireOccurrence(
   occurrenceId: string,
 ): Promise<{ bill: BillRecord; occurrence: OccurrenceRecord }> {
   const bill = await requireBill(context, billId);
-  const occurrence = await repository.getOccurrence(billId, occurrenceId);
+  const occurrence = await billsRepository.getOccurrence(billId, occurrenceId);
   if (!occurrence) throw new NotFoundError("Bill occurrence");
   return { bill, occurrence };
 }
@@ -237,7 +249,7 @@ export async function ensureOccurrences(
   const until = addDays(today, OCCURRENCE_HORIZON_DAYS);
   const dueDates = getBillDueDates(toSchedule(bill), until);
 
-  await repository.insertOccurrences(
+  await billsRepository.insertOccurrences(
     executor,
     dueDates.map(({ dueDate, installmentNumber }) => ({
       billId: bill.id,
@@ -258,30 +270,33 @@ export async function createBill(context: HouseholdContext, body: CreateBillBody
   const usesDayOfMonth = MONTHLY_FREQUENCIES.has(body.frequency);
 
   const created = await db.transaction(async (tx) => {
-    const bill = await repository.insertBill(tx, {
-      householdId: context.householdId,
-      createdByUserId: context.userId,
-      name: body.name,
-      description: body.description ?? null,
-      expectedAmount: body.expectedAmount,
-      currencyCode: body.currencyCode,
-      frequency: body.frequency,
-      dayOfMonth: usesDayOfMonth ? (body.dayOfMonth ?? getUTCDate(startDate)) : null,
-      dayOfWeek:
-        body.frequency === "weekly" || body.frequency === "biweekly"
-          ? (body.dayOfWeek ?? startDate.getUTCDay())
-          : null,
-      startDate,
-      endDate: body.endDate ? parseISODate(formatISODate(body.endDate)) : null,
-      installmentCount: body.installmentCount ?? null,
-      categoryId: body.categoryId ?? null,
-      merchantId: body.merchantId ?? null,
-      remindDaysBefore: body.remindDaysBefore ?? null,
-      audience: body.audience ?? "owner",
-    });
+    const bill = await billsRepository.create(
+      context,
+      {
+        createdByUserId: context.userId,
+        name: body.name,
+        description: body.description ?? null,
+        expectedAmount: body.expectedAmount,
+        currencyCode: body.currencyCode,
+        frequency: body.frequency,
+        dayOfMonth: usesDayOfMonth ? (body.dayOfMonth ?? getUTCDate(startDate)) : null,
+        dayOfWeek:
+          body.frequency === "weekly" || body.frequency === "biweekly"
+            ? (body.dayOfWeek ?? startDate.getUTCDay())
+            : null,
+        startDate,
+        endDate: body.endDate ? parseISODate(formatISODate(body.endDate)) : null,
+        installmentCount: body.installmentCount ?? null,
+        categoryId: body.categoryId ?? null,
+        merchantId: body.merchantId ?? null,
+        remindDaysBefore: body.remindDaysBefore ?? null,
+        audience: body.audience ?? "owner",
+      },
+      tx,
+    );
 
     await ensureOccurrences(tx, bill, today);
-    await repository.markFirstOccurrencesPaid(tx, bill.id, body.alreadyPaidCount ?? 0);
+    await billsRepository.markFirstOccurrencesPaid(tx, bill.id, body.alreadyPaidCount ?? 0);
     return bill;
   });
 
@@ -296,9 +311,9 @@ export async function getBill(context: HouseholdContext, id: string): Promise<Bi
 
 export async function listBills(
   context: HouseholdContext,
-  query: Parameters<typeof repository.listBillsPage>[1],
+  query: ListBillsQuery,
 ): Promise<ListResult<Bill>> {
-  const page = await repository.listBillsPage(context, query);
+  const page = await billsRepository.listPage(context, query);
 
   return {
     data: await presentBills(context, page.rows),
@@ -328,7 +343,7 @@ export async function updateBill(
     : existing.startDate;
 
   const updated = await db.transaction(async (tx) => {
-    const bill = await repository.updateBill(tx, id, {
+    const bill = await updateBillRow(context, id, tx, {
       name: body.name,
       description: body.description,
       expectedAmount: body.expectedAmount,
@@ -356,10 +371,10 @@ export async function updateBill(
     });
 
     if (scheduleChanged) {
-      await repository.deleteUnresolvedOccurrencesFrom(tx, id, todayIso);
+      await billsRepository.deleteUnresolvedOccurrencesFrom(tx, id, todayIso);
       if (bill.status === "active") await ensureOccurrences(tx, bill, today);
     } else if (amountChanged) {
-      await repository.setUnresolvedAmountFrom(tx, id, todayIso, bill.expectedAmount);
+      await billsRepository.setUnresolvedAmountFrom(tx, id, todayIso, bill.expectedAmount);
     }
 
     return bill;
@@ -378,10 +393,10 @@ async function setStatus(
   const today = getTodayInTimezone(context.timezone);
 
   const updated = await db.transaction(async (tx) => {
-    const bill = await repository.updateBill(tx, id, { status });
+    const bill = await updateBillRow(context, id, tx, { status });
 
     if (status === "canceled") {
-      await repository.deleteUnresolvedOccurrencesFrom(tx, id, formatISODate(today));
+      await billsRepository.deleteUnresolvedOccurrencesFrom(tx, id, formatISODate(today));
     } else if (status === "active" && existing.status !== "active") {
       await ensureOccurrences(tx, bill, today);
     }
@@ -402,7 +417,7 @@ export const cancelBill = (context: HouseholdContext, id: string) =>
 
 export async function deleteBill(context: HouseholdContext, id: string): Promise<void> {
   await requireBill(context, id);
-  await repository.deleteBill(id);
+  await billsRepository.delete(id, context);
 }
 
 // ─── Occurrences ─────────────────────────────────────────────────────────
@@ -418,11 +433,11 @@ async function presentOccurrence(
 export async function listOccurrences(
   context: HouseholdContext,
   billId: string,
-  query: Parameters<typeof repository.listOccurrencesPage>[1],
+  query: Parameters<typeof billsRepository.listOccurrencesPage>[1],
 ): Promise<ListResult<BillOccurrence>> {
   await requireBill(context, billId);
   const today = getTodayInTimezone(context.timezone);
-  const page = await repository.listOccurrencesPage(billId, query, formatISODate(today));
+  const page = await billsRepository.listOccurrencesPage(billId, query, formatISODate(today));
   const transactions = await loadLinkedTransactions(
     context,
     page.rows.map((row) => row.transactionId),
@@ -443,7 +458,7 @@ export async function updateOccurrenceAmount(
   await requireOccurrence(context, billId, occurrenceId);
   return presentOccurrence(
     context,
-    await repository.updateOccurrence(occurrenceId, { expectedAmount }),
+    await billsRepository.updateOccurrence(occurrenceId, { expectedAmount }),
   );
 }
 
@@ -469,7 +484,7 @@ export async function linkTransaction(
   try {
     return presentOccurrence(
       context,
-      await repository.updateOccurrence(occurrenceId, {
+      await billsRepository.updateOccurrence(occurrenceId, {
         transactionId,
         paidAt: new Date(),
         skippedAt: null,
@@ -492,7 +507,7 @@ export async function markOccurrencePaid(
   await requireOccurrence(context, billId, occurrenceId);
   return presentOccurrence(
     context,
-    await repository.updateOccurrence(occurrenceId, { paidAt: new Date(), skippedAt: null }),
+    await billsRepository.updateOccurrence(occurrenceId, { paidAt: new Date(), skippedAt: null }),
   );
 }
 
@@ -504,7 +519,7 @@ export async function skipOccurrence(
   await requireOccurrence(context, billId, occurrenceId);
   return presentOccurrence(
     context,
-    await repository.updateOccurrence(occurrenceId, {
+    await billsRepository.updateOccurrence(occurrenceId, {
       skippedAt: new Date(),
       paidAt: null,
       transactionId: null,
@@ -520,7 +535,7 @@ export async function resetOccurrence(
   await requireOccurrence(context, billId, occurrenceId);
   return presentOccurrence(
     context,
-    await repository.updateOccurrence(occurrenceId, {
+    await billsRepository.updateOccurrence(occurrenceId, {
       paidAt: null,
       skippedAt: null,
       transactionId: null,
@@ -535,7 +550,7 @@ export async function getForecast(
   query: { from: string; to: string },
 ): Promise<BillForecast> {
   const today = getTodayInTimezone(context.timezone);
-  const rows = await repository.listForecastRows(context, query.from, query.to);
+  const rows = await billsRepository.listForecastRows(context, query.from, query.to);
 
   const items = rows
     .filter((row) => row.skippedAt === null)

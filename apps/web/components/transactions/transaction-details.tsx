@@ -22,6 +22,7 @@ import {
 import { useTransactionInlineUpdates } from "@/components/transactions/use-transaction-inline-updates";
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
+import { AttachmentGallery } from "@/components/uploads/attachment-gallery";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
 
@@ -196,6 +197,18 @@ export function TransactionDetails({
               />
             </SidePanelDetailRow>
           ))}
+        </SidePanelSection>
+      ) : null}
+
+      {row.rowKind === "transaction" ? (
+        <SidePanelSection title="Receipts">
+          <AttachmentGallery
+            targetType="transaction"
+            targetId={row.id}
+            attachmentRole="receipt"
+            addLabel="Add receipt"
+            emptyLabel="Attach a photo or PDF of the receipt to keep it for warranty or returns."
+          />
         </SidePanelSection>
       ) : null}
 

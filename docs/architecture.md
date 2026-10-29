@@ -10,6 +10,7 @@ Luraba is a single product release composed of four workspace packages:
 | `packages/contracts` | Public HTTP endpoint definitions, request schemas, response resources, and wire types |
 | `packages/db` | Drizzle schema and database client shared by the API and worker; migrations live in `apps/api` |
 | `packages/queue` | Queue and job names, job payload schemas, and producer helpers shared by the API and worker |
+| `packages/storage` | Provider-agnostic object storage (S3, R2, GCS, MinIO) used by the uploads module |
 | `packages/domain` | Framework-free finance, date, and recurrency primitives shared safely between applications |
 
 The API owns persistence. The contracts package owns the public REST boundary.
@@ -59,3 +60,11 @@ by hand), skipped, written off ("I'll take the loss"), overdue once the due date
 and grace period pass, otherwise scheduled. Per-person and per-split totals
 (received, outstanding, written off) are computed on read. Splits send no
 notifications.
+
+## File storage
+
+Files are stored as objects in an S3-compatible bucket (`@luraba/storage`), by default a bundled
+MinIO. The API proxies uploads and downloads (`/uploads`), so the bucket stays private. `uploads`
+rows describe stored files and who uploaded them (personal or household scope); `attachments` link an
+upload to any record through a registry of targets and roles (a profile picture, a transaction
+receipt). Unused uploads can be listed and cleaned up. Setup: [storage.md](storage.md).

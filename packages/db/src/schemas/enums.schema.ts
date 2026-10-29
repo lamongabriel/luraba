@@ -8,6 +8,7 @@ import {
   PREFERRED_THEME_VALUES,
 } from "@luraba/contracts/preferences";
 import { SPLIT_STATUSES } from "@luraba/contracts/splits";
+import { UPLOAD_KINDS, UPLOAD_SCOPES } from "@luraba/contracts/uploads";
 import { pgEnum } from "drizzle-orm/pg-core";
 
 // ─── User Preference Enums ───────────────────────────────────────────────
@@ -164,3 +165,7 @@ export const billAudienceEnum = pgEnum("bill_audience", BILL_AUDIENCES);
 
 // ─── Split Enums ─────────────────────────────────────────────────────────
 export const splitStatusEnum = pgEnum("split_status", SPLIT_STATUSES);
+
+// ─── Upload Enums ────────────────────────────────────────────────────────
+export const uploadScopeEnum = pgEnum("upload_scope", UPLOAD_SCOPES);
+export const uploadKindEnum = pgEnum("upload_kind", UPLOAD_KINDS);

@@ -17,6 +17,9 @@ type RepositoryOptions = {
 
 type MutationValues = Record<string, unknown>;
 
+/** `db` or a transaction handle, for writes that must commit together. */
+export type DbExecutor = Pick<typeof db, "select" | "insert" | "update" | "delete">;
+
 export abstract class HouseholdScopedRepository<
   TRecord,
   TCreateValues extends MutationValues = MutationValues,
@@ -40,8 +43,12 @@ export abstract class HouseholdScopedRepository<
     return query as Promise<TRecord[]>;
   }
 
-  async get(id: string, context: HouseholdContext): Promise<TRecord | undefined> {
-    const rows = await db
+  async get(
+    id: string,
+    context: HouseholdContext,
+    executor: DbExecutor = db,
+  ): Promise<TRecord | undefined> {
+    const rows = await executor
       .select()
       .from(this.table)
       .where(and(eq(this.table.id, id), eq(this.table.householdId, context.householdId)));
@@ -49,8 +56,12 @@ export abstract class HouseholdScopedRepository<
     return rows[0] as TRecord | undefined;
   }
 
-  async create(context: HouseholdContext, values: TCreateValues): Promise<TRecord> {
-    const rows = await db
+  async create(
+    context: HouseholdContext,
+    values: TCreateValues,
+    executor: DbExecutor = db,
+  ): Promise<TRecord> {
+    const rows = await executor
       .insert(this.table)
       .values(this.withCreateDefaults(context, values))
       .returning();
@@ -61,8 +72,9 @@ export abstract class HouseholdScopedRepository<
     id: string,
     context: HouseholdContext,
     values: TUpdateValues,
+    executor: DbExecutor = db,
   ): Promise<TRecord | undefined> {
-    const rows = await db
+    const rows = await executor
       .update(this.table)
       .set(this.withUpdateTimestamp(values))
       .where(and(eq(this.table.id, id), eq(this.table.householdId, context.householdId)))
@@ -71,8 +83,12 @@ export abstract class HouseholdScopedRepository<
     return rows[0] as TRecord | undefined;
   }
 
-  async delete(id: string, context: HouseholdContext): Promise<TRecord | undefined> {
-    const rows = await db
+  async delete(
+    id: string,
+    context: HouseholdContext,
+    executor: DbExecutor = db,
+  ): Promise<TRecord | undefined> {
+    const rows = await executor
       .delete(this.table)
       .where(and(eq(this.table.id, id), eq(this.table.householdId, context.householdId)))
       .returning();

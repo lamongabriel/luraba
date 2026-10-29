@@ -1,0 +1,67 @@
+# Agent guide
+
+Luraba is a self-hosted personal-finance workspace: a pnpm + Turborepo monorepo with an
+Express API, a Next.js web app, a BullMQ worker and shared packages.
+
+**Read the README of the folder you are about to change before you change it.** They record the
+conventions that are not obvious from the code. When you add a module, component group or package,
+add its README in the same change, and update the READMEs you rely on if the rules move.
+
+## Where to read
+
+| You are touching | Read first |
+| --- | --- |
+| Anything (layout, commands, workflow) | this file, then [README.md](README.md) and [docs/architecture.md](docs/architecture.md) |
+| An API endpoint, service or repository | [apps/api/README.md](apps/api/README.md) and [apps/api/src/modules/README.md](apps/api/src/modules/README.md) |
+| Controllers, repositories, list/query helpers, errors, responses | [apps/api/src/shared/README.md](apps/api/src/shared/README.md) |
+| A specific API module | `apps/api/src/modules/<module>/README.md` |
+| API tests | [apps/api/src/test/README.md](apps/api/src/test/README.md) |
+| Database tables or migrations | [packages/db/README.md](packages/db/README.md) |
+| HTTP contracts, permissions, wire types | [packages/contracts/README.md](packages/contracts/README.md) |
+| File uploads, attachments, storage backends | [docs/storage.md](docs/storage.md), [packages/storage/README.md](packages/storage/README.md), [apps/api/src/modules/uploads/README.md](apps/api/src/modules/uploads/README.md) |
+| Money, dates, recurrence | [packages/domain/README.md](packages/domain/README.md) |
+| Notifications, queues, the worker | [packages/notifications/README.md](packages/notifications/README.md), [packages/queue/README.md](packages/queue/README.md), [apps/worker/README.md](apps/worker/README.md) |
+| The web app | [apps/web/README.md](apps/web/README.md) (data layer, components, forms, permissions) |
+| Reusable upload UI (galleries, cropper) | [apps/web/components/uploads/README.md](apps/web/components/uploads/README.md) |
+| Deployment (Compose, Coolify) | [docs/deployment.md](docs/deployment.md), [docs/coolify.md](docs/coolify.md) |
+
+## Rules that always apply
+
+1. **Contract first.** A public endpoint is defined once in `packages/contracts` (`defineEndpoint`)
+   and consumed by both the API controller and the web service. The web app never redefines
+   request/response types. Every non-204 endpoint has a response schema, and the inventory in
+   `packages/contracts/src/__tests__/contracts.test.ts` must be updated when you add one.
+2. **Household data goes through `HouseholdScopedRepository`.** Any table with a `household_id`
+   column extends it (get/create/update/delete are filtered by household for you). Never write an
+   update or delete by `id` alone on household data. Tables without a household column (child rows,
+   or rows that can be personal) are reached through a parent you already loaded, and say so in the
+   module README.
+3. **Layering.** route -> controller (`createHouseholdHandler` / `createAuthenticatedHandler`) ->
+   service (business rules, returns wire shapes) -> repository (SQL only). Controllers contain no
+   logic; repositories contain no rules.
+4. **Authorization.** Routes use `requireAccess({ permission })`. New capabilities add a permission
+   in `packages/contracts/src/permissions.ts` and a role mapping there.
+5. **Migrations are hand-written SQL** plus a `_journal.json` entry (`drizzle-kit generate` is
+   broken here). Apply with `pnpm --filter @luraba/api db:migrate`.
+6. **Tests.** API integration tests run with `pnpm test:integration` from `apps/api`, which loads
+   `.env.test`. Never run vitest with `RUN_DB_TESTS=1` directly: it would hit the dev database.
+7. **Drizzle gotcha.** Inside a subquery, a column of the outer table renders unqualified and
+   resolves to the inner table. Qualify it by hand (see `uploads.repository.ts`).
+8. **Files** are stored through `@luraba/storage` and the uploads module, never by writing to disk
+   or calling S3 directly. Attach files to records with the attachment registry
+   (`packages/contracts/src/uploads/catalog.ts`).
+9. **Docs travel with code.** Behavior changes update the nearest README and, for architecture
+   level changes, `docs/architecture.md`.
+10. **Git.** Commit only when asked. Stage files by name (never `git add -A`). Conventional commit
+    messages (`feat(scope): ...`) are enforced by commitlint.
+
+## Commands
+
+```sh
+pnpm dev                     # db + redis + minio, migrations, then api/web/worker watchers
+pnpm typecheck               # whole workspace
+pnpm check                   # biome (lint + format)
+pnpm fix                     # biome --write
+pnpm test                    # unit + API integration tests
+pnpm --filter @luraba/api test:integration src/modules/<module>
+```

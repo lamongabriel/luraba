@@ -57,6 +57,7 @@ variable share one value across the services.
 | `SERVICE_USER_POSTGRES` | Database username for Postgres, migrations, and API. |
 | `SERVICE_PASSWORD_64_POSTGRES` | Database password, 64 alphanumeric characters. |
 | `SERVICE_PASSWORD_64_AUTH` | `AUTH_SECRET`, 64 alphanumeric characters. |
+| `SERVICE_USER_MINIO`, `SERVICE_PASSWORD_64_MINIO` | Credentials of the bundled MinIO file storage. |
 | `SERVICE_HEX_64_INTEGRATIONS` | `INTEGRATIONS_ENCRYPTION_KEY`, exactly 64 hexadecimal characters for AES-256 encryption. |
 
 Keep the generated credentials across deployments. Back up the integration
@@ -133,6 +134,13 @@ Register these OAuth callback URLs, replacing the example origin with yours:
 Brandfetch credentials are saved through Luraba's integration settings, not an
 environment variable. The generated integration encryption key protects those
 stored credentials; it is not a provider API key.
+
+## File storage
+
+Uploads are stored in the bundled `minio` service (volume `minio_data`, no public port; the API
+proxies every download). To use S3, Cloudflare R2 or Google Cloud Storage instead, set
+`USE_MINIO=false` and the `STORAGE_*` variables in Coolify. See [storage.md](storage.md). Back up the
+`minio_data` volume together with `postgres_data`.
 
 ## Operations
 

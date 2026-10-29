@@ -16,7 +16,7 @@ import { mapDetailedRows } from "@/modules/transactions/transactions.helpers";
 import * as transactionsRepository from "@/modules/transactions/transactions.repository";
 import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
-import * as repository from "./splits.repository";
+import { splitsRepository } from "./splits.repository";
 import type { InstallmentRecord, ParticipantRecord, SplitRecord } from "./splits.types";
 
 type SplitInstallmentInput = z.output<typeof splitInstallmentInputSchema>;
@@ -145,8 +145,10 @@ async function buildDetails(
   splits: readonly SplitRecord[],
 ): Promise<SplitDetail[]> {
   const today = getTodayInTimezone(context.timezone);
-  const participantRows = await repository.listParticipants(splits.map((split) => split.id));
-  const installmentRows = await repository.listInstallments(participantRows.map((row) => row.id));
+  const participantRows = await splitsRepository.listParticipants(splits.map((split) => split.id));
+  const installmentRows = await splitsRepository.listInstallments(
+    participantRows.map((row) => row.id),
+  );
   const transactions = await loadLinkedTransactions(context, installmentRows);
 
   const installmentsByParticipant = new Map<string, SplitInstallment[]>();
@@ -191,14 +193,14 @@ async function buildDetails(
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
 async function requireSplit(context: HouseholdContext, id: string): Promise<SplitRecord> {
-  const split = await repository.getSplit(context, id);
+  const split = await splitsRepository.get(id, context);
   if (!split) throw new NotFoundError("Split");
   return split;
 }
 
 async function requireInstallment(context: HouseholdContext, splitId: string, id: string) {
   const split = await requireSplit(context, splitId);
-  const installment = await repository.getInstallment(splitId, id);
+  const installment = await splitsRepository.getInstallment(splitId, id);
   if (!installment) throw new NotFoundError("Installment");
   return { split, installment };
 }
@@ -230,18 +232,18 @@ function toInstallmentRows(participantId: string, installments: readonly SplitIn
 }
 
 async function insertParticipantWithInstallments(
-  executor: Parameters<typeof repository.insertParticipant>[0],
+  executor: Parameters<typeof splitsRepository.insertParticipant>[0],
   splitId: string,
   participant: SplitParticipantInput,
   createdAt?: Date,
 ) {
-  const created = await repository.insertParticipant(executor, {
+  const created = await splitsRepository.insertParticipant(executor, {
     splitId,
     createdAt,
     name: participant.name,
     notes: participant.notes ?? null,
   });
-  await repository.insertInstallments(
+  await splitsRepository.insertInstallments(
     executor,
     toInstallmentRows(created.id, participant.installments ?? []),
   );
@@ -263,15 +265,18 @@ export async function createSplit(
   if (body.sourceTransactionId) await requireTransaction(context, body.sourceTransactionId);
 
   const created = await db.transaction(async (tx) => {
-    const split = await repository.insertSplit(tx, {
-      householdId: context.householdId,
-      createdByUserId: context.userId,
-      title: body.title,
-      description: body.description ?? null,
-      totalAmount: body.totalAmount ?? null,
-      currencyCode: body.currencyCode,
-      sourceTransactionId: body.sourceTransactionId ?? null,
-    });
+    const split = await splitsRepository.create(
+      context,
+      {
+        createdByUserId: context.userId,
+        title: body.title,
+        description: body.description ?? null,
+        totalAmount: body.totalAmount ?? null,
+        currencyCode: body.currencyCode,
+        sourceTransactionId: body.sourceTransactionId ?? null,
+      },
+      tx,
+    );
     // Rows inserted in one transaction share a timestamp, so space them out to keep the order.
     const base = Date.now();
     for (const [index, participant] of body.participants.entries()) {
@@ -289,9 +294,9 @@ export async function getSplit(context: HouseholdContext, id: string): Promise<S
 
 export async function listSplits(
   context: HouseholdContext,
-  query: Parameters<typeof repository.listSplitsPage>[1],
+  query: Parameters<typeof splitsRepository.listPage>[1],
 ): Promise<ListResult<Omit<SplitDetail, "participants">>> {
-  const page = await repository.listSplitsPage(context, query);
+  const page = await splitsRepository.listPage(context, query);
   const details = await buildDetails(context, page.rows);
 
   return {
@@ -313,13 +318,13 @@ export async function updateSplit(
 ): Promise<SplitDetail> {
   await requireSplit(context, id);
   if (body.sourceTransactionId) await requireTransaction(context, body.sourceTransactionId);
-  await repository.updateSplit(id, body);
+  await splitsRepository.update(id, context, body);
   return presentSplit(context, id);
 }
 
 export async function deleteSplit(context: HouseholdContext, id: string): Promise<void> {
   await requireSplit(context, id);
-  await repository.deleteSplit(id);
+  await splitsRepository.delete(id, context);
 }
 
 // ─── Participants ────────────────────────────────────────────────────────
@@ -341,10 +346,10 @@ export async function updateParticipant(
   body: { name?: string; notes?: string | null },
 ): Promise<SplitDetail> {
   await requireSplit(context, splitId);
-  if (!(await repository.getParticipant(splitId, participantId))) {
+  if (!(await splitsRepository.getParticipant(splitId, participantId))) {
     throw new NotFoundError("Participant");
   }
-  await repository.updateParticipant(participantId, body);
+  await splitsRepository.updateParticipant(participantId, body);
   return presentSplit(context, splitId);
 }
 
@@ -354,10 +359,10 @@ export async function removeParticipant(
   participantId: string,
 ): Promise<SplitDetail> {
   await requireSplit(context, splitId);
-  if (!(await repository.getParticipant(splitId, participantId))) {
+  if (!(await splitsRepository.getParticipant(splitId, participantId))) {
     throw new NotFoundError("Participant");
   }
-  await repository.deleteParticipant(participantId);
+  await splitsRepository.deleteParticipant(participantId);
   return presentSplit(context, splitId);
 }
 
@@ -368,13 +373,16 @@ export async function addInstallments(
   body: AddSplitInstallmentsInput,
 ): Promise<SplitDetail> {
   await requireSplit(context, splitId);
-  const participant: ParticipantRecord | undefined = await repository.getParticipant(
+  const participant: ParticipantRecord | undefined = await splitsRepository.getParticipant(
     splitId,
     participantId,
   );
   if (!participant) throw new NotFoundError("Participant");
 
-  await repository.insertInstallments(db, toInstallmentRows(participantId, body.installments));
+  await splitsRepository.insertInstallments(
+    db,
+    toInstallmentRows(participantId, body.installments),
+  );
   return presentSplit(context, splitId);
 }
 
@@ -410,7 +418,7 @@ export async function updateInstallment(
 
   return presentInstallment(
     context,
-    await repository.updateInstallment(installmentId, {
+    await splitsRepository.updateInstallment(installmentId, {
       dueDate,
       graceUntil,
       expectedAmount: body.expectedAmount,
@@ -424,7 +432,7 @@ export async function removeInstallment(
   installmentId: string,
 ): Promise<void> {
   await requireInstallment(context, splitId, installmentId);
-  await repository.deleteInstallment(installmentId);
+  await splitsRepository.deleteInstallment(installmentId);
 }
 
 const CLEARED = { receivedAt: null, skippedAt: null, writtenOffAt: null, transactionId: null };
@@ -448,7 +456,7 @@ export async function linkInstallment(
   try {
     return presentInstallment(
       context,
-      await repository.updateInstallment(installmentId, {
+      await splitsRepository.updateInstallment(installmentId, {
         ...CLEARED,
         transactionId,
         receivedAt: new Date(),
@@ -471,7 +479,7 @@ async function setResolution(
   await requireInstallment(context, splitId, installmentId);
   return presentInstallment(
     context,
-    await repository.updateInstallment(installmentId, { ...CLEARED, ...values }),
+    await splitsRepository.updateInstallment(installmentId, { ...CLEARED, ...values }),
   );
 }
 

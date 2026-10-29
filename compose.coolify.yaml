@@ -14,6 +14,20 @@ x-api-environment: &api-environment
   DB_PASSWORD: ${SERVICE_PASSWORD_64_POSTGRES}
   DB_SSL: "false"
   REDIS_URL: redis://redis:6379
+  # File storage: the bundled MinIO by default; set USE_MINIO=false and the STORAGE_* variables
+  # (S3, R2, Google Cloud Storage...) to use an external bucket instead. See docs/storage.md.
+  USE_MINIO: ${USE_MINIO:-true}
+  MINIO_ENDPOINT: http://minio:9000
+  MINIO_BUCKET: luraba
+  MINIO_ROOT_USER: ${SERVICE_USER_MINIO}
+  MINIO_ROOT_PASSWORD: ${SERVICE_PASSWORD_64_MINIO}
+  STORAGE_BUCKET: ${STORAGE_BUCKET:-}
+  STORAGE_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY_ID:-}
+  STORAGE_SECRET_ACCESS_KEY: ${STORAGE_SECRET_ACCESS_KEY:-}
+  STORAGE_ENDPOINT: ${STORAGE_ENDPOINT:-}
+  STORAGE_REGION: ${STORAGE_REGION:-auto}
+  STORAGE_KEY_PREFIX: ${STORAGE_KEY_PREFIX:-}
+  STORAGE_MAX_UPLOAD_MB: ${STORAGE_MAX_UPLOAD_MB:-20}
   AUTH_SECRET: ${SERVICE_PASSWORD_64_AUTH}
   # AES-256 requires exactly 64 hexadecimal characters (32 bytes).
   INTEGRATIONS_ENCRYPTION_KEY: ${SERVICE_HEX_64_INTEGRATIONS}
@@ -87,6 +101,22 @@ services:
       timeout: 5s
       retries: 12
 
+  minio:
+    build:
+      context: ./docker/minio
+    restart: unless-stopped
+    command: ["server", "/data"]
+    environment:
+      MINIO_ROOT_USER: ${SERVICE_USER_MINIO}
+      MINIO_ROOT_PASSWORD: ${SERVICE_PASSWORD_64_MINIO}
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -T 5 -O - http://127.0.0.1:9000/minio/health/live >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   migrate:
     build:
       context: .
@@ -115,6 +145,8 @@ services:
       migrate:
         condition: service_completed_successfully
       redis:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     healthcheck:
       test:
@@ -181,3 +213,4 @@ configs:
 volumes:
   postgres_data:
   redis_data:
+  minio_data:

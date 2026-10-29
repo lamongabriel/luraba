@@ -77,6 +77,19 @@ const envSchema = z
     VAPID_SUBJECT: optionalStringEnvSchema,
     SMS_PROVIDER: optionalStringEnvSchema,
     REDIS_URL: optionalStringEnvSchema,
+    USE_MINIO: booleanEnvSchema.default(true),
+    MINIO_ENDPOINT: z.string().default("http://localhost:9000"),
+    MINIO_BUCKET: z.string().default("luraba"),
+    MINIO_ROOT_USER: z.string().default("luraba"),
+    MINIO_ROOT_PASSWORD: z.string().default("luraba-secret-key"),
+    STORAGE_BUCKET: optionalStringEnvSchema,
+    STORAGE_ACCESS_KEY_ID: optionalStringEnvSchema,
+    STORAGE_SECRET_ACCESS_KEY: optionalStringEnvSchema,
+    STORAGE_ENDPOINT: optionalStringEnvSchema,
+    STORAGE_REGION: optionalStringEnvSchema,
+    STORAGE_FORCE_PATH_STYLE: optionalBooleanEnvSchema,
+    STORAGE_KEY_PREFIX: optionalStringEnvSchema,
+    STORAGE_MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(500).default(20),
     INTEGRATIONS_ENCRYPTION_KEY: hexSecretEnvSchema("INTEGRATIONS_ENCRYPTION_KEY", 64),
     RUN_DB_TESTS: booleanEnvSchema.default(false),
   })
@@ -120,6 +133,32 @@ const pushConfig =
       }
     : undefined;
 
+// USE_MINIO (the default) points storage at the bundled MinIO service; set it to false to use
+// the STORAGE_* variables for S3, Cloudflare R2, Google Cloud Storage or any S3-compatible bucket.
+const storageConfig = parsedEnv.data.USE_MINIO
+  ? {
+      bucket: parsedEnv.data.MINIO_BUCKET,
+      accessKeyId: parsedEnv.data.MINIO_ROOT_USER,
+      secretAccessKey: parsedEnv.data.MINIO_ROOT_PASSWORD,
+      endpoint: parsedEnv.data.MINIO_ENDPOINT,
+      region: "us-east-1",
+      forcePathStyle: true,
+      keyPrefix: parsedEnv.data.STORAGE_KEY_PREFIX,
+    }
+  : parsedEnv.data.STORAGE_BUCKET &&
+      parsedEnv.data.STORAGE_ACCESS_KEY_ID &&
+      parsedEnv.data.STORAGE_SECRET_ACCESS_KEY
+    ? {
+        bucket: parsedEnv.data.STORAGE_BUCKET,
+        accessKeyId: parsedEnv.data.STORAGE_ACCESS_KEY_ID,
+        secretAccessKey: parsedEnv.data.STORAGE_SECRET_ACCESS_KEY,
+        endpoint: parsedEnv.data.STORAGE_ENDPOINT,
+        region: parsedEnv.data.STORAGE_REGION,
+        forcePathStyle: parsedEnv.data.STORAGE_FORCE_PATH_STYLE,
+        keyPrefix: parsedEnv.data.STORAGE_KEY_PREFIX,
+      }
+    : undefined;
+
 export const env = {
   nodeEnv: parsedEnv.data.NODE_ENV,
   port: parsedEnv.data.PORT,
@@ -141,6 +180,8 @@ export const env = {
   push: pushConfig,
   smsProvider: parsedEnv.data.SMS_PROVIDER,
   redisUrl: parsedEnv.data.REDIS_URL,
+  storage: storageConfig,
+  maxUploadBytes: parsedEnv.data.STORAGE_MAX_UPLOAD_MB * 1024 * 1024,
   integrationsEncryptionKey: parsedEnv.data.INTEGRATIONS_ENCRYPTION_KEY,
   runDbTests: parsedEnv.data.RUN_DB_TESTS,
 } as const;

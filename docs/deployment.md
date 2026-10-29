@@ -35,3 +35,10 @@ domain, proxy, or non-default port.
 - Back up the Postgres volume or database before upgrades.
 - Place TLS termination and public routing behind a reverse proxy appropriate
   for the deployment environment.
+
+## File storage
+
+`compose.yaml` runs a `minio` service (built from `docker/minio`) for uploads, enabled by default
+(`USE_MINIO=true`). Set the `MINIO_*` credentials in `apps/api/.env` before exposing the host, and back
+up the `minio_data` volume with the database. To use an external bucket, set `USE_MINIO=false` and the
+`STORAGE_*` variables; see [storage.md](storage.md).

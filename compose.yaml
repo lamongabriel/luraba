@@ -12,6 +12,7 @@ x-api-environment: &api-environment
   BASE_URL: ${BASE_URL:-http://localhost:${API_PORT:-3001}}
   FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:${WEB_PORT:-3000}}
   REDIS_URL: redis://redis:6379
+  MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
 
 services:
   db:
@@ -45,6 +46,26 @@ services:
       timeout: 5s
       retries: 12
 
+  # S3-compatible object storage on a local volume. Used when USE_MINIO=true (the default).
+  minio:
+    build:
+      context: ./docker/minio
+    restart: unless-stopped
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-luraba}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-luraba-secret-key}
+    ports:
+      - "127.0.0.1:${MINIO_PORT:-9000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -T 5 -O - http://127.0.0.1:9000/minio/health/live >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   migrate:
     build:
       context: .
@@ -74,6 +95,8 @@ services:
       migrate:
         condition: service_completed_successfully
       redis:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q -T 5 -O - http://127.0.0.1:3001/health >/dev/null"]
@@ -123,3 +146,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  minio_data:

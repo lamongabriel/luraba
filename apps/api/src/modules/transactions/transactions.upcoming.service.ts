@@ -6,7 +6,7 @@ import {
 import { addDays, formatISODate, getTodayInTimezone } from "@luraba/domain";
 import type { z } from "zod";
 import type { HouseholdContext } from "@/config/permissions";
-import * as billsRepository from "@/modules/bills/bills.repository";
+import { billsRepository } from "@/modules/bills/bills.repository";
 import { createListMeta } from "@/shared/list";
 import * as repository from "./transactions.analytics.repository";
 import type { TransactionFilterQuery } from "./transactions.query";

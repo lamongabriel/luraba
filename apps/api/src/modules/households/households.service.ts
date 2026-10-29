@@ -23,6 +23,7 @@ import { currenciesRepository } from "@/modules/currencies/currencies.repository
 import { fxService } from "@/modules/fx/fx.service";
 import { mailService } from "@/modules/mail/mail.service";
 import { renderHouseholdInvitation } from "@/modules/mail/mail.templates";
+import * as uploadsService from "@/modules/uploads/uploads.service";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
 import { logger } from "@/shared/logger";
@@ -255,9 +256,13 @@ export async function deleteHousehold(
     throw new ForbiddenError("Only a household owner can delete the household");
   }
 
+  const objectKeys = await uploadsService.collectHouseholdObjectKeys(householdId);
+
   if (!(await householdsRepository.deleteHousehold(householdId))) {
     throw new NotFoundError("Household");
   }
+
+  await uploadsService.deleteObjects(objectKeys);
 }
 
 export async function createHousehold(

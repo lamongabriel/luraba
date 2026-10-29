@@ -34,5 +34,6 @@ export * from "./schemas/splits.schema.js";
 export * from "./schemas/tags.schema.js";
 export * from "./schemas/transaction-tags.schema.js";
 export * from "./schemas/transactions.schema.js";
+export * from "./schemas/uploads.schema.js";
 export * from "./schemas/users.schema.js";
 export { usersTable as users } from "./schemas/users.schema.js";

@@ -17,6 +17,7 @@ import {
   splitsEndpoints,
   tagsEndpoints,
   transactionsEndpoints,
+  uploadsEndpoints,
 } from "@luraba/contracts";
 import { Router } from "express";
 
@@ -37,6 +38,7 @@ import referenceDataRouter from "@/modules/reference-data/reference-data.routes"
 import splitsRouter from "@/modules/splits/splits.routes";
 import tagsRouter from "@/modules/tags/tags.routes";
 import transactionsRouter from "@/modules/transactions/transactions.routes";
+import uploadsRouter, { attachmentsRouter } from "@/modules/uploads/uploads.routes";
 
 const router = Router();
 
@@ -57,5 +59,7 @@ router.use(getEndpointBasePath(paymentMethodsEndpoints.list), paymentMethodsRout
 router.use(getEndpointBasePath(referenceDataEndpoints.getLocations), referenceDataRouter);
 router.use(getEndpointBasePath(tagsEndpoints.list), tagsRouter);
 router.use(getEndpointBasePath(transactionsEndpoints.list), transactionsRouter);
+router.use(getEndpointBasePath(uploadsEndpoints.list), uploadsRouter);
+router.use(getEndpointBasePath(uploadsEndpoints.listAttachments), attachmentsRouter);
 
 export default router;

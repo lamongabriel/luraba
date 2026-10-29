@@ -22,3 +22,4 @@ export * from "./registry.js";
 export * from "./splits/index.js";
 export * from "./tags/index.js";
 export * from "./transactions/index.js";
+export * from "./uploads/index.js";

@@ -18,7 +18,7 @@
     "pnpm": ">=10.28.2"
   },
   "scripts": {
-    "dev": "docker compose up -d db redis && pnpm --filter @luraba/api db:migrate && turbo run dev",
+    "dev": "docker compose up -d db redis minio && pnpm --filter @luraba/api db:migrate && turbo run dev",
     "build": "turbo run build",
     "check": "biome check .",
     "fix": "biome check --write .",
