@@ -2,8 +2,8 @@
 
 import type { SplitInstallment } from "@luraba/contracts";
 import * as React from "react";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateInput, MoneyInput } from "@/components/ui/masked-input";
 import { Modal, ModalBody, ModalContent, ModalFooter } from "@/components/ui/modal";
 import { Typography } from "@/components/ui/typography";
 import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance";
@@ -45,31 +45,15 @@ export function AdjustInstallmentModal({
         <ModalBody className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="adjust-due">Due date</Label>
-            <Input
-              id="adjust-due"
-              type="date"
-              value={dueDate}
-              onChange={(event) => setDueDate(event.target.value)}
-            />
+            <DateInput id="adjust-due" value={dueDate} onValueChange={setDueDate} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="adjust-grace">Grace period until</Label>
-            <Input
-              id="adjust-grace"
-              type="date"
-              value={graceUntil}
-              onChange={(event) => setGraceUntil(event.target.value)}
-            />
+            <DateInput id="adjust-grace" value={graceUntil} onValueChange={setGraceUntil} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="adjust-amount">Amount</Label>
-            <Input
-              id="adjust-amount"
-              type="number"
-              step="0.01"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-            />
+            <MoneyInput id="adjust-amount" value={amount} onValueChange={setAmount} />
           </div>
           {mutation.errorMessage ? (
             <Typography variant="small-destructive">{mutation.errorMessage}</Typography>

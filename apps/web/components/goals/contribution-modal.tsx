@@ -1,11 +1,12 @@
 "use client";
 
 import type { GoalContribution } from "@luraba/contracts";
-import { formatISODate } from "@luraba/domain";
+import { todayISODate } from "@luraba/domain";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateInput, MoneyInput } from "@/components/ui/masked-input";
 import { Modal, ModalBody, ModalContent, ModalFooter } from "@/components/ui/modal";
 import { Typography } from "@/components/ui/typography";
 import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance";
@@ -35,7 +36,7 @@ export function ContributionModal({
     if (!open) return;
     setWithdrawal(Boolean(contribution && contribution.amount < 0));
     setAmount(contribution ? String(minorToMajorUnits(Math.abs(contribution.amount), 2)) : "");
-    setContributedOn(contribution?.contributedOn ?? formatISODate(new Date()));
+    setContributedOn(contribution?.contributedOn ?? todayISODate());
     setNote(contribution?.note ?? "");
   }, [open, contribution]);
 
@@ -92,22 +93,14 @@ export function ContributionModal({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="contribution-amount">Amount</Label>
-            <Input
-              id="contribution-amount"
-              type="number"
-              step="0.01"
-              min="0"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-            />
+            <MoneyInput id="contribution-amount" value={amount} onValueChange={setAmount} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="contribution-date">Date</Label>
-            <Input
+            <DateInput
               id="contribution-date"
-              type="date"
               value={contributedOn}
-              onChange={(event) => setContributedOn(event.target.value)}
+              onValueChange={setContributedOn}
             />
           </div>
           <div className="space-y-1.5">

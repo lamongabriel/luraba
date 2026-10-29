@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Bill, BillFrequency } from "@luraba/contracts";
-import { formatISODate } from "@luraba/domain";
+import { getUTCDate, getUTCDay, now, todayISODate } from "@luraba/domain";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -20,6 +20,7 @@ import {
 import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance";
 import { useCreateBillMutation, useUpdateBillMutation } from "@/mutations/bills/use-bill-mutations";
 import { useCurrenciesQuery } from "@/queries/currencies/use-currencies-query";
+import { useDefaultCurrencyCode } from "@/stores/auth-session-store";
 
 const numberField = z.union([z.number(), z.literal("")]);
 
@@ -52,15 +53,15 @@ const AUDIENCE_OPTIONS = [
   { value: "household", label: "Everyone in the household" },
 ];
 
-function getDefaults(bill: Bill | undefined, precision: number): Values {
+function getDefaults(bill: Bill | undefined, precision: number, defaultCurrency: string): Values {
   return {
     name: bill?.name ?? "",
     amount: bill ? minorToMajorUnits(bill.expectedAmount, precision) : "",
-    currencyCode: bill?.currencyCode ?? "BRL",
+    currencyCode: bill?.currencyCode ?? defaultCurrency,
     frequency: bill?.frequency ?? "monthly",
-    dayOfMonth: bill?.dayOfMonth ?? new Date().getDate(),
-    dayOfWeek: String(bill?.dayOfWeek ?? new Date().getDay()),
-    startDate: bill?.startDate ?? formatISODate(new Date()),
+    dayOfMonth: bill?.dayOfMonth ?? getUTCDate(now()),
+    dayOfWeek: String(bill?.dayOfWeek ?? getUTCDay(now())),
+    startDate: bill?.startDate ?? todayISODate(),
     duration: bill?.installmentCount ? "installments" : bill?.endDate ? "until" : "forever",
     installmentCount: bill?.installmentCount ?? "",
     endDate: bill?.endDate ?? "",
@@ -80,11 +81,12 @@ function BillForm({
   onSuccess: () => void;
 }) {
   const isEdit = Boolean(bill);
+  const defaultCurrency = useDefaultCurrencyCode();
   const currencies = useCurrenciesQuery({ perPage: 100 });
   const currencyList = currencies.data?.data ?? [];
 
   const form = useForm<Values>({
-    defaultValues: getDefaults(bill, 2),
+    defaultValues: getDefaults(bill, 2, defaultCurrency),
     resolver: zodResolver(schema),
   });
 
@@ -164,8 +166,7 @@ function BillForm({
           control={form.control}
           name="amount"
           label="Expected amount"
-          inputType="number"
-          step="0.01"
+          inputType="money"
           description="What you usually pay. You can change it per payment later."
           disabled={isPending}
         />
@@ -196,7 +197,7 @@ function BillForm({
           control={form.control}
           name="dayOfMonth"
           label="Day of the month"
-          inputType="number"
+          inputType="integer"
           description="Short months use their last day."
           disabled={isPending}
         />
@@ -233,7 +234,7 @@ function BillForm({
           control={form.control}
           name="installmentCount"
           label="Number of payments"
-          inputType="number"
+          inputType="integer"
           description="A loan or land plan with 48 installments, for example."
           disabled={isPending}
         />
@@ -252,7 +253,7 @@ function BillForm({
           control={form.control}
           name="alreadyPaidCount"
           label="Already paid"
-          inputType="number"
+          inputType="integer"
           description="Payments made before you started tracking here, counted from the first one."
           disabled={isPending}
         />
@@ -262,7 +263,7 @@ function BillForm({
         control={form.control}
         name="remindDaysBefore"
         label="Remind me early (days)"
-        inputType="number"
+        inputType="integer"
         description="Optional. You're always reminded on the due date and when it's overdue."
         disabled={isPending}
       />

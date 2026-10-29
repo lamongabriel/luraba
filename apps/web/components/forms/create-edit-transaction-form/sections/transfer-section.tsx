@@ -5,7 +5,7 @@ import { type Control, Controller } from "react-hook-form";
 import { FormItem } from "@/components/forms/form-item";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/masked-input";
 import { Typography } from "@/components/ui/typography";
 
 import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema";
@@ -71,8 +71,7 @@ export function TransferSection({
           control={control}
           name="amount"
           label={`Sent amount${fromCurrencyCode ? ` (${fromCurrencyCode})` : ""}`}
-          inputType="number"
-          step="any"
+          inputType="money"
           placeholder="0.00"
         />
         <Controller
@@ -84,16 +83,12 @@ export function TransferSection({
                 Received amount
                 {toCurrencyCode ? ` (${toCurrencyCode})` : ""}
               </FieldLabel>
-              <Input
+              <MoneyInput
                 id="toAmount"
-                type="number"
-                step="any"
                 value={field.value}
-                placeholder="0.00"
                 aria-invalid={Boolean(fieldState.error)}
                 onBlur={field.onBlur}
-                onChange={(event) => {
-                  const value = event.target.value;
+                onValueChange={(value) => {
                   field.onChange(value === "" ? "" : Number(value));
                   if (isCrossCurrency) onUseCustomAmount();
                 }}

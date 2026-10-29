@@ -42,8 +42,7 @@ export function CreditCardPurchaseSection({
         control={control}
         name="amount"
         label="Purchase amount"
-        inputType="number"
-        step="any"
+        inputType="money"
         placeholder="0.00"
       />
       <div className="grid gap-3 sm:grid-cols-2">

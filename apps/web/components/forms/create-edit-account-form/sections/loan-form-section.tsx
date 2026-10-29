@@ -18,16 +18,15 @@ export function LoanFormSection({ disabled, form }: CreateEditAccountSectionProp
         control={form.control}
         name="originalPrincipal"
         label="Original principal"
-        inputType="number"
-        step="0.01"
+        inputType="money"
         disabled={disabled}
       />
       <FormItem
         control={form.control}
         name="annualInterestRate"
         label="Annual interest rate"
-        inputType="number"
-        step="0.0001"
+        inputType="decimal"
+        decimals={4}
         disabled={disabled}
       />
       <FormItem
@@ -64,8 +63,7 @@ export function LoanFormSection({ disabled, form }: CreateEditAccountSectionProp
         control={form.control}
         name="paymentAmount"
         label="Payment amount"
-        inputType="number"
-        step="0.01"
+        inputType="money"
         disabled={disabled}
       />
       <FormItem

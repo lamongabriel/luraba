@@ -63,6 +63,7 @@ function buildAccount(
     details,
     institutionDomain: null,
     institutionLogoUrl: null,
+    imageUploadId: null,
     institutionName: "Chase",
     name: "Main account",
     notes: null,

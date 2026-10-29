@@ -18,8 +18,7 @@ export function CreateAccountStartingBalanceSection({ disabled, form, type }: Pr
           control={form.control}
           name="openingBalance"
           label={type === "loan" || type === "other_liability" ? "Amount owed" : "Opening balance"}
-          inputType="number"
-          step="0.01"
+          inputType="money"
           disabled={disabled}
         />
         <FormItem

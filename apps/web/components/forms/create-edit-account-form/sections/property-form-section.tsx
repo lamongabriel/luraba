@@ -34,8 +34,8 @@ export function PropertyFormSection({ disabled, form }: CreateEditAccountSection
         control={form.control}
         name="area"
         label="Area"
-        inputType="number"
-        step="0.01"
+        inputType="decimal"
+        decimals={2}
         disabled={disabled}
       />
       <FormItem

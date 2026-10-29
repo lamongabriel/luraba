@@ -4,8 +4,8 @@ import { formatShortDate } from "@luraba/domain";
 import * as React from "react";
 import { DataTableSearchInput } from "@/components/data-table/data-table-search-input";
 import { MoneyValue } from "@/components/finance/money-value";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MoneyInput } from "@/components/ui/masked-input";
 import { Modal, ModalBody, ModalContent, ModalFooter } from "@/components/ui/modal";
 import { Typography } from "@/components/ui/typography";
 import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance";
@@ -112,14 +112,7 @@ export function LinkGoalTransactionModal({
           {selected ? (
             <div className="space-y-1.5">
               <Label htmlFor="link-goal-amount">Amount that counts toward the goal</Label>
-              <Input
-                id="link-goal-amount"
-                type="number"
-                step="0.01"
-                min="0"
-                value={amount}
-                onChange={(event) => setAmount(event.target.value)}
-              />
+              <MoneyInput id="link-goal-amount" value={amount} onValueChange={setAmount} />
               {tooMuch ? (
                 <Typography variant="small-destructive">
                   That is more than the transaction moved.

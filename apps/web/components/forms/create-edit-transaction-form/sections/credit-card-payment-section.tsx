@@ -51,8 +51,7 @@ export function CreditCardPaymentSection({
         control={control}
         name="amount"
         label="Payment amount"
-        inputType="number"
-        step="any"
+        inputType="money"
         placeholder="0.00"
       />
     </TransactionFormSection>

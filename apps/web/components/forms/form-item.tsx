@@ -16,6 +16,7 @@ import { IconPickerControl } from "@/components/forms/form-icon-picker";
 import { TagSelectControl } from "@/components/forms/form-tag-select";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { MoneyInput, NumberInput } from "@/components/ui/masked-input";
 import {
   Select,
   SelectContent,
@@ -41,8 +42,16 @@ type BaseFormItemProps<TFieldValues extends FieldValues> = {
 
 type InputFormItemProps<TFieldValues extends FieldValues> = BaseFormItemProps<TFieldValues> & {
   type?: "input";
-  inputType?: "text" | "email" | "password" | "number" | "date";
-  step?: string;
+  /**
+   * `money` (amount in major units, `precision` decimal places), `integer` and `decimal` (counts,
+   * days, rates; `decimals` places) use the shared masked inputs. Never use a raw number input.
+   */
+  inputType?: "text" | "email" | "password" | "money" | "integer" | "decimal" | "date";
+  /** Currency decimal places for `money`. Defaults to 2. */
+  precision?: number;
+  /** Fraction digits for `decimal`. Defaults to 2. */
+  decimals?: number;
+  allowNegative?: boolean;
   readOnly?: boolean;
   format?: (value: string) => string;
   inputClassName?: string;
@@ -163,48 +172,60 @@ export function FormItem<TFieldValues extends FieldValues>(props: FormItemProps<
               {labelAdornment}
             </FieldLabel>
 
-            {(props.type === undefined || props.type === "input") && (
-              <Input
-                {...field}
-                id={inputId}
-                type={props.inputType ?? "text"}
-                step={props.step}
-                value={
-                  typeof field.value === "string" || typeof field.value === "number"
-                    ? field.value
-                    : (field.value ?? "")
-                }
-                placeholder={placeholder}
-                autoComplete={autoComplete}
-                readOnly={props.readOnly}
-                disabled={disabled}
-                aria-invalid={hasError}
-                className={props.inputClassName}
-                onChange={(event) => {
-                  if (props.inputType === "number") {
-                    const nextValue = event.target.value;
+            {(props.type === undefined || props.type === "input") &&
+              (props.inputType === "money" ||
+                props.inputType === "integer" ||
+                props.inputType === "decimal") && (
+                <MaskedFormInput
+                  id={inputId}
+                  kind={props.inputType}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                  ref={field.ref}
+                  precision={props.precision}
+                  decimals={props.decimals}
+                  allowNegative={props.allowNegative}
+                  placeholder={placeholder}
+                  readOnly={props.readOnly}
+                  disabled={disabled}
+                  aria-invalid={hasError}
+                  className={props.inputClassName}
+                />
+              )}
 
-                    if (nextValue === "") {
-                      field.onChange("");
-                      return;
+            {(props.type === undefined || props.type === "input") &&
+              props.inputType !== "money" &&
+              props.inputType !== "integer" &&
+              props.inputType !== "decimal" && (
+                <Input
+                  {...field}
+                  id={inputId}
+                  type={props.inputType ?? "text"}
+                  value={
+                    typeof field.value === "string" || typeof field.value === "number"
+                      ? field.value
+                      : (field.value ?? "")
+                  }
+                  placeholder={placeholder}
+                  autoComplete={autoComplete}
+                  readOnly={props.readOnly}
+                  disabled={disabled}
+                  aria-invalid={hasError}
+                  className={props.inputClassName}
+                  onChange={(event) => {
+                    field.onChange(event.target.value);
+                  }}
+                  onBlur={(event) => {
+                    if (props.format) {
+                      field.onChange(props.format(event.target.value));
                     }
 
-                    const parsed = Number(nextValue);
-                    field.onChange(Number.isNaN(parsed) ? "" : parsed);
-                    return;
-                  }
-
-                  field.onChange(event.target.value);
-                }}
-                onBlur={(event) => {
-                  if (props.format && props.inputType !== "number") {
-                    field.onChange(props.format(event.target.value));
-                  }
-
-                  field.onBlur();
-                }}
-              />
-            )}
+                    field.onBlur();
+                  }}
+                />
+              )}
 
             {props.type === "select" && (
               <Select
@@ -325,46 +346,19 @@ export function FormItem<TFieldValues extends FieldValues>(props: FormItemProps<
             )}
 
             {props.type === "int" && (
-              <Input
-                {...field}
+              <MaskedFormInput
                 id={inputId}
-                type="number"
-                step="1"
-                inputMode="numeric"
-                value={
-                  typeof field.value === "string" || typeof field.value === "number"
-                    ? field.value
-                    : (field.value ?? "")
-                }
+                kind="integer"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                name={field.name}
+                ref={field.ref}
                 placeholder={placeholder}
                 readOnly={props.readOnly}
                 disabled={disabled}
                 aria-invalid={hasError}
                 className={props.inputClassName}
-                onChange={(event) => {
-                  const nextValue = event.target.value;
-
-                  if (nextValue === "") {
-                    field.onChange("");
-                    return;
-                  }
-
-                  const parsed = Number(nextValue);
-                  field.onChange(Number.isNaN(parsed) ? "" : parsed);
-                }}
-                onBlur={(event) => {
-                  const nextValue = event.target.value;
-
-                  if (nextValue !== "") {
-                    const parsed = Number(nextValue);
-
-                    if (!Number.isNaN(parsed)) {
-                      field.onChange(Math.round(parsed));
-                    }
-                  }
-
-                  field.onBlur();
-                }}
               />
             )}
 
@@ -375,6 +369,46 @@ export function FormItem<TFieldValues extends FieldValues>(props: FormItemProps<
           </Field>
         );
       }}
+    />
+  );
+}
+
+/** Adapts the masked inputs (canonical strings) to react-hook-form's number | "" field values. */
+function MaskedFormInput({
+  kind,
+  value,
+  onChange,
+  precision,
+  decimals,
+  allowNegative,
+  ...props
+}: Omit<React.ComponentProps<typeof MoneyInput>, "value" | "onValueChange" | "onChange"> & {
+  kind: "money" | "integer" | "decimal";
+  value: unknown;
+  onChange: (value: number | "") => void;
+  precision?: number;
+  decimals?: number;
+}) {
+  const emit = (text: string) => {
+    const parsed = Number(text);
+    onChange(text === "" || text === "-" || Number.isNaN(parsed) ? "" : parsed);
+  };
+  const shown = typeof value === "number" || typeof value === "string" ? value : "";
+  return kind === "money" ? (
+    <MoneyInput
+      {...props}
+      value={shown}
+      onValueChange={emit}
+      precision={precision}
+      allowNegative={allowNegative}
+    />
+  ) : (
+    <NumberInput
+      {...props}
+      value={shown}
+      onValueChange={emit}
+      decimals={kind === "integer" ? 0 : (decimals ?? 2)}
+      allowNegative={allowNegative}
     />
   );
 }

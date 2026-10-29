@@ -4,13 +4,13 @@ import { CancelCircleIcon, CirclePlusIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { Column } from "@tanstack/react-table";
 import * as React from "react";
-
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NumberInput } from "@/components/ui/masked-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
+import { formatNumber } from "@/lib/finance";
 import { cn } from "@/lib/utils";
 
 type RangeValue = [number, number];
@@ -102,14 +102,19 @@ export function FilterSlider<TData>(props: FilterSliderProps<TData>) {
   }, [max, min, value]);
 
   const formatValue = React.useCallback((item: number) => {
-    return item.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    return formatNumber(item, "en", { maximumFractionDigits: 0 });
   }, []);
 
   const onFromInputChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const nextValue = Number(event.target.value);
+    (text: string) => {
+      const nextValue = Number(text);
 
-      if (!Number.isNaN(nextValue) && nextValue >= min && nextValue <= resolvedValue[1]) {
+      if (
+        text !== "" &&
+        !Number.isNaN(nextValue) &&
+        nextValue >= min &&
+        nextValue <= resolvedValue[1]
+      ) {
         onValueChange?.([nextValue, resolvedValue[1]]);
       }
     },
@@ -117,10 +122,15 @@ export function FilterSlider<TData>(props: FilterSliderProps<TData>) {
   );
 
   const onToInputChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const nextValue = Number(event.target.value);
+    (text: string) => {
+      const nextValue = Number(text);
 
-      if (!Number.isNaN(nextValue) && nextValue <= max && nextValue >= resolvedValue[0]) {
+      if (
+        text !== "" &&
+        !Number.isNaN(nextValue) &&
+        nextValue <= max &&
+        nextValue >= resolvedValue[0]
+      ) {
         onValueChange?.([resolvedValue[0], nextValue]);
       }
     },
@@ -188,18 +198,13 @@ export function FilterSlider<TData>(props: FilterSliderProps<TData>) {
               From
             </Label>
             <div className="relative">
-              <Input
+              <NumberInput
                 id={`${id}-from`}
-                type="number"
                 aria-valuemin={min}
                 aria-valuemax={max}
-                inputMode="numeric"
-                pattern="[0-9]*"
                 placeholder={min.toString()}
-                min={min}
-                max={max}
-                value={resolvedValue[0].toString()}
-                onChange={onFromInputChange}
+                value={resolvedValue[0]}
+                onValueChange={onFromInputChange}
                 className={cn("h-7 w-24", unit && "pr-8")}
               />
               {unit ? (
@@ -212,18 +217,13 @@ export function FilterSlider<TData>(props: FilterSliderProps<TData>) {
               to
             </Label>
             <div className="relative">
-              <Input
+              <NumberInput
                 id={`${id}-to`}
-                type="number"
                 aria-valuemin={min}
                 aria-valuemax={max}
-                inputMode="numeric"
-                pattern="[0-9]*"
                 placeholder={max.toString()}
-                min={min}
-                max={max}
-                value={resolvedValue[1].toString()}
-                onChange={onToInputChange}
+                value={resolvedValue[1]}
+                onValueChange={onToInputChange}
                 className={cn("h-7 w-24", unit && "pr-8")}
               />
               {unit ? (

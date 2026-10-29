@@ -1,4 +1,4 @@
-import { fromMinorUnits, toMinorUnits } from "@luraba/domain";
+import { formatMoney, fromMinorUnits, toMinorUnits } from "@luraba/domain";
 
 const LANGUAGE_TO_LOCALE: Record<string, string> = {
   en: "en-US",
@@ -16,14 +16,28 @@ export function formatCurrency(
   options?: Intl.NumberFormatOptions,
   precision = 2,
 ) {
-  return new Intl.NumberFormat(getLocale(language), {
-    style: "currency",
-    currency: currencyCode,
-    maximumFractionDigits: precision,
-    minimumFractionDigits: precision,
-    ...options,
-  }).format(minorToMajorUnits(amount, precision));
+  if (options) {
+    return new Intl.NumberFormat(getLocale(language), {
+      style: "currency",
+      currency: currencyCode,
+      maximumFractionDigits: precision,
+      minimumFractionDigits: precision,
+      ...options,
+    }).format(minorToMajorUnits(amount, precision));
+  }
+  return formatMoney(amount, currencyCode, { locale: getLocale(language), precision });
 }
+
+/** A plain localized number (counts, areas, mileage). Money goes through `formatCurrency`. */
+export function formatNumber(value: number, language = "en", options?: Intl.NumberFormatOptions) {
+  return new Intl.NumberFormat(getLocale(language), {
+    maximumFractionDigits: 2,
+    ...options,
+  }).format(value);
+}
+
+/** Fallback when neither the record nor the household names a currency. */
+export const FALLBACK_CURRENCY_CODE = "USD";
 
 export function majorToMinorUnits(amount: number, precision: number) {
   return toMinorUnits(amount, precision);

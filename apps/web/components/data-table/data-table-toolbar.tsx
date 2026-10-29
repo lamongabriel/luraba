@@ -11,6 +11,7 @@ import { FilterFaceted } from "@/components/filters/filter-faceted";
 import { FilterSlider } from "@/components/filters/filter-slider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/masked-input";
 import { cn } from "@/lib/utils";
 
 interface DataTableToolbarProps<TData> extends React.ComponentProps<"div"> {
@@ -89,12 +90,11 @@ function DataTableToolbarFilter<TData>({ column }: DataTableToolbarFilterProps<T
         case "number":
           return (
             <div className="relative">
-              <Input
-                type="number"
-                inputMode="numeric"
+              <NumberInput
+                decimals={2}
                 placeholder={columnMeta.placeholder ?? columnMeta.label}
                 value={(column.getFilterValue() as string) ?? ""}
-                onChange={(event) => column.setFilterValue(event.target.value)}
+                onValueChange={(value) => column.setFilterValue(value)}
                 className={cn("h-7 w-[120px]", columnMeta.unit && "pr-8")}
               />
               {columnMeta.unit && (

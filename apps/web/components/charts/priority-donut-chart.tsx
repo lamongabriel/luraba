@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { Cell, Pie, PieChart } from "recharts";
-
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { formatNumber } from "@/lib/finance";
 
 import { StripePattern } from "./chart-patterns";
 import { ChartState } from "./chart-state";
@@ -89,7 +89,7 @@ export function PriorityDonutChart({
               />
               <span className="min-w-0 flex-1 truncate text-xs">{item.name}</span>
               <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                {formatValue?.(item.value) ?? item.value.toLocaleString()}
+                {formatValue?.(item.value) ?? formatNumber(item.value)}
               </span>
             </li>
           ))}

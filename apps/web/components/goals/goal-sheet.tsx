@@ -8,12 +8,20 @@ import { z } from "zod";
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
 import { FormItem } from "@/components/forms/form-item";
 import { FormSheet } from "@/components/forms/form-sheet";
+import { GoalPlanPreview } from "@/components/goals/goal-plan-preview";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance";
 import { bpsToPercent, GOAL_KIND_OPTIONS, GOAL_STATUS_OPTIONS, percentToBps } from "@/lib/goals";
 import { useCreateGoalMutation, useUpdateGoalMutation } from "@/mutations/goals/use-goal-mutations";
 import { useCurrenciesQuery } from "@/queries/currencies/use-currencies-query";
+import { useAuthSessionStore, useDefaultCurrencyCode } from "@/stores/auth-session-store";
+
+const PLAN_OPTIONS = [
+  { value: "date", label: "I want to reach it by a date" },
+  { value: "monthly", label: "I'll put in a set amount each month" },
+  { value: "none", label: "No plan yet" },
+];
 
 const numberField = z.union([z.number(), z.literal("")]);
 
@@ -23,6 +31,7 @@ const schema = z.object({
   kind: z.enum(["savings", "investment"]),
   targetAmount: z.number({ error: "Enter the amount you want to reach." }).positive(),
   currencyCode: z.string().length(3),
+  plan: z.enum(["none", "date", "monthly"]),
   startDate: z.string(),
   targetDate: z.string(),
   monthlyContribution: numberField,
@@ -41,10 +50,11 @@ function GoalForm({
   onCancel: () => void;
   onSuccess: () => void;
 }) {
+  const defaultCurrency = useDefaultCurrencyCode();
   const currencies = useCurrenciesQuery({ perPage: 100 });
   const currencyList = currencies.data?.data ?? [];
   const precisionOf = (code: string) => currencyList.find((c) => c.code === code)?.precision ?? 2;
-  const precision = precisionOf(goal?.currencyCode ?? "BRL");
+  const precision = precisionOf(goal?.currencyCode ?? defaultCurrency);
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -53,7 +63,8 @@ function GoalForm({
       description: goal?.description ?? "",
       kind: goal?.kind ?? "savings",
       targetAmount: goal ? minorToMajorUnits(goal.targetAmount, precision) : ("" as never),
-      currencyCode: goal?.currencyCode ?? "BRL",
+      currencyCode: goal?.currencyCode ?? defaultCurrency,
+      plan: goal?.targetDate ? "date" : goal?.monthlyContribution ? "monthly" : "none",
       startDate: goal?.startDate ?? "",
       targetDate: goal?.targetDate ?? "",
       monthlyContribution: goal?.monthlyContribution
@@ -75,6 +86,9 @@ function GoalForm({
   const isPending = createMutation.isPending || updateMutation.isPending;
   const errorMessage = createMutation.errorMessage || updateMutation.errorMessage;
   const kind = form.watch("kind");
+  const plan = form.watch("plan");
+  const watched = form.watch();
+  const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
   const currencyCode = form.watch("currencyCode");
 
   const onSubmit = form.handleSubmit((values) => {
@@ -84,9 +98,10 @@ function GoalForm({
       description: values.description.trim() || null,
       kind: values.kind,
       targetAmount: majorToMinorUnits(values.targetAmount, unit),
-      targetDate: values.targetDate || null,
+      // One way to plan: a date (we work out the monthly amount) or a monthly amount (we work out the date).
+      targetDate: values.plan === "date" && values.targetDate ? values.targetDate : null,
       monthlyContribution:
-        values.monthlyContribution === ""
+        values.plan !== "monthly" || values.monthlyContribution === ""
           ? null
           : majorToMinorUnits(values.monthlyContribution, unit),
       expectedReturnBps:
@@ -134,8 +149,7 @@ function GoalForm({
           control={form.control}
           name="targetAmount"
           label="Target"
-          inputType="number"
-          step="0.01"
+          inputType="money"
           disabled={isPending}
         />
         <FormItem
@@ -151,36 +165,60 @@ function GoalForm({
           disabled={isPending || Boolean(goal)}
         />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <FormItem
-          control={form.control}
-          name="monthlyContribution"
-          label="Per month"
-          inputType="number"
-          step="0.01"
-          description="What you plan to put in each month."
-          disabled={isPending}
-        />
+      <FormItem
+        control={form.control}
+        name="plan"
+        label="How do you want to plan it?"
+        type="select"
+        options={PLAN_OPTIONS}
+        disabled={isPending}
+      />
+      {plan === "date" ? (
         <FormItem
           control={form.control}
           name="targetDate"
           label="Reach it by"
           inputType="date"
-          description="Optional."
+          description="We'll work out how much to put in each month."
           disabled={isPending}
         />
-      </div>
+      ) : null}
+      {plan === "monthly" ? (
+        <FormItem
+          control={form.control}
+          name="monthlyContribution"
+          label="Per month"
+          inputType="money"
+          description="We'll work out when you'll get there."
+          disabled={isPending}
+        />
+      ) : null}
       {kind === "investment" ? (
         <FormItem
           control={form.control}
           name="expectedReturnPercent"
           label="Expected yearly return (%)"
-          inputType="number"
-          step="0.1"
+          inputType="decimal"
+          decimals={2}
           description="Optional. Used only for the estimate; nothing is guaranteed."
           disabled={isPending}
         />
       ) : null}
+      <GoalPlanPreview
+        kind={kind}
+        plan={plan}
+        targetAmount={watched.targetAmount}
+        monthlyContribution={watched.monthlyContribution}
+        targetDate={watched.targetDate}
+        startDate={watched.startDate}
+        expectedReturnPercent={watched.expectedReturnPercent}
+        saved={goal?.saved ?? 0}
+        currencyCode={currencyCode}
+        precision={precisionOf(currencyCode)}
+        language={language}
+        onPickMonthly={(amount) => form.setValue("monthlyContribution", amount)}
+        onPickDate={(date) => form.setValue("targetDate", date)}
+      />
       <FormItem
         control={form.control}
         name="startDate"

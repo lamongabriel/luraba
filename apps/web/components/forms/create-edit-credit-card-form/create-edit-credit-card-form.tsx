@@ -50,7 +50,7 @@ export function CreateEditCreditCardForm({
           institutionName={values.institutionName}
           last4={values.last4}
           name={values.name}
-          className="border-0 bg-transparent p-0"
+          className="mx-auto max-w-sm"
         />
       </div>
 
@@ -158,7 +158,7 @@ export function CreateEditCreditCardForm({
         />
         <FormItem
           type="input"
-          inputType="number"
+          inputType="money"
           control={form.control}
           name="creditLimitAmount"
           label="Credit limit"

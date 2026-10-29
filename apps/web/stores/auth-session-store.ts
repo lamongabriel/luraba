@@ -3,6 +3,7 @@
 import type { AuthSession, HouseholdContext, HouseholdSummary, User } from "@luraba/contracts";
 import { create } from "zustand";
 import { STORAGE_KEYS } from "@/config/storage";
+import { FALLBACK_CURRENCY_CODE } from "@/lib/finance";
 import { readStorage, removeStorage, writeStorage } from "@/lib/local-storage";
 
 export type AuthBootstrapStatus = "idle" | "loading" | "authenticated" | "anonymous";
@@ -65,3 +66,10 @@ export const useAuthSessionStore = create<AuthSessionState>((set) => ({
   },
   setBootstrapStatus: (bootstrapStatus) => set({ bootstrapStatus }),
 }));
+
+/** The active household's default currency; every "new record" form starts from it. */
+export function useDefaultCurrencyCode(): string {
+  return useAuthSessionStore(
+    (state) => state.household?.settings.defaultCurrencyId ?? FALLBACK_CURRENCY_CODE,
+  );
+}

@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { SplitDetail } from "@luraba/contracts";
-import { formatISODate } from "@luraba/domain";
+import { todayISODate } from "@luraba/domain";
 import * as React from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -19,6 +19,7 @@ import {
   useUpdateSplitMutation,
 } from "@/mutations/splits/use-split-mutations";
 import { useCurrenciesQuery } from "@/queries/currencies/use-currencies-query";
+import { useDefaultCurrencyCode } from "@/stores/auth-session-store";
 
 const numberField = z.union([z.number(), z.literal("")]);
 
@@ -47,7 +48,7 @@ const STATUS_OPTIONS = [
 ];
 
 function emptyParticipant(): ParticipantValues {
-  return { name: "", installmentCount: 1, amount: "", firstDueDate: formatISODate(new Date()) };
+  return { name: "", installmentCount: 1, amount: "", firstDueDate: todayISODate() };
 }
 
 function toParticipantBody(participant: ParticipantValues, precision: number) {
@@ -92,15 +93,14 @@ function ParticipantFields({
           control={control}
           name={`participants.${index}.installmentCount`}
           label="Installments"
-          inputType="number"
+          inputType="integer"
           disabled={disabled}
         />
         <FormItem
           control={control}
           name={`participants.${index}.amount`}
           label="Each"
-          inputType="number"
-          step="0.01"
+          inputType="money"
           disabled={disabled}
         />
         <FormItem
@@ -131,6 +131,7 @@ function SplitForm({
   onCancel: () => void;
   onSuccess: () => void;
 }) {
+  const defaultCurrency = useDefaultCurrencyCode();
   const currencies = useCurrenciesQuery({ perPage: 100 });
   const currencyList = currencies.data?.data ?? [];
   const precisionOf = (code: string) => currencyList.find((c) => c.code === code)?.precision ?? 2;
@@ -143,7 +144,7 @@ function SplitForm({
       totalAmount: split?.totalAmount
         ? minorToMajorUnits(split.totalAmount, precisionOf(split.currencyCode))
         : "",
-      currencyCode: split?.currencyCode ?? "BRL",
+      currencyCode: split?.currencyCode ?? defaultCurrency,
       status: split?.status ?? "active",
       participants: mode === "edit" ? [] : [emptyParticipant()],
     },
@@ -214,8 +215,7 @@ function SplitForm({
               control={form.control}
               name="totalAmount"
               label="Total you paid"
-              inputType="number"
-              step="0.01"
+              inputType="money"
               description="Optional, for reference."
               disabled={isPending}
             />
