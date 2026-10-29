@@ -1,7 +1,7 @@
 import type { listCategoriesQuerySchema } from "@luraba/contracts/categories";
+import { categoriesTable } from "@luraba/db/schemas/categories.schema";
 import { eq, type SQL, sql } from "drizzle-orm";
 import type { z } from "zod";
-import { categoriesTable } from "@/db/schemas/categories.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,

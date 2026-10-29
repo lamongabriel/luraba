@@ -1,5 +1,5 @@
+import { entriesTable } from "@luraba/db/schemas/entries.schema";
 import { and, eq, isNotNull } from "drizzle-orm";
-import { entriesTable } from "@/db/schemas/entries.schema";
 import type { TxClient } from "@/db/types";
 import type { EntryRecord } from "./entries.types";
 

@@ -13,6 +13,7 @@ import type { EntryDraft } from "@/modules/entries/entries.types";
 import { fxService } from "@/modules/fx/fx.service";
 import { ledgerAccountsRepository } from "@/modules/ledger-accounts/ledger-accounts.repository";
 import { merchantsRepository } from "@/modules/merchants/merchants.repository";
+import { notifyTransactionCreated } from "@/modules/notifications/notifications.listeners";
 import { paymentMethodsRepository } from "@/modules/payment-methods/payment-methods.repository";
 import {
   addTransactionTags,
@@ -21,6 +22,7 @@ import {
 } from "@/modules/tags/tags-associations.service";
 import { NotFoundError, ValidationError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
+import { logger } from "@/shared/logger";
 import {
   mapCreditCardInstallmentRowsToFeedRows,
   mapDetailedRows,
@@ -464,6 +466,18 @@ async function createTransferEntries(
 // -----------------------------------------------------------------------------
 
 export async function createTransaction(
+  context: HouseholdContext,
+  dto: CreateTransactionDto,
+): Promise<TransactionResponse> {
+  const transaction = await createTransactionByType(context, dto);
+  // Fire-and-forget: alerts must never delay or fail the write.
+  void notifyTransactionCreated(context, transaction).catch((err) =>
+    logger.error({ err }, "[transactions] Failed to notify about new transaction"),
+  );
+  return transaction;
+}
+
+async function createTransactionByType(
   context: HouseholdContext,
   dto: CreateTransactionDto,
 ): Promise<TransactionResponse> {

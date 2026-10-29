@@ -72,6 +72,11 @@ const envSchema = z
     SMTP_FROM_EMAIL: optionalEmailEnvSchema,
     SMTP_REPLY_EMAIL: optionalEmailEnvSchema,
     SMTP_TLS_CIPHERS: optionalStringEnvSchema,
+    VAPID_PUBLIC_KEY: optionalStringEnvSchema,
+    VAPID_PRIVATE_KEY: optionalStringEnvSchema,
+    VAPID_SUBJECT: optionalStringEnvSchema,
+    SMS_PROVIDER: optionalStringEnvSchema,
+    REDIS_URL: optionalStringEnvSchema,
     INTEGRATIONS_ENCRYPTION_KEY: hexSecretEnvSchema("INTEGRATIONS_ENCRYPTION_KEY", 64),
     RUN_DB_TESTS: booleanEnvSchema.default(false),
   })
@@ -104,6 +109,17 @@ const mailConfig = {
   tlsCiphers: parsedEnv.data.SMTP_TLS_CIPHERS,
 } satisfies MailConfig;
 
+const pushConfig =
+  parsedEnv.data.VAPID_PUBLIC_KEY && parsedEnv.data.VAPID_PRIVATE_KEY
+    ? {
+        publicKey: parsedEnv.data.VAPID_PUBLIC_KEY,
+        privateKey: parsedEnv.data.VAPID_PRIVATE_KEY,
+        subject:
+          parsedEnv.data.VAPID_SUBJECT ??
+          `mailto:${parsedEnv.data.SMTP_FROM_EMAIL ?? "admin@localhost"}`,
+      }
+    : undefined;
+
 export const env = {
   nodeEnv: parsedEnv.data.NODE_ENV,
   port: parsedEnv.data.PORT,
@@ -122,6 +138,9 @@ export const env = {
     github: githubAuthProvider,
   },
   mail: mailConfig,
+  push: pushConfig,
+  smsProvider: parsedEnv.data.SMS_PROVIDER,
+  redisUrl: parsedEnv.data.REDIS_URL,
   integrationsEncryptionKey: parsedEnv.data.INTEGRATIONS_ENCRYPTION_KEY,
   runDbTests: parsedEnv.data.RUN_DB_TESTS,
 } as const;

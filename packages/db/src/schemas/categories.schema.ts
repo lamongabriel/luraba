@@ -6,8 +6,8 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { categoryTypeEnum } from "./enums.schema";
-import { householdsTable } from "./households.schema";
+import { categoryTypeEnum } from "./enums.schema.js";
+import { householdsTable } from "./households.schema.js";
 
 export const categoriesTable = pgTable(
   "categories",

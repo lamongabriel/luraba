@@ -1,7 +1,7 @@
 import { listIntegrationsQuerySchema } from "@luraba/contracts/integrations";
+import { brandfetchIntegrationsTable } from "@luraba/db/schemas/brandfetch-integrations.schema";
 import { describe, expect, it } from "vitest";
 import { db } from "@/db";
-import { brandfetchIntegrationsTable } from "@/db/schemas/brandfetch-integrations.schema";
 import { createAuthenticatedContext } from "@/test/auth";
 import * as integrationsService from "../integrations.service";
 

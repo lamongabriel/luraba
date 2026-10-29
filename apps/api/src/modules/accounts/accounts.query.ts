@@ -1,7 +1,7 @@
 import type { listAccountsQuerySchema } from "@luraba/contracts/accounts";
+import { accountsTable } from "@luraba/db/schemas/accounts.schema";
 import { eq, ne, type SQL, sql } from "drizzle-orm";
 import type { z } from "zod";
-import { accountsTable } from "@/db/schemas/accounts.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,

@@ -1,5 +1,5 @@
+import { brandfetchIntegrationsTable } from "@luraba/db/schemas/brandfetch-integrations.schema";
 import type { HouseholdContext } from "@/config/permissions";
-import { brandfetchIntegrationsTable } from "@/db/schemas/brandfetch-integrations.schema";
 import { HouseholdScopedRepository } from "@/shared/repositories/household-scoped.repository";
 
 export type BrandfetchIntegrationRecord = typeof brandfetchIntegrationsTable.$inferSelect;

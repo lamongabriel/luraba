@@ -2,9 +2,9 @@ import type {
   listCreditCardCyclesQuerySchema,
   listCreditCardsQuerySchema,
 } from "@luraba/contracts/credit-cards";
+import { creditCardsTable } from "@luraba/db/schemas/credit-cards.schema";
 import { eq, type SQL, sql } from "drizzle-orm";
 import type { z } from "zod";
-import { creditCardsTable } from "@/db/schemas/credit-cards.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,

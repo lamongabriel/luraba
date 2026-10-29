@@ -1,7 +1,7 @@
+import { brandfetchIntegrationsTable } from "@luraba/db/schemas/brandfetch-integrations.schema";
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db";
-import { brandfetchIntegrationsTable } from "@/db/schemas/brandfetch-integrations.schema";
 import { ValidationError } from "@/shared/errors";
 import { createAuthenticatedContext } from "@/test/auth";
 import * as brandfetchService from "../brandfetch.service";

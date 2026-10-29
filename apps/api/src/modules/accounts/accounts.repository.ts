@@ -1,9 +1,4 @@
 import type { AccountSubtype } from "@luraba/contracts/accounts";
-import { now } from "@luraba/domain";
-import { and, eq, sql } from "drizzle-orm";
-import { unionAll } from "drizzle-orm/pg-core";
-import type { HouseholdContext } from "@/config/permissions";
-import { db } from "@/db";
 import {
   cashAccountProfilesTable,
   cryptoAccountProfilesTable,
@@ -13,8 +8,13 @@ import {
   otherLiabilityAccountProfilesTable,
   propertyAccountProfilesTable,
   vehicleAccountProfilesTable,
-} from "@/db/schemas/account-profiles.schema";
-import { accountsTable } from "@/db/schemas/accounts.schema";
+} from "@luraba/db/schemas/account-profiles.schema";
+import { accountsTable } from "@luraba/db/schemas/accounts.schema";
+import { now } from "@luraba/domain";
+import { and, eq, sql } from "drizzle-orm";
+import { unionAll } from "drizzle-orm/pg-core";
+import type { HouseholdContext } from "@/config/permissions";
+import { db } from "@/db";
 import type { TxClient } from "@/db/types";
 import { buildAccountBalanceSubquery } from "@/modules/ledger-accounts/ledger-accounts.repository";
 import { type DbListPage, getPagination } from "@/shared/list";

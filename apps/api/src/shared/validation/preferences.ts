@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   creditExpenseTimingEnum,
   creditInstallmentBudgetModeEnum,
@@ -7,7 +6,8 @@ import {
   preferredDateFormatEnum,
   preferredLanguageEnum,
   themePreferenceEnum,
-} from "@/db/schemas/enums.schema";
+} from "@luraba/db/schemas/enums.schema";
+import { z } from "zod";
 import {
   isCountryCode,
   isTimezone,

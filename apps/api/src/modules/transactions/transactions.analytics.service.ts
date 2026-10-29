@@ -2,6 +2,7 @@ import {
   transactionAnalyticsQuerySchema,
   transactionAnalyticsSchema,
 } from "@luraba/contracts/transactions";
+import { householdsTable } from "@luraba/db/schemas/households.schema";
 import {
   clampDateToToday,
   differenceInCalendarDays,
@@ -15,7 +16,6 @@ import {
 import { eq } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
-import { householdsTable } from "@/db/schemas/households.schema";
 import { authRepository } from "@/modules/auth/auth.repository";
 import { fxService } from "@/modules/fx/fx.service";
 import * as repository from "./transactions.analytics.repository";

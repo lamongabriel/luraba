@@ -1,12 +1,12 @@
 import { now } from "@luraba/domain";
 import { boolean, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
-import { currenciesTable } from "./currencies.schema";
+import { currenciesTable } from "./currencies.schema.js";
 import {
   defaultPeriodEnum,
   preferredDateFormatEnum,
   preferredLanguageEnum,
   themePreferenceEnum,
-} from "./enums.schema";
+} from "./enums.schema.js";
 
 export const usersTable = pgTable("users", {
   id: uuid().primaryKey().defaultRandom(),

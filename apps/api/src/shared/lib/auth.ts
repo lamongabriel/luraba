@@ -1,10 +1,10 @@
+import * as schema from "@luraba/db/schema";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
 import type { Auth, BetterAuthOptions } from "better-auth/types";
 import { env } from "@/config/env";
 import { db } from "@/db";
-import * as schema from "@/db/schema";
 import { authRepository } from "@/modules/auth/auth.repository";
 import * as authService from "@/modules/auth/auth.service";
 import { provisionHouseholdForUser } from "@/modules/households/households.lifecycle";

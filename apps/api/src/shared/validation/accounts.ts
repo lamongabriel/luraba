@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   accountClassificationEnum,
   accountTypeEnum,
@@ -14,7 +13,8 @@ import {
   propertyAreaUnitEnum,
   vehicleAccountSubtypeEnum,
   vehicleMileageUnitEnum,
-} from "@/db/schemas/enums.schema";
+} from "@luraba/db/schemas/enums.schema";
+import { z } from "zod";
 
 export const accountClassificationSchema = z.enum(accountClassificationEnum.enumValues);
 export const accountTypeSchema = z.enum(accountTypeEnum.enumValues);

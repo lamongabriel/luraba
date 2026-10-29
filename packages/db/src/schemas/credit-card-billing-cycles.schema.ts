@@ -1,6 +1,6 @@
 import { bigint, date, pgTable, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { creditCardsTable } from "./credit-cards.schema";
-import { creditCardCycleStatusEnum } from "./enums.schema";
+import { creditCardsTable } from "./credit-cards.schema.js";
+import { creditCardCycleStatusEnum } from "./enums.schema.js";
 
 export const creditCardBillingCyclesTable = pgTable(
   "credit_card_billing_cycles",

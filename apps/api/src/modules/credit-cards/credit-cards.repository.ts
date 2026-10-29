@@ -1,6 +1,6 @@
+import { creditCardsTable } from "@luraba/db/schemas/credit-cards.schema";
 import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { creditCardsTable } from "@/db/schemas/credit-cards.schema";
 import { buildAccountBalanceSubquery } from "@/modules/ledger-accounts/ledger-accounts.repository";
 import { NotFoundError } from "@/shared/errors";
 import { type DbListPage, getPagination } from "@/shared/list";

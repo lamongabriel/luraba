@@ -1,7 +1,7 @@
 import type { listIntegrationsQuerySchema } from "@luraba/contracts/integrations";
+import { brandfetchIntegrationsTable } from "@luraba/db/schemas/brandfetch-integrations.schema";
 import { eq, type SQL, sql } from "drizzle-orm";
 import type { z } from "zod";
-import { brandfetchIntegrationsTable } from "@/db/schemas/brandfetch-integrations.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,

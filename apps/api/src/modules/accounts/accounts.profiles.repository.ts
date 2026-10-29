@@ -4,8 +4,6 @@ import type {
   CreateAccountProfile,
   UpdateAccountProfile,
 } from "@luraba/contracts/accounts";
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
 import {
   cashAccountProfilesTable,
   cryptoAccountProfilesTable,
@@ -15,7 +13,9 @@ import {
   otherLiabilityAccountProfilesTable,
   propertyAccountProfilesTable,
   vehicleAccountProfilesTable,
-} from "@/db/schemas/account-profiles.schema";
+} from "@luraba/db/schemas/account-profiles.schema";
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
 import type { TxClient } from "@/db/types";
 
 const nullable = <T>(value: T | null | undefined): T | null => value ?? null;

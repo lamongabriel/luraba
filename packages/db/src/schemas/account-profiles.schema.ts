@@ -10,7 +10,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
-import { accountsTable } from "./accounts.schema";
+import { accountsTable } from "./accounts.schema.js";
 import {
   cashAccountSubtypeEnum,
   cryptoAccountSubtypeEnum,
@@ -24,7 +24,7 @@ import {
   propertyAreaUnitEnum,
   vehicleAccountSubtypeEnum,
   vehicleMileageUnitEnum,
-} from "./enums.schema";
+} from "./enums.schema.js";
 
 export const cashAccountProfilesTable = pgTable("cash_account_profiles", {
   accountId: uuid("account_id")

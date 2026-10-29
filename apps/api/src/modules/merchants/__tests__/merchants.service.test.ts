@@ -1,7 +1,7 @@
 import { listMerchantsQuerySchema } from "@luraba/contracts/merchants";
+import { brandfetchIntegrationsTable } from "@luraba/db/schemas/brandfetch-integrations.schema";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db";
-import { brandfetchIntegrationsTable } from "@/db/schemas/brandfetch-integrations.schema";
 import * as brandfetchService from "@/modules/integrations/brandfetch/brandfetch.service";
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { createAuthenticatedContext } from "@/test/auth";

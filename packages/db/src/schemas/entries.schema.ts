@@ -1,9 +1,9 @@
 import { sql } from "drizzle-orm";
 import { bigint, check, date, index, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
-import { categoriesTable } from "./categories.schema";
-import { currenciesTable } from "./currencies.schema";
-import { ledgerAccountsTable } from "./ledger-accounts.schema";
-import { transactionsTable } from "./transactions.schema";
+import { categoriesTable } from "./categories.schema.js";
+import { currenciesTable } from "./currencies.schema.js";
+import { ledgerAccountsTable } from "./ledger-accounts.schema.js";
+import { transactionsTable } from "./transactions.schema.js";
 
 export const entriesTable = pgTable(
   "entries",

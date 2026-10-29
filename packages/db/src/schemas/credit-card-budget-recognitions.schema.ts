@@ -1,8 +1,8 @@
 import { bigint, date, index, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
-import { categoriesTable } from "./categories.schema";
-import { creditCardInstallmentsTable } from "./credit-card-installments.schema";
-import { creditCardPurchasesTable } from "./credit-card-purchases.schema";
-import { currenciesTable } from "./currencies.schema";
+import { categoriesTable } from "./categories.schema.js";
+import { creditCardInstallmentsTable } from "./credit-card-installments.schema.js";
+import { creditCardPurchasesTable } from "./credit-card-purchases.schema.js";
+import { currenciesTable } from "./currencies.schema.js";
 
 export const creditCardBudgetRecognitionsTable = pgTable(
   "credit_card_budget_recognitions",

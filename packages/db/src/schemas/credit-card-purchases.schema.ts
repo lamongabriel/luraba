@@ -7,9 +7,9 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { creditCardsTable } from "./credit-cards.schema";
-import { creditExpenseTimingEnum, creditInstallmentBudgetModeEnum } from "./enums.schema";
-import { transactionsTable } from "./transactions.schema";
+import { creditCardsTable } from "./credit-cards.schema.js";
+import { creditExpenseTimingEnum, creditInstallmentBudgetModeEnum } from "./enums.schema.js";
+import { transactionsTable } from "./transactions.schema.js";
 
 export const creditCardPurchasesTable = pgTable(
   "credit_card_purchases",

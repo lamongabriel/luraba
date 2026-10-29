@@ -1,5 +1,5 @@
 import { pgTable, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
-import { householdsTable } from "./households.schema";
+import { householdsTable } from "./households.schema.js";
 
 export const tagsTable = pgTable(
   "tags",

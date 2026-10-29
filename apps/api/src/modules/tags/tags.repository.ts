@@ -1,7 +1,7 @@
+import { tagsTable } from "@luraba/db/schemas/tags.schema";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
-import { tagsTable } from "@/db/schemas/tags.schema";
 import { type DbListPage, getPagination } from "@/shared/list";
 import { HouseholdScopedRepository } from "@/shared/repositories/household-scoped.repository";
 import { buildTagsListOrder, buildTagsListWhere, type ListTagsQuery } from "./tags.query";

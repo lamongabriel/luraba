@@ -1,7 +1,7 @@
 import type { listTagsQuerySchema } from "@luraba/contracts/tags";
+import { tagsTable } from "@luraba/db/schemas/tags.schema";
 import { eq, type SQL, sql } from "drizzle-orm";
 import type { z } from "zod";
-import { tagsTable } from "@/db/schemas/tags.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,

@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { pgTable, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
-import { currenciesTable } from "./currencies.schema";
-import { ledgerClassificationEnum, ledgerOwnerTypeEnum } from "./enums.schema";
+import { currenciesTable } from "./currencies.schema.js";
+import { ledgerClassificationEnum, ledgerOwnerTypeEnum } from "./enums.schema.js";
 
 export const ledgerAccountsTable = pgTable(
   "ledger_accounts",

@@ -1,7 +1,7 @@
 import type { listCurrenciesQuerySchema } from "@luraba/contracts/currencies";
+import { currenciesTable } from "@luraba/db/schemas/currencies.schema";
 import { type SQL, sql } from "drizzle-orm";
 import type { z } from "zod";
-import { currenciesTable } from "@/db/schemas/currencies.schema";
 import { buildIlikeSearch, buildOrderBy, combineConditions, inArrayIfAny } from "@/shared/list";
 
 export type ListCurrenciesQuery = z.output<typeof listCurrenciesQuerySchema>;

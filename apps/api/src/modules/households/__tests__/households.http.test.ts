@@ -1,10 +1,10 @@
+import { householdInvitesTable } from "@luraba/db/schemas/households.schema";
+import { usersTable } from "@luraba/db/schemas/users.schema";
 import { eq } from "drizzle-orm";
 import request from "supertest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import app from "@/app";
 import { db } from "@/db";
-import { householdInvitesTable } from "@/db/schemas/households.schema";
-import { usersTable } from "@/db/schemas/users.schema";
 import { mailService } from "@/modules/mail/mail.service";
 import {
   createAccessTokenForUser,

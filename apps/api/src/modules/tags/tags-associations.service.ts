@@ -1,9 +1,9 @@
 import type { TagSummary } from "@luraba/contracts/tags";
+import { tagsTable } from "@luraba/db/schemas/tags.schema";
+import { transactionTagsTable } from "@luraba/db/schemas/transaction-tags.schema";
 import { asc, eq } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
-import { tagsTable } from "@/db/schemas/tags.schema";
-import { transactionTagsTable } from "@/db/schemas/transaction-tags.schema";
 import type { TxClient } from "@/db/types";
 import { NotFoundError } from "@/shared/errors";
 import { tagsRepository } from "./tags.repository";

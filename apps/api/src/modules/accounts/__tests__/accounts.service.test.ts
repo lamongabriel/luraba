@@ -1,12 +1,12 @@
 import { listAccountsQuerySchema } from "@luraba/contracts/accounts";
 import { listAccountTransactionsQuerySchema } from "@luraba/contracts/transactions";
+import { cashAccountProfilesTable } from "@luraba/db/schemas/account-profiles.schema";
+import { accountsTable } from "@luraba/db/schemas/accounts.schema";
+import { entriesTable } from "@luraba/db/schemas/entries.schema";
+import { transactionsTable } from "@luraba/db/schemas/transactions.schema";
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db";
-import { cashAccountProfilesTable } from "@/db/schemas/account-profiles.schema";
-import { accountsTable } from "@/db/schemas/accounts.schema";
-import { entriesTable } from "@/db/schemas/entries.schema";
-import { transactionsTable } from "@/db/schemas/transactions.schema";
 import * as categoriesService from "@/modules/categories/categories.service";
 import * as creditCardsService from "@/modules/credit-cards/credit-cards.service";
 import * as brandfetchService from "@/modules/integrations/brandfetch/brandfetch.service";

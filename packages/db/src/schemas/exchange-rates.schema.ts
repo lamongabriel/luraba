@@ -1,5 +1,5 @@
 import { bigint, date, pgTable, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
-import { currenciesTable } from "./currencies.schema";
+import { currenciesTable } from "./currencies.schema.js";
 
 export const exchangeRatesTable = pgTable(
   "exchange_rates",

@@ -225,6 +225,13 @@
       "when": 1788492680000,
       "tag": "0031_reference_data",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1788496200000,
+      "tag": "0032_notifications",
+      "breakpoints": true
     }
   ]
 }

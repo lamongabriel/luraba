@@ -1,6 +1,6 @@
 import { integer, pgTable, primaryKey, timestamp, uuid } from "drizzle-orm/pg-core";
-import { tagsTable } from "./tags.schema";
-import { transactionsTable } from "./transactions.schema";
+import { tagsTable } from "./tags.schema.js";
+import { transactionsTable } from "./transactions.schema.js";
 
 export const transactionTagsTable = pgTable(
   "transaction_tags",

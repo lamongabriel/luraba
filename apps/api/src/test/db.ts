@@ -1,11 +1,11 @@
 import path from "node:path";
+import { paymentMethodsTable } from "@luraba/db/schemas/payment-methods.schema";
 import { isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
 import { env } from "@/config/env";
 import { db } from "@/db";
-import { paymentMethodsTable } from "@/db/schemas/payment-methods.schema";
 
 const TEST_REFERENCE_TABLES = ["currencies", "__drizzle_migrations"] as const;
 

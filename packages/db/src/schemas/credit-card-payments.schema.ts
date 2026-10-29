@@ -1,6 +1,6 @@
 import { bigint, pgTable, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { creditCardsTable } from "./credit-cards.schema";
-import { transactionsTable } from "./transactions.schema";
+import { creditCardsTable } from "./credit-cards.schema.js";
+import { transactionsTable } from "./transactions.schema.js";
 
 export const creditCardPaymentsTable = pgTable(
   "credit_card_payments",

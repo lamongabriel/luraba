@@ -1,7 +1,7 @@
 import type { listMerchantsQuerySchema } from "@luraba/contracts/merchants";
+import { merchantsTable } from "@luraba/db/schemas/merchants.schema";
 import { eq, type SQL, sql } from "drizzle-orm";
 import type { z } from "zod";
-import { merchantsTable } from "@/db/schemas/merchants.schema";
 import {
   buildIlikeSearch,
   buildOrderBy,

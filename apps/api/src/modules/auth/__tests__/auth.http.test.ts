@@ -1,9 +1,9 @@
+import { householdInvitesTable, householdMembersTable } from "@luraba/db/schemas/households.schema";
+import { usersTable } from "@luraba/db/schemas/users.schema";
 import { and, eq } from "drizzle-orm";
 import request from "supertest";
 import app from "@/app";
 import { db } from "@/db";
-import { householdInvitesTable, householdMembersTable } from "@/db/schemas/households.schema";
-import { usersTable } from "@/db/schemas/users.schema";
 import { createAuthenticatedContext, createAuthHeaders } from "@/test/auth";
 import { createHousehold, createHouseholdMembership } from "@/test/factories";
 

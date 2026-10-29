@@ -1,13 +1,13 @@
 import { sql } from "drizzle-orm";
 import { integer, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
-import { currenciesTable } from "./currencies.schema";
+import { currenciesTable } from "./currencies.schema.js";
 import {
   creditExpenseTimingEnum,
   creditInstallmentBudgetModeEnum,
   householdInviteStatusEnum,
   householdRoleEnum,
-} from "./enums.schema";
-import { usersTable } from "./users.schema";
+} from "./enums.schema.js";
+import { usersTable } from "./users.schema.js";
 
 export const householdsTable = pgTable("households", {
   id: uuid().primaryKey().defaultRandom(),

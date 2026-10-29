@@ -1,8 +1,8 @@
 import { sql } from "drizzle-orm";
 import { check, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
-import { currenciesTable } from "./currencies.schema";
-import { accountClassificationEnum, accountTypeEnum } from "./enums.schema";
-import { householdsTable } from "./households.schema";
+import { currenciesTable } from "./currencies.schema.js";
+import { accountClassificationEnum, accountTypeEnum } from "./enums.schema.js";
+import { householdsTable } from "./households.schema.js";
 
 export const accountsTable = pgTable(
   "accounts",

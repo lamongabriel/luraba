@@ -2,11 +2,11 @@ import {
   listAccountTransactionsQuerySchema,
   listTransactionsQuerySchema,
 } from "@luraba/contracts/transactions";
+import { entriesTable } from "@luraba/db/schemas/entries.schema";
+import { ledgerAccountsTable } from "@luraba/db/schemas/ledger-accounts.schema";
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db";
-import { entriesTable } from "@/db/schemas/entries.schema";
-import { ledgerAccountsTable } from "@/db/schemas/ledger-accounts.schema";
 import * as accountsService from "@/modules/accounts/accounts.service";
 import * as categoriesService from "@/modules/categories/categories.service";
 import * as creditCardsService from "@/modules/credit-cards/credit-cards.service";

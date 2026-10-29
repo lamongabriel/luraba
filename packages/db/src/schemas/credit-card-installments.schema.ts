@@ -1,7 +1,7 @@
 import { bigint, integer, pgTable, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { creditCardBillingCyclesTable } from "./credit-card-billing-cycles.schema";
-import { creditCardPurchasesTable } from "./credit-card-purchases.schema";
-import { creditCardsTable } from "./credit-cards.schema";
+import { creditCardBillingCyclesTable } from "./credit-card-billing-cycles.schema.js";
+import { creditCardPurchasesTable } from "./credit-card-purchases.schema.js";
+import { creditCardsTable } from "./credit-cards.schema.js";
 
 export const creditCardInstallmentsTable = pgTable(
   "credit_card_installments",

@@ -1,8 +1,8 @@
+import { accountsTable } from "@luraba/db/schemas/accounts.schema";
+import type { creditCardBillingCyclesTable } from "@luraba/db/schemas/credit-card-billing-cycles.schema";
+import { creditCardsTable } from "@luraba/db/schemas/credit-cards.schema";
 import { formatISODate } from "@luraba/domain";
 import { aliasedTable, sql } from "drizzle-orm";
-import { accountsTable } from "@/db/schemas/accounts.schema";
-import type { creditCardBillingCyclesTable } from "@/db/schemas/credit-card-billing-cycles.schema";
-import { creditCardsTable } from "@/db/schemas/credit-cards.schema";
 import type { BaseCreditCardCycleSummary, CreditCardCycleItem } from "./credit-cards.types";
 
 export const creditCardLedgerAccountsTable = aliasedTable(accountsTable, "credit_card_ledgers");

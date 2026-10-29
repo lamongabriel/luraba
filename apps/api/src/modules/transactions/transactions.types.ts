@@ -9,10 +9,10 @@ import type {
   upcomingTransactionSchema,
   updateTransactionInputSchema,
 } from "@luraba/contracts/transactions";
+import type { entriesTable } from "@luraba/db/schemas/entries.schema";
+import type { tagsTable } from "@luraba/db/schemas/tags.schema";
+import type { transactionsTable } from "@luraba/db/schemas/transactions.schema";
 import type { z } from "zod";
-import type { entriesTable } from "@/db/schemas/entries.schema";
-import type { tagsTable } from "@/db/schemas/tags.schema";
-import type { transactionsTable } from "@/db/schemas/transactions.schema";
 
 /** Database records stay API-local; public HTTP schemas come from contracts. */
 export type TransactionRecord = typeof transactionsTable.$inferSelect;

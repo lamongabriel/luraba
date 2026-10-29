@@ -1,8 +1,8 @@
+import { currenciesTable } from "@luraba/db/schemas/currencies.schema";
+import { paymentMethodsTable } from "@luraba/db/schemas/payment-methods.schema";
 import { and, eq, isNull } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { db } from "@/db";
-import { currenciesTable } from "@/db/schemas/currencies.schema";
-import { paymentMethodsTable } from "@/db/schemas/payment-methods.schema";
 
 describe("required reference data", () => {
   it("is installed by migrations and survives test database resets", async () => {

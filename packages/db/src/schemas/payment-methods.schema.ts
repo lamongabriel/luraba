@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { pgTable, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
-import { currenciesTable } from "./currencies.schema";
-import { householdsTable } from "./households.schema";
+import { currenciesTable } from "./currencies.schema.js";
+import { householdsTable } from "./households.schema.js";
 
 export const paymentMethodsTable = pgTable(
   "payment_methods",

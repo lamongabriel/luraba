@@ -146,3 +146,11 @@ export const creditCardCycleStatusEnum = pgEnum("credit_card_cycle_status", [
   "closed",
   "paid",
 ]);
+
+// ─── Notification Enums ──────────────────────────────────────────────────
+export const notificationDeliveryStatusEnum = pgEnum("notification_delivery_status", [
+  "pending",
+  "sent",
+  "failed",
+  "skipped",
+]);

@@ -1,7 +1,7 @@
 import type { Currency } from "@luraba/contracts/currencies";
+import { currenciesTable } from "@luraba/db/schemas/currencies.schema";
 import { asc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { currenciesTable } from "@/db/schemas/currencies.schema";
 import { type DbListPage, getPagination } from "@/shared/list";
 import {
   buildCurrenciesListOrder,

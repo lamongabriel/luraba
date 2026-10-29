@@ -1,9 +1,9 @@
 import { boolean, date, index, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
-import { categoriesTable } from "./categories.schema";
-import { transactionTypeEnum } from "./enums.schema";
-import { householdsTable } from "./households.schema";
-import { merchantsTable } from "./merchants.schema";
-import { paymentMethodsTable } from "./payment-methods.schema";
+import { categoriesTable } from "./categories.schema.js";
+import { transactionTypeEnum } from "./enums.schema.js";
+import { householdsTable } from "./households.schema.js";
+import { merchantsTable } from "./merchants.schema.js";
+import { paymentMethodsTable } from "./payment-methods.schema.js";
 
 export const transactionsTable = pgTable(
   "transactions",

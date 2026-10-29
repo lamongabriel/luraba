@@ -3,11 +3,11 @@ import {
   type HouseholdPermission,
   hasHouseholdPermission,
 } from "@luraba/contracts";
+import { householdMembersTable, householdsTable } from "@luraba/db/schemas/households.schema";
 import { fromNodeHeaders } from "better-auth/node";
 import { and, eq } from "drizzle-orm";
 import type { NextFunction, Request, Response } from "express";
 import { db } from "@/db";
-import { householdMembersTable, householdsTable } from "@/db/schemas/households.schema";
 import * as householdsService from "@/modules/households/households.service";
 import { ForbiddenError, UnauthorizedError } from "@/shared/errors";
 import { auth } from "@/shared/lib/auth";

@@ -1,7 +1,7 @@
 import { bigint, index, integer, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
-import { accountsTable } from "./accounts.schema";
-import { creditCardProductTypeEnum } from "./enums.schema";
-import { householdsTable } from "./households.schema";
+import { accountsTable } from "./accounts.schema.js";
+import { creditCardProductTypeEnum } from "./enums.schema.js";
+import { householdsTable } from "./households.schema.js";
 
 export const creditCardsTable = pgTable(
   "credit_cards",

@@ -2,10 +2,10 @@ import {
   listCreditCardCyclesQuerySchema,
   listCreditCardsQuerySchema,
 } from "@luraba/contracts/credit-cards";
+import { creditCardBudgetRecognitionsTable } from "@luraba/db/schemas/credit-card-budget-recognitions.schema";
 import { eq } from "drizzle-orm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db";
-import { creditCardBudgetRecognitionsTable } from "@/db/schemas/credit-card-budget-recognitions.schema";
 import * as accountsService from "@/modules/accounts/accounts.service";
 import * as categoriesService from "@/modules/categories/categories.service";
 import * as brandfetchService from "@/modules/integrations/brandfetch/brandfetch.service";

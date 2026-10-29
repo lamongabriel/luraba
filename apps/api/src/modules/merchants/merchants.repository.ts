@@ -1,7 +1,7 @@
+import { merchantsTable } from "@luraba/db/schemas/merchants.schema";
 import { and, eq, sql } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
-import { merchantsTable } from "@/db/schemas/merchants.schema";
 import { type DbListPage, getPagination } from "@/shared/list";
 import { HouseholdScopedRepository } from "@/shared/repositories/household-scoped.repository";
 import {

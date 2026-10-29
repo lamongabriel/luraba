@@ -1,6 +1,6 @@
 import { now } from "@luraba/domain";
 import { index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { usersTable } from "./users.schema";
+import { usersTable } from "./users.schema.js";
 
 export const authSessionsTable = pgTable(
   "auth_sessions",

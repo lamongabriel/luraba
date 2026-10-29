@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { householdsTable } from "./households.schema";
+import { householdsTable } from "./households.schema.js";
 
 export const brandfetchIntegrationsTable = pgTable(
   "brandfetch_integrations",

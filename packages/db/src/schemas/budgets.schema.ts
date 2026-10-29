@@ -1,6 +1,6 @@
 import { bigint, date, pgTable, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { categoriesTable } from "./categories.schema";
-import { householdsTable } from "./households.schema";
+import { categoriesTable } from "./categories.schema.js";
+import { householdsTable } from "./households.schema.js";
 
 export const budgetsTable = pgTable(
   "budgets",

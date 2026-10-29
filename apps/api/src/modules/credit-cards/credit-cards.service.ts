@@ -1,8 +1,8 @@
+import { creditCardsTable } from "@luraba/db/schemas/credit-cards.schema";
 import { now } from "@luraba/domain";
 import { eq } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
-import { creditCardsTable } from "@/db/schemas/credit-cards.schema";
 import { accountsRepository } from "@/modules/accounts/accounts.repository";
 import * as accountsService from "@/modules/accounts/accounts.service";
 import { ledgerAccountsRepository } from "@/modules/ledger-accounts/ledger-accounts.repository";
