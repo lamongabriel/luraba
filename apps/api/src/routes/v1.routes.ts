@@ -6,9 +6,11 @@ import {
   categoriesEndpoints,
   creditCardsEndpoints,
   currenciesEndpoints,
+  exportsEndpoints,
   getEndpointBasePath,
   goalsEndpoints,
   householdsEndpoints,
+  importsEndpoints,
   integrationsEndpoints,
   merchantsEndpoints,
   notificationsEndpoints,
@@ -29,8 +31,10 @@ import budgetsRouter from "@/modules/budgets/budgets.routes";
 import categoriesRouter from "@/modules/categories/categories.routes";
 import creditCardsRouter from "@/modules/credit-cards/credit-cards.routes";
 import currenciesRouter from "@/modules/currencies/currencies.routes";
+import exportsRouter from "@/modules/exports/exports.routes";
 import goalsRouter from "@/modules/goals/goals.routes";
 import householdsRouter from "@/modules/households/households.routes";
+import importsRouter from "@/modules/imports/imports.routes";
 import integrationsRouter from "@/modules/integrations/integrations.routes";
 import merchantsRouter from "@/modules/merchants/merchants.routes";
 import notificationsRouter from "@/modules/notifications/notifications.routes";
@@ -52,6 +56,8 @@ router.use(getEndpointBasePath(accountsEndpoints.list), accountsRouter);
 router.use(getEndpointBasePath(billsEndpoints.list), billsRouter);
 router.use(getEndpointBasePath(splitsEndpoints.list), splitsRouter);
 router.use(getEndpointBasePath(goalsEndpoints.list), goalsRouter);
+router.use(getEndpointBasePath(importsEndpoints.list), importsRouter);
+router.use(getEndpointBasePath(exportsEndpoints.list), exportsRouter);
 router.use(getEndpointBasePath(budgetsEndpoints.getMonth), budgetsRouter);
 router.use(getEndpointBasePath(categoriesEndpoints.list), categoriesRouter);
 router.use(getEndpointBasePath(creditCardsEndpoints.list), creditCardsRouter);

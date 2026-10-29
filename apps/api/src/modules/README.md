@@ -70,6 +70,8 @@ A scoped `update`/`delete` returns `undefined` when nothing matched: turn that i
 | [entries](entries/README.md) | Double-entry ledger entries |
 | [fx](fx/README.md) | Exchange-rate providers and sync |
 | [goals](goals/README.md) | Savings and investment goals, contributions and completion estimates |
+| [imports](imports/README.md) | Statement import (OFX/CSV): parsers, mapping, background worker, reconciliation |
+| [exports](exports/README.md) | CSV/JSON export through a registry of exporters |
 | [health](health/README.md) | Health check |
 | [households](households/README.md) | Households, members, roles, invitations |
 | [integrations](integrations/README.md) | Third-party credentials (Brandfetch) |
