@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  FileExportIcon,
   Notification01Icon,
   Settings02Icon,
   Shield01Icon,
@@ -17,6 +18,7 @@ const links = [
   { href: "/settings/preferences", label: "Preferences", icon: Settings02Icon },
   { href: "/settings/notifications", label: "Notifications", icon: Notification01Icon },
   { href: "/settings/security", label: "Security", icon: Shield01Icon },
+  { href: "/settings/import-export", label: "Import & export", icon: FileExportIcon },
 ] as const;
 
 export function SettingsLayout({ children }: { children: ReactNode }) {
