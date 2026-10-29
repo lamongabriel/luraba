@@ -3,6 +3,7 @@ import { z } from "zod";
 export const QUEUE_NAMES = {
   notifications: "notifications",
   bills: "bills",
+  imports: "imports",
 } as const;
 
 export const NOTIFICATION_JOBS = {
@@ -26,3 +27,11 @@ export const BILL_JOBS = {
   /** Recurring: send due-soon and overdue reminders. */
   remind: "remind",
 } as const;
+
+export const IMPORT_JOBS = {
+  /** Create the records of one staged import batch. */
+  process: "process",
+} as const;
+
+export const importJobSchema = z.object({ batchId: z.uuid() });
+export type ImportJobData = z.output<typeof importJobSchema>;
