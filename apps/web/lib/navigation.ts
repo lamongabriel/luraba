@@ -6,6 +6,7 @@ import {
   GoalIcon,
   Layers01Icon,
   Settings02Icon,
+  Store01Icon,
   TagsIcon,
   UserGroupIcon,
   UserMultiple02Icon,
@@ -74,6 +75,12 @@ export const mainNav: NavigationItem[] = [
     href: "/tags",
     icon: TagsIcon,
     permission: PERMISSIONS.TAGS_READ,
+  },
+  {
+    title: "Merchants",
+    href: "/merchants",
+    icon: Store01Icon,
+    permission: PERMISSIONS.MERCHANTS_READ,
   },
 ];
 

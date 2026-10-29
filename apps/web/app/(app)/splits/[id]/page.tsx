@@ -257,7 +257,11 @@ export default function SplitDetailsPage() {
 
   if (query.isPending) {
     return (
-      <InternalPageLayout title="Split">
+      <InternalPageLayout
+        title="Split"
+        subtitle="Who owes what, installments and payments."
+        back={{ href: "/splits", label: "Splits" }}
+      >
         <Skeleton className="h-40 rounded-xl bg-muted/50" />
       </InternalPageLayout>
     );
@@ -265,7 +269,11 @@ export default function SplitDetailsPage() {
 
   if (query.isError || !split) {
     return (
-      <InternalPageLayout title="Split">
+      <InternalPageLayout
+        title="Split"
+        subtitle="Who owes what, installments and payments."
+        back={{ href: "/splits", label: "Splits" }}
+      >
         <ErrorState
           title="Couldn't load this split"
           description={query.error?.message || "It may have been deleted."}
@@ -280,6 +288,8 @@ export default function SplitDetailsPage() {
   return (
     <InternalPageLayout
       title={split.title}
+      subtitle="Who owes what, installments and payments."
+      back={{ href: "/splits", label: "Splits" }}
       actions={
         canUpdate || canDelete ? (
           <div className="flex items-center gap-2">

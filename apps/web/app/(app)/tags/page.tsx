@@ -142,6 +142,7 @@ export default function TagsPage() {
   return (
     <InternalPageLayout
       title="Tags"
+      subtitle="Label transactions across categories to find them later."
       actions={
         <PermissionButton
           permission={PERMISSIONS.TAGS_CREATE}

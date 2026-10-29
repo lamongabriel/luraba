@@ -2,7 +2,7 @@
 
 import type { Bill } from "@luraba/contracts";
 import { MAX_PER_PAGE } from "@luraba/contracts";
-import { addDays, formatISODate, formatShortDate } from "@luraba/domain";
+import { addDays, formatISODate, formatShortDate, now } from "@luraba/domain";
 import Link from "next/link";
 import * as React from "react";
 import { BillSheet } from "@/components/bills/bill-sheet";
@@ -83,7 +83,7 @@ function BillCard({ bill, language }: { bill: Bill; language: string }) {
 
 function ForecastStrip({ language }: { language: string }) {
   const range = React.useMemo(() => {
-    const today = new Date();
+    const today = now();
     return {
       from: formatISODate(today),
       to: formatISODate(addDays(today, FORECAST_DAYS)),
@@ -182,6 +182,7 @@ export default function BillsPage() {
   return (
     <InternalPageLayout
       title="Bills"
+      subtitle="Recurring bills and when each one is due."
       actions={
         <PermissionButton
           permission={PERMISSIONS.BILLS_CREATE}

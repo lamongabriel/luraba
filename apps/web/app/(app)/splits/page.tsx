@@ -112,6 +112,7 @@ export default function SplitsPage() {
   return (
     <InternalPageLayout
       title="Splits"
+      subtitle="Shared expenses and who still owes whom."
       actions={
         <PermissionButton
           permission={PERMISSIONS.SPLITS_CREATE}

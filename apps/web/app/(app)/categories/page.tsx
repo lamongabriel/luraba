@@ -318,6 +318,7 @@ export default function CategoriesPage() {
   return (
     <InternalPageLayout
       title="Categories"
+      subtitle="Group your spending and income to see where money goes."
       actions={
         <PermissionButton
           permission={PERMISSIONS.CATEGORIES_CREATE}

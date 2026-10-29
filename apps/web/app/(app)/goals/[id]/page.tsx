@@ -67,15 +67,13 @@ function describeOutlook(goal: GoalDetail, language: string): string {
   const { estimate } = goal;
   if (goal.state === "achieved") return "You've reached this goal.";
   if (goal.state === "paused" || goal.state === "canceled") return `This goal is ${goal.state}.`;
-  if (estimate.projectedCompletionDate) {
-    const when = formatShortDate(estimate.projectedCompletionDate, language);
-    if (goal.targetDate && estimate.onTrack === false) {
-      return `At the planned pace you'd reach it on ${when}, after your ${formatShortDate(goal.targetDate, language)} date.`;
-    }
-    return `At the planned pace you'll reach it on ${when}.`;
+  if (goal.monthlyContribution && estimate.projectedCompletionDate) {
+    return `Putting in the planned amount each month, you'll reach it on ${formatShortDate(estimate.projectedCompletionDate, language)}.`;
   }
-  if (estimate.requiredMonthly !== null) {
-    return "Set a monthly amount to see when you'll get there.";
+  if (goal.targetDate && estimate.requiredMonthly !== null) {
+    return estimate.onTrack
+      ? `You're ahead of a steady pace to ${formatShortDate(goal.targetDate, language)}.`
+      : `Put in about this much each month to reach it by ${formatShortDate(goal.targetDate, language)}.`;
   }
   return "Add a monthly amount or a target date to get an estimate.";
 }
@@ -164,7 +162,11 @@ export default function GoalDetailsPage() {
 
   if (query.isPending) {
     return (
-      <InternalPageLayout title="Goal">
+      <InternalPageLayout
+        title="Goal"
+        subtitle="Progress, monthly plan and contributions."
+        back={{ href: "/goals", label: "Goals" }}
+      >
         <Skeleton className="h-40 rounded-xl bg-muted/50" />
       </InternalPageLayout>
     );
@@ -172,7 +174,11 @@ export default function GoalDetailsPage() {
 
   if (query.isError || !goal) {
     return (
-      <InternalPageLayout title="Goal">
+      <InternalPageLayout
+        title="Goal"
+        subtitle="Progress, monthly plan and contributions."
+        back={{ href: "/goals", label: "Goals" }}
+      >
         <ErrorState
           title="Couldn't load this goal"
           description={query.error?.message || "It may have been deleted."}
@@ -191,6 +197,8 @@ export default function GoalDetailsPage() {
   return (
     <InternalPageLayout
       title={goal.name}
+      subtitle="Progress, monthly plan and contributions."
+      back={{ href: "/goals", label: "Goals" }}
       actions={
         canUpdate || canDelete ? (
           <div className="flex items-center gap-2">
@@ -257,35 +265,43 @@ export default function GoalDetailsPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Still to go">{money(estimate.remaining)}</Stat>
-        <Stat
-          label="Needed per month"
-          hint={
-            estimate.monthsLeft !== null
-              ? `${formatMonths(estimate.monthsLeft)} left`
-              : "Set a target date to see this"
-          }
-        >
-          {estimate.requiredMonthly !== null ? money(estimate.requiredMonthly) : "—"}
-        </Stat>
-        <Stat label="Planned per month">
-          {goal.monthlyContribution ? money(goal.monthlyContribution) : "—"}
-        </Stat>
-        <Stat
-          label={goal.targetDate ? "On the target date" : "Expected return"}
-          hint={
-            estimate.shortfall
-              ? `Short by ${formatCurrency(estimate.shortfall, goal.currencyCode, language)}`
-              : undefined
-          }
-        >
-          {goal.targetDate
-            ? estimate.projectedAtTargetDate !== null
-              ? money(estimate.projectedAtTargetDate)
-              : "—"
-            : goal.expectedReturnBps
-              ? `${bpsToPercent(goal.expectedReturnBps)}% a year`
-              : "—"}
-        </Stat>
+        {goal.targetDate ? (
+          <>
+            <Stat
+              label="Needed per month"
+              hint={
+                estimate.monthsLeft !== null
+                  ? `${formatMonths(estimate.monthsLeft)} left`
+                  : undefined
+              }
+            >
+              {estimate.requiredMonthly !== null ? money(estimate.requiredMonthly) : "—"}
+            </Stat>
+            <Stat label="Should have by now" hint="At a steady pace to your date">
+              {estimate.expectedSaved !== null ? money(estimate.expectedSaved) : "—"}
+            </Stat>
+          </>
+        ) : goal.monthlyContribution ? (
+          <>
+            <Stat label="Per month">{money(goal.monthlyContribution)}</Stat>
+            <Stat
+              label="Finish date"
+              hint={
+                goal.expectedReturnBps
+                  ? `With ${bpsToPercent(goal.expectedReturnBps)}% a year`
+                  : undefined
+              }
+            >
+              {estimate.projectedCompletionDate
+                ? formatShortDate(estimate.projectedCompletionDate, language)
+                : "—"}
+            </Stat>
+          </>
+        ) : (
+          <Stat label="Plan" hint="Edit the goal to add a date or a monthly amount">
+            None yet
+          </Stat>
+        )}
       </div>
 
       <section className="rounded-xl border border-border/60 p-4">

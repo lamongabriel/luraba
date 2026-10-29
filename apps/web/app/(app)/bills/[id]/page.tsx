@@ -188,7 +188,11 @@ export default function BillDetailsPage() {
 
   if (billQuery.isPending) {
     return (
-      <InternalPageLayout title="Bill">
+      <InternalPageLayout
+        title="Bill"
+        subtitle="Schedule, upcoming occurrences and payment history."
+        back={{ href: "/bills", label: "Bills" }}
+      >
         <Skeleton className="h-40 rounded-xl bg-muted/50" />
       </InternalPageLayout>
     );
@@ -196,7 +200,11 @@ export default function BillDetailsPage() {
 
   if (billQuery.isError || !bill) {
     return (
-      <InternalPageLayout title="Bill">
+      <InternalPageLayout
+        title="Bill"
+        subtitle="Schedule, upcoming occurrences and payment history."
+        back={{ href: "/bills", label: "Bills" }}
+      >
         <ErrorState
           title="Couldn't load this bill"
           description={billQuery.error?.message || "It may have been deleted."}
@@ -212,6 +220,8 @@ export default function BillDetailsPage() {
   return (
     <InternalPageLayout
       title={bill.name}
+      subtitle="Schedule, upcoming occurrences and payment history."
+      back={{ href: "/bills", label: "Bills" }}
       actions={
         canUpdate || canDelete ? (
           <div className="flex items-center gap-2">

@@ -168,6 +168,7 @@ export default function TransactionsPage() {
   return (
     <InternalPageLayout
       title="Transactions"
+      subtitle="Every purchase, payment and transfer across your accounts and cards."
       actions={
         <PermissionButton
           permission={PERMISSIONS.TRANSACTIONS_CREATE}

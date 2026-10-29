@@ -205,6 +205,7 @@ export function HouseholdsDirectory() {
   const header = (
     <PageHeader
       title="Households"
+      subtitle="The shared workspaces you belong to."
       actions={
         can(PERMISSIONS.HOUSEHOLD_READ) ? (
           <Button

@@ -135,6 +135,7 @@ export default function GoalsPage() {
   return (
     <InternalPageLayout
       title="Goals"
+      subtitle="Save or invest toward something and see when you will get there."
       actions={
         <PermissionButton
           permission={PERMISSIONS.GOALS_CREATE}

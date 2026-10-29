@@ -1,21 +1,9 @@
 import {
-  ArrowLeftRightIcon,
-  BitcoinCircleIcon,
-  CreditCardIcon,
-  DashboardSquare01Icon,
-  DollarCircleIcon,
-  Home01Icon,
-  PieChart02Icon,
-  WalletIcon,
-} from "@hugeicons/core-free-icons";
-import type { HugeiconsIcon } from "@hugeicons/react";
-import {
   ACCOUNT_TYPES,
   type AccountSubtype,
   type AccountType,
   type CreatableNonCardAccountType,
 } from "@luraba/contracts";
-import type { ComponentProps } from "react";
 
 export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   cash: "Cash",
@@ -28,19 +16,6 @@ export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   other_asset: "Other asset",
   other_liability: "Other liability",
 };
-
-export const ACCOUNT_TYPE_ICONS: Record<AccountType, ComponentProps<typeof HugeiconsIcon>["icon"]> =
-  {
-    cash: WalletIcon,
-    investment: PieChart02Icon,
-    crypto: BitcoinCircleIcon,
-    loan: DollarCircleIcon,
-    credit_card: CreditCardIcon,
-    property: Home01Icon,
-    vehicle: DashboardSquare01Icon,
-    other_asset: PieChart02Icon,
-    other_liability: ArrowLeftRightIcon,
-  };
 
 export const CREATABLE_ACCOUNT_TYPES = ACCOUNT_TYPES.filter(
   (type): type is CreatableNonCardAccountType => type !== "credit_card",
@@ -158,8 +133,4 @@ export function formatAccountSubtypeLabel(subtype: string) {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-}
-
-export function getAccountTypeIcon(type: AccountType) {
-  return ACCOUNT_TYPE_ICONS[type];
 }

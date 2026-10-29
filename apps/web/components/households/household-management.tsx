@@ -109,11 +109,10 @@ export function HouseholdManagement({ householdId }: { householdId: string }) {
       <PageReveal className="min-w-0 max-w-full space-y-8">
         <PageHeader
           title={household.name}
-          description={
+          subtitle={
             household.description || "A shared household workspace for organizing finances."
           }
-          backHref="/households"
-          backText="All households"
+          back={{ href: "/households", label: "households" }}
           actions={
             <div className="flex items-center gap-1.5">
               {canUpdateHousehold ? (
