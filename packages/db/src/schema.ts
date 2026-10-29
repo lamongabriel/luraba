@@ -27,6 +27,7 @@ export {
   householdMembersTable as householdMembers,
   householdsTable as households,
 } from "./schemas/households.schema.js";
+export * from "./schemas/imports.schema.js";
 export * from "./schemas/ledger-accounts.schema.js";
 export * from "./schemas/merchants.schema.js";
 export * from "./schemas/notifications.schema.js";

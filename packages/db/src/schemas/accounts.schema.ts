@@ -3,6 +3,7 @@ import { check, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "dri
 import { currenciesTable } from "./currencies.schema.js";
 import { accountClassificationEnum, accountTypeEnum } from "./enums.schema.js";
 import { householdsTable } from "./households.schema.js";
+import { uploadsTable } from "./uploads.schema.js";
 
 export const accountsTable = pgTable(
   "accounts",
@@ -15,6 +16,10 @@ export const accountsTable = pgTable(
     institutionName: varchar("institution_name", { length: 255 }),
     institutionDomain: varchar("institution_domain", { length: 255 }),
     institutionLogoUrl: varchar("institution_logo_url", { length: 512 }),
+    /** An uploaded picture shown instead of the institution logo or the type icon. */
+    imageUploadId: uuid("image_upload_id").references(() => uploadsTable.id, {
+      onDelete: "set null",
+    }),
     notes: text(),
     classification: accountClassificationEnum().notNull(),
     type: accountTypeEnum().notNull(),
