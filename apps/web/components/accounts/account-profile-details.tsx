@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { MoneyValue } from "@/components/finance/money-value";
 import { Typography } from "@/components/ui/typography";
 import { formatAccountSubtypeLabel } from "@/lib/accounts";
+import { formatNumber } from "@/lib/finance";
 
 function Detail({ label, value }: { label: string; value: ReactNode }) {
   if (value === null || value === undefined || value === "") return null;
@@ -58,7 +59,7 @@ export function AccountProfileDetails({
             value={
               details.area === null
                 ? null
-                : `${details.area.toLocaleString()} ${details.areaUnit ?? ""}`
+                : `${formatNumber(details.area)} ${details.areaUnit ?? ""}`
             }
           />
           <Detail label="Year built" value={details.yearBuilt} />
@@ -79,7 +80,7 @@ export function AccountProfileDetails({
             value={
               details.mileage === null
                 ? null
-                : `${details.mileage.toLocaleString()} ${details.mileageUnit ?? ""}`
+                : `${formatNumber(details.mileage)} ${details.mileageUnit ?? ""}`
             }
           />
         </>

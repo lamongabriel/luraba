@@ -11,7 +11,11 @@ export function AccountDetailsError({
   onRetry: () => void;
 }) {
   return (
-    <InternalPageLayout title="Account">
+    <InternalPageLayout
+      title="Account"
+      subtitle="Balance, activity and details."
+      back={{ href: "/accounts", label: "Accounts" }}
+    >
       <ErrorState title="Couldn't load this account" description={message} onRetry={onRetry} />
     </InternalPageLayout>
   );

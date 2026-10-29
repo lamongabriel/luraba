@@ -5,8 +5,8 @@ import { formatDatePattern as format, now } from "@luraba/domain";
 import * as React from "react";
 import { FormSheet } from "@/components/forms/form-sheet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateInput, MoneyInput } from "@/components/ui/masked-input";
 import { Typography } from "@/components/ui/typography";
 import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance";
 import { queryClient } from "@/lib/query-client";
@@ -73,23 +73,22 @@ export function AdjustAccountBalanceSheet({
       <form className="space-y-5" onSubmit={submit}>
         <div className="space-y-2">
           <Label htmlFor="adjusted-balance">New balance</Label>
-          <Input
+          <MoneyInput
             id="adjusted-balance"
-            type="number"
-            step={1 / 10 ** precision}
+            precision={precision}
+            allowNegative
             value={balance}
-            onChange={(event) => setBalance(event.target.value)}
+            onValueChange={setBalance}
             className="h-7 rounded-xl shadow-none"
             disabled={mutation.isPending}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="balance-date">Balance as of</Label>
-          <Input
+          <DateInput
             id="balance-date"
-            type="date"
             value={date}
-            onChange={(event) => setDate(event.target.value)}
+            onValueChange={setDate}
             className="h-7 rounded-xl shadow-none"
             disabled={mutation.isPending}
           />

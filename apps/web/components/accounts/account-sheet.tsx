@@ -2,6 +2,7 @@
 
 import type { AccountDetails } from "@luraba/contracts";
 import * as React from "react";
+import { AccountImageField } from "@/components/accounts/account-image-field";
 import { CreateEditAccountForm } from "@/components/forms/create-edit-account-form/create-edit-account-form";
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
 import { FormSheet } from "@/components/forms/form-sheet";
@@ -38,6 +39,11 @@ export function AccountSheet({
       }
       className="border-l-0 shadow-none before:hidden data-[side=right]:sm:max-w-xl"
     >
+      {account ? (
+        <div className="mb-4">
+          <AccountImageField account={account} />
+        </div>
+      ) : null}
       <FormErrorBoundary>
         <CreateEditAccountForm
           // Remount the form when switching between accounts / create mode.

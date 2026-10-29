@@ -1,7 +1,5 @@
 "use client";
 
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { TransactionFeedRow } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
 import { useParams, useRouter } from "next/navigation";
@@ -12,7 +10,6 @@ import { AdjustAccountBalanceSheet } from "@/components/accounts/adjust-account-
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
 import { PERMISSIONS, PermissionButton, ResourceAccessBoundary } from "@/components/permissions";
-import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { formatAccountSubtypeLabel, formatAccountTypeLabel } from "@/lib/accounts";
 import { queryClient } from "@/lib/query-client";
@@ -88,12 +85,10 @@ export default function AccountDetailsPage() {
       {account ? (
         <InternalPageLayout
           title={account.name}
+          subtitle="Balance, activity and details."
+          back={{ href: "/accounts", label: "Accounts" }}
           actions={
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => router.push("/accounts")}>
-                <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
-                Accounts
-              </Button>
               <PermissionButton
                 permission={PERMISSIONS.TRANSACTIONS_CREATE}
                 variant="outline"

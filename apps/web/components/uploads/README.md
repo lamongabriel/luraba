@@ -23,3 +23,7 @@ download. Never build bucket URLs in the browser.
    (`packages/contracts/src/uploads/catalog.ts`).
 2. Render `<AttachmentGallery targetType="..." targetId={record.id} attachmentRole="..." />`.
 3. Gate extra controls with `PERMISSIONS.UPLOADS_*` (`PermissionButton`).
+
+## Picture on a record
+
+`entity-image-field.tsx` (`EntityImageField`) uploads, attaches and sets/clears one picture on an existing record (account photo, merchant logo). The caller passes `onChange(uploadId | null)` to update its own field. Used by `components/accounts/account-image-field.tsx` and `components/merchants/merchant-image-field.tsx`.
