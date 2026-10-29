@@ -146,3 +146,12 @@
     letter-spacing: var(--tracking-normal);
   }
 }
+
+/* Credit card invoice statuses: paid, closed (waiting), overdue, open, upcoming. */
+:root {
+  --color-invoice-paid: oklch(0.696 0.17 162.48);
+  --color-invoice-closed: oklch(0.705 0.213 47.6);
+  --color-invoice-overdue: oklch(0.637 0.237 25.33);
+  --color-invoice-open: oklch(0.685 0.169 237.32);
+  --color-invoice-upcoming: oklch(0.708 0.02 261);
+}
