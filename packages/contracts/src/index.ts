@@ -19,5 +19,6 @@ export * from "./permissions.js";
 export * from "./preferences.js";
 export * from "./reference-data/index.js";
 export * from "./registry.js";
+export * from "./splits/index.js";
 export * from "./tags/index.js";
 export * from "./transactions/index.js";

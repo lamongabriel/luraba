@@ -30,6 +30,7 @@ export * from "./schemas/ledger-accounts.schema.js";
 export * from "./schemas/merchants.schema.js";
 export * from "./schemas/notifications.schema.js";
 export * from "./schemas/payment-methods.schema.js";
+export * from "./schemas/splits.schema.js";
 export * from "./schemas/tags.schema.js";
 export * from "./schemas/transaction-tags.schema.js";
 export * from "./schemas/transactions.schema.js";

@@ -14,6 +14,7 @@ import {
   onboardingEndpoints,
   paymentMethodsEndpoints,
   referenceDataEndpoints,
+  splitsEndpoints,
   tagsEndpoints,
   transactionsEndpoints,
 } from "@luraba/contracts";
@@ -33,6 +34,7 @@ import notificationsRouter from "@/modules/notifications/notifications.routes";
 import onboardingRouter from "@/modules/onboarding/onboarding.routes";
 import paymentMethodsRouter from "@/modules/payment-methods/payment-methods.routes";
 import referenceDataRouter from "@/modules/reference-data/reference-data.routes";
+import splitsRouter from "@/modules/splits/splits.routes";
 import tagsRouter from "@/modules/tags/tags.routes";
 import transactionsRouter from "@/modules/transactions/transactions.routes";
 
@@ -44,6 +46,7 @@ router.use(getEndpointBasePath(householdsEndpoints.list), householdsRouter);
 router.use(getEndpointBasePath(integrationsEndpoints.list), integrationsRouter);
 router.use(getEndpointBasePath(accountsEndpoints.list), accountsRouter);
 router.use(getEndpointBasePath(billsEndpoints.list), billsRouter);
+router.use(getEndpointBasePath(splitsEndpoints.list), splitsRouter);
 router.use(getEndpointBasePath(budgetsEndpoints.getMonth), budgetsRouter);
 router.use(getEndpointBasePath(categoriesEndpoints.list), categoriesRouter);
 router.use(getEndpointBasePath(creditCardsEndpoints.list), creditCardsRouter);

@@ -239,6 +239,13 @@
       "when": 1788499800000,
       "tag": "0033_bills",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1788586200000,
+      "tag": "0034_splits",
+      "breakpoints": true
     }
   ]
 }

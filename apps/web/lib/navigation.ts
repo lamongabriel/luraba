@@ -7,6 +7,7 @@ import {
   Settings02Icon,
   TagsIcon,
   UserGroupIcon,
+  UserMultiple02Icon,
   WalletIcon,
 } from "@hugeicons/core-free-icons";
 import { PERMISSIONS, type PermissionKey } from "@luraba/contracts";
@@ -48,6 +49,12 @@ export const mainNav: NavigationItem[] = [
     href: "/bills",
     icon: Calendar03Icon,
     permission: PERMISSIONS.BILLS_READ,
+  },
+  {
+    title: "Splits",
+    href: "/splits",
+    icon: UserMultiple02Icon,
+    permission: PERMISSIONS.SPLITS_READ,
   },
   {
     title: "Categories",

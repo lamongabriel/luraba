@@ -14,6 +14,7 @@ import { notificationsEndpoints } from "./notifications/endpoints.js";
 import { onboardingEndpoints } from "./onboarding/endpoints.js";
 import { paymentMethodsEndpoints } from "./payment-methods/endpoints.js";
 import { referenceDataEndpoints } from "./reference-data/endpoints.js";
+import { splitsEndpoints } from "./splits/endpoints.js";
 import { tagsEndpoints } from "./tags/endpoints.js";
 import { transactionsEndpoints } from "./transactions/endpoints.js";
 
@@ -35,6 +36,7 @@ export const contractModules = {
   onboarding: onboardingEndpoints,
   paymentMethods: paymentMethodsEndpoints,
   referenceData: referenceDataEndpoints,
+  splits: splitsEndpoints,
   tags: tagsEndpoints,
   transactions: transactionsEndpoints,
 } as const satisfies Readonly<Record<string, EndpointGroup>>;

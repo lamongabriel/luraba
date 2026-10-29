@@ -31,6 +31,10 @@
       "types": "./dist/auth/index.d.ts",
       "import": "./dist/auth/index.js"
     },
+    "./splits": {
+      "types": "./dist/splits/index.d.ts",
+      "import": "./dist/splits/index.js"
+    },
     "./bills": {
       "types": "./dist/bills/index.d.ts",
       "import": "./dist/bills/index.js"

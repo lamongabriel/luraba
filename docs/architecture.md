@@ -48,3 +48,14 @@ occurrences, topped up by the worker's `bills.generate` job; finite plans
 again 1, 3 and 7 days after it is missed, once the household's local time passes
 9:00. Dedupe keys keep the hourly job from repeating a reminder, and occurrences
 dated before the bill was created (backfilled history) never remind.
+
+### Split payments
+
+A split (`splits`) is a purchase shared with people who pay you back. Each person
+(`split_participants`) has any number of installments (`split_installments`),
+each with its own due date, amount and optional grace date. As with bills, the
+state is derived: received (an incoming transaction was linked, or it was marked
+by hand), skipped, written off ("I'll take the loss"), overdue once the due date
+and grace period pass, otherwise scheduled. Per-person and per-split totals
+(received, outstanding, written off) are computed on read. Splits send no
+notifications.

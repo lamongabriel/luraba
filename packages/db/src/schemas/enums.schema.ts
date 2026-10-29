@@ -7,6 +7,7 @@ import {
   PREFERRED_PERIOD_VALUES,
   PREFERRED_THEME_VALUES,
 } from "@luraba/contracts/preferences";
+import { SPLIT_STATUSES } from "@luraba/contracts/splits";
 import { pgEnum } from "drizzle-orm/pg-core";
 
 // ─── User Preference Enums ───────────────────────────────────────────────
@@ -160,3 +161,6 @@ export const notificationDeliveryStatusEnum = pgEnum("notification_delivery_stat
 export const billFrequencyEnum = pgEnum("bill_frequency", BILL_FREQUENCIES);
 export const billStatusEnum = pgEnum("bill_status", BILL_STATUSES);
 export const billAudienceEnum = pgEnum("bill_audience", BILL_AUDIENCES);
+
+// ─── Split Enums ─────────────────────────────────────────────────────────
+export const splitStatusEnum = pgEnum("split_status", SPLIT_STATUSES);
