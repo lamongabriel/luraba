@@ -7,6 +7,17 @@ Express API, a Next.js web app, a BullMQ worker and shared packages.
 conventions that are not obvious from the code. When you add a module, component group or package,
 add its README in the same change, and update the READMEs you rely on if the rules move.
 
+> ## STOP: never hand-render these in the web app
+>
+> **Accounts, credit cards, transaction types, merchants, amounts (money with sign and color),
+> categories and tags are always rendered with the shared components in
+> [`apps/web/components/display/`](apps/web/components/display/README.md)**: `AccountDisplay`,
+> `TransactionTypeDisplay`, `MerchantDisplay`, `AmountDisplay`, `CategoryDisplay`, `TagDisplay`.
+> Do not build your own avatar, icon, badge, chip or colored money text for these, in tables, drawers,
+> cards or forms. Icons, colors, labels and sizes live in `components/display/constants.ts`; change
+> them there and the whole app follows. If a case is missing, extend that folder instead of working
+> around it. Read its README before touching any UI that shows these things.
+
 ## Where to read
 
 | You are touching | Read first |
@@ -20,9 +31,13 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | HTTP contracts, permissions, wire types | [packages/contracts/README.md](packages/contracts/README.md) |
 | File uploads, attachments, storage backends | [docs/storage.md](docs/storage.md), [packages/storage/README.md](packages/storage/README.md), [apps/api/src/modules/uploads/README.md](apps/api/src/modules/uploads/README.md) |
 | Money, dates, recurrence | [packages/domain/README.md](packages/domain/README.md) |
+| Formatting numbers, money, dates; number and date inputs | [docs/formatting.md](docs/formatting.md) (**mandatory**) |
 | Notifications, queues, the worker | [packages/notifications/README.md](packages/notifications/README.md), [packages/queue/README.md](packages/queue/README.md), [apps/worker/README.md](apps/worker/README.md) |
+| Credit cards UI (overview, card detail, invoices) | [apps/web/components/credit-cards/README.md](apps/web/components/credit-cards/README.md) |
 | The web app | [apps/web/README.md](apps/web/README.md) (data layer, components, forms, permissions) |
+| Showing an account, card, transaction type, merchant, amount, category or tag | [apps/web/components/display/README.md](apps/web/components/display/README.md) (**mandatory**) |
 | Reusable upload UI (galleries, cropper) | [apps/web/components/uploads/README.md](apps/web/components/uploads/README.md) |
+| Importing statements (OFX/CSV) or exporting data | [apps/api/src/modules/imports/README.md](apps/api/src/modules/imports/README.md), [apps/api/src/modules/exports/README.md](apps/api/src/modules/exports/README.md), [apps/web/components/imports/README.md](apps/web/components/imports/README.md) |
 | Deployment (Compose, Coolify) | [docs/deployment.md](docs/deployment.md), [docs/coolify.md](docs/coolify.md) |
 
 ## Rules that always apply
@@ -54,6 +69,19 @@ add its README in the same change, and update the READMEs you rely on if the rul
    level changes, `docs/architecture.md`.
 10. **Git.** Commit only when asked. Stage files by name (never `git add -A`). Conventional commit
     messages (`feat(scope): ...`) are enforced by commitlint.
+
+11. **English only, American examples.** All UI text is English, never Portuguese or another language
+    (translate terms: "fatura" = invoice, "limite" = credit limit, "vencimento" = due date). Placeholders,
+    tooltips, tests and sample data use American names and institutions (Chase, American Express,
+    John Doe, Chris, Mike), never Portuguese names or Brazilian banks.
+12. **Shared display components.** Anything that shows an account, credit card, transaction type,
+    merchant, amount, category or tag uses `apps/web/components/display/` (see the banner at the top).
+    Account types live in one catalog (`ACCOUNT_TYPE_DISPLAY`): a new account type or subtype adds its
+    label, icon and color there, never inline in a page.
+13. **Numbers, money and dates are shared.** Money text goes through `formatMoney` /
+    `AmountDisplay`, numeric inputs through `MoneyInput` / `NumberInput` / `DateInput` (never
+    `type="number"`), dates through the UTC helpers in `@luraba/domain`. See
+    [docs/formatting.md](docs/formatting.md).
 
 ## Commands
 

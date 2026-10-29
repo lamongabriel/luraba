@@ -70,6 +70,17 @@ saved, achieved, on track or behind, and the estimate (the monthly amount needed
 finishes, and with an expected yearly return for investments, what it grows to) are computed on
 read by `@luraba/domain`. Goals send no notifications.
 
+## Import and export
+
+Statements are imported in three steps (upload and preview, map and review, background import).
+A `ParserAdapter` registry turns OFX and bank CSV files into normalized rows, staged in
+`import_batches`/`import_rows`; a pure evaluator decides each row's kind and problems; per-kind
+importers create records through the existing transaction, purchase and payment services. A BullMQ
+worker (inside the API process) runs the import, and `import_records` make re-imports idempotent
+(bank id, fingerprint, installment series, cross-statement pair keys). A reconciliation check compares
+the file's balance and period with Luraba's. Exports use a registry of exporters (CSV/JSON). Both
+live in Settings. Details: `apps/api/src/modules/imports/README.md`, `exports/README.md`.
+
 ## File storage
 
 Files are stored as objects in an S3-compatible bucket (`@luraba/storage`), by default a bundled

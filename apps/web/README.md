@@ -33,3 +33,11 @@ authorization logic in `apps/api` instead of importing it into this workspace.
 Adding data to a screen: service function -> query hook (+ key) -> component; writes: mutation hook
 that invalidates the key. Reusable file/attachment UI is documented in
 [components/uploads/README.md](components/uploads/README.md).
+
+**Display components (mandatory).** Accounts, credit cards, transaction types, merchants, amounts, categories and tags are shown with [components/display/](components/display/README.md), never hand-built.
+
+Credit cards UI (month overview, card detail, invoices): [components/credit-cards/README.md](components/credit-cards/README.md).
+
+**Page titles.** Every page in `(app)` renders `InternalPageLayout` (which wraps `components/finance/page-header.tsx`):
+`title`, a mandatory `subtitle`, an optional `back={{ href, label }}` ("Back to {label}", use it on every detail page) and an
+`actions` slot aligned with the title. Do not build one-off headers.
