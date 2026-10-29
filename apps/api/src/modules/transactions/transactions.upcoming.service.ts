@@ -6,6 +6,7 @@ import {
 import { addDays, formatISODate, getTodayInTimezone } from "@luraba/domain";
 import type { z } from "zod";
 import type { HouseholdContext } from "@/config/permissions";
+import * as billsRepository from "@/modules/bills/bills.repository";
 import { createListMeta } from "@/shared/list";
 import * as repository from "./transactions.analytics.repository";
 import type { TransactionFilterQuery } from "./transactions.query";
@@ -22,6 +23,47 @@ function toFilterQuery(query: UpcomingQuery): TransactionFilterQuery {
     ...filters
   } = query;
   return transactionAnalyticsQuerySchema.parse(filters);
+}
+
+/** Bills only have a name, amount, category and merchant, so filters on anything else exclude them. */
+async function listUpcomingBills(
+  context: HouseholdContext,
+  filters: TransactionFilterQuery,
+  toDate: string,
+  today: Date,
+): Promise<UpcomingTransaction[]> {
+  const unsupported =
+    filters.accountIds?.length ||
+    filters.creditCardIds?.length ||
+    filters.tagIds?.length ||
+    filters.paymentMethodCodes?.length ||
+    (filters.originTypes?.length && !filters.originTypes.includes("expense"));
+  if (unsupported) return [];
+
+  const rows = await billsRepository.listUpcomingOccurrences(context.householdId, toDate, filters);
+
+  return rows.map((row) =>
+    upcomingTransactionSchema.parse({
+      sourceType: "bill_occurrence",
+      sourceId: row.occurrenceId,
+      parentId: row.billId,
+      description: row.name,
+      effectiveDate: formatISODate(row.dueDate),
+      amount: row.expectedAmount,
+      currencyCode: row.currencyCode,
+      accountId: null,
+      accountName: null,
+      creditCardId: null,
+      creditCardName: null,
+      categoryId: row.categoryId,
+      categoryName: null,
+      merchantId: row.merchantId,
+      merchantName: null,
+      installmentNumber: row.installmentNumber,
+      installmentCount: row.installmentCount,
+      isOverdue: row.dueDate < today,
+    }),
+  );
 }
 
 export async function listUpcomingTransactions(context: HouseholdContext, query: UpcomingQuery) {
@@ -60,7 +102,9 @@ export async function listUpcomingTransactions(context: HouseholdContext, query:
     }),
   );
 
-  const data = installments.sort(
+  const bills = await listUpcomingBills(context, filters, toDate, today);
+
+  const data = [...installments, ...bills].sort(
     (a, b) =>
       (query.sortDirection === "desc" ? -1 : 1) *
       (a.effectiveDate.localeCompare(b.effectiveDate) || a.sourceId.localeCompare(b.sourceId)),

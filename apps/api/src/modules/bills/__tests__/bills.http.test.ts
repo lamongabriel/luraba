@@ -130,4 +130,38 @@ describe("bills routes", () => {
     expect(response.status).toBe(200);
     expect(response.body.data.items.length).toBeGreaterThan(0);
   });
+
+  it("shows unpaid bills in the upcoming transactions feed", async () => {
+    const context = await createAuthenticatedContext();
+    const headers = createAuthHeaders(context.token, context.household.id);
+    const today = formatISODate(getTodayInTimezone(context.householdContext.timezone));
+
+    await request(app).post("/api/v1/bills").set(headers).send({
+      name: "Upcoming Gas",
+      expectedAmount: 5_000,
+      currencyCode: "BRL",
+      frequency: "weekly",
+      startDate: today,
+    });
+
+    const response = await request(app)
+      .get("/api/v1/transactions/upcoming")
+      .set(headers)
+      .query({ search: "Upcoming Gas", perPage: 10 });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.length).toBeGreaterThanOrEqual(4);
+    expect(response.body.data[0]).toMatchObject({
+      sourceType: "bill_occurrence",
+      description: "Upcoming Gas",
+      amount: 5_000,
+      isOverdue: false,
+    });
+
+    const filtered = await request(app)
+      .get("/api/v1/transactions/upcoming")
+      .set(headers)
+      .query({ search: "Upcoming Gas", accountIds: crypto.randomUUID() });
+    expect(filtered.body.data).toHaveLength(0);
+  });
 });

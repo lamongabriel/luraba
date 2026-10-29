@@ -47,8 +47,13 @@ export function UpcomingTransactionsPanel({
                     <span className="flex items-center gap-1.5">
                       <span className="truncate text-xs font-medium">{row.description}</span>
                       <Badge variant="outline" className="h-4 px-1 text-[0.55rem]">
-                        Installment
+                        {row.sourceType === "bill_occurrence" ? "Bill" : "Installment"}
                       </Badge>
+                      {row.isOverdue ? (
+                        <Badge variant="destructive" className="h-4 px-1 text-[0.55rem]">
+                          Overdue
+                        </Badge>
+                      ) : null}
                     </span>
                     <span className="mt-0.5 block text-[0.65rem] text-muted-foreground">
                       {formatShortDate(row.effectiveDate, language)}

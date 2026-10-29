@@ -330,3 +330,79 @@ export async function listForecastRows(context: HouseholdContext, from: string, 
     )
     .orderBy(asc(billOccurrencesTable.dueDate), asc(billsTable.name));
 }
+
+export type UpcomingBillRow = {
+  occurrenceId: string;
+  billId: string;
+  name: string;
+  dueDate: Date;
+  expectedAmount: number;
+  currencyCode: string;
+  categoryId: string | null;
+  merchantId: string | null;
+  installmentNumber: number | null;
+  installmentCount: number | null;
+};
+
+/**
+ * Unpaid occurrences of active bills due up to `toDate`, including overdue ones.
+ * Occurrences dated before the bill was created are backfilled history, not debts.
+ */
+export async function listUpcomingOccurrences(
+  householdId: string,
+  toDate: string,
+  filters: {
+    search?: string;
+    categoryIds?: string[];
+    merchantIds?: string[];
+    currencyCodes?: string[];
+    uncategorized?: boolean;
+    amountMin?: number;
+    amountMax?: number;
+  },
+): Promise<UpcomingBillRow[]> {
+  const rows = await db
+    .select({
+      occurrenceId: billOccurrencesTable.id,
+      billId: billsTable.id,
+      name: billsTable.name,
+      dueDate: billOccurrencesTable.dueDate,
+      expectedAmount: billOccurrencesTable.expectedAmount,
+      currencyCode: billsTable.currencyCode,
+      categoryId: billsTable.categoryId,
+      merchantId: billsTable.merchantId,
+      installmentNumber: billOccurrencesTable.installmentNumber,
+      installmentCount: billsTable.installmentCount,
+    })
+    .from(billOccurrencesTable)
+    .innerJoin(billsTable, eq(billsTable.id, billOccurrencesTable.billId))
+    .where(
+      and(
+        eq(billsTable.householdId, householdId),
+        eq(billsTable.status, "active"),
+        unresolved,
+        lte(billOccurrencesTable.dueDate, sql`${toDate}::date`),
+        gte(billOccurrencesTable.dueDate, sql`${billsTable.createdAt}::date`),
+        buildIlikeSearch(filters.search, [sql`${billsTable.name}`]),
+        filters.categoryIds?.length
+          ? inArray(billsTable.categoryId, filters.categoryIds)
+          : undefined,
+        filters.merchantIds?.length
+          ? inArray(billsTable.merchantId, filters.merchantIds)
+          : undefined,
+        filters.currencyCodes?.length
+          ? inArray(billsTable.currencyCode, filters.currencyCodes)
+          : undefined,
+        filters.uncategorized ? isNull(billsTable.categoryId) : undefined,
+        filters.amountMin !== undefined
+          ? gte(billOccurrencesTable.expectedAmount, filters.amountMin)
+          : undefined,
+        filters.amountMax !== undefined
+          ? lte(billOccurrencesTable.expectedAmount, filters.amountMax)
+          : undefined,
+      ),
+    )
+    .orderBy(asc(billOccurrencesTable.dueDate), asc(billOccurrencesTable.id));
+
+  return rows;
+}

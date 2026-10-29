@@ -88,7 +88,10 @@ export const transactionAnalyticsSchema = z.object({
     ),
   }),
 });
-export const upcomingTransactionSourceSchema = z.literal("credit_card_installment");
+export const upcomingTransactionSourceSchema = z.enum([
+  "credit_card_installment",
+  "bill_occurrence",
+]);
 export const upcomingTransactionSchema = z.object({
   sourceType: upcomingTransactionSourceSchema,
   sourceId: z.uuid(),
@@ -107,6 +110,8 @@ export const upcomingTransactionSchema = z.object({
   merchantName: z.string().nullable(),
   installmentNumber: z.number().int().nullable(),
   installmentCount: z.number().int().nullable(),
+  /** Only bills can be past due while still upcoming; installments are always in the future. */
+  isOverdue: z.boolean().default(false),
 });
 
 export type Transaction = z.output<typeof transactionSchema>;

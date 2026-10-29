@@ -7,6 +7,7 @@ import type {
   TransactionFeedRow,
   UpcomingTransaction,
 } from "@luraba/contracts";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { TransactionsError } from "@/app/(app)/transactions/_error";
 import { TransactionsLoading } from "@/app/(app)/transactions/_loading";
@@ -30,6 +31,7 @@ import { useAuthSessionStore } from "@/stores/auth-session-store";
 
 export default function TransactionsPage() {
   const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
+  const router = useRouter();
   const params = useTransactionParams();
   const lookupsQuery = useTransactionLookupsQuery();
   const analyticsFilters = React.useMemo(() => {
@@ -95,6 +97,10 @@ export default function TransactionsPage() {
 
   const openUpcoming = React.useCallback(
     (row: UpcomingTransaction) => {
+      if (row.sourceType === "bill_occurrence") {
+        router.push(`/bills/${row.parentId}`);
+        return;
+      }
       const feedRow: TransactionFeedRow = {
         id: row.parentId,
         type: "expense",
@@ -134,7 +140,7 @@ export default function TransactionsPage() {
       };
       openRow(feedRow, "view");
     },
-    [openRow],
+    [openRow, router],
   );
 
   const precision =
