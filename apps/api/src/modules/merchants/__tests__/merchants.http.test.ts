@@ -1,9 +1,21 @@
+import { createMemoryStorage } from "@luraba/storage";
 import request from "supertest";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import app from "@/app";
 import * as brandfetchService from "@/modules/integrations/brandfetch/brandfetch.service";
+import { setStorageForTesting } from "@/modules/uploads/uploads.storage";
 import { createAuthenticatedContext, createAuthHeaders } from "@/test/auth";
 import { buildMerchantInput } from "@/test/factories";
+
+const PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "base64",
+);
+const PDF = Buffer.from("%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n");
+const storage = createMemoryStorage();
+
+beforeAll(() => setStorageForTesting(storage));
+afterAll(() => setStorageForTesting(undefined));
 
 describe("merchants routes", () => {
   afterEach(() => {
@@ -158,6 +170,40 @@ describe("merchants routes", () => {
         logoUrl: null,
       }),
     );
+  });
+
+  it("PATCH /api/v1/merchants/:id sets and clears an uploaded logo", async () => {
+    const context = await createAuthenticatedContext();
+    const headers = createAuthHeaders(context.token, context.household.id);
+    const created = await request(app)
+      .post("/api/v1/merchants")
+      .set(headers)
+      .send(buildMerchantInput({ name: "Logo merchant" }));
+    const image = await request(app)
+      .post("/api/v1/uploads?scope=household")
+      .set(headers)
+      .attach("file", PNG, { filename: "logo.png", contentType: "image/png" });
+    const pdf = await request(app)
+      .post("/api/v1/uploads?scope=household")
+      .set(headers)
+      .attach("file", PDF, { filename: "doc.pdf", contentType: "application/pdf" });
+    const url = `/api/v1/merchants/${created.body.data.id}`;
+
+    const rejected = await request(app)
+      .patch(url)
+      .set(headers)
+      .send({ imageUploadId: pdf.body.data.id });
+    expect(rejected.status).toBe(422);
+
+    const set = await request(app)
+      .patch(url)
+      .set(headers)
+      .send({ imageUploadId: image.body.data.id });
+    expect(set.status).toBe(200);
+    expect(set.body.data.imageUploadId).toBe(image.body.data.id);
+
+    const cleared = await request(app).patch(url).set(headers).send({ imageUploadId: null });
+    expect(cleared.body.data.imageUploadId).toBeNull();
   });
 
   it("DELETE /api/v1/merchants/:id deletes a merchant", async () => {

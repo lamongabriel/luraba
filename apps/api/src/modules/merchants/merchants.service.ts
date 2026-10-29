@@ -10,6 +10,7 @@ import {
   buildBrandfetchLogoUrl,
   normalizeBrandDomain,
 } from "@/modules/integrations/brandfetch/brandfetch.utils";
+import { assertHouseholdImageUpload } from "@/modules/uploads/uploads.guards";
 import { ConflictError, NotFoundError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
 import type { ListMerchantsQuery } from "./merchants.query";
@@ -22,6 +23,7 @@ function mapMerchantRecord(merchant: MerchantRecord): Merchant {
     name: merchant.name,
     domain: merchant.domain ?? null,
     logoUrl: merchant.logoUrl ?? null,
+    imageUploadId: merchant.imageUploadId ?? null,
     createdAt: formatISODateTime(merchant.createdAt),
     updatedAt: formatISODateTime(merchant.updatedAt),
   };
@@ -95,6 +97,10 @@ export async function updateMerchant(
     }
   }
 
+  if (body.imageUploadId) {
+    await assertHouseholdImageUpload(context, body.imageUploadId, "imageUploadId");
+  }
+
   const normalizedDomain =
     body.domain === null ? null : body.domain ? normalizeBrandDomain(body.domain) : undefined;
   const brandfetchClientId = normalizedDomain
@@ -111,6 +117,7 @@ export async function updateMerchant(
     name: body.name,
     domain: normalizedDomain,
     logoUrl,
+    imageUploadId: body.imageUploadId,
   });
 
   if (!updated) {

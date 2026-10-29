@@ -1,11 +1,13 @@
 import type { CreateAccountInput, UpdateAccountInput } from "@luraba/contracts/accounts";
+import { createMemoryStorage } from "@luraba/storage";
 import request from "supertest";
-import { vi } from "vitest";
+import { afterAll, beforeAll, vi } from "vitest";
 import app from "@/app";
 import * as accountsService from "@/modules/accounts/accounts.service";
 import * as categoriesService from "@/modules/categories/categories.service";
 import * as creditCardsService from "@/modules/credit-cards/credit-cards.service";
 import * as transactionsService from "@/modules/transactions/transactions.service";
+import { setStorageForTesting } from "@/modules/uploads/uploads.storage";
 import { createAuthenticatedContext, createAuthHeaders } from "@/test/auth";
 import {
   buildAccountInput,
@@ -15,6 +17,16 @@ import {
   createHousehold,
   createHouseholdMembership,
 } from "@/test/factories";
+
+const PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "base64",
+);
+const PDF = Buffer.from("%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n");
+const storage = createMemoryStorage();
+
+beforeAll(() => setStorageForTesting(storage));
+afterAll(() => setStorageForTesting(undefined));
 
 type TypedAccountHttpCase = {
   type: CreateAccountInput["type"];
@@ -297,6 +309,43 @@ describe("accounts routes", () => {
 
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("PATCH /api/v1/accounts/:id sets and clears an uploaded picture", async () => {
+    const context = await createAuthenticatedContext();
+    const headers = createAuthHeaders(context.token, context.household.id);
+    const created = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: "Picture account" }),
+    );
+    const image = await request(app)
+      .post("/api/v1/uploads?scope=household")
+      .set(headers)
+      .attach("file", PNG, { filename: "car.png", contentType: "image/png" });
+    expect(image.status).toBe(201);
+    const pdf = await request(app)
+      .post("/api/v1/uploads?scope=household")
+      .set(headers)
+      .attach("file", PDF, { filename: "doc.pdf", contentType: "application/pdf" });
+
+    const rejected = await request(app)
+      .patch(`/api/v1/accounts/${created.id}`)
+      .set(headers)
+      .send({ imageUploadId: pdf.body.data.id });
+    expect(rejected.status).toBe(422);
+
+    const set = await request(app)
+      .patch(`/api/v1/accounts/${created.id}`)
+      .set(headers)
+      .send({ imageUploadId: image.body.data.id });
+    expect(set.status).toBe(200);
+    expect(set.body.data.imageUploadId).toBe(image.body.data.id);
+
+    const cleared = await request(app)
+      .patch(`/api/v1/accounts/${created.id}`)
+      .set(headers)
+      .send({ imageUploadId: null });
+    expect(cleared.body.data.imageUploadId).toBeNull();
   });
 
   it("POST /api/v1/accounts respects household permissions", async () => {

@@ -161,6 +161,7 @@ class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
           institutionName: accountsTable.institutionName,
           institutionDomain: accountsTable.institutionDomain,
           institutionLogoUrl: accountsTable.institutionLogoUrl,
+          imageUploadId: accountsTable.imageUploadId,
           notes: accountsTable.notes,
           classification: accountsTable.classification,
           type: accountsTable.type,

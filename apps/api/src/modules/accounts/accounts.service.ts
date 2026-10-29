@@ -26,6 +26,7 @@ import {
   listTransactions as listTransactionFeed,
 } from "@/modules/transactions/transactions.service";
 import type { TransactionFeedRow } from "@/modules/transactions/transactions.types";
+import { assertHouseholdImageUpload } from "@/modules/uploads/uploads.guards";
 import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
 import {
@@ -53,6 +54,7 @@ function mapAccountRecord(account: AccountRecord): Account {
     institutionName: account.institutionName ?? null,
     institutionDomain: account.institutionDomain ?? null,
     institutionLogoUrl: account.institutionLogoUrl ?? null,
+    imageUploadId: account.imageUploadId ?? null,
     notes: account.notes ?? null,
     classification: account.classification,
     type: account.type,
@@ -88,6 +90,7 @@ type UpdateAccountRecordInput = {
   name?: string;
   institutionName?: string | null;
   institutionDomain?: string | null;
+  imageUploadId?: string | null;
   notes?: string | null;
 };
 
@@ -318,6 +321,9 @@ export async function updateAccount(
     }
   }
 
+  if (dto.imageUploadId)
+    await assertHouseholdImageUpload(context, dto.imageUploadId, "imageUploadId");
+
   if (dto.details && dto.details.kind !== account.type) {
     throw new ValidationError("Account details must match the existing account type");
   }
@@ -343,6 +349,7 @@ export async function updateAccount(
       name: dto.name,
       institutionName: dto.institutionName,
       institutionDomain: dto.institutionDomain,
+      imageUploadId: dto.imageUploadId,
       notes: dto.notes,
     });
 
