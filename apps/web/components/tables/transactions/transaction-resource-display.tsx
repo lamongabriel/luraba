@@ -1,53 +1,17 @@
 "use client";
 
-import { Store01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
-import type {
-  AccountDetails,
-  AccountType,
-  CreditCard,
-  Merchant,
-  TransactionFeedRow,
-} from "@luraba/contracts";
+import type { AccountDetails, CreditCard, Merchant, TransactionFeedRow } from "@luraba/contracts";
 import { formatDisplayDate } from "@luraba/domain";
 import * as React from "react";
-import { CreditCardBrandMark } from "@/components/credit-cards/credit-card-brand";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { type AccountDisplayInput, AccountMark, MerchantMark } from "@/components/display";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { formatAccountTypeLabel, getAccountTypeIcon } from "@/lib/accounts";
-import { cn } from "@/lib/utils";
+import { formatAccountTypeLabel } from "@/lib/accounts";
 import { useAccountQuery } from "@/queries/accounts/use-accounts-query";
 import { useCreditCardQuery } from "@/queries/credit-cards/use-credit-cards-query";
 import { useMerchantQuery } from "@/queries/merchants/use-merchants-query";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
-
-function ResourceMark({
-  imageUrl,
-  fallback,
-  className,
-}: {
-  imageUrl?: string | null;
-  fallback: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <Avatar
-      className={cn(
-        "flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-sm border border-border/70 bg-muted text-[0.6rem] text-muted-foreground",
-        className,
-      )}
-    >
-      <AvatarImage src={imageUrl ?? undefined} alt="" className="object-contain" />
-      <AvatarFallback className="rounded-sm text-[0.6rem]">{fallback}</AvatarFallback>
-    </Avatar>
-  );
-}
-
-function getInitial(value: string) {
-  return value.trim().charAt(0).toUpperCase() || "?";
-}
 
 function AccountHoverDetails({
   account,
@@ -91,20 +55,7 @@ function AccountHoverDetails({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <ResourceMark
-          imageUrl={card ? undefined : account?.institutionLogoUrl}
-          fallback={
-            card ? (
-              <CreditCardBrandMark brand={card.brand} />
-            ) : account ? (
-              <HugeiconsIcon
-                icon={getAccountTypeIcon(account.type as AccountType)}
-                strokeWidth={2}
-                className="size-3"
-              />
-            ) : null
-          }
-        />
+        {resource ? <AccountMark account={resource} size="md" /> : null}
         <div className="min-w-0">
           <Typography as="p" variant="small-strong" className="truncate">
             {name}
@@ -166,7 +117,7 @@ export function TransactionAccountDisplay({
   const label = card
     ? `${card.brand} •••• ${card.last4}`
     : (account?.name ?? row.accountName ?? "No account");
-  const imageUrl = card?.institutionLogoUrl ?? account?.institutionLogoUrl;
+  const visual = card ?? account;
 
   return (
     <div className="min-w-44">
@@ -177,20 +128,7 @@ export function TransactionAccountDisplay({
             className="flex min-w-0 items-center gap-2 text-left"
             aria-label={`View details for ${label}`}
           >
-            <ResourceMark
-              imageUrl={card ? undefined : imageUrl}
-              fallback={
-                card ? (
-                  <CreditCardBrandMark brand={card.brand} />
-                ) : account ? (
-                  <HugeiconsIcon
-                    icon={getAccountTypeIcon(account.type as AccountType)}
-                    strokeWidth={2}
-                    className="size-3"
-                  />
-                ) : null
-              }
-            />
+            {visual ? <AccountMark account={visual} /> : null}
             <span className="truncate text-xs font-medium">{label}</span>
           </button>
         </HoverCardTrigger>
@@ -239,10 +177,7 @@ function MerchantHoverDetails({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <ResourceMark
-          imageUrl={merchant.logoUrl}
-          fallback={<span>{getInitial(merchant.name)}</span>}
-        />
+        <MerchantMark merchant={merchant} size="md" />
         <div className="min-w-0">
           <Typography as="p" variant="small-strong" className="truncate">
             {merchant.name}
@@ -301,20 +236,9 @@ export function TransactionAccountPanelDisplay({
 
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <ResourceMark
-        imageUrl={resolvedCard ? undefined : resolvedAccount?.institutionLogoUrl}
-        fallback={
-          resolvedCard ? (
-            <CreditCardBrandMark brand={resolvedCard.brand} />
-          ) : resolvedAccount ? (
-            <HugeiconsIcon
-              icon={getAccountTypeIcon(resolvedAccount.type as AccountType)}
-              strokeWidth={2}
-              className="size-3"
-            />
-          ) : null
-        }
-      />
+      {(resolvedCard ?? resolvedAccount) ? (
+        <AccountMark account={(resolvedCard ?? resolvedAccount) as AccountDisplayInput} size="md" />
+      ) : null}
       <div className="min-w-0">
         <Typography as="p" variant="small-strong" className="truncate">
           {label}
@@ -349,10 +273,7 @@ export function TransactionMerchantPanelDisplay({
 
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <ResourceMark
-        imageUrl={resolvedMerchant.logoUrl}
-        fallback={<HugeiconsIcon icon={Store01Icon} strokeWidth={2} className="size-3" />}
-      />
+      <MerchantMark merchant={resolvedMerchant} size="md" />
       <div className="min-w-0">
         <Typography as="p" variant="small-strong" className="truncate">
           {resolvedMerchant.name}
@@ -390,10 +311,7 @@ export function TransactionMerchantDisplay({
             className="flex min-w-0 items-center gap-2 text-left"
             aria-label={`View details for ${lookupMerchant.name}`}
           >
-            <ResourceMark
-              imageUrl={lookupMerchant.logoUrl}
-              fallback={<HugeiconsIcon icon={Store01Icon} strokeWidth={2} className="size-3" />}
-            />
+            <MerchantMark merchant={lookupMerchant} />
             <span className="truncate text-xs font-medium">{lookupMerchant.name}</span>
           </button>
         </HoverCardTrigger>

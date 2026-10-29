@@ -1,12 +1,8 @@
 "use client";
 
 import type { TransactionFeedRow } from "@luraba/contracts";
+import { CategoryDisplay, TransactionTypeDisplay } from "@/components/display";
 import { ComboboxControl } from "@/components/forms/form-combobox";
-import { TransactionTypeBadge } from "@/components/tables/transactions/transaction-type-badge";
-import {
-  TransactionLabelChip,
-  UncategorizedChip,
-} from "@/components/transactions/transaction-label-chip";
 import { useTransactionInlineUpdates } from "@/components/transactions/use-transaction-inline-updates";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
 
@@ -31,14 +27,14 @@ export function InlineCategoryCell({
   const category = lookups.categories.find((item) => item.id === row.categoryId);
 
   if (row.originType === "transfer") {
-    return <TransactionTypeBadge type="transfer" />;
+    return <TransactionTypeDisplay type="transfer" />;
   }
 
   if (!isInlineEditable(row)) {
     return category ? (
-      <TransactionLabelChip entity={category} />
+      <CategoryDisplay category={category} />
     ) : (
-      <TransactionTypeBadge type={row.originType} />
+      <TransactionTypeDisplay type={row.originType} />
     );
   }
 
@@ -71,17 +67,17 @@ export function InlineCategoryCell({
         renderOption={(option) => {
           const optionCategory = lookups.categories.find((item) => item.id === option.value);
           return optionCategory ? (
-            <TransactionLabelChip entity={optionCategory} />
+            <CategoryDisplay category={optionCategory} />
           ) : (
-            <UncategorizedChip />
+            <CategoryDisplay category={null} />
           );
         }}
         renderValue={(option) => {
           const optionCategory = lookups.categories.find((item) => item.id === option?.value);
           return optionCategory ? (
-            <TransactionLabelChip entity={optionCategory} />
+            <CategoryDisplay category={optionCategory} />
           ) : (
-            <UncategorizedChip />
+            <CategoryDisplay category={null} />
           );
         }}
       />

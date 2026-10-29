@@ -4,14 +4,17 @@ import type { TransactionFeedRow } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import {
+  AmountDisplay,
+  amountKindForTransactionType,
+  TransactionTypeDisplay,
+} from "@/components/display";
 import { MoneyValue } from "@/components/finance/money-value";
 import { InlineCategoryCell } from "@/components/tables/transactions/transaction-inline-editors";
 import {
   TransactionAccountDisplay,
   TransactionMerchantDisplay,
 } from "@/components/tables/transactions/transaction-resource-display";
-import { TransactionTypeBadge } from "@/components/tables/transactions/transaction-type-badge";
-import { cn } from "@/lib/utils";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
 
 function DetailsCell({ row }: { row: TransactionFeedRow }) {
@@ -36,9 +39,6 @@ function AmountCell({
     lookups.currencies.find((currency) => currency.code === row.currencyCode)?.precision ?? 2;
   const toPrecision =
     lookups.currencies.find((currency) => currency.code === row.toCurrencyCode)?.precision ?? 2;
-  const isExpense = row.originType === "expense" || row.originType === "credit_card_installment";
-  const isIncome = row.originType === "income";
-
   if (row.originType === "transfer" && row.toAmount !== null && row.toCurrencyCode) {
     return (
       <div className="flex min-w-44 items-center justify-end gap-1.5 whitespace-nowrap">
@@ -61,13 +61,12 @@ function AmountCell({
 
   return (
     <div className="min-w-28 text-right">
-      <MoneyValue
-        amount={isExpense ? -Math.abs(row.amount) : isIncome ? Math.abs(row.amount) : row.amount}
+      <AmountDisplay
+        amount={row.amount}
         currencyCode={row.currencyCode}
+        kind={amountKindForTransactionType(row.originType)}
         language={language}
         precision={precision}
-        signed={isExpense || isIncome}
-        className={cn(isExpense && "text-destructive", isIncome && "text-emerald-400")}
       />
     </div>
   );
@@ -97,7 +96,7 @@ export function getTransactionsTableColumns({
     {
       accessorKey: "originType",
       header: ({ column }) => <DataTableColumnHeader column={column} label="Type" />,
-      cell: ({ row }) => <TransactionTypeBadge type={row.original.originType} />,
+      cell: ({ row }) => <TransactionTypeDisplay type={row.original.originType} />,
       meta: { label: "Type" },
     },
     {

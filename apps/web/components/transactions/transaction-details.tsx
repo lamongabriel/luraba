@@ -5,6 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { CreditCardPayment, CreditCardPurchase, TransactionFeedRow } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
 import * as React from "react";
+import { CategoryDisplay, TransactionTypeDisplay } from "@/components/display";
 import { MoneyValue } from "@/components/finance/money-value";
 import { ComboboxControl } from "@/components/forms/form-combobox";
 import { TagSelectControl } from "@/components/forms/form-tag-select";
@@ -14,11 +15,6 @@ import {
   SidePanelSection,
   SidePanelSettingCard,
 } from "@/components/side-panel/side-panel-section";
-import { TransactionTypeBadge } from "@/components/tables/transactions/transaction-type-badge";
-import {
-  TransactionLabelChip,
-  UncategorizedChip,
-} from "@/components/transactions/transaction-label-chip";
 import { useTransactionInlineUpdates } from "@/components/transactions/use-transaction-inline-updates";
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
@@ -76,7 +72,7 @@ export function TransactionDetails({
     <div className="space-y-7">
       <SidePanelSection title="Overview">
         <SidePanelDetailRow label="Type">
-          <TransactionTypeBadge type={row.originType} />
+          <TransactionTypeDisplay type={row.originType} />
         </SidePanelDetailRow>
         <SidePanelDetailRow label="Purchase date">
           {formatShortDate(row.purchaseDate, language)}
@@ -100,7 +96,7 @@ export function TransactionDetails({
         <SidePanelSection title="Classification">
           <SidePanelDetailRow label="Category">
             {row.originType === "transfer" ? (
-              <TransactionTypeBadge type="transfer" />
+              <TransactionTypeDisplay type="transfer" />
             ) : (
               <ComboboxControl
                 id={`transaction-category-${row.rowId}`}
@@ -122,14 +118,12 @@ export function TransactionDetails({
                     (item) => item.id === option.value,
                   );
                   return optionCategory ? (
-                    <TransactionLabelChip entity={optionCategory} />
+                    <CategoryDisplay category={optionCategory} />
                   ) : (
-                    <UncategorizedChip />
+                    <CategoryDisplay category={null} />
                   );
                 }}
-                renderValue={() =>
-                  category ? <TransactionLabelChip entity={category} /> : <UncategorizedChip />
-                }
+                renderValue={() => <CategoryDisplay category={category} />}
               />
             )}
           </SidePanelDetailRow>

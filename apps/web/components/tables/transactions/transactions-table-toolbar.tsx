@@ -24,6 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoneyInput } from "@/components/ui/masked-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
@@ -265,30 +266,32 @@ export function TransactionsTableToolbar({
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
                 <Typography variant="small-strong">Minimum amount</Typography>
-                <Input
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={filters.amountMin ?? ""}
-                  onChange={(event) =>
-                    setFilter("amountMin", event.target.value ? Number(event.target.value) : null)
+                <MoneyInput
+                  value={
+                    filters.amountMin === null || filters.amountMin === undefined
+                      ? ""
+                      : filters.amountMin / 100
+                  }
+                  onValueChange={(value) =>
+                    setFilter("amountMin", value === "" ? null : Math.round(Number(value) * 100))
                   }
                 />
               </div>
               <div className="space-y-1.5">
                 <Typography variant="small-strong">Maximum amount</Typography>
-                <Input
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={filters.amountMax ?? ""}
-                  onChange={(event) =>
-                    setFilter("amountMax", event.target.value ? Number(event.target.value) : null)
+                <MoneyInput
+                  value={
+                    filters.amountMax === null || filters.amountMax === undefined
+                      ? ""
+                      : filters.amountMax / 100
+                  }
+                  onValueChange={(value) =>
+                    setFilter("amountMax", value === "" ? null : Math.round(Number(value) * 100))
                   }
                 />
               </div>
               <Typography variant="small-muted" className="col-span-2">
-                Amount filters use each currency’s smallest stored unit.
+                Amounts are matched in each transaction’s own currency.
               </Typography>
             </div>
             <BooleanFilter

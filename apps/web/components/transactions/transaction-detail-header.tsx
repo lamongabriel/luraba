@@ -4,6 +4,7 @@ import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { TransactionFeedRow } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
+import { TransactionTypeDisplay } from "@/components/display";
 import { MoneyValue } from "@/components/finance/money-value";
 import { PERMISSIONS, PermissionButton } from "@/components/permissions";
 import { SidePanelTitle } from "@/components/side-panel/side-panel";
@@ -12,7 +13,6 @@ import {
   TransactionAccountPanelDisplay,
   TransactionMerchantPanelDisplay,
 } from "@/components/tables/transactions/transaction-resource-display";
-import { TransactionTypeBadge } from "@/components/tables/transactions/transaction-type-badge";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
 
 export function TransactionDetailHeader({
@@ -39,7 +39,7 @@ export function TransactionDetailHeader({
             {row.description}
           </SidePanelTitle>
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <TransactionTypeBadge type={row.originType} />
+            <TransactionTypeDisplay type={row.originType} />
             <span aria-hidden="true">•</span>
             <span>{formatShortDate(row.postedDate, language)}</span>
           </div>
