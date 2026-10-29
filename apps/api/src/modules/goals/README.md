@@ -22,6 +22,7 @@ of when it will be reached.
     `saved` is always the money put in.
   - On track with a monthly plan means the projection finishes by the target date; with a date and
     no plan it means `saved` is at least a steady pace from `startDate`.
+- A goal is planned **one way**: a target date (the estimate gives the monthly amount needed) or a monthly amount (the estimate gives the finish date), never both; the contract and `updateGoal` reject both. With neither it is open-ended.
 - A contribution can be backed by a transaction (`transactionId`, unique, `ON DELETE SET NULL`).
   Linking supplies the amount (the whole transaction by default, or any part up to it) and the
   date from the transaction. It must be in the goal's currency; one transaction backs one

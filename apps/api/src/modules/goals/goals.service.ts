@@ -260,6 +260,11 @@ export async function updateGoal(
         ? null
         : toDay(body.targetDate);
   assertDatesInOrder(startDate, targetDate);
+  const monthlyContribution =
+    body.monthlyContribution === undefined ? goal.monthlyContribution : body.monthlyContribution;
+  if (targetDate && monthlyContribution) {
+    throw new ValidationError("Plan with a monthly amount or a target date, not both");
+  }
   if (kind === "savings" && body.expectedReturnBps) {
     throw new ValidationError("Only investment goals can have an expected return");
   }

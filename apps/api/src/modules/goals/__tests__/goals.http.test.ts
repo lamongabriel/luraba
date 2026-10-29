@@ -51,19 +51,40 @@ describe("goals routes", () => {
         currencyCode: "BRL",
         startDate: monthsFromNow(-2),
         targetDate: monthsFromNow(10),
-        monthlyContribution: 100_000,
       });
     expect(created.status).toBe(201);
     const goal = created.body.data;
     expect(goal).toMatchObject({
       kind: "savings",
       status: "active",
-      state: "on_track",
+      state: "behind", // two of twelve months gone and nothing saved
       saved: 0,
-      estimate: { remaining: 500_000, percent: 0, onTrack: true },
+      estimate: { remaining: 500_000, percent: 0, onTrack: false },
     });
     expect(goal.estimate.requiredMonthly).toBe(Math.ceil(500_000 / goal.estimate.monthsLeft));
-    expect(goal.estimate.projectedCompletionDate).not.toBeNull();
+    expect(goal.estimate.projectedCompletionDate).toBeNull();
+
+    // A date and a monthly amount are two ways to plan the same thing: pick one.
+    const both = await request(app)
+      .patch(`/api/v1/goals/${goal.id}`)
+      .set(headers)
+      .send({ monthlyContribution: 100_000 });
+    expect(both.status).toBe(422);
+    const switched = await request(app)
+      .patch(`/api/v1/goals/${goal.id}`)
+      .set(headers)
+      .send({ targetDate: null, monthlyContribution: 100_000 });
+    expect(switched.body.data).toMatchObject({
+      targetDate: null,
+      state: "open",
+      estimate: { requiredMonthly: null },
+    });
+    expect(switched.body.data.estimate.projectedCompletionDate).not.toBeNull();
+    const back = await request(app)
+      .patch(`/api/v1/goals/${goal.id}`)
+      .set(headers)
+      .send({ targetDate: monthsFromNow(10), monthlyContribution: null });
+    expect(back.status).toBe(200);
 
     const base = `/api/v1/goals/${goal.id}/contributions`;
     const first = await request(app)

@@ -1,16 +1,7 @@
+import { formatMoney as formatAmount } from "@luraba/domain";
 import type { HouseholdContext } from "@/config/permissions";
 import { notify } from "./notifications.emitter";
 import * as repository from "./notifications.repository";
-
-function formatAmount(amountMinor: number, currencyCode: string): string {
-  try {
-    const formatter = new Intl.NumberFormat("en", { style: "currency", currency: currencyCode });
-    const digits = formatter.resolvedOptions().maximumFractionDigits ?? 2;
-    return formatter.format(amountMinor / 10 ** digits);
-  } catch {
-    return `${amountMinor} ${currencyCode}`;
-  }
-}
 
 /**
  * Tells the other household members that someone recorded a transaction.

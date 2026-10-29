@@ -1,4 +1,4 @@
-import { daysUntilDue } from "@luraba/domain";
+import { daysUntilDue, formatMoney } from "@luraba/domain";
 
 /** Days after the due date on which an unpaid bill is nagged about again. */
 export const OVERDUE_MILESTONES = [1, 3, 7] as const;
@@ -60,16 +60,6 @@ export function getLocalDate(timezone: string, at: Date): Date {
     day: "2-digit",
   }).format(at);
   return new Date(`${iso}T00:00:00.000Z`);
-}
-
-export function formatMoney(amountMinor: number, currencyCode: string): string {
-  try {
-    const format = new Intl.NumberFormat("en-US", { style: "currency", currency: currencyCode });
-    const digits = format.resolvedOptions().maximumFractionDigits ?? 2;
-    return format.format(amountMinor / 10 ** digits);
-  } catch {
-    return `${(amountMinor / 100).toFixed(2)} ${currencyCode}`;
-  }
 }
 
 export function buildReminderMessage(
