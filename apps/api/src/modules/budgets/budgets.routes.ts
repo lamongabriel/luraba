@@ -16,4 +16,10 @@ router.put(
   budgetsController.replaceMonth,
 );
 
+router.put(
+  getEndpointRouterPath(budgetsEndpoints.updateMonthSettings),
+  requireAccess({ permission: PERMISSIONS.BUDGETS_UPDATE }),
+  budgetsController.updateMonthSettings,
+);
+
 export default router;

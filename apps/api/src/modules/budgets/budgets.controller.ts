@@ -15,6 +15,14 @@ export const getMonth = createHouseholdHandler({
     ),
 });
 
+export const updateMonthSettings = createHouseholdHandler({
+  params: budgetsEndpoints.updateMonthSettings.params,
+  body: budgetsEndpoints.updateMonthSettings.body,
+  response: budgetsEndpoints.updateMonthSettings.response,
+  handle: ({ household, params, body }) =>
+    budgetsService.updateBudgetMonthSettings(household, parseBudgetMonthKey(params.month), body),
+});
+
 export const replaceMonth = createHouseholdHandler({
   params: budgetsEndpoints.replaceMonth.params,
   body: budgetsEndpoints.replaceMonth.body,

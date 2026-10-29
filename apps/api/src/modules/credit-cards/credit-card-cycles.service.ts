@@ -1,3 +1,4 @@
+import { accountsTable } from "@luraba/db/schemas/accounts.schema";
 import { creditCardBillingCyclesTable } from "@luraba/db/schemas/credit-card-billing-cycles.schema";
 import { creditCardBudgetRecognitionsTable } from "@luraba/db/schemas/credit-card-budget-recognitions.schema";
 import { creditCardInstallmentsTable } from "@luraba/db/schemas/credit-card-installments.schema";
@@ -24,6 +25,10 @@ import { db } from "@/db";
 import type { TxClient } from "@/db/types";
 import { ConflictError, NotFoundError, ValidationError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
+import type {
+  CreditExpenseTiming,
+  CreditInstallmentBudgetMode,
+} from "@/shared/validation/preferences";
 import {
   deriveCycleDisplayStatus,
   getNextCycleShapeFromPeriodStart,
@@ -217,14 +222,24 @@ export async function createInstallmentsForPurchase(
   return createdRows;
 }
 
+/** The budget month a card amount counts in, from the timing the purchase was stamped with. */
+export function resolveBudgetMonth(
+  timing: CreditExpenseTiming,
+  dates: { spendDate: Date; dueDate: Date },
+): Date {
+  if (timing === "spend_month") return startOfMonth(dates.spendDate);
+  if (timing === "payment_month") return startOfMonth(dates.dueDate);
+  return addMonths(dates.dueDate, 1);
+}
+
 export async function recreateBudgetRecognitionsForPurchase(
   tx: TxClient,
   purchase: {
     id: string;
     purchaseAmount: number;
     installmentCount: number;
-    budgetExpenseTiming: "spend_month" | "payment_month";
-    budgetInstallmentMode: "per_installment" | "full_amount";
+    budgetExpenseTiming: CreditExpenseTiming;
+    budgetInstallmentMode: CreditInstallmentBudgetMode;
   },
   params: {
     categoryId: string | null;
@@ -257,10 +272,10 @@ export async function recreateBudgetRecognitionsForPurchase(
 
   if (purchase.budgetInstallmentMode === "per_installment") {
     for (const installment of installments) {
-      const budgetMonth =
-        purchase.budgetExpenseTiming === "spend_month"
-          ? startOfMonth(installment.closingDate)
-          : startOfMonth(installment.dueDate);
+      const budgetMonth = resolveBudgetMonth(purchase.budgetExpenseTiming, {
+        spendDate: installment.closingDate,
+        dueDate: installment.dueDate,
+      });
 
       if (!shouldIncludeMonth(budgetMonth)) continue;
 
@@ -275,10 +290,10 @@ export async function recreateBudgetRecognitionsForPurchase(
     }
   } else {
     const firstInstallment = installments[0];
-    const budgetMonth =
-      purchase.budgetExpenseTiming === "spend_month"
-        ? startOfMonth(params.purchaseDate)
-        : startOfMonth(firstInstallment?.dueDate ?? params.purchaseDate);
+    const budgetMonth = resolveBudgetMonth(purchase.budgetExpenseTiming, {
+      spendDate: params.purchaseDate,
+      dueDate: firstInstallment?.dueDate ?? params.purchaseDate,
+    });
 
     if (shouldIncludeMonth(budgetMonth)) {
       rows.push({
@@ -294,6 +309,68 @@ export async function recreateBudgetRecognitionsForPurchase(
 
   if (rows.length > 0) {
     await tx.insert(creditCardBudgetRecognitionsTable).values(rows);
+  }
+}
+
+/**
+ * Applies new budget settings to every card purchase posted in `month`: the purchase is stamped with
+ * them and its budget recognitions are recreated. Used when a month's override changes.
+ */
+export async function restampMonthPurchases(
+  tx: TxClient,
+  householdId: string,
+  month: Date,
+  settings: { timing: CreditExpenseTiming; mode: CreditInstallmentBudgetMode },
+): Promise<void> {
+  const purchases = await tx
+    .select({
+      purchaseId: creditCardPurchasesTable.id,
+      purchaseAmount: creditCardPurchasesTable.purchaseAmount,
+      installmentCount: creditCardPurchasesTable.installmentCount,
+      includeInBudget: creditCardPurchasesTable.includeInBudget,
+      categoryId: transactionsTable.categoryId,
+      postedDate: transactionsTable.postedDate,
+      currencyCode: accountsTable.currencyId,
+    })
+    .from(creditCardPurchasesTable)
+    .innerJoin(creditCardsTable, eq(creditCardsTable.id, creditCardPurchasesTable.creditCardId))
+    .innerJoin(accountsTable, eq(accountsTable.id, creditCardsTable.ownerAccountId))
+    .innerJoin(transactionsTable, eq(transactionsTable.id, creditCardPurchasesTable.transactionId))
+    .where(
+      and(
+        eq(creditCardsTable.householdId, householdId),
+        gte(transactionsTable.postedDate, month),
+        lt(transactionsTable.postedDate, addMonths(month, 1)),
+      ),
+    );
+
+  for (const purchase of purchases) {
+    await tx
+      .update(creditCardPurchasesTable)
+      .set({ budgetExpenseTiming: settings.timing, budgetInstallmentMode: settings.mode })
+      .where(eq(creditCardPurchasesTable.id, purchase.purchaseId));
+
+    await tx
+      .delete(creditCardBudgetRecognitionsTable)
+      .where(eq(creditCardBudgetRecognitionsTable.purchaseId, purchase.purchaseId));
+
+    if (!purchase.includeInBudget || !purchase.categoryId) continue;
+
+    await recreateBudgetRecognitionsForPurchase(
+      tx,
+      {
+        id: purchase.purchaseId,
+        purchaseAmount: purchase.purchaseAmount,
+        installmentCount: purchase.installmentCount,
+        budgetExpenseTiming: settings.timing,
+        budgetInstallmentMode: settings.mode,
+      },
+      {
+        categoryId: purchase.categoryId,
+        currencyCode: purchase.currencyCode,
+        purchaseDate: purchase.postedDate,
+      },
+    );
   }
 }
 

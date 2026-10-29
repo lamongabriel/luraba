@@ -1,15 +1,23 @@
-import type { MonthlyBudget, replaceMonthlyBudgetBodySchema } from "@luraba/contracts/budgets";
+import type {
+  MonthlyBudget,
+  replaceMonthlyBudgetBodySchema,
+  updateBudgetMonthSettingsBodySchema,
+} from "@luraba/contracts/budgets";
 import type { z } from "zod";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
 import { categoriesRepository } from "@/modules/categories/categories.repository";
+import { restampMonthPurchases } from "@/modules/credit-cards/credit-card-cycles.service";
 import { fxService } from "@/modules/fx/fx.service";
 import { householdsRepository } from "@/modules/households/households.repository";
 import { NotFoundError, ValidationError } from "@/shared/errors";
+import { budgetMonthSettingsRepository } from "./budget-month-settings.repository";
 import { budgetsRepository } from "./budgets.repository";
+import { getMonthBudgetSettings } from "./budgets.settings";
 import { formatBudgetMonthKey } from "./budgets.types";
 
 type ReplaceMonthlyBudget = z.output<typeof replaceMonthlyBudgetBodySchema>;
+type UpdateBudgetMonthSettings = z.output<typeof updateBudgetMonthSettingsBodySchema>;
 
 type BudgetRow = Awaited<ReturnType<typeof budgetsRepository.listMonthBudgets>>[number];
 type ActualRow = Awaited<ReturnType<typeof budgetsRepository.listMonthActuals>>[number];
@@ -54,6 +62,7 @@ async function buildMonthlyBudgetResponse(params: {
   budgetRows: BudgetRow[];
   standardActualRows: ActualRow[];
   creditCardActualRows: CreditCardActualRow[];
+  settings: MonthlyBudget["settings"];
 }): Promise<MonthlyBudget> {
   const categories = {
     income: new Map<string, BudgetCategoryItem>(),
@@ -111,6 +120,7 @@ async function buildMonthlyBudgetResponse(params: {
   );
 
   return {
+    settings: params.settings,
     month: formatBudgetMonthKey(params.month),
     budgetCurrencyCode: params.budgetCurrencyCode,
     displayCurrencyCode: params.displayCurrencyCode,
@@ -160,10 +170,11 @@ export async function getMonthlyBudget(
     displayCurrencyOverride,
   );
 
-  const [budgetRows, standardActualRows, creditCardActualRows] = await Promise.all([
+  const [budgetRows, standardActualRows, creditCardActualRows, settings] = await Promise.all([
     budgetsRepository.listMonthBudgets(context.householdId, month),
     budgetsRepository.listMonthActuals(context.householdId, month),
     budgetsRepository.listMonthCreditCardActuals(context.householdId, month),
+    getMonthBudgetSettings(context, month),
   ]);
 
   return buildMonthlyBudgetResponse({
@@ -173,7 +184,34 @@ export async function getMonthlyBudget(
     budgetRows,
     standardActualRows,
     creditCardActualRows,
+    settings,
   });
+}
+
+/**
+ * Sets (or clears, with `null`) the credit-card overrides for a month and re-stamps that month's
+ * card purchases so the budget reflects them straight away.
+ */
+export async function updateBudgetMonthSettings(
+  context: HouseholdContext,
+  month: Date,
+  dto: UpdateBudgetMonthSettings,
+): Promise<MonthlyBudget> {
+  await db.transaction(async (tx) => {
+    await budgetMonthSettingsRepository.saveForMonth(tx, context, month, {
+      month,
+      creditExpenseTiming: dto.creditExpenseTiming,
+      creditInstallmentBudgetMode: dto.creditInstallmentBudgetMode,
+    });
+
+    const effective = await getMonthBudgetSettings(context, month, tx);
+    await restampMonthPurchases(tx, context.householdId, month, {
+      timing: effective.creditExpenseTiming,
+      mode: effective.creditInstallmentBudgetMode,
+    });
+  });
+
+  return getMonthlyBudget(context, month);
 }
 
 export async function replaceMonthlyBudget(

@@ -3,10 +3,11 @@ import { creditCardBudgetRecognitionsTable } from "@luraba/db/schemas/credit-car
 import { creditCardInstallmentsTable } from "@luraba/db/schemas/credit-card-installments.schema";
 import { creditCardPurchasesTable } from "@luraba/db/schemas/credit-card-purchases.schema";
 import { transactionsTable } from "@luraba/db/schemas/transactions.schema";
-import { formatISODate } from "@luraba/domain";
+import { formatISODate, startOfMonth } from "@luraba/domain";
 import { and, asc, eq } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
+import { resolveCreditBudgetSettings } from "@/modules/budgets/budgets.settings";
 import { entriesRepository } from "@/modules/entries/entries.repository";
 import * as entriesService from "@/modules/entries/entries.service";
 import { ledgerAccountsRepository } from "@/modules/ledger-accounts/ledger-accounts.repository";
@@ -17,6 +18,10 @@ import {
   validateTagIds,
 } from "@/modules/tags/tags-associations.service";
 import { NotFoundError } from "@/shared/errors";
+import type {
+  CreditExpenseTiming,
+  CreditInstallmentBudgetMode,
+} from "@/shared/validation/preferences";
 import {
   createInstallmentsForPurchase,
   recreateBudgetRecognitionsForPurchase,
@@ -50,8 +55,8 @@ type PurchaseWithTransactionRow = {
   amount: number;
   installmentCount: number;
   includeInBudget: boolean;
-  budgetExpenseTiming: "spend_month" | "payment_month";
-  budgetInstallmentMode: "per_installment" | "full_amount";
+  budgetExpenseTiming: CreditExpenseTiming;
+  budgetInstallmentMode: CreditInstallmentBudgetMode;
   createdAt: Date;
 };
 
@@ -161,6 +166,7 @@ export async function createPurchase(
 
   const paymentMethod = await resolveCreditCardPaymentMethod(context, card.currencyCode);
   const postedDate = dto.postedDate ?? dto.purchaseDate;
+  const budgetSettings = await resolveCreditBudgetSettings(context, startOfMonth(postedDate));
 
   const result = await db.transaction(async (tx) => {
     await syncCardCycles(tx, card, context.timezone);
@@ -185,8 +191,8 @@ export async function createPurchase(
         purchaseAmount: dto.amount,
         installmentCount: dto.installmentCount,
         includeInBudget: dto.includeInBudget,
-        budgetExpenseTiming: context.creditExpenseTiming,
-        budgetInstallmentMode: context.creditInstallmentBudgetMode,
+        budgetExpenseTiming: budgetSettings.timing,
+        budgetInstallmentMode: budgetSettings.mode,
       })
       .returning();
 
