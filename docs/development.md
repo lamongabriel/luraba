@@ -11,6 +11,7 @@
 ```sh
 pnpm install
 cp apps/api/.env.example apps/api/.env
+cp apps/worker/.env.example apps/worker/.env
 cp apps/web/.env.example apps/web/.env.local
 ```
 
@@ -25,7 +26,7 @@ Assign the first value to `AUTH_SECRET` and the second to
 `INTEGRATIONS_ENCRYPTION_KEY`. OAuth, SMTP, and provider credentials are
 optional for local development.
 
-Run `pnpm dev`. It starts the `db` Compose service, migrates the database, and
+Run `pnpm dev`. It starts the `db` and `redis` Compose services, migrates the database, and
 runs every workspace development task through Turbo. There is no separate
 setup, seed, or Docker development command.
 
@@ -45,10 +46,11 @@ and data only after migrations complete.
 ## Environment files
 
 `apps/api/.env` contains API secrets, origins, and local database connection
-settings. `apps/web/.env.local` contains browser-safe values only. Keep both
+settings. `apps/worker/.env` repeats the database, Redis, SMTP, and push settings
+the worker needs to deliver notifications; keep the shared values identical. `apps/web/.env.local` contains browser-safe values only. Keep both
 untracked. Application ports are `3001` for API and `3000` for web; Postgres
-uses `5432`.
+uses `5432`; Redis uses `6379`.
 
-Compose accepts unprefixed host-port overrides: `API_PORT`, `WEB_PORT`, and
-`POSTGRES_PORT`. Application configuration uses direct names such as `PORT`,
+Compose accepts unprefixed host-port overrides: `API_PORT`, `WEB_PORT`,
+`POSTGRES_PORT`, and `REDIS_PORT`. Application configuration uses direct names such as `PORT`,
 `DB_HOST`, and `NEXT_PUBLIC_API_URL` instead of project-prefixed aliases.

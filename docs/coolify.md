@@ -114,8 +114,14 @@ The Compose file exposes these variables in Coolify's environment editor.
 | `SMTP_FROM_EMAIL` | Empty; enter a sender address accepted by your provider. |
 | `SMTP_REPLY_EMAIL` | Empty; optional reply-to address. |
 | `SMTP_TLS_CIPHERS` | Empty; optional TLS cipher override. |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Empty; set both to enable web push. Generate with `npx web-push generate-vapid-keys`. |
+| `VAPID_SUBJECT` | Empty; `mailto:` address or URL that identifies you to push services. |
+| `SMS_PROVIDER` | Empty; SMS stays disabled until a provider is implemented. |
 
-Email stays disabled until its required settings are supplied. The defaults suit
+The `redis` service queues background jobs and the `worker` service runs them,
+including notification delivery; the worker shares the SMTP and push settings
+with the API. Email stays disabled until its
+required settings are supplied. The defaults suit
 Resend; replace the SMTP settings as needed for another provider. OAuth and SMTP
 credentials must come from their providers—Coolify cannot generate them.
 

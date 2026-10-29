@@ -11,6 +11,7 @@ x-api-environment: &api-environment
   DB_SSL: "false"
   BASE_URL: ${BASE_URL:-http://localhost:${API_PORT:-3001}}
   FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:${WEB_PORT:-3000}}
+  REDIS_URL: redis://redis:6379
 
 services:
   db:
@@ -26,6 +27,20 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-luraba} -d ${DB_NAME:-luraba_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -58,12 +73,29 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q -T 5 -O - http://127.0.0.1:3001/health >/dev/null"]
       interval: 10s
       timeout: 10s
       retries: 12
       start_period: 20s
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - path: ./apps/api/.env
+        required: true
+    environment: *api-environment
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
 
   web:
     build:
@@ -90,3 +122,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
