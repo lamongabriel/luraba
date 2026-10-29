@@ -9,6 +9,7 @@ import { FormItem } from "@/components/forms/form-item";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Typography } from "@/components/ui/typography";
+import { CREDIT_EXPENSE_TIMING_OPTIONS, CREDIT_INSTALLMENT_MODE_OPTIONS } from "@/lib/budgets";
 import { createTimezoneOptions } from "@/lib/timezones";
 import { useCurrenciesQuery } from "@/queries/currencies/use-currencies-query";
 import { useLocationOptionsQuery } from "@/queries/reference-data/use-location-options-query";
@@ -147,13 +148,11 @@ export function CreateEditHouseholdForm({
           control={form.control}
           name="creditExpenseTiming"
           label="Credit-card expense timing"
-          options={[
-            { value: "spend_month", label: "Month spent" },
-            { value: "payment_month", label: "Month paid" },
-          ]}
+          options={CREDIT_EXPENSE_TIMING_OPTIONS}
           labelAdornment={
             <FieldInfoHint>
-              Choose whether credit-card expenses belong to the purchase month or the payment month.
+              The default month credit-card purchases count in for budgets. Each budget month can
+              override it.
             </FieldInfoHint>
           }
           disabled={isPending}
@@ -163,10 +162,7 @@ export function CreateEditHouseholdForm({
           control={form.control}
           name="creditInstallmentBudgetMode"
           label="Installment budget mode"
-          options={[
-            { value: "per_installment", label: "Each installment" },
-            { value: "full_amount", label: "Full amount upfront" },
-          ]}
+          options={CREDIT_INSTALLMENT_MODE_OPTIONS}
           labelAdornment={
             <FieldInfoHint>
               Decide whether a purchase is recognized one installment at a time or in full when it

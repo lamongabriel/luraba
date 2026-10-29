@@ -38,6 +38,8 @@ that invalidates the key. Reusable file/attachment UI is documented in
 
 Credit cards UI (month overview, card detail, invoices): [components/credit-cards/README.md](components/credit-cards/README.md).
 
+Budget UI (monthly plan, card settings): [components/budgets/README.md](components/budgets/README.md).
+
 **Page titles.** Every page in `(app)` renders `InternalPageLayout` (which wraps `components/finance/page-header.tsx`):
 `title`, a mandatory `subtitle`, an optional `back={{ href, label }}` ("Back to {label}", use it on every detail page) and an
 `actions` slot aligned with the title. Do not build one-off headers.

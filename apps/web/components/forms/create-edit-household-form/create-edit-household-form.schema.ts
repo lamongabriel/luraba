@@ -1,3 +1,4 @@
+import { creditExpenseTimingSchema, creditInstallmentBudgetModeSchema } from "@luraba/contracts";
 import { z } from "zod";
 
 export const createEditHouseholdFormSchema = z.object({
@@ -15,8 +16,8 @@ export const createEditHouseholdFormSchema = z.object({
     .int("Choose a whole day.")
     .min(1, "Budget months start on day 1 or later.")
     .max(31, "Budget months can start on day 31 at most."),
-  creditExpenseTiming: z.enum(["spend_month", "payment_month"]),
-  creditInstallmentBudgetMode: z.enum(["per_installment", "full_amount"]),
+  creditExpenseTiming: creditExpenseTimingSchema,
+  creditInstallmentBudgetMode: creditInstallmentBudgetModeSchema,
 });
 
 export type CreateEditHouseholdFormValues = z.infer<typeof createEditHouseholdFormSchema>;

@@ -4,7 +4,12 @@ import type {
   CreditCardCycleDisplayStatus,
   TransactionFeedRow,
 } from "@luraba/contracts";
-import { formatDisplayDate, formatMonthKey, getTodayInTimezone } from "@luraba/domain";
+import {
+  formatDisplayDate,
+  formatMonthKey,
+  getTodayInTimezone,
+  shiftMonthKey,
+} from "@luraba/domain";
 
 /**
  * How an invoice is shown. `due` is a closed invoice waiting for payment, `overdue` is the same
@@ -68,11 +73,7 @@ export function currentMonthKey(timezone: string): string {
   return formatMonthKey(getTodayInTimezone(timezone));
 }
 
-export function shiftMonthKey(monthKey: string, delta: number): string {
-  const [year, month] = monthKey.split("-").map(Number);
-  const index = year * 12 + (month - 1) + delta;
-  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
-}
+export { shiftMonthKey };
 
 export function formatMonthKeyLabel(
   monthKey: string,

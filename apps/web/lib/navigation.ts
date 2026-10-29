@@ -1,6 +1,7 @@
 import {
   ArrowLeftRightIcon,
   Calendar03Icon,
+  Coins01Icon,
   CreditCardIcon,
   DashboardSquare01Icon,
   GoalIcon,
@@ -45,6 +46,12 @@ export const mainNav: NavigationItem[] = [
     href: "/credit-cards",
     icon: CreditCardIcon,
     permission: PERMISSIONS.CREDIT_CARDS_READ,
+  },
+  {
+    title: "Budget",
+    href: "/budget",
+    icon: Coins01Icon,
+    permission: PERMISSIONS.BUDGETS_READ,
   },
   {
     title: "Bills",
