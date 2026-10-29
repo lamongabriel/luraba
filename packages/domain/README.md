@@ -4,7 +4,7 @@ Framework-free finance, date and recurrence primitives shared by the API, worker
 No I/O, no framework imports.
 
 - `date.ts` parsing, formatting, timezone ranges and calendar helpers (`formatISODate`,
-  `getTodayInTimezone`, `parseISODate`...). Do not reimplement date logic elsewhere.
+  `getTodayInTimezone`, `parseISODate`...). Do not reimplement date logic elsewhere. Month helpers are UTC (`startOfMonth`, `addMonths` force day 1; `formatMonthKey`, `parseMonthKey`, `shiftMonthKey` use `YYYY-MM` keys).
 - `money.ts` minor-unit math and formatting.
 - `recurrency.ts` generic schedules (monthly/weekly/...), bounded by occurrences, end date or a
   requested range, mapped into a module-specific result. Bills use it.

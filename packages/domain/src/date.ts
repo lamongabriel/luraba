@@ -1,7 +1,6 @@
 import {
   addDays as dfnsAddDays,
   addMilliseconds as dfnsAddMilliseconds,
-  addMonths as dfnsAddMonths,
   differenceInCalendarDays as dfnsDifferenceInCalendarDays,
   endOfMonth as dfnsEndOfMonth,
   format as dfnsFormat,
@@ -10,7 +9,6 @@ import {
   isEqual as dfnsIsEqual,
   isValid as dfnsIsValid,
   parseISO as dfnsParseISO,
-  startOfMonth as dfnsStartOfMonth,
   startOfWeek as dfnsStartOfWeek,
   startOfYear as dfnsStartOfYear,
   subDays as dfnsSubDays,
@@ -72,7 +70,7 @@ export function addMilliseconds(date: Date, milliseconds: number): Date {
  * Matches existing API semantics where budget/cycle months always start on day 1.
  */
 export function addMonths(date: Date, months: number): Date {
-  return dfnsAddMonths(dfnsStartOfMonth(date), months);
+  return new Date(Date.UTC(getUTCFullYear(date), getUTCMonth(date) + months, 1));
 }
 
 /** Subtract days from a date. */
@@ -82,7 +80,7 @@ export function subDays(date: Date, days: number): Date {
 
 /** Returns the start of the month (UTC midnight on the 1st). */
 export function startOfMonth(date: Date): Date {
-  return dfnsStartOfMonth(date);
+  return new Date(Date.UTC(getUTCFullYear(date), getUTCMonth(date), 1));
 }
 
 /** Returns `true` if `date` is before `compare`. */
@@ -219,6 +217,12 @@ export function formatMonthKey(date: Date): string {
 export function parseMonthKey(monthKey: string): Date {
   const [year, month] = monthKey.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, 1));
+}
+
+/** Moves a month key by whole months: `shiftMonthKey("2026-01", -1)` is `"2025-12"`. */
+export function shiftMonthKey(monthKey: string, delta: number): string {
+  const [year, month] = monthKey.split("-").map(Number);
+  return formatMonthKey(new Date(Date.UTC(year, month - 1 + delta, 1)));
 }
 
 /** Normalizes a Date to the start of its UTC day (midnight UTC). */
