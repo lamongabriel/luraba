@@ -5,8 +5,8 @@ import {
   type NotificationChannel,
   type NotificationEventType,
   type NotificationPreference,
-} from "@luraba/contracts/notifications";
-import type { PreferenceOverride } from "./notifications.repository";
+} from "@luraba/contracts";
+import type { PreferenceOverride } from "./types.js";
 
 export type PreferenceLookup = ReadonlyMap<string, boolean>;
 

@@ -34,5 +34,17 @@ a delivery is never queued twice). `apps/worker` consumes the queue, sends,
 and records the outcome; failed sends retry with exponential backoff. Postgres is
 the source of truth: a recurring sweep in the worker re-queues any delivery that
 is still pending after two minutes, so a Redis outage or crash cannot lose an
-alert. Future recurring work, such as bill reminders, is registered as another
-job scheduler in the worker.
+alert. Recurring work is registered as a job scheduler in the worker.
+
+### Recurring bills
+
+A bill (`bills`) is a schedule; each due date is a row in `bill_occurrences`. An
+occurrence's state is derived, never stored: paid when `paid_at` is set (by
+linking a transaction or marking it paid), skipped, overdue once its date passes
+unresolved, otherwise scheduled. Open-ended bills keep about 90 days of
+occurrences, topped up by the worker's `bills.generate` job; finite plans
+(loans, land) create every installment up front. The worker's hourly
+`bills.remind` job notifies on the due date (and optionally N days before) and
+again 1, 3 and 7 days after it is missed, once the household's local time passes
+9:00. Dedupe keys keep the hourly job from repeating a reminder, and occurrences
+dated before the bill was created (backfilled history) never remind.

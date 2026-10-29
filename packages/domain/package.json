@@ -27,6 +27,10 @@
       "types": "./dist/date.d.ts",
       "import": "./dist/date.js"
     },
+    "./bills": {
+      "types": "./dist/bills.d.ts",
+      "import": "./dist/bills.js"
+    },
     "./recurrency": {
       "types": "./dist/recurrency.d.ts",
       "import": "./dist/recurrency.js"

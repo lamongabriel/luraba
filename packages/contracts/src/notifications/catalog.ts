@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const NOTIFICATION_CHANNELS = ["in_app", "email", "push", "sms"] as const;
-export const NOTIFICATION_CATEGORIES = ["transactions", "system"] as const;
+export const NOTIFICATION_CATEGORIES = ["transactions", "bills", "system"] as const;
 
 /** SMS vendors Luraba can deliver through. Empty until a provider is implemented in the worker. */
 export const SMS_PROVIDERS = [] as const satisfies readonly string[];
@@ -28,6 +28,19 @@ export const NOTIFICATION_EVENTS = {
     label: "New transaction",
     description: "A household member records a new transaction.",
     defaults: { in_app: true, email: false, push: false, sms: false },
+  },
+  "bill.due_soon": {
+    category: "bills",
+    label: "Bill due soon",
+    description:
+      "A bill is due today, or a few days from now if the bill asks for an early reminder.",
+    defaults: { in_app: true, email: true, push: true, sms: false },
+  },
+  "bill.overdue": {
+    category: "bills",
+    label: "Bill overdue",
+    description: "A bill passed its due date without being paid. Repeats on days 1, 3 and 7.",
+    defaults: { in_app: true, email: true, push: true, sms: true },
   },
   "system.test": {
     category: "system",

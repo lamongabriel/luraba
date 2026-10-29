@@ -43,6 +43,7 @@ const CHANNEL_LABELS: Record<NotificationChannel, string> = {
 
 const CATEGORY_LABELS: Record<(typeof NOTIFICATION_CATEGORIES)[number], string> = {
   transactions: "Transactions",
+  bills: "Bills",
   system: "System",
 };
 

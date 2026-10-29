@@ -2,43 +2,17 @@ import type { NotificationChannel } from "@luraba/contracts/notifications";
 import { householdMembersTable } from "@luraba/db/schemas/households.schema";
 import {
   notificationContactsTable,
-  notificationDeliveriesTable,
   notificationPreferencesTable,
   notificationsTable,
   pushSubscriptionsTable,
 } from "@luraba/db/schemas/notifications.schema";
 import { usersTable } from "@luraba/db/schemas/users.schema";
-import { and, count, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, count, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { type DbListPage, getPagination } from "@/shared/list";
-import type { ExternalChannel, NotificationRecord, RecipientContact } from "./notifications.types";
-
-export type PreferenceOverride = {
-  userId: string;
-  eventType: string;
-  channel: string;
-  enabled: boolean;
-};
-
-type NewNotification = Omit<typeof notificationsTable.$inferInsert, "id" | "createdAt" | "readAt">;
+import type { NotificationRecord } from "./notifications.types";
 
 // ─── Preferences ─────────────────────────────────────────────────────────
-
-export async function listPreferenceOverrides(
-  userIds: readonly string[],
-): Promise<PreferenceOverride[]> {
-  if (userIds.length === 0) return [];
-
-  return db
-    .select({
-      userId: notificationPreferencesTable.userId,
-      eventType: notificationPreferencesTable.eventType,
-      channel: notificationPreferencesTable.channel,
-      enabled: notificationPreferencesTable.enabled,
-    })
-    .from(notificationPreferencesTable)
-    .where(inArray(notificationPreferencesTable.userId, [...userIds]));
-}
 
 export async function upsertPreferences(
   userId: string,
@@ -117,70 +91,7 @@ export async function deletePushSubscription(userId: string, endpoint: string): 
     );
 }
 
-// ─── Recipients ──────────────────────────────────────────────────────────
-
-export async function getRecipients(userIds: readonly string[]): Promise<RecipientContact[]> {
-  if (userIds.length === 0) return [];
-  const ids = [...userIds];
-
-  const [users, contacts, subscriptionCounts] = await Promise.all([
-    db
-      .select({ id: usersTable.id, email: usersTable.email })
-      .from(usersTable)
-      .where(inArray(usersTable.id, ids)),
-    db
-      .select()
-      .from(notificationContactsTable)
-      .where(inArray(notificationContactsTable.userId, ids)),
-    db
-      .select({ userId: pushSubscriptionsTable.userId, value: count() })
-      .from(pushSubscriptionsTable)
-      .where(inArray(pushSubscriptionsTable.userId, ids))
-      .groupBy(pushSubscriptionsTable.userId),
-  ]);
-
-  const phoneByUser = new Map(contacts.map((contact) => [contact.userId, contact.phoneNumber]));
-  const pushByUser = new Map(subscriptionCounts.map((row) => [row.userId, row.value]));
-
-  return users.map((user) => ({
-    userId: user.id,
-    email: user.email,
-    phoneNumber: phoneByUser.get(user.id) ?? null,
-    pushSubscriptionCount: pushByUser.get(user.id) ?? 0,
-  }));
-}
-
 // ─── Notifications ───────────────────────────────────────────────────────
-
-/**
- * Stores a notification and its pending deliveries atomically. Returns
- * undefined when `dedupeKey` was already used for this user. The caller queues
- * the returned delivery ids; the worker's sweep covers any that never get queued.
- */
-export async function createWithDeliveries(
-  values: NewNotification,
-  channels: readonly ExternalChannel[],
-): Promise<{ notification: NotificationRecord; deliveryIds: string[] } | undefined> {
-  return db.transaction(async (tx) => {
-    const [created] = await tx
-      .insert(notificationsTable)
-      .values(values)
-      .onConflictDoNothing()
-      .returning();
-
-    if (!created) return undefined;
-
-    const deliveries =
-      channels.length > 0
-        ? await tx
-            .insert(notificationDeliveriesTable)
-            .values(channels.map((channel) => ({ notificationId: created.id, channel })))
-            .returning({ id: notificationDeliveriesTable.id })
-        : [];
-
-    return { notification: created, deliveryIds: deliveries.map((row) => row.id) };
-  });
-}
 
 export async function listPage(
   userId: string,

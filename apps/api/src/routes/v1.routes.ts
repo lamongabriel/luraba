@@ -1,6 +1,7 @@
 import {
   accountsEndpoints,
   authEndpoints,
+  billsEndpoints,
   budgetsEndpoints,
   categoriesEndpoints,
   creditCardsEndpoints,
@@ -20,6 +21,7 @@ import { Router } from "express";
 
 import accountsRouter from "@/modules/accounts/accounts.routes";
 import authRouter from "@/modules/auth/auth.routes";
+import billsRouter from "@/modules/bills/bills.routes";
 import budgetsRouter from "@/modules/budgets/budgets.routes";
 import categoriesRouter from "@/modules/categories/categories.routes";
 import creditCardsRouter from "@/modules/credit-cards/credit-cards.routes";
@@ -41,6 +43,7 @@ router.use(getEndpointBasePath(currenciesEndpoints.list), currenciesRouter);
 router.use(getEndpointBasePath(householdsEndpoints.list), householdsRouter);
 router.use(getEndpointBasePath(integrationsEndpoints.list), integrationsRouter);
 router.use(getEndpointBasePath(accountsEndpoints.list), accountsRouter);
+router.use(getEndpointBasePath(billsEndpoints.list), billsRouter);
 router.use(getEndpointBasePath(budgetsEndpoints.getMonth), budgetsRouter);
 router.use(getEndpointBasePath(categoriesEndpoints.list), categoriesRouter);
 router.use(getEndpointBasePath(creditCardsEndpoints.list), creditCardsRouter);

@@ -44,3 +44,17 @@ export async function enqueueDeliveries(
     })),
   );
 }
+
+export type BillQueue = Queue;
+
+export function createBillQueue(connection: Redis): BillQueue {
+  return new Queue(QUEUE_NAMES.bills, {
+    connection,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: "exponential", delay: NOTIFICATION_DELIVERY_BACKOFF_MS },
+      removeOnComplete: { age: ONE_HOUR_SECONDS },
+      removeOnFail: { age: SEVEN_DAYS_SECONDS },
+    },
+  });
+}

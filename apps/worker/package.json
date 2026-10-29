@@ -20,6 +20,7 @@
     "@luraba/contracts": "workspace:*",
     "@luraba/db": "workspace:*",
     "@luraba/domain": "workspace:*",
+    "@luraba/notifications": "workspace:*",
     "@luraba/queue": "workspace:*",
     "bullmq": "^6.5.1",
     "dotenv": "^16.6.1",

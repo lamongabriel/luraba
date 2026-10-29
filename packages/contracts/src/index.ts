@@ -1,6 +1,7 @@
 export * from "./accounts/index.js";
 export * from "./api.js";
 export * from "./auth/index.js";
+export * from "./bills/index.js";
 export * from "./budgets/index.js";
 export * from "./categories/index.js";
 export * from "./common.js";

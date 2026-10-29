@@ -1,3 +1,4 @@
+export * from "./bills.js";
 export * from "./classification.js";
 export * from "./date.js";
 export * from "./money.js";

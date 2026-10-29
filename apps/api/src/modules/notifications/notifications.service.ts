@@ -9,11 +9,17 @@ import type {
   UpdateNotificationPreferencesInput,
 } from "@luraba/contracts/notifications";
 import { formatISODateTime } from "@luraba/domain";
+import {
+  buildPreferenceLookup,
+  buildPreferenceMatrix,
+  isChannelReady,
+} from "@luraba/notifications";
 import { env } from "@/config/env";
 import { DependencyUnavailableError, NotFoundError, ValidationError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
-import { isChannelAvailable, isChannelReady } from "./notifications.channels";
-import { buildPreferenceLookup, buildPreferenceMatrix } from "./notifications.preferences";
+import { isChannelAvailable } from "./notifications.channels";
+import { notifier } from "./notifications.emitter";
+
 import { queueDeliveries } from "./notifications.queue";
 import * as repository from "./notifications.repository";
 import type { ExternalChannel, NotificationRecord } from "./notifications.types";
@@ -97,7 +103,7 @@ export async function updateContact(
 }
 
 export async function getPreferences(userId: string): Promise<NotificationPreference[]> {
-  const overrides = await repository.listPreferenceOverrides([userId]);
+  const overrides = await notifier.store.listPreferenceOverrides([userId]);
   return buildPreferenceMatrix(buildPreferenceLookup(overrides));
 }
 
@@ -146,7 +152,7 @@ export async function sendTest(userId: string, body: SendTestNotificationInput):
   };
 
   if (channel === "in_app") {
-    await repository.createWithDeliveries({ ...values, inApp: true }, []);
+    await notifier.store.createWithDeliveries({ ...values, inApp: true }, []);
     return;
   }
 
@@ -155,7 +161,7 @@ export async function sendTest(userId: string, body: SendTestNotificationInput):
     throw new DependencyUnavailableError(`The ${channel} channel is not configured on this server`);
   }
 
-  const [recipient] = await repository.getRecipients([userId]);
+  const [recipient] = await notifier.store.getRecipients([userId]);
   if (!recipient || !isChannelReady(external, recipient)) {
     throw new ValidationError(
       channel === "sms"
@@ -166,6 +172,8 @@ export async function sendTest(userId: string, body: SendTestNotificationInput):
     );
   }
 
-  const created = await repository.createWithDeliveries({ ...values, inApp: false }, [external]);
+  const created = await notifier.store.createWithDeliveries({ ...values, inApp: false }, [
+    external,
+  ]);
   if (created) await queueDeliveries(created.deliveryIds);
 }

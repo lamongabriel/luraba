@@ -1,11 +1,11 @@
-import { NOTIFICATION_EVENTS } from "@luraba/contracts/notifications";
+import { NOTIFICATION_EVENTS } from "@luraba/contracts";
 import { describe, expect, it } from "vitest";
 import {
   buildPreferenceLookup,
   buildPreferenceMatrix,
   isChannelEnabled,
   resolveEnabledChannels,
-} from "../notifications.preferences";
+} from "./preferences.js";
 
 describe("notification preferences", () => {
   it("falls back to the catalog defaults without overrides", () => {

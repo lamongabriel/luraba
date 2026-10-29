@@ -40,6 +40,7 @@
   "dependencies": {
     "@luraba/contracts": "workspace:*",
     "@luraba/db": "workspace:*",
+    "@luraba/notifications": "workspace:*",
     "@luraba/domain": "workspace:*",
     "@luraba/queue": "workspace:*",
     "ioredis": "^6.0.0",

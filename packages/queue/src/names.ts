@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const QUEUE_NAMES = {
   notifications: "notifications",
+  bills: "bills",
 } as const;
 
 export const NOTIFICATION_JOBS = {
@@ -18,3 +19,10 @@ export type DeliverJobData = z.output<typeof deliverJobSchema>;
 
 export const NOTIFICATION_DELIVERY_ATTEMPTS = 5;
 export const NOTIFICATION_DELIVERY_BACKOFF_MS = 30_000;
+
+export const BILL_JOBS = {
+  /** Recurring: keep open-ended bills supplied with upcoming occurrences. */
+  generate: "generate",
+  /** Recurring: send due-soon and overdue reminders. */
+  remind: "remind",
+} as const;

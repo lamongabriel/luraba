@@ -1,3 +1,4 @@
+import { BILL_AUDIENCES, BILL_FREQUENCIES, BILL_STATUSES } from "@luraba/contracts/bills";
 import {
   CREDIT_EXPENSE_TIMING_VALUES,
   CREDIT_INSTALLMENT_BUDGET_MODE_VALUES,
@@ -154,3 +155,8 @@ export const notificationDeliveryStatusEnum = pgEnum("notification_delivery_stat
   "failed",
   "skipped",
 ]);
+
+// ─── Bill Enums ──────────────────────────────────────────────────────────
+export const billFrequencyEnum = pgEnum("bill_frequency", BILL_FREQUENCIES);
+export const billStatusEnum = pgEnum("bill_status", BILL_STATUSES);
+export const billAudienceEnum = pgEnum("bill_audience", BILL_AUDIENCES);

@@ -1,6 +1,7 @@
 import { accountsEndpoints } from "./accounts/endpoints.js";
 import type { EndpointContract } from "./api.js";
 import { authEndpoints } from "./auth/endpoints.js";
+import { billsEndpoints } from "./bills/endpoints.js";
 import { budgetsEndpoints } from "./budgets/endpoints.js";
 import { categoriesEndpoints } from "./categories/endpoints.js";
 import { creditCardsEndpoints } from "./credit-cards/endpoints.js";
@@ -21,6 +22,7 @@ type EndpointGroup = Readonly<Record<string, EndpointContract>>;
 export const contractModules = {
   accounts: accountsEndpoints,
   auth: authEndpoints,
+  bills: billsEndpoints,
   budgets: budgetsEndpoints,
   categories: categoriesEndpoints,
   currencies: currenciesEndpoints,
