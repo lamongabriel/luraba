@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { currencyCodeSchema, wireDateTimeSchema } from "../common.js";
+import { creditExpenseTimingSchema, creditInstallmentBudgetModeSchema } from "../preferences.js";
 import { tagSummarySchema } from "../tags/resource.js";
 
 export const creditCardCycleStatusSchema = z.enum(["open", "closed", "paid"]);
@@ -146,8 +147,8 @@ export const creditCardPurchaseSchema = z.object({
   installmentCount: z.number().int(),
   tags: z.array(tagSummarySchema),
   includeInBudget: z.boolean(),
-  budgetExpenseTiming: z.enum(["spend_month", "payment_month"]),
-  budgetInstallmentMode: z.enum(["per_installment", "full_amount"]),
+  budgetExpenseTiming: creditExpenseTimingSchema,
+  budgetInstallmentMode: creditInstallmentBudgetModeSchema,
   installments: z.array(
     z.object({
       installmentId: z.uuid(),

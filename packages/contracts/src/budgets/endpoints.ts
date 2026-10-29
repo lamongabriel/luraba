@@ -3,6 +3,7 @@ import {
   budgetMonthParamsSchema,
   getMonthlyBudgetQuerySchema,
   replaceMonthlyBudgetBodySchema,
+  updateBudgetMonthSettingsBodySchema,
 } from "./requests.js";
 import { monthlyBudgetSchema } from "./resource.js";
 
@@ -20,6 +21,14 @@ export const budgetsEndpoints = {
     path: "/budgets/:month",
     params: budgetMonthParamsSchema,
     body: replaceMonthlyBudgetBodySchema,
+    response: monthlyBudgetSchema,
+    status: 200,
+  }),
+  updateMonthSettings: defineEndpoint({
+    method: "put",
+    path: "/budgets/:month/settings",
+    params: budgetMonthParamsSchema,
+    body: updateBudgetMonthSettingsBodySchema,
     response: monthlyBudgetSchema,
     status: 200,
   }),

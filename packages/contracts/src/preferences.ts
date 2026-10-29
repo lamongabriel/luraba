@@ -17,7 +17,16 @@ export const PREFERRED_PERIOD_VALUES = [
   "all_time",
 ] as const;
 export const PREFERRED_THEME_VALUES = ["light", "dark", "system"] as const;
-export const CREDIT_EXPENSE_TIMING_VALUES = ["spend_month", "payment_month"] as const;
+/**
+ * Which month a credit-card purchase counts in for the budget:
+ * `spend_month` is the purchase month (the statement closing month per installment),
+ * `payment_month` the month the bill is due and `month_after_payment` the month after that.
+ */
+export const CREDIT_EXPENSE_TIMING_VALUES = [
+  "spend_month",
+  "payment_month",
+  "month_after_payment",
+] as const;
 export const CREDIT_INSTALLMENT_BUDGET_MODE_VALUES = ["per_installment", "full_amount"] as const;
 
 export const languageSchema = z.enum(LANGUAGE_VALUES);
