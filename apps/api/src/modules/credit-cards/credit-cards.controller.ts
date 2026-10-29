@@ -12,6 +12,11 @@ export const list = createHouseholdHandler({
     return withApiMeta(result.data, result.meta);
   },
 });
+export const getOverview = createHouseholdHandler({
+  query: creditCardsEndpoints.overview.query,
+  response: creditCardsEndpoints.overview.response,
+  handle: ({ household, query }) => service.getOverview(household, query),
+});
 export const create = createHouseholdHandler({
   body: creditCardsEndpoints.create.body,
   response: creditCardsEndpoints.create.response,

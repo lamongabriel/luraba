@@ -565,4 +565,149 @@ describe("credit cards routes", () => {
       expect(response.body.error.code).toBe("NOT_FOUND");
     }
   });
+  it("GET /api/v1/credit-cards/overview summarizes the month's invoices and the limit used", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-30T12:00:00.000Z"));
+
+    const context = await createAuthenticatedContext();
+    const headers = createAuthHeaders(context.token, context.household.id);
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: "Electronics", type: "expense" }),
+    );
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
+    const createdCard = await request(app)
+      .post("/api/v1/credit-cards")
+      .set(headers)
+      .send(
+        buildCreditCardInput({
+          ownerAccountId: ownerAccount.id,
+          name: "Chase Sapphire",
+          closingDay: 25,
+          dueDay: 5,
+          creditLimitAmount: 100_000,
+        }),
+      );
+    const cardId = createdCard.body.data.id;
+    const purchase = (description: string, amount: number, date: string, installments: number) =>
+      request(app).post(`/api/v1/credit-cards/${cardId}/purchases`).set(headers).send({
+        description,
+        amount,
+        categoryId: category.id,
+        purchaseDate: date,
+        postedDate: date,
+        installmentCount: installments,
+      });
+    await purchase("Headphones", 20_000, "2026-04-20", 1);
+    await purchase("Laptop", 30_000, "2026-04-28", 3);
+
+    const response = await request(app)
+      .get("/api/v1/credit-cards/overview")
+      .query({ month: "2026-05" })
+      .set(headers);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.month).toBe("2026-05");
+    expect(response.body.data.cards).toHaveLength(1);
+    expect(response.body.data.cards[0]).toMatchObject({
+      name: "Chase Sapphire",
+      invoice: {
+        dueDate: "2026-05-05",
+        displayStatus: "due",
+        statementAmount: 20_000,
+        remainingAmount: 20_000,
+      },
+      limit: {
+        limit: 100_000,
+        closedInvoice: 20_000,
+        openInvoice: 10_000,
+        futureInvoices: 20_000,
+        used: 50_000,
+        available: 50_000,
+      },
+    });
+    expect(response.body.data.totals).toEqual([
+      expect.objectContaining({ invoiceAmount: 20_000, invoiceRemainingAmount: 20_000 }),
+    ]);
+
+    // Without a month it opens on the closed, unpaid invoice rather than the calendar month.
+    const defaulted = await request(app).get("/api/v1/credit-cards/overview").set(headers);
+    expect(defaulted.body.data.month).toBe("2026-05");
+    expect(defaulted.body.data.cards[0].invoice.displayStatus).toBe("due");
+  });
+
+  it("GET /api/v1/credit-cards/overview rejects months too far ahead and bad formats", async () => {
+    const context = await createAuthenticatedContext();
+    const headers = createAuthHeaders(context.token, context.household.id);
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
+    await request(app)
+      .post("/api/v1/credit-cards")
+      .set(headers)
+      .send(buildCreditCardInput({ ownerAccountId: ownerAccount.id }));
+
+    const badFormat = await request(app)
+      .get("/api/v1/credit-cards/overview")
+      .query({ month: "2026-13" })
+      .set(headers);
+    const tooFar = await request(app)
+      .get("/api/v1/credit-cards/overview")
+      .query({ month: "2099-01" })
+      .set(headers);
+
+    expect(badFormat.status).toBe(422);
+    expect(tooFar.status).toBe(422);
+  });
+
+  it("GET /api/v1/credit-cards/:id/cycles/:cycleId lists the payments applied to the invoice", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-30T12:00:00.000Z"));
+
+    const context = await createAuthenticatedContext();
+    const headers = createAuthHeaders(context.token, context.household.id);
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: "Groceries", type: "expense" }),
+    );
+    const ownerAccount = await createCreditCardOwner(context.householdContext);
+    await createBalanceEntryForAccount({
+      householdId: context.household.id,
+      accountId: ownerAccount.id,
+      amount: 500_000,
+    });
+    const createdCard = await request(app)
+      .post("/api/v1/credit-cards")
+      .set(headers)
+      .send(buildCreditCardInput({ ownerAccountId: ownerAccount.id, closingDay: 25, dueDay: 5 }));
+    const cardId = createdCard.body.data.id;
+    await request(app).post(`/api/v1/credit-cards/${cardId}/purchases`).set(headers).send({
+      description: "Weekly shop",
+      amount: 20_000,
+      categoryId: category.id,
+      purchaseDate: "2026-04-20",
+      postedDate: "2026-04-20",
+      installmentCount: 1,
+    });
+    const payment = await request(app)
+      .post(`/api/v1/credit-cards/${cardId}/payments`)
+      .set(headers)
+      .send({ amount: 5_000, fromAccountId: ownerAccount.id, paymentDate: "2026-04-30" });
+    expect(payment.status).toBe(201);
+
+    const cycles = await request(app)
+      .get(`/api/v1/credit-cards/${cardId}/cycles`)
+      .query({ scope: "all" })
+      .set(headers);
+    const invoice = cycles.body.data.find(
+      (cycle: { statementAmount: number }) => cycle.statementAmount === 20_000,
+    );
+    const details = await request(app)
+      .get(`/api/v1/credit-cards/${cardId}/cycles/${invoice.id}`)
+      .set(headers);
+
+    expect(details.status).toBe(200);
+    expect(details.body.data.payments).toEqual([
+      expect.objectContaining({ paymentDate: "2026-04-30", amount: 5_000 }),
+    ]);
+    expect(details.body.data.items).toHaveLength(1);
+  });
 });

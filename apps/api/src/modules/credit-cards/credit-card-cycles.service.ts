@@ -10,6 +10,7 @@ import {
   addMonths,
   buildCycleForPurchaseDate,
   buildCycleFromClosingDate,
+  formatISODate,
   formatMonthKey,
   getTodayInTimezone,
   isAfter,
@@ -523,9 +524,15 @@ export async function getBillingCycle(
   const items = await cycleRepository.loadCycleItems(creditCardId, cycleId);
   const [enrichedCycle] = enrichCycleSummaries([cycle], context.timezone);
 
+  const payments = await cycleRepository.loadCyclePayments(creditCardId, cycleId);
+
   return {
     cycle: enrichedCycle,
     items: mapCycleItems(items),
+    payments: payments.map((payment) => ({
+      ...payment,
+      paymentDate: formatISODate(payment.paymentDate),
+    })),
   };
 }
 
@@ -609,6 +616,43 @@ export async function updateBillingCycle(
   });
 
   return getBillingCycle(context, creditCardId, cycleId);
+}
+
+/** Upcoming billing cycles are only created on demand, so a far-off month needs this bound. */
+const MAX_OVERVIEW_MONTHS_AHEAD = 24;
+
+/**
+ * Every cycle of the card, synced, and extended until one is due in `throughMonth` so the overview
+ * can show invoices of months that have no purchases yet.
+ */
+export async function listCyclesThroughMonth(
+  context: HouseholdContext,
+  card: CreditCardRow,
+  throughMonth: Date,
+): Promise<CreditCardCycleSummary[]> {
+  const currentMonth = startOfMonth(getTodayInTimezone(context.timezone));
+  if (throughMonth > addMonths(currentMonth, MAX_OVERVIEW_MONTHS_AHEAD)) {
+    throw new ValidationError(
+      `month cannot be more than ${MAX_OVERVIEW_MONTHS_AHEAD} months in the future`,
+    );
+  }
+
+  const cycles = await db.transaction(async (tx) => {
+    const synced = await syncCardCycles(tx, card, context.timezone);
+    let latestCycle =
+      [...synced].sort((left, right) => (left.closingDate > right.closingDate ? -1 : 1))[0] ??
+      (await ensureCurrentCycle(tx, card, context.timezone));
+
+    let extended = false;
+    while (startOfMonth(latestCycle.dueDate) < throughMonth) {
+      latestCycle = await ensureNextCycleAfter(tx, card, latestCycle);
+      extended = true;
+    }
+
+    return extended ? syncCardCycles(tx, card, context.timezone) : synced;
+  });
+
+  return enrichCycleSummaries(cycles, context.timezone);
 }
 
 export async function getForecast(

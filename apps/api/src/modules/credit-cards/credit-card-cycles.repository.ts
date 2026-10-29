@@ -275,3 +275,27 @@ export async function loadCycleItems(
       asc(creditCardInstallmentsTable.createdAt),
     );
 }
+
+export async function loadCyclePayments(cardId: string, cycleId: string) {
+  return db
+    .select({
+      paymentId: creditCardPaymentsTable.id,
+      transactionId: creditCardPaymentsTable.transactionId,
+      description: transactionsTable.description,
+      paymentDate: transactionsTable.purchaseDate,
+      amount: creditCardPaymentAllocationsTable.amount,
+    })
+    .from(creditCardPaymentAllocationsTable)
+    .innerJoin(
+      creditCardPaymentsTable,
+      eq(creditCardPaymentsTable.id, creditCardPaymentAllocationsTable.paymentId),
+    )
+    .innerJoin(transactionsTable, eq(transactionsTable.id, creditCardPaymentsTable.transactionId))
+    .where(
+      and(
+        eq(creditCardPaymentsTable.creditCardId, cardId),
+        eq(creditCardPaymentAllocationsTable.billingCycleId, cycleId),
+      ),
+    )
+    .orderBy(asc(transactionsTable.purchaseDate), asc(creditCardPaymentAllocationsTable.createdAt));
+}
