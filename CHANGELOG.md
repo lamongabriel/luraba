@@ -1,5 +1,69 @@
 # Changelog
 
+## [1.3.0](https://github.com/lamongabriel/luraba/compare/v1.2.1...v1.3.0) (2026-10-30)
+
+
+### Features
+
+* add Coolify Docker Compose deployment configuration ([8034f87](https://github.com/lamongabriel/luraba/commit/8034f87296a1d85f5ed160769c13b33088eb5324))
+* **api:** add credit card overview, invoice payments and cycle changes ([004dc29](https://github.com/lamongabriel/luraba/commit/004dc29da9ac7c6424e212f1973d2ca43e81045c))
+* **api:** add CSV and JSON exports through an exporter registry ([b1b43d3](https://github.com/lamongabriel/luraba/commit/b1b43d36d3627ea607f78dba8b778ed04b4db62e))
+* **api:** add statement import with parsers, mapping, background worker and reconciliation ([d5ad1d9](https://github.com/lamongabriel/luraba/commit/d5ad1d9a172f6c8a4d341c57aac9213887f46b84))
+* **api:** per-month credit-card budget settings and recognition restamping ([581f59e](https://github.com/lamongabriel/luraba/commit/581f59e89af226807d3d5f9a13a67a7094012e36))
+* **api:** support account and merchant images with upload guards ([512a666](https://github.com/lamongabriel/luraba/commit/512a66692c7470c538d24c0c94d9f8181641f7cb))
+* **api:** wire import and export routes and the import worker ([beb61b8](https://github.com/lamongabriel/luraba/commit/beb61b8dc5fd00fa1fbdb48793d9698f90148efc))
+* **bills:** add recurring bills with occurrences, reminders and web UI ([bdb700a](https://github.com/lamongabriel/luraba/commit/bdb700ad3579cab43163d38e024756223ad21bd3))
+* **charts:** add reusable chart components with state handling ([b7d9ce8](https://github.com/lamongabriel/luraba/commit/b7d9ce8454a73d237e0834b7373c549ef8f26fdc))
+* **contracts:** add budget month settings endpoint and card timing option ([00a46d6](https://github.com/lamongabriel/luraba/commit/00a46d6fd159006f952a85d418739cdd47781c9c))
+* **contracts:** add import, export, credit card overview and image contracts ([d38e38b](https://github.com/lamongabriel/luraba/commit/d38e38ba7893ebad098065824b3cfbbeb05962d5))
+* **contracts:** add shared option catalogs ([c0fbbc8](https://github.com/lamongabriel/luraba/commit/c0fbbc8712a84dfab8c6623620b7d57f2cf65824))
+* **db:** add budget month settings and a month-after-payment timing ([75b9ebe](https://github.com/lamongabriel/luraba/commit/75b9ebec16e1135425a0d4c52c3205a4e6b61634))
+* **db:** add import tables and account and merchant image columns ([178043a](https://github.com/lamongabriel/luraba/commit/178043ae737c8366e2c54b3d7a9610e030cbd5e5))
+* **domain:** add credit card helpers, shared money formatters and UTC date helpers ([932f54d](https://github.com/lamongabriel/luraba/commit/932f54d1b38dea1dc33446819bf49bfcf39bbe4c))
+* **goals:** add savings and investment goals with contributions and estimates ([407c771](https://github.com/lamongabriel/luraba/commit/407c77105f9ffe4108efaa816574176fc1946758))
+* **investments:** add investments API (accounts, assets, events, positions, taxes, allocation) ([1b88b82](https://github.com/lamongabriel/luraba/commit/1b88b82932c37807a1ad0a0bc5aed8f37c8dc20c))
+* **investments:** add pluggable market-data layer and investments contracts ([a24f57d](https://github.com/lamongabriel/luraba/commit/a24f57da85c6b27dcc5b08f2f1a1c5f752ee3534))
+* **investments:** add pure investments engine, schema and reference-data migration ([7d6e6df](https://github.com/lamongabriel/luraba/commit/7d6e6df51f5dad9f16fb8f43f059bb484a19d96d))
+* **investments:** import B3/CSV/JSON statements and export investment data ([15c8934](https://github.com/lamongabriel/luraba/commit/15c8934d44b0e6a4448d797c7bff9ca649c11b10))
+* **investments:** keep prices fresh with scheduled refresh jobs and background refresh on read ([6f10401](https://github.com/lamongabriel/luraba/commit/6f104017e2b2c10e634184b6ccaa2ff248bdf01d))
+* **investments:** reminders, corporate-action suggestions, net-worth hook, scale and scenario tests ([d6ecc1b](https://github.com/lamongabriel/luraba/commit/d6ecc1b794c5e3aec84413f2b95b75166c0071d2))
+* **investments:** web data layer, shared display components, dashboard and holdings pages ([13bf29f](https://github.com/lamongabriel/luraba/commit/13bf29f00020373a7bd757d67872af415078bccc))
+* **investments:** web income, taxes, allocation, import/export, settings and tests ([abef443](https://github.com/lamongabriel/luraba/commit/abef443f103ff64bd6e9383fdda5b94fd3c0cf1a))
+* **investments:** web transactions, accounts, asset detail, fixed income and forms ([9e550da](https://github.com/lamongabriel/luraba/commit/9e550daf82cff2ea1342223757c53eae1e48e0b8))
+* **notifications:** add configurable alerts across in-app, email, push and SMS ([d4d69b6](https://github.com/lamongabriel/luraba/commit/d4d69b6e416ee437a0ead3ec3a6dcf6735574536))
+* **queue:** add import queue and job names ([faf7c03](https://github.com/lamongabriel/luraba/commit/faf7c03cc80d3d07d8f25836df3a5596531f76c7))
+* **splits:** add split payments with per-person installments, linking and write-offs ([eebc5b7](https://github.com/lamongabriel/luraba/commit/eebc5b76578b31c3a5880032e5acb6ced7948007))
+* track who created records and add products with transaction items ([9af7ec9](https://github.com/lamongabriel/luraba/commit/9af7ec9c1aad76834faaf0ed9677af49c4fe086c))
+* **transactions:** show unpaid and overdue bills in the upcoming feed ([66362ab](https://github.com/lamongabriel/luraba/commit/66362abe541d19a7a54bb3071d9159217cb64a15))
+* **uploads:** add S3-compatible storage layer with uploads and attachments ([23b7bf3](https://github.com/lamongabriel/luraba/commit/23b7bf3bbf02d8be839f835c9feaec723472bfc6))
+* **web:** add account images and entity image field ([c72d2fc](https://github.com/lamongabriel/luraba/commit/c72d2fc9985cfdef35917362824052aa9f2320ad))
+* **web:** add credit card overview, invoices and card detail pages ([f9d4c80](https://github.com/lamongabriel/luraba/commit/f9d4c801cd31e3bb681ce398c1a3dba19b4e9164))
+* **web:** add import and export wizard under settings ([1689c5a](https://github.com/lamongabriel/luraba/commit/1689c5a11a6fab449c67398d3a560d651cf44bde))
+* **web:** add masked money, number and date inputs and use them in all forms ([4cf4eb0](https://github.com/lamongabriel/luraba/commit/4cf4eb0fc96b01a576e0edfd1aa66f5c95824ee1))
+* **web:** add merchants page and merchant form with images ([feb1328](https://github.com/lamongabriel/luraba/commit/feb1328ead6b7d3599be9d32accee244575a520d))
+* **web:** add shared display components for accounts, merchants, amounts, categories and tags ([5b583fc](https://github.com/lamongabriel/luraba/commit/5b583fc9a925860de4717766a3d0e9d8cb3af3cf))
+* **web:** add the budget page with monthly plan and card settings ([fafd1d5](https://github.com/lamongabriel/luraba/commit/fafd1d55de2154d942b17686b0fa1cf02635eb6e))
+* **web:** standardize option selects, KPIs and page states ([91047e9](https://github.com/lamongabriel/luraba/commit/91047e97b56e04e1f85e48fc6c517d0f420d21bb))
+* **worker:** add BullMQ worker app and Redis queue package ([f39d160](https://github.com/lamongabriel/luraba/commit/f39d160f08230eca4dc2b1614fcfa4f2904cb3a3))
+
+
+### Bug Fixes
+
+* **api:** describe the investments write permission ([261e3f3](https://github.com/lamongabriel/luraba/commit/261e3f33544e6f3c17d37e8c7b33fd785f569671))
+* **api:** make date-dependent tests stable and clear lint warnings ([1719d07](https://github.com/lamongabriel/luraba/commit/1719d070df12e45c02977c1c13a34593bef31ad1))
+* **domain:** make startOfMonth and addMonths UTC and add shiftMonthKey ([39c8578](https://github.com/lamongabriel/luraba/commit/39c8578803f4715b45e54491f508ecd87dfa34d1))
+* **investments:** correct annualized return, form defaults and total value ([902cf21](https://github.com/lamongabriel/luraba/commit/902cf21cf673e2c3dd97832466a6c138b1b437bd))
+* **web:** restore credit card brand and preview components still imported ([900805a](https://github.com/lamongabriel/luraba/commit/900805a50e6db84d41cb6ed1f77483c4a8cbd657))
+
+
+### Documentation
+
+* add agent skills for React composition and view transitions ([248a2b7](https://github.com/lamongabriel/luraba/commit/248a2b7374ad55398735f82a65c1dd3b2d2f2637))
+* add formatting guide and update architecture and agent guide ([bf65465](https://github.com/lamongabriel/luraba/commit/bf65465b44334ebb7ea75c6d5499a48811c9347c))
+* clarify Coolify setup and hardcode DB name in compose ([3c71641](https://github.com/lamongabriel/luraba/commit/3c71641aafcedf7f8c581850862e22bfbb925e90))
+* document the budget module for agents ([228232b](https://github.com/lamongabriel/luraba/commit/228232b7c119a896ad752c5b9d08bd52452ae29a))
+* **investments:** user guide, progress, architecture and contracts notes ([346add4](https://github.com/lamongabriel/luraba/commit/346add4fd846fea026ffc9a236973dac07f6e95c))
+
 ## [1.2.1](https://github.com/lamongabriel/luraba/compare/v1.2.0...v1.2.1) (2026-09-08)
 
 
