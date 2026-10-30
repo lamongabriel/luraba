@@ -46,3 +46,16 @@ whose market is open; weekends and closed markets are skipped. Without `REDIS_UR
 run on in-process timers. The consumer lives in the API process (like the import worker) because
 it reuses the market-data layer. A separate Redis hot cache was rejected: a primary-key lookup in
 Postgres is as fast as the network hop to Redis and adds an invalidation problem.
+
+## D-10 Average-cost lots are pooled
+Under the average method, purchases of one asset merge into a single pooled lot (fixed-income
+applications keep one lot each because IR and IOF depend on each lot's date). Before this, every
+sale walked every historical lot, which made replays quadratic (12,000 events took ~9 s; now ~0.2 s).
+The preço médio, realized P&L and quantities are unchanged; only the lot breakdown of an average-cost
+position is coarser. FIFO and specific-lot accounts keep real lots (needed for US short/long-term gains).
+
+## D-11 Reminders and corporate-action suggestions
+Maturity (7 days) and DARF (7 days before due, then overdue) reminders run daily from the market-data
+queue and use the notification catalog (`investment.maturity_soon`, `investment.darf_due`) with dedupe
+keys. Splits and dividends reported by providers are only suggestions (`GET /investments/corporate-actions`);
+confirming one creates a normal event.

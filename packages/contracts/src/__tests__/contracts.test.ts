@@ -28,7 +28,7 @@ const EXPECTED_MODULE_COUNTS = {
   households: 22,
   imports: 11,
   integrations: 3,
-  investments: 40,
+  investments: 41,
   merchants: 5,
   notifications: 12,
   onboarding: 1,
@@ -171,6 +171,7 @@ const EXPECTED_ENDPOINTS = [
   "GET /investments/income",
   "GET /investments/taxes",
   "POST /investments/taxes/darf",
+  "GET /investments/corporate-actions",
   "GET /investments/holdings-at",
   "GET /investments/allocation",
   "PUT /investments/portfolios/:id/targets",
@@ -249,7 +250,7 @@ const EXPECTED_ENDPOINTS = [
 ] as const;
 
 describe("HTTP contract inventory", () => {
-  it("contains the complete 204-route inventory by module", () => {
+  it("contains the complete 205-route inventory by module", () => {
     expect(
       Object.fromEntries(
         Object.entries(contractModules).map(([module, endpoints]) => [
@@ -258,7 +259,7 @@ describe("HTTP contract inventory", () => {
         ]),
       ),
     ).toEqual(EXPECTED_MODULE_COUNTS);
-    expect(allEndpoints).toHaveLength(204);
+    expect(allEndpoints).toHaveLength(205);
     expect(allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`)).toEqual(
       EXPECTED_ENDPOINTS,
     );
@@ -267,7 +268,7 @@ describe("HTTP contract inventory", () => {
   it("has unique method/path pairs and complete endpoint schemas", () => {
     const identities = allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`);
 
-    expect(new Set(identities).size).toBe(204);
+    expect(new Set(identities).size).toBe(205);
 
     for (const endpoint of allEndpoints) {
       expect(endpoint.path).toMatch(/^\/[a-z][a-z0-9/-]*(?::[A-Za-z][A-Za-z0-9_]*)?/);

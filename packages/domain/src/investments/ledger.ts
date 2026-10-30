@@ -21,6 +21,8 @@ export type Lot = {
   quantity: Dec;
   costAsset: Dec;
   costBase: Dec;
+  /** Average-cost pool: purchases merged into one lot (never set for fixed income, whose lots keep their dates). */
+  pooled?: boolean;
 };
 
 export type SaleMatch = {
@@ -284,6 +286,8 @@ type Acquisition = {
   costAsset: Dec;
   fee: Dec;
   fx: Dec;
+  /** Merge into the position's average-cost pool (average method only). */
+  pool?: boolean;
 };
 
 function applyAcquisition(engine: Engine, acquisition: Acquisition): void {
@@ -291,7 +295,22 @@ function applyAcquisition(engine: Engine, acquisition: Acquisition): void {
     return;
   }
   const position = getPosition(engine, acquisition.assetId, acquisition.currency);
+  const pool =
+    acquisition.pool && engine.options.method !== "FIFO" && engine.options.method !== "SPECIFIC_LOT"
+      ? position.lots.find((lot) => lot.pooled)
+      : undefined;
+  if (pool) {
+    // One pooled lot keeps average-cost sales O(1) per asset however many purchases there were.
+    pool.quantity = pool.quantity.plus(acquisition.quantity);
+    pool.costAsset = pool.costAsset.plus(acquisition.costAsset);
+    pool.costBase = pool.costBase.plus(acquisition.costAsset.mul(acquisition.fx));
+    if (acquisition.date < pool.acquiredDate) pool.acquiredDate = acquisition.date;
+    position.feesPaidAsset = position.feesPaidAsset.plus(acquisition.fee);
+    refresh(position);
+    return;
+  }
   position.lots.push({
+    ...(acquisition.pool ? { pooled: true } : {}),
     id: acquisition.eventId,
     assetId: acquisition.assetId,
     acquiredDate: acquisition.date,
@@ -759,6 +778,17 @@ export function computeLedger(
 
   const events = sortLedgerEvents(rawEvents);
   const dayTradeHandled = new Set<string>();
+  // Same-day trades per asset, grouped once: filtering all events per trade would be quadratic.
+  const dayTrades = new Map<string, LedgerEvent[]>();
+  if (options.detectDayTrade) {
+    for (const candidate of events) {
+      if (candidate.type !== "BUY" && candidate.type !== "SELL") continue;
+      const key = `${candidate.tradeDate}|${candidate.assetId}`;
+      const group = dayTrades.get(key);
+      if (group) group.push(candidate);
+      else dayTrades.set(key, [candidate]);
+    }
+  }
   const checkpoints = options.checkpoints ?? [];
   const snapshots: LedgerSnapshot[] = [];
   let nextCheckpoint = 0;
@@ -818,12 +848,7 @@ export function computeLedger(
         continue;
       }
       dayTradeHandled.add(key);
-      const sameDay = events.filter(
-        (candidate) =>
-          candidate.tradeDate === event.tradeDate &&
-          candidate.assetId === event.assetId &&
-          (candidate.type === "BUY" || candidate.type === "SELL"),
-      );
+      const sameDay = dayTrades.get(key) ?? [];
       const result = splitDayTrade(
         engine,
         sameDay.filter((candidate) => candidate.type === "BUY"),
@@ -844,6 +869,7 @@ export function computeLedger(
         costAsset: acquisitionCost(event),
         fee: d(event.fees),
         fx: fxOf(event),
+        pool: event.type !== "FI_APPLICATION",
       });
     } else {
       let quantity = d(event.quantity);

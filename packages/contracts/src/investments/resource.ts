@@ -515,6 +515,25 @@ export const holdingsAtSchema = z.object({
   ),
 });
 
+export const corporateActionSuggestionSchema = z.object({
+  assetId: z.uuid(),
+  accountId: z.uuid(),
+  symbol: z.string(),
+  kind: z.enum(["SPLIT", "REVERSE_SPLIT", "DIVIDEND"]),
+  date: isoDate,
+  paymentDate: isoDate.nullable(),
+  ratioFrom: nullableDecimal,
+  ratioTo: nullableDecimal,
+  amountPerShare: nullableDecimal,
+  quantityHeld: decimal,
+  /** Dividends: shares held on the ex-date times the amount per share, in the asset currency. */
+  suggestedGross: nullableDecimal,
+  currencyCode: currencyCodeSchema,
+  alreadyRecorded: z.boolean(),
+  provider: z.string(),
+});
+
+export type CorporateActionSuggestion = z.output<typeof corporateActionSuggestionSchema>;
 export type InvestmentAccount = z.output<typeof investmentAccountSchema>;
 export type Portfolio = z.output<typeof portfolioSchema>;
 export type InvestmentAsset = z.output<typeof assetSchema>;

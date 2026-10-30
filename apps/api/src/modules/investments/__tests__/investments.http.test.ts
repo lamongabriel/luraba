@@ -115,6 +115,13 @@ describe("investments: end to end", () => {
     expect(dashboard.status).toBe(200);
     expect(dashboard.body.data.marketValue).toBe(120_000);
 
+    // The generic accounts list shows the portfolio's market value (positions + cash).
+    const accountsList = await request(app).get("/api/v1/accounts").set(headers);
+    const listed = (accountsList.body.data as { id: string; balance: number }[]).find(
+      (a) => a.id === accountId,
+    );
+    expect(listed?.balance).toBe(936_500 + 120_000);
+
     const taxes = await api("get", "/taxes?year=2026");
     expect(taxes.status).toBe(200);
     // Sales of R$350 are far below the R$20k monthly exemption: no tax due.

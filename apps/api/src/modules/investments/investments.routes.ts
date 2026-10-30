@@ -56,6 +56,7 @@ router.get(path(e.getIncome), read, c.getIncome);
 router.get(path(e.getTaxes), read, c.getTaxes);
 router.post(path(e.markDarfPaid), write, c.markDarfPaid);
 router.get(path(e.getHoldingsAt), read, c.getHoldingsAt);
+router.get(path(e.listCorporateActions), read, c.listCorporateActions);
 
 router.get(path(e.getAllocation), read, c.getAllocation);
 router.get(path(e.getRebalance), read, c.getRebalance);

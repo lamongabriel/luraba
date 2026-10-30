@@ -3,6 +3,7 @@ import { createHouseholdHandler } from "@/shared/controllers/household.controlle
 import { withApiMeta } from "@/shared/response";
 import * as accounts from "./investments.accounts.service";
 import * as assets from "./investments.assets.service";
+import * as corporate from "./investments.corporate-actions.service";
 import * as events from "./investments.events.service";
 import * as importer from "./investments.import.service";
 import * as reports from "./investments.reports.service";
@@ -237,4 +238,10 @@ export const commitImport = createHouseholdHandler({
   body: e.commitImport.body,
   response: e.commitImport.response,
   handle: ({ household, params, body }) => importer.commitImport(household, params.batchId, body),
+});
+
+export const listCorporateActions = createHouseholdHandler({
+  query: e.listCorporateActions.query,
+  response: e.listCorporateActions.response,
+  handle: ({ household, query }) => corporate.listCorporateActions(household, query),
 });

@@ -28,14 +28,14 @@ background, then update the screen. Weekends/closed markets are skipped. Use Yah
 
 ## B. Remaining API
 - [x] Optional migration 0044: benchmark assets (^BVSP, IFIX, ^GSPC), import batch + mapping tables
-- [ ] Accounts hook: investment account balance in the accounts list / net worth uses investment valuation
+- [x] Accounts hook: investment account balance in the accounts list / net worth uses investment valuation
 - [x] Import: app CSV, B3 Negociação, B3 Movimentação, generic CSV with mapping, JSON backup; preview + commit + dedupe + template download
 - [x] Export: events, positions, income, realized, tax, backup (CSV/JSON)
-- [ ] Corporate-action suggestions job (splits/bonus from providers, user confirms)
-- [ ] Monthly apuração notification (DARF due), maturity reminders via existing notifications
-- [ ] Remaining worker jobs: macro sync (CDI/IPCA/Selic/IGP-M), Tesouro prices, fixed-income accrual snapshot, portfolio snapshot
-- [ ] More integration tests: allocation/rebalance, asset detail, fixed income (CDB 110% CDI), FIFO/specific lot, US account + FX, import round trip, permissions (viewer cannot write)
-- [ ] Contract/domain enum parity test; ledger checkpoint test; 10k-event performance test
+- [x] Corporate-action suggestions job (splits/bonus from providers, user confirms)
+- [x] Monthly apuração notification (DARF due), maturity reminders via existing notifications
+- [x] Remaining worker jobs: macro sync (CDI/IPCA/Selic/IGP-M), Tesouro prices, fixed-income accrual snapshot, portfolio snapshot
+- [x] More integration tests: allocation/rebalance, asset detail, fixed income (CDB 110% CDI), FIFO/specific lot, US account + FX, import round trip, permissions (viewer cannot write)
+- [x] Contract/domain enum parity test; ledger checkpoint test; 10k-event performance test
 - [ ] Update contracts README, apps/api/src/modules/README.md, docs/architecture.md
 
 ## C. Web app (use shared display components; read apps/web/README.md and components/display/README.md first)
@@ -67,3 +67,4 @@ background, then update the screen. Weekends/closed markets are skipped. Use Yah
 - 1b88b82 API backend done.
 - Group A freshness: jobs in API process (BullMQ market-data queue, timers w/o Redis), refresh-on-read, tests.
 - Group B1: migration 0044 (benchmarks, import tables), import (5 formats) + export (6 kinds) + template, parser unit tests, HTTP test.
+- Group B2: accounts hook (net worth), reminders, corporate-action suggestions, scenario tests (CDB, FIFO, US, allocation, permissions, isolation), parity + 12k-event scale tests, ledger lot pooling (quadratic -> linear).

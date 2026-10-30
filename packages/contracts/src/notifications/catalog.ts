@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const NOTIFICATION_CHANNELS = ["in_app", "email", "push", "sms"] as const;
-export const NOTIFICATION_CATEGORIES = ["transactions", "bills", "system"] as const;
+export const NOTIFICATION_CATEGORIES = ["transactions", "bills", "investments", "system"] as const;
 
 /** SMS vendors Luraba can deliver through. Empty until a provider is implemented in the worker. */
 export const SMS_PROVIDERS = [] as const satisfies readonly string[];
@@ -41,6 +41,18 @@ export const NOTIFICATION_EVENTS = {
     label: "Bill overdue",
     description: "A bill passed its due date without being paid. Repeats on days 1, 3 and 7.",
     defaults: { in_app: true, email: true, push: true, sms: true },
+  },
+  "investment.maturity_soon": {
+    category: "investments",
+    label: "Investment maturing",
+    description: "A fixed-income investment matures within a week.",
+    defaults: { in_app: true, email: true, push: true, sms: false },
+  },
+  "investment.darf_due": {
+    category: "investments",
+    label: "Investment tax (DARF) due",
+    description: "A monthly capital-gains DARF is due soon or overdue and not marked as paid.",
+    defaults: { in_app: true, email: true, push: true, sms: false },
   },
   "system.test": {
     category: "system",

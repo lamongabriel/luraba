@@ -15,6 +15,7 @@ import {
   buildBrandfetchLogoUrl,
   normalizeBrandDomain,
 } from "@/modules/integrations/brandfetch/brandfetch.utils";
+import { accountTotals } from "@/modules/investments/investments.valuation";
 import { ledgerAccountsRepository } from "@/modules/ledger-accounts/ledger-accounts.repository";
 import type {
   ListAccountTransactionsQuery,
@@ -63,6 +64,19 @@ function mapAccountRecord(account: AccountRecord): Account {
     createdAt: formatISODateTime(account.createdAt),
     updatedAt: formatISODateTime(account.updatedAt),
   };
+}
+
+/**
+ * An investment account that has recorded investment events is worth its market value (positions
+ * plus cash), not the money transferred in, so net worth follows the portfolio.
+ */
+async function investmentBalance(
+  context: HouseholdContext,
+  account: { id: string; type: string },
+): Promise<number | null> {
+  if (account.type !== "investment") return null;
+  const totals = await accountTotals(context, account.id).catch(() => null);
+  return totals?.hasEvents ? totals.totalValue : null;
 }
 
 function mapAccountWithProfile(
@@ -256,12 +270,16 @@ export async function listAccounts(
   const page = await accountsRepository.listPage(context, query);
 
   return {
-    data: page.rows.map(
-      (account): AccountSummary => ({
-        ...mapAccountRecord(account),
-        subtype: account.subtype,
-        balance: toDisplayedBalance(account.balance, account.classification),
-      }),
+    data: await Promise.all(
+      page.rows.map(
+        async (account): Promise<AccountSummary> => ({
+          ...mapAccountRecord(account),
+          subtype: account.subtype,
+          balance:
+            (await investmentBalance(context, account)) ??
+            toDisplayedBalance(account.balance, account.classification),
+        }),
+      ),
     ),
     meta: createListMeta(query, page.totalCount),
   };
@@ -282,7 +300,9 @@ export async function getAccountDetails(
   const profile = await getAccountProfile(account.id, account.type);
   if (!profile) throw new NotFoundError("Account profile");
 
-  return mapAccountWithProfile(account, balance, profile);
+  const details = mapAccountWithProfile(account, balance, profile);
+  const invested = await investmentBalance(context, account);
+  return invested === null ? details : { ...details, balance: invested };
 }
 
 export async function listAccountTransactions(

@@ -252,6 +252,11 @@ export const markDarfPaidBodySchema = z.object({
   amount: nonNegativeDecimalSchema,
   paidDate: isoDateSchema,
 });
+export const corporateActionsQuerySchema = z.object({
+  accountId: optionalUuid,
+  assetId: optionalUuid,
+  from: isoDateSchema.optional(),
+});
 export const holdingsAtQuerySchema = z.object({ date: isoDateSchema, accountId: optionalUuid });
 
 export const providerSettingsBodySchema = z.object({

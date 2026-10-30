@@ -520,6 +520,7 @@ const totalsCache = new Map<
   {
     at: number;
     value: {
+      hasEvents: boolean;
       positionsValue: number;
       totalValue: number;
       cash: { currencyCode: string; amount: number }[];
@@ -547,6 +548,7 @@ export async function accountTotals(context: HouseholdContext, accountId: string
   }
   const positionsValue = await scope.fx.minor(holdings.totalMarketValue, account.currencyId);
   const value = {
+    hasEvents: (holdings.ledgers[0]?.events.length ?? 0) > 0,
     positionsValue,
     totalValue: await scope.fx.minor(
       holdings.totalMarketValue.plus(holdings.cashReporting),
