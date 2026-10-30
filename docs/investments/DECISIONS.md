@@ -36,3 +36,13 @@ with R$20,000 monthly sales exemption, 20% day trade, FII 20%, ETF 15%, BDR 15%,
 2026), custody fee 0.20% a.a., offshore flat 15% (Lei 14.754/2023), US NRA dividend 30%, US
 long-term threshold 1 year, DARF code 6015, B3 holiday calendar 2000–2035 (generated from the Easter
 algorithm plus fixed holidays; ⚠ extra one-off closures are not included).
+
+## D-09 Price freshness
+Quotes are cached durably in `asset_quotes` (and daily closes in `price_history`), the same shape as
+the FX cache. A read serves the cached value immediately; stale quotes of open markets are refreshed
+in the background (never awaited) and the dashboard reports `priceFreshness.refreshing` so the UI
+refetches. A repeatable BullMQ job (`market-data` queue, every 5 min) refreshes every held asset
+whose market is open; weekends and closed markets are skipped. Without `REDIS_URL` the same jobs
+run on in-process timers. The consumer lives in the API process (like the import worker) because
+it reuses the market-data layer. A separate Redis hot cache was rejected: a primary-key lookup in
+Postgres is as fast as the network hop to Redis and adds an invalidation problem.

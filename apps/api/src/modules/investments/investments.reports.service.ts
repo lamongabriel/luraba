@@ -464,6 +464,7 @@ export async function dashboard(
       oldestAsOf: oldest ? oldest.toISOString() : null,
       providers: [...new Set(rows.map((r) => r.price?.provider).filter((x): x is string => !!x))],
       staleAssets: rows.filter((r) => r.priceStale).length,
+      refreshing: holdings.refreshing,
     },
     disclaimer: TAX_DISCLAIMER,
   };

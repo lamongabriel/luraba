@@ -259,6 +259,8 @@ export const dashboardSchema = z.object({
     oldestAsOf: z.string().nullable(),
     providers: z.array(z.string()),
     staleAssets: z.number().int(),
+    /** True while stale quotes are being fetched in the background; refetch shortly. */
+    refreshing: z.boolean(),
   }),
   disclaimer: z.string(),
 });

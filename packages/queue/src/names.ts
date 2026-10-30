@@ -4,6 +4,7 @@ export const QUEUE_NAMES = {
   notifications: "notifications",
   bills: "bills",
   imports: "imports",
+  marketData: "market-data",
 } as const;
 
 export const NOTIFICATION_JOBS = {
@@ -35,3 +36,19 @@ export const IMPORT_JOBS = {
 
 export const importJobSchema = z.object({ batchId: z.uuid() });
 export type ImportJobData = z.output<typeof importJobSchema>;
+
+export const MARKET_DATA_JOBS = {
+  /** Recurring (every few minutes): refresh the quote of every held asset whose market is open. */
+  refreshQuotes: "refresh-quotes",
+  /** Recurring (daily): fill the daily price history of held assets. */
+  topUpHistory: "top-up-history",
+  /** Recurring (daily): CDI/Selic/IPCA/IGP-M/US CPI series. */
+  syncMacro: "sync-macro",
+  /** Recurring (daily): Tesouro Direto buyback prices. */
+  syncTesouro: "sync-tesouro",
+  /** Recurring (daily): store one value snapshot per investment account. */
+  snapshot: "snapshot",
+  /** Recurring (daily): maturity and DARF reminders. */
+  reminders: "reminders",
+} as const;
+export type MarketDataJobName = (typeof MARKET_DATA_JOBS)[keyof typeof MARKET_DATA_JOBS];

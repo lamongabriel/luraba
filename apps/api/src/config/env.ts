@@ -98,6 +98,10 @@ const envSchema = z
     ALPHA_VANTAGE_API_KEY: optionalStringEnvSchema,
     ALPHA_VANTAGE_PREMIUM: optionalBooleanEnvSchema,
     BRAPI_TOKEN: optionalStringEnvSchema,
+    MARKET_DATA_JOBS_ENABLED: z
+      .enum(["true", "false"])
+      .default("true")
+      .transform((value) => value === "true"),
     MARKET_DATA_TIMEOUT_MS: z.coerce.number().int().min(500).max(60_000).default(8000),
     RUN_DB_TESTS: booleanEnvSchema.default(false),
   })
@@ -197,6 +201,7 @@ export const env = {
     alphaVantagePremium: parsedEnv.data.ALPHA_VANTAGE_PREMIUM ?? false,
     brapiToken: parsedEnv.data.BRAPI_TOKEN,
     timeoutMs: parsedEnv.data.MARKET_DATA_TIMEOUT_MS,
+    jobsEnabled: parsedEnv.data.MARKET_DATA_JOBS_ENABLED,
   },
   runDbTests: parsedEnv.data.RUN_DB_TESTS,
 } as const;

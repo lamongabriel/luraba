@@ -23,6 +23,7 @@ import { getCurrencyOrThrow } from "./investments.currency";
 import { FxConverter } from "./investments.fx";
 import { loadCalendar, loadIndexData, loadTaxRules } from "./investments.macro";
 import { toLedgerEvent } from "./investments.mappers";
+import { isRefreshing, refreshStaleInBackground } from "./investments.refresh";
 import * as repo from "./investments.repository";
 import type {
   AssetRecord,
@@ -100,6 +101,8 @@ export type Holdings = {
   totalMarketValue: Dec;
   /** Warnings such as missing FX pairs. */
   warnings: string[];
+  /** Stale quotes are being refreshed in the background. */
+  refreshing: boolean;
 };
 
 export function todayIso(): string {
@@ -356,6 +359,12 @@ export async function computeHoldings(scope: Scope): Promise<Holdings> {
     marketDataService.latestPrices(assetList),
     repo.getHouseholdAssetSettings(scope.context, [...assetIds]),
   ]);
+  const openIds = new Set<string>();
+  for (const { ledger } of ledgers)
+    for (const p of ledger.positions.values()) if (!p.quantity.isZero()) openIds.add(p.assetId);
+  const heldNow = assetList.filter((a) => openIds.has(a.id));
+  refreshStaleInBackground(scope.context.householdId, heldNow, (id) => prices.get(id)?.asOf);
+  const refreshing = isRefreshing(heldNow.map((a) => a.id));
   const earliest = ledgers
     .flatMap((l) => l.events)
     .reduce((min, e) => (e.tradeDate < min ? e.tradeDate : min), today);
@@ -501,6 +510,7 @@ export async function computeHoldings(scope: Scope): Promise<Holdings> {
     cashByCurrency,
     totalMarketValue,
     warnings,
+    refreshing,
   };
 }
 
