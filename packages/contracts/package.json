@@ -103,6 +103,10 @@
       "types": "./dist/merchants/index.d.ts",
       "import": "./dist/merchants/index.js"
     },
+    "./investments": {
+      "types": "./dist/investments/index.d.ts",
+      "import": "./dist/investments/index.js"
+    },
     "./products": {
       "types": "./dist/products/index.d.ts",
       "import": "./dist/products/index.js"

@@ -12,6 +12,7 @@ import { healthEndpoints } from "./health/endpoints.js";
 import { householdsEndpoints } from "./households/endpoints.js";
 import { importsEndpoints } from "./imports/endpoints.js";
 import { integrationsEndpoints } from "./integrations/endpoints.js";
+import { investmentsEndpoints } from "./investments/endpoints.js";
 import { merchantsEndpoints } from "./merchants/endpoints.js";
 import { notificationsEndpoints } from "./notifications/endpoints.js";
 import { onboardingEndpoints } from "./onboarding/endpoints.js";
@@ -39,6 +40,7 @@ export const contractModules = {
   households: householdsEndpoints,
   imports: importsEndpoints,
   integrations: integrationsEndpoints,
+  investments: investmentsEndpoints,
   merchants: merchantsEndpoints,
   products: productsEndpoints,
   notifications: notificationsEndpoints,

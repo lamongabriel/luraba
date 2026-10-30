@@ -90,7 +90,22 @@ export type LedgerIssue = {
   message: string;
 };
 
+export type LedgerSnapshot = {
+  /** State at the end of this day (events dated on or before it). */
+  date: IsoDate;
+  positions: {
+    assetId: string;
+    currency: string;
+    quantity: Dec;
+    costAsset: Dec;
+    costBase: Dec;
+    lots: Lot[];
+  }[];
+  cash: Record<string, Dec>;
+};
+
 export type LedgerResult = {
+  snapshots: LedgerSnapshot[];
   positions: Map<string, PositionState>;
   sales: RealizedSale[];
   income: IncomeRecord[];
@@ -104,6 +119,8 @@ export type LedgerOptions = {
   detectDayTrade?: boolean;
   /** Throw on the first overselling event instead of clamping and reporting it. */
   strict?: boolean;
+  /** Dates (ascending) at which to capture a state snapshot during the single pass. */
+  checkpoints?: readonly IsoDate[];
 };
 
 export class OversellError extends Error {
@@ -739,8 +756,33 @@ export function computeLedger(
 
   const events = sortLedgerEvents(rawEvents);
   const dayTradeHandled = new Set<string>();
+  const checkpoints = options.checkpoints ?? [];
+  const snapshots: LedgerSnapshot[] = [];
+  let nextCheckpoint = 0;
+  const capture = (date: IsoDate): void => {
+    snapshots.push({
+      date,
+      positions: [...engine.positions.values()]
+        .filter((position) => position.quantity.gt(0))
+        .map((position) => ({
+          assetId: position.assetId,
+          currency: position.currency,
+          quantity: position.quantity,
+          costAsset: position.costAsset,
+          costBase: position.costBase,
+          lots: position.lots.map((lot) => ({ ...lot })),
+        })),
+      cash: { ...engine.cash },
+    });
+  };
 
   for (const event of events) {
+    while (
+      nextCheckpoint < checkpoints.length &&
+      (checkpoints[nextCheckpoint] as string) < event.tradeDate
+    ) {
+      capture(checkpoints[nextCheckpoint++] as string);
+    }
     applyCash(engine, event);
     const { type } = event;
 
@@ -820,6 +862,10 @@ export function computeLedger(
     }
   }
 
+  while (nextCheckpoint < checkpoints.length) {
+    capture(checkpoints[nextCheckpoint++] as string);
+  }
+
   for (const [currency, amount] of Object.entries(engine.cash)) {
     if (amount.lt(0)) {
       engine.issues.push({
@@ -831,6 +877,7 @@ export function computeLedger(
   }
 
   return {
+    snapshots,
     positions: engine.positions,
     sales: engine.sales,
     income: engine.income,

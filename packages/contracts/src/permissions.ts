@@ -73,6 +73,9 @@ export const PERMISSIONS = {
   UPLOADS_READ: "uploads.read",
   UPLOADS_CREATE: "uploads.create",
   UPLOADS_DELETE: "uploads.delete",
+  INVESTMENTS_READ: "investments.read",
+  INVESTMENTS_WRITE: "investments.write",
+  INVESTMENTS_DELETE: "investments.delete",
   BUDGETS_READ: "budgets.read",
   BUDGETS_UPDATE: "budgets.update",
   CREDIT_CARDS_READ: "creditCards.read",
@@ -144,6 +147,8 @@ export const HOUSEHOLD_ROLE_PERMISSIONS: Readonly<
     PERMISSIONS.PRODUCTS_UPDATE,
     PERMISSIONS.BUDGETS_READ,
     PERMISSIONS.CREDIT_CARDS_READ,
+    PERMISSIONS.INVESTMENTS_READ,
+    PERMISSIONS.INVESTMENTS_WRITE,
   ]),
   viewer: new Set([
     PERMISSIONS.HOUSEHOLD_READ,
@@ -161,6 +166,7 @@ export const HOUSEHOLD_ROLE_PERMISSIONS: Readonly<
     PERMISSIONS.PRODUCTS_READ,
     PERMISSIONS.BUDGETS_READ,
     PERMISSIONS.CREDIT_CARDS_READ,
+    PERMISSIONS.INVESTMENTS_READ,
   ]),
 };
 

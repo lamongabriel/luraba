@@ -95,6 +95,10 @@ const envSchema = z
     STORAGE_KEY_PREFIX: optionalStringEnvSchema,
     STORAGE_MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(500).default(20),
     INTEGRATIONS_ENCRYPTION_KEY: hexSecretEnvSchema("INTEGRATIONS_ENCRYPTION_KEY", 64),
+    ALPHA_VANTAGE_API_KEY: optionalStringEnvSchema,
+    ALPHA_VANTAGE_PREMIUM: optionalBooleanEnvSchema,
+    BRAPI_TOKEN: optionalStringEnvSchema,
+    MARKET_DATA_TIMEOUT_MS: z.coerce.number().int().min(500).max(60_000).default(8000),
     RUN_DB_TESTS: booleanEnvSchema.default(false),
   })
   .superRefine((data, ctx) =>
@@ -188,6 +192,12 @@ export const env = {
   storage: storageConfig,
   maxUploadBytes: parsedEnv.data.STORAGE_MAX_UPLOAD_MB * 1024 * 1024,
   integrationsEncryptionKey: parsedEnv.data.INTEGRATIONS_ENCRYPTION_KEY,
+  marketData: {
+    alphaVantageApiKey: parsedEnv.data.ALPHA_VANTAGE_API_KEY,
+    alphaVantagePremium: parsedEnv.data.ALPHA_VANTAGE_PREMIUM ?? false,
+    brapiToken: parsedEnv.data.BRAPI_TOKEN,
+    timeoutMs: parsedEnv.data.MARKET_DATA_TIMEOUT_MS,
+  },
   runDbTests: parsedEnv.data.RUN_DB_TESTS,
 } as const;
 
