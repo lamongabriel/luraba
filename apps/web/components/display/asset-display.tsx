@@ -11,7 +11,8 @@ import { DisplayMark } from "./display-mark";
 export type AssetDisplayInput = {
   symbol: string;
   name: string;
-  assetClass: AssetClass;
+  /** Unknown (e.g. on a ledger row) renders the generic icon. */
+  assetClass?: AssetClass;
   logoUrl?: string | null;
 };
 
@@ -21,7 +22,7 @@ export function AssetMark({
   size = "sm",
   className,
 }: {
-  asset: Pick<AssetDisplayInput, "assetClass" | "logoUrl"> | null | undefined;
+  asset: Partial<Pick<AssetDisplayInput, "assetClass" | "logoUrl">> | null | undefined;
   size?: DisplaySize;
   className?: string;
 }) {
@@ -66,7 +67,9 @@ export function AssetDisplay({
         <span className={cn("block truncate font-medium", dims.text)}>{asset.symbol}</span>
         {detail !== "none" ? (
           <span className={cn("block truncate text-muted-foreground", dims.subtext)}>
-            {detail === "class" ? ASSET_CLASS_DISPLAY[asset.assetClass].label : asset.name}
+            {detail === "class"
+              ? ASSET_CLASS_DISPLAY[asset.assetClass ?? "OTHER"].label
+              : asset.name}
           </span>
         ) : null}
       </span>

@@ -74,3 +74,28 @@ export function fractionToPercent(value: string | number | null | undefined) {
   const number = Number(value);
   return Number.isFinite(number) ? number * 100 : null;
 }
+
+/** Moves the decimal point of a plain decimal string by `places` (exact, no floats). */
+export function shiftDecimal(value: string, places: number): string {
+  const trimmed = value.trim();
+  if (!/^-?\d+(\.\d+)?$/u.test(trimmed)) return "";
+  const negative = trimmed.startsWith("-");
+  const [integerPart = "0", fraction = ""] = trimmed.replace("-", "").split(".");
+  let digits = `${integerPart}${fraction}`;
+  let point = integerPart.length + places;
+  if (point <= 0) {
+    digits = `${"0".repeat(1 - point)}${digits}`;
+    point = 1;
+  } else if (point > digits.length) {
+    digits = digits.padEnd(point, "0");
+  }
+  const whole = digits.slice(0, point).replace(/^0+(?=\d)/u, "");
+  const rest = digits.slice(point).replace(/0+$/u, "");
+  const text = rest ? `${whole}.${rest}` : whole;
+  return negative && /[1-9]/u.test(text) ? `-${text}` : text;
+}
+
+/** `"110"` (percent) to `"1.1"` (the fraction the API stores). */
+export const percentToFraction = (percent: string) => shiftDecimal(percent, -2);
+/** `"1.1"` (stored fraction) to `"110"` (what the person types). */
+export const fractionToPercentText = (fraction: string) => shiftDecimal(fraction, 2);
