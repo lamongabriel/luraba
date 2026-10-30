@@ -8,9 +8,9 @@ import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 import { BillSheet } from "@/components/bills/bill-sheet";
 import { LinkTransactionModal } from "@/components/bills/link-transaction-modal";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
+import { KpiCard, KpiGrid } from "@/components/kpi";
 import { PERMISSIONS, useCan } from "@/components/permissions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Modal, ModalBody, ModalContent, ModalFooter } from "@/components/ui/modal";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { describeBillSchedule, OCCURRENCE_STATE_LABELS } from "@/lib/bills";
 import {
@@ -36,6 +35,8 @@ import {
 } from "@/mutations/bills/use-bill-mutations";
 import { useBillOccurrencesQuery, useBillQuery } from "@/queries/bills/use-bills-queries";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
+import { BillDetailError } from "./_error";
+import { BillDetailLoading, BillPaymentsLoading } from "./_loading";
 
 const STATE_BADGE: Record<
   BillOccurrence["state"],
@@ -46,15 +47,6 @@ const STATE_BADGE: Record<
   paid: "secondary",
   skipped: "outline",
 };
-
-function Stat({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl border border-border/60 p-4">
-      <Typography variant="small-muted">{label}</Typography>
-      <div className="mt-1 text-lg">{children}</div>
-    </div>
-  );
-}
 
 function OccurrenceRow({
   occurrence,
@@ -186,31 +178,14 @@ export default function BillDetailsPage() {
 
   const bill = billQuery.data;
 
-  if (billQuery.isPending) {
-    return (
-      <InternalPageLayout
-        title="Bill"
-        subtitle="Schedule, upcoming occurrences and payment history."
-        back={{ href: "/bills", label: "Bills" }}
-      >
-        <Skeleton className="h-40 rounded-xl bg-muted/50" />
-      </InternalPageLayout>
-    );
-  }
+  if (billQuery.isPending) return <BillDetailLoading />;
 
   if (billQuery.isError || !bill) {
     return (
-      <InternalPageLayout
-        title="Bill"
-        subtitle="Schedule, upcoming occurrences and payment history."
-        back={{ href: "/bills", label: "Bills" }}
-      >
-        <ErrorState
-          title="Couldn't load this bill"
-          description={billQuery.error?.message || "It may have been deleted."}
-          onRetry={() => void billQuery.refetch()}
-        />
-      </InternalPageLayout>
+      <BillDetailError
+        message={billQuery.error?.message}
+        onRetry={() => void billQuery.refetch()}
+      />
     );
   }
 
@@ -275,8 +250,8 @@ export default function BillDetailsPage() {
         ) : null}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Next payment">
+      <KpiGrid columns={4}>
+        <KpiCard title="Next payment">
           {summary.nextDueDate ? (
             <>
               <span className="block text-base">
@@ -292,8 +267,8 @@ export default function BillDetailsPage() {
           ) : (
             "None"
           )}
-        </Stat>
-        <Stat label={bill.installmentCount ? "Installments" : "Payments made"}>
+        </KpiCard>
+        <KpiCard title={bill.installmentCount ? "Installments" : "Payments made"}>
           {bill.installmentCount ? (
             <>
               {summary.paidCount} of {bill.installmentCount}
@@ -304,8 +279,8 @@ export default function BillDetailsPage() {
           ) : (
             summary.paidCount
           )}
-        </Stat>
-        <Stat label="Average paid">
+        </KpiCard>
+        <KpiCard title="Average paid">
           {summary.averagePaid !== null ? (
             <MoneyValue
               amount={summary.averagePaid}
@@ -315,22 +290,22 @@ export default function BillDetailsPage() {
           ) : (
             "—"
           )}
-        </Stat>
-        <Stat label="Total paid">
+        </KpiCard>
+        <KpiCard title="Total paid">
           <MoneyValue
             amount={summary.totalPaid}
             currencyCode={bill.currencyCode}
             language={language}
           />
-        </Stat>
-      </div>
+        </KpiCard>
+      </KpiGrid>
 
       <section>
         <Typography variant="small-strong" className="mb-1">
           Payments
         </Typography>
         {occurrencesQuery.isPending ? (
-          <Skeleton className="h-24 rounded-xl bg-muted/50" />
+          <BillPaymentsLoading />
         ) : occurrences.length === 0 ? (
           <Typography variant="small-muted">No payments scheduled.</Typography>
         ) : (

@@ -1,7 +1,4 @@
 "use client";
-
-import { ChartLineData01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { Benchmark } from "@luraba/contracts";
 import { BENCHMARKS } from "@luraba/contracts";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -9,14 +6,11 @@ import Link from "next/link";
 import * as React from "react";
 
 import { AmountDisplay } from "@/components/display";
-import { EmptyState } from "@/components/empty-state";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { AllocationChart } from "@/components/investments/allocation-chart";
 import { BENCHMARK_LABELS, PERIOD_LABELS } from "@/components/investments/constants";
 import { CorporateActionSuggestions } from "@/components/investments/corporate-action-suggestions";
 import { FreshnessBadge } from "@/components/investments/freshness-badge";
-import { MetricCard } from "@/components/investments/metric-card";
 import { MoversList } from "@/components/investments/movers-list";
 import { PercentChange } from "@/components/investments/percent-change";
 import { PerformanceChart } from "@/components/investments/performance-chart";
@@ -26,6 +20,7 @@ import { SegmentedControl } from "@/components/investments/segmented-control";
 import { UpcomingList } from "@/components/investments/upcoming-list";
 import { useInvestmentFormat } from "@/components/investments/use-investment-format";
 import { scopeQuery, useInvestmentScope } from "@/components/investments/use-investment-scope";
+import { KpiCard, KpiGrid } from "@/components/kpi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -35,12 +30,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   useInvestmentDashboardQuery,
   usePositionsQuery,
 } from "@/queries/investments/use-investments-queries";
 import { useDefaultCurrencyCode } from "@/stores/auth-session-store";
+import { InvestmentsEmpty } from "./_empty";
+import { InvestmentsError } from "./_error";
+import { InvestmentsLoading } from "./_loading";
 
 const NO_BENCHMARK = "none";
 const ALLOCATION_VIEWS = [
@@ -49,19 +46,6 @@ const ALLOCATION_VIEWS = [
   { value: "country", label: "Country" },
   { value: "currency", label: "Currency" },
 ] as const;
-
-function DashboardSkeleton() {
-  return (
-    <div className="space-y-3" aria-busy="true">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {["a", "b", "c", "d"].map((key) => (
-          <Skeleton key={key} className="h-24 rounded-xl bg-muted/50" />
-        ))}
-      </div>
-      <Skeleton className="h-80 rounded-xl bg-muted/50" />
-    </div>
-  );
-}
 
 export default function InvestmentsPage() {
   const format = useInvestmentFormat();
@@ -95,78 +79,61 @@ export default function InvestmentsPage() {
 
   let content: React.ReactNode;
   if (dashboard.isPending) {
-    content = <DashboardSkeleton />;
+    content = <InvestmentsLoading />;
   } else if (dashboard.isError || !data) {
     content = (
-      <ErrorState
-        title="Couldn't load your investments"
-        description={dashboard.error?.message || "An unexpected error occurred."}
+      <InvestmentsError
+        message={dashboard.error?.message}
         onRetry={() => void dashboard.refetch()}
       />
     );
   } else if (isEmpty && (positions.data?.length ?? 0) === 0) {
-    content = (
-      <EmptyState
-        icon={<HugeiconsIcon icon={ChartLineData01Icon} strokeWidth={2} />}
-        title="Start tracking your investments"
-        description="Create an investment account, then record your first buy, deposit or import a broker statement."
-        action={
-          <div className="flex gap-2">
-            <Button asChild>
-              <Link href="/investments/accounts">Create an account</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/investments/import">Import a statement</Link>
-            </Button>
-          </div>
-        }
-      />
-    );
+    content = <InvestmentsEmpty />;
   } else {
     const value = (scope.net ? data.netValue : data.marketValue) + data.cash;
     content = (
       <div className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard
-            label={scope.net ? "Net value" : "Total value"}
+        <KpiGrid columns={4}>
+          <KpiCard
+            title={scope.net ? "Net value" : "Total value"}
             value={money(value)}
-            detail={
+            description={
               <span>
                 Positions {money(scope.net ? data.netValue : data.marketValue)} · cash{" "}
                 {money(data.cash)}
               </span>
             }
           />
-          <MetricCard
-            label="Invested"
+          <KpiCard
+            title="Invested"
             value={money(data.invested)}
-            detail={`${format.percent(data.xirr)} annualized (XIRR)`}
+            description={`${format.percent(data.xirr)} annualized (XIRR)`}
           />
-          <MetricCard
-            label="Unrealized P&L"
+          <KpiCard
+            title="Unrealized P&L"
             value={money(data.unrealizedPnl, "auto")}
-            detail={<PercentChange value={data.unrealizedPnlPercent} />}
+            description={<PercentChange value={data.unrealizedPnlPercent} />}
           />
-          <MetricCard
-            label="Today"
+          <KpiCard
+            title="Today"
             value={money(data.todayChange, "auto")}
-            detail={<PercentChange value={data.todayChangePercent} />}
+            description={<PercentChange value={data.todayChangePercent} />}
           />
-        </div>
+        </KpiGrid>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard label="Realized P&L" value={money(data.realizedPnl, "auto")} />
-          <MetricCard
-            label="Income (last 12 months)"
+        <KpiGrid columns={4}>
+          <KpiCard title="Realized P&L" value={money(data.realizedPnl, "auto")} />
+          <KpiCard
+            title="Income (last 12 months)"
             value={money(data.income.last12Months)}
-            detail={<span>Year to date {money(data.income.ytd)}</span>}
+            description={<span>Year to date {money(data.income.ytd)}</span>}
           />
-          <MetricCard
-            label={`Return (${PERIOD_LABELS[scope.period]}, time-weighted)`}
+          <KpiCard
+            title={`Return (${PERIOD_LABELS[scope.period]}, time-weighted)`}
             value={data.twr === null ? "—" : <PercentChange value={data.twr} />}
           />
-          <MetricCard
-            label={
+          <KpiCard
+            title={
               benchmark
                 ? `${BENCHMARK_LABELS[benchmark]} (${PERIOD_LABELS[scope.period]})`
                 : "Benchmark"
@@ -174,9 +141,9 @@ export default function InvestmentsPage() {
             value={
               data.benchmarkReturn === null ? "—" : <PercentChange value={data.benchmarkReturn} />
             }
-            detail={benchmark ? undefined : "Pick a benchmark to compare"}
+            description={benchmark ? undefined : "Pick a benchmark to compare"}
           />
-        </div>
+        </KpiGrid>
 
         <Card>
           <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">

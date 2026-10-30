@@ -6,18 +6,21 @@ import { addDays, formatISODate, formatShortDate, now } from "@luraba/domain";
 import Link from "next/link";
 import * as React from "react";
 import { BillSheet } from "@/components/bills/bill-sheet";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
+import { KpiCard, KpiGrid, KpiGridSkeleton } from "@/components/kpi";
 import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
 import { PERMISSIONS, PermissionButton } from "@/components/permissions";
+import { DataBoundary } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useEntityDisclosure } from "@/hooks/use-disclosure";
 import { describeBillSchedule } from "@/lib/bills";
 import { useBillForecastQuery, useBillsQuery } from "@/queries/bills/use-bills-queries";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
+import { BillsEmpty } from "./_empty";
+import { BillsError } from "./_error";
+import { BillsLoading } from "./_loading";
 
 const FORECAST_DAYS = 30;
 
@@ -91,7 +94,8 @@ function ForecastStrip({ language }: { language: string }) {
   }, []);
   const forecast = useBillForecastQuery(range);
 
-  if (forecast.isPending || forecast.isError) return null;
+  if (forecast.isPending) return <KpiGridSkeleton columns={3} label="Loading forecast" />;
+  if (forecast.isError) return null;
 
   const upcoming = forecast.data.items.filter((item) => item.state !== "paid");
   const totals = new Map<string, number>();
@@ -101,37 +105,24 @@ function ForecastStrip({ language }: { language: string }) {
   const overdue = upcoming.filter((item) => item.state === "overdue").length;
 
   return (
-    <ItemReveal className="grid gap-3 sm:grid-cols-3">
-      <div className="rounded-xl border border-border/60 p-4">
-        <Typography variant="small-muted">Due in the next {FORECAST_DAYS} days</Typography>
-        <div className="mt-1 space-y-0.5">
-          {totals.size === 0 ? (
-            <Typography variant="small-strong">Nothing due</Typography>
-          ) : (
-            [...totals].map(([currencyCode, amount]) => (
-              <MoneyValue
-                key={currencyCode}
-                amount={amount}
-                currencyCode={currencyCode}
-                language={language}
-                className="block text-lg"
-              />
-            ))
-          )}
-        </div>
-      </div>
-      <div className="rounded-xl border border-border/60 p-4">
-        <Typography variant="small-muted">Payments coming up</Typography>
-        <Typography variant="small-strong" className="mt-1 text-lg">
-          {upcoming.length}
-        </Typography>
-      </div>
-      <div className="rounded-xl border border-border/60 p-4">
-        <Typography variant="small-muted">Overdue</Typography>
-        <Typography variant="small-strong" className="mt-1 text-lg">
-          {overdue}
-        </Typography>
-      </div>
+    <ItemReveal>
+      <KpiGrid columns={3}>
+        <KpiCard title={`Due in the next ${FORECAST_DAYS} days`}>
+          {totals.size === 0
+            ? "Nothing due"
+            : [...totals].map(([currencyCode, amount]) => (
+                <MoneyValue
+                  key={currencyCode}
+                  amount={amount}
+                  currencyCode={currencyCode}
+                  language={language}
+                  className="block"
+                />
+              ))}
+        </KpiCard>
+        <KpiCard title="Payments coming up" value={upcoming.length} />
+        <KpiCard title="Overdue" value={overdue} />
+      </KpiGrid>
     </ItemReveal>
   );
 }
@@ -142,42 +133,24 @@ export default function BillsPage() {
   const query = useBillsQuery({ perPage: MAX_PER_PAGE });
   const bills = query.data?.data ?? [];
 
-  let content: React.ReactNode;
-
-  if (query.isPending) {
-    content = (
-      <div className="grid gap-3 md:grid-cols-2">
-        {["a", "b", "c", "d"].map((key) => (
-          <Skeleton key={key} className="h-28 rounded-xl bg-muted/50" />
-        ))}
-      </div>
-    );
-  } else if (query.isError) {
-    content = (
-      <ErrorState
-        title="Couldn't load bills"
-        description={query.error.message || "An unexpected error occurred while loading this page."}
-        onRetry={() => void query.refetch()}
-      />
-    );
-  } else if (bills.length === 0) {
-    content = (
-      <div className="rounded-xl border border-dashed border-border/70 p-8 text-center">
-        <Typography variant="small-strong">No bills yet</Typography>
-        <Typography variant="small-muted" className="mt-1">
-          Add a recurring payment like water, rent or a loan and Luraba will remind you.
-        </Typography>
-      </div>
-    );
-  } else {
-    content = (
+  const content = (
+    <DataBoundary
+      isPending={query.isPending}
+      isError={query.isError}
+      isEmpty={bills.length === 0}
+      loading={<BillsLoading />}
+      errorState={
+        <BillsError message={query.error?.message} onRetry={() => void query.refetch()} />
+      }
+      empty={<BillsEmpty onCreate={sheet.onCreate} />}
+    >
       <SectionReveal className="grid gap-3 md:grid-cols-2">
         {bills.map((bill) => (
           <BillCard key={bill.id} bill={bill} language={language} />
         ))}
       </SectionReveal>
-    );
-  }
+    </DataBoundary>
+  );
 
   return (
     <InternalPageLayout

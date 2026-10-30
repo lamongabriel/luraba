@@ -3,6 +3,7 @@
 import type { ImportBatch, ImportFilter } from "@luraba/contracts";
 import * as React from "react";
 import { MoneyValue } from "@/components/finance/money-value";
+import { KpiCard, KpiGrid } from "@/components/kpi";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,19 +11,6 @@ import { useStartImportMutation } from "@/mutations/imports/use-import-mutations
 import { isImportRunning, useImportReconciliationQuery } from "@/queries/imports/use-imports-query";
 import { useDefaultCurrencyCode } from "@/stores/auth-session-store";
 import { FilterTabs, ImportRowsTable, RESULT_FILTERS } from "./import-rows-table";
-
-function Stat({ label, value, tone }: { label: string; value: number; tone?: "bad" }) {
-  return (
-    <div className="rounded-xl border px-4 py-3">
-      <p
-        className={`text-xl font-semibold ${tone === "bad" && value > 0 ? "text-destructive" : ""}`}
-      >
-        {value}
-      </p>
-      <p className="text-xs text-muted-foreground">{label}</p>
-    </div>
-  );
-}
 
 function Reconciliation({ batch }: { batch: ImportBatch }) {
   const defaultCurrency = useDefaultCurrencyCode();
@@ -179,12 +167,12 @@ export function RunStep({ batch, onAnother }: { batch: ImportBatch; onAnother: (
           {batch.errorMessage ? (
             <p className="text-xs text-destructive">{batch.errorMessage}</p>
           ) : null}
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Stat label="Imported" value={batch.createdCount} />
-            <Stat label="Already in Luraba" value={batch.duplicateCount} />
-            <Stat label="Skipped" value={batch.skippedCount} />
-            <Stat label="Failed" value={batch.failedCount} tone="bad" />
-          </div>
+          <KpiGrid columns={4}>
+            <KpiCard title="Imported" value={batch.createdCount} />
+            <KpiCard title="Already in Luraba" value={batch.duplicateCount} />
+            <KpiCard title="Skipped" value={batch.skippedCount} />
+            <KpiCard title="Failed" value={batch.failedCount} />
+          </KpiGrid>
         </CardContent>
       </Card>
 

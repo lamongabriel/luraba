@@ -1,6 +1,6 @@
 "use client";
 
-import { CountryCombobox } from "@/components/forms/country-combobox";
+import { CountrySelect } from "@/components/display";
 import { FormItem } from "@/components/forms/form-item";
 import { Typography } from "@/components/ui/typography";
 import { AREA_UNIT_OPTIONS } from "@/lib/accounts";
@@ -23,12 +23,11 @@ export function PropertyFormSection({ disabled, form }: CreateEditAccountSection
       <FormItem control={form.control} name="city" label="City" disabled={disabled} />
       <FormItem control={form.control} name="region" label="State / region" disabled={disabled} />
       <FormItem control={form.control} name="postalCode" label="Postal code" disabled={disabled} />
-      <CountryCombobox
+      <CountrySelect
         control={form.control}
-        countries={locationOptionsQuery.data?.countries ?? []}
         name="countryCode"
         label="Country"
-        disabled={disabled || locationOptionsQuery.isPending || locationOptionsQuery.isError}
+        disabled={disabled}
       />
       <FormItem
         control={form.control}

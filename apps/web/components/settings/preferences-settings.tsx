@@ -1,20 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  CurrencySelectControl,
+  DateFormatSelectControl,
+  LanguageSelectControl,
+  PreferredPeriodSelectControl,
+  PreferredThemeSelectControl,
+  TimeZoneSelectControl,
+} from "@/components/display";
 import { ErrorState } from "@/components/error-state";
-import { ComboboxControl } from "@/components/forms/form-combobox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { createTimezoneOptions } from "@/lib/timezones";
 import { useUpdateUserPreferencesMutation } from "@/mutations/auth/use-update-user-preferences-mutation";
 import { useUserPreferencesQuery } from "@/queries/auth/use-user-preferences-query";
 import { useLocationOptionsQuery } from "@/queries/reference-data/use-location-options-query";
@@ -53,17 +52,13 @@ export function PreferencesSettings() {
       />
     );
 
-  const timezoneOptions = createTimezoneOptions(locationOptionsQuery.data.timezones);
   const fields = [
-    ["language", "Language", ["en", "pt-BR"]],
-    ["currency", "Currency", ["USD", "BRL", "EUR"]],
-    ["dateFormat", "Date format", ["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"]],
-    [
-      "preferredPeriod",
-      "Default period",
-      ["current_month", "last_30_days", "last_90_days", "current_year", "all_time"],
-    ],
-    ["preferredTheme", "Theme", ["system", "light", "dark"]],
+    ["language", "Language", LanguageSelectControl],
+    ["currency", "Currency", CurrencySelectControl],
+    ["timezone", "Time zone", TimeZoneSelectControl],
+    ["dateFormat", "Date format", DateFormatSelectControl],
+    ["preferredPeriod", "Default period", PreferredPeriodSelectControl],
+    ["preferredTheme", "Theme", PreferredThemeSelectControl],
   ] as const;
   return (
     <Card>
@@ -74,38 +69,16 @@ export function PreferencesSettings() {
         </p>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
-        {fields.map(([key, label, options]) => (
+        {fields.map(([key, label, Control]) => (
           <div key={key} className="space-y-2">
-            <Label>{label}</Label>
-            <Select
-              value={values[key]}
-              onValueChange={(value) => setValues((current) => ({ ...current, [key]: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {options.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option.replaceAll("_", " ")}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor={`preference-${key}`}>{label}</Label>
+            <Control
+              id={`preference-${key}`}
+              value={values[key] ?? ""}
+              onChange={(value) => setValues((current) => ({ ...current, [key]: value }))}
+            />
           </div>
         ))}
-        <div className="space-y-2">
-          <Label htmlFor="timezone">Timezone</Label>
-          <ComboboxControl
-            id="timezone"
-            value={values.timezone ?? ""}
-            options={timezoneOptions}
-            onChange={(timezone) => setValues((current) => ({ ...current, timezone }))}
-            placeholder="Select timezone"
-            searchPlaceholder="Search timezones..."
-            emptyMessage="No timezones found."
-          />
-        </div>
         <div className="flex justify-end sm:col-span-2">
           <Button isLoading={mutation.isPending} onClick={() => mutation.mutate(values as never)}>
             Save preferences

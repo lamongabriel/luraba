@@ -6,13 +6,13 @@ import type { GoalContribution, GoalDetail } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
 import { ContributionModal } from "@/components/goals/contribution-modal";
 import { GoalProgressChart } from "@/components/goals/goal-progress-chart";
 import { GoalSheet } from "@/components/goals/goal-sheet";
 import { LinkGoalTransactionModal } from "@/components/goals/link-transaction-modal";
+import { KpiCard, KpiGrid } from "@/components/kpi";
 import { PERMISSIONS, useCan } from "@/components/permissions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,9 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Modal, ModalBody, ModalContent, ModalFooter } from "@/components/ui/modal";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
-import { formatCurrency } from "@/lib/finance";
 import {
   bpsToPercent,
   formatMonths,
@@ -39,28 +37,8 @@ import {
 } from "@/mutations/goals/use-goal-mutations";
 import { useGoalQuery } from "@/queries/goals/use-goals-queries";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
-
-function Stat({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-xl border border-border/60 p-4">
-      <Typography variant="small-muted">{label}</Typography>
-      <div className="mt-1 text-lg">{children}</div>
-      {hint ? (
-        <Typography variant="small-muted" className="mt-1">
-          {hint}
-        </Typography>
-      ) : null}
-    </div>
-  );
-}
+import { GoalDetailError } from "./_error";
+import { GoalDetailLoading } from "./_loading";
 
 /** One plain sentence on where the goal stands, from the estimate. */
 function describeOutlook(goal: GoalDetail, language: string): string {
@@ -160,32 +138,10 @@ export default function GoalDetailsPage() {
   const removeContribution = useRemoveContributionMutation();
   const goal = query.data;
 
-  if (query.isPending) {
-    return (
-      <InternalPageLayout
-        title="Goal"
-        subtitle="Progress, monthly plan and contributions."
-        back={{ href: "/goals", label: "Goals" }}
-      >
-        <Skeleton className="h-40 rounded-xl bg-muted/50" />
-      </InternalPageLayout>
-    );
-  }
+  if (query.isPending) return <GoalDetailLoading />;
 
   if (query.isError || !goal) {
-    return (
-      <InternalPageLayout
-        title="Goal"
-        subtitle="Progress, monthly plan and contributions."
-        back={{ href: "/goals", label: "Goals" }}
-      >
-        <ErrorState
-          title="Couldn't load this goal"
-          description={query.error?.message || "It may have been deleted."}
-          onRetry={() => void query.refetch()}
-        />
-      </InternalPageLayout>
-    );
+    return <GoalDetailError message={query.error?.message} onRetry={() => void query.refetch()} />;
   }
 
   const { estimate } = goal;
@@ -264,30 +220,30 @@ export default function GoalDetailsPage() {
         </Typography>
       </section>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Still to go">{money(estimate.remaining)}</Stat>
+      <KpiGrid columns={4}>
+        <KpiCard title="Still to go">{money(estimate.remaining)}</KpiCard>
         {goal.targetDate ? (
           <>
-            <Stat
-              label="Needed per month"
-              hint={
+            <KpiCard
+              title="Needed per month"
+              description={
                 estimate.monthsLeft !== null
                   ? `${formatMonths(estimate.monthsLeft)} left`
                   : undefined
               }
             >
               {estimate.requiredMonthly !== null ? money(estimate.requiredMonthly) : "—"}
-            </Stat>
-            <Stat label="Should have by now" hint="At a steady pace to your date">
+            </KpiCard>
+            <KpiCard title="Should have by now" description="At a steady pace to your date">
               {estimate.expectedSaved !== null ? money(estimate.expectedSaved) : "—"}
-            </Stat>
+            </KpiCard>
           </>
         ) : goal.monthlyContribution ? (
           <>
-            <Stat label="Per month">{money(goal.monthlyContribution)}</Stat>
-            <Stat
-              label="Finish date"
-              hint={
+            <KpiCard title="Per month">{money(goal.monthlyContribution)}</KpiCard>
+            <KpiCard
+              title="Finish date"
+              description={
                 goal.expectedReturnBps
                   ? `With ${bpsToPercent(goal.expectedReturnBps)}% a year`
                   : undefined
@@ -296,14 +252,14 @@ export default function GoalDetailsPage() {
               {estimate.projectedCompletionDate
                 ? formatShortDate(estimate.projectedCompletionDate, language)
                 : "—"}
-            </Stat>
+            </KpiCard>
           </>
         ) : (
-          <Stat label="Plan" hint="Edit the goal to add a date or a monthly amount">
+          <KpiCard title="Plan" description="Edit the goal to add a date or a monthly amount">
             None yet
-          </Stat>
+          </KpiCard>
         )}
-      </div>
+      </KpiGrid>
 
       <section className="rounded-xl border border-border/60 p-4">
         <Typography variant="small-strong" className="mb-2">

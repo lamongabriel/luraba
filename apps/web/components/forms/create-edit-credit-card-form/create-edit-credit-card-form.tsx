@@ -2,12 +2,12 @@
 
 import type { CreditCard } from "@luraba/contracts";
 import { CreditCardPreview } from "@/components/credit-cards/credit-card-preview";
+import { CurrencySelect } from "@/components/display";
 import { FormItem } from "@/components/forms/form-item";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Typography } from "@/components/ui/typography";
 import { CREDIT_CARD_BRAND_OPTIONS } from "@/lib/credit-cards";
-
 import { creditCardColorPresets } from "./create-edit-credit-card-form.schema";
 import { useCreateEditCreditCardForm } from "./use-create-edit-credit-card-form";
 
@@ -95,11 +95,10 @@ export function CreateEditCreditCardForm({
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormItem
+        <CurrencySelect
           control={form.control}
           name="currencyCode"
           label="Currency"
-          readOnly
           disabled
           description="Derived from the owner account."
         />

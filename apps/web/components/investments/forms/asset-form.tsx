@@ -5,8 +5,7 @@ import type { FixedIncomeTermsInput, InvestmentAsset } from "@luraba/contracts";
 import { ASSET_CLASSES } from "@luraba/contracts";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
-import { ASSET_CLASS_DISPLAY } from "@/components/display";
+import { ASSET_CLASS_DISPLAY, CurrencySelect } from "@/components/display";
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
 import { FormItem } from "@/components/forms/form-item";
 import { FormSheet } from "@/components/forms/form-sheet";
@@ -18,14 +17,12 @@ import {
   useSetFixedIncomeTermsMutation,
   useUpdateAssetMutation,
 } from "@/mutations/investments/use-investments-mutations";
-
 import {
   type FixedIncomeFormValues,
   FixedIncomeTermsFields,
   fixedIncomeFormSchema,
   getFixedIncomeDefaults,
 } from "./fixed-income-terms-fields";
-import { useCurrencyOptions } from "./use-currency-options";
 
 export const isFixedIncomeClass = (assetClass: string) =>
   ASSET_CLASS_DISPLAY[assetClass as keyof typeof ASSET_CLASS_DISPLAY]?.group === "fixed_income";
@@ -68,7 +65,6 @@ function AssetForm({
   onCancel: () => void;
   onSuccess: () => void;
 }) {
-  const currencies = useCurrencyOptions();
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -161,12 +157,10 @@ function AssetForm({
       />
       {!asset ? (
         <div className="grid gap-4 sm:grid-cols-3">
-          <FormItem
-            type="select"
+          <CurrencySelect
             control={form.control}
             name="currencyCode"
             label="Currency"
-            options={currencies}
             disabled={isPending}
           />
           <FormItem

@@ -2,6 +2,7 @@
 
 import type { ImportBatch } from "@luraba/contracts";
 import * as React from "react";
+import { CurrencyDisplay } from "@/components/display";
 import { MoneyValue } from "@/components/finance/money-value";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -107,7 +108,9 @@ export function UploadPreviewStep({
                 ? `${batch.periodStart} to ${batch.periodEnd}`
                 : "Not stated"}
             </Fact>
-            <Fact label="Currency">{currency}</Fact>
+            <Fact label="Currency">
+              <CurrencyDisplay currencyCode={currency} />
+            </Fact>
             <Fact
               label={
                 batch.sourceKind === "credit_card"

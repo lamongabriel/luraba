@@ -6,6 +6,7 @@ import { todayISODate } from "@luraba/domain";
 import * as React from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
+import { CurrencySelect } from "@/components/display";
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
 import { FormItem } from "@/components/forms/form-item";
 import { FormSheet } from "@/components/forms/form-sheet";
@@ -157,7 +158,7 @@ function SplitForm({
   const isPending = createMutation.isPending || updateMutation.isPending || addMutation.isPending;
   const errorMessage =
     createMutation.errorMessage || updateMutation.errorMessage || addMutation.errorMessage;
-  const currencyCode = form.watch("currencyCode");
+  const _currencyCode = form.watch("currencyCode");
 
   const onSubmit = form.handleSubmit((values) => {
     const precision = precisionOf(values.currencyCode);
@@ -219,16 +220,10 @@ function SplitForm({
               description="Optional, for reference."
               disabled={isPending}
             />
-            <FormItem
+            <CurrencySelect
               control={form.control}
               name="currencyCode"
               label="Currency"
-              type="select"
-              options={
-                currencyList.length > 0
-                  ? currencyList.map((c) => ({ value: c.code, label: `${c.code} (${c.symbol})` }))
-                  : [{ value: currencyCode, label: currencyCode }]
-              }
               disabled={isPending || mode === "edit"}
             />
           </div>

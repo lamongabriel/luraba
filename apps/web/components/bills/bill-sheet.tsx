@@ -6,6 +6,7 @@ import { getUTCDate, getUTCDay, now, todayISODate } from "@luraba/domain";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { CurrencySelect } from "@/components/display";
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
 import { FormItem } from "@/components/forms/form-item";
 import { FormSheet } from "@/components/forms/form-sheet";
@@ -97,7 +98,7 @@ function BillForm({
 
   const frequency = form.watch("frequency") as BillFrequency;
   const duration = form.watch("duration");
-  const currencyCode = form.watch("currencyCode");
+  const _currencyCode = form.watch("currencyCode");
 
   const onSubmit = form.handleSubmit((values) => {
     if (values.amount === "" || values.amount <= 0) {
@@ -170,15 +171,10 @@ function BillForm({
           description="What you usually pay. You can change it per payment later."
           disabled={isPending}
         />
-        <FormItem
+        <CurrencySelect
           control={form.control}
           name="currencyCode"
           label="Currency"
-          type="select"
-          options={(currencyList.length > 0
-            ? currencyList.map((c) => ({ value: c.code, label: `${c.code} (${c.symbol})` }))
-            : [{ value: currencyCode, label: currencyCode }]
-          ).slice(0, 100)}
           disabled={isPending || isEdit}
         />
       </div>

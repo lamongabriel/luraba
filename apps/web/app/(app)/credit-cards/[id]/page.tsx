@@ -14,7 +14,6 @@ import { InvoiceHistoryChart } from "@/components/credit-cards/invoice-history-c
 import { InvoiceStrip } from "@/components/credit-cards/invoice-strip";
 import { LimitBreakdown } from "@/components/credit-cards/limit-breakdown";
 import { PayInvoiceModal } from "@/components/credit-cards/pay-invoice-modal";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MonthSelector } from "@/components/finance/month-selector";
 import { PERMISSIONS, useCan } from "@/components/permissions";
@@ -26,7 +25,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Modal, ModalBody, ModalContent, ModalFooter } from "@/components/ui/modal";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useCurrencyPrecision } from "@/hooks/use-currency-precision";
 import { useDisclosure } from "@/hooks/use-disclosure";
@@ -48,6 +46,9 @@ import {
   useCreditCardQuery,
 } from "@/queries/credit-cards/use-credit-cards-query";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
+import { InvoicesEmpty } from "./_empty";
+import { CreditCardDetailError, InvoicesError } from "./_error";
+import { CreditCardDetailLoading, InvoicesLoading } from "./_loading";
 
 /** Invoices shown before the current month, and in total (the API allows up to 24 months). */
 const MONTHS_BEFORE = 8;
@@ -125,30 +126,13 @@ export default function CreditCardDetailPage() {
       )
     : false;
 
-  if (cardQuery.isPending) {
-    return (
-      <InternalPageLayout
-        title="Credit card"
-        subtitle="Invoices, limit and the purchases behind each one."
-        back={{ href: "/credit-cards", label: "Credit cards" }}
-      >
-        <Skeleton className="h-56 rounded-xl bg-muted/50" />
-      </InternalPageLayout>
-    );
-  }
+  if (cardQuery.isPending) return <CreditCardDetailLoading />;
   if (cardQuery.isError || !card) {
     return (
-      <InternalPageLayout
-        title="Credit card"
-        subtitle="Invoices, limit and the purchases behind each one."
-        back={{ href: "/credit-cards", label: "Credit cards" }}
-      >
-        <ErrorState
-          title="Couldn't load this credit card"
-          description={cardQuery.error?.message || "An unexpected error occurred."}
-          onRetry={() => void cardQuery.refetch()}
-        />
-      </InternalPageLayout>
+      <CreditCardDetailError
+        message={cardQuery.error?.message}
+        onRetry={() => void cardQuery.refetch()}
+      />
     );
   }
 
@@ -234,15 +218,14 @@ export default function CreditCardDetailPage() {
 
         <div className="min-w-0 space-y-4">
           {forecastQuery.isPending ? (
-            <Skeleton className="h-64 rounded-xl bg-muted/50" />
+            <InvoicesLoading />
           ) : forecastQuery.isError ? (
-            <ErrorState
-              title="Couldn't load invoices"
-              description={forecastQuery.error.message}
+            <InvoicesError
+              message={forecastQuery.error.message}
               onRetry={() => void forecastQuery.refetch()}
             />
           ) : cycles.length === 0 || !selectedCycle ? (
-            <Typography variant="body-muted">This card has no invoices yet.</Typography>
+            <InvoicesEmpty />
           ) : (
             <>
               <section className="rounded-xl border border-border/60 p-4">

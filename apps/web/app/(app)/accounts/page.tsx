@@ -1,13 +1,12 @@
 "use client";
 
-import { ArrowRight01Icon, WalletIcon } from "@hugeicons/core-free-icons";
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AccountSummary } from "@luraba/contracts";
 import Link from "next/link";
 import * as React from "react";
 import { AccountSheet } from "@/components/accounts/account-sheet";
 import { AccountMark } from "@/components/display";
-import { EmptyState } from "@/components/empty-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
 import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
@@ -17,6 +16,7 @@ import { formatAccountSubtypeLabel, formatAccountTypeLabel } from "@/lib/account
 import { useAccountsQuery } from "@/queries/accounts/use-accounts-query";
 import { useAuthSessionStore, useDefaultCurrencyCode } from "@/stores/auth-session-store";
 
+import { AccountsEmpty } from "./_empty";
 import { AccountsError } from "./_error";
 import { AccountsLoading } from "./_loading";
 
@@ -131,25 +131,6 @@ function AccountGroup({
   );
 }
 
-function EmptyAccountsState({ onCreate }: { onCreate: () => void }) {
-  return (
-    <EmptyState
-      icon={<HugeiconsIcon icon={WalletIcon} strokeWidth={1.8} className="size-5" />}
-      title="Bring your accounts together"
-      description="Add cash, investments, property, vehicles, or loans to see your full financial picture in one place."
-      action={
-        <PermissionButton
-          permission={PERMISSIONS.ACCOUNTS_CREATE}
-          deniedMessage="Your household role cannot create accounts."
-          onClick={onCreate}
-        >
-          Add your first account
-        </PermissionButton>
-      }
-    />
-  );
-}
-
 export default function AccountsPage() {
   const [isCreateSheetOpen, setIsCreateSheetOpen] = React.useState(false);
   const query = useAccountsQuery();
@@ -168,7 +149,7 @@ export default function AccountsPage() {
       onRetry={() => void query.refetch()}
     />
   ) : accounts.length === 0 ? (
-    <EmptyAccountsState onCreate={() => setIsCreateSheetOpen(true)} />
+    <AccountsEmpty onCreate={() => setIsCreateSheetOpen(true)} />
   ) : (
     <>
       <AccountGroup title="Assets" accounts={assets} language={language} />

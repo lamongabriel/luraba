@@ -7,12 +7,28 @@ Express API, a Next.js web app, a BullMQ worker and shared packages.
 conventions that are not obvious from the code. When you add a module, component group or package,
 add its README in the same change, and update the READMEs you rely on if the rules move.
 
+> ## STOP: reuse before you build (web app)
+>
+> **Before writing any UI, search `apps/web/components` for something that already does it** (KPI cards,
+> empty states, error states, loading skeletons, tables, filters, sheets, selects). Search by name and by
+> behavior, in more than one folder. If one fits, use it. If it almost fits, **extend that component** so
+> every page benefits; never copy it or build a page-local variant. Only if nothing exists, create a new
+> reusable component in the shared folder, document it in that folder's README, and use it from the page.
+>
+> **Every page and data section has three states, built from the shared components, not by hand:**
+> `loading` (skeleton), `error` (retryable) and `empty`. The loading skeleton must match the loaded page
+> **one to one** (same grid, card sizes, row heights, headers); if the layout shifts by a single pixel
+> when data arrives, the page is wrong. Assume the page always has a scrollbar. KPIs use the shared KPI
+> cards component, empty states the shared empty state (as on tags and categories), errors the shared
+> `ErrorState`. Details: [components/kpi](apps/web/components/kpi/README.md) and
+> [components/states](apps/web/components/states/README.md); enforced by `apps/web/test/conventions.test.ts`.
+
 > ## STOP: never hand-render these in the web app
 >
 > **Accounts, credit cards, transaction types, merchants, products, amounts (money with sign and color),
 > categories and tags are always rendered with the shared components in
 > [`apps/web/components/display/`](apps/web/components/display/README.md)**: `AccountDisplay`,
-> `TransactionTypeDisplay`, `MerchantDisplay`, `ProductDisplay`, `AmountDisplay`, `CategoryDisplay`, `TagDisplay` and
+> `TransactionTypeDisplay`, `MerchantDisplay`, `ProductDisplay`, `AmountDisplay`, `CategoryDisplay`, `TagDisplay`, `CurrencyDisplay` and
 > `MemberDisplay` (who created a record).
 > Do not build your own avatar, icon, badge, chip or colored money text for these, in tables, drawers,
 > cards or forms. Icons, colors, labels and sizes live in `components/display/constants.ts`; change
@@ -37,6 +53,9 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | Budget page (monthly plan, card settings) | [apps/web/components/budgets/README.md](apps/web/components/budgets/README.md), [apps/api/src/modules/budgets/README.md](apps/api/src/modules/budgets/README.md) |
 | Credit cards UI (overview, card detail, invoices) | [apps/web/components/credit-cards/README.md](apps/web/components/credit-cards/README.md) |
 | The web app | [apps/web/README.md](apps/web/README.md) (data layer, components, forms, permissions) |
+| Choosing or showing a currency, country, language, time zone, date format, default period or theme | [packages/contracts/src/catalogs/README.md](packages/contracts/src/catalogs/README.md) and the selects in [display](apps/web/components/display/README.md) (**mandatory**) |
+| A page's loading, error or empty state; skeletons | [apps/web/components/states/README.md](apps/web/components/states/README.md) (**mandatory**) |
+| KPIs / headline numbers | [apps/web/components/kpi/README.md](apps/web/components/kpi/README.md) (**mandatory**) |
 | Showing an account, card, transaction type, merchant, product, amount, category or tag | [apps/web/components/display/README.md](apps/web/components/display/README.md) (**mandatory**) |
 | Products and transaction items (UI) | [apps/web/components/products/README.md](apps/web/components/products/README.md), [apps/api/src/modules/products/README.md](apps/api/src/modules/products/README.md) |
 | Reusable upload UI (galleries, cropper) | [apps/web/components/uploads/README.md](apps/web/components/uploads/README.md) |
@@ -44,6 +63,10 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | Deployment (Compose, Coolify) | [docs/deployment.md](docs/deployment.md), [docs/coolify.md](docs/coolify.md) |
 
 ## Rules that always apply
+
+0. **Shared option sets live in `@luraba/contracts`, not the web app.** Currencies, countries, time
+   zones, languages, date formats, periods, themes and any other enum that is stored or validated by
+   the API are defined once in `packages/contracts` (`src/catalogs`), imported by the API and the web.
 
 1. **Contract first.** A public endpoint is defined once in `packages/contracts` (`defineEndpoint`)
    and consumed by both the API controller and the web service. The web app never redefines
@@ -80,6 +103,10 @@ add its README in the same change, and update the READMEs you rely on if the rul
 12. **Shared display components.** Anything that shows an account, credit card, transaction type,
     merchant, amount, category, tag or the member who created a record uses `apps/web/components/display/`
     (see the banner at the top).
+    Currencies, countries, languages, time zones and date formats are chosen with `CurrencySelect`,
+    `CountrySelect`, `LanguageSelect`, `TimeZoneSelect` and `DateFormatSelect` (and shown with
+    `CurrencyDisplay`), fed by `packages/contracts/src/catalogs` (shared with the API); never build those options in a page, and keep
+    option labels capitalized and in the catalog.
     Account types live in one catalog (`ACCOUNT_TYPE_DISPLAY`): a new account type or subtype adds its
     label, icon and color there, never inline in a page.
 13. **Numbers, money and dates are shared.** Money text goes through `formatMoney` /

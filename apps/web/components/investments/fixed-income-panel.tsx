@@ -5,13 +5,12 @@ import { formatShortDate } from "@luraba/domain";
 
 import { GradientAreaChart } from "@/components/charts";
 import { AmountDisplay } from "@/components/display";
+import { KpiCard, KpiGrid } from "@/components/kpi";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/finance";
-
 import { INDEXER_LABELS, RATE_FORM_LABELS } from "./constants";
 import { fractionToPercentText } from "./format";
-import { MetricCard } from "./metric-card";
 import { useInvestmentFormat } from "./use-investment-format";
 
 /**
@@ -57,36 +56,38 @@ export function FixedIncomePanel({
       </div>
 
       {position ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard
-            label="Curve value"
+        <KpiGrid columns={4}>
+          <KpiCard
+            title="Curve value"
             value={money(position.curveValue)}
-            detail={position.accruedIsEstimated ? "Estimated (index not published yet)" : undefined}
+            description={
+              position.accruedIsEstimated ? "Estimated (index not published yet)" : undefined
+            }
           />
-          <MetricCard
-            label="Market value"
+          <KpiCard
+            title="Market value"
             value={position.marketValue === null ? "—" : money(position.marketValue)}
-            detail={position.marketValue === null ? "No buyback price" : "Provider price"}
+            description={position.marketValue === null ? "No buyback price" : "Provider price"}
           />
-          <MetricCard
-            label="Estimated IR + IOF"
+          <KpiCard
+            title="Estimated IR + IOF"
             value={money(position.estimatedIr + position.estimatedIof)}
-            detail={
+            description={
               position.nextIrBracketInDays !== null
                 ? `Lower IR bracket in ${position.nextIrBracketInDays} days`
                 : "At the lowest bracket"
             }
           />
-          <MetricCard
-            label="Net if redeemed today"
+          <KpiCard
+            title="Net if redeemed today"
             value={money(position.netValue)}
-            detail={
+            description={
               position.iofDaysRemaining
                 ? `IOF applies for ${position.iofDaysRemaining} more days`
                 : undefined
             }
           />
-        </div>
+        </KpiGrid>
       ) : null}
 
       <Card>
@@ -119,13 +120,10 @@ export function FixedIncomePanel({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <MetricCard label="Gross" value={money(detail.fixedIncomeProjection.grossValue)} />
-              <MetricCard
-                label="After taxes"
-                value={money(detail.fixedIncomeProjection.netValue)}
-              />
-            </div>
+            <KpiGrid columns={2}>
+              <KpiCard title="Gross" value={money(detail.fixedIncomeProjection.grossValue)} />
+              <KpiCard title="After taxes" value={money(detail.fixedIncomeProjection.netValue)} />
+            </KpiGrid>
             <div>
               <p className="mb-1 text-xs text-muted-foreground">
                 Income tax brackets by holding time

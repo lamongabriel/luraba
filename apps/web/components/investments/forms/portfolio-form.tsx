@@ -5,7 +5,7 @@ import type { Portfolio } from "@luraba/contracts";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
+import { CurrencySelect } from "@/components/display";
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
 import { FormItem } from "@/components/forms/form-item";
 import { FormSheet } from "@/components/forms/form-sheet";
@@ -16,8 +16,6 @@ import {
   useUpdatePortfolioMutation,
 } from "@/mutations/investments/use-investments-mutations";
 import { useInvestmentSettingsQuery } from "@/queries/investments/use-investments-queries";
-
-import { useCurrencyOptions } from "./use-currency-options";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Enter a name.").max(255),
@@ -35,7 +33,6 @@ function PortfolioForm({
   onSuccess: () => void;
 }) {
   const settings = useInvestmentSettingsQuery();
-  const currencies = useCurrencyOptions();
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -79,13 +76,11 @@ function PortfolioForm({
         placeholder="Retirement"
         disabled={isPending}
       />
-      <FormItem
-        type="select"
+      <CurrencySelect
         control={form.control}
         name="reportingCurrencyCode"
         label="Reporting currency"
         description="Totals for this portfolio are shown in this currency."
-        options={currencies}
         disabled={isPending}
       />
       {errorMessage ? <Typography variant="small-destructive">{errorMessage}</Typography> : null}

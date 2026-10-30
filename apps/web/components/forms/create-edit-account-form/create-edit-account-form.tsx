@@ -35,14 +35,6 @@ export function CreateEditAccountForm({
         disabled={isPending}
         isEdit={isEdit}
         typeOptions={typeOptions}
-        currenciesArePending={currenciesQuery.isPending}
-        currencyOptions={
-          currenciesQuery.data?.data.map((currency) => ({
-            value: currency.code,
-            label: currency.code,
-            description: currency.symbol,
-          })) ?? []
-        }
       />
 
       <CreateEditAccountDetailsSection form={form} disabled={isPending} />

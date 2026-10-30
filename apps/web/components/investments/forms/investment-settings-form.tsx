@@ -5,14 +5,12 @@ import type { InvestmentSettings } from "@luraba/contracts";
 import { COST_BASIS_METHODS, TAX_PROFILES } from "@luraba/contracts";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
+import { CurrencySelect } from "@/components/display";
 import { FormItem } from "@/components/forms/form-item";
 import { COST_BASIS_LABELS, TAX_PROFILE_LABELS } from "@/components/investments/constants";
 import { PERMISSIONS, PermissionButton } from "@/components/permissions";
 import { Typography } from "@/components/ui/typography";
 import { useUpdateInvestmentSettingsMutation } from "@/mutations/investments/use-investments-mutations";
-
-import { useCurrencyOptions } from "./use-currency-options";
 
 const schema = z.object({
   reportingCurrencyCode: z.string().min(1, "Choose a currency."),
@@ -23,7 +21,6 @@ type Values = z.infer<typeof schema>;
 
 /** Household defaults for the investments area. */
 export function InvestmentSettingsForm({ settings }: { settings: InvestmentSettings }) {
-  const currencies = useCurrencyOptions();
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: settings,
@@ -42,13 +39,11 @@ export function InvestmentSettingsForm({ settings }: { settings: InvestmentSetti
         mutation.mutate(values);
       })}
     >
-      <FormItem
-        type="select"
+      <CurrencySelect
         control={form.control}
         name="reportingCurrencyCode"
         label="Reporting currency"
         description="Totals across accounts and currencies are shown in this currency."
-        options={currencies}
         disabled={mutation.isPending}
       />
       <FormItem

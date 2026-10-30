@@ -3,21 +3,22 @@
 import { type Goal, MAX_PER_PAGE } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
 import Link from "next/link";
-import type * as React from "react";
 import { MemberDisplay } from "@/components/display";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
 import { GoalSheet } from "@/components/goals/goal-sheet";
 import { SectionReveal } from "@/components/motion/reveal";
 import { PERMISSIONS, PermissionButton } from "@/components/permissions";
+import { DataBoundary } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useDisclosure } from "@/hooks/use-disclosure";
 import { GOAL_KIND_OPTIONS, GOAL_STATE_BADGE, GOAL_STATE_LABELS } from "@/lib/goals";
 import { useGoalsQuery } from "@/queries/goals/use-goals-queries";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
+import { GoalsEmpty } from "./_empty";
+import { GoalsError } from "./_error";
+import { GoalsLoading } from "./_loading";
 
 function GoalHint({ goal, language }: { goal: Goal; language: string }) {
   const { estimate } = goal;
@@ -97,42 +98,24 @@ export default function GoalsPage() {
   const query = useGoalsQuery({ perPage: MAX_PER_PAGE });
   const goals = query.data?.data ?? [];
 
-  let content: React.ReactNode;
-
-  if (query.isPending) {
-    content = (
-      <div className="grid gap-3 md:grid-cols-2">
-        {["a", "b", "c"].map((key) => (
-          <Skeleton key={key} className="h-28 rounded-xl bg-muted/50" />
-        ))}
-      </div>
-    );
-  } else if (query.isError) {
-    content = (
-      <ErrorState
-        title="Couldn't load goals"
-        description={query.error.message || "An unexpected error occurred while loading this page."}
-        onRetry={() => void query.refetch()}
-      />
-    );
-  } else if (goals.length === 0) {
-    content = (
-      <div className="rounded-xl border border-dashed border-border/70 p-8 text-center">
-        <Typography variant="small-strong">No goals yet</Typography>
-        <Typography variant="small-muted" className="mt-1">
-          Save for something, or invest a set amount each month, and see when you'll get there.
-        </Typography>
-      </div>
-    );
-  } else {
-    content = (
+  const content = (
+    <DataBoundary
+      isPending={query.isPending}
+      isError={query.isError}
+      isEmpty={goals.length === 0}
+      loading={<GoalsLoading />}
+      errorState={
+        <GoalsError message={query.error?.message} onRetry={() => void query.refetch()} />
+      }
+      empty={<GoalsEmpty onCreate={sheet.onOpen} />}
+    >
       <SectionReveal className="grid gap-3 md:grid-cols-2">
         {goals.map((goal) => (
           <GoalCard key={goal.id} goal={goal} language={language} />
         ))}
       </SectionReveal>
-    );
-  }
+    </DataBoundary>
+  );
 
   return (
     <InternalPageLayout

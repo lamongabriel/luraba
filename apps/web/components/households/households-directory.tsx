@@ -15,6 +15,7 @@ import Link from "next/link";
 import * as React from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { CurrencyDisplay } from "@/components/display";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { PageHeader } from "@/components/finance/page-header";
@@ -122,7 +123,7 @@ export function HouseholdsDirectory() {
       {
         accessorKey: "defaultCurrencyId",
         header: "Currency",
-        cell: ({ row }) => <span className="font-medium">{row.original.defaultCurrencyId}</span>,
+        cell: ({ row }) => <CurrencyDisplay currencyCode={row.original.defaultCurrencyId} />,
       },
       {
         accessorKey: "timezone",

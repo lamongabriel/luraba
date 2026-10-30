@@ -9,8 +9,6 @@ import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import type * as React from "react";
 
 import { getInvestmentEventTypeLabel } from "@/components/display";
-import { EmptyState } from "@/components/empty-state";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { ConfirmDeleteModal } from "@/components/investments/confirm-delete-modal";
 import { EventsTable } from "@/components/investments/events-table";
@@ -25,13 +23,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useDisclosure, useEntityDisclosure } from "@/hooks/use-disclosure";
 import { useDeleteInvestmentEventMutation } from "@/mutations/investments/use-investments-mutations";
 import {
   useInvestmentAccountsQuery,
   useInvestmentEventsQuery,
 } from "@/queries/investments/use-investments-queries";
+import { InvestmentTransactionsEmpty } from "./_empty";
+import { InvestmentTransactionsError } from "./_error";
+import { InvestmentTransactionsLoading } from "./_loading";
 
 const ALL = "all";
 const PER_PAGE = 50;
@@ -62,22 +62,16 @@ export default function InvestmentTransactionsPage() {
 
   let content: React.ReactNode;
   if (events.isPending) {
-    content = <Skeleton className="h-72 rounded-xl bg-muted/50" />;
+    content = <InvestmentTransactionsLoading />;
   } else if (events.isError) {
     content = (
-      <ErrorState
-        title="Couldn't load transactions"
-        description={events.error.message}
+      <InvestmentTransactionsError
+        message={events.error?.message}
         onRetry={() => void events.refetch()}
       />
     );
   } else if (events.data.data.length === 0) {
-    content = (
-      <EmptyState
-        title="No transactions yet"
-        description="Record a buy, a dividend or a deposit, or import a broker statement."
-      />
-    );
+    content = <InvestmentTransactionsEmpty />;
   } else {
     const pagination = events.data.meta.pagination;
     content = (

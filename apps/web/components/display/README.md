@@ -1,6 +1,6 @@
 # Display components
 
-The one way to show an **account, credit card, transaction type, merchant, product, amount, category or tag**
+The one way to show an **account, credit card, transaction type, merchant, product, amount, currency, category or tag**
 anywhere in the web app (tables, drawers, cards, forms, pickers). Do not build a local avatar, icon,
 badge or colored money text for these. If the case you need is missing, extend this folder.
 
@@ -16,8 +16,27 @@ import { AccountDisplay, AmountDisplay, CategoryDisplay, MerchantDisplay, TagDis
 | `MerchantDisplay` / `MerchantMark` | Logo, else a shop icon, + name | `merchant`, `size`, `detail="domain"` |
 | `ProductDisplay` / `ProductMark` | Product (or a transaction item): picture, else a package icon, + name, optional `detail` line | `product`, `size`, `detail` |
 | `AmountDisplay` | Money with the right sign and color | `amount` (minor units), `currencyCode`, `kind`, `size` |
+| `CurrencyDisplay` | A currency: country flag + 3-letter code + symbol (`🇧🇷 BRL R$`), optional name | `currencyCode`, `showName`, `size` |
 | `CategoryDisplay` | Category chip; `null` renders "Uncategorized" | `category`, `variant="chip" \| "inline"`, `size` |
 | `TagDisplay` | Tag chip | `tag`, `variant`, `size` |
+
+## Option selects
+
+Every searchable choice that is shared across forms is a component here, never a hand-built
+`FormItem type="select"` with a local options array. Each exists in two forms with the same combobox
+look: `XSelect` for react-hook-form (`control`, `name`, `label`, `description`, `disabled`, like
+`FormItem`) and `XSelectControl` for plain state (`id`, `value`, `onChange`).
+
+| Select | Choices come from | Shows |
+| --- | --- | --- |
+| `CurrencySelect` (`exclude`, `only`) | API currencies (symbol, precision) + `CURRENCY_CATALOG` (name, flag) | flag, code, symbol, name |
+| `CountrySelect` | API `/reference-data/locations` | flag, name, ISO code |
+| `TimeZoneSelect` | API `/reference-data/locations` | IANA name, friendly name, GMT offset |
+| `LanguageSelect` | `LANGUAGE_CATALOG` | flag, English and native name |
+| `DateFormatSelect` | `DATE_FORMAT_CATALOG` | format with an example date |
+| `PreferredPeriodSelectControl`, `PreferredThemeSelectControl` | `@luraba/contracts` `catalogs/preferences.ts` | capitalized label |
+
+The lists, labels and flags live in [`@luraba/contracts` catalogs](../../../../packages/contracts/src/catalogs/README.md); change them there.
 
 Sizes are `xs | sm | md | lg` everywhere (`DISPLAY_SIZES`).
 

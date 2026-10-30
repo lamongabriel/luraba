@@ -6,7 +6,6 @@ import type { SplitInstallment, SplitParticipant } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
 import { PERMISSIONS, useCan } from "@/components/permissions";
@@ -23,7 +22,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Modal, ModalBody, ModalContent, ModalFooter } from "@/components/ui/modal";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { INSTALLMENT_STATE_LABELS } from "@/lib/splits";
 import {
@@ -37,6 +35,8 @@ import {
 } from "@/mutations/splits/use-split-mutations";
 import { useSplitQuery } from "@/queries/splits/use-splits-queries";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
+import { SplitDetailError } from "./_error";
+import { SplitDetailLoading } from "./_loading";
 
 const STATE_BADGE: Record<
   SplitInstallment["state"],
@@ -255,32 +255,10 @@ export default function SplitDetailsPage() {
   });
   const split = query.data;
 
-  if (query.isPending) {
-    return (
-      <InternalPageLayout
-        title="Split"
-        subtitle="Who owes what, installments and payments."
-        back={{ href: "/splits", label: "Splits" }}
-      >
-        <Skeleton className="h-40 rounded-xl bg-muted/50" />
-      </InternalPageLayout>
-    );
-  }
+  if (query.isPending) return <SplitDetailLoading />;
 
   if (query.isError || !split) {
-    return (
-      <InternalPageLayout
-        title="Split"
-        subtitle="Who owes what, installments and payments."
-        back={{ href: "/splits", label: "Splits" }}
-      >
-        <ErrorState
-          title="Couldn't load this split"
-          description={query.error?.message || "It may have been deleted."}
-          onRetry={() => void query.refetch()}
-        />
-      </InternalPageLayout>
-    );
+    return <SplitDetailError message={query.error?.message} onRetry={() => void query.refetch()} />;
   }
 
   const { summary } = split;

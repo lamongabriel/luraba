@@ -2,10 +2,9 @@
 
 import type { TransactionAnalytics } from "@luraba/contracts";
 import type { UseQueryResult } from "@tanstack/react-query";
-import { KpiCard, type KpiTrendState } from "@/components/analytics/kpi-card";
 import { ErrorState } from "@/components/error-state";
 import { MoneyValue } from "@/components/finance/money-value";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiCard, KpiGrid, KpiGridSkeleton, type KpiTrendState } from "@/components/kpi";
 import type { AppClientError } from "@/services/error-client";
 
 type AnalyticsQuery = UseQueryResult<TransactionAnalytics, AppClientError>;
@@ -26,18 +25,7 @@ export function TransactionAnalyticsSummary({
   precision?: number;
 }) {
   if (query.isPending) {
-    return (
-      <div
-        className="grid gap-3 md:grid-cols-3"
-        aria-busy="true"
-        aria-label="Loading transaction analytics"
-        role="status"
-      >
-        <Skeleton className="h-28" />
-        <Skeleton className="h-28" />
-        <Skeleton className="h-28" />
-      </div>
-    );
+    return <KpiGridSkeleton columns={3} label="Loading transaction analytics" />;
   }
 
   if (query.isError || !query.data) {
@@ -68,7 +56,7 @@ export function TransactionAnalyticsSummary({
   ] as const;
 
   return (
-    <div className="grid gap-3 md:grid-cols-3">
+    <KpiGrid columns={3}>
       {cards.map(({ key, title, metric, inverse }) => (
         <KpiCard
           key={key}
@@ -89,6 +77,6 @@ export function TransactionAnalyticsSummary({
           trend={metric.trend}
         />
       ))}
-    </div>
+    </KpiGrid>
   );
 }

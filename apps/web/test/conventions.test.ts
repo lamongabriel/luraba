@@ -44,4 +44,58 @@ describe("shared formatting conventions (docs/formatting.md)", () => {
       [],
     );
   });
+
+  it("builds currency, country and time zone choices only through the shared selects", () => {
+    expect(offenders(/\$\{\w+\.code\} \(\$\{\w+\.symbol\}\)/u)).toEqual([]);
+    expect(offenders(/createTimezoneOptions|CountryCombobox|useCurrencyOptions/u)).toEqual([]);
+  });
+});
+
+describe("page state conventions (AGENTS.md: reuse before you build)", () => {
+  const pages = (() => {
+    const found: string[] = [];
+    const walk = (dir: string) => {
+      for (const name of readdirSync(dir)) {
+        const path = join(dir, name);
+        if (statSync(path).isDirectory()) walk(path);
+        else if (name === "page.tsx") found.push(path);
+      }
+    };
+    walk(join(ROOT, "app", "(app)"));
+    return found;
+  })();
+  const dataPages = pages.filter((page) => /\buse\w+Query\(/u.test(readFileSync(page, "utf8")));
+
+  it("finds the data pages", () => {
+    expect(dataPages.length).toBeGreaterThan(20);
+  });
+
+  it("gives every data page _loading, _error and (for lists) _empty files", () => {
+    const missing: string[] = [];
+    for (const page of dataPages) {
+      const dir = join(page, "..");
+      const isDetail = /\[\w+\]$/u.test(dir);
+      const required = ["_loading.tsx", "_error.tsx", ...(isDetail ? [] : ["_empty.tsx"])];
+      const files = readdirSync(dir);
+      for (const file of required) {
+        if (!files.includes(file)) missing.push(`${relative(ROOT, dir)}/${file}`);
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it("builds page states from the _loading/_error/_empty files, not inline", () => {
+    const inline = pages
+      .map((page) => relative(ROOT, page))
+      .filter((page) =>
+        /components\/ui\/skeleton|components\/error-state|components\/empty-state/u.test(
+          readFileSync(join(ROOT, page), "utf8"),
+        ),
+      );
+    expect(inline).toEqual([]);
+  });
+
+  it("has no page-local KPI tiles (use components/kpi)", () => {
+    expect(offenders(/function (?:Stat|StatCard|SummaryTile|MetricCard|KpiTile)\b/u)).toEqual([]);
+  });
 });

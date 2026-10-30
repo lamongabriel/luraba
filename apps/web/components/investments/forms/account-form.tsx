@@ -6,7 +6,7 @@ import { COST_BASIS_METHODS, TAX_PROFILES } from "@luraba/contracts";
 import * as React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-
+import { CurrencySelect } from "@/components/display";
 import { FormItem } from "@/components/forms/form-item";
 import { COST_BASIS_LABELS, TAX_PROFILE_LABELS } from "@/components/investments/constants";
 import { Button } from "@/components/ui/button";
@@ -21,8 +21,6 @@ import {
   useInvestmentSettingsQuery,
   usePortfoliosQuery,
 } from "@/queries/investments/use-investments-queries";
-
-import { useCurrencyOptions } from "./use-currency-options";
 
 const NO_PORTFOLIO = "none";
 
@@ -50,7 +48,6 @@ export function AccountForm({
 }) {
   const settings = useInvestmentSettingsQuery();
   const portfolios = usePortfoliosQuery();
-  const currencies = useCurrencyOptions();
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -130,13 +127,11 @@ export function AccountForm({
           placeholder="US"
           disabled={isPending}
         />
-        <FormItem
-          type="select"
+        <CurrencySelect
           control={form.control}
           name="currencyCode"
           label="Base currency"
           description={isEdit ? "The base currency cannot change." : undefined}
-          options={currencies}
           disabled={isPending || isEdit}
         />
       </div>

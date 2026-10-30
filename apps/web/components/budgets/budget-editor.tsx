@@ -4,9 +4,9 @@ import type { Category, MonthlyBudget } from "@luraba/contracts";
 import { useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
 import { AmountDisplay } from "@/components/display";
+import { KpiCard, KpiGrid } from "@/components/kpi";
 import { PERMISSIONS, PermissionButton, useCan } from "@/components/permissions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import {
   BUDGET_SECTIONS,
@@ -148,8 +148,8 @@ export function BudgetEditor({
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <SummaryTile label="Income planned" detail="Received so far">
+      <KpiGrid columns={3}>
+        <KpiCard title="Income planned" description="Received so far">
           <AmountDisplay
             amount={plannedIncome}
             currencyCode={currencyCode}
@@ -165,8 +165,8 @@ export function BudgetEditor({
             precision={precision}
             language={language}
           />
-        </SummaryTile>
-        <SummaryTile label="Expenses planned" detail="Spent so far">
+        </KpiCard>
+        <KpiCard title="Expenses planned" description="Spent so far">
           <AmountDisplay
             amount={plannedExpense}
             currencyCode={currencyCode}
@@ -182,10 +182,10 @@ export function BudgetEditor({
             precision={precision}
             language={language}
           />
-        </SummaryTile>
-        <SummaryTile
-          label={leftToAssign < 0 ? "Planned over income" : "Left to assign"}
-          detail={
+        </KpiCard>
+        <KpiCard
+          title={leftToAssign < 0 ? "Planned over income" : "Left to assign"}
+          description={
             leftToAssign === 0
               ? "Every bit of income has a job."
               : leftToAssign < 0
@@ -202,8 +202,8 @@ export function BudgetEditor({
             precision={precision}
             language={language}
           />
-        </SummaryTile>
-      </div>
+        </KpiCard>
+      </KpiGrid>
 
       <BudgetCardSettings month={month} settings={budget.settings} canEdit={canEdit} />
 
@@ -290,25 +290,5 @@ export function BudgetEditor({
         </div>
       ) : null}
     </div>
-  );
-}
-
-function SummaryTile({
-  label,
-  detail,
-  children,
-}: {
-  label: string;
-  detail: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Card size="sm">
-      <CardContent className="space-y-2">
-        <Typography variant="meta">{label}</Typography>
-        {children}
-        <Typography variant="small-muted">{detail}</Typography>
-      </CardContent>
-    </Card>
   );
 }

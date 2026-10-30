@@ -5,7 +5,6 @@ import * as React from "react";
 
 import { VerticalBarChart } from "@/components/charts";
 import { AmountDisplay, AssetDisplay } from "@/components/display";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { AssetPriceChart } from "@/components/investments/asset-price-chart";
 import { EventsTable } from "@/components/investments/events-table";
@@ -14,19 +13,20 @@ import { AssetSheet, isFixedIncomeClass } from "@/components/investments/forms/a
 import { EventSheet } from "@/components/investments/forms/event-sheet";
 import { ManualPriceSheet } from "@/components/investments/forms/manual-price-sheet";
 import { LotsTable } from "@/components/investments/lots-table";
-import { MetricCard } from "@/components/investments/metric-card";
 import { PercentChange } from "@/components/investments/percent-change";
 import { SegmentedControl } from "@/components/investments/segmented-control";
 import { useInvestmentFormat } from "@/components/investments/use-investment-format";
+import { KpiCard, KpiGrid } from "@/components/kpi";
 import { PERMISSIONS, PermissionButton, ResourceAccessBoundary } from "@/components/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useDisclosure } from "@/hooks/use-disclosure";
 import { formatCurrency } from "@/lib/finance";
 import {
   useAssetDetailQuery,
   useInvestmentSettingsQuery,
 } from "@/queries/investments/use-investments-queries";
+import { InvestmentAssetDetailError } from "./_error";
+import { InvestmentAssetDetailLoading } from "./_loading";
 
 const RANGES = ["5D", "1M", "6M", "YTD", "1Y", "5Y", "MAX"] as const;
 
@@ -40,7 +40,7 @@ export default function AssetDetailPage() {
   const editSheet = useDisclosure();
   const priceSheet = useDisclosure();
 
-  if (detail.isPending) return <Skeleton className="h-96 rounded-xl bg-muted/50" />;
+  if (detail.isPending) return <InvestmentAssetDetailLoading />;
   if (detail.isError) {
     return (
       <ResourceAccessBoundary
@@ -48,9 +48,8 @@ export default function AssetDetailPage() {
         resourceName="asset"
         backHref="/investments/holdings"
         fallback={
-          <ErrorState
-            title="Couldn't load this asset"
-            description={detail.error.message}
+          <InvestmentAssetDetailError
+            message={detail.error?.message}
             onRetry={() => void detail.refetch()}
           />
         }
@@ -117,28 +116,28 @@ export default function AssetDetailPage() {
       }
     >
       {position ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard
-            label="Quantity"
+        <KpiGrid columns={4}>
+          <KpiCard
+            title="Quantity"
             value={format.quantity(position.quantity)}
-            detail={`Average cost ${format.unitPrice(position.averageCost, asset.currencyCode)}`}
+            description={`Average cost ${format.unitPrice(position.averageCost, asset.currencyCode)}`}
           />
-          <MetricCard
-            label="Value"
+          <KpiCard
+            title="Value"
             value={money(position.marketValue)}
-            detail={`${format.percent(position.percentOfPortfolio)} of portfolio`}
+            description={`${format.percent(position.percentOfPortfolio)} of portfolio`}
           />
-          <MetricCard
-            label="Unrealized P&L"
+          <KpiCard
+            title="Unrealized P&L"
             value={money(position.unrealizedPnl, "auto")}
-            detail={<PercentChange value={position.unrealizedPnlPercent} />}
+            description={<PercentChange value={position.unrealizedPnlPercent} />}
           />
-          <MetricCard
-            label="Income received"
+          <KpiCard
+            title="Income received"
             value={money(position.income)}
-            detail={<span>Realized {money(position.realizedPnl, "auto")}</span>}
+            description={<span>Realized {money(position.realizedPnl, "auto")}</span>}
           />
-        </div>
+        </KpiGrid>
       ) : (
         <p className="text-sm text-muted-foreground">You don't hold this asset right now.</p>
       )}

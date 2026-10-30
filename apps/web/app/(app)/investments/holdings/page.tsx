@@ -5,8 +5,6 @@ import { keepPreviousData } from "@tanstack/react-query";
 import * as React from "react";
 
 import { ASSET_CLASS_DISPLAY } from "@/components/display";
-import { EmptyState } from "@/components/empty-state";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { FreshnessBadge } from "@/components/investments/freshness-badge";
 import { PositionsTable } from "@/components/investments/positions-table";
@@ -20,13 +18,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   useInvestmentDashboardQuery,
   useInvestmentSettingsQuery,
   usePositionsQuery,
 } from "@/queries/investments/use-investments-queries";
 import { useDefaultCurrencyCode } from "@/stores/auth-session-store";
+import { HoldingsEmpty } from "./_empty";
+import { HoldingsError } from "./_error";
+import { HoldingsLoading } from "./_loading";
 
 const ALL = "all";
 
@@ -61,22 +61,13 @@ export default function HoldingsPage() {
 
   let content: React.ReactNode;
   if (positions.isPending) {
-    content = <Skeleton className="h-72 rounded-xl bg-muted/50" />;
+    content = <HoldingsLoading />;
   } else if (positions.isError) {
     content = (
-      <ErrorState
-        title="Couldn't load your holdings"
-        description={positions.error.message}
-        onRetry={() => void positions.refetch()}
-      />
+      <HoldingsError message={positions.error?.message} onRetry={() => void positions.refetch()} />
     );
   } else if (positions.data.length === 0) {
-    content = (
-      <EmptyState
-        title="No holdings yet"
-        description="Positions appear here after you record a buy or import a statement."
-      />
-    );
+    content = <HoldingsEmpty />;
   } else {
     content = (
       <PositionsTable

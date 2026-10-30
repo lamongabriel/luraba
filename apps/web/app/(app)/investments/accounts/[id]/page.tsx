@@ -3,7 +3,6 @@
 import { useParams } from "next/navigation";
 
 import { AccountDisplay, AmountDisplay } from "@/components/display";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { COST_BASIS_LABELS, TAX_PROFILE_LABELS } from "@/components/investments/constants";
 import { CorporateActionSuggestions } from "@/components/investments/corporate-action-suggestions";
@@ -11,19 +10,20 @@ import { EventsTable } from "@/components/investments/events-table";
 import { InvestmentAccountSheet } from "@/components/investments/forms/account-sheet";
 import { CashMovementSheet } from "@/components/investments/forms/cash-movement-sheet";
 import { EventSheet } from "@/components/investments/forms/event-sheet";
-import { MetricCard } from "@/components/investments/metric-card";
 import { PositionsTable } from "@/components/investments/positions-table";
 import { useInvestmentFormat } from "@/components/investments/use-investment-format";
+import { KpiCard, KpiGrid } from "@/components/kpi";
 import { PERMISSIONS, PermissionButton, ResourceAccessBoundary } from "@/components/permissions";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useDisclosure } from "@/hooks/use-disclosure";
 import {
   useInvestmentAccountQuery,
   useInvestmentEventsQuery,
   usePositionsQuery,
 } from "@/queries/investments/use-investments-queries";
+import { InvestmentAccountDetailError } from "./_error";
+import { InvestmentAccountDetailLoading } from "./_loading";
 
 export default function InvestmentAccountPage() {
   const { id } = useParams<{ id: string }>();
@@ -35,9 +35,7 @@ export default function InvestmentAccountPage() {
   const cashSheet = useDisclosure();
   const settingsSheet = useDisclosure();
 
-  if (account.isPending) {
-    return <Skeleton className="h-80 rounded-xl bg-muted/50" />;
-  }
+  if (account.isPending) return <InvestmentAccountDetailLoading />;
   if (account.isError) {
     return (
       <ResourceAccessBoundary
@@ -45,9 +43,8 @@ export default function InvestmentAccountPage() {
         resourceName="account"
         backHref="/investments/accounts"
         fallback={
-          <ErrorState
-            title="Couldn't load this account"
-            description={account.error.message}
+          <InvestmentAccountDetailError
+            message={account.error?.message}
             onRetry={() => void account.refetch()}
           />
         }
@@ -103,11 +100,11 @@ export default function InvestmentAccountPage() {
         </div>
       }
     >
-      <div className="grid gap-3 sm:grid-cols-3">
-        <MetricCard label="Total value" value={money(data.totalValue)} />
-        <MetricCard label="Positions" value={money(data.positionsValue)} />
-        <MetricCard
-          label="Cash"
+      <KpiGrid columns={3}>
+        <KpiCard title="Total value" value={money(data.totalValue)} />
+        <KpiCard title="Positions" value={money(data.positionsValue)} />
+        <KpiCard
+          title="Cash"
           value={
             data.cash.length === 0 ? (
               <span className="text-muted-foreground">None</span>
@@ -122,7 +119,7 @@ export default function InvestmentAccountPage() {
             )
           }
         />
-      </div>
+      </KpiGrid>
 
       <CorporateActionSuggestions accountId={id} />
 

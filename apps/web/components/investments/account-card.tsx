@@ -2,11 +2,9 @@
 
 import type { InvestmentAccount } from "@luraba/contracts";
 import Link from "next/link";
-
-import { AccountDisplay, AmountDisplay } from "@/components/display";
+import { AccountDisplay, AmountDisplay, CurrencyDisplay } from "@/components/display";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-
 import { COST_BASIS_LABELS, TAX_PROFILE_LABELS } from "./constants";
 import { useInvestmentFormat } from "./use-investment-format";
 
@@ -35,7 +33,9 @@ export function AccountCard({ account }: { account: InvestmentAccount }) {
         <div className="flex flex-wrap items-center gap-1.5">
           <Badge variant="outline">{COST_BASIS_LABELS[account.costBasisMethod]}</Badge>
           <Badge variant="outline">{TAX_PROFILE_LABELS[account.taxProfile]}</Badge>
-          <Badge variant="outline">{account.currencyCode}</Badge>
+          <Badge variant="outline">
+            <CurrencyDisplay currencyCode={account.currencyCode} size="xs" />
+          </Badge>
         </div>
         {account.cash.length > 0 ? (
           <dl className="grid gap-1 text-xs">

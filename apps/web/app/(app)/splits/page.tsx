@@ -2,20 +2,21 @@
 
 import { MAX_PER_PAGE, type Split } from "@luraba/contracts";
 import Link from "next/link";
-import type * as React from "react";
 import { MemberDisplay } from "@/components/display";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
 import { SectionReveal } from "@/components/motion/reveal";
 import { PERMISSIONS, PermissionButton } from "@/components/permissions";
 import { SplitSheet } from "@/components/splits/split-sheet";
+import { DataBoundary } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
 import { useDisclosure } from "@/hooks/use-disclosure";
 import { useSplitsQuery } from "@/queries/splits/use-splits-queries";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
+import { SplitsEmpty } from "./_empty";
+import { SplitsError } from "./_error";
+import { SplitsLoading } from "./_loading";
 
 function SplitCard({ split, language }: { split: Split; language: string }) {
   const { summary } = split;
@@ -74,42 +75,24 @@ export default function SplitsPage() {
   const query = useSplitsQuery({ perPage: MAX_PER_PAGE });
   const splits = query.data?.data ?? [];
 
-  let content: React.ReactNode;
-
-  if (query.isPending) {
-    content = (
-      <div className="grid gap-3 md:grid-cols-2">
-        {["a", "b", "c"].map((key) => (
-          <Skeleton key={key} className="h-28 rounded-xl bg-muted/50" />
-        ))}
-      </div>
-    );
-  } else if (query.isError) {
-    content = (
-      <ErrorState
-        title="Couldn't load splits"
-        description={query.error.message || "An unexpected error occurred while loading this page."}
-        onRetry={() => void query.refetch()}
-      />
-    );
-  } else if (splits.length === 0) {
-    content = (
-      <div className="rounded-xl border border-dashed border-border/70 p-8 text-center">
-        <Typography variant="small-strong">No split purchases yet</Typography>
-        <Typography variant="small-muted" className="mt-1">
-          Paid for something others are chipping in on? Add it and track who has paid you back.
-        </Typography>
-      </div>
-    );
-  } else {
-    content = (
+  const content = (
+    <DataBoundary
+      isPending={query.isPending}
+      isError={query.isError}
+      isEmpty={splits.length === 0}
+      loading={<SplitsLoading />}
+      errorState={
+        <SplitsError message={query.error?.message} onRetry={() => void query.refetch()} />
+      }
+      empty={<SplitsEmpty onCreate={sheet.onOpen} />}
+    >
       <SectionReveal className="grid gap-3 md:grid-cols-2">
         {splits.map((split) => (
           <SplitCard key={split.id} split={split} language={language} />
         ))}
       </SectionReveal>
-    );
-  }
+    </DataBoundary>
+  );
 
   return (
     <InternalPageLayout

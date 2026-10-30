@@ -5,6 +5,7 @@ import type { GoalDetail } from "@luraba/contracts";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { CurrencySelect } from "@/components/display";
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
 import { FormItem } from "@/components/forms/form-item";
 import { FormSheet } from "@/components/forms/form-sheet";
@@ -152,16 +153,10 @@ function GoalForm({
           inputType="money"
           disabled={isPending}
         />
-        <FormItem
+        <CurrencySelect
           control={form.control}
           name="currencyCode"
           label="Currency"
-          type="select"
-          options={
-            currencyList.length > 0
-              ? currencyList.map((c) => ({ value: c.code, label: `${c.code} (${c.symbol})` }))
-              : [{ value: currencyCode, label: currencyCode }]
-          }
           disabled={isPending || Boolean(goal)}
         />
       </div>

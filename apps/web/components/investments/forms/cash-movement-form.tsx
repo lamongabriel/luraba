@@ -5,16 +5,14 @@ import { todayISODate } from "@luraba/domain";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
+import { CurrencySelect } from "@/components/display";
 import { FormItem } from "@/components/forms/form-item";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { useAddCashMovementMutation } from "@/mutations/investments/use-investments-mutations";
 import { useAccountsQuery } from "@/queries/accounts/use-accounts-query";
 import { useInvestmentAccountsQuery } from "@/queries/investments/use-investments-queries";
-
 import { ExactDateField, ExactNumberField } from "./exact-fields";
-import { useCurrencyOptions } from "./use-currency-options";
 
 const KINDS = [
   { value: "deposit", label: "Deposit" },
@@ -68,7 +66,6 @@ export function CashMovementForm({
 }) {
   const accounts = useInvestmentAccountsQuery();
   const others = useAccountsQuery({});
-  const currencies = useCurrencyOptions();
   const form = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -168,13 +165,11 @@ export function CashMovementForm({
           label={kind === "fx_conversion" ? "Amount sold" : "Amount"}
           disabled={mutation.isPending}
         />
-        <FormItem
-          type="select"
+        <CurrencySelect
           control={form.control}
           name="currencyCode"
           label="Currency"
           placeholder="Account currency"
-          options={currencies}
           disabled={mutation.isPending}
         />
       </div>
@@ -187,12 +182,11 @@ export function CashMovementForm({
             label="Amount received"
             disabled={mutation.isPending}
           />
-          <FormItem
-            type="select"
+          <CurrencySelect
             control={form.control}
             name="toCurrencyCode"
             label="Received currency"
-            options={currencies.filter((item) => item.value !== currencyCode)}
+            exclude={[currencyCode]}
             disabled={mutation.isPending}
           />
         </div>

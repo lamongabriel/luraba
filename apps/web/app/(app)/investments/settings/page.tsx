@@ -1,15 +1,17 @@
 "use client";
 
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { InvestmentSettingsForm } from "@/components/investments/forms/investment-settings-form";
 import { ProviderCard } from "@/components/investments/provider-card";
+import { DataBoundary } from "@/components/states";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   useInvestmentSettingsQuery,
   useMarketDataProvidersQuery,
 } from "@/queries/investments/use-investments-queries";
+import { PriceProvidersEmpty } from "./_empty";
+import { InvestmentSettingsError, PriceProvidersError } from "./_error";
+import { InvestmentSettingsLoading, PriceProvidersLoading } from "./_loading";
 
 export default function InvestmentSettingsPage() {
   const settings = useInvestmentSettingsQuery();
@@ -25,17 +27,19 @@ export default function InvestmentSettingsPage() {
           <CardTitle>Defaults</CardTitle>
         </CardHeader>
         <CardContent>
-          {settings.isPending ? (
-            <Skeleton className="h-48 rounded-xl bg-muted/50" />
-          ) : settings.isError ? (
-            <ErrorState
-              title="Couldn't load the settings"
-              description={settings.error.message}
-              onRetry={() => void settings.refetch()}
-            />
-          ) : (
-            <InvestmentSettingsForm settings={settings.data} />
-          )}
+          <DataBoundary
+            isPending={settings.isPending}
+            isError={settings.isError}
+            loading={<InvestmentSettingsLoading />}
+            errorState={
+              <InvestmentSettingsError
+                message={settings.error?.message}
+                onRetry={() => void settings.refetch()}
+              />
+            }
+          >
+            {settings.data ? <InvestmentSettingsForm settings={settings.data} /> : null}
+          </DataBoundary>
         </CardContent>
       </Card>
 
@@ -49,17 +53,23 @@ export default function InvestmentSettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {providers.isPending ? (
-            <Skeleton className="h-40 rounded-xl bg-muted/50" />
-          ) : providers.isError ? (
-            <ErrorState
-              title="Couldn't load the providers"
-              description={providers.error.message}
-              onRetry={() => void providers.refetch()}
-            />
-          ) : (
-            providers.data.map((provider) => <ProviderCard key={provider.id} provider={provider} />)
-          )}
+          <DataBoundary
+            isPending={providers.isPending}
+            isError={providers.isError}
+            isEmpty={providers.data?.length === 0}
+            loading={<PriceProvidersLoading />}
+            errorState={
+              <PriceProvidersError
+                message={providers.error?.message}
+                onRetry={() => void providers.refetch()}
+              />
+            }
+            empty={<PriceProvidersEmpty />}
+          >
+            {providers.data?.map((provider) => (
+              <ProviderCard key={provider.id} provider={provider} />
+            ))}
+          </DataBoundary>
         </CardContent>
       </Card>
     </InternalPageLayout>

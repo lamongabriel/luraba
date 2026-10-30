@@ -6,14 +6,12 @@ import { keepPreviousData } from "@tanstack/react-query";
 import * as React from "react";
 
 import { AmountDisplay, AssetDisplay } from "@/components/display";
-import { EmptyState } from "@/components/empty-state";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { TAX_DISCLAIMER } from "@/components/investments/constants";
 import { DarfPaidSheet } from "@/components/investments/forms/darf-paid-sheet";
-import { MetricCard } from "@/components/investments/metric-card";
 import { ApuracaoTable, UsGainsTable } from "@/components/investments/tax-tables";
 import { useInvestmentFormat } from "@/components/investments/use-investment-format";
+import { KpiCard, KpiGrid } from "@/components/kpi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -22,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -35,6 +32,9 @@ import {
   useInvestmentAccountsQuery,
   useInvestmentTaxesQuery,
 } from "@/queries/investments/use-investments-queries";
+import { TaxesEmpty } from "./_empty";
+import { TaxesError } from "./_error";
+import { TaxesLoading } from "./_loading";
 
 const ALL = "all";
 
@@ -53,15 +53,9 @@ export default function TaxesPage() {
 
   let content: React.ReactNode;
   if (taxes.isPending) {
-    content = <Skeleton className="h-72 rounded-xl bg-muted/50" />;
+    content = <TaxesLoading />;
   } else if (taxes.isError) {
-    content = (
-      <ErrorState
-        title="Couldn't load your tax report"
-        description={taxes.error.message}
-        onRetry={() => void taxes.refetch()}
-      />
-    );
+    content = <TaxesError message={taxes.error?.message} onRetry={() => void taxes.refetch()} />;
   } else {
     const data = taxes.data;
     const currencyCode = data.annual.reportingCurrencyCode;
@@ -81,26 +75,23 @@ export default function TaxesPage() {
       data.usGains.length === 0 &&
       data.annual.holdingsAtCost.length === 0;
     content = nothing ? (
-      <EmptyState
-        title={`No taxable activity in ${year}`}
-        description="Sales, income and holdings for the year appear here once you have transactions."
-      />
+      <TaxesEmpty year={year} />
     ) : (
       <div className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <MetricCard label="Realized result" value={money(data.annual.realizedResult, "auto")} />
-          <MetricCard label="Tax-exempt income" value={money(data.annual.exemptIncome)} />
-          <MetricCard label="Taxed at the source" value={money(data.annual.taxedAtSource)} />
-          <MetricCard
-            label="Exclusive-tax income"
+        <KpiGrid columns={4}>
+          <KpiCard title="Realized result" value={money(data.annual.realizedResult, "auto")} />
+          <KpiCard title="Tax-exempt income" value={money(data.annual.exemptIncome)} />
+          <KpiCard title="Taxed at the source" value={money(data.annual.taxedAtSource)} />
+          <KpiCard
+            title="Exclusive-tax income"
             value={money(data.annual.exclusiveTaxIncome)}
-            detail={
+            description={
               data.annual.offshoreEstimatedTax > 0 ? (
                 <span>Offshore est. tax {money(data.annual.offshoreEstimatedTax)}</span>
               ) : undefined
             }
           />
-        </div>
+        </KpiGrid>
 
         {data.apuracao.length > 0 ? (
           <Card>

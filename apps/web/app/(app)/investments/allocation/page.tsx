@@ -6,8 +6,6 @@ import { keepPreviousData } from "@tanstack/react-query";
 import * as React from "react";
 
 import { AmountDisplay } from "@/components/display";
-import { EmptyState } from "@/components/empty-state";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { AllocationChart } from "@/components/investments/allocation-chart";
 import { AllocationTargetsEditor } from "@/components/investments/allocation-targets-editor";
@@ -24,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -37,6 +34,9 @@ import {
   useAllocationQuery,
   useRebalanceQuery,
 } from "@/queries/investments/use-investments-queries";
+import { AllocationEmpty } from "./_empty";
+import { AllocationError } from "./_error";
+import { AllocationLoading } from "./_loading";
 
 function RebalancePlanner({
   portfolioId,
@@ -139,22 +139,16 @@ export default function AllocationPage() {
 
   let content: React.ReactNode;
   if (allocation.isPending) {
-    content = <Skeleton className="h-72 rounded-xl bg-muted/50" />;
+    content = <AllocationLoading />;
   } else if (allocation.isError) {
     content = (
-      <ErrorState
-        title="Couldn't load your allocation"
-        description={allocation.error.message}
+      <AllocationError
+        message={allocation.error?.message}
         onRetry={() => void allocation.refetch()}
       />
     );
   } else if (allocation.data.slices.length === 0) {
-    content = (
-      <EmptyState
-        title="Nothing to allocate yet"
-        description="Your allocation appears here once you hold investments."
-      />
-    );
+    content = <AllocationEmpty />;
   } else {
     const data = allocation.data;
     const currencyCode = data.reportingCurrencyCode;

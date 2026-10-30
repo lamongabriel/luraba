@@ -5,8 +5,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { Portfolio } from "@luraba/contracts";
 import type * as React from "react";
 
-import { EmptyState } from "@/components/empty-state";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { AccountCard } from "@/components/investments/account-card";
 import { ConfirmDeleteModal } from "@/components/investments/confirm-delete-modal";
@@ -14,13 +12,15 @@ import { InvestmentAccountSheet } from "@/components/investments/forms/account-s
 import { PortfolioSheet } from "@/components/investments/forms/portfolio-form";
 import { PERMISSIONS, PermissionButton } from "@/components/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useEntityDisclosure } from "@/hooks/use-disclosure";
 import { useDeletePortfolioMutation } from "@/mutations/investments/use-investments-mutations";
 import {
   useInvestmentAccountsQuery,
   usePortfoliosQuery,
 } from "@/queries/investments/use-investments-queries";
+import { InvestmentAccountsEmpty } from "./_empty";
+import { InvestmentAccountsError } from "./_error";
+import { InvestmentAccountsLoading } from "./_loading";
 
 export default function InvestmentAccountsPage() {
   const accounts = useInvestmentAccountsQuery();
@@ -35,36 +35,16 @@ export default function InvestmentAccountsPage() {
 
   let content: React.ReactNode;
   if (accounts.isPending) {
-    content = (
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {["a", "b", "c"].map((key) => (
-          <Skeleton key={key} className="h-36 rounded-xl bg-muted/50" />
-        ))}
-      </div>
-    );
+    content = <InvestmentAccountsLoading />;
   } else if (accounts.isError) {
     content = (
-      <ErrorState
-        title="Couldn't load your accounts"
-        description={accounts.error.message}
+      <InvestmentAccountsError
+        message={accounts.error?.message}
         onRetry={() => void accounts.refetch()}
       />
     );
   } else if (accounts.data.length === 0) {
-    content = (
-      <EmptyState
-        title="No investment accounts yet"
-        description="Create an account for each broker or bank where you hold investments."
-        action={
-          <PermissionButton
-            permission={PERMISSIONS.INVESTMENTS_WRITE}
-            onClick={() => accountSheet.onCreate()}
-          >
-            Create an account
-          </PermissionButton>
-        }
-      />
-    );
+    content = <InvestmentAccountsEmpty onCreate={() => accountSheet.onCreate()} />;
   } else {
     content = (
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

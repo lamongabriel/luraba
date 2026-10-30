@@ -34,7 +34,9 @@ Adding data to a screen: service function -> query hook (+ key) -> component; wr
 that invalidates the key. Reusable file/attachment UI is documented in
 [components/uploads/README.md](components/uploads/README.md).
 
-**Display components (mandatory).** Accounts, credit cards, transaction types, merchants, products, amounts, categories and tags are shown with [components/display/](components/display/README.md), never hand-built.
+**Page states and KPIs (mandatory).** Every data page has `_loading.tsx`, `_error.tsx` (and `_empty.tsx` for lists) built with [components/states](components/states/README.md); headline numbers use [components/kpi](components/kpi/README.md). Skeletons match the loaded page one to one.
+
+**Display components (mandatory).** Accounts, credit cards, transaction types, merchants, products, amounts, currencies, categories and tags are shown with [components/display/](components/display/README.md), never hand-built. Currency, country, language, time zone and date-format choices use the shared selects there (`CurrencySelect`, `CountrySelect`, ...) backed by [contracts catalogs](../../packages/contracts/src/catalogs/README.md).
 
 Credit cards UI (month overview, card detail, invoices): [components/credit-cards/README.md](components/credit-cards/README.md).
 

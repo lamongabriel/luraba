@@ -23,7 +23,6 @@ import {
 } from "@/components/tables/transactions/transactions-table-filters";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/ui/masked-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {

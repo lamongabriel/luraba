@@ -10,16 +10,17 @@ import { CreditCardSheet } from "@/components/credit-cards/credit-card-sheet";
 import { LatestCardTransactions } from "@/components/credit-cards/latest-card-transactions";
 import { LimitBreakdown } from "@/components/credit-cards/limit-breakdown";
 import { OverviewSummary } from "@/components/credit-cards/overview-summary";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { SectionReveal } from "@/components/motion/reveal";
 import { PERMISSIONS, PermissionButton } from "@/components/permissions";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Typography } from "@/components/ui/typography";
+import { DataBoundary } from "@/components/states";
 import { useCurrencyPrecision } from "@/hooks/use-currency-precision";
 import { useDisclosure } from "@/hooks/use-disclosure";
 import { useCreditCardOverviewQuery } from "@/queries/credit-cards/use-credit-cards-query";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
+import { CreditCardsEmpty } from "./_empty";
+import { CreditCardsError } from "./_error";
+import { CreditCardsLoading } from "./_loading";
 
 export default function CreditCardsPage() {
   const sheet = useDisclosure();
@@ -34,69 +35,57 @@ export default function CreditCardsPage() {
     [overview],
   );
 
-  let content: React.ReactNode;
-  if (query.isPending) {
-    content = (
-      <div className="space-y-4">
-        <Skeleton className="h-48 rounded-xl bg-muted/50" />
-        <Skeleton className="h-56 rounded-xl bg-muted/50" />
-      </div>
-    );
-  } else if (query.isError || !overview) {
-    content = (
-      <ErrorState
-        title="Couldn't load credit cards"
-        description={
-          query.error?.message || "An unexpected error occurred while loading this page."
-        }
-        onRetry={() => void query.refetch()}
-      />
-    );
-  } else if (overview.cards.length === 0) {
-    content = (
-      <div className="rounded-xl border border-dashed border-border/70 p-8 text-center">
-        <Typography variant="small-strong">No credit cards yet</Typography>
-        <Typography variant="small-muted" className="mt-1">
-          Add a card to follow its invoices, installments and remaining limit.
-        </Typography>
-      </div>
-    );
-  } else {
-    const currencies = overview.totals.map((total) => total.currencyCode);
-    content = (
-      <SectionReveal className="space-y-5">
-        {overview.totals.map((total) => (
-          <div
-            key={total.currencyCode}
-            className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)]"
-          >
-            <OverviewSummary
-              overview={overview}
-              currencyCode={total.currencyCode}
-              language={language}
-              precision={precisionOf(total.currencyCode)}
-              showCurrency={currencies.length > 1}
-            />
-            <LimitBreakdown
-              breakdown={total.limit}
-              currencyCode={total.currencyCode}
-              language={language}
-              precision={precisionOf(total.currencyCode)}
-              title={
-                currencies.length > 1 ? `Credit limit · ${total.currencyCode}` : "Credit limit"
-              }
-            />
-          </div>
-        ))}
-        <CreditCardCarousel cards={overview.cards} language={language} precisionOf={precisionOf} />
-        <LatestCardTransactions
-          language={language}
-          cardNames={cardNames}
-          onSelect={setSelectedRow}
-        />
-      </SectionReveal>
-    );
-  }
+  const currencies = (overview?.totals ?? []).map((total) => total.currencyCode);
+  const content = (
+    <DataBoundary
+      isPending={query.isPending}
+      isError={query.isError || (!query.isPending && !overview)}
+      isEmpty={overview?.cards.length === 0}
+      loading={<CreditCardsLoading />}
+      errorState={
+        <CreditCardsError message={query.error?.message} onRetry={() => void query.refetch()} />
+      }
+      empty={<CreditCardsEmpty onCreate={sheet.onOpen} />}
+    >
+      {overview ? (
+        <SectionReveal className="space-y-5">
+          {overview.totals.map((total) => (
+            <div
+              key={total.currencyCode}
+              className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)]"
+            >
+              <OverviewSummary
+                overview={overview}
+                currencyCode={total.currencyCode}
+                language={language}
+                precision={precisionOf(total.currencyCode)}
+                showCurrency={currencies.length > 1}
+              />
+              <LimitBreakdown
+                breakdown={total.limit}
+                currencyCode={total.currencyCode}
+                language={language}
+                precision={precisionOf(total.currencyCode)}
+                title={
+                  currencies.length > 1 ? `Credit limit · ${total.currencyCode}` : "Credit limit"
+                }
+              />
+            </div>
+          ))}
+          <CreditCardCarousel
+            cards={overview.cards}
+            language={language}
+            precisionOf={precisionOf}
+          />
+          <LatestCardTransactions
+            language={language}
+            cardNames={cardNames}
+            onSelect={setSelectedRow}
+          />
+        </SectionReveal>
+      ) : null}
+    </DataBoundary>
+  );
 
   return (
     <InternalPageLayout

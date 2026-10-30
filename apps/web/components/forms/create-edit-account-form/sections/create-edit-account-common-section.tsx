@@ -1,13 +1,11 @@
 "use client";
 
+import { CurrencySelect } from "@/components/display";
 import { FieldInfoHint } from "@/components/forms/field-info-hint";
 import { FormItem } from "@/components/forms/form-item";
-
 import type { CreateEditAccountCommonSectionProps } from "./create-edit-account-section.types";
 
 export function CreateEditAccountCommonSection({
-  currenciesArePending,
-  currencyOptions,
   disabled,
   form,
   isEdit,
@@ -31,16 +29,11 @@ export function CreateEditAccountCommonSection({
         options={typeOptions}
         description={isEdit ? "Type cannot be changed after creation." : undefined}
       />
-      <FormItem
-        type="combobox"
+      <CurrencySelect
         control={form.control}
         name="currencyCode"
         label="Currency"
-        placeholder="Select a currency"
-        searchPlaceholder="Search currencies..."
-        emptyMessage="No currencies found."
-        disabled={disabled || currenciesArePending || isEdit}
-        options={currencyOptions}
+        disabled={disabled || isEdit}
         description={isEdit ? "Currency cannot be changed after creation." : undefined}
       />
       <FormItem

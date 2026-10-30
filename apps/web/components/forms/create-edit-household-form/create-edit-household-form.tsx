@@ -2,15 +2,13 @@
 
 import type { CreateHouseholdInput, HouseholdSummary } from "@luraba/contracts";
 import { MAX_PER_PAGE } from "@luraba/contracts";
-import { CountryCombobox } from "@/components/forms/country-combobox";
+import { CountrySelect, CurrencySelect, TimeZoneSelect } from "@/components/display";
 import { FieldInfoHint } from "@/components/forms/field-info-hint";
-import type { FormComboboxOption } from "@/components/forms/form-combobox";
 import { FormItem } from "@/components/forms/form-item";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Typography } from "@/components/ui/typography";
 import { CREDIT_EXPENSE_TIMING_OPTIONS, CREDIT_INSTALLMENT_MODE_OPTIONS } from "@/lib/budgets";
-import { createTimezoneOptions } from "@/lib/timezones";
 import { useCurrenciesQuery } from "@/queries/currencies/use-currencies-query";
 import { useLocationOptionsQuery } from "@/queries/reference-data/use-location-options-query";
 
@@ -39,17 +37,6 @@ export function CreateEditHouseholdForm({
     onSubmit,
   });
 
-  const currencyOptions: FormComboboxOption[] =
-    currenciesQuery.data?.data.map((currency) => ({
-      value: currency.code,
-      label: currency.code,
-      description: currency.symbol,
-      searchText: `${currency.code} ${currency.symbol}`,
-    })) ?? [];
-  const timezoneOptions: FormComboboxOption[] = createTimezoneOptions(
-    locationOptionsQuery.data?.timezones ?? [],
-  );
-
   return (
     <form className="space-y-6" onSubmit={submit} noValidate>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -60,16 +47,11 @@ export function CreateEditHouseholdForm({
           placeholder="Gabriel's household"
           disabled={isPending}
         />
-        <FormItem
-          type="combobox"
+        <CurrencySelect
           control={form.control}
           name="defaultCurrencyId"
           label="Default currency"
-          placeholder="Select currency"
-          searchPlaceholder="Search currencies..."
-          emptyMessage="No currencies found."
-          options={currencyOptions}
-          disabled={isPending || currenciesQuery.isPending}
+          disabled={isPending}
           labelAdornment={
             <FieldInfoHint>Used for household summaries and budget defaults.</FieldInfoHint>
           }
@@ -92,28 +74,22 @@ export function CreateEditHouseholdForm({
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <CountryCombobox
+        <CountrySelect
           control={form.control}
-          countries={locationOptionsQuery.data?.countries ?? []}
           name="countryCode"
           label="Country"
-          disabled={isPending || locationOptionsQuery.isPending || locationOptionsQuery.isError}
+          disabled={isPending}
           labelAdornment={
             <FieldInfoHint>
               Used for regional defaults and future locale-aware features.
             </FieldInfoHint>
           }
         />
-        <FormItem
-          type="combobox"
+        <TimeZoneSelect
           control={form.control}
           name="timezone"
-          label="Timezone"
-          placeholder="Select timezone"
-          searchPlaceholder="Search timezones..."
-          emptyMessage="No timezones found."
-          options={timezoneOptions}
-          disabled={isPending || locationOptionsQuery.isPending || locationOptionsQuery.isError}
+          label="Time zone"
+          disabled={isPending}
           labelAdornment={
             <FieldInfoHint>
               Controls calendar boundaries and date display for this household.

@@ -6,16 +6,13 @@ import * as React from "react";
 
 import { VerticalBarChart } from "@/components/charts";
 import { AmountDisplay, AssetDisplay, InvestmentEventTypeDisplay } from "@/components/display";
-import { EmptyState } from "@/components/empty-state";
-import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
-import { MetricCard } from "@/components/investments/metric-card";
 import { ScopeBar } from "@/components/investments/scope-bar";
 import { SegmentedControl } from "@/components/investments/segmented-control";
 import { useInvestmentFormat } from "@/components/investments/use-investment-format";
 import { scopeQuery, useInvestmentScope } from "@/components/investments/use-investment-scope";
+import { KpiCard, KpiGrid } from "@/components/kpi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -26,6 +23,9 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/finance";
 import { useInvestmentIncomeQuery } from "@/queries/investments/use-investments-queries";
+import { IncomeEmpty } from "./_empty";
+import { IncomeError } from "./_error";
+import { IncomeLoading } from "./_loading";
 
 type Range = "12M" | "YTD" | "ALL";
 const RANGES = [
@@ -53,22 +53,11 @@ export default function IncomePage() {
 
   let content: React.ReactNode;
   if (income.isPending) {
-    content = <Skeleton className="h-72 rounded-xl bg-muted/50" />;
+    content = <IncomeLoading />;
   } else if (income.isError) {
-    content = (
-      <ErrorState
-        title="Couldn't load your income"
-        description={income.error.message}
-        onRetry={() => void income.refetch()}
-      />
-    );
+    content = <IncomeError message={income.error?.message} onRetry={() => void income.refetch()} />;
   } else if (income.data.rows.length === 0) {
-    content = (
-      <EmptyState
-        title="No income in this period"
-        description="Dividends, interest on equity, coupons and fund income show up here."
-      />
-    );
+    content = <IncomeEmpty />;
   } else {
     const data = income.data;
     const currencyCode = data.reportingCurrencyCode;
@@ -84,11 +73,11 @@ export default function IncomePage() {
     );
     content = (
       <div className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <MetricCard label="Gross income" value={money(data.totalGross)} />
-          <MetricCard label="Taxes withheld" value={money(data.totalWithheld)} />
-          <MetricCard label="Net income" value={money(data.totalNet)} />
-        </div>
+        <KpiGrid columns={3}>
+          <KpiCard title="Gross income" value={money(data.totalGross)} />
+          <KpiCard title="Taxes withheld" value={money(data.totalWithheld)} />
+          <KpiCard title="Net income" value={money(data.totalNet)} />
+        </KpiGrid>
 
         <Card>
           <CardHeader>
