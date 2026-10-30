@@ -11,6 +11,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./catalogs": {
+      "types": "./dist/catalogs/index.d.ts",
+      "import": "./dist/catalogs/index.js"
+    },
     "./permissions": {
       "types": "./dist/permissions.d.ts",
       "import": "./dist/permissions.js"

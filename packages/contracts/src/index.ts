@@ -3,6 +3,7 @@ export * from "./api.js";
 export * from "./auth/index.js";
 export * from "./bills/index.js";
 export * from "./budgets/index.js";
+export * from "./catalogs/index.js";
 export * from "./categories/index.js";
 export * from "./common.js";
 export * from "./credit-cards/index.js";

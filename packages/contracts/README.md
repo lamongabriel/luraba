@@ -16,6 +16,7 @@ src/<module>/
 src/registry.ts  every module's endpoints (`allEndpoints`, `contractModules`)
 src/permissions.ts  PERMISSIONS and the per-role permission lists
 src/api.ts, list.ts, common.ts  envelope, pagination, shared schemas
+src/catalogs/  shared option catalogs (currencies, countries, time zones, languages, date formats...): see its README
 ```
 
 Each module is also a package export (`@luraba/contracts/categories`); add the export to
