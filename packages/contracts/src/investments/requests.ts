@@ -145,6 +145,7 @@ export const eventMetaSchema = z
     toAmount: nonNegativeDecimalSchema.optional(),
     lots: z.array(z.object({ lotId: z.string(), quantity: nonNegativeDecimalSchema })).optional(),
     counterpartAccountId: z.uuid().optional(),
+    skipCash: z.boolean().optional(),
     paidMonth: z
       .string()
       .regex(/^\d{4}-\d{2}$/u)
@@ -164,7 +165,8 @@ export const eventBodySchema = z.object({
   /** Omit to derive it from quantity x unit price. */
   grossAmount: nonNegativeDecimalSchema.optional(),
   fees: nonNegativeDecimalSchema.default("0"),
-  taxesWithheld: nonNegativeDecimalSchema.default("0"),
+  /** Omit to let the tax rules estimate the withholding (JCP, US non-resident dividends). */
+  taxesWithheld: nonNegativeDecimalSchema.optional(),
   /** Defaults to the asset currency, or the account currency for cash events. */
   currencyCode: currencyCodeSchema.optional(),
   /** Omit to use the FX module's rate for the trade date. */

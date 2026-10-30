@@ -559,6 +559,9 @@ function splitDayTrade(
 
 function applyCash(engine: Engine, event: LedgerEvent): void {
   const { type, currency } = event;
+  if (event.meta?.skipCash) {
+    return;
+  }
   if (ACQUISITIONS.has(type)) {
     addCash(engine, currency, acquisitionCost(event).neg());
   } else if (DISPOSALS.has(type)) {

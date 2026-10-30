@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { defineEndpoint } from "../api.js";
+import { listMetaSchema } from "../list.js";
 import {
   allocationQuerySchema,
   allocationTargetsBodySchema,
@@ -59,13 +60,6 @@ import {
   refreshResultSchema,
   taxReportSchema,
 } from "./resource.js";
-
-const eventPageMeta = z.object({
-  page: z.number(),
-  perPage: z.number(),
-  totalCount: z.number(),
-  totalPages: z.number(),
-});
 
 export const investmentsEndpoints = {
   getSettings: defineEndpoint({
@@ -239,7 +233,7 @@ export const investmentsEndpoints = {
     path: "/investments/events",
     query: listEventsQuerySchema,
     response: z.array(investmentEventSchema),
-    meta: eventPageMeta,
+    meta: listMetaSchema(),
     status: 200,
   }),
   createEvent: defineEndpoint({

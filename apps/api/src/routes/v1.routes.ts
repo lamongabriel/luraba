@@ -12,6 +12,7 @@ import {
   householdsEndpoints,
   importsEndpoints,
   integrationsEndpoints,
+  investmentsEndpoints,
   merchantsEndpoints,
   notificationsEndpoints,
   onboardingEndpoints,
@@ -37,6 +38,7 @@ import goalsRouter from "@/modules/goals/goals.routes";
 import householdsRouter from "@/modules/households/households.routes";
 import importsRouter from "@/modules/imports/imports.routes";
 import integrationsRouter from "@/modules/integrations/integrations.routes";
+import investmentsRouter from "@/modules/investments/investments.routes";
 import merchantsRouter from "@/modules/merchants/merchants.routes";
 import notificationsRouter from "@/modules/notifications/notifications.routes";
 import onboardingRouter from "@/modules/onboarding/onboarding.routes";
@@ -61,6 +63,7 @@ router.use(getEndpointBasePath(goalsEndpoints.list), goalsRouter);
 router.use(getEndpointBasePath(importsEndpoints.list), importsRouter);
 router.use(getEndpointBasePath(exportsEndpoints.list), exportsRouter);
 router.use(getEndpointBasePath(budgetsEndpoints.getMonth), budgetsRouter);
+router.use(getEndpointBasePath(investmentsEndpoints.getSettings), investmentsRouter);
 router.use(getEndpointBasePath(categoriesEndpoints.list), categoriesRouter);
 router.use(getEndpointBasePath(creditCardsEndpoints.list), creditCardsRouter);
 router.use(getEndpointBasePath(merchantsEndpoints.list), merchantsRouter);

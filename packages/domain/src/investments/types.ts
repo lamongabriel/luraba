@@ -144,6 +144,8 @@ export type EventMeta = {
   /** FX_CONVERSION: destination currency and amount credited. */
   toCurrency?: string;
   toAmount?: string;
+  /** Income recorded as received outside the account: no cash movement. */
+  skipCash?: boolean;
   /** SPECIFIC_LOT sells: `[{ lotId: <buy event id>, quantity }]`. */
   lots?: { lotId: string; quantity: string }[];
 };
