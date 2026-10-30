@@ -22,7 +22,10 @@ export function InvestmentsSubnav() {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Investments sections" className="-mx-1 overflow-x-auto px-1 pb-1">
+    <nav
+      aria-label="Investments sections"
+      className="-mx-1 overflow-x-auto px-1 pb-1 [scrollbar-width:none]"
+    >
       <ul className="flex min-w-max items-center gap-1">
         {LINKS.map((link) => {
           const active =

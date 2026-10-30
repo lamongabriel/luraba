@@ -333,11 +333,13 @@ export async function dashboard(
   const bench = query.benchmark ? await benchmarkLevels(query.benchmark, from, today) : null;
   const twr = series.points.length > 1 ? timeWeightedReturn(series.points).total : null;
   const last = series.points[series.points.length - 1];
-  const xirrFlows = series.flows
-    .filter((f) => f.date >= from)
-    .map((f) => ({ date: f.date, amount: f.amount.neg() }));
   const first = series.points[0];
-  if (first && first.value.gt(0)) xirrFlows.unshift({ date: from, amount: first.value.neg() });
+  // The opening value already includes any flow on its own day, so only later flows are added.
+  const xirrFlows = series.flows
+    .filter((f) => !first || f.date > first.date)
+    .map((f) => ({ date: f.date, amount: f.amount.neg() }));
+  if (first && first.value.gt(0))
+    xirrFlows.unshift({ date: first.date, amount: first.value.neg() });
   if (last) xirrFlows.push({ date: today, amount: last.value });
   const irr = xirr(xirrFlows);
   const benchmarkReturn = bench ? seriesReturn(bench, from, today) : null;

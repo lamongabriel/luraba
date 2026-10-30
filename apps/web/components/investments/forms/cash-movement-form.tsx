@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { todayISODate } from "@luraba/domain";
+import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -88,6 +89,12 @@ export function CashMovementForm({
     onSuccess,
   });
   const selected = accounts.data?.find((item) => item.id === form.watch("accountId"));
+  // Picking an account sets its currency; the person can then change it (e.g. to sell dollars).
+  const selectedCurrency = selected?.currencyCode;
+  React.useEffect(() => {
+    if (selectedCurrency)
+      form.setValue("currencyCode", selectedCurrency, { shouldValidate: false });
+  }, [selectedCurrency, form]);
   const currencyCode = form.watch("currencyCode") || selected?.currencyCode || "";
   const precision = 2;
 
@@ -166,7 +173,7 @@ export function CashMovementForm({
           control={form.control}
           name="currencyCode"
           label="Currency"
-          placeholder={selected?.currencyCode ?? "Account currency"}
+          placeholder="Account currency"
           options={currencies}
           disabled={mutation.isPending}
         />

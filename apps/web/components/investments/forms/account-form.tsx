@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { InvestmentAccount } from "@luraba/contracts";
 import { COST_BASIS_METHODS, TAX_PROFILES } from "@luraba/contracts";
+import * as React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -64,6 +65,14 @@ export function AccountForm({
       portfolioId: account?.portfolioId ?? NO_PORTFOLIO,
     },
   });
+  // The household defaults arrive after the first render; fill them into a still-empty new form.
+  const { data: defaults } = settings;
+  React.useEffect(() => {
+    if (account || !defaults || form.formState.dirtyFields.currencyCode) return;
+    form.setValue("currencyCode", defaults.reportingCurrencyCode);
+    form.setValue("costBasisMethod", defaults.defaultCostBasisMethod);
+    form.setValue("taxProfile", defaults.defaultTaxProfile);
+  }, [account, defaults, form]);
   const create = useCreateInvestmentAccountMutation({
     successToast: { title: "Account created" },
     onSuccess,

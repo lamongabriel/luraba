@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Portfolio } from "@luraba/contracts";
+import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -43,6 +44,11 @@ function PortfolioForm({
         portfolio?.reportingCurrencyCode ?? settings.data?.reportingCurrencyCode ?? "",
     },
   });
+  const { data: defaults } = settings;
+  React.useEffect(() => {
+    if (portfolio || !defaults || form.formState.dirtyFields.reportingCurrencyCode) return;
+    form.setValue("reportingCurrencyCode", defaults.reportingCurrencyCode);
+  }, [portfolio, defaults, form]);
   const create = useCreatePortfolioMutation({
     successToast: { title: "Portfolio created" },
     onSuccess,

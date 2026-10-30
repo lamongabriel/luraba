@@ -114,6 +114,8 @@ describe("investments: end to end", () => {
     const dashboard = await api("get", "/dashboard?period=MAX");
     expect(dashboard.status).toBe(200);
     expect(dashboard.body.data.marketValue).toBe(120_000);
+    // Deposits of 10000 grew to 10565: the annualized return must be positive, not double-counted.
+    expect(Number(dashboard.body.data.xirr)).toBeGreaterThan(0);
 
     // The generic accounts list shows the portfolio's market value (positions + cash).
     const accountsList = await request(app).get("/api/v1/accounts").set(headers);

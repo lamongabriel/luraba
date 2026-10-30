@@ -49,9 +49,9 @@ export function FreshnessBadge({
         />
         {busy
           ? "Updating prices…"
-          : freshness
+          : freshness?.oldestAsOf
             ? `Prices ${formatAge(freshness.oldestAsOf, nowMs)}`
-            : "Prices —"}
+            : "No prices yet"}
       </Badge>
       {stale > 0 && !busy ? (
         <span className="text-xs text-muted-foreground">

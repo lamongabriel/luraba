@@ -17,10 +17,13 @@ export function AccountCard({ account }: { account: InvestmentAccount }) {
   return (
     <Card className="transition-colors hover:border-foreground/20">
       <CardContent className="space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <Link href={`/investments/accounts/${account.id}`} className="min-w-0 hover:underline">
-            <AccountDisplay account={account} size="md" detail="type" />
-          </Link>
+        <Link
+          href={`/investments/accounts/${account.id}`}
+          className="block min-w-0 hover:underline"
+        >
+          <AccountDisplay account={account} size="md" detail="type" />
+        </Link>
+        <div>
           <AmountDisplay
             amount={account.totalValue}
             currencyCode={account.currencyCode}

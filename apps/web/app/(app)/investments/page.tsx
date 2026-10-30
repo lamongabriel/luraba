@@ -123,14 +123,19 @@ export default function InvestmentsPage() {
       />
     );
   } else {
-    const value = scope.net ? data.netValue : data.marketValue;
+    const value = (scope.net ? data.netValue : data.marketValue) + data.cash;
     content = (
       <div className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label={scope.net ? "Net value" : "Total value"}
             value={money(value)}
-            detail={<span>Includes {money(data.cash)} cash</span>}
+            detail={
+              <span>
+                Positions {money(scope.net ? data.netValue : data.marketValue)} · cash{" "}
+                {money(data.cash)}
+              </span>
+            }
           />
           <MetricCard
             label="Invested"
