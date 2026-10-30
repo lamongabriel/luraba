@@ -6,6 +6,7 @@ import type { AppQueryOptions } from "@/queries/query-options";
 import { listExporters } from "@/services/exports.service";
 import {
   getImport,
+  getImportPreview,
   getImportReconciliation,
   type ListImportRowsParams,
   listImportGroups,
@@ -20,6 +21,8 @@ export const importQueryKeys = {
   lists: () => [...importQueryKeys.all, "list"] as const,
   list: (query: ListImportsQuery = {}) => [...importQueryKeys.lists(), query] as const,
   detail: (id: string) => [...importQueryKeys.all, "detail", id] as const,
+  preview: (id: string, limit: number) =>
+    [...importQueryKeys.detail(id), "preview", limit] as const,
   rows: (id: string, query: ListImportRowsParams = {}) =>
     [...importQueryKeys.detail(id), "rows", query] as const,
   groups: (id: string, query: ListImportGroupsQuery = {}) =>
@@ -54,6 +57,16 @@ export function useImportQuery(id: string | null) {
     queryFn: () => getImport(id as string),
     enabled: Boolean(id),
     refetchInterval: (state) => (isImportRunning(state.state.data) ? 1500 : false),
+  });
+}
+
+/** The file as written, plus the pre-filled column mapping. */
+export function useImportPreviewQuery(id: string | null, limit = 20) {
+  return useQuery({
+    queryKey: importQueryKeys.preview(id ?? "", limit),
+    queryFn: () => getImportPreview(id as string, limit),
+    enabled: Boolean(id),
+    staleTime: Number.POSITIVE_INFINITY,
   });
 }
 

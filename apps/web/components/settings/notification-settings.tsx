@@ -7,13 +7,12 @@ import {
   type NotificationChannels,
   type NotificationPreference,
 } from "@luraba/contracts";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ErrorState } from "@/components/error-state";
+import { SectionCard } from "@/components/section/section-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -26,7 +25,6 @@ import {
   useSendTestNotificationMutation,
   useSubscribePushMutation,
   useUnsubscribePushMutation,
-  useUpdateNotificationContactMutation,
   useUpdateNotificationPreferencesMutation,
 } from "@/mutations/notifications/use-notification-mutations";
 import {
@@ -154,44 +152,11 @@ function PushControls({ channels }: { channels: NotificationChannels }) {
 }
 
 function SmsControls({ channels }: { channels: NotificationChannels }) {
-  const [phone, setPhone] = useState(channels.phoneNumber ?? "");
-  const save = useUpdateNotificationContactMutation({
-    successToast: { title: "Phone number saved" },
-  });
-
-  useEffect(() => {
-    setPhone(channels.phoneNumber ?? "");
-  }, [channels.phoneNumber]);
-
-  const trimmed = phone.trim();
-  const unchanged = trimmed === (channels.phoneNumber ?? "");
-
+  if (channels.channels.sms.ready) return null;
   return (
-    <div className="flex items-center gap-2">
-      <div className="space-y-1">
-        <Label htmlFor="notification-phone" className="sr-only">
-          Phone number
-        </Label>
-        <Input
-          id="notification-phone"
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
-          placeholder="+5511999999999"
-          value={phone}
-          onChange={(event) => setPhone(event.target.value)}
-          className="w-44"
-        />
-      </div>
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={unchanged || save.isPending}
-        onClick={() => save.mutate({ phoneNumber: trimmed === "" ? null : trimmed })}
-      >
-        Save
-      </Button>
-    </div>
+    <Button asChild variant="outline" size="sm">
+      <Link href="/settings/profile">Add a phone number</Link>
+    </Button>
   );
 }
 
@@ -199,53 +164,48 @@ function ChannelsCard({ channels }: { channels: NotificationChannels }) {
   const { email, push, sms } = channels.channels;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Channels</CardTitle>
-        <p className="text-xs text-muted-foreground">
-          Set up where Luraba can reach you. Which alerts use each channel is chosen below.
-        </p>
-      </CardHeader>
-      <CardContent>
-        <ChannelRow
-          title="Email"
-          description="Sent to the email address on your account."
-          status={email.available ? "Ready" : "Not configured on this server."}
-          testChannel="email"
-          testDisabled={!email.available}
-        />
-        <ChannelRow
-          title="Push"
-          description="Browser and installed-app notifications, even when Luraba is closed."
-          status={
-            !push.available
-              ? "Not configured on this server."
-              : channels.pushSubscriptionCount > 0
-                ? `Enabled on ${channels.pushSubscriptionCount} browser${channels.pushSubscriptionCount === 1 ? "" : "s"}.`
-                : "Not enabled on any browser yet."
-          }
-          testChannel="push"
-          testDisabled={!push.available || !push.ready}
-        >
-          <PushControls channels={channels} />
-        </ChannelRow>
-        <ChannelRow
-          title="SMS"
-          description="Text messages to your phone, in international format."
-          status={
-            sms.available
-              ? sms.ready
-                ? "Ready"
-                : "Add a phone number."
-              : "No SMS provider is set up yet."
-          }
-          testChannel="sms"
-          testDisabled={!sms.available || !sms.ready}
-        >
-          <SmsControls channels={channels} />
-        </ChannelRow>
-      </CardContent>
-    </Card>
+    <SectionCard
+      title="Channels"
+      description="Set up where Luraba can reach you. Which alerts use each channel is chosen below."
+    >
+      <ChannelRow
+        title="Email"
+        description="Sent to the email address on your account."
+        status={email.available ? "Ready" : "Not configured on this server."}
+        testChannel="email"
+        testDisabled={!email.available}
+      />
+      <ChannelRow
+        title="Push"
+        description="Browser and installed-app notifications, even when Luraba is closed."
+        status={
+          !push.available
+            ? "Not configured on this server."
+            : channels.pushSubscriptionCount > 0
+              ? `Enabled on ${channels.pushSubscriptionCount} browser${channels.pushSubscriptionCount === 1 ? "" : "s"}.`
+              : "Not enabled on any browser yet."
+        }
+        testChannel="push"
+        testDisabled={!push.available || !push.ready}
+      >
+        <PushControls channels={channels} />
+      </ChannelRow>
+      <ChannelRow
+        title="SMS"
+        description="Text messages to the phone number on your profile."
+        status={
+          sms.available
+            ? sms.ready
+              ? "Ready"
+              : "Add a phone number to your profile."
+            : "No SMS provider is set up yet."
+        }
+        testChannel="sms"
+        testDisabled={!sms.available || !sms.ready}
+      >
+        <SmsControls channels={channels} />
+      </ChannelRow>
+    </SectionCard>
   );
 }
 
@@ -259,67 +219,63 @@ function AlertsCard({
   const update = useUpdateNotificationPreferencesMutation();
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Alerts</CardTitle>
-        <p className="text-xs text-muted-foreground">
-          Choose, for each alert, which channels it uses.
-        </p>
-      </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <table className="w-full min-w-[28rem] text-left text-xs">
-          <thead>
-            <tr className="text-muted-foreground">
-              <th className="pb-2 font-medium">Alert</th>
-              {NOTIFICATION_CHANNELS.map((channel) => (
-                <th key={channel} className="w-16 pb-2 text-center font-medium">
-                  {CHANNEL_LABELS[channel]}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {NOTIFICATION_CATEGORIES.map((category) => {
-              const rows = preferences.filter((preference) => preference.category === category);
-              if (rows.length === 0) return null;
+    <SectionCard
+      title="Alerts"
+      description="Choose, for each alert, which channels it uses."
+      contentClassName="overflow-x-auto"
+    >
+      <table className="w-full min-w-[28rem] text-left text-xs">
+        <thead>
+          <tr className="text-muted-foreground">
+            <th className="pb-2 font-medium">Alert</th>
+            {NOTIFICATION_CHANNELS.map((channel) => (
+              <th key={channel} className="w-16 pb-2 text-center font-medium">
+                {CHANNEL_LABELS[channel]}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {NOTIFICATION_CATEGORIES.map((category) => {
+            const rows = preferences.filter((preference) => preference.category === category);
+            if (rows.length === 0) return null;
 
-              return [
-                <tr key={category}>
-                  <th
-                    colSpan={NOTIFICATION_CHANNELS.length + 1}
-                    className="pt-4 pb-1 text-[0.68rem] font-medium uppercase tracking-[0.18em] text-muted-foreground"
-                  >
-                    {CATEGORY_LABELS[category]}
-                  </th>
-                </tr>,
-                ...rows.map((preference) => (
-                  <tr key={preference.eventType} className="border-t border-border/60">
-                    <td className="py-3 pr-3">
-                      <p className="text-sm font-medium">{preference.label}</p>
-                      <p className="text-muted-foreground">{preference.description}</p>
+            return [
+              <tr key={category}>
+                <th
+                  colSpan={NOTIFICATION_CHANNELS.length + 1}
+                  className="pt-4 pb-1 text-[0.68rem] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+                >
+                  {CATEGORY_LABELS[category]}
+                </th>
+              </tr>,
+              ...rows.map((preference) => (
+                <tr key={preference.eventType} className="border-t border-border/60">
+                  <td className="py-3 pr-3">
+                    <p className="text-sm font-medium">{preference.label}</p>
+                    <p className="text-muted-foreground">{preference.description}</p>
+                  </td>
+                  {NOTIFICATION_CHANNELS.map((channel) => (
+                    <td key={channel} className="text-center">
+                      <Switch
+                        aria-label={`${preference.label} by ${CHANNEL_LABELS[channel]}`}
+                        checked={preference.channels[channel] ?? false}
+                        disabled={!channels.channels[channel].available || update.isPending}
+                        onCheckedChange={(enabled) =>
+                          update.mutate({
+                            preferences: [{ eventType: preference.eventType, channel, enabled }],
+                          })
+                        }
+                      />
                     </td>
-                    {NOTIFICATION_CHANNELS.map((channel) => (
-                      <td key={channel} className="text-center">
-                        <Switch
-                          aria-label={`${preference.label} by ${CHANNEL_LABELS[channel]}`}
-                          checked={preference.channels[channel] ?? false}
-                          disabled={!channels.channels[channel].available || update.isPending}
-                          onCheckedChange={(enabled) =>
-                            update.mutate({
-                              preferences: [{ eventType: preference.eventType, channel, enabled }],
-                            })
-                          }
-                        />
-                      </td>
-                    ))}
-                  </tr>
-                )),
-              ];
-            })}
-          </tbody>
-        </table>
-      </CardContent>
-    </Card>
+                  ))}
+                </tr>
+              )),
+            ];
+          })}
+        </tbody>
+      </table>
+    </SectionCard>
   );
 }
 

@@ -40,12 +40,6 @@ export const channels = createAuthenticatedHandler({
   handle: ({ user }) => service.getChannels(user.id),
 });
 
-export const updateContact = createAuthenticatedHandler({
-  body: notificationsEndpoints.updateContact.body,
-  response: notificationsEndpoints.updateContact.response,
-  handle: ({ user, body }) => service.updateContact(user.id, body),
-});
-
 export const getPreferences = createAuthenticatedHandler({
   response: notificationsEndpoints.getPreferences.response,
   handle: ({ user }) => service.getPreferences(user.id),

@@ -4,6 +4,7 @@ import type {
   ImportRowKind,
   ImportSourceKind,
 } from "@luraba/contracts/imports";
+import { valueSourceKey } from "./imports.normalize";
 import type {
   DuplicateMark,
   ImportMappingRecord,
@@ -118,29 +119,38 @@ export function groupMapping(record: ImportMappingRecord | undefined): ImportMap
 }
 
 export function effectiveMapping(
-  row: Pick<ImportRowRecord, "merchantId" | "categoryId" | "tagIds" | "sourceKey">,
+  row: Pick<ImportRowRecord, "merchantId" | "categoryId" | "tagIds" | "sourceKey" | "hints">,
   mappings: ReadonlyMap<string, ImportMappingRecord>,
 ): ImportMapping {
   const group = groupMapping(mappings.get(row.sourceKey)) ?? EMPTY_MAPPING;
   const merchantId = row.merchantId ?? (group.targetType === "merchant" ? group.merchantId : null);
+
+  // What the user mapped the file's own category and tag texts to (step 3).
+  const categoryValue = row.hints.categoryValue as string | undefined;
+  const valueCategoryId = categoryValue
+    ? (mappings.get(valueSourceKey("category", categoryValue))?.categoryId ?? null)
+    : null;
+  const tagValues = (row.hints.tagValues as string[] | undefined) ?? [];
+  const valueTagIds = tagValues.flatMap(
+    (tag) => mappings.get(valueSourceKey("tag", tag))?.tagIds ?? [],
+  );
+  const tagIds = row.tagIds ?? [...new Set([...group.tagIds, ...valueTagIds])];
+
   return {
     targetType: row.merchantId ? "merchant" : group.targetType,
     merchantId,
     accountId: row.merchantId ? null : group.accountId,
     creditCardId: row.merchantId ? null : group.creditCardId,
-    categoryId: row.categoryId ?? group.categoryId,
-    tagIds: row.tagIds ?? group.tagIds,
+    categoryId: row.categoryId ?? valueCategoryId ?? group.categoryId,
+    tagIds,
   };
 }
 
 export function hintLabel(row: Pick<ImportRowRecord, "hints">): string | null {
   const movement = row.hints.movement;
-  if (movement === "investment")
-    return "Looks like a move to or from an investment. Map it to your investment account to record a transfer.";
-  if (movement === "card_payment")
-    return "Looks like a credit card payment. Map it to the card (from a bank statement) or to the paying account (from a card statement).";
-  if (movement === "card_refund")
-    return "A credit on the card that is not a payment (refund or reversal).";
+  if (movement === "investment") return "Looks like an investment move.";
+  if (movement === "card_payment") return "Looks like a card payment.";
+  if (movement === "card_refund") return "A refund or reversal.";
   return null;
 }
 
@@ -159,11 +169,9 @@ export function evaluateRow(row: ImportRowRecord, context: EvaluationContext): R
 
   const problems = (row.hints.problems as string[] | undefined) ?? [];
   for (const message of problems) error("invalid_value", message);
-  if (row.postedDate === null && problems.length === 0)
-    error("invalid_date", "The date is missing.");
-  if (row.amount === null && problems.length === 0)
-    error("invalid_amount", "The amount is missing.");
-  if (row.amount === 0) error("invalid_amount", "The amount is zero.");
+  if (row.postedDate === null && problems.length === 0) error("invalid_date", "Date is missing.");
+  if (row.amount === null && problems.length === 0) error("invalid_amount", "Amount is missing.");
+  if (row.amount === 0) error("invalid_amount", "Amount is zero.");
   if (row.amount === null || row.amount === 0 || row.postedDate === null) {
     return { kind: null, issues };
   }
@@ -176,9 +184,7 @@ export function evaluateRow(row: ImportRowRecord, context: EvaluationContext): R
   if (!context.target) {
     error(
       "no_target",
-      context.sourceKind === "credit_card"
-        ? "Choose the Luraba credit card this file belongs to."
-        : "Choose the Luraba account this file belongs to.",
+      context.sourceKind === "credit_card" ? "Choose a card." : "Choose an account.",
     );
   } else if (
     context.statementCurrency &&
@@ -186,36 +192,31 @@ export function evaluateRow(row: ImportRowRecord, context: EvaluationContext): R
   ) {
     error(
       "currency_mismatch",
-      `The file is in ${context.statementCurrency} but the chosen target uses ${context.target.currencyCode}.`,
+      `File is ${context.statementCurrency}, target is ${context.target.currencyCode}.`,
     );
   }
 
   if (context.sourceKind === "bank_account") {
     if (mapping.targetType === "account") {
-      if (!mapping.accountId) error("needs_mapping", "Choose the account this movement goes to.");
+      if (!mapping.accountId) error("needs_mapping", "Choose the account.");
       else if (mapping.accountId === context.target?.id)
-        error("same_account", "A transfer needs a different account than the one being imported.");
+        error("same_account", "Choose a different account.");
       else {
         const other = context.accounts.get(mapping.accountId);
         if (other && context.target && other.currencyCode !== context.target.currencyCode)
-          error(
-            "transfer_currency",
-            "Transfers between accounts in different currencies can't be imported yet.",
-          );
+          error("transfer_currency", "Transfers across currencies aren't supported.");
         kind = "transfer";
       }
     } else if (mapping.targetType === "credit_card") {
-      if (!mapping.creditCardId)
-        error("needs_mapping", "Choose the credit card this payment is for.");
-      else if (!outgoing)
-        error("card_payment_direction", "A credit card payment must be money going out.");
+      if (!mapping.creditCardId) error("needs_mapping", "Choose the card.");
+      else if (!outgoing) error("card_payment_direction", "A card payment must be money out.");
       else kind = "card_payment";
     } else if (movement === "investment" || movement === "card_payment") {
       error(
         "needs_mapping",
         movement === "investment"
-          ? "Investment movement: map it to an investment account, or skip the row."
-          : "Credit card payment: map it to the card, or skip the row.",
+          ? "Investment move: choose the account."
+          : "Card payment: choose the card.",
       );
     } else {
       kind = outgoing ? "expense" : "income";
@@ -223,46 +224,29 @@ export function evaluateRow(row: ImportRowRecord, context: EvaluationContext): R
   } else if (outgoing) {
     kind = "card_purchase";
     if (mapping.targetType === "account" || mapping.targetType === "credit_card")
-      error("mapping_target_mismatch", "A card purchase can only be mapped to a merchant.");
+      error("mapping_target_mismatch", "Card purchases map to merchants only.");
   } else if (movement === "card_payment" || mapping.targetType === "account") {
-    if (!mapping.accountId) error("needs_mapping", "Choose the account that paid this invoice.");
+    if (!mapping.accountId) error("needs_mapping", "Choose the paying account.");
     else kind = "card_payment";
   } else {
     kind = "unsupported";
-    warn(
-      "unsupported_refund",
-      "Refunds and reversals can't be imported yet. Skip this row; a refund that offsets a charge in the same file is skipped for you.",
-    );
+    warn("unsupported_refund", "Refunds can't be imported. Remove it.");
   }
 
   if (kind === "expense" || kind === "income" || kind === "card_purchase") {
-    if (!mapping.merchantId) warn("no_merchant", "No merchant mapped.");
     if (mapping.categoryId) {
       const type = context.categoryTypes.get(mapping.categoryId);
       const expected = kind === "income" ? "income" : "expense";
       if (type && type !== expected)
-        error(
-          "category_type",
-          `The category is an ${type} category but this row is ${expected === "income" ? "income" : "an expense"}.`,
-        );
+        error("category_type", `Category is ${type}, row is ${expected}.`);
     }
   }
-  if (kind === "card_purchase" && row.installmentNumber && row.installmentTotal) {
-    info(
-      "installment_plan",
-      `Installment ${row.installmentNumber}/${row.installmentTotal}: recorded as one purchase in ${row.installmentTotal} installments; the total is estimated from this installment and earlier ones are back-dated.`,
-    );
-  }
-
   if (row.hints.netted) {
-    info(
-      "netted",
-      "Offsets another row in this file (a charge and its reversal), so both are skipped.",
-    );
+    info("netted", "Offsets another row.");
   }
   const pairKey = numberedPairKey(row, kind, mapping, context);
   if (pairKey && context.existingPairKeys.has(pairKey)) {
-    info("duplicate", "The same movement was already imported from the other statement.");
+    info("duplicate", "Already imported from the other statement.");
   }
   const duplicate = duplicateMarkOf(row);
   if (duplicate) {

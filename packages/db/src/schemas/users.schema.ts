@@ -1,5 +1,5 @@
 import { now } from "@luraba/domain";
-import { boolean, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, date, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { currenciesTable } from "./currencies.schema.js";
 import {
   defaultPeriodEnum,
@@ -14,6 +14,11 @@ export const usersTable = pgTable("users", {
   email: varchar({ length: 255 }).notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: varchar({ length: 512 }),
+  /** E.164, e.g. +15551234567. Used for SMS notifications; null until the user adds one. */
+  phoneNumber: varchar("phone_number", { length: 20 }),
+  /** ISO 3166-1 alpha-2 country the user lives in. */
+  countryCode: varchar("country_code", { length: 2 }),
+  dateOfBirth: date("date_of_birth", { mode: "string" }),
   defaultHouseholdId: uuid("default_household_id"),
   preferredLanguage: preferredLanguageEnum("preferred_language").notNull().default("en"),
   preferredCurrency: varchar("preferred_currency", { length: 3 })

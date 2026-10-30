@@ -6,10 +6,7 @@ import {
   CreditCardIcon,
   DashboardSquare01Icon,
   GoalIcon,
-  Layers01Icon,
   Settings02Icon,
-  Store01Icon,
-  TagsIcon,
   UserGroupIcon,
   UserMultiple02Icon,
   WalletIcon,
@@ -78,29 +75,12 @@ export const mainNav: NavigationItem[] = [
     icon: GoalIcon,
     permission: PERMISSIONS.GOALS_READ,
   },
-  {
-    title: "Categories",
-    href: "/categories",
-    icon: Layers01Icon,
-    permission: PERMISSIONS.CATEGORIES_READ,
-  },
-  {
-    title: "Tags",
-    href: "/tags",
-    icon: TagsIcon,
-    permission: PERMISSIONS.TAGS_READ,
-  },
-  {
-    title: "Merchants",
-    href: "/merchants",
-    icon: Store01Icon,
-    permission: PERMISSIONS.MERCHANTS_READ,
-  },
 ];
 
 export const userMenuLinks = [
   { label: "Settings", href: "/settings", icon: Settings02Icon },
-  { label: "Households", href: "/households", icon: UserGroupIcon },
+  { label: "Household", href: "/household", icon: UserGroupIcon },
+  { label: "All households", href: "/households", icon: UserGroupIcon },
 ] as const;
 
 export function getFirstAccessibleRoute(permissions: readonly string[]): string {

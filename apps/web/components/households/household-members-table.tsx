@@ -2,7 +2,12 @@
 
 import { Delete02Icon, UserGroupIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { HouseholdMember, HouseholdRole, ListHouseholdMembersQuery } from "@luraba/contracts";
+import {
+  canManageMember,
+  type HouseholdMember,
+  type HouseholdRole,
+  type ListHouseholdMembersQuery,
+} from "@luraba/contracts";
 import { formatDate } from "@luraba/domain";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -13,23 +18,14 @@ import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { FilterFaceted } from "@/components/filters/filter-faceted";
 import { HouseholdTableToolbar } from "@/components/households/household-table-toolbar";
+import { RemoveMemberDialog } from "@/components/households/remove-member-dialog";
+import { MemberRoleControl } from "@/components/households/roles/member-role-control";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { householdMemberToUserDisplay, UserDisplay } from "@/components/users/user-display";
 import { useApiParams } from "@/hooks/use-api-params";
 import { useDataTable } from "@/hooks/use-data-table";
-import { canManageHousehold } from "@/lib/households";
-import {
-  useRemoveHouseholdMemberMutation,
-  useUpdateHouseholdMemberMutation,
-} from "@/mutations/households/use-household-mutations";
+import { useRemoveHouseholdMemberMutation } from "@/mutations/households/use-household-mutations";
 import {
   householdQueryKeys,
   useHouseholdMembersQuery,
@@ -65,20 +61,13 @@ export function HouseholdMembersTable({
   );
   const rolesQuery = useHouseholdRolesQuery();
   const roles = rolesQuery.data ?? [];
-  const roleOptions = roles;
-  const update = useUpdateHouseholdMemberMutation({
-    onSuccess: () =>
-      client.invalidateQueries({
-        queryKey: householdQueryKeys.members(householdId),
-      }),
-  });
   const remove = useRemoveHouseholdMemberMutation({
-    onSuccess: () =>
-      client.invalidateQueries({
-        queryKey: householdQueryKeys.members(householdId),
-      }),
+    onSuccess: async () => {
+      setRemoving(null);
+      await client.invalidateQueries({ queryKey: householdQueryKeys.members(householdId) });
+    },
   });
-  const manager = canManageHousehold(householdRole, roles);
+  const [removing, setRemoving] = React.useState<HouseholdMember | null>(null);
   const columns = React.useMemo<ColumnDef<HouseholdMember>[]>(
     () => [
       {
@@ -108,35 +97,11 @@ export function HouseholdMembersTable({
         accessorKey: "role",
         header: ({ column }) => <DataTableColumnHeader column={column} label="Role" />,
         cell: ({ row }) => (
-          <Select
-            disabled={!manager || row.original.userId === currentUserId}
-            value={row.original.role}
-            onValueChange={(value) =>
-              update.mutate({
-                householdId,
-                userId: row.original.userId,
-                body: { role: value as HouseholdRole },
-              })
-            }
-          >
-            <SelectTrigger
-              title={
-                row.original.userId === currentUserId
-                  ? "You cannot change your own role here"
-                  : undefined
-              }
-              className="h-7 w-28"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {roleOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MemberRoleControl
+            householdId={householdId}
+            actorRole={householdRole}
+            member={row.original}
+          />
         ),
         enableSorting: true,
       },
@@ -162,26 +127,24 @@ export function HouseholdMembersTable({
         id: "actions",
         header: "",
         enableHiding: false,
-        cell: ({ row }) => (
-          <div className="flex justify-end" data-row-action>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              disabled={!manager || row.original.userId === currentUserId}
-              title={
-                row.original.userId === currentUserId
-                  ? "You cannot remove yourself"
-                  : "Remove member"
-              }
-              onClick={() => remove.mutate({ householdId, userId: row.original.userId })}
-            >
-              <HugeiconsIcon icon={Delete02Icon} className="text-destructive" strokeWidth={2} />
-            </Button>
-          </div>
-        ),
+        cell: ({ row }) =>
+          row.original.userId !== currentUserId &&
+          canManageMember(householdRole, row.original.role) ? (
+            <div className="flex justify-end" data-row-action>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                title="Remove member"
+                aria-label={`Remove ${row.original.name}`}
+                onClick={() => setRemoving(row.original)}
+              >
+                <HugeiconsIcon icon={Delete02Icon} className="text-destructive" strokeWidth={2} />
+              </Button>
+            </div>
+          ) : null,
       },
     ],
-    [currentUserId, householdId, manager, remove, roleOptions, update],
+    [currentUserId, householdId, householdRole],
   );
   const rows = query.data?.data ?? [];
   const { table } = useDataTable({
@@ -210,7 +173,7 @@ export function HouseholdMembersTable({
         onSearchChange={params.setSearch}
         role={params.filters.roles?.[0]}
         onRoleChange={(value) => params.setFilter("roles", value ? [value] : null)}
-        roleOptions={roleOptions}
+        roleOptions={roles}
         onClear={params.clearFilters}
         hasFilters={params.hasFilters}
         placeholder="Search members..."
@@ -258,6 +221,13 @@ export function HouseholdMembersTable({
           pageSizeOptions={[10, 20, 50, 100]}
         />
       )}
+      <RemoveMemberDialog
+        open={removing !== null}
+        onOpenChange={(open) => !open && setRemoving(null)}
+        name={removing?.name ?? ""}
+        isPending={remove.isPending}
+        onConfirm={() => removing && remove.mutate({ householdId, userId: removing.userId })}
+      />
     </div>
   );
 }

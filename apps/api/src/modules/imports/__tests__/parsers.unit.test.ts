@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { normalizeRows } from "../imports.normalize";
 import { detectParser } from "../parsers/registry";
 import { decodeFileBytes, parseAmount, parseDate, parseDelimited } from "../parsers/text";
-import { bankOfx, cardOfx, interCheckingCsv, nubankCardCsv, nubankCheckingCsv } from "./fixtures";
+import { bankOfx, cardOfx } from "./fixtures";
 
 function parse(name: string, text: string) {
   const adapter = detectParser({ name, text });
@@ -67,31 +67,6 @@ describe("format adapters", () => {
     ).toBe("card_payment");
   });
 
-  it("detects and reads the three CSV layouts", () => {
-    const checking = parse("NU_1.csv", nubankCheckingCsv);
-    expect(checking.adapter.id).toBe("nubank-checking-csv");
-    expect(checking.statement.rows[0]?.amount).toBe(568214);
-    expect(checking.statement.rows[1]?.hints.movement).toBe("investment");
-    expect(checking.statement.rows[3]?.hints.paymentMethod).toBe("boleto");
-
-    const card = parse("Nubank_2026-11-05.csv", nubankCardCsv);
-    expect(card.adapter.id).toBe("nubank-card-csv");
-    expect(card.statement.rows[0]?.amount).toBe(-1290);
-    expect(card.statement.rows[2]?.amount).toBe(215095);
-
-    const inter = parse("Extrato.csv", interCheckingCsv);
-    expect(inter.adapter.id).toBe("inter-checking-csv");
-    expect(inter.statement.accountRef).toBe("30331749");
-    expect(inter.statement.balance).toEqual({ amount: 160065, date: "2026-10-29" });
-    expect(inter.statement.rows[1]?.hints.movement).toBe("investment");
-  });
-
-  it("flags unreadable values instead of dropping the row", () => {
-    const { statement } = parse("NU_1.csv", `${nubankCheckingCsv}99/99/2026,abc,id-1,Broken row\n`);
-    const broken = statement.rows.at(-1);
-    expect(broken?.problems).toHaveLength(2);
-  });
-
   it("returns no parser for unknown files", () => {
     expect(detectParser({ name: "notes.txt", text: "hello" })).toBeUndefined();
   });
@@ -109,13 +84,5 @@ describe("normalizeRows", () => {
     const bank = normalizeRows(parse("statement.ofx", bankOfx()).statement.rows);
     const coffees = bank.filter((row) => row.description.includes("COFFEE"));
     expect(new Set(coffees.map((row) => row.fingerprint)).size).toBe(2);
-  });
-
-  it("builds the same fingerprint for the same line in CSV and OFX", () => {
-    const ofx = normalizeRows(parse("card.ofx", cardOfx()).statement.rows);
-    const csv = normalizeRows(parse("Nubank_2026-11-05.csv", nubankCardCsv).statement.rows);
-    const spotifyOfx = ofx.find((row) => row.description === "Ebn*Spotify");
-    const spotifyCsv = csv.find((row) => row.description === "Ebn*Spotify");
-    expect(spotifyOfx?.fingerprint).toBe(spotifyCsv?.fingerprint);
   });
 });

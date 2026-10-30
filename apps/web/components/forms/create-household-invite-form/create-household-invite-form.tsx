@@ -1,28 +1,46 @@
 "use client";
 
-import type { CreateHouseholdInviteInput } from "@luraba/contracts";
+import {
+  type CreateHouseholdInviteInput,
+  getAssignableRoles,
+  HOUSEHOLD_ROLE_METADATA,
+  type HouseholdRole,
+} from "@luraba/contracts";
+import { Controller } from "react-hook-form";
 import { FieldInfoHint } from "@/components/forms/field-info-hint";
 import { FormItem } from "@/components/forms/form-item";
+import { RolePicker } from "@/components/households/roles/role-picker";
 import { Button } from "@/components/ui/button";
-import { useHouseholdRolesQuery } from "@/queries/households/use-households-query";
 
 import { useCreateHouseholdInviteForm } from "./use-create-household-invite-form";
 
 export function CreateHouseholdInviteForm({
+  actorRole,
   onCancel,
   onSubmit,
   isPending = false,
 }: {
+  /** The inviter's role: only the roles they may hand out are offered. */
+  actorRole: HouseholdRole;
   onCancel: () => void;
   onSubmit: (body: CreateHouseholdInviteInput) => void;
   isPending?: boolean;
 }) {
   const { form, submit } = useCreateHouseholdInviteForm({ onSubmit });
-  const rolesQuery = useHouseholdRolesQuery();
-  const roleOptions = rolesQuery.data?.filter((role) => role.canBeInvited) ?? [];
+  const roleOptions = getAssignableRoles(actorRole).filter(
+    (role) => HOUSEHOLD_ROLE_METADATA[role].canBeInvited,
+  );
 
   return (
     <form className="space-y-6" onSubmit={submit} noValidate>
+      <FormItem
+        control={form.control}
+        name="name"
+        label="Name (optional)"
+        placeholder="John Doe"
+        autoComplete="off"
+        disabled={isPending}
+      />
       <FormItem
         control={form.control}
         name="email"
@@ -38,20 +56,21 @@ export function CreateHouseholdInviteForm({
           </FieldInfoHint>
         }
       />
-      <FormItem
-        type="select"
-        control={form.control}
-        name="role"
-        label="Role"
-        options={roleOptions}
-        disabled={isPending || rolesQuery.isPending}
-        labelAdornment={
-          <FieldInfoHint>
-            Admins can manage members and invitations. Members can use the finance features allowed
-            by their household permissions.
-          </FieldInfoHint>
-        }
-      />
+      <div className="space-y-2">
+        <p className="text-sm font-medium">Role</p>
+        <Controller
+          control={form.control}
+          name="role"
+          render={({ field }) => (
+            <RolePicker
+              roles={roleOptions}
+              value={field.value}
+              onChange={field.onChange}
+              disabled={isPending}
+            />
+          )}
+        />
+      </div>
       <div className="flex flex-col gap-3 border-t border-dashed border-border pt-5 sm:flex-row sm:justify-end">
         <Button type="button" variant="ghost" onClick={onCancel} disabled={isPending}>
           Cancel

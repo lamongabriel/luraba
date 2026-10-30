@@ -17,6 +17,23 @@ export function toSourceKey(row: Pick<ParsedRow, "counterparty" | "description">
 }
 
 /**
+ * Identifies one installment plan across monthly statements without reading any text: installment
+ * `n` posted on date `d` belongs to a purchase made `n - 1` months before `d`, so every installment
+ * of a plan shares that month, the installment count and the amount, whatever the bank prints.
+ */
+export function seriesKeyFor(
+  date: string | null,
+  amount: number | null,
+  installment: { number: number; total: number } | null | undefined,
+): string | null {
+  if (!date || amount === null || !installment) return null;
+  const [year, month] = date.split("-").map(Number) as [number, number];
+  const anchor = new Date(Date.UTC(year, month - 1 - (installment.number - 1), 1));
+  const key = `${anchor.getUTCFullYear()}-${String(anchor.getUTCMonth() + 1).padStart(2, "0")}`;
+  return `plan|${key}|${installment.total}|${Math.abs(amount)}`;
+}
+
+/**
  * Computes the keys used to recognise a row on a later import:
  * - `externalKey`: the bank's id. When the file repeats an id (a charge and its IOF line share a
  *   FITID) the amount and the occurrence disambiguate, so each line stays unique.
@@ -54,11 +71,16 @@ export function normalizeRows(rows: ParsedRow[]): NormalizedRow[] {
       fingerprint = `${base}#${seen}`;
     }
 
-    const seriesKey =
-      row.installment && row.seriesBase && row.amount !== null
-        ? `${normalizeKey(row.seriesBase)}|${row.installment.total}|${Math.abs(row.amount)}`
-        : null;
+    const seriesKey = seriesKeyFor(row.date, row.amount, row.installment);
 
     return { ...row, rowIndex, sourceKey: toSourceKey(row), externalKey, fingerprint, seriesKey };
   });
+}
+
+/**
+ * Mapping key of a value the file uses for a category or a tag ("Groceries" -> a Luraba category).
+ * Prefixed so it never collides with the merchant keys, which are unprefixed.
+ */
+export function valueSourceKey(field: "category" | "tag", value: string): string {
+  return `${field}:${normalizeKey(value).slice(0, MAX_KEY_LENGTH) || "(blank)"}`;
 }

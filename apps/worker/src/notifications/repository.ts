@@ -1,5 +1,4 @@
 import {
-  notificationContactsTable,
   notificationDeliveriesTable,
   notificationsTable,
   pushSubscriptionsTable,
@@ -31,33 +30,31 @@ export async function getNotification(notificationId: string) {
 
 export async function getRecipient(userId: string): Promise<Recipient | undefined> {
   const [user] = await db
-    .select({ id: usersTable.id, email: usersTable.email, name: usersTable.name })
+    .select({
+      id: usersTable.id,
+      email: usersTable.email,
+      name: usersTable.name,
+      phoneNumber: usersTable.phoneNumber,
+    })
     .from(usersTable)
     .where(eq(usersTable.id, userId))
     .limit(1);
   if (!user) return undefined;
 
-  const [contact, subscriptions] = await Promise.all([
-    db
-      .select({ phoneNumber: notificationContactsTable.phoneNumber })
-      .from(notificationContactsTable)
-      .where(eq(notificationContactsTable.userId, userId))
-      .limit(1),
-    db
-      .select({
-        endpoint: pushSubscriptionsTable.endpoint,
-        p256dh: pushSubscriptionsTable.p256dh,
-        auth: pushSubscriptionsTable.auth,
-      })
-      .from(pushSubscriptionsTable)
-      .where(eq(pushSubscriptionsTable.userId, userId)),
-  ]);
+  const subscriptions = await db
+    .select({
+      endpoint: pushSubscriptionsTable.endpoint,
+      p256dh: pushSubscriptionsTable.p256dh,
+      auth: pushSubscriptionsTable.auth,
+    })
+    .from(pushSubscriptionsTable)
+    .where(eq(pushSubscriptionsTable.userId, userId));
 
   return {
     userId: user.id,
     email: user.email,
     name: user.name,
-    phoneNumber: contact[0]?.phoneNumber ?? null,
+    phoneNumber: user.phoneNumber,
     pushSubscriptions: subscriptions,
   };
 }

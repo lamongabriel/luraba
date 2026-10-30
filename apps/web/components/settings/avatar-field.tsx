@@ -7,6 +7,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { ClickToUpload } from "@/components/uploads/click-to-upload";
 import { ImageCropperDialog } from "@/components/uploads/image-cropper-dialog";
 import { uploadContentUrl } from "@/lib/uploads";
 import { useUpdateProfileMutation } from "@/mutations/settings/use-settings-mutations";
@@ -26,13 +27,15 @@ export function AvatarField({
   userId,
   name,
   image,
+  children,
 }: {
   userId: string;
   name: string;
   image: string | null;
+  /** Shown beside the photo, e.g. the name and email. */
+  children?: React.ReactNode;
 }) {
   const client = useQueryClient();
-  const inputRef = React.useRef<HTMLInputElement>(null);
   const [picked, setPicked] = React.useState<File | null>(null);
   const config = useUploadConfigQuery();
   const library = useUploadsQuery({ scope: "user", kind: "image", sort: "createdAt" });
@@ -77,40 +80,28 @@ export function AvatarField({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-4">
-        <Avatar size="lg" className="size-16">
-          <AvatarImage src={image ?? undefined} alt="" />
-          <AvatarFallback>{name.slice(0, 2).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div className="space-x-2">
+        <ClickToUpload
+          rounded="full"
+          busy={busy}
+          label={image ? "Replace photo" : "Upload photo"}
+          onFile={setPicked}
+        >
+          <Avatar className="size-20">
+            <AvatarImage src={image ?? undefined} alt="" />
+            <AvatarFallback className="text-lg">{name.slice(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+        </ClickToUpload>
+        {children}
+        {image ? (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            isLoading={busy}
-            onClick={() => inputRef.current?.click()}
+            disabled={busy}
+            onClick={() => profile.mutate({ name, image: null })}
           >
-            Upload photo
+            Remove
           </Button>
-          {image ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={busy}
-              onClick={() => profile.mutate({ name, image: null })}
-            >
-              Remove
-            </Button>
-          ) : null}
-        </div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
-          hidden
-          onChange={(event) => {
-            setPicked(event.target.files?.[0] ?? null);
-            event.target.value = "";
-          }}
-        />
+        ) : null}
       </div>
 
       {library.data && library.data.data.length > 0 ? (

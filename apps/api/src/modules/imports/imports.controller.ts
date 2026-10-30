@@ -42,6 +42,21 @@ export const remove = createHouseholdHandler({
   handle: ({ household, params }) => service.deleteImport(household, params.id),
 });
 
+export const preview = createHouseholdHandler({
+  params: e.preview.params,
+  query: e.preview.query,
+  response: e.preview.response,
+  handle: ({ household, params, query }) =>
+    service.previewImport(household, params.id, query.limit),
+});
+
+export const saveColumns = createHouseholdHandler({
+  params: e.saveColumns.params,
+  body: e.saveColumns.body,
+  response: e.saveColumns.response,
+  handle: ({ household, params, body }) => service.saveColumns(household, params.id, body),
+});
+
 export const rows = createHouseholdHandler({
   params: e.rows.params,
   query: e.rows.query,
@@ -64,7 +79,8 @@ export const groups = createHouseholdHandler({
   params: e.groups.params,
   query: e.groups.query,
   response: e.groups.response,
-  handle: ({ household, params, query }) => service.listGroups(household, params.id, query.filter),
+  handle: ({ household, params, query }) =>
+    service.listGroups(household, params.id, query.filter, query.field),
 });
 
 export const saveMapping = createHouseholdHandler({
@@ -89,13 +105,16 @@ export const reconciliation = createHouseholdHandler({
 
 /** `POST /imports`: multipart upload (a plain handler, like uploads; the response is `importBatchSchema`). */
 export async function upload(req: Request, res: Response): Promise<void> {
-  if (!req.file) throw new ValidationError("Attach the statement file in the `file` field");
-  const parserId =
-    typeof req.body?.parserId === "string" && req.body.parserId ? req.body.parserId : undefined;
+  if (!req.file) throw new ValidationError("Attach the file in the `file` field");
+  const field = (name: string) => {
+    const value = req.body?.[name];
+    return typeof value === "string" && value ? value : undefined;
+  };
   const batch = await service.createImport(req.household as NonNullable<Request["household"]>, {
     fileName: req.file.originalname,
     bytes: req.file.buffer,
-    parserId,
+    accountId: field("accountId"),
+    creditCardId: field("creditCardId"),
   });
   sendCreated(res, importBatchSchema.parse(batch));
 }

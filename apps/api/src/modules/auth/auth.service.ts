@@ -5,7 +5,9 @@ import type {
   AuthSession,
   SessionUser,
   UpdateUserPreferencesInput,
+  UpdateUserProfileInput,
   UserPreferences,
+  UserProfile,
 } from "@luraba/contracts/auth";
 import { formatISODateTime } from "@luraba/domain";
 import { env } from "@/config/env";
@@ -21,6 +23,9 @@ function mapUserRecordToSessionUser(user: UserRecord): SessionUser {
     id: user.id,
     name: user.name,
     email: user.email,
+    phoneNumber: user.phoneNumber,
+    countryCode: user.countryCode,
+    dateOfBirth: user.dateOfBirth,
     defaultHouseholdId: user.defaultHouseholdId,
     preferences: {
       language: user.preferredLanguage,
@@ -114,4 +119,14 @@ export async function updateMyPreferences(
   const preferences = await authRepository.updateUserPreferences(userId, dto);
   if (!preferences) throw new NotFoundError("User");
   return preferences;
+}
+
+export async function updateMyProfile(
+  userId: string,
+  dto: UpdateUserProfileInput,
+): Promise<UserProfile> {
+  await findRequiredUser(userId);
+  const profile = await authRepository.updateUserProfile(userId, dto);
+  if (!profile) throw new NotFoundError("User");
+  return profile;
 }

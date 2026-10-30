@@ -7,15 +7,15 @@ import type {
   HouseholdSummary,
   ListHouseholdsQuery,
 } from "@luraba/contracts";
-import { PERMISSIONS } from "@luraba/contracts";
+import { hasHouseholdPermission, PERMISSIONS } from "@luraba/contracts";
 import { formatDate } from "@luraba/domain";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
-import { CurrencyDisplay } from "@/components/display";
+import { CurrencyDisplay, HouseholdMark } from "@/components/display";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { PageHeader } from "@/components/finance/page-header";
@@ -49,6 +49,7 @@ function HouseholdIdentity({
 }) {
   return (
     <div className="flex min-w-56 items-center gap-3">
+      <HouseholdMark household={household} size="md" />
       <span className="min-w-0">
         <span className="flex items-center gap-2">
           {isCurrent ? (
@@ -69,7 +70,9 @@ function HouseholdIdentity({
 
 export function HouseholdsDirectory() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const activeHouseholdId = useAuthSessionStore((state) => state.activeHouseholdId);
+  const setActiveHouseholdId = useAuthSessionStore((state) => state.setActiveHouseholdId);
   const can = useCan();
   const params = useApiParams({
     pagination: true,
@@ -151,13 +154,19 @@ export function HouseholdsDirectory() {
           const household = row.original;
           return (
             <div className="flex justify-end gap-1" data-row-action>
-              <Button asChild variant="ghost" size="sm" className="gap-1.5">
-                <Link href={`/households/${household.id}`}>
-                  Details
-                  <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} />
-                </Link>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => {
+                  setActiveHouseholdId(household.id);
+                  router.push("/household");
+                }}
+              >
+                Open
+                <HugeiconsIcon icon={ArrowRight01Icon} strokeWidth={2} />
               </Button>
-              {household.role === "owner" ? (
+              {hasHouseholdPermission(household.role, PERMISSIONS.HOUSEHOLD_UPDATE) ? (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -177,7 +186,7 @@ export function HouseholdsDirectory() {
         },
       },
     ],
-    [activeHouseholdId, roles],
+    [activeHouseholdId, roles, router, setActiveHouseholdId],
   );
 
   const rows = query.data?.data ?? [];

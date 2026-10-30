@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { SectionCard } from "@/components/section/section-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,65 +17,49 @@ export function SecuritySettings() {
   const sessions = useRevokeOtherSessionsMutation();
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Password</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Use a strong password you do not reuse elsewhere.
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="current-password">Current password</Label>
-            <Input
-              id="current-password"
-              type="password"
-              value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="new-password">New password</Label>
-            <Input
-              id="new-password"
-              type="password"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-            />
-          </div>
-          <div className="flex justify-end">
-            <Button
-              isLoading={password.isPending}
-              onClick={() =>
-                password.mutate({
-                  currentPassword,
-                  newPassword,
-                  revokeOtherSessions: false,
-                })
-              }
-            >
-              Change password
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Sessions</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Sign out any other devices using your account.
-          </p>
-        </CardHeader>
-        <CardContent>
+      <SectionCard
+        title="Password"
+        description="Use a strong password you do not reuse elsewhere."
+        contentClassName="space-y-4"
+      >
+        <div className="space-y-2">
+          <Label htmlFor="current-password">Current password</Label>
+          <Input
+            id="current-password"
+            type="password"
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="new-password">New password</Label>
+          <Input
+            id="new-password"
+            type="password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+          />
+        </div>
+        <div className="flex justify-end">
           <Button
-            variant="outline"
-            isLoading={sessions.isPending}
-            onClick={() => sessions.mutate()}
+            isLoading={password.isPending}
+            onClick={() =>
+              password.mutate({
+                currentPassword,
+                newPassword,
+                revokeOtherSessions: false,
+              })
+            }
           >
-            Sign out other sessions
+            Change password
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </SectionCard>
+      <SectionCard title="Sessions" description="Sign out any other devices using your account.">
+        <Button variant="outline" isLoading={sessions.isPending} onClick={() => sessions.mutate()}>
+          Sign out other sessions
+        </Button>
+      </SectionCard>
     </div>
   );
 }

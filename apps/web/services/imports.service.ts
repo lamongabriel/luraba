@@ -6,6 +6,7 @@ import {
   importsEndpoints,
   type ListImportGroupsQuery,
   type ListImportsQuery,
+  type SaveImportColumnsInput,
   type SaveImportMappingInput,
   type StartImportInput,
   type UpdateImportInput,
@@ -26,10 +27,13 @@ export type ListImportRowsParams = {
 };
 
 /** Sends the statement as multipart/form-data (the one non-JSON call; the response is a contract). */
-export async function uploadImport(file: File, parserId?: string) {
+export type ImportUploadTarget = { accountId: string } | { creditCardId: string };
+
+export async function uploadImport(file: File, target: ImportUploadTarget) {
   const form = new FormData();
   form.append("file", file, file.name);
-  if (parserId) form.append("parserId", parserId);
+  if ("accountId" in target) form.append("accountId", target.accountId);
+  else form.append("creditCardId", target.creditCardId);
 
   const response = await lurabaApiClient.post<unknown>("/imports", form);
   const envelope = apiSuccessResponseSchema(importBatchSchema).safeParse(response.data);
@@ -53,6 +57,10 @@ export const deleteImport = (id: string) =>
   requestContract(importsEndpoints.delete, { params: { id } });
 export const listImportRows = (id: string, query: ListImportRowsParams = {}) =>
   requestContract(importsEndpoints.rows, { params: { id }, query });
+export const getImportPreview = (id: string, limit = 20) =>
+  requestContract(importsEndpoints.preview, { params: { id }, query: { limit } });
+export const saveImportColumns = (id: string, body: SaveImportColumnsInput) =>
+  requestContract(importsEndpoints.saveColumns, { params: { id }, body });
 export const updateImportRows = (id: string, body: UpdateImportRowsInput) =>
   requestContract(importsEndpoints.updateRows, { params: { id }, body });
 export const listImportGroups = (id: string, query: ListImportGroupsQuery = {}) =>

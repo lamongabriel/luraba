@@ -14,9 +14,9 @@ import { CategorySheet } from "@/components/categories/category-sheet";
 import { DeleteCategoryModal } from "@/components/categories/delete-category-modal";
 import { DataTableSearchInput } from "@/components/data-table/data-table-search-input";
 import { FilterFaceted } from "@/components/filters/filter-faceted";
-import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
 import { PERMISSIONS, PermissionButton, useCan } from "@/components/permissions";
+import { SectionCard } from "@/components/section/section-card";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -316,9 +316,10 @@ export default function CategoriesPage() {
   }
 
   return (
-    <InternalPageLayout
+    <SectionCard
+      contentClassName="space-y-4"
       title="Categories"
-      subtitle="Group your spending and income to see where money goes."
+      description="Group your spending and income to see where money goes."
       actions={
         <PermissionButton
           permission={PERMISSIONS.CATEGORIES_CREATE}
@@ -362,6 +363,6 @@ export default function CategoriesPage() {
         onOpenChange={deleteDisclosure.setIsOpen}
         category={deleteDisclosure.entity}
       />
-    </InternalPageLayout>
+    </SectionCard>
   );
 }

@@ -6,9 +6,9 @@ import type { Tag } from "@luraba/contracts";
 import { MAX_PER_PAGE } from "@luraba/contracts";
 import * as React from "react";
 import { DataTableSearchInput } from "@/components/data-table/data-table-search-input";
-import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
 import { PERMISSIONS, PermissionButton, useCan } from "@/components/permissions";
+import { SectionCard } from "@/components/section/section-card";
 import { DeleteTagModal } from "@/components/tags/delete-tag-modal";
 import { TagSheet } from "@/components/tags/tag-sheet";
 import { Button } from "@/components/ui/button";
@@ -140,9 +140,10 @@ export default function TagsPage() {
   }
 
   return (
-    <InternalPageLayout
+    <SectionCard
+      contentClassName="space-y-4"
       title="Tags"
-      subtitle="Label transactions across categories to find them later."
+      description="Label transactions across categories to find them later."
       actions={
         <PermissionButton
           permission={PERMISSIONS.TAGS_CREATE}
@@ -174,6 +175,6 @@ export default function TagsPage() {
         onOpenChange={deleteDisclosure.setIsOpen}
         tag={deleteDisclosure.entity}
       />
-    </InternalPageLayout>
+    </SectionCard>
   );
 }

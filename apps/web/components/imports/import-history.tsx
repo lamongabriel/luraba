@@ -1,6 +1,7 @@
 "use client";
 
-import type { ImportBatch } from "@luraba/contracts";
+import { type ImportBatch, PERMISSIONS } from "@luraba/contracts";
+import { useCan } from "@/components/permissions/use-can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useDeleteImportMutation } from "@/mutations/imports/use-import-mutations";
@@ -18,6 +19,7 @@ const STATUS_LABEL: Record<ImportBatch["status"], string> = {
 export function ImportHistory({ onOpen }: { onOpen: (batch: ImportBatch) => void }) {
   const query = useImportsQuery({ perPage: 10 });
   const remove = useDeleteImportMutation();
+  const canDelete = useCan()(PERMISSIONS.IMPORTS_DELETE);
   const batches = query.data?.data ?? [];
   if (batches.length === 0) return null;
 
@@ -46,15 +48,17 @@ export function ImportHistory({ onOpen }: { onOpen: (batch: ImportBatch) => void
               <Button type="button" size="sm" variant="ghost" onClick={() => onOpen(batch)}>
                 {batch.status === "draft" ? "Continue" : "View"}
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                disabled={isImportRunning(batch) || remove.isPending}
-                onClick={() => remove.mutate(batch.id)}
-              >
-                Remove
-              </Button>
+              {canDelete ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={isImportRunning(batch) || remove.isPending}
+                  onClick={() => remove.mutate(batch.id)}
+                >
+                  Remove
+                </Button>
+              ) : null}
             </div>
           </li>
         ))}

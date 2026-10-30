@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { importColumnMappingSchema } from "./columns.js";
 
 export const importSourceKindSchema = z.enum(["bank_account", "credit_card"]);
 export const importBatchStatusSchema = z.enum([
@@ -8,6 +9,7 @@ export const importBatchStatusSchema = z.enum([
   "completed",
   "failed",
 ]);
+export const importBatchFormatSchema = z.enum(["table", "statement"]);
 export const importRowKindSchema = z.enum([
   "expense",
   "income",
@@ -63,6 +65,10 @@ export const importBatchSchema = z.object({
   status: importBatchStatusSchema,
   parserId: z.string(),
   parserLabel: z.string(),
+  /** `table`: CSV or Excel, columns are mapped in step 2. `statement`: OFX, fixed fields. */
+  format: importBatchFormatSchema,
+  /** The confirmed column mapping; null until step 2 is done (always null for statements). */
+  columnMapping: importColumnMappingSchema.nullable(),
   sourceKind: importSourceKindSchema,
   fileName: z.string(),
   fileSize: z.number().int(),
@@ -76,8 +82,6 @@ export const importBatchSchema = z.object({
   warnings: z.array(z.string()),
   targetAccountId: z.uuid().nullable(),
   targetCreditCardId: z.uuid().nullable(),
-  /** The target used the last time a file with the same account reference was imported. */
-  suggestedTarget: z.object({ type: z.enum(["account", "credit_card"]), id: z.uuid() }).nullable(),
   rowCount: z.number().int(),
   processedCount: z.number().int(),
   createdCount: z.number().int(),
@@ -117,6 +121,8 @@ export const importRowSchema = z.object({
   outcome: importRowOutcomeSchema.nullable(),
   outcomeMessage: z.string().nullable(),
 });
+
+export const importValueFieldSchema = z.enum(["merchant", "category", "tag"]);
 
 export const importGroupSchema = z.object({
   sourceKey: z.string(),
@@ -172,6 +178,8 @@ export const importReconciliationSchema = z.object({
   notes: z.array(z.string()),
 });
 
+export type ImportValueField = z.output<typeof importValueFieldSchema>;
+export type ImportBatchFormat = z.output<typeof importBatchFormatSchema>;
 export type ImportParser = z.output<typeof importParserSchema>;
 export type ImportBatch = z.output<typeof importBatchSchema>;
 export type ImportRow = z.output<typeof importRowSchema>;

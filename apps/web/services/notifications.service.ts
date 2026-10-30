@@ -9,7 +9,6 @@ import {
   notificationsEndpoints,
   type PushSubscriptionInput,
   type SendTestNotificationInput,
-  type UpdateNotificationContactInput,
   type UpdateNotificationPreferencesInput,
 } from "@luraba/contracts";
 import { requestContract } from "@/services/contract-client.service";
@@ -38,12 +37,6 @@ export function deleteNotification(id: string): Promise<void> {
 
 export function getNotificationChannels(): Promise<NotificationChannelsResult> {
   return requestContract(notificationsEndpoints.channels, {});
-}
-
-export function updateNotificationContact(
-  input: UpdateNotificationContactInput,
-): Promise<NotificationChannelsResult> {
-  return requestContract(notificationsEndpoints.updateContact, { body: input });
 }
 
 export function getNotificationPreferences(): Promise<NotificationPreferencesResult> {

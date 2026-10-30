@@ -316,6 +316,41 @@
       "when": 1789450200000,
       "tag": "0044_investment_imports",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1789536600000,
+      "tag": "0045_import_wizard",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1789623000000,
+      "tag": "0046_import_record_origin",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1789709400000,
+      "tag": "0047_household_image",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1789795800000,
+      "tag": "0048_user_profile",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1789882200000,
+      "tag": "0049_invite_name",
+      "breakpoints": true
     }
   ]
 }

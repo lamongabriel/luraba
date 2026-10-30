@@ -1,6 +1,6 @@
 "use client";
 
-import type { Product } from "@luraba/contracts";
+import { PERMISSIONS, type Product } from "@luraba/contracts";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProductMark } from "@/components/display";
 import { EntityImageField } from "@/components/uploads/entity-image-field";
@@ -22,6 +22,7 @@ export function ProductImageField({ product }: { product: Product }) {
   return (
     <EntityImageField
       targetType="product"
+      permission={PERMISSIONS.PRODUCTS_UPDATE}
       targetId={product.id}
       attachmentRole="image"
       noun="picture"

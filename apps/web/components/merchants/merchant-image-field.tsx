@@ -1,6 +1,6 @@
 "use client";
 
-import type { Merchant } from "@luraba/contracts";
+import { type Merchant, PERMISSIONS } from "@luraba/contracts";
 import { useQueryClient } from "@tanstack/react-query";
 import { MerchantMark } from "@/components/display";
 import { EntityImageField } from "@/components/uploads/entity-image-field";
@@ -22,6 +22,7 @@ export function MerchantImageField({ merchant }: { merchant: Merchant }) {
   return (
     <EntityImageField
       targetType="merchant"
+      permission={PERMISSIONS.MERCHANTS_UPDATE}
       targetId={merchant.id}
       attachmentRole="logo"
       noun="logo"

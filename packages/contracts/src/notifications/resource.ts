@@ -22,7 +22,7 @@ export const notificationUnreadCountSchema = z.object({ count: z.number().int().
 export const notificationChannelStateSchema = z.object({
   /** The server can deliver on this channel right now. */
   available: z.boolean(),
-  /** The user has what the channel needs (a phone number, a registered browser). */
+  /** The user has what the channel needs (a phone number on the profile, a registered browser). */
   ready: z.boolean(),
 });
 
@@ -33,7 +33,6 @@ export const notificationChannelsSchema = z.object({
     push: notificationChannelStateSchema,
     sms: notificationChannelStateSchema,
   }),
-  phoneNumber: z.string().nullable(),
   /** VAPID application server key the browser needs to subscribe; null when push is off. */
   pushPublicKey: z.string().nullable(),
   pushSubscriptionCount: z.number().int().nonnegative(),

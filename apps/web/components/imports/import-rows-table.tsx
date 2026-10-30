@@ -22,18 +22,16 @@ import { IssueList, RowStatusBadge } from "./import-status";
 
 export const ROW_FILTERS: Array<{ value: ImportFilter; label: string }> = [
   { value: "all", label: "All" },
-  { value: "attention", label: "Needs attention" },
-  { value: "invalid", label: "Blocked" },
-  { value: "unmapped", label: "Unmapped" },
-  { value: "duplicates", label: "Duplicates" },
-  { value: "skipped", label: "Skipped" },
+  { value: "invalid", label: "Needs a fix" },
+  { value: "duplicates", label: "Already in Luraba" },
+  { value: "skipped", label: "Removed" },
 ];
 
 export const RESULT_FILTERS: Array<{ value: ImportFilter; label: string }> = [
   { value: "all", label: "All" },
   { value: "created", label: "Imported" },
-  { value: "duplicates", label: "Duplicates" },
-  { value: "skipped", label: "Skipped" },
+  { value: "duplicates", label: "Already in Luraba" },
+  { value: "skipped", label: "Removed" },
   { value: "failed", label: "Failed" },
 ];
 
@@ -84,7 +82,7 @@ export function ImportRowsTable({
   currencyCode: string;
   filter: ImportFilter;
   perPage?: number;
-  /** Show the skip toggle and the edit button (step 2). */
+  /** Show the remove toggle and the edit button (review step). */
   editable: boolean;
   onEditRow?: (row: ImportRow) => void;
 }) {
@@ -118,11 +116,11 @@ export function ImportRowsTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-24">Date</TableHead>
-              <TableHead>Bank description</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead>Becomes</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead>Status</TableHead>
-              {editable ? <TableHead className="w-24" /> : null}
+              {editable ? <TableHead className="w-40" /> : null}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -188,7 +186,7 @@ export function ImportRowsTable({
                             })
                           }
                         >
-                          {row.skip ? "Include" : "Skip"}
+                          {row.skip ? "Restore" : "Remove"}
                         </Button>
                         <Button
                           type="button"

@@ -44,13 +44,15 @@ async function cropToBlob(src: string, area: Area): Promise<Blob> {
   );
 }
 
-/** Pan and zoom a picture inside a round frame, then hand back the cropped square. */
+/** Pan and zoom a picture inside a round or square frame, then hand back the cropped square. */
 export function ImageCropperDialog({
   file,
   onCancel,
   onCropped,
   isSaving = false,
   title = "Crop your photo",
+  shape = "round",
+  confirmLabel = "Use photo",
 }: {
   /** The picked image; the dialog is open while this is set. */
   file: File | null;
@@ -58,6 +60,9 @@ export function ImageCropperDialog({
   onCropped: (blob: Blob) => void;
   isSaving?: boolean;
   title?: string;
+  /** The frame shown while cropping; the saved image is always a square. */
+  shape?: "round" | "square";
+  confirmLabel?: string;
 }) {
   const [src, setSrc] = React.useState<string | null>(null);
   const [crop, setCrop] = React.useState({ x: 0, y: 0 });
@@ -101,7 +106,7 @@ export function ImageCropperDialog({
               crop={crop}
               zoom={zoom}
               aspect={1}
-              cropShape="round"
+              cropShape={shape === "round" ? "round" : "rect"}
               showGrid={false}
               onCropChange={setCrop}
               onZoomChange={setZoom}
@@ -123,7 +128,7 @@ export function ImageCropperDialog({
             Cancel
           </Button>
           <Button onClick={save} isLoading={isSaving} disabled={!area}>
-            Use photo
+            {confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

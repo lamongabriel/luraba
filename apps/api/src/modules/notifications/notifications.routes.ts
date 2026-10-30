@@ -14,7 +14,6 @@ router.post(getEndpointRouterPath(notificationsEndpoints.markAllRead), controlle
 router.post(getEndpointRouterPath(notificationsEndpoints.markRead), controller.markRead);
 router.delete(getEndpointRouterPath(notificationsEndpoints.delete), controller.deleteNotification);
 router.get(getEndpointRouterPath(notificationsEndpoints.channels), controller.channels);
-router.patch(getEndpointRouterPath(notificationsEndpoints.updateContact), controller.updateContact);
 router.get(getEndpointRouterPath(notificationsEndpoints.getPreferences), controller.getPreferences);
 router.patch(
   getEndpointRouterPath(notificationsEndpoints.updatePreferences),

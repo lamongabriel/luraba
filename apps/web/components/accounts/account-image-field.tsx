@@ -1,6 +1,6 @@
 "use client";
 
-import type { AccountDetails } from "@luraba/contracts";
+import { type AccountDetails, PERMISSIONS } from "@luraba/contracts";
 import { useQueryClient } from "@tanstack/react-query";
 import { AccountMark } from "@/components/display";
 import { EntityImageField } from "@/components/uploads/entity-image-field";
@@ -20,6 +20,7 @@ export function AccountImageField({ account }: { account: AccountDetails }) {
   return (
     <EntityImageField
       targetType="account"
+      permission={PERMISSIONS.ACCOUNTS_UPDATE}
       targetId={account.id}
       uploadId={account.imageUploadId}
       preview={<AccountMark account={account} size="lg" />}

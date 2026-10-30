@@ -34,6 +34,12 @@ export const importBatchesTable = pgTable(
     /** `draft` (mapping), `queued`, `importing`, `completed`, `failed`. */
     status: varchar({ length: 16 }).notNull().default("draft"),
     parserId: varchar("parser_id", { length: 64 }).notNull(),
+    /** `table` (CSV/Excel: the user maps columns) or `statement` (OFX: fixed fields). */
+    format: varchar({ length: 16 }).notNull().default("statement"),
+    /** The file as plain text cells (header row + data rows), kept so the column mapping can be re-applied. */
+    rawTable: jsonb("raw_table").$type<{ headers: string[]; rows: string[][] } | null>(),
+    /** The column mapping last applied to `rawTable`; null until the user confirms step 2. */
+    columnMapping: jsonb("column_mapping").$type<Record<string, unknown> | null>(),
     /** `bank_account` or `credit_card`: what the file describes. */
     sourceKind: varchar("source_kind", { length: 16 }).notNull(),
     fileName: varchar("file_name", { length: 255 }).notNull(),
@@ -169,6 +175,10 @@ export const importRecordsTable = pgTable(
     externalId: text("external_id"),
     fingerprint: text(),
     seriesKey: text("series_key"),
+    /** The description exactly as the file wrote it, so a created transaction can be traced back. */
+    originalName: text("original_name"),
+    installmentNumber: integer("installment_number"),
+    installmentTotal: integer("installment_total"),
     /** Same-money movement seen from two statements (transfers, card payments). */
     pairKey: text("pair_key"),
     transactionId: uuid("transaction_id"),
@@ -187,6 +197,32 @@ export const importRecordsTable = pgTable(
       table.householdId,
       table.targetId,
       table.fingerprint,
+    ),
+  ],
+);
+
+/** A saved column mapping per account or card: the next file with the same layout arrives mapped. */
+export const importTemplatesTable = pgTable(
+  "import_templates",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => householdsTable.id, { onDelete: "cascade" }),
+    /** `account` or `credit_card`. */
+    targetType: varchar("target_type", { length: 16 }).notNull(),
+    targetId: uuid("target_id").notNull(),
+    /** Normalized header names joined together: a template applies when the file has the same layout. */
+    headerSignature: text("header_signature").notNull(),
+    mapping: jsonb().$type<Record<string, unknown>>().notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("import_templates_target_unique").on(
+      table.householdId,
+      table.targetType,
+      table.targetId,
     ),
   ],
 );

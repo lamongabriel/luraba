@@ -217,6 +217,9 @@ export async function processImportBatch(batchId: string): Promise<void> {
           externalId: row.externalId,
           fingerprint: row.fingerprint,
           seriesKey: row.seriesKey,
+          originalName: row.description,
+          installmentNumber: row.installmentNumber,
+          installmentTotal: row.installmentTotal,
           pairKey,
           transactionId: created.transactionId,
         });

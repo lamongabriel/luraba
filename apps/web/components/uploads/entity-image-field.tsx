@@ -1,8 +1,12 @@
 "use client";
 
+import type { PermissionInput } from "@luraba/contracts";
 import * as React from "react";
 import { toast } from "sonner";
+import { useCan } from "@/components/permissions/use-can";
 import { Button } from "@/components/ui/button";
+import { ClickToUpload } from "@/components/uploads/click-to-upload";
+import { ImageCropperDialog } from "@/components/uploads/image-cropper-dialog";
 import {
   useCreateAttachmentMutation,
   useDeleteUploadMutation,
@@ -11,7 +15,7 @@ import {
 import { useUploadConfigQuery } from "@/queries/uploads/use-uploads-query";
 
 /**
- * Upload / replace / remove one picture on a record (an account photo, a merchant logo).
+ * Change one picture on a record by clicking it (`ClickToUpload`), or remove it (an account photo, a merchant logo).
  * Uploads to the household, attaches it to the record (`targetType` + `role` from the attachment
  * registry), then calls `onChange` so the caller can point the record's field at the upload.
  * Removing calls `onChange(null)` and deletes the old file.
@@ -22,25 +26,41 @@ export function EntityImageField({
   attachmentRole = "image",
   uploadId,
   preview,
+  children,
   noun = "picture",
+  permission,
   onChange,
 }: {
-  targetType: "account" | "merchant" | "product";
+  targetType: "account" | "merchant" | "product" | "household";
   targetId: string;
   attachmentRole?: string;
   uploadId: string | null;
   /** The current look of the record, e.g. `<AccountMark />`. */
   preview: React.ReactNode;
+  /** Shown beside the picture, e.g. the record's name. */
+  children?: React.ReactNode;
   noun?: string;
+  /** Needed to change the picture; without it the picture is shown but not clickable. */
+  permission?: PermissionInput;
   onChange: (uploadId: string | null) => Promise<unknown>;
 }) {
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const can = useCan();
   const config = useUploadConfigQuery();
   const upload = useUploadFileMutation();
   const attach = useCreateAttachmentMutation();
   const remove = useDeleteUploadMutation();
   const [saving, setSaving] = React.useState(false);
+  const [picked, setPicked] = React.useState<File | null>(null);
   const busy = saving || upload.isPending || attach.isPending || remove.isPending;
+
+  if (permission && !can(permission)) {
+    return (
+      <div className="flex items-center gap-4">
+        {preview}
+        {children}
+      </div>
+    );
+  }
 
   if (config.data && !config.data.enabled) {
     return (
@@ -50,10 +70,14 @@ export function EntityImageField({
     );
   }
 
-  async function pick(file: File) {
+  async function pick(blob: Blob) {
     setSaving(true);
     try {
-      const created = await upload.mutateAsync({ file, scope: "household", filename: file.name });
+      const created = await upload.mutateAsync({
+        file: blob,
+        scope: "household",
+        filename: "picture.webp",
+      });
       await attach.mutateAsync({
         uploadId: created.id,
         targetType,
@@ -61,6 +85,7 @@ export function EntityImageField({
         role: attachmentRole,
       });
       await onChange(created.id);
+      setPicked(null);
       toast.success(`${noun[0]?.toUpperCase()}${noun.slice(1)} updated`);
     } catch {
       // The mutations already toasted the failure.
@@ -83,33 +108,27 @@ export function EntityImageField({
 
   return (
     <div className="flex items-center gap-4">
-      {preview}
-      <div className="space-x-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          isLoading={busy}
-          onClick={() => inputRef.current?.click()}
-        >
-          {uploadId ? `Replace ${noun}` : `Upload ${noun}`}
+      <ClickToUpload
+        busy={busy}
+        label={uploadId ? `Replace ${noun}` : `Upload ${noun}`}
+        onFile={setPicked}
+      >
+        {preview}
+      </ClickToUpload>
+      {children}
+      {uploadId ? (
+        <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={clear}>
+          Remove
         </Button>
-        {uploadId ? (
-          <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={clear}>
-            Remove
-          </Button>
-        ) : null}
-      </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/png,image/jpeg,image/webp,image/gif"
-        hidden
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          event.target.value = "";
-          if (file) void pick(file);
-        }}
+      ) : null}
+      <ImageCropperDialog
+        file={picked}
+        shape="square"
+        title={`Crop ${noun}`}
+        confirmLabel={`Use ${noun}`}
+        onCancel={() => setPicked(null)}
+        onCropped={(blob) => void pick(blob)}
+        isSaving={busy}
       />
     </div>
   );

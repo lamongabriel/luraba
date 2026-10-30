@@ -1,6 +1,5 @@
 import type { Database } from "@luraba/db";
 import {
-  notificationContactsTable,
   notificationDeliveriesTable,
   notificationPreferencesTable,
   notificationsTable,
@@ -36,15 +35,15 @@ export function createNotificationStore(db: Database) {
       if (userIds.length === 0) return [];
       const ids = [...userIds];
 
-      const [users, contacts, subscriptionCounts] = await Promise.all([
+      const [users, subscriptionCounts] = await Promise.all([
         db
-          .select({ id: usersTable.id, email: usersTable.email })
+          .select({
+            id: usersTable.id,
+            email: usersTable.email,
+            phoneNumber: usersTable.phoneNumber,
+          })
           .from(usersTable)
           .where(inArray(usersTable.id, ids)),
-        db
-          .select()
-          .from(notificationContactsTable)
-          .where(inArray(notificationContactsTable.userId, ids)),
         db
           .select({ userId: pushSubscriptionsTable.userId, value: count() })
           .from(pushSubscriptionsTable)
@@ -52,13 +51,12 @@ export function createNotificationStore(db: Database) {
           .groupBy(pushSubscriptionsTable.userId),
       ]);
 
-      const phoneByUser = new Map(contacts.map((contact) => [contact.userId, contact.phoneNumber]));
       const pushByUser = new Map(subscriptionCounts.map((row) => [row.userId, row.value]));
 
       return users.map((user) => ({
         userId: user.id,
         email: user.email,
-        phoneNumber: phoneByUser.get(user.id) ?? null,
+        phoneNumber: user.phoneNumber,
         pushSubscriptionCount: pushByUser.get(user.id) ?? 0,
       }));
     },

@@ -6,6 +6,8 @@ import {
   type GetUserPreferencesResult,
   type UpdateUserPreferencesInput,
   type UpdateUserPreferencesResult,
+  type UpdateUserProfileInput,
+  type UpdateUserProfileResult,
 } from "@luraba/contracts";
 import type { AxiosInstance } from "axios";
 import { lurabaApiClient, lurabaApiPassiveClient } from "@/api/luraba-api";
@@ -33,4 +35,8 @@ export function updateUserPreferences(
   input: UpdateUserPreferencesInput,
 ): Promise<UpdateUserPreferencesResult> {
   return requestContract(authEndpoints.updatePreferences, { body: input });
+}
+
+export function updateUserProfile(input: UpdateUserProfileInput): Promise<UpdateUserProfileResult> {
+  return requestContract(authEndpoints.updateProfile, { body: input });
 }

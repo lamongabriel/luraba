@@ -3,6 +3,7 @@ import {
   importMappingsTable,
   importRecordsTable,
   importRowsTable,
+  importTemplatesTable,
 } from "@luraba/db/schemas/imports.schema";
 import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
@@ -13,6 +14,7 @@ import type {
   ImportMappingRecord,
   ImportRecordRecord,
   ImportRowRecord,
+  ImportTemplateRecord,
 } from "./imports.types";
 
 class ImportBatchesRepository extends HouseholdScopedRepository<
@@ -39,33 +41,6 @@ class ImportBatchesRepository extends HouseholdScopedRepository<
         .where(where),
     ]);
     return { rows, total: count?.total ?? 0 };
-  }
-
-  /** The target used last time for the same account reference and parser. */
-  async findLastTarget(
-    context: HouseholdContext,
-    parserId: string,
-    ref: string,
-    excludeId: string,
-  ) {
-    const rows = await db
-      .select({
-        accountId: importBatchesTable.targetAccountId,
-        cardId: importBatchesTable.targetCreditCardId,
-      })
-      .from(importBatchesTable)
-      .where(
-        and(
-          eq(importBatchesTable.householdId, context.householdId),
-          eq(importBatchesTable.sourceAccountRef, ref),
-          eq(importBatchesTable.parserId, parserId),
-          sql`${importBatchesTable.id} <> ${excludeId}`,
-          sql`(${importBatchesTable.targetAccountId} is not null or ${importBatchesTable.targetCreditCardId} is not null)`,
-        ),
-      )
-      .orderBy(desc(importBatchesTable.createdAt))
-      .limit(1);
-    return rows[0];
   }
 }
 
@@ -109,6 +84,53 @@ class ImportMappingsRepository extends HouseholdScopedRepository<
 }
 
 export const importMappingsRepository = new ImportMappingsRepository();
+
+class ImportTemplatesRepository extends HouseholdScopedRepository<
+  ImportTemplateRecord,
+  typeof importTemplatesTable.$inferInsert
+> {
+  constructor() {
+    super(importTemplatesTable);
+  }
+
+  async findForTarget(context: HouseholdContext, targetType: string, targetId: string) {
+    const rows = await db
+      .select()
+      .from(importTemplatesTable)
+      .where(
+        and(
+          eq(importTemplatesTable.householdId, context.householdId),
+          eq(importTemplatesTable.targetType, targetType),
+          eq(importTemplatesTable.targetId, targetId),
+        ),
+      );
+    return rows[0];
+  }
+
+  /** One template per account or card: saving again replaces it. */
+  async upsert(
+    context: HouseholdContext,
+    values: Omit<typeof importTemplatesTable.$inferInsert, "householdId">,
+  ) {
+    await db
+      .insert(importTemplatesTable)
+      .values({ ...values, householdId: context.householdId })
+      .onConflictDoUpdate({
+        target: [
+          importTemplatesTable.householdId,
+          importTemplatesTable.targetType,
+          importTemplatesTable.targetId,
+        ],
+        set: {
+          headerSignature: values.headerSignature,
+          mapping: values.mapping,
+          updatedAt: new Date(),
+        },
+      });
+  }
+}
+
+export const importTemplatesRepository = new ImportTemplatesRepository();
 
 /** The idempotency ledger. Has a household column, so it is scoped like any other table. */
 class ImportRecordsRepository extends HouseholdScopedRepository<
@@ -195,6 +217,11 @@ export const importRowsRepository = {
     for (let i = 0; i < rows.length; i += 500) {
       await db.insert(importRowsTable).values(rows.slice(i, i + 500));
     }
+  },
+
+  /** Drops every staged row of a draft batch (the column mapping changed and rows are rebuilt). */
+  async deleteAll(batchId: string) {
+    await db.delete(importRowsTable).where(eq(importRowsTable.batchId, batchId));
   },
 
   async listAll(batchId: string): Promise<ImportRowRecord[]> {

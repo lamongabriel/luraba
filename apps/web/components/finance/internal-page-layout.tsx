@@ -12,6 +12,8 @@ export function InternalPageLayout({
   subtitle,
   back,
   actions,
+  compact,
+  leading,
   createdBy,
   children,
   className,
@@ -20,6 +22,9 @@ export function InternalPageLayout({
   subtitle: React.ReactNode;
   back?: PageBackLink;
   actions?: React.ReactNode;
+  /** Smaller title block, for pages inside a section menu (Household). */
+  compact?: boolean;
+  leading?: React.ReactNode;
   /** A record's `createdByUserId`; when given (even null) the page shows who created it. */
   createdBy?: string | null;
   children: React.ReactNode;
@@ -27,7 +32,14 @@ export function InternalPageLayout({
 }) {
   return (
     <PageReveal className={cn("min-w-0 max-w-full space-y-5", className)}>
-      <PageHeader title={title} subtitle={subtitle} back={back} actions={actions} />
+      <PageHeader
+        title={title}
+        subtitle={subtitle}
+        back={back}
+        actions={actions}
+        compact={compact}
+        leading={leading}
+      />
       {createdBy !== undefined ? (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           Created by <MemberDisplay userId={createdBy} size="xs" />

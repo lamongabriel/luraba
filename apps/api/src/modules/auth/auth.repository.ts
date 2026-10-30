@@ -1,4 +1,9 @@
-import type { UpdateUserPreferencesInput, UserPreferences } from "@luraba/contracts/auth";
+import type {
+  UpdateUserPreferencesInput,
+  UpdateUserProfileInput,
+  UserPreferences,
+  UserProfile,
+} from "@luraba/contracts/auth";
 import { usersTable } from "@luraba/db/schemas/users.schema";
 import { now } from "@luraba/domain";
 import { eq } from "drizzle-orm";
@@ -66,6 +71,24 @@ class AuthRepository extends Repository<UserRecord> {
       dateFormat: row.preferredDateFormat,
       preferredPeriod: row.preferredPeriod,
       preferredTheme: row.preferredTheme,
+    };
+  }
+
+  async updateUserProfile(
+    id: string,
+    dto: UpdateUserProfileInput,
+  ): Promise<UserProfile | undefined> {
+    const row = await this.update(id, {
+      phoneNumber: dto.phoneNumber,
+      countryCode: dto.countryCode,
+      dateOfBirth: dto.dateOfBirth,
+    });
+    if (!row) return undefined;
+
+    return {
+      phoneNumber: row.phoneNumber,
+      countryCode: row.countryCode,
+      dateOfBirth: row.dateOfBirth,
     };
   }
 }

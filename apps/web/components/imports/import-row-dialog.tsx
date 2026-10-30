@@ -15,10 +15,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NumberInput } from "@/components/ui/masked-input";
+import { Switch } from "@/components/ui/switch";
 import { useUpdateImportRowsMutation } from "@/mutations/imports/use-import-mutations";
 import { MerchantPicker } from "./import-pickers";
 
-/** Overrides for one row. Leaving a field empty keeps following the mapping of its bank name. */
+/** Overrides for one row. Leaving a field empty keeps following the mapping from step 3. */
 export function ImportRowDialog({
   batchId,
   row,
@@ -33,6 +35,9 @@ export function ImportRowDialog({
   const [categoryId, setCategoryId] = React.useState("");
   const [tagIds, setTagIds] = React.useState<string[]>([]);
   const [description, setDescription] = React.useState("");
+  const [isInstallment, setIsInstallment] = React.useState(false);
+  const [installmentNumber, setInstallmentNumber] = React.useState("");
+  const [installmentTotal, setInstallmentTotal] = React.useState("");
 
   React.useEffect(() => {
     if (!row) return;
@@ -40,9 +45,17 @@ export function ImportRowDialog({
     setCategoryId(row.categoryId ?? "");
     setTagIds(row.tagIds ?? []);
     setDescription(row.descriptionOverride ?? "");
+    setIsInstallment(Boolean(row.installmentTotal));
+    setInstallmentNumber(row.installmentNumber ? String(row.installmentNumber) : "");
+    setInstallmentTotal(row.installmentTotal ? String(row.installmentTotal) : "");
   }, [row]);
 
   if (!row) return null;
+
+  const number = Number(installmentNumber);
+  const total = Number(installmentTotal);
+  const installmentValid =
+    !isInstallment || (Number.isInteger(number) && total >= 2 && number >= 1 && number <= total);
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
@@ -50,7 +63,7 @@ export function ImportRowDialog({
         <DialogHeader>
           <DialogTitle>Edit this row</DialogTitle>
           <DialogDescription>
-            Only for this row. To change every row with the same bank name, use the mapping above.
+            Only for this row. To change every row with the same name, go back to step 3.
           </DialogDescription>
         </DialogHeader>
         <p className="rounded-lg bg-muted px-3 py-2 text-xs break-words">{row.description}</p>
@@ -63,6 +76,39 @@ export function ImportRowDialog({
               placeholder={row.description}
               onChange={(event) => setDescription(event.target.value)}
             />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Switch
+                id="row-installment"
+                checked={isInstallment}
+                onCheckedChange={setIsInstallment}
+                aria-label="Installment purchase"
+              />
+              <Label htmlFor="row-installment">Installment purchase</Label>
+            </div>
+            {isInstallment ? (
+              <div className="flex items-center gap-2">
+                <NumberInput
+                  aria-label="Installment number"
+                  value={installmentNumber}
+                  onValueChange={setInstallmentNumber}
+                  placeholder="4"
+                  className="w-20"
+                />
+                <span className="text-xs text-muted-foreground">of</span>
+                <NumberInput
+                  aria-label="Number of installments"
+                  value={installmentTotal}
+                  onValueChange={setInstallmentTotal}
+                  placeholder="12"
+                  className="w-20"
+                />
+                <span className="text-xs text-muted-foreground">
+                  All installments cost the same; earlier ones are added too.
+                </span>
+              </div>
+            ) : null}
           </div>
           <div className="space-y-1">
             <Label htmlFor="row-merchant">Merchant</Label>
@@ -100,7 +146,7 @@ export function ImportRowDialog({
           </Button>
           <Button
             type="button"
-            disabled={update.isPending}
+            disabled={update.isPending || !installmentValid}
             onClick={() =>
               update.mutate(
                 {
@@ -111,6 +157,7 @@ export function ImportRowDialog({
                     categoryId: categoryId || null,
                     tagIds: tagIds.length > 0 ? tagIds : null,
                     descriptionOverride: description.trim() || null,
+                    installment: isInstallment ? { number, total } : null,
                   },
                 },
                 { onSuccess: () => onOpenChange(false) },

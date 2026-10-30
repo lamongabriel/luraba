@@ -55,16 +55,16 @@ export async function detectDefaults(
 
   for (const row of rows) {
     if (row.externalId && externalIds.has(row.externalId)) {
-      marks.set(row.id, { level: "exact", message: "Already imported (same bank id)." });
+      marks.set(row.id, { level: "exact", message: "Already imported (same ID)." });
     } else if (row.fingerprint && fingerprints.has(row.fingerprint)) {
       marks.set(row.id, {
         level: "exact",
-        message: "Already imported (same date, amount and description).",
+        message: "Already imported.",
       });
     } else if (row.seriesKey && seriesKeys.has(row.seriesKey)) {
       marks.set(row.id, {
         level: "exact",
-        message: `Installment ${row.installmentNumber}/${row.installmentTotal} belongs to a plan that was already imported.`,
+        message: `Installment plan already imported.`,
       });
     }
     if (marks.has(row.id)) consume(row);
@@ -75,7 +75,7 @@ export async function detectDefaults(
     if (consume(row)) {
       marks.set(row.id, {
         level: "possible",
-        message: "Luraba already has a transaction with the same date and amount on this account.",
+        message: "Same date and amount already in Luraba.",
       });
     }
   }
@@ -92,7 +92,7 @@ export async function detectDefaults(
         ]);
     }
     for (const row of rows) {
-      if (row.hints.movement !== "card_refund" || row.amount === null || row.amount <= 0) continue;
+      if (row.hints.movement === "card_payment" || row.amount === null || row.amount <= 0) continue;
       const candidates = charges.get(`${iso(row.postedDate)}|${row.amount}`);
       const chargeId = candidates?.pop();
       if (chargeId) {

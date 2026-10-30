@@ -1,3 +1,4 @@
+import { canAssignRole, canManageMember } from "@luraba/contracts";
 import type {
   AcceptHouseholdInviteResult,
   Household,
@@ -23,6 +24,7 @@ import { currenciesRepository } from "@/modules/currencies/currencies.repository
 import { fxService } from "@/modules/fx/fx.service";
 import { mailService } from "@/modules/mail/mail.service";
 import { renderHouseholdInvitation } from "@/modules/mail/mail.templates";
+import { assertHouseholdImageUpload } from "@/modules/uploads/uploads.guards";
 import * as uploadsService from "@/modules/uploads/uploads.service";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
@@ -49,13 +51,6 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-function canManageRole(
-  actorRole: HouseholdContext["role"],
-  targetRole: HouseholdContext["role"],
-): boolean {
-  return actorRole === "owner" || targetRole !== "owner";
-}
-
 function inviteExpiresAt(): Date {
   return addMilliseconds(now(), INVITATION_LIFETIME_MS);
 }
@@ -71,6 +66,7 @@ function mapHousehold(
     id: record.id,
     name: record.name,
     description: record.description ?? null,
+    imageUploadId: record.imageUploadId ?? null,
     defaultCurrencyId: record.defaultCurrencyId,
     countryCode: record.countryCode,
     timezone: record.timezone,
@@ -108,6 +104,7 @@ function mapHouseholdInvite(record: HouseholdInviteListRow): HouseholdInvite {
     householdId: record.householdId,
     householdName: record.householdName,
     email: record.email,
+    name: record.inviteeName,
     role: record.role,
     status: record.status,
     computedStatus: householdInviteComputedStatusSchema.parse(record.computedStatus),
@@ -299,6 +296,14 @@ export async function updateHousehold(
   const current = await householdsRepository.findHouseholdById(householdId);
   if (!current) throw new NotFoundError("Household");
 
+  if (body.imageUploadId) {
+    await assertHouseholdImageUpload(
+      { ...context, householdId },
+      body.imageUploadId,
+      "imageUploadId",
+    );
+  }
+
   if (body.defaultCurrencyId) {
     const currency = await currenciesRepository.findByCode(body.defaultCurrencyId);
     if (!currency) throw new NotFoundError("Currency");
@@ -359,8 +364,12 @@ export async function updateMemberRole(
 ): Promise<HouseholdMember> {
   const target = await householdsRepository.findMembership(householdId, userId);
   if (!target) throw new NotFoundError("Household member");
-  if (!canManageRole(context.role, target.role) || !canManageRole(context.role, body.role)) {
-    throw new ForbiddenError("You do not have permission to manage this member role");
+  const isSelf = userId === context.userId;
+  if (!canManageMember(context.role, target.role, { self: isSelf })) {
+    throw new ForbiddenError("You do not have permission to manage this member");
+  }
+  if (!canAssignRole(context.role, body.role)) {
+    throw new ForbiddenError("You do not have permission to give this role");
   }
   if (target.role === "owner" && body.role !== "owner") {
     if ((await householdsRepository.countOwners(householdId)) <= 1) {
@@ -385,7 +394,7 @@ export async function removeMember(
 ): Promise<void> {
   const target = await householdsRepository.findMembership(householdId, userId);
   if (!target) throw new NotFoundError("Household member");
-  if (!canManageRole(context.role, target.role)) {
+  if (!canManageMember(context.role, target.role, { self: userId === context.userId })) {
     throw new ForbiddenError("You do not have permission to remove this member");
   }
   if (target.role === "owner" && (await householdsRepository.countOwners(householdId)) <= 1) {
@@ -399,7 +408,7 @@ export async function createInvite(
   householdId: string,
   body: CreateHouseholdInviteValues,
 ): Promise<HouseholdInvite> {
-  if (!canManageRole(context.role, body.role)) {
+  if (!canAssignRole(context.role, body.role)) {
     throw new ForbiddenError("You do not have permission to invite users with this role");
   }
 
@@ -419,6 +428,7 @@ export async function createInvite(
 
   const created = pending
     ? await householdsRepository.refreshInvite(pending.id, {
+        inviteeName: body.name || null,
         role: body.role,
         invitedByUserId: context.userId,
         tokenHash: token.tokenHash,
@@ -427,6 +437,7 @@ export async function createInvite(
     : await householdsRepository.createInvite({
         householdId,
         email,
+        inviteeName: body.name || null,
         role: body.role,
         invitedByUserId: context.userId,
         tokenHash: token.tokenHash,
@@ -571,8 +582,15 @@ export async function rejectInviteById(userEmail: string, inviteId: string): Pro
   }
 }
 
+/** An invitation for a role you may not give is not yours to resend, refresh or cancel. */
+function assertCanManageInvite(context: HouseholdContext, inviteRole: HouseholdContext["role"]) {
+  if (!canAssignRole(context.role, inviteRole)) {
+    throw new ForbiddenError("You do not have permission to manage this invitation");
+  }
+}
+
 async function rotateManagedInvite(
-  _context: HouseholdContext,
+  context: HouseholdContext,
   householdId: string,
   inviteId: string,
 ) {
@@ -580,6 +598,7 @@ async function rotateManagedInvite(
   if (!invite || invite.householdId !== householdId || invite.status !== "pending") {
     throw new NotFoundError("Household invite");
   }
+  assertCanManageInvite(context, invite.role);
 
   const token = issueInvitationToken();
   const refreshed = await householdsRepository.refreshInvite(inviteId, {
@@ -611,10 +630,13 @@ export async function resendInvite(
 }
 
 export async function cancelInvite(
-  _context: HouseholdContext,
+  context: HouseholdContext,
   householdId: string,
   inviteId: string,
 ): Promise<void> {
+  const invite = await householdsRepository.findInviteById(inviteId);
+  if (!invite || invite.householdId !== householdId) throw new NotFoundError("Household invite");
+  assertCanManageInvite(context, invite.role);
   if (!(await householdsRepository.cancelInvite(householdId, inviteId))) {
     throw new NotFoundError("Household invite");
   }

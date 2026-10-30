@@ -46,6 +46,8 @@ router.delete(
   requireAccess({ permission: PERMISSIONS.IMPORTS_DELETE }),
   controller.remove,
 );
+router.get(path(e.preview), read, controller.preview);
+router.put(path(e.saveColumns), write, controller.saveColumns);
 router.get(path(e.rows), read, controller.rows);
 router.patch(path(e.updateRows), write, controller.updateRows);
 router.get(path(e.groups), read, controller.groups);

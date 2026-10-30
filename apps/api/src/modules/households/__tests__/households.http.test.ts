@@ -1,17 +1,28 @@
 import { householdInvitesTable } from "@luraba/db/schemas/households.schema";
 import { usersTable } from "@luraba/db/schemas/users.schema";
+import { createMemoryStorage } from "@luraba/storage";
 import { eq } from "drizzle-orm";
 import request from "supertest";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import app from "@/app";
 import { db } from "@/db";
 import { mailService } from "@/modules/mail/mail.service";
+import { setStorageForTesting } from "@/modules/uploads/uploads.storage";
 import {
   createAccessTokenForUser,
   createAuthenticatedContext,
   createAuthHeaders,
 } from "@/test/auth";
 import { createHouseholdMembership, createUser } from "@/test/factories";
+
+const PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "base64",
+);
+const PDF = Buffer.from("%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n");
+
+beforeAll(() => setStorageForTesting(createMemoryStorage()));
+afterAll(() => setStorageForTesting(undefined));
 
 function tokenFromUrl(url: string): string {
   const token = new URL(url).pathname.split("/").at(-1);
@@ -488,5 +499,34 @@ describe("households routes", () => {
       .delete(`/api/v1/households/${second.household.id}/invites/${created.body.data.id}`)
       .set(createAuthHeaders(second.token, second.household.id))
       .expect(404);
+  });
+  it("PATCH /api/v1/households/:id sets and clears the household image", async () => {
+    const owner = await createAuthenticatedContext();
+    const headers = createAuthHeaders(owner.token, owner.household.id);
+    const image = await request(app)
+      .post("/api/v1/uploads?scope=household")
+      .set(headers)
+      .attach("file", PNG, { filename: "home.png", contentType: "image/png" });
+    const pdf = await request(app)
+      .post("/api/v1/uploads?scope=household")
+      .set(headers)
+      .attach("file", PDF, { filename: "doc.pdf", contentType: "application/pdf" });
+    const url = `/api/v1/households/${owner.household.id}`;
+
+    const rejected = await request(app)
+      .patch(url)
+      .set(headers)
+      .send({ imageUploadId: pdf.body.data.id });
+    expect(rejected.status).toBe(422);
+
+    const set = await request(app)
+      .patch(url)
+      .set(headers)
+      .send({ imageUploadId: image.body.data.id });
+    expect(set.status).toBe(200);
+    expect(set.body.data.imageUploadId).toBe(image.body.data.id);
+
+    const cleared = await request(app).patch(url).set(headers).send({ imageUploadId: null });
+    expect(cleared.body.data.imageUploadId).toBeNull();
   });
 });

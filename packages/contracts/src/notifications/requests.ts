@@ -21,16 +21,6 @@ export const updateNotificationPreferencesBodySchema = z.object({
     .max(200),
 });
 
-/** E.164: "+" followed by up to 15 digits, first digit non-zero. */
-export const phoneNumberSchema = z
-  .string()
-  .trim()
-  .regex(/^\+[1-9]\d{6,14}$/u, "Use international format, for example +5511999999999");
-
-export const updateNotificationContactBodySchema = z.object({
-  phoneNumber: phoneNumberSchema.nullable(),
-});
-
 export const pushSubscriptionBodySchema = z.object({
   endpoint: z.url().max(2048),
   keys: z.object({
@@ -52,7 +42,6 @@ export type ListNotificationsQuery = z.input<typeof listNotificationsQuerySchema
 export type UpdateNotificationPreferencesInput = z.input<
   typeof updateNotificationPreferencesBodySchema
 >;
-export type UpdateNotificationContactInput = z.input<typeof updateNotificationContactBodySchema>;
 export type PushSubscriptionInput = z.input<typeof pushSubscriptionBodySchema>;
 export type PushUnsubscribeInput = z.input<typeof pushUnsubscribeBodySchema>;
 export type SendTestNotificationInput = z.input<typeof sendTestNotificationBodySchema>;

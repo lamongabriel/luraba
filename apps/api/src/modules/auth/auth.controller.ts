@@ -31,3 +31,9 @@ export const updateMyPreferences = createAuthenticatedHandler({
   response: authEndpoints.updatePreferences.response,
   handle: ({ user, body }) => authService.updateMyPreferences(user.id, body),
 });
+
+export const updateMyProfile = createAuthenticatedHandler({
+  body: authEndpoints.updateProfile.body,
+  response: authEndpoints.updateProfile.response,
+  handle: ({ user, body }) => authService.updateMyProfile(user.id, body),
+});

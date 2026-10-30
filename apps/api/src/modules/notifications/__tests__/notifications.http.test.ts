@@ -156,22 +156,23 @@ describe("notifications routes", () => {
     expect(notified).toBe(0);
   });
 
-  it("validates and stores the phone number, and reports channel state", async () => {
+  it("reports SMS as ready once the profile has a phone number", async () => {
     const { token } = await createAuthenticatedContext();
 
-    const invalid = await request(app)
-      .patch("/api/v1/notifications/contact")
-      .set(createAuthHeaders(token))
-      .send({ phoneNumber: "11999999999" });
-    expect(invalid.status).toBe(422);
+    const before = await request(app)
+      .get("/api/v1/notifications/channels")
+      .set(createAuthHeaders(token));
+    expect(before.body.data.channels.sms.ready).toBe(false);
 
-    const valid = await request(app)
-      .patch("/api/v1/notifications/contact")
+    await request(app)
+      .patch("/api/v1/auth/me/profile")
       .set(createAuthHeaders(token))
-      .send({ phoneNumber: "+5511999999999" });
-    expect(valid.status).toBe(200);
-    expect(valid.body.data.phoneNumber).toBe("+5511999999999");
-    expect(valid.body.data.channels.sms).toEqual({ available: false, ready: true });
+      .send({ phoneNumber: "+15551234567" });
+
+    const after = await request(app)
+      .get("/api/v1/notifications/channels")
+      .set(createAuthHeaders(token));
+    expect(after.body.data.channels.sms).toEqual({ available: false, ready: true });
   });
 
   it("refuses to test a channel that is not configured on the server", async () => {

@@ -23,14 +23,14 @@ export function InlineCategoryCell({
   lookups: TransactionLookups;
   row: TransactionFeedRow;
 }) {
-  const { isPending, update } = useTransactionInlineUpdates(row);
+  const { canUpdate, isPending, update } = useTransactionInlineUpdates(row);
   const category = lookups.categories.find((item) => item.id === row.categoryId);
 
   if (row.originType === "transfer") {
     return <TransactionTypeDisplay type="transfer" />;
   }
 
-  if (!isInlineEditable(row)) {
+  if (!canUpdate || !isInlineEditable(row)) {
     return category ? (
       <CategoryDisplay category={category} />
     ) : (

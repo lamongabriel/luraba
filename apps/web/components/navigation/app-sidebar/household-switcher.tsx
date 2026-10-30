@@ -5,6 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { HouseholdContext, HouseholdSummary, User } from "@luraba/contracts";
 import Link from "next/link";
 import * as React from "react";
+import { HouseholdMark } from "@/components/display";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,17 +40,6 @@ interface HouseholdSwitcherProps {
   onHouseholdChange?: (householdId: string) => void;
 }
 
-function getInitials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0] ?? "")
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
-
 function createFallbackDescription(household: HouseholdWorkspace) {
   return `${household.defaultCurrencyId} budgeting for ${household.countryCode} in ${household.timezone.replaceAll("_", " ")}.`;
 }
@@ -70,6 +60,7 @@ function mergeHouseholds(
     id: initialHousehold.id,
     name: initialHousehold.name,
     description: existing?.description ?? "Primary household workspace.",
+    imageUploadId: existing?.imageUploadId ?? null,
     role: initialHousehold.role,
     createdByUserId: existing?.createdByUserId ?? initialHousehold.id,
     createdAt: existing?.createdAt ?? FALLBACK_HOUSEHOLD_TIMESTAMP,
@@ -129,8 +120,6 @@ export function HouseholdSwitcher({
     return null;
   }
 
-  const initials = getInitials(selectedHousehold.name);
-
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -140,15 +129,11 @@ export function HouseholdSwitcher({
               size="lg"
               className="h-11 rounded-xl border border-sidebar-border/70 bg-card/80 px-2.5 py-2 hover:bg-accent/60"
             >
-              <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Typography
-                  as="span"
-                  variant="small"
-                  className="text-[0.62rem] font-semibold text-primary-foreground"
-                >
-                  {initials}
-                </Typography>
-              </div>
+              <HouseholdMark
+                household={selectedHousehold}
+                size="md"
+                className="size-7 rounded-lg"
+              />
 
               <div className="min-w-0 flex-1 text-left">
                 <Typography
@@ -198,15 +183,7 @@ export function HouseholdSwitcher({
                   value={household.id}
                   className="items-center gap-2.5 rounded-none px-3 py-3 first:mt-1"
                 >
-                  <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                    <Typography
-                      as="span"
-                      variant="small"
-                      className="text-[0.62rem] font-semibold text-primary-foreground"
-                    >
-                      {getInitials(household.name)}
-                    </Typography>
-                  </div>
+                  <HouseholdMark household={household} size="md" className="rounded-lg" />
 
                   <div className="min-w-0 flex-1">
                     <Typography

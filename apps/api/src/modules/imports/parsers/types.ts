@@ -11,6 +11,10 @@ export type RowHints = {
   movement?: RowMovement;
   /** Luraba payment method code ("pix", "boleto"...). Used when available for the currency. */
   paymentMethod?: string;
+  /** The file's own category text (table imports), mapped to a Luraba category in step 3. */
+  categoryValue?: string;
+  /** The file's own tag texts (table imports), each mapped to a Luraba tag in step 3. */
+  tagValues?: string[];
 };
 
 export type ParsedRow = {

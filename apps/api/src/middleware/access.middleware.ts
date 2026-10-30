@@ -63,8 +63,11 @@ async function resolveHousehold(
   options: AccessOptions,
 ): Promise<NonNullable<Request["household"]>> {
   const user = await authenticateRequest(req);
+  // A household named in the route is the one being acted on, so access is decided by the caller's
+  // role *there*; the header only picks the active household for routes that name none. Letting
+  // the header win would authorize a request with the caller's role in some other household.
   const requestedHouseholdId =
-    getHouseholdIdFromHeader(req) ?? getHouseholdIdFromRoute(req, options.householdParam);
+    getHouseholdIdFromRoute(req, options.householdParam) ?? getHouseholdIdFromHeader(req);
 
   if (
     req.household &&

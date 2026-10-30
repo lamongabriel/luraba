@@ -1,7 +1,6 @@
 import type { NotificationChannel } from "@luraba/contracts/notifications";
 import { householdMembersTable } from "@luraba/db/schemas/households.schema";
 import {
-  notificationContactsTable,
   notificationPreferencesTable,
   notificationsTable,
   pushSubscriptionsTable,
@@ -33,26 +32,16 @@ export async function upsertPreferences(
     });
 }
 
-// ─── Contact & push subscriptions ────────────────────────────────────────
+// ─── Phone (from the user profile) & push subscriptions ────────────────────────────────────────
 
 export async function getPhoneNumber(userId: string): Promise<string | null> {
   const [row] = await db
-    .select({ phoneNumber: notificationContactsTable.phoneNumber })
-    .from(notificationContactsTable)
-    .where(eq(notificationContactsTable.userId, userId))
+    .select({ phoneNumber: usersTable.phoneNumber })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
     .limit(1);
 
   return row?.phoneNumber ?? null;
-}
-
-export async function setPhoneNumber(userId: string, phoneNumber: string | null): Promise<void> {
-  await db
-    .insert(notificationContactsTable)
-    .values({ userId, phoneNumber })
-    .onConflictDoUpdate({
-      target: notificationContactsTable.userId,
-      set: { phoneNumber, updatedAt: sql`now()` },
-    });
 }
 
 export async function countPushSubscriptions(userId: string): Promise<number> {

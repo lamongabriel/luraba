@@ -7,11 +7,11 @@ import { MAX_PER_PAGE } from "@luraba/contracts";
 import * as React from "react";
 import { DataTableSearchInput } from "@/components/data-table/data-table-search-input";
 import { MerchantDisplay } from "@/components/display";
-import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { DeleteMerchantModal } from "@/components/merchants/delete-merchant-modal";
 import { MerchantSheet } from "@/components/merchants/merchant-sheet";
 import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
 import { PERMISSIONS, PermissionButton, useCan } from "@/components/permissions";
+import { SectionCard } from "@/components/section/section-card";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -138,9 +138,10 @@ export default function MerchantsPage() {
   }
 
   return (
-    <InternalPageLayout
+    <SectionCard
+      contentClassName="space-y-4"
       title="Merchants"
-      subtitle="The shops and services you pay, with their logos."
+      description="The shops and services you pay, with their logos."
       actions={
         <PermissionButton
           permission={PERMISSIONS.MERCHANTS_CREATE}
@@ -172,6 +173,6 @@ export default function MerchantsPage() {
         onOpenChange={deleteDisclosure.setIsOpen}
         merchant={deleteDisclosure.entity}
       />
-    </InternalPageLayout>
+    </SectionCard>
   );
 }

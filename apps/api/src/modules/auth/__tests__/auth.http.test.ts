@@ -14,6 +14,44 @@ describe("auth routes", () => {
     return token;
   }
 
+  it("PATCH /api/v1/auth/me/profile validates, stores and clears profile details", async () => {
+    const { token } = await createAuthenticatedContext();
+    const headers = createAuthHeaders(token);
+
+    const invalid = await request(app)
+      .patch("/api/v1/auth/me/profile")
+      .set(headers)
+      .send({ phoneNumber: "5551234567" });
+    expect(invalid.status).toBe(422);
+
+    const future = await request(app)
+      .patch("/api/v1/auth/me/profile")
+      .set(headers)
+      .send({ dateOfBirth: "2999-01-01" });
+    expect(future.status).toBe(422);
+
+    const saved = await request(app)
+      .patch("/api/v1/auth/me/profile")
+      .set(headers)
+      .send({ phoneNumber: "+15551234567", countryCode: "us", dateOfBirth: "1990-04-12" });
+    expect(saved.status).toBe(200);
+    expect(saved.body.data).toEqual({
+      phoneNumber: "+15551234567",
+      countryCode: "US",
+      dateOfBirth: "1990-04-12",
+    });
+
+    const me = await request(app).get("/api/v1/auth/me").set(headers);
+    expect(me.body.data.user.phoneNumber).toBe("+15551234567");
+
+    const cleared = await request(app)
+      .patch("/api/v1/auth/me/profile")
+      .set(headers)
+      .send({ phoneNumber: null });
+    expect(cleared.body.data.phoneNumber).toBeNull();
+    expect(cleared.body.data.countryCode).toBe("US");
+  });
+
   it("GET /api/v1/auth/providers returns enabled auth providers", async () => {
     const response = await request(app).get("/api/v1/auth/providers");
 

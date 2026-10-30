@@ -103,14 +103,17 @@ worth uses their valuation. Details: `apps/api/src/modules/investments/README.md
 
 ## Import and export
 
-Statements are imported in three steps (upload and preview, map and review, background import).
-A `ParserAdapter` registry turns OFX and bank CSV files into normalized rows, staged in
-`import_batches`/`import_rows`; a pure evaluator decides each row's kind and problems; per-kind
-importers create records through the existing transaction, purchase and payment services. A BullMQ
-worker (inside the API process) runs the import, and `import_records` make re-imports idempotent
-(bank id, fingerprint, installment series, cross-statement pair keys). A reconciliation check compares
-the file's balance and period with Luraba's. Exports use a registry of exporters (CSV/JSON). Both
-live in Settings. Details: `apps/api/src/modules/imports/README.md`, `exports/README.md`.
+Imports are a five-step wizard (Upload, Columns, Values, Review, Import) that maps the file to Luraba,
+never the other way round. CSV and Excel are kept as plain cells (`import_batches.raw_table`) and the
+user maps columns to Luraba's fields (`@luraba/contracts` `IMPORT_FIELDS`), with header-alias
+suggestions and a saved layout per account (`import_templates`); OFX has fixed fields and skips the
+column step. The mapped rows are staged in `import_rows`, the user maps the file's merchants,
+categories and tags to Luraba records (`import_mappings`), a pure evaluator decides each row's kind and
+problems, and per-kind importers create records through the existing transaction, purchase and payment
+services. A BullMQ worker (inside the API process) runs the import, and `import_records` make
+re-imports idempotent (bank id, fingerprint, installment series, cross-statement pair keys). OFX
+imports also get a reconciliation check against the file's balance and period. Exports use a registry
+of exporters (CSV/JSON). Both live in Settings. Details: `apps/api/src/modules/imports/README.md`, `exports/README.md`.
 
 ## File storage
 

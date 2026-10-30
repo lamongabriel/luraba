@@ -91,10 +91,30 @@ export type PermissionMatch = "any" | "all";
 export type PermissionInput = PermissionKey | readonly PermissionKey[];
 
 export const HOUSEHOLD_ROLE_METADATA = {
-  owner: { label: "Owner", description: "Full household control.", canBeInvited: false },
-  admin: { label: "Admin", description: "Manage members and invitations.", canBeInvited: true },
-  member: { label: "Member", description: "Manage permitted finance data.", canBeInvited: true },
-  viewer: { label: "Viewer", description: "Read-only household access.", canBeInvited: true },
+  owner: {
+    label: "Owner",
+    description:
+      "Full control of the household, its members and its data. The only role that can change the household itself, delete it, or manage other owners.",
+    canBeInvited: false,
+  },
+  admin: {
+    label: "Admin",
+    description:
+      "Runs the household day to day: manages members and invitations (except owners and other admins) and every kind of finance data. Cannot edit or delete the household.",
+    canBeInvited: true,
+  },
+  member: {
+    label: "Member",
+    description:
+      "Records everyday finance: transactions, bills, goals, splits, investments and imports. Cannot change shared setup such as categories, tags, budgets or credit cards, and cannot manage people.",
+    canBeInvited: true,
+  },
+  viewer: {
+    label: "Viewer",
+    description:
+      "Read-only. Can look at the household's finances and download exports, but cannot change anything or see who else is in the household.",
+    canBeInvited: true,
+  },
 } as const satisfies Record<
   HouseholdRole,
   { label: string; description: string; canBeInvited: boolean }
@@ -169,6 +189,41 @@ export const HOUSEHOLD_ROLE_PERMISSIONS: Readonly<
     PERMISSIONS.INVESTMENTS_READ,
   ]),
 };
+
+/** Roles from least to most powerful; a role may only manage roles below its own (owners: all). */
+const HOUSEHOLD_ROLE_RANK: Readonly<Record<HouseholdRole, number>> = {
+  viewer: 0,
+  member: 1,
+  admin: 2,
+  owner: 3,
+};
+
+/** The roles `actor` may give to someone (invite, or change a member to). */
+export function getAssignableRoles(actor: HouseholdRole): HouseholdRole[] {
+  if (actor === "owner") return ["owner", "admin", "member", "viewer"];
+  if (actor === "admin") return ["member", "viewer"];
+  return [];
+}
+
+export function canAssignRole(actor: HouseholdRole, role: HouseholdRole): boolean {
+  return getAssignableRoles(actor).includes(role);
+}
+
+/**
+ * Whether `actor` may change the role of, or remove, a member who currently has `target`.
+ * Owners manage everyone (including themselves, with the last-owner rule enforced by the API);
+ * admins manage only members and viewers; nobody else manages anyone, and nobody but an owner
+ * changes their own role.
+ */
+export function canManageMember(
+  actor: HouseholdRole,
+  target: HouseholdRole,
+  options: { self?: boolean } = {},
+): boolean {
+  if (actor === "owner") return true;
+  if (options.self) return false;
+  return actor === "admin" && HOUSEHOLD_ROLE_RANK[target] < HOUSEHOLD_ROLE_RANK[actor];
+}
 
 export function getPermissionsForRole(role: HouseholdRole): HouseholdPermission[] {
   return Array.from(HOUSEHOLD_ROLE_PERMISSIONS[role]);

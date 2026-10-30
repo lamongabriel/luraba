@@ -2,16 +2,18 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import app from "@/app";
 import * as accountsService from "@/modules/accounts/accounts.service";
+import * as categoriesService from "@/modules/categories/categories.service";
 import * as creditCardsService from "@/modules/credit-cards/credit-cards.service";
 import * as merchantsService from "@/modules/merchants/merchants.service";
 import { createAuthenticatedContext, createAuthHeaders } from "@/test/auth";
 import {
   buildAccountInput,
+  buildCategoryInput,
   buildCreditCardInput,
   buildMerchantInput,
   createCreditCardOwner,
 } from "@/test/factories";
-import { bankOfx, cardOfx } from "./fixtures";
+import { bankOfx, cardOfx, simpleXlsx } from "./fixtures";
 
 type Auth = Awaited<ReturnType<typeof createAuthenticatedContext>>;
 
@@ -28,11 +30,17 @@ type TestRow = {
   [key: string]: unknown;
 };
 
-async function upload(auth: Auth, name: string, content: string) {
-  return request(app)
-    .post("/api/v1/imports")
-    .set(headers(auth))
-    .attach("file", Buffer.from(content, "latin1"), name);
+type UploadTarget = { accountId?: string; creditCardId?: string };
+
+async function upload(auth: Auth, name: string, content: string, target: UploadTarget = {}) {
+  const req = request(app).post("/api/v1/imports").set(headers(auth));
+  if (target.accountId) req.field("accountId", target.accountId);
+  if (target.creditCardId) req.field("creditCardId", target.creditCardId);
+  return req.attach("file", Buffer.from(content, "latin1"), name);
+}
+
+async function put(auth: Auth, path: string, body: Record<string, unknown>) {
+  return request(app).put(`/api/v1/imports/${path}`).set(headers(auth)).send(body);
 }
 
 async function waitForDone(auth: Auth, id: string) {
@@ -87,7 +95,7 @@ describe("imports: bank statement", () => {
       buildMerchantInput({ name: "Coffee Co" }),
     );
 
-    const uploaded = await upload(auth, "statement.ofx", bankOfx());
+    const uploaded = await upload(auth, "statement.ofx", bankOfx(), { accountId: account.id });
     expect(uploaded.status).toBe(201);
     const batch = uploaded.body.data;
     expect(batch.parserId).toBe("ofx");
@@ -95,14 +103,16 @@ describe("imports: bank statement", () => {
     expect(batch.rowCount).toBe(5);
     expect(batch.statementBalance).toBe(109100);
 
-    // No target yet: every row is blocked.
-    expect((await rowsOf(auth, batch.id)).every((row) => row.status === "invalid")).toBe(true);
+    expect(batch.format).toBe("statement");
+    expect(batch.targetAccountId).toBe(account.id);
 
-    const targeted = await request(app)
-      .patch(`/api/v1/imports/${batch.id}`)
-      .set(headers(auth))
-      .send({ targetAccountId: account.id });
-    expect(targeted.status).toBe(200);
+    // The raw file shows as a plain table; OFX has no columns to map.
+    const preview = await request(app)
+      .get(`/api/v1/imports/${batch.id}/preview`)
+      .set(headers(auth));
+    expect(preview.body.data.headers).toEqual(["Date", "Description", "Amount", "ID"]);
+    expect(preview.body.data.suggestion).toBeNull();
+    expect((await put(auth, `${batch.id}/columns`, { mapping: {} })).status).toBe(422);
 
     // Investment and card payment rows need a decision; the rest is ready.
     let unmapped = await rowsOf(auth, batch.id, "unmapped");
@@ -162,11 +172,8 @@ describe("imports: bank statement", () => {
     expect(reconciliation.body.data.missingInLuraba).toBe(1);
 
     // Importing the same file again creates nothing.
-    const again = (await upload(auth, "statement.ofx", bankOfx())).body.data;
-    await request(app)
-      .patch(`/api/v1/imports/${again.id}`)
-      .set(headers(auth))
-      .send({ targetAccountId: account.id });
+    const again = (await upload(auth, "statement.ofx", bankOfx(), { accountId: account.id })).body
+      .data;
     const duplicates = await rowsOf(auth, again.id, "duplicates");
     expect(duplicates).toHaveLength(4);
     await request(app)
@@ -178,7 +185,8 @@ describe("imports: bank statement", () => {
     expect(second.duplicateCount).toBe(4);
 
     // Mappings are remembered: a fresh upload arrives with the Coffee group already mapped.
-    const third = (await upload(auth, "statement.ofx", bankOfx())).body.data;
+    const third = (await upload(auth, "statement.ofx", bankOfx(), { accountId: account.id })).body
+      .data;
     const remembered = await groupFor(auth, third.id, "Coffee");
     expect(remembered.mapping.merchantId).toBe(merchant.id);
   });
@@ -206,12 +214,8 @@ describe("imports: bank statement", () => {
       `${transfer("A1")}\n${transfer("A2")}\n</BANKTRANLIST>`,
     );
 
-    const batch = (await upload(auth, "twice.ofx", ofx)).body.data;
+    const batch = (await upload(auth, "twice.ofx", ofx, { accountId: account.id })).body.data;
     expect(batch.rowCount).toBe(2);
-    await request(app)
-      .patch(`/api/v1/imports/${batch.id}`)
-      .set(headers(auth))
-      .send({ targetAccountId: account.id });
     const group = await groupFor(auth, batch.id, "Cdb Reserve");
     await map(auth, batch.id, {
       sourceKey: group.sourceKey,
@@ -227,15 +231,33 @@ describe("imports: bank statement", () => {
   it("keeps other households out", async () => {
     const owner = await createAuthenticatedContext();
     const other = await createAuthenticatedContext();
-    const batch = (await upload(owner, "statement.ofx", bankOfx())).body.data;
+    const account = await accountsService.createAccount(
+      owner.householdContext,
+      buildAccountInput({ name: "Checking", currencyCode: "BRL" }),
+    );
+    const batch = (await upload(owner, "statement.ofx", bankOfx(), { accountId: account.id })).body
+      .data;
     const response = await request(app).get(`/api/v1/imports/${batch.id}`).set(headers(other));
     expect(response.status).toBe(404);
   });
 
-  it("rejects files that no adapter recognizes", async () => {
+  it("rejects unknown formats, a missing target and the wrong kind of target", async () => {
     const auth = await createAuthenticatedContext();
-    const response = await upload(auth, "notes.txt", "hello");
-    expect(response.status).toBe(422);
+    const account = await accountsService.createAccount(
+      auth.householdContext,
+      buildAccountInput({ name: "Checking", currencyCode: "BRL" }),
+    );
+    expect((await upload(auth, "notes.pdf", "hello", { accountId: account.id })).status).toBe(422);
+    expect((await upload(auth, "statement.ofx", bankOfx())).status).toBe(422);
+
+    const owner = await createCreditCardOwner(auth.householdContext);
+    const card = await creditCardsService.createCreditCard(
+      auth.householdContext,
+      buildCreditCardInput({ ownerAccountId: owner.id, name: "Card" }),
+    );
+    const wrong = await upload(auth, "statement.ofx", bankOfx(), { creditCardId: card.id });
+    expect(wrong.status).toBe(422);
+    expect(wrong.body.error.message).toContain("bank account statement");
   });
 });
 
@@ -252,13 +274,9 @@ describe("imports: credit card statement", () => {
       buildAccountInput({ name: "Payer", currencyCode: "BRL" }),
     );
 
-    const batch = (await upload(auth, "card.ofx", cardOfx())).body.data;
+    const batch = (await upload(auth, "card.ofx", cardOfx(), { creditCardId: card.id })).body.data;
     expect(batch.sourceKind).toBe("credit_card");
     expect(batch.rowCount).toBe(6);
-    await request(app)
-      .patch(`/api/v1/imports/${batch.id}`)
-      .set(headers(auth))
-      .send({ targetCreditCardId: card.id });
 
     const rows = await rowsOf(auth, batch.id);
     const reversal = rows.find((row) => row.description.startsWith("IOF refunded"));
@@ -290,14 +308,279 @@ describe("imports: credit card statement", () => {
 
     // The next month's line of the same plan is recognized, not bought again.
     const next = cardOfx().replace("Parcela 4/12", "Parcela 5/12").replace("20260928", "20261028");
-    const nextBatch = (await upload(auth, "card-next.ofx", next)).body.data;
-    await request(app)
-      .patch(`/api/v1/imports/${nextBatch.id}`)
-      .set(headers(auth))
-      .send({ targetCreditCardId: card.id });
+    const nextBatch = (await upload(auth, "card-next.ofx", next, { creditCardId: card.id })).body
+      .data;
     const nextRows = await rowsOf(auth, nextBatch.id);
     const plan = nextRows.find((row) => row.installmentNumber === 5);
     expect(plan?.status).toBe("duplicate");
+  });
+});
+
+describe("imports: CSV wizard", () => {
+  const csv = [
+    "Data;Descricao;Valor;Categoria;Estabelecimento",
+    "28/10/2026;STARBUCKS #123;-12,90;Cafe;Starbucks #123",
+    "29/10/2026;Salario;3.000,00;;",
+    "30/10/2026;STARBUCKS #123;-8,00;Cafe;Starbucks #123",
+    "31/10/2026;Bad row;abc;;",
+  ].join("\n");
+
+  it("maps columns, maps values, edits and removes rows, imports and remembers the layout", async () => {
+    const auth = await createAuthenticatedContext();
+    const account = await accountsService.createAccount(
+      auth.householdContext,
+      buildAccountInput({ name: "Checking", currencyCode: "BRL" }),
+    );
+    const merchant = await merchantsService.createMerchant(
+      auth.householdContext,
+      buildMerchantInput({ name: "Starbucks" }),
+    );
+    const category = await categoriesService.createCategory(
+      auth.householdContext,
+      buildCategoryInput({ name: "Coffee", type: "expense" }),
+    );
+
+    const uploaded = await upload(auth, "bank.csv", csv, { accountId: account.id });
+    expect(uploaded.status).toBe(201);
+    const batch = uploaded.body.data;
+    expect(batch.format).toBe("table");
+    expect(batch.columnMapping).toBeNull();
+    expect(batch.rowCount).toBe(0);
+    expect(await rowsOf(auth, batch.id)).toHaveLength(0);
+
+    // Step 1: the raw file as written, with a suggestion from Portuguese header aliases.
+    const preview = (
+      await request(app).get(`/api/v1/imports/${batch.id}/preview`).set(headers(auth))
+    ).body.data;
+    expect(preview.headers).toEqual(["Data", "Descricao", "Valor", "Categoria", "Estabelecimento"]);
+    expect(preview.totalRows).toBe(4);
+    expect(preview.rows[0][1]).toBe("STARBUCKS #123");
+    expect(preview.suggestionSource).toBe("aliases");
+    expect(preview.suggestion).toMatchObject({
+      columns: {
+        date: "Data",
+        description: "Descricao",
+        amount: "Valor",
+        category: "Categoria",
+        merchant: "Estabelecimento",
+      },
+      dateFormat: "DD/MM/YYYY",
+      decimalSeparator: ",",
+    });
+
+    // Import is blocked until the required fields are mapped.
+    const incomplete = await put(auth, `${batch.id}/columns`, {
+      mapping: { ...preview.suggestion, columns: { date: "Data" } },
+    });
+    expect(incomplete.status).toBe(422);
+    expect(incomplete.body.error.message).toBe("Map these fields first: Description, Amount");
+    const unknown = await put(auth, `${batch.id}/columns`, {
+      mapping: { ...preview.suggestion, columns: { ...preview.suggestion.columns, date: "Nope" } },
+    });
+    expect(unknown.status).toBe(422);
+    const early = await request(app)
+      .post(`/api/v1/imports/${batch.id}/start`)
+      .set(headers(auth))
+      .send({});
+    expect(early.status).toBe(422);
+
+    // Step 2: confirm the mapping and keep it as the account's template.
+    const mapped = await put(auth, `${batch.id}/columns`, {
+      mapping: preview.suggestion,
+      saveTemplate: true,
+    });
+    expect(mapped.status).toBe(200);
+    expect(mapped.body.data.rowCount).toBe(4);
+    expect(mapped.body.data.columnMapping.dateFormat).toBe("DD/MM/YYYY");
+    expect(mapped.body.data.summary.invalid).toBe(1);
+
+    // Step 3: values. The file's category and merchant text map to Luraba entities.
+    const categories = (
+      await request(app)
+        .get(`/api/v1/imports/${batch.id}/groups`)
+        .query({ field: "category" })
+        .set(headers(auth))
+    ).body.data as TestRow[];
+    expect(categories.map((g) => [g.displayName, g.rowCount])).toEqual([["Cafe", 2]]);
+    await map(auth, batch.id, {
+      field: "category",
+      sourceKey: categories[0]?.sourceKey,
+      targetType: "none",
+      categoryId: category.id,
+    });
+    const coffee = await groupFor(auth, batch.id, "Starbucks");
+    expect(coffee.rowCount).toBe(2);
+    await map(auth, batch.id, {
+      sourceKey: coffee.sourceKey,
+      targetType: "merchant",
+      merchantId: merchant.id,
+    });
+    const afterMap = (await rowsOf(auth, batch.id)).find((row) =>
+      row.description.includes("STARBUCKS"),
+    );
+    const effective = afterMap?.effective as { categoryId?: string } | undefined;
+    expect(effective?.categoryId).toBe(category.id);
+
+    // Step 4: edit a description, remove the broken row.
+    const rows = await rowsOf(auth, batch.id);
+    const salary = rows.find((row) => row.description === "Salario");
+    const broken = rows.find((row) => row.description === "Bad row");
+    expect(broken?.status).toBe("invalid");
+    expect(broken?.issues.map((issue) => (issue as { message?: string }).message)).toEqual([
+      'Bad amount: "abc"',
+    ]);
+    const edit = await request(app)
+      .patch(`/api/v1/imports/${batch.id}/rows`)
+      .set(headers(auth))
+      .send({ rowIds: [salary?.id], descriptionOverride: "Monthly salary" });
+    expect(edit.status).toBe(200);
+    const remove = await request(app)
+      .patch(`/api/v1/imports/${batch.id}/rows`)
+      .set(headers(auth))
+      .send({ rowIds: [broken?.id], skip: true });
+    expect(remove.body.data.summary).toMatchObject({ ready: 3, invalid: 0, skipped: 1 });
+
+    // Step 5: background import.
+    const started = await request(app)
+      .post(`/api/v1/imports/${batch.id}/start`)
+      .set(headers(auth))
+      .send({});
+    expect(started.status).toBe(200);
+    const done = await waitForDone(auth, batch.id);
+    expect(done.status).toBe("completed");
+    expect(done.createdCount).toBe(3);
+    expect(done.skippedCount).toBe(1);
+
+    const transactions = await request(app)
+      .get("/api/v1/transactions")
+      .set(headers(auth))
+      .query({ perPage: 50 });
+    const descriptions = (transactions.body.data as Array<{ description: string }>).map(
+      (t) => t.description,
+    );
+    expect(descriptions).toContain("Monthly salary");
+
+    // The next file with the same layout arrives mapped by the saved template, and every line is a duplicate.
+    const again = (await upload(auth, "bank-again.csv", csv, { accountId: account.id })).body.data;
+    const againPreview = (
+      await request(app).get(`/api/v1/imports/${again.id}/preview`).set(headers(auth))
+    ).body.data;
+    expect(againPreview.suggestionSource).toBe("template");
+    await put(auth, `${again.id}/columns`, { mapping: againPreview.suggestion });
+    const duplicates = await rowsOf(auth, again.id, "duplicates");
+    expect(duplicates).toHaveLength(3);
+  });
+
+  it("imports an Excel file through the same columns", async () => {
+    const auth = await createAuthenticatedContext();
+    const account = await accountsService.createAccount(
+      auth.householdContext,
+      buildAccountInput({ name: "Checking", currencyCode: "BRL" }),
+    );
+    const response = await request(app)
+      .post("/api/v1/imports")
+      .set(headers(auth))
+      .field("accountId", account.id)
+      .attach("file", simpleXlsx(), "bank.xlsx");
+    expect(response.status).toBe(201);
+    const preview = (
+      await request(app).get(`/api/v1/imports/${response.body.data.id}/preview`).set(headers(auth))
+    ).body.data;
+    expect(preview.suggestion.columns).toMatchObject({ date: "Date", amount: "Amount" });
+    expect(preview.suggestion.dateFormat).toBe("YYYY-MM-DD");
+    const mapped = await put(auth, `${response.body.data.id}/columns`, {
+      mapping: preview.suggestion,
+    });
+    expect(mapped.body.data.summary.ready).toBe(1);
+  });
+});
+
+describe("imports: card installments", () => {
+  const file = (name: string, date: string) =>
+    [
+      "date,title,amount",
+      `${date},${name},"29,59"`,
+      `${date},IOF de Anthropic,"3,98"`,
+      `${date},IOF de volta de Anthropic,"- 3,98"`,
+    ].join("\n");
+
+  async function setInstallment(auth: Auth, id: string, rowId: string, number: number) {
+    return request(app)
+      .patch(`/api/v1/imports/${id}/rows`)
+      .set(headers(auth))
+      .send({ rowIds: [rowId], installment: { number, total: 12 } });
+  }
+
+  it("takes the installment from the user, backfills the plan and never reads the text", async () => {
+    const auth = await createAuthenticatedContext();
+    const owner = await createCreditCardOwner(auth.householdContext);
+    const card = await creditCardsService.createCreditCard(
+      auth.householdContext,
+      buildCreditCardInput({ ownerAccountId: owner.id, name: "Card" }),
+    );
+
+    const first = (
+      await upload(auth, "sep.csv", file("Terabyteshop - NuPay - Parcela 4/12", "2026-09-28"), {
+        creditCardId: card.id,
+      })
+    ).body.data;
+    const preview = (
+      await request(app).get(`/api/v1/imports/${first.id}/preview`).set(headers(auth))
+    ).body.data;
+    expect(preview.suggestion).toMatchObject({
+      amountSign: "positive_is_out",
+      installmentsFromDescription: false,
+      dateFormat: "YYYY-MM-DD",
+      decimalSeparator: ",",
+    });
+    await put(auth, `${first.id}/columns`, { mapping: preview.suggestion });
+
+    // Nothing was read from the description: it is a single purchase until the user says otherwise.
+    const rows = await rowsOf(auth, first.id);
+    const plan = rows.find((row) => row.description.includes("Terabyteshop"));
+    expect(plan).toMatchObject({ installmentNumber: null, kind: "card_purchase" });
+    // The charge and its reversal offset each other and start removed.
+    expect(rows.filter((row) => row.skip)).toHaveLength(2);
+
+    const marked = await setInstallment(auth, first.id, plan?.id as string, 4);
+    expect(marked.status).toBe(200);
+    const after = (await rowsOf(auth, first.id)).find((row) => row.id === plan?.id);
+    expect(after).toMatchObject({ installmentNumber: 4, installmentTotal: 12 });
+
+    await request(app).post(`/api/v1/imports/${first.id}/start`).set(headers(auth)).send({});
+    const done = await waitForDone(auth, first.id);
+    expect(done.createdCount).toBe(1);
+
+    // Next month the bank prints a different name; the user marks installment 5 of 12 and the
+    // plan is recognized by date, count and amount alone.
+    const second = (
+      await upload(auth, "oct.csv", file("TERABYTE SHOP 5 de 12", "2026-10-28"), {
+        creditCardId: card.id,
+      })
+    ).body.data;
+    await put(auth, `${second.id}/columns`, { mapping: preview.suggestion });
+    const next = (await rowsOf(auth, second.id)).find((row) =>
+      row.description.includes("TERABYTE"),
+    );
+    expect(next?.status).toBe("ready");
+    await setInstallment(auth, second.id, next?.id as string, 5);
+    const flagged = (await rowsOf(auth, second.id)).find((row) => row.id === next?.id);
+    expect(flagged?.status).toBe("duplicate");
+    expect(flagged?.issues.map((issue) => (issue as { message?: string }).message)).toContain(
+      "Installment plan already imported.",
+    );
+
+    // Opt-in text reading still works, and is off unless the user switches it on.
+    const third = (
+      await upload(auth, "nov.csv", file("Terabyteshop - Parcela 6/12", "2026-11-28"), {
+        creditCardId: card.id,
+      })
+    ).body.data;
+    await put(auth, `${third.id}/columns`, {
+      mapping: { ...preview.suggestion, installmentsFromDescription: true },
+    });
+    const read = (await rowsOf(auth, third.id)).find((row) => row.description.includes("Terabyte"));
+    expect(read).toMatchObject({ installmentNumber: 6, installmentTotal: 12, status: "duplicate" });
   });
 });
 

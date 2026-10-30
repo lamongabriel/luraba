@@ -16,7 +16,7 @@ import {
 
 const EXPECTED_MODULE_COUNTS = {
   accounts: 6,
-  auth: 4,
+  auth: 5,
   bills: 15,
   budgets: 3,
   categories: 4,
@@ -26,11 +26,11 @@ const EXPECTED_MODULE_COUNTS = {
   currencies: 2,
   health: 1,
   households: 22,
-  imports: 11,
+  imports: 13,
   integrations: 3,
   investments: 41,
   merchants: 5,
-  notifications: 12,
+  notifications: 11,
   onboarding: 1,
   paymentMethods: 4,
   referenceData: 1,
@@ -52,6 +52,7 @@ const EXPECTED_ENDPOINTS = [
   "GET /auth/me",
   "GET /auth/me/preferences",
   "PATCH /auth/me/preferences",
+  "PATCH /auth/me/profile",
   "GET /bills",
   "GET /bills/forecast",
   "GET /bills/:id",
@@ -131,6 +132,8 @@ const EXPECTED_ENDPOINTS = [
   "GET /imports/:id",
   "PATCH /imports/:id",
   "DELETE /imports/:id",
+  "GET /imports/:id/preview",
+  "PUT /imports/:id/columns",
   "GET /imports/:id/rows",
   "PATCH /imports/:id/rows",
   "GET /imports/:id/groups",
@@ -197,7 +200,6 @@ const EXPECTED_ENDPOINTS = [
   "POST /notifications/read-all",
   "DELETE /notifications/:id",
   "GET /notifications/channels",
-  "PATCH /notifications/contact",
   "GET /notifications/preferences",
   "PATCH /notifications/preferences",
   "POST /notifications/push-subscriptions",
@@ -250,7 +252,7 @@ const EXPECTED_ENDPOINTS = [
 ] as const;
 
 describe("HTTP contract inventory", () => {
-  it("contains the complete 205-route inventory by module", () => {
+  it("contains the complete 207-route inventory by module", () => {
     expect(
       Object.fromEntries(
         Object.entries(contractModules).map(([module, endpoints]) => [
@@ -259,7 +261,7 @@ describe("HTTP contract inventory", () => {
         ]),
       ),
     ).toEqual(EXPECTED_MODULE_COUNTS);
-    expect(allEndpoints).toHaveLength(205);
+    expect(allEndpoints).toHaveLength(207);
     expect(allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`)).toEqual(
       EXPECTED_ENDPOINTS,
     );
@@ -268,7 +270,7 @@ describe("HTTP contract inventory", () => {
   it("has unique method/path pairs and complete endpoint schemas", () => {
     const identities = allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`);
 
-    expect(new Set(identities).size).toBe(205);
+    expect(new Set(identities).size).toBe(207);
 
     for (const endpoint of allEndpoints) {
       expect(endpoint.path).toMatch(/^\/[a-z][a-z0-9/-]*(?::[A-Za-z][A-Za-z0-9_]*)?/);

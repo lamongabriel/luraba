@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 
 const STATUS_LABELS: Record<ImportRowStatus, string> = {
   ready: "Ready",
-  invalid: "Needs attention",
+  invalid: "Needs a fix",
   duplicate: "Already in Luraba",
-  skipped: "Skipped",
+  skipped: "Removed",
   created: "Imported",
   failed: "Failed",
 };
@@ -35,23 +35,17 @@ const SEVERITY_CLASS: Record<ImportIssue["severity"], string> = {
   info: "text-muted-foreground",
 };
 
-/** Every problem and note on a row, worst first, so nothing is hidden behind a tooltip. */
+/** The worst problem on a row, one short line, with a count of the rest. */
 export function IssueList({ issues }: { issues: ImportIssue[] }) {
   if (issues.length === 0) return null;
   const order = { error: 0, warning: 1, info: 2 } as const;
+  const [first, ...rest] = [...issues].sort((a, b) => order[a.severity] - order[b.severity]);
+  if (!first) return null;
   return (
-    <ul className="mt-1 space-y-0.5">
-      {[...issues]
-        .sort((a, b) => order[a.severity] - order[b.severity])
-        .map((issue) => (
-          <li
-            key={`${issue.code}-${issue.message}`}
-            className={cn("text-[0.6875rem]", SEVERITY_CLASS[issue.severity])}
-          >
-            {issue.message}
-          </li>
-        ))}
-    </ul>
+    <p className={cn("mt-1 text-[0.6875rem]", SEVERITY_CLASS[first.severity])}>
+      {first.message}
+      {rest.length > 0 ? ` +${rest.length} more` : ""}
+    </p>
   );
 }
 

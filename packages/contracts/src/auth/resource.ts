@@ -18,10 +18,18 @@ export const userPreferencesSchema = z.object({
   preferredPeriod: preferredPeriodSchema,
   preferredTheme: preferredThemeSchema,
 });
+/** Who the user is, beyond name and email (name and picture are edited through Better Auth). */
+export const userProfileSchema = z.object({
+  phoneNumber: z.string().nullable(),
+  countryCode: z.string().length(2).nullable(),
+  /** ISO date (YYYY-MM-DD). */
+  dateOfBirth: z.iso.date().nullable(),
+});
 export const sessionUserSchema = z.object({
   id: z.uuid(),
   name: z.string(),
   email: z.email(),
+  ...userProfileSchema.shape,
   defaultHouseholdId: z.uuid().nullable(),
   preferences: userPreferencesSchema,
   createdAt: wireDateTimeSchema,
@@ -43,6 +51,7 @@ export const authProvidersSchema = z.object({
   socialProviders: z.object({ google: z.boolean(), github: z.boolean() }),
 });
 
+export type UserProfile = z.output<typeof userProfileSchema>;
 export type UserPreferences = z.output<typeof userPreferencesSchema>;
 export type SessionUser = z.output<typeof sessionUserSchema>;
 export type AuthHousehold = z.output<typeof authHouseholdSchema>;

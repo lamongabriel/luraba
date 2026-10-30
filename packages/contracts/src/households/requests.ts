@@ -40,6 +40,7 @@ export const updateHouseholdBodySchema = z
   .object({
     name: z.string().min(1).max(255).optional(),
     description: z.string().max(4000).optional(),
+    imageUploadId: z.uuid().nullable().optional(),
     ...householdSettingsPatchSchema.shape,
   })
   .refine(
@@ -52,6 +53,8 @@ export const createHouseholdInviteBodySchema = z.object({
     .email()
     .max(255)
     .transform((value) => value.trim().toLowerCase()),
+  /** Who this is for; only shown to household managers. */
+  name: z.string().trim().max(255).optional(),
   role: householdRoleSchema.exclude(["owner"]).default("member"),
 });
 const inviteTokenSchema = z.string().min(1).max(256);

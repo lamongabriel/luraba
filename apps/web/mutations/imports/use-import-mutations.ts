@@ -7,6 +7,8 @@ import { importQueryKeys } from "@/queries/imports/use-imports-query";
 import { downloadExport } from "@/services/exports.service";
 import {
   deleteImport,
+  type ImportUploadTarget,
+  saveImportColumns,
   saveImportMapping,
   startImport,
   updateImport,
@@ -20,15 +22,26 @@ function useRefreshImports() {
   return () => client.invalidateQueries({ queryKey: importQueryKeys.all });
 }
 
-type UploadVariables = { file: File; parserId?: string };
+type UploadVariables = { file: File; target: ImportUploadTarget };
 const uploadDefinition = createAppMutationDefinition({
-  defaultErrorMessage: "We couldn't read this file. Check that it is a supported statement.",
-  mutationFn: ({ file, parserId }: UploadVariables) => uploadImport(file, parserId),
+  defaultErrorMessage: "We couldn't read this file. Use a CSV, Excel or OFX file.",
+  mutationFn: ({ file, target }: UploadVariables) => uploadImport(file, target),
   mutationKey: ["imports", "upload"],
 });
 export function useUploadImportMutation() {
   const refresh = useRefreshImports();
   return useAppMutation(uploadDefinition, { onSuccess: refresh });
+}
+
+const saveColumnsDefinition = createAppMutationDefinition({
+  defaultErrorMessage: "We couldn't apply this column mapping. Please try again.",
+  mutationFn: ({ id, body }: { id: string; body: Parameters<typeof saveImportColumns>[1] }) =>
+    saveImportColumns(id, body),
+  mutationKey: ["imports", "save-columns"],
+});
+export function useSaveImportColumnsMutation() {
+  const refresh = useRefreshImports();
+  return useAppMutation(saveColumnsDefinition, { onSuccess: refresh });
 }
 
 const updateDefinition = createAppMutationDefinition({

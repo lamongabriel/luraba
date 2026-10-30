@@ -1,6 +1,11 @@
 import { defineEndpoint } from "../api.js";
-import { updateUserPreferencesBodySchema } from "./requests.js";
-import { authProvidersSchema, authSessionSchema, userPreferencesSchema } from "./resource.js";
+import { updateUserPreferencesBodySchema, updateUserProfileBodySchema } from "./requests.js";
+import {
+  authProvidersSchema,
+  authSessionSchema,
+  userPreferencesSchema,
+  userProfileSchema,
+} from "./resource.js";
 
 export const authEndpoints = {
   providers: defineEndpoint({
@@ -21,6 +26,13 @@ export const authEndpoints = {
     path: "/auth/me/preferences",
     body: updateUserPreferencesBodySchema,
     response: userPreferencesSchema,
+    status: 200,
+  }),
+  updateProfile: defineEndpoint({
+    method: "patch",
+    path: "/auth/me/profile",
+    body: updateUserProfileBodySchema,
+    response: userProfileSchema,
     status: 200,
   }),
 } as const;

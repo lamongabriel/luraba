@@ -1,16 +1,22 @@
 import { createHash } from "node:crypto";
-import type {
-  ImportBatch,
-  ImportGroup,
-  ImportParser,
-  ImportReconciliation,
-  ImportRow,
-  ImportRowStatus,
-  listImportRowsQuerySchema,
-  SaveImportMappingInput,
-  StartImportInput,
-  UpdateImportInput,
-  UpdateImportRowsInput,
+import {
+  type ImportBatch,
+  type ImportColumnMapping,
+  type ImportFilePreview,
+  type ImportGroup,
+  type ImportParser,
+  type ImportReconciliation,
+  type ImportRow,
+  type ImportRowStatus,
+  type ImportValueField,
+  importColumnMappingSchema,
+  type listImportRowsQuerySchema,
+  missingImportFields,
+  type SaveImportColumnsInput,
+  type SaveImportMappingInput,
+  type StartImportInput,
+  type UpdateImportInput,
+  type UpdateImportRowsInput,
 } from "@luraba/contracts/imports";
 import { importRowsTable } from "@luraba/db/schemas/imports.schema";
 import { formatISODateTime } from "@luraba/domain";
@@ -25,6 +31,13 @@ import { merchantsRepository } from "@/modules/merchants/merchants.repository";
 import { validateTagIds } from "@/modules/tags/tags-associations.service";
 import { NotFoundError, ValidationError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
+import {
+  applyMapping,
+  distinctValues,
+  headerSignature,
+  suggestMapping,
+  unknownHeaders,
+} from "./imports.columns";
 import { detectDefaults } from "./imports.duplicates";
 import {
   type EvaluationContext,
@@ -37,7 +50,7 @@ import {
   withPairOccurrences,
 } from "./imports.evaluate";
 import { loadTarget } from "./imports.ledger";
-import { normalizeRows } from "./imports.normalize";
+import { normalizeRows, seriesKeyFor, valueSourceKey } from "./imports.normalize";
 import { batchSummarySelect, buildRowFilter } from "./imports.query";
 import { enqueueImportBatch } from "./imports.queue";
 import {
@@ -45,10 +58,13 @@ import {
   importMappingsRepository,
   importRecordsRepository,
   importRowsRepository,
+  importTemplatesRepository,
 } from "./imports.repository";
+import { type RawTable, readTable, tableKindOf } from "./imports.table";
 import type { ImportBatchRecord, ImportMappingRecord, ImportRowRecord } from "./imports.types";
 import { detectParser, getParser, parserAdapters } from "./parsers/registry";
 import { decodeFileBytes } from "./parsers/text";
+import type { ParsedRow } from "./parsers/types";
 
 const MAX_ROWS = 20_000;
 
@@ -112,65 +128,55 @@ async function loadSummaries(batchIds: string[]) {
   );
 }
 
+function parseColumnMapping(value: unknown): ImportColumnMapping | null {
+  const parsed = importColumnMappingSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
+
 async function toBatchResponses(
-  context: HouseholdContext,
+  _context: HouseholdContext,
   batches: ImportBatchRecord[],
 ): Promise<ImportBatch[]> {
   const summaries = await loadSummaries(batches.map((b) => b.id));
-  return Promise.all(
-    batches.map(async (batch) => {
-      let suggestedTarget: ImportBatch["suggestedTarget"] = null;
-      if (batch.status === "draft" && batch.sourceAccountRef) {
-        const last = await importBatchesRepository.findLastTarget(
-          context,
-          batch.parserId,
-          batch.sourceAccountRef,
-          batch.id,
-        );
-        if (last?.cardId && batch.sourceKind === "credit_card")
-          suggestedTarget = { type: "credit_card", id: last.cardId };
-        else if (last?.accountId && batch.sourceKind === "bank_account")
-          suggestedTarget = { type: "account", id: last.accountId };
-      }
-      return {
-        id: batch.id,
-        status: batch.status as ImportBatch["status"],
-        parserId: batch.parserId,
-        parserLabel: getParser(batch.parserId)?.label ?? batch.parserId,
-        sourceKind: batch.sourceKind as ImportBatch["sourceKind"],
-        fileName: batch.fileName,
-        fileSize: batch.fileSize,
-        institution: batch.institution,
-        sourceAccountRef: batch.sourceAccountRef,
-        currencyCode: batch.currencyCode,
-        periodStart: isoDate(batch.periodStart),
-        periodEnd: isoDate(batch.periodEnd),
-        statementBalance: batch.statementBalance,
-        statementBalanceDate: isoDate(batch.statementBalanceDate),
-        warnings: batch.warnings,
-        targetAccountId: batch.targetAccountId,
-        targetCreditCardId: batch.targetCreditCardId,
-        suggestedTarget,
-        rowCount: batch.rowCount,
-        processedCount: batch.processedCount,
-        createdCount: batch.createdCount,
-        duplicateCount: batch.duplicateCount,
-        skippedCount: batch.skippedCount,
-        failedCount: batch.failedCount,
-        errorMessage: batch.errorMessage,
-        summary: summaries.get(batch.id) ?? {
-          ready: 0,
-          invalid: 0,
-          duplicates: 0,
-          skipped: 0,
-          warnings: 0,
-        },
-        startedAt: batch.startedAt ? formatISODateTime(batch.startedAt) : null,
-        finishedAt: batch.finishedAt ? formatISODateTime(batch.finishedAt) : null,
-        createdAt: formatISODateTime(batch.createdAt),
-      };
-    }),
-  );
+  return batches.map((batch) => ({
+    id: batch.id,
+    status: batch.status as ImportBatch["status"],
+    parserId: batch.parserId,
+    parserLabel:
+      getParser(batch.parserId)?.label ?? TABLE_PARSERS[batch.parserId] ?? batch.parserId,
+    format: batch.format as ImportBatch["format"],
+    columnMapping: parseColumnMapping(batch.columnMapping),
+    sourceKind: batch.sourceKind as ImportBatch["sourceKind"],
+    fileName: batch.fileName,
+    fileSize: batch.fileSize,
+    institution: batch.institution,
+    sourceAccountRef: batch.sourceAccountRef,
+    currencyCode: batch.currencyCode,
+    periodStart: isoDate(batch.periodStart),
+    periodEnd: isoDate(batch.periodEnd),
+    statementBalance: batch.statementBalance,
+    statementBalanceDate: isoDate(batch.statementBalanceDate),
+    warnings: batch.warnings,
+    targetAccountId: batch.targetAccountId,
+    targetCreditCardId: batch.targetCreditCardId,
+    rowCount: batch.rowCount,
+    processedCount: batch.processedCount,
+    createdCount: batch.createdCount,
+    duplicateCount: batch.duplicateCount,
+    skippedCount: batch.skippedCount,
+    failedCount: batch.failedCount,
+    errorMessage: batch.errorMessage,
+    summary: summaries.get(batch.id) ?? {
+      ready: 0,
+      invalid: 0,
+      duplicates: 0,
+      skipped: 0,
+      warnings: 0,
+    },
+    startedAt: batch.startedAt ? formatISODateTime(batch.startedAt) : null,
+    finishedAt: batch.finishedAt ? formatISODateTime(batch.finishedAt) : null,
+    createdAt: formatISODateTime(batch.createdAt),
+  }));
 }
 
 async function toBatchResponse(context: HouseholdContext, batch: ImportBatchRecord) {
@@ -188,63 +194,52 @@ export async function requireBatch(context: HouseholdContext, id: string) {
 // Upload
 // ---------------------------------------------------------------------------
 
+const TABLE_PARSERS: Record<string, string> = { csv: "CSV file", xlsx: "Excel file" };
+
 export function listParsers(): ImportParser[] {
-  return parserAdapters.map((adapter) => ({
-    id: adapter.id,
-    label: adapter.label,
-    description: adapter.description,
-    sourceKind: adapter.sourceKind,
-    extensions: adapter.extensions,
-  }));
+  return [
+    {
+      id: "csv",
+      label: TABLE_PARSERS.csv as string,
+      description: "Any CSV: you map its columns to Luraba's fields.",
+      sourceKind: null,
+      extensions: [".csv", ".tsv", ".txt"],
+    },
+    {
+      id: "xlsx",
+      label: TABLE_PARSERS.xlsx as string,
+      description: "Excel workbook (first sheet): you map its columns to Luraba's fields.",
+      sourceKind: null,
+      extensions: [".xlsx"],
+    },
+    ...parserAdapters.map((adapter) => ({
+      id: adapter.id,
+      label: adapter.label,
+      description: adapter.description,
+      sourceKind: adapter.sourceKind,
+      extensions: adapter.extensions,
+    })),
+  ];
 }
 
-export async function createImport(
-  context: HouseholdContext,
-  input: { fileName: string; bytes: Uint8Array; parserId?: string },
-): Promise<ImportBatch> {
-  const text = decodeFileBytes(input.bytes);
-  const file = { name: input.fileName, text };
-  const adapter = input.parserId ? getParser(input.parserId) : detectParser(file);
-  if (input.parserId && !adapter)
-    throw new ValidationError(`Unknown file format "${input.parserId}"`);
-  if (!adapter) {
-    throw new ValidationError(
-      "This file format is not recognized. Supported: OFX, Nubank checking CSV, Nubank card CSV and Banco Inter checking CSV.",
-    );
-  }
+type TargetInput = { accountId?: string | null; creditCardId?: string | null };
 
-  let statement: ReturnType<typeof adapter.parse>;
-  try {
-    statement = adapter.parse(file);
-  } catch {
-    throw new ValidationError(`The file could not be read as "${adapter.label}"`);
-  }
-  if (statement.rows.length === 0) throw new ValidationError("The file has no transactions");
-  if (statement.rows.length > MAX_ROWS)
-    throw new ValidationError(`The file has more than ${MAX_ROWS} rows; split it by period`);
+async function assertCardTarget(context: HouseholdContext, id: string) {
+  if (!(await creditCardsRepository.findById(context.householdId, id)))
+    throw new NotFoundError("Credit card");
+}
 
-  const normalized = normalizeRows(statement.rows);
-  const batch = await importBatchesRepository.create(context, {
-    householdId: context.householdId,
-    createdByUserId: context.userId,
-    parserId: adapter.id,
-    sourceKind: statement.sourceKind,
-    fileName: input.fileName.slice(0, 255),
-    fileHash: createHash("sha256").update(input.bytes).digest("hex"),
-    fileSize: input.bytes.byteLength,
-    institution: statement.institution,
-    sourceAccountRef: statement.accountRef,
-    currencyCode: statement.currency,
-    periodStart: statement.periodStart ? new Date(`${statement.periodStart}T00:00:00Z`) : null,
-    periodEnd: statement.periodEnd ? new Date(`${statement.periodEnd}T00:00:00Z`) : null,
-    statementBalance: statement.balance?.amount ?? null,
-    statementBalanceDate: statement.balance?.date
-      ? new Date(`${statement.balance.date}T00:00:00Z`)
-      : null,
-    warnings: statement.warnings,
-    rowCount: normalized.length,
-  });
+async function assertAccountTarget(context: HouseholdContext, id: string) {
+  const account = await accountsRepository.get(id, context);
+  if (!account) throw new NotFoundError("Account");
+  if (account.type === "credit_card")
+    throw new ValidationError("Pick a bank, cash or investment account, not a credit card");
+}
 
+/** Stores the rows of a parsed file for a draft batch and refreshes duplicates and evaluation. */
+async function stageRows(context: HouseholdContext, batch: ImportBatchRecord, rows: ParsedRow[]) {
+  const normalized = normalizeRows(rows);
+  await importRowsRepository.deleteAll(batch.id);
   await importRowsRepository.insertMany(
     normalized.map((row) => ({
       batchId: batch.id,
@@ -264,9 +259,203 @@ export async function createImport(
       raw: row.raw,
     })),
   );
+  const updated = await importBatchesRepository.update(batch.id, context, {
+    rowCount: normalized.length,
+  });
+  await redetect(context, updated ?? batch);
+}
 
-  await reevaluate(context, batch);
-  return toBatchResponse(context, batch);
+function formatMinor(amount: number | null): string {
+  if (amount === null) return "";
+  return `${amount < 0 ? "-" : ""}${Math.floor(Math.abs(amount) / 100)}.${String(Math.abs(amount) % 100).padStart(2, "0")}`;
+}
+
+/**
+ * Step 1: reads the file and creates the batch for the chosen account or card. CSV and Excel are
+ * kept as plain cells and nothing is staged until the columns are mapped (step 2); OFX has fixed
+ * fields, so its rows are staged right away.
+ */
+export async function createImport(
+  context: HouseholdContext,
+  input: { fileName: string; bytes: Uint8Array } & TargetInput,
+): Promise<ImportBatch> {
+  const kind = tableKindOf(input.fileName);
+  if (!kind) throw new ValidationError("Use a CSV, Excel (.xlsx) or OFX file");
+  if (Boolean(input.accountId) === Boolean(input.creditCardId))
+    throw new ValidationError("Choose the account or card first");
+  const isCard = Boolean(input.creditCardId);
+  if (input.creditCardId) await assertCardTarget(context, input.creditCardId);
+  if (input.accountId) await assertAccountTarget(context, input.accountId);
+
+  const common = {
+    householdId: context.householdId,
+    createdByUserId: context.userId,
+    fileName: input.fileName.slice(0, 255),
+    fileHash: createHash("sha256").update(input.bytes).digest("hex"),
+    fileSize: input.bytes.byteLength,
+    targetAccountId: input.accountId ?? null,
+    targetCreditCardId: input.creditCardId ?? null,
+  };
+
+  if (kind !== "ofx") {
+    const table = await readTable(kind, input.bytes);
+    if (table.rows.length > MAX_ROWS)
+      throw new ValidationError(`The file has more than ${MAX_ROWS} rows; split it by period`);
+    const batch = await importBatchesRepository.create(context, {
+      ...common,
+      parserId: kind,
+      format: "table",
+      rawTable: table,
+      sourceKind: isCard ? "credit_card" : "bank_account",
+    });
+    return toBatchResponse(context, batch);
+  }
+
+  const file = { name: input.fileName, text: decodeFileBytes(input.bytes) };
+  const adapter = detectParser(file);
+  if (!adapter) throw new ValidationError("This OFX file could not be read");
+  let statement: ReturnType<typeof adapter.parse>;
+  try {
+    statement = adapter.parse(file);
+  } catch {
+    throw new ValidationError("This OFX file could not be read");
+  }
+  if (statement.rows.length === 0) throw new ValidationError("The file has no transactions");
+  if (statement.rows.length > MAX_ROWS)
+    throw new ValidationError(`The file has more than ${MAX_ROWS} rows; split it by period`);
+  if ((statement.sourceKind === "credit_card") !== isCard)
+    throw new ValidationError(
+      isCard
+        ? "This is a bank account statement. Choose an account."
+        : "This is a credit card statement. Choose a card.",
+    );
+
+  const rawTable: RawTable = {
+    headers: ["Date", "Description", "Amount", "ID"],
+    rows: statement.rows.map((row) => [
+      row.date ?? "",
+      row.description,
+      formatMinor(row.amount),
+      row.externalId ?? "",
+    ]),
+  };
+  const batch = await importBatchesRepository.create(context, {
+    ...common,
+    parserId: adapter.id,
+    format: "statement",
+    rawTable,
+    sourceKind: statement.sourceKind,
+    institution: statement.institution,
+    sourceAccountRef: statement.accountRef,
+    currencyCode: statement.currency,
+    periodStart: statement.periodStart ? new Date(`${statement.periodStart}T00:00:00Z`) : null,
+    periodEnd: statement.periodEnd ? new Date(`${statement.periodEnd}T00:00:00Z`) : null,
+    statementBalance: statement.balance?.amount ?? null,
+    statementBalanceDate: statement.balance?.date
+      ? new Date(`${statement.balance.date}T00:00:00Z`)
+      : null,
+    warnings: statement.warnings,
+  });
+  await stageRows(context, batch, statement.rows);
+  return toBatchResponse(context, (await importBatchesRepository.get(batch.id, context)) ?? batch);
+}
+
+// ---------------------------------------------------------------------------
+// Step 1 and 2: the file as a table, and the column mapping
+// ---------------------------------------------------------------------------
+
+const LOW_CARDINALITY = 12;
+
+function targetOf(
+  batch: ImportBatchRecord,
+): { type: "account" | "credit_card"; id: string } | null {
+  if (batch.targetCreditCardId) return { type: "credit_card", id: batch.targetCreditCardId };
+  if (batch.targetAccountId) return { type: "account", id: batch.targetAccountId };
+  return null;
+}
+
+export async function previewImport(
+  context: HouseholdContext,
+  id: string,
+  limit: number,
+): Promise<ImportFilePreview> {
+  const batch = await requireBatch(context, id);
+  const table = batch.rawTable ?? { headers: [], rows: [] };
+  const columnValues: Record<string, string[]> = {};
+  for (const header of table.headers) {
+    const values = distinctValues(table, header, LOW_CARDINALITY);
+    if (values) columnValues[header] = values;
+  }
+
+  let suggestion: ImportColumnMapping | null = null;
+  let suggestionSource: ImportFilePreview["suggestionSource"] = null;
+  if (batch.format === "table") {
+    const current = parseColumnMapping(batch.columnMapping);
+    const target = targetOf(batch);
+    const template = target
+      ? await importTemplatesRepository.findForTarget(context, target.type, target.id)
+      : undefined;
+    const saved = template ? parseColumnMapping(template.mapping) : null;
+    if (current) {
+      suggestion = current;
+      suggestionSource = "current";
+    } else if (
+      template &&
+      saved &&
+      template.headerSignature === headerSignature(table.headers) &&
+      unknownHeaders(table, saved).length === 0
+    ) {
+      suggestion = saved;
+      suggestionSource = "template";
+    } else {
+      suggestion = suggestMapping(table, { creditCard: batch.sourceKind === "credit_card" });
+      suggestionSource = "aliases";
+    }
+  }
+  return {
+    headers: table.headers,
+    rows: table.rows.slice(0, limit),
+    totalRows: table.rows.length,
+    columnValues,
+    suggestion,
+    suggestionSource,
+  };
+}
+
+/** Step 2: applies the user's column mapping to the file, staging one row per line. */
+export async function saveColumns(
+  context: HouseholdContext,
+  id: string,
+  input: SaveImportColumnsInput,
+): Promise<ImportBatch> {
+  const batch = await requireBatch(context, id);
+  if (batch.status !== "draft") throw new ValidationError("This import has already been started");
+  if (batch.format !== "table" || !batch.rawTable)
+    throw new ValidationError("This file has fixed fields; there are no columns to map");
+
+  const mapping = importColumnMappingSchema.parse(input.mapping);
+  const missing = missingImportFields(mapping);
+  if (missing.length > 0)
+    throw new ValidationError(`Map these fields first: ${missing.join(", ")}`);
+  const unknown = unknownHeaders(batch.rawTable, mapping);
+  if (unknown.length > 0) throw new ValidationError(`Column "${unknown[0]}" is not in the file`);
+  if (mapping.columns.amount && (mapping.columns.debit || mapping.columns.credit))
+    throw new ValidationError("Use Amount or Money in/out, not both");
+
+  const updated = await importBatchesRepository.update(id, context, { columnMapping: mapping });
+  if (!updated) throw new NotFoundError("Import");
+  await stageRows(context, updated, applyMapping(batch.rawTable, mapping));
+
+  const target = targetOf(batch);
+  if (input.saveTemplate && target) {
+    await importTemplatesRepository.upsert(context, {
+      targetType: target.type,
+      targetId: target.id,
+      headerSignature: headerSignature(batch.rawTable.headers),
+      mapping,
+    });
+  }
+  return toBatchResponse(context, (await importBatchesRepository.get(id, context)) ?? updated);
 }
 
 // ---------------------------------------------------------------------------
@@ -388,27 +577,17 @@ export async function updateImport(
 
   const values: { targetAccountId?: string | null; targetCreditCardId?: string | null } = {};
   if (batch.sourceKind === "credit_card") {
-    if (input.targetAccountId) throw new ValidationError("This file is a credit card statement");
+    if (input.targetAccountId)
+      throw new ValidationError("This is a credit card file; choose a card");
     if (input.targetCreditCardId !== undefined) {
-      if (input.targetCreditCardId) {
-        const card = await creditCardsRepository.findById(
-          context.householdId,
-          input.targetCreditCardId,
-        );
-        if (!card) throw new NotFoundError("Credit card");
-      }
+      if (input.targetCreditCardId) await assertCardTarget(context, input.targetCreditCardId);
       values.targetCreditCardId = input.targetCreditCardId;
     }
   } else {
     if (input.targetCreditCardId)
-      throw new ValidationError("This file is a bank account statement");
+      throw new ValidationError("This is a bank file; choose an account");
     if (input.targetAccountId !== undefined) {
-      if (input.targetAccountId) {
-        const account = await accountsRepository.get(input.targetAccountId, context);
-        if (!account) throw new NotFoundError("Account");
-        if (account.type === "credit_card")
-          throw new ValidationError("Pick a bank, cash or investment account, not a credit card");
-      }
+      if (input.targetAccountId) await assertAccountTarget(context, input.targetAccountId);
       values.targetAccountId = input.targetAccountId;
     }
   }
@@ -493,21 +672,112 @@ export async function updateRows(
   if (tagIds !== undefined) values.tagIds = tagIds as string[] | null;
   if (changes.descriptionOverride !== undefined)
     values.descriptionOverride = changes.descriptionOverride;
-  await importRowsRepository.updateMany(batch.id, rowIds, values);
+  if (Object.keys(values).length > 0)
+    await importRowsRepository.updateMany(batch.id, rowIds, values);
+  if (changes.installment !== undefined)
+    await setInstallment(context, batch, rowIds, changes.installment);
   await reevaluate(context, batch);
   return toBatchResponse(context, batch);
+}
+
+/**
+ * The user says "this is installment N of M" (or clears it). The plan key is rebuilt from the date,
+ * amount and installment, and duplicates are looked up again for these rows only, so the user's
+ * other removals stay as they are.
+ */
+async function setInstallment(
+  context: HouseholdContext,
+  batch: ImportBatchRecord,
+  rowIds: string[],
+  installment: { number: number; total: number } | null,
+) {
+  const rows = await importRowsRepository.listAll(batch.id);
+  const edited = rows.filter((row) => rowIds.includes(row.id));
+  for (const row of edited) {
+    await importRowsRepository.updateMany(batch.id, [row.id], {
+      installmentNumber: installment?.number ?? null,
+      installmentTotal: installment?.total ?? null,
+      seriesKey: seriesKeyFor(isoDate(row.postedDate), row.amount, installment),
+    });
+  }
+  const target = await loadTarget(context, batch);
+  if (!target) return;
+  const fresh = (await importRowsRepository.listAll(batch.id)).filter(
+    (row) => row.outcome !== "created" && row.outcome !== "duplicate",
+  );
+  const defaults = await detectDefaults(context, target, fresh);
+  const wanted = new Set(rowIds);
+  const byId = new Map(fresh.map((row) => [row.id, row]));
+  await importRowsRepository.saveEvaluations(
+    batch.id,
+    defaults
+      .filter((d) => wanted.has(d.id))
+      .map((d) => ({
+        id: d.id,
+        kind: byId.get(d.id)?.kind ?? null,
+        issues: byId.get(d.id)?.issues ?? [],
+        hints: d.hints,
+        skip: d.skip,
+      })),
+  );
+}
+
+type ValueGroup = Omit<ImportGroup, "mapping" | "hint" | "issueCount"> & { rowIds: string[] };
+
+/** The distinct category or tag texts the file uses, with how many rows use each. */
+function collectValueGroups(
+  rows: ImportRowRecord[],
+  field: Exclude<ImportValueField, "merchant">,
+): Map<string, ValueGroup> {
+  const groups = new Map<string, ValueGroup>();
+  for (const row of rows) {
+    const values =
+      field === "category"
+        ? row.hints.categoryValue
+          ? [row.hints.categoryValue as string]
+          : []
+        : ((row.hints.tagValues as string[] | undefined) ?? []);
+    for (const value of new Set(values)) {
+      const key = valueSourceKey(field, value);
+      const group = groups.get(key) ?? {
+        sourceKey: key,
+        displayName: value,
+        sampleDescription: row.description,
+        rowCount: 0,
+        totalAmount: 0,
+        rowIds: [],
+      };
+      group.rowCount += 1;
+      group.totalAmount += row.amount ?? 0;
+      group.rowIds.push(row.id);
+      groups.set(key, group);
+    }
+  }
+  return groups;
 }
 
 export async function listGroups(
   context: HouseholdContext,
   id: string,
   filter: "all" | "unmapped",
+  field: ImportValueField = "merchant",
 ): Promise<ImportGroup[]> {
   await requireBatch(context, id);
   const rows = await importRowsRepository.listAll(id);
   const mappings = new Map(
     (await importMappingsRepository.list(context)).map((m) => [m.sourceKey, m]),
   );
+  if (field !== "merchant") {
+    return [...collectValueGroups(rows, field).values()]
+      .map(({ rowIds: _rowIds, ...group }) => ({
+        ...group,
+        hint: null,
+        mapping: groupMapping(mappings.get(group.sourceKey)),
+        issueCount: 0,
+      }))
+      .filter((group) => filter === "all" || !group.mapping)
+      .sort((a, b) => b.rowCount - a.rowCount || a.displayName.localeCompare(b.displayName));
+  }
   const groups = new Map<string, ImportGroup & { needsDecision: boolean }>();
   for (const row of rows) {
     const existing = groups.get(row.sourceKey);
@@ -544,6 +814,29 @@ export async function saveMapping(
   if (batch.status === "queued" || batch.status === "importing")
     throw new ValidationError("This import is running; wait for it to finish");
 
+  if (input.categoryId && !(await categoriesRepository.get(input.categoryId, context)))
+    throw new NotFoundError("Category");
+  const tagIds = await validateTagIds(context, input.tagIds);
+
+  const field = input.field ?? "merchant";
+  if (field !== "merchant") {
+    const rows = await importRowsRepository.listAll(id);
+    const group = collectValueGroups(rows, field).get(input.sourceKey);
+    if (!group) throw new NotFoundError("Import value");
+    await importMappingsRepository.upsert(context, {
+      sourceKey: input.sourceKey,
+      displayName: group.displayName,
+      targetType: "none",
+      merchantId: null,
+      accountId: null,
+      creditCardId: null,
+      categoryId: field === "category" ? (input.categoryId ?? null) : null,
+      tagIds: field === "tag" ? ((tagIds ?? []) as string[]) : [],
+    });
+    await reevaluate(context, batch);
+    return toBatchResponse(context, batch);
+  }
+
   const sample = (
     await db
       .select({
@@ -565,9 +858,6 @@ export async function saveMapping(
     throw new NotFoundError("Account");
   if (creditCardId && !(await creditCardsRepository.findById(context.householdId, creditCardId)))
     throw new NotFoundError("Credit card");
-  if (input.categoryId && !(await categoriesRepository.get(input.categoryId, context)))
-    throw new NotFoundError("Category");
-  const tagIds = await validateTagIds(context, input.tagIds);
 
   await importMappingsRepository.upsert(context, {
     sourceKey: input.sourceKey,
@@ -595,12 +885,12 @@ export async function startImport(
   const batch = await requireBatch(context, id);
   if (batch.status === "queued" || batch.status === "importing")
     throw new ValidationError("This import is already running");
+  if (batch.format === "table" && !batch.columnMapping)
+    throw new ValidationError("Map the columns first");
   const target = await loadTarget(context, batch);
   if (!target)
     throw new ValidationError(
-      batch.sourceKind === "credit_card"
-        ? "Choose the credit card for this import first"
-        : "Choose the account for this import first",
+      batch.sourceKind === "credit_card" ? "Choose a card first" : "Choose an account first",
     );
 
   await reevaluate(context, batch);
@@ -610,7 +900,7 @@ export async function startImport(
   if (blocked.length > 0) {
     if (!input.skipInvalid)
       throw new ValidationError(
-        `${blocked.length} row${blocked.length === 1 ? "" : "s"} still ha${blocked.length === 1 ? "s" : "ve"} problems. Fix or skip them, or start with "skip invalid rows".`,
+        `${blocked.length} row${blocked.length === 1 ? " has" : "s have"} problems. Fix or remove ${blocked.length === 1 ? "it" : "them"}.`,
       );
     await importRowsRepository.updateMany(
       id,

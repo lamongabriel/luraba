@@ -1,19 +1,12 @@
-import { interCheckingCsvAdapter } from "./adapters/inter-csv.js";
-import { nubankCardCsvAdapter, nubankCheckingCsvAdapter } from "./adapters/nubank-csv.js";
 import { ofxAdapter } from "./adapters/ofx.js";
 import type { ImportFile, ParserAdapter } from "./types.js";
 
 /**
- * The parser registry. Adding a format means writing one `ParserAdapter` and listing it here;
- * nothing downstream (staging, mapping, importers) changes. A PDF adapter would plug in the same
- * way once a text extractor is available (see ../README.md).
+ * Formats with fixed fields (OFX). Tables (CSV, Excel) have no adapter: the user maps their columns
+ * (`../imports.columns.ts`). Adding a fixed format means writing one `ParserAdapter` and listing it
+ * here; nothing downstream (staging, mapping, importers) changes.
  */
-export const parserAdapters: readonly ParserAdapter[] = [
-  ofxAdapter,
-  nubankCheckingCsvAdapter,
-  nubankCardCsvAdapter,
-  interCheckingCsvAdapter,
-];
+export const parserAdapters: readonly ParserAdapter[] = [ofxAdapter];
 
 const MIN_SCORE = 0.3;
 

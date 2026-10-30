@@ -7,7 +7,6 @@ import {
   pushSubscriptionBodySchema,
   pushUnsubscribeBodySchema,
   sendTestNotificationBodySchema,
-  updateNotificationContactBodySchema,
   updateNotificationPreferencesBodySchema,
 } from "./requests.js";
 import {
@@ -52,13 +51,6 @@ export const notificationsEndpoints = {
   channels: defineEndpoint({
     method: "get",
     path: "/notifications/channels",
-    response: notificationChannelsSchema,
-    status: 200,
-  }),
-  updateContact: defineEndpoint({
-    method: "patch",
-    path: "/notifications/contact",
-    body: updateNotificationContactBodySchema,
     response: notificationChannelsSchema,
     status: 200,
   }),

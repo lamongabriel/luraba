@@ -10,8 +10,8 @@ import {
   TimeZoneSelectControl,
 } from "@/components/display";
 import { ErrorState } from "@/components/error-state";
+import { SectionCard } from "@/components/section/section-card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUpdateUserPreferencesMutation } from "@/mutations/auth/use-update-user-preferences-mutation";
@@ -61,30 +61,26 @@ export function PreferencesSettings() {
     ["preferredTheme", "Theme", PreferredThemeSelectControl],
   ] as const;
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Preferences</CardTitle>
-        <p className="text-xs text-muted-foreground">
-          These defaults shape dates and presentation across Luraba.
-        </p>
-      </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
-        {fields.map(([key, label, Control]) => (
-          <div key={key} className="space-y-2">
-            <Label htmlFor={`preference-${key}`}>{label}</Label>
-            <Control
-              id={`preference-${key}`}
-              value={values[key] ?? ""}
-              onChange={(value) => setValues((current) => ({ ...current, [key]: value }))}
-            />
-          </div>
-        ))}
-        <div className="flex justify-end sm:col-span-2">
-          <Button isLoading={mutation.isPending} onClick={() => mutation.mutate(values as never)}>
-            Save preferences
-          </Button>
+    <SectionCard
+      title="Preferences"
+      description="These defaults shape dates and presentation across Luraba."
+      contentClassName="grid gap-4 sm:grid-cols-2"
+    >
+      {fields.map(([key, label, Control]) => (
+        <div key={key} className="space-y-2">
+          <Label htmlFor={`preference-${key}`}>{label}</Label>
+          <Control
+            id={`preference-${key}`}
+            value={values[key] ?? ""}
+            onChange={(value) => setValues((current) => ({ ...current, [key]: value }))}
+          />
         </div>
-      </CardContent>
-    </Card>
+      ))}
+      <div className="flex justify-end sm:col-span-2">
+        <Button isLoading={mutation.isPending} onClick={() => mutation.mutate(values as never)}>
+          Save preferences
+        </Button>
+      </div>
+    </SectionCard>
   );
 }

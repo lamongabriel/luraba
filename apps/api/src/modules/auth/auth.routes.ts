@@ -17,5 +17,10 @@ router.patch(
   requireAccess(),
   authController.updateMyPreferences,
 );
+router.patch(
+  getEndpointRouterPath(authEndpoints.updateProfile),
+  requireAccess(),
+  authController.updateMyProfile,
+);
 
 export default router;

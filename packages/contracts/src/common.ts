@@ -52,6 +52,12 @@ export const wireDateTimeSchema = z
   .union([z.date(), z.iso.datetime()])
   .transform((value) => (value instanceof Date ? value.toISOString() : value));
 
+/** E.164: "+" followed by up to 15 digits, first digit non-zero. */
+export const phoneNumberSchema = z
+  .string()
+  .trim()
+  .regex(/^\+[1-9]\d{6,14}$/u, "Use international format, for example +15551234567");
+
 export const dateInputSchema = z
   .union([z.date(), z.iso.date(), z.iso.datetime()])
   .transform((value) => (value instanceof Date ? value : new Date(value)));

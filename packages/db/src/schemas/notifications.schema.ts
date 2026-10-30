@@ -38,16 +38,6 @@ export const notificationPreferencesTable = pgTable(
   ],
 );
 
-/** Per-user delivery destinations that are not part of the auth profile. */
-export const notificationContactsTable = pgTable("notification_contacts", {
-  userId: uuid("user_id")
-    .primaryKey()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
-  phoneNumber: varchar("phone_number", { length: 20 }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
 export const pushSubscriptionsTable = pgTable(
   "push_subscriptions",
   {

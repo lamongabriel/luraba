@@ -170,7 +170,7 @@ export function RunStep({ batch, onAnother }: { batch: ImportBatch; onAnother: (
           <KpiGrid columns={4}>
             <KpiCard title="Imported" value={batch.createdCount} />
             <KpiCard title="Already in Luraba" value={batch.duplicateCount} />
-            <KpiCard title="Skipped" value={batch.skippedCount} />
+            <KpiCard title="Removed" value={batch.skippedCount} />
             <KpiCard title="Failed" value={batch.failedCount} />
           </KpiGrid>
         </CardContent>
@@ -178,7 +178,7 @@ export function RunStep({ batch, onAnother }: { batch: ImportBatch; onAnother: (
 
       {!running ? (
         <>
-          <Reconciliation batch={batch} />
+          {batch.format === "statement" ? <Reconciliation batch={batch} /> : null}
           <section className="space-y-2">
             <h3 className="text-sm font-medium">Result of every row</h3>
             <FilterTabs value={filter} onChange={setFilter} filters={RESULT_FILTERS} />

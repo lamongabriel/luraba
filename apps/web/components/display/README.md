@@ -14,6 +14,7 @@ import { AccountDisplay, AmountDisplay, CategoryDisplay, MerchantDisplay, TagDis
 | `MemberDisplay` / `MemberMark` | Who created a record: a household member's picture or initials + name | `userId` (a record's `createdByUserId`; unknown or null renders "Unknown"), `size` |
 | `TransactionTypeDisplay` | Expense, income, transfer, adjustment, installment, card payment | `type`, `variant="badge" \| "inline" \| "icon"`, `size` |
 | `MerchantDisplay` / `MerchantMark` | Logo, else a shop icon, + name | `merchant`, `size`, `detail="domain"` |
+| `HouseholdDisplay` / `HouseholdMark` | Uploaded picture, else initials, + name | `household`, `size` |
 | `ProductDisplay` / `ProductMark` | Product (or a transaction item): picture, else a package icon, + name, optional `detail` line | `product`, `size`, `detail` |
 | `AmountDisplay` | Money with the right sign and color | `amount` (minor units), `currencyCode`, `kind`, `size` |
 | `CurrencyDisplay` | A currency: country flag + 3-letter code + symbol (`🇧🇷 BRL R$`), optional name | `currencyCode`, `showName`, `size` |
@@ -67,7 +68,7 @@ TypeScript forces it).
 
 ## Merchants
 
-`MerchantDisplay` shows the uploaded logo (`imageUploadId`), else the domain-derived `logoUrl`, else a shop icon. Logos are uploaded from the merchant sheet on `/merchants` (`components/merchants/merchant-image-field.tsx`, built on the shared `components/uploads/entity-image-field.tsx`).
+`MerchantDisplay` shows the uploaded logo (`imageUploadId`), else the domain-derived `logoUrl`, else a shop icon. Logos are uploaded from the merchant sheet on `/household/merchants` (`components/merchants/merchant-image-field.tsx`, built on the shared `components/uploads/entity-image-field.tsx`).
 
 ## Products
 

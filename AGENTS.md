@@ -59,6 +59,7 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | Showing an account, card, transaction type, merchant, product, amount, category or tag | [apps/web/components/display/README.md](apps/web/components/display/README.md) (**mandatory**) |
 | Products and transaction items (UI) | [apps/web/components/products/README.md](apps/web/components/products/README.md), [apps/api/src/modules/products/README.md](apps/api/src/modules/products/README.md) |
 | Reusable upload UI (galleries, cropper) | [apps/web/components/uploads/README.md](apps/web/components/uploads/README.md) |
+| Settings / Household pages, cards, section menus | [apps/web/components/section/README.md](apps/web/components/section/README.md) |
 | Importing statements (OFX/CSV) or exporting data | [apps/api/src/modules/imports/README.md](apps/api/src/modules/imports/README.md), [apps/api/src/modules/exports/README.md](apps/api/src/modules/exports/README.md), [apps/web/components/imports/README.md](apps/web/components/imports/README.md) |
 | Deployment (Compose, Coolify) | [docs/deployment.md](docs/deployment.md), [docs/coolify.md](docs/coolify.md) |
 

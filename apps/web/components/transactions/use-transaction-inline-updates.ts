@@ -1,7 +1,12 @@
 "use client";
 
-import type { TransactionFeedRow, UpdateTransactionInput } from "@luraba/contracts";
+import {
+  PERMISSIONS,
+  type TransactionFeedRow,
+  type UpdateTransactionInput,
+} from "@luraba/contracts";
 import * as React from "react";
+import { useCan } from "@/components/permissions/use-can";
 import { queryClient } from "@/lib/query-client";
 import { useUpdateCreditCardPurchaseMutation } from "@/mutations/credit-cards/use-credit-card-transaction-mutations";
 import { useUpdateTransactionMutation } from "@/mutations/transactions/use-transaction-mutations";
@@ -21,6 +26,7 @@ export interface InlineTransactionUpdateOptions {
 }
 
 export function useTransactionInlineUpdates(row: TransactionFeedRow) {
+  const canUpdate = useCan()(PERMISSIONS.TRANSACTIONS_UPDATE);
   const invalidate = React.useCallback(() => {
     void Promise.all([
       queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all }),
@@ -63,6 +69,7 @@ export function useTransactionInlineUpdates(row: TransactionFeedRow) {
   );
 
   return {
+    canUpdate,
     error: transactionMutation.error ?? purchaseMutation.error,
     isPending: transactionMutation.isPending || purchaseMutation.isPending,
     update,

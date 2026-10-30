@@ -1,5 +1,14 @@
 import { sql } from "drizzle-orm";
-import { integer, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+  type AnyPgColumn,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 import { currenciesTable } from "./currencies.schema.js";
 import {
   creditExpenseTimingEnum,
@@ -7,12 +16,17 @@ import {
   householdInviteStatusEnum,
   householdRoleEnum,
 } from "./enums.schema.js";
+import { uploadsTable } from "./uploads.schema.js";
 import { usersTable } from "./users.schema.js";
 
 export const householdsTable = pgTable("households", {
   id: uuid().primaryKey().defaultRandom(),
   name: varchar({ length: 255 }).notNull(),
   description: text(),
+  // Lazy reference: uploads belong to a household, so the two schemas import each other.
+  imageUploadId: uuid("image_upload_id").references((): AnyPgColumn => uploadsTable.id, {
+    onDelete: "set null",
+  }),
   defaultCurrencyId: varchar("default_currency_id", { length: 3 })
     .notNull()
     .references(() => currenciesTable.code, { onDelete: "restrict" }),
@@ -59,6 +73,8 @@ export const householdInvitesTable = pgTable(
       .notNull()
       .references(() => householdsTable.id, { onDelete: "cascade" }),
     email: varchar({ length: 255 }).notNull(),
+    /** Optional name the inviter gave the invitee; shown in the invitations list. */
+    inviteeName: varchar("invitee_name", { length: 255 }),
     role: householdRoleEnum().notNull(),
     status: householdInviteStatusEnum().notNull().default("pending"),
     invitedByUserId: uuid("invited_by_user_id")

@@ -1,4 +1,4 @@
-/** Synthetic statements shaped like real bank exports (SGML OFX with no closing tags, bank CSVs). */
+/** Synthetic statements shaped like real bank exports (SGML OFX with no closing tags). */
 
 export function bankOfx(): string {
   return `OFXHEADER:100
@@ -182,26 +182,9 @@ NEWFILEUID:NONE
 `;
 }
 
-export const nubankCheckingCsv = `Data,Valor,Identificador,Descrição
-10/10/2026,5682.14,6aca9103-7224-413b-9fac-cf6eaf4d0de4,Transferência recebida pelo Pix - JOHN DOE - •••.123.456-•• - BANCO INTER (0077) Agência: 1 Conta: 1234567-8
-10/10/2026,-1058.00,6aca914e-2632-4b07-9f92-27224ad2ceaa,Aplicação RDB
-12/10/2026,1058.00,6acd5da9-e38d-46c3-96d5-f2f508401421,Resgate RDB
-13/10/2026,-300.00,6aca91d1-34b4-4179-9916-788d18da73eb,Pagamento de boleto efetuado - ACME ACCOUNTING LTD.
-`;
-
-export const nubankCardCsv = `date,title,amount
-2026-10-23,Ebn*Spotify,"12,90"
-2026-10-01,Foreign Sub,"113,95"
-2026-09-29,Pagamento recebido,"- 2.150,95"
-2026-09-28,Terabyteshop - NuPay - Parcela 4/12,"29,59"
-`;
-
-export const interCheckingCsv = ` Extrato Conta Corrente 
-Conta ;30331749
-Período ;29/09/2026 a 29/10/2026
-Saldo ;1.600,65
-
-Data Lançamento;Histórico;Descrição;Valor;Saldo
-28/10/2026;Pix recebido;John Doe;1.600,00;1.600,65
-26/10/2026;Aplicação;Cdb Porq Obj Banco Inter S A;-3,00;0,65
-`;
+/** A one-row workbook (Date, Description, Amount) built by hand, base64 encoded. */
+export const simpleXlsx = () =>
+  Buffer.from(
+    "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",
+    "base64",
+  );

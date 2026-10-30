@@ -5,7 +5,6 @@ import type {
   NotificationPreference,
   PushSubscriptionInput,
   SendTestNotificationInput,
-  UpdateNotificationContactInput,
   UpdateNotificationPreferencesInput,
 } from "@luraba/contracts/notifications";
 import { formatISODateTime } from "@luraba/domain";
@@ -88,18 +87,9 @@ export async function getChannels(userId: string): Promise<NotificationChannels>
         ready: phoneNumber !== null,
       },
     },
-    phoneNumber,
     pushPublicKey: env.push?.publicKey ?? null,
     pushSubscriptionCount,
   };
-}
-
-export async function updateContact(
-  userId: string,
-  body: UpdateNotificationContactInput,
-): Promise<NotificationChannels> {
-  await repository.setPhoneNumber(userId, body.phoneNumber ?? null);
-  return getChannels(userId);
 }
 
 export async function getPreferences(userId: string): Promise<NotificationPreference[]> {
@@ -165,7 +155,7 @@ export async function sendTest(userId: string, body: SendTestNotificationInput):
   if (!recipient || !isChannelReady(external, recipient)) {
     throw new ValidationError(
       channel === "sms"
-        ? "Add a phone number before testing SMS"
+        ? "Add a phone number to your profile before testing SMS"
         : channel === "push"
           ? "Enable push notifications in this browser before testing"
           : "Your account has no email address",

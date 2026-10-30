@@ -1,11 +1,14 @@
 import { z } from "zod";
 import { defineEndpoint } from "../api.js";
 import { listMetaSchema } from "../list.js";
+import { importFilePreviewSchema } from "./columns.js";
 import {
+  importFilePreviewQuerySchema,
   importIdParamsSchema,
   listImportGroupsQuerySchema,
   listImportRowsQuerySchema,
   listImportsQuerySchema,
+  saveImportColumnsBodySchema,
   saveImportMappingBodySchema,
   startImportBodySchema,
   updateImportBodySchema,
@@ -58,6 +61,22 @@ export const importsEndpoints = {
     path: "/imports/:id",
     params: importIdParamsSchema,
     status: 204,
+  }),
+  preview: defineEndpoint({
+    method: "get",
+    path: "/imports/:id/preview",
+    params: importIdParamsSchema,
+    query: importFilePreviewQuerySchema,
+    response: importFilePreviewSchema,
+    status: 200,
+  }),
+  saveColumns: defineEndpoint({
+    method: "put",
+    path: "/imports/:id/columns",
+    params: importIdParamsSchema,
+    body: saveImportColumnsBodySchema,
+    response: importBatchSchema,
+    status: 200,
   }),
   rows: defineEndpoint({
     method: "get",

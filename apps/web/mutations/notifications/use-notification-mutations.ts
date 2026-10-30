@@ -10,19 +10,18 @@ import {
 import { notificationQueryKeys } from "@/queries/notifications/use-notifications-queries";
 import {
   deleteNotification,
+  type getNotificationChannels,
   markAllNotificationsRead,
   markNotificationRead,
   sendTestNotification,
   subscribePush,
   unsubscribePush,
-  updateNotificationContact,
   updateNotificationPreferences,
 } from "@/services/notifications.service";
 
-type ChannelsResponse = Awaited<ReturnType<typeof updateNotificationContact>>;
+type ChannelsResponse = Awaited<ReturnType<typeof getNotificationChannels>>;
 type PreferencesBody = Parameters<typeof updateNotificationPreferences>[0];
 type PreferencesResponse = Awaited<ReturnType<typeof updateNotificationPreferences>>;
-type ContactBody = Parameters<typeof updateNotificationContact>[0];
 type SubscribeBody = Parameters<typeof subscribePush>[0];
 type TestBody = Parameters<typeof sendTestNotification>[0];
 
@@ -96,27 +95,6 @@ export function useUpdateNotificationPreferencesMutation(
     onSettled: async (...args) => {
       await invalidate();
       await options?.onSettled?.(...args);
-    },
-  });
-}
-
-export const updateNotificationContactMutationDefinition = createAppMutationDefinition<
-  ChannelsResponse,
-  ContactBody
->({
-  defaultErrorMessage: "We couldn't save your phone number. Please try again.",
-  mutationFn: updateNotificationContact,
-  mutationKey: ["notifications", "update-contact"],
-});
-export function useUpdateNotificationContactMutation(
-  options?: UseAppMutationOptions<ChannelsResponse, ContactBody>,
-) {
-  const invalidate = useInvalidateNotifications();
-  return useAppMutation(updateNotificationContactMutationDefinition, {
-    ...options,
-    onSuccess: async (...args) => {
-      await invalidate();
-      await options?.onSuccess?.(...args);
     },
   });
 }

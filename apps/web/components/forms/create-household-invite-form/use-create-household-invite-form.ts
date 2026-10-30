@@ -15,13 +15,17 @@ export function useCreateHouseholdInviteForm({
   onSubmit: (body: CreateHouseholdInviteInput) => void;
 }) {
   const form = useForm<CreateHouseholdInviteFormValues>({
-    defaultValues: { email: "", role: "member" },
+    defaultValues: { name: "", email: "", role: "member" },
     resolver: zodResolver(createHouseholdInviteFormSchema),
     mode: "onBlur",
   });
 
   const submit = form.handleSubmit((values) =>
-    onSubmit({ email: values.email.trim().toLowerCase(), role: values.role }),
+    onSubmit({
+      email: values.email.trim().toLowerCase(),
+      role: values.role,
+      ...(values.name?.trim() ? { name: values.name.trim() } : {}),
+    }),
   );
 
   return { form, submit };

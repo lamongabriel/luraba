@@ -39,7 +39,7 @@ export function TransactionDetails({
   row: TransactionFeedRow;
 }) {
   const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
-  const { isPending, update } = useTransactionInlineUpdates(row);
+  const { canUpdate, isPending, update } = useTransactionInlineUpdates(row);
   const persistedIncludeInBudget = purchase?.includeInBudget ?? row.includeInBudget;
   const [includeInBudget, setIncludeInBudget] = React.useState(persistedIncludeInBudget);
   const categoryId = purchase?.categoryId ?? row.categoryId;
@@ -111,7 +111,7 @@ export function TransactionDetails({
                     categoryId: value === CLEAR_CATEGORY ? null : value,
                   })
                 }
-                disabled={isPending}
+                disabled={isPending || !canUpdate}
                 placeholder="Uncategorized"
                 searchPlaceholder="Search categories..."
                 emptyMessage="No categories found."

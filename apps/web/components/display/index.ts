@@ -24,6 +24,7 @@ export {
 export * from "./constants";
 export { CurrencyDisplay, CurrencyLabel, StaticCurrencyDisplay } from "./currency-display";
 export { DisplayMark } from "./display-mark";
+export { HouseholdDisplay, HouseholdMark } from "./household-display";
 export {
   getInvestmentEventTypeLabel,
   InvestmentEventTypeDisplay,

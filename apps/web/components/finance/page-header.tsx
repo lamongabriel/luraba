@@ -21,12 +21,18 @@ export function PageHeader({
   subtitle,
   actions,
   back,
+  compact = false,
+  leading,
   className,
 }: {
   title: string;
   subtitle: React.ReactNode;
   actions?: React.ReactNode;
   back?: PageBackLink;
+  /** A smaller title and subtitle, for pages that sit inside another page's menu. */
+  compact?: boolean;
+  /** A picture or icon before the title (the household picture). */
+  leading?: React.ReactNode;
   className?: string;
 }) {
   return (
@@ -40,13 +46,20 @@ export function PageHeader({
         </Button>
       ) : null}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0">
-          <Typography as="h1" variant="page-title" className="max-w-3xl">
-            {title}
-          </Typography>
-          <Typography variant="body-muted" className="mt-1 max-w-3xl">
-            {subtitle}
-          </Typography>
+        <div className="flex min-w-0 items-center gap-3">
+          {leading}
+          <div className="min-w-0">
+            <Typography
+              as="h1"
+              variant={compact ? "section-title" : "page-title"}
+              className="max-w-3xl"
+            >
+              {title}
+            </Typography>
+            <Typography variant={compact ? "small-muted" : "body-muted"} className="mt-1 max-w-3xl">
+              {subtitle}
+            </Typography>
+          </div>
         </div>
         {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
