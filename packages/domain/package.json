@@ -50,6 +50,7 @@
     "vitest": "catalog:"
   },
   "dependencies": {
-    "date-fns": "catalog:"
+    "date-fns": "catalog:",
+    "decimal.js": "10.6.0"
   }
 }

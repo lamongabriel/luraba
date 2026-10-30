@@ -7,7 +7,12 @@ import { Pool } from "pg";
 import { env } from "@/config/env";
 import { db } from "@/db";
 
-const TEST_REFERENCE_TABLES = ["currencies", "__drizzle_migrations"] as const;
+const TEST_REFERENCE_TABLES = [
+  "currencies",
+  "__drizzle_migrations",
+  "tax_rules",
+  "holiday_calendar",
+] as const;
 
 function createPool(database: string) {
   return new Pool({
