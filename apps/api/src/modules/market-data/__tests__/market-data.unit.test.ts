@@ -31,7 +31,9 @@ import {
 } from "./fixtures";
 import { describeProviderContract } from "./provider-contract";
 
-vi.mock("@/shared/logger", () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
+vi.mock("@/shared/logger", () => ({
+  logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
 
 const petr4: InstrumentRef = { symbol: "PETR4", market: "BR", currency: "BRL" };
 const aapl: InstrumentRef = { symbol: "AAPL", market: "US", currency: "USD" };
