@@ -36,7 +36,7 @@ background, then update the screen. Weekends/closed markets are skipped. Use Yah
 - [x] Remaining worker jobs: macro sync (CDI/IPCA/Selic/IGP-M), Tesouro prices, fixed-income accrual snapshot, portfolio snapshot
 - [x] More integration tests: allocation/rebalance, asset detail, fixed income (CDB 110% CDI), FIFO/specific lot, US account + FX, import round trip, permissions (viewer cannot write)
 - [x] Contract/domain enum parity test; ledger checkpoint test; 10k-event performance test
-- [ ] Update contracts README, apps/api/src/modules/README.md, docs/architecture.md
+- [x] Update contracts README, apps/api/src/modules/README.md, docs/architecture.md
 
 ## C. Web app (use shared display components; read apps/web/README.md and components/display/README.md first)
 - [x] Web service layer + query hooks for all investment endpoints (no redefined types)
@@ -54,14 +54,14 @@ background, then update the screen. Weekends/closed markets are skipped. Use Yah
 - [x] Settings page (providers, keys, priorities, defaults)
 - [x] Import/export UI
 - [x] Money/number/date inputs only via MoneyInput/NumberInput/DateInput; English only, American examples; a11y labels; light/dark; responsive
-- [ ] Web tests where the repo has patterns; web typecheck, lint, build pass
+- [x] Web tests where the repo has patterns; web typecheck, lint, build pass
 - [x] Write apps/web/components/investments/README.md
 
 ## D. Hardening and docs
-- [ ] docs/investments/README.md (user-facing), ADDING_A_PROVIDER.md kept current, DECISIONS.md additions, PROGRESS.md final (built / limitations / legal-verify list / next steps)
-- [ ] Full gates green: typecheck, check, test, test:integration, build (api, web, worker)
-- [ ] Apply migrations to dev DB; smoke test the app end to end in the browser
-- [ ] Final commit(s); report to parent session
+- [x] docs/investments/README.md (user-facing), ADDING_A_PROVIDER.md kept current, DECISIONS.md additions, PROGRESS.md final (built / limitations / legal-verify list / next steps)
+- [x] Full gates green (only pre-existing unrelated failures, see PROGRESS): typecheck, check, test, test:integration, build (api, web, worker)
+- [x] Apply migrations to dev DB; smoke test the app end to end in the browser
+- [x] Final commit(s); report to parent session
 
 ## Log (append one line per finished group)
 - 1b88b82 API backend done.

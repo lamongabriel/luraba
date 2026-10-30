@@ -85,6 +85,7 @@ A scoped `update`/`delete` returns `undefined` when nothing matched: turn that i
 | [exports](exports/README.md) | CSV/JSON export through a registry of exporters |
 | [health](health/README.md) | Health check |
 | [households](households/README.md) | Households, members, roles, invitations |
+| [investments](investments/README.md) | Brazil + US investing: event ledger, positions, P&L, taxes, fixed income, quotes, import/export |
 | [integrations](integrations/README.md) | Third-party credentials (Brandfetch) |
 | [ledger-accounts](ledger-accounts/README.md) | Ledger accounts backing entries |
 | [mail](mail/README.md) | SMTP mail service and templates |

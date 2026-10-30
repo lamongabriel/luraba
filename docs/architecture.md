@@ -89,6 +89,18 @@ saved, achieved, on track or behind, and the estimate (the monthly amount needed
 finishes, and with an expected yearly return for investments, what it grows to) are computed on
 read by `@luraba/domain`. Goals send no notifications.
 
+## Investments
+
+Investing (Brazil and US) is an append-only event ledger (`investment_events`) per investment account;
+positions, P&L, taxes, fixed-income accrual and performance (TWR, XIRR, benchmarks) are recomputed on
+read by the pure decimal.js engine in `packages/domain/src/investments`. Quotes come from a provider
+registry (Yahoo, Alpha Vantage, brapi, BCB, Tesouro, manual) cached in `asset_quotes`: reads serve the
+cache at once and enqueue a market-hours-aware background refresh (BullMQ `market-data` queue, every
+5 minutes), and the dashboard reports `priceFreshness.refreshing` so the web polls until fresh. Daily
+`portfolio_snapshots` make history a cheap read. Investment accounts are normal `accounts` rows, so net
+worth uses their valuation. Details: `apps/api/src/modules/investments/README.md`,
+`apps/web/components/investments/README.md`, `docs/investments/README.md`.
+
 ## Import and export
 
 Statements are imported in three steps (upload and preview, map and review, background import).

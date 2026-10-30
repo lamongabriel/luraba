@@ -31,6 +31,11 @@ Each module is also a package export (`@luraba/contracts/categories`); add the e
 - Adding a permission: add the key to `PERMISSIONS` and to the role lists in `permissions.ts`.
 - Rebuild after changes so dependents see them: `pnpm --filter @luraba/contracts build` (the dev
   watchers do this).
+- `investments` is the large module (40 endpoints, `PERMISSIONS.INVESTMENTS_*`). Money aggregates are
+  integer minor units in the reporting currency; quantities, prices and rates are decimal strings
+  (`decimalStringSchema`, never floats); event amounts are decimal strings in major units; percent
+  fields are in percent units (12.5 = 12.5%). `investments/values.ts` mirrors the domain enums
+  (parity is asserted in the API tests) and exports their types.
 - Endpoints that stream bytes (upload, download) are deliberately not contracts.
 
 ## Uploads registry
