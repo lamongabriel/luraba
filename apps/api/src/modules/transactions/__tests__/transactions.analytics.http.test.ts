@@ -106,11 +106,16 @@ describe("transaction analytics routes", () => {
         ownerAccountId: ownerAccount.id,
       }),
     );
+    // Bought today, so the installments are always in the future whenever the suite runs.
+    const now = new Date();
+    const purchasedOn = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+    );
     const purchase = await creditCardsService.createPurchase(context.householdContext, card.id, {
       description: "Upcoming Laptop",
       amount: 100_000,
-      purchaseDate: new Date("2026-08-10T00:00:00.000Z"),
-      postedDate: new Date("2026-08-10T00:00:00.000Z"),
+      purchaseDate: purchasedOn,
+      postedDate: purchasedOn,
       installmentCount: 2,
     });
 

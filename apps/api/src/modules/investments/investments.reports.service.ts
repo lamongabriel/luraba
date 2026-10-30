@@ -338,8 +338,7 @@ export async function dashboard(
   const xirrFlows = series.flows
     .filter((f) => !first || f.date > first.date)
     .map((f) => ({ date: f.date, amount: f.amount.neg() }));
-  if (first && first.value.gt(0))
-    xirrFlows.unshift({ date: first.date, amount: first.value.neg() });
+  if (first?.value.gt(0)) xirrFlows.unshift({ date: first.date, amount: first.value.neg() });
   if (last) xirrFlows.push({ date: today, amount: last.value });
   const irr = xirr(xirrFlows);
   const benchmarkReturn = bench ? seriesReturn(bench, from, today) : null;
@@ -350,7 +349,7 @@ export async function dashboard(
       value: await money(scope, point.value),
       invested: await money(scope, series.invested[i] as Dec),
       benchmark:
-        bench && first && first.value.gt(0)
+        bench && first?.value.gt(0)
           ? await money(
               scope,
               first.value.mul(ONE.plus(seriesReturn(bench, from, point.date) ?? ZERO)),

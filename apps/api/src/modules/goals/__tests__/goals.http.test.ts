@@ -1,3 +1,4 @@
+import { formatISODate, getTodayInTimezone } from "@luraba/domain";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import app from "@/app";
@@ -11,7 +12,8 @@ const monthsFromNow = (months: number) => {
   const now = new Date();
   return iso(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + months, 1)));
 };
-const today = () => iso(new Date());
+// The test household lives in America/Sao_Paulo, which is a calendar day behind UTC after 21:00 there.
+const today = () => formatISODate(getTodayInTimezone("America/Sao_Paulo"));
 
 async function setup(role: "owner" | "viewer" = "owner") {
   const context = await createAuthenticatedContext({ role });

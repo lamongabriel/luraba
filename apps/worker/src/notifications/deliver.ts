@@ -34,7 +34,7 @@ export async function processDelivery(deps: DeliverDeps, job: DeliverJob): Promi
 
   const delivery = await repository.getDelivery(deliveryId);
   // Already settled, or removed with its notification: nothing left to send.
-  if (!delivery || delivery.status !== "pending") return;
+  if (delivery?.status !== "pending") return;
 
   const provider = channels[delivery.channel as ExternalChannel];
   if (!provider?.isAvailable()) {

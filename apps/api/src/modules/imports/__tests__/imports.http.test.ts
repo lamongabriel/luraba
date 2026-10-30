@@ -17,6 +17,17 @@ type Auth = Awaited<ReturnType<typeof createAuthenticatedContext>>;
 
 const headers = (auth: Auth) => createAuthHeaders(auth.token, auth.household.id);
 
+/** The few row/group fields these tests read; everything else on the wire stays untyped. */
+type TestRow = {
+  id: string;
+  description: string;
+  displayName: string;
+  skip?: boolean;
+  status?: string;
+  issues: Array<{ code: string }>;
+  [key: string]: unknown;
+};
+
 async function upload(auth: Auth, name: string, content: string) {
   return request(app)
     .post("/api/v1/imports")
@@ -40,7 +51,7 @@ async function rowsOf(auth: Auth, id: string, filter = "all") {
     .set(headers(auth))
     .query({ perPage: 100, filter });
   expect(response.status).toBe(200);
-  return response.body.data as Array<Record<string, any>>;
+  return response.body.data as TestRow[];
 }
 
 async function map(auth: Auth, id: string, body: Record<string, unknown>) {
@@ -53,7 +64,7 @@ async function map(auth: Auth, id: string, body: Record<string, unknown>) {
 
 async function groupFor(auth: Auth, id: string, text: string) {
   const response = await request(app).get(`/api/v1/imports/${id}/groups`).set(headers(auth));
-  const group = (response.body.data as Array<Record<string, any>>).find((g) =>
+  const group = (response.body.data as TestRow[]).find((g) =>
     g.displayName.toLowerCase().includes(text.toLowerCase()),
   );
   if (!group) throw new Error(`no group for ${text}`);
@@ -254,7 +265,7 @@ describe("imports: credit card statement", () => {
     const iof = rows.find((row) => row.description.startsWith("IOF de"));
     expect(reversal?.skip).toBe(true);
     expect(iof?.skip).toBe(true);
-    expect(iof?.issues.map((i: any) => i.code)).toContain("netted");
+    expect(iof?.issues.map((i: { code: string }) => i.code)).toContain("netted");
 
     const payment = rows.find((row) => row.description === "Pagamento recebido");
     expect(payment?.status).toBe("invalid");
@@ -300,7 +311,7 @@ describe("exports", () => {
 
     const list = await request(app).get("/api/v1/exports").set(headers(auth));
     expect(list.status).toBe(200);
-    expect(list.body.data.map((e: any) => e.id)).toContain("transactions");
+    expect(list.body.data.map((e: { id: string }) => e.id)).toContain("transactions");
 
     const csv = await request(app).get("/api/v1/exports/accounts?format=csv").set(headers(auth));
     expect(csv.status).toBe(200);

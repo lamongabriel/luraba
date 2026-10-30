@@ -125,7 +125,7 @@ export class AlphaVantageProvider
     const symbol = alphaVantageSymbol(ref);
     const body = await this.call({ function: "GLOBAL_QUOTE", symbol }, ctx, `quote ${symbol}`);
     const quote = body["Global Quote"] as Record<string, string> | undefined;
-    if (!quote || !quote["05. price"]) {
+    if (!quote?.["05. price"]) {
       throw new SymbolNotFoundError(`Alpha Vantage has no quote for ${symbol}`, "alphavantage");
     }
     return {
