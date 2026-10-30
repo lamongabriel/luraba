@@ -27,6 +27,10 @@ and shared-package watchers.
 
 Use `pnpm seed:mock` only when you want optional demo data.
 
+Use `pnpm down` to wipe the local Docker stack and start fresh. It removes the containers,
+networks, locally built images and **all volumes** (Postgres, Redis and MinIO data), so every
+record and uploaded file is lost. Run `pnpm dev` afterwards to recreate everything.
+
 ## Workspace commands
 
 ```sh
