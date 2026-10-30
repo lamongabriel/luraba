@@ -40,6 +40,7 @@ import {
   useInvestmentDashboardQuery,
   usePositionsQuery,
 } from "@/queries/investments/use-investments-queries";
+import { useDefaultCurrencyCode } from "@/stores/auth-session-store";
 
 const NO_BENCHMARK = "none";
 const ALLOCATION_VIEWS = [
@@ -76,7 +77,8 @@ export default function InvestmentsPage() {
   const positions = usePositionsQuery(scopeQuery(scope), { placeholderData: keepPreviousData });
 
   const data = dashboard.data;
-  const currencyCode = data?.reportingCurrencyCode ?? "USD";
+  const defaultCurrency = useDefaultCurrencyCode();
+  const currencyCode = data?.reportingCurrencyCode ?? defaultCurrency;
   const precision = format.precisionOf(currencyCode);
   const money = (amount: number, kind: "neutral" | "auto" = "neutral") => (
     <AmountDisplay

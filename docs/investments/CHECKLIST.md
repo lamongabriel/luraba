@@ -39,23 +39,23 @@ background, then update the screen. Weekends/closed markets are skipped. Use Yah
 - [ ] Update contracts README, apps/api/src/modules/README.md, docs/architecture.md
 
 ## C. Web app (use shared display components; read apps/web/README.md and components/display/README.md first)
-- [ ] Web service layer + query hooks for all investment endpoints (no redefined types)
-- [ ] Add investment account type entry in `ACCOUNT_TYPE_DISPLAY`; nav entry "Investments"
-- [ ] Shared components in `apps/web/components/investments/` (+ README): AssetDisplay, PositionTable, PerformanceChart, AllocationChart, FreshnessBadge, EventForm, AssetPicker, FixedIncomeTermsForm, TaxTable, ImportWizard, etc.
-- [ ] Dashboard page (value, P&L, today, TWR/XIRR, benchmark chart, allocation, movers, upcoming, freshness)
-- [ ] Holdings page (sortable table, net/gross toggle, by account/portfolio)
-- [ ] Asset detail page (chart with buy/sell markers + avg cost line, lots, events, income, fundamentals)
-- [ ] Fixed-income detail page (curve, market vs curve, IR/IOF countdown, projection)
-- [ ] Investment account page (cash per currency, events, settings, cost-basis method)
-- [ ] Event form (all types incl. corporate actions, cash movements, transfers)
-- [ ] Proventos/income page
-- [ ] Taxes page (apuração, DARF mark paid, US lots, annual summary, disclaimer)
-- [ ] Allocation + rebalance page (targets editor)
-- [ ] Settings page (providers, keys, priorities, defaults)
-- [ ] Import/export UI
-- [ ] Money/number/date inputs only via MoneyInput/NumberInput/DateInput; English only, American examples; a11y labels; light/dark; responsive
+- [x] Web service layer + query hooks for all investment endpoints (no redefined types)
+- [x] Add investment account type entry in `ACCOUNT_TYPE_DISPLAY`; nav entry "Investments"
+- [x] Shared components in `apps/web/components/investments/` (+ README): AssetDisplay, PositionTable, PerformanceChart, AllocationChart, FreshnessBadge, EventForm, AssetPicker, FixedIncomeTermsForm, TaxTable, ImportWizard, etc.
+- [x] Dashboard page (value, P&L, today, TWR/XIRR, benchmark chart, allocation, movers, upcoming, freshness)
+- [x] Holdings page (sortable table, net/gross toggle, by account/portfolio)
+- [x] Asset detail page (chart with buy/sell markers + avg cost line, lots, events, income, fundamentals)
+- [x] Fixed-income detail page (curve, market vs curve, IR/IOF countdown, projection)
+- [x] Investment account page (cash per currency, events, settings, cost-basis method)
+- [x] Event form (all types incl. corporate actions, cash movements, transfers)
+- [x] Proventos/income page
+- [x] Taxes page (apuração, DARF mark paid, US lots, annual summary, disclaimer)
+- [x] Allocation + rebalance page (targets editor)
+- [x] Settings page (providers, keys, priorities, defaults)
+- [x] Import/export UI
+- [x] Money/number/date inputs only via MoneyInput/NumberInput/DateInput; English only, American examples; a11y labels; light/dark; responsive
 - [ ] Web tests where the repo has patterns; web typecheck, lint, build pass
-- [ ] Write apps/web/components/investments/README.md
+- [x] Write apps/web/components/investments/README.md
 
 ## D. Hardening and docs
 - [ ] docs/investments/README.md (user-facing), ADDING_A_PROVIDER.md kept current, DECISIONS.md additions, PROGRESS.md final (built / limitations / legal-verify list / next steps)
@@ -68,3 +68,4 @@ background, then update the screen. Weekends/closed markets are skipped. Use Yah
 - Group A freshness: jobs in API process (BullMQ market-data queue, timers w/o Redis), refresh-on-read, tests.
 - Group B1: migration 0044 (benchmarks, import tables), import (5 formats) + export (6 kinds) + template, parser unit tests, HTTP test.
 - Group B2: accounts hook (net worth), reminders, corporate-action suggestions, scenario tests (CDB, FIFO, US, allocation, permissions, isolation), parity + 12k-event scale tests, ledger lot pooling (quadratic -> linear).
+- Group C1: web data layer, display components (AssetDisplay, InvestmentEventTypeDisplay), dashboard, holdings, transactions, accounts, asset + fixed-income detail, forms, income, taxes, allocation/rebalance, import/export, settings. Remaining: web tests, a11y/responsive pass, build/lint gates, docs.

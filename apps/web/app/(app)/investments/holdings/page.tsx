@@ -26,6 +26,7 @@ import {
   useInvestmentSettingsQuery,
   usePositionsQuery,
 } from "@/queries/investments/use-investments-queries";
+import { useDefaultCurrencyCode } from "@/stores/auth-session-store";
 
 const ALL = "all";
 
@@ -37,8 +38,11 @@ export default function HoldingsPage() {
   const positions = usePositionsQuery(query, { placeholderData: keepPreviousData });
   const dashboard = useInvestmentDashboardQuery(query, { placeholderData: keepPreviousData });
   const settings = useInvestmentSettingsQuery();
+  const defaultCurrency = useDefaultCurrencyCode();
   const currencyCode =
-    dashboard.data?.reportingCurrencyCode ?? settings.data?.reportingCurrencyCode ?? "USD";
+    dashboard.data?.reportingCurrencyCode ??
+    settings.data?.reportingCurrencyCode ??
+    defaultCurrency;
 
   const filtered = React.useMemo(() => {
     const needle = search.trim().toLowerCase();
