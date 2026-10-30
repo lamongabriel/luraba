@@ -220,6 +220,7 @@ export default function BillDetailsPage() {
   return (
     <InternalPageLayout
       title={bill.name}
+      createdBy={bill.createdByUserId}
       subtitle="Schedule, upcoming occurrences and payment history."
       back={{ href: "/bills", label: "Bills" }}
       actions={

@@ -91,6 +91,7 @@ export async function createCreditCard(
       .insert(creditCardsTable)
       .values({
         householdId: context.householdId,
+        createdByUserId: context.userId,
         name: dto.name,
         institutionName: dto.institutionName ?? null,
         institutionDomain: institution.institutionDomain ?? null,
@@ -136,6 +137,7 @@ export async function createCreditCard(
       closingDay: createdCard.closingDay,
       dueDay: createdCard.dueDay,
       creditLimitAmount: createdCard.creditLimitAmount,
+      createdByUserId: createdCard.createdByUserId,
       createdAt: createdCard.createdAt,
       updatedAt: createdCard.updatedAt,
     } satisfies CreditCardRow;

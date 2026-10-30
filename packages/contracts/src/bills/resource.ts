@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { wireDateTimeSchema } from "../common.js";
+import { createdByUserIdSchema, wireDateTimeSchema } from "../common.js";
 import {
   billAudienceSchema,
   billFrequencySchema,
@@ -65,6 +65,7 @@ export const billSchema = z.object({
   remindDaysBefore: z.number().int().nullable(),
   audience: billAudienceSchema,
   summary: billSummarySchema,
+  createdByUserId: createdByUserIdSchema,
   createdAt: wireDateTimeSchema,
   updatedAt: wireDateTimeSchema,
 });

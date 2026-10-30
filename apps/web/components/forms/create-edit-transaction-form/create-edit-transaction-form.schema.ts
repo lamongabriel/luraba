@@ -21,6 +21,19 @@ const optionalId = z
   .refine((value) => value === "" || z.uuid().safeParse(value).success, "Choose a valid option.");
 const dateSchema = z.string().refine((value) => isValid(parseISO(value)), "Enter a valid date.");
 
+export const transactionItemFormSchema = z.object({
+  /** Empty when the item is typed by hand and not tied to a product. */
+  productId: z.string(),
+  name: z.string().trim().min(1, "Enter an item name.").max(255, "Name is too long."),
+  quantity: z
+    .number({ error: "Enter a quantity." })
+    .int("Quantity must be a whole number.")
+    .min(1, "Use at least 1."),
+  unitPrice: z.number({ error: "Enter a price." }).positive("Price must be greater than zero."),
+  saveAsProductPrice: z.boolean(),
+});
+export type TransactionItemFormValues = z.infer<typeof transactionItemFormSchema>;
+
 export const createEditTransactionFormSchema = z
   .object({
     kind: z.enum(TRANSACTION_FORM_KINDS),
@@ -47,6 +60,7 @@ export const createEditTransactionFormSchema = z
       .max(60, "Use no more than 60 installments."),
     includeInBudget: z.boolean(),
     tagIds: z.array(z.uuid()).max(50, "Choose no more than 50 tags."),
+    items: z.array(transactionItemFormSchema).max(200, "Use no more than 200 items."),
   })
   .superRefine((values, context) => {
     const requireId = (field: keyof typeof values, message: string) => {

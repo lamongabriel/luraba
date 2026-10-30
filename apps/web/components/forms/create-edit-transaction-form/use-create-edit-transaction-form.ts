@@ -18,11 +18,17 @@ import {
 } from "@/mutations/transactions/use-transaction-mutations";
 import { accountQueryKeys } from "@/queries/accounts/use-accounts-query";
 import { creditCardQueryKeys } from "@/queries/credit-cards/use-credit-cards-query";
+import { productQueryKeys } from "@/queries/products/use-products-query";
+import {
+  transactionItemsQueryKeys,
+  useTransactionItemsQuery,
+} from "@/queries/transactions/use-transaction-items-query";
 import {
   type TransactionLookups,
   transactionLookupQueryKeys,
 } from "@/queries/transactions/use-transaction-lookups-query";
 import { transactionQueryKeys } from "@/queries/transactions/use-transactions-query";
+import { replaceTransactionItems } from "@/services/transaction-items.service";
 
 import {
   type CreateEditTransactionFormValues,
@@ -49,8 +55,10 @@ export function useCreateEditTransactionForm({
   row?: TransactionFeedRow | null;
 }) {
   const isEdit = Boolean(row);
+  const itemsQuery = useTransactionItemsQuery(row?.id ?? "");
+  const existingItems = itemsQuery.data;
   const form = useForm<CreateEditTransactionFormValues>({
-    defaultValues: getTransactionFormDefaultValues(lookups, row, details),
+    defaultValues: getTransactionFormDefaultValues(lookups, row, details, existingItems),
     resolver: zodResolver(createEditTransactionFormSchema),
   });
   const kind = useWatch({ control: form.control, name: "kind" });
@@ -62,8 +70,8 @@ export function useCreateEditTransactionForm({
   });
 
   React.useEffect(() => {
-    form.reset(getTransactionFormDefaultValues(lookups, row, details));
-  }, [details, form, lookups, row]);
+    form.reset(getTransactionFormDefaultValues(lookups, row, details, existingItems));
+  }, [details, existingItems, form, lookups, row]);
 
   const previousKind = React.useRef(kind);
   React.useEffect(() => {
@@ -82,7 +90,30 @@ export function useCreateEditTransactionForm({
     previousKind.current = kind;
   }, [form, isEdit, kind, lookups, transferFx.setUsesMarketRate]);
 
-  const finish = async () => {
+  const saveItems = async (transactionId: string | undefined) => {
+    if (!transactionId) return;
+    const { items, kind: submittedKind } = form.getValues();
+    const supportsItems = submittedKind !== "transfer" && submittedKind !== "credit_card_payment";
+    if (!supportsItems || (items.length === 0 && !existingItems?.length)) return;
+
+    const precision = itemPrecision.current;
+    await replaceTransactionItems(transactionId, {
+      items: items.map((item) => ({
+        productId: item.productId || null,
+        name: item.name.trim(),
+        quantity: item.quantity,
+        unitPrice: majorToMinorUnits(item.unitPrice, precision),
+        saveAsProductPrice: item.saveAsProductPrice,
+      })),
+    });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: transactionItemsQueryKeys.all }),
+      queryClient.invalidateQueries({ queryKey: productQueryKeys.all }),
+    ]);
+  };
+
+  const finish = async (transactionId?: string) => {
+    await saveItems(transactionId);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all }),
       queryClient.invalidateQueries({ queryKey: accountQueryKeys.all }),
@@ -94,28 +125,30 @@ export function useCreateEditTransactionForm({
     onSuccess();
   };
 
+  const itemPrecision = React.useRef(2);
+
   const createTransactionMutation = useCreateTransactionMutation({
-    onSuccess: finish,
+    onSuccess: (created) => finish(created.id),
     successToast: { title: "Transaction created" },
   });
   const updateTransactionMutation = useUpdateTransactionMutation({
-    onSuccess: finish,
+    onSuccess: (updated) => finish(updated.id),
     successToast: { title: "Transaction updated" },
   });
   const createPurchaseMutation = useCreateCreditCardPurchaseMutation({
-    onSuccess: finish,
+    onSuccess: (created) => finish(created.transactionId),
     successToast: { title: "Credit card purchase created" },
   });
   const updatePurchaseMutation = useUpdateCreditCardPurchaseMutation({
-    onSuccess: finish,
+    onSuccess: (updated) => finish(updated.transactionId),
     successToast: { title: "Credit card purchase updated" },
   });
   const createPaymentMutation = useCreateCreditCardPaymentMutation({
-    onSuccess: finish,
+    onSuccess: () => finish(),
     successToast: { title: "Credit card payment created" },
   });
   const updatePaymentMutation = useUpdateCreditCardPaymentMutation({
-    onSuccess: finish,
+    onSuccess: () => finish(),
     successToast: { title: "Credit card payment updated" },
   });
 
@@ -142,6 +175,7 @@ export function useCreateEditTransactionForm({
       getCurrencyPrecision(lookups, selectedCurrencyCode ?? transferFx.fromCurrencyCode),
     );
     const merchantId = values.merchantId || undefined;
+    itemPrecision.current = getCurrencyPrecision(lookups, selectedCurrencyCode);
 
     if (values.kind === "credit_card_purchase") {
       const body = {

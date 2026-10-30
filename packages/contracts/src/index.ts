@@ -20,6 +20,7 @@ export * from "./onboarding/index.js";
 export * from "./payment-methods/index.js";
 export * from "./permissions.js";
 export * from "./preferences.js";
+export * from "./products/index.js";
 export * from "./reference-data/index.js";
 export * from "./registry.js";
 export * from "./splits/index.js";

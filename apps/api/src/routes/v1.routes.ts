@@ -16,6 +16,7 @@ import {
   notificationsEndpoints,
   onboardingEndpoints,
   paymentMethodsEndpoints,
+  productsEndpoints,
   referenceDataEndpoints,
   splitsEndpoints,
   tagsEndpoints,
@@ -40,6 +41,7 @@ import merchantsRouter from "@/modules/merchants/merchants.routes";
 import notificationsRouter from "@/modules/notifications/notifications.routes";
 import onboardingRouter from "@/modules/onboarding/onboarding.routes";
 import paymentMethodsRouter from "@/modules/payment-methods/payment-methods.routes";
+import productsRouter from "@/modules/products/products.routes";
 import referenceDataRouter from "@/modules/reference-data/reference-data.routes";
 import splitsRouter from "@/modules/splits/splits.routes";
 import tagsRouter from "@/modules/tags/tags.routes";
@@ -62,6 +64,7 @@ router.use(getEndpointBasePath(budgetsEndpoints.getMonth), budgetsRouter);
 router.use(getEndpointBasePath(categoriesEndpoints.list), categoriesRouter);
 router.use(getEndpointBasePath(creditCardsEndpoints.list), creditCardsRouter);
 router.use(getEndpointBasePath(merchantsEndpoints.list), merchantsRouter);
+router.use(getEndpointBasePath(productsEndpoints.list), productsRouter);
 router.use(getEndpointBasePath(notificationsEndpoints.list), notificationsRouter);
 router.use(getEndpointBasePath(onboardingEndpoints.getOptions), onboardingRouter);
 router.use(getEndpointBasePath(paymentMethodsEndpoints.list), paymentMethodsRouter);

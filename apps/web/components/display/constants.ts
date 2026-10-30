@@ -13,6 +13,7 @@ import {
   Exchange01Icon,
   Home01Icon,
   Motorbike01Icon,
+  Package01Icon,
   PieChart02Icon,
   PiggyBankIcon,
   SlidersHorizontalIcon,
@@ -184,6 +185,7 @@ export function amountKindForSignedAmount(amount: number): AmountKind {
 
 /* ---------------------------------------------------------------- merchants */
 
+export const PRODUCT_FALLBACK = { icon: Package01Icon, color: "#a16207" } as const;
 export const MERCHANT_FALLBACK = { icon: Store01Icon, color: "#64748b" } as const;
 
 /* ------------------------------------------------------------ empty labels */
@@ -192,4 +194,6 @@ export const EMPTY_LABELS = {
   account: "No account",
   category: "Uncategorized",
   merchant: "No merchant",
+  product: "No product",
+  member: "Unknown",
 } as const;

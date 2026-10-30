@@ -9,10 +9,11 @@ add its README in the same change, and update the READMEs you rely on if the rul
 
 > ## STOP: never hand-render these in the web app
 >
-> **Accounts, credit cards, transaction types, merchants, amounts (money with sign and color),
+> **Accounts, credit cards, transaction types, merchants, products, amounts (money with sign and color),
 > categories and tags are always rendered with the shared components in
 > [`apps/web/components/display/`](apps/web/components/display/README.md)**: `AccountDisplay`,
-> `TransactionTypeDisplay`, `MerchantDisplay`, `AmountDisplay`, `CategoryDisplay`, `TagDisplay`.
+> `TransactionTypeDisplay`, `MerchantDisplay`, `ProductDisplay`, `AmountDisplay`, `CategoryDisplay`, `TagDisplay` and
+> `MemberDisplay` (who created a record).
 > Do not build your own avatar, icon, badge, chip or colored money text for these, in tables, drawers,
 > cards or forms. Icons, colors, labels and sizes live in `components/display/constants.ts`; change
 > them there and the whole app follows. If a case is missing, extend that folder instead of working
@@ -36,7 +37,8 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | Budget page (monthly plan, card settings) | [apps/web/components/budgets/README.md](apps/web/components/budgets/README.md), [apps/api/src/modules/budgets/README.md](apps/api/src/modules/budgets/README.md) |
 | Credit cards UI (overview, card detail, invoices) | [apps/web/components/credit-cards/README.md](apps/web/components/credit-cards/README.md) |
 | The web app | [apps/web/README.md](apps/web/README.md) (data layer, components, forms, permissions) |
-| Showing an account, card, transaction type, merchant, amount, category or tag | [apps/web/components/display/README.md](apps/web/components/display/README.md) (**mandatory**) |
+| Showing an account, card, transaction type, merchant, product, amount, category or tag | [apps/web/components/display/README.md](apps/web/components/display/README.md) (**mandatory**) |
+| Products and transaction items (UI) | [apps/web/components/products/README.md](apps/web/components/products/README.md), [apps/api/src/modules/products/README.md](apps/api/src/modules/products/README.md) |
 | Reusable upload UI (galleries, cropper) | [apps/web/components/uploads/README.md](apps/web/components/uploads/README.md) |
 | Importing statements (OFX/CSV) or exporting data | [apps/api/src/modules/imports/README.md](apps/api/src/modules/imports/README.md), [apps/api/src/modules/exports/README.md](apps/api/src/modules/exports/README.md), [apps/web/components/imports/README.md](apps/web/components/imports/README.md) |
 | Deployment (Compose, Coolify) | [docs/deployment.md](docs/deployment.md), [docs/coolify.md](docs/coolify.md) |
@@ -76,7 +78,8 @@ add its README in the same change, and update the READMEs you rely on if the rul
     tooltips, tests and sample data use American names and institutions (Chase, American Express,
     John Doe, Chris, Mike), never Portuguese names or Brazilian banks.
 12. **Shared display components.** Anything that shows an account, credit card, transaction type,
-    merchant, amount, category or tag uses `apps/web/components/display/` (see the banner at the top).
+    merchant, amount, category, tag or the member who created a record uses `apps/web/components/display/`
+    (see the banner at the top).
     Account types live in one catalog (`ACCOUNT_TYPE_DISPLAY`): a new account type or subtype adds its
     label, icon and color there, never inline in a page.
 13. **Numbers, money and dates are shared.** Money text goes through `formatMoney` /

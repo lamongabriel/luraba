@@ -4,6 +4,7 @@ import { type Goal, MAX_PER_PAGE } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
 import Link from "next/link";
 import type * as React from "react";
+import { MemberDisplay } from "@/components/display";
 import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
@@ -64,6 +65,7 @@ function GoalCard({ goal, language }: { goal: Goal; language: string }) {
             {goal.name}
           </Typography>
           <Typography variant="small-muted">{kindLabel}</Typography>
+          <MemberDisplay userId={goal.createdByUserId} size="xs" className="mt-1" />
         </div>
         <Badge variant={GOAL_STATE_BADGE[goal.state]}>{GOAL_STATE_LABELS[goal.state]}</Badge>
       </div>

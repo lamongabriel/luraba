@@ -173,6 +173,7 @@ export async function createPurchase(
 
     const transaction = await createUnderlyingExpenseTransaction(tx, {
       householdId: context.householdId,
+      createdByUserId: context.userId,
       card,
       paymentMethodId: paymentMethod.id,
       description: dto.description,

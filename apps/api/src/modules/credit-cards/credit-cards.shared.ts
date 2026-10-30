@@ -100,6 +100,7 @@ export async function createUnderlyingExpenseTransaction(
   tx: TxClient,
   params: {
     householdId: string;
+    createdByUserId: string;
     card: CreditCardRow;
     paymentMethodId: string;
     description: string;
@@ -125,6 +126,7 @@ export async function createUnderlyingExpenseTransaction(
 
   const createdTransaction = await baseTxRepository.createTransaction(tx, {
     householdId: params.householdId,
+    createdByUserId: params.createdByUserId,
     type: "expense",
     paymentMethodId: params.paymentMethodId,
     categoryId: params.categoryId ?? undefined,
@@ -156,6 +158,7 @@ export async function createUnderlyingPaymentTransaction(
   tx: TxClient,
   params: {
     householdId: string;
+    createdByUserId: string;
     card: CreditCardRow;
     fromAccountId: string;
     description: string;
@@ -173,6 +176,7 @@ export async function createUnderlyingPaymentTransaction(
 
   const createdTransaction = await baseTxRepository.createTransaction(tx, {
     householdId: params.householdId,
+    createdByUserId: params.createdByUserId,
     type: "transfer",
     paymentMethodId: null,
     categoryId: null,

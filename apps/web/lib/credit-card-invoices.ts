@@ -222,6 +222,7 @@ export function invoiceLineToFeedRow(
     tags: [],
     includeInBudget: true,
     purchaseDate: line.date,
+    createdByUserId: null,
     createdAt: line.date,
     updatedAt: line.date,
     creditCardId: card.id,

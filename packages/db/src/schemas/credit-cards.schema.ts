@@ -2,6 +2,7 @@ import { bigint, index, integer, pgTable, timestamp, uuid, varchar } from "drizz
 import { accountsTable } from "./accounts.schema.js";
 import { creditCardProductTypeEnum } from "./enums.schema.js";
 import { householdsTable } from "./households.schema.js";
+import { usersTable } from "./users.schema.js";
 
 export const creditCardsTable = pgTable(
   "credit_cards",
@@ -28,6 +29,10 @@ export const creditCardsTable = pgTable(
     closingDay: integer("closing_day").notNull(),
     dueDay: integer("due_day").notNull(),
     creditLimitAmount: bigint("credit_limit_amount", { mode: "number" }).notNull().default(-1),
+    /** Who created the record. Null for rows that predate tracking or whose user was deleted. */
+    createdByUserId: uuid("created_by_user_id").references(() => usersTable.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

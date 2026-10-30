@@ -34,7 +34,7 @@ Adding data to a screen: service function -> query hook (+ key) -> component; wr
 that invalidates the key. Reusable file/attachment UI is documented in
 [components/uploads/README.md](components/uploads/README.md).
 
-**Display components (mandatory).** Accounts, credit cards, transaction types, merchants, amounts, categories and tags are shown with [components/display/](components/display/README.md), never hand-built.
+**Display components (mandatory).** Accounts, credit cards, transaction types, merchants, products, amounts, categories and tags are shown with [components/display/](components/display/README.md), never hand-built.
 
 Credit cards UI (month overview, card detail, invoices): [components/credit-cards/README.md](components/credit-cards/README.md).
 

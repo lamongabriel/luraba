@@ -199,6 +199,7 @@ export function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResp
         includeInBudget: first.includeInBudget,
         purchaseDate: formatISODate(first.purchaseDate),
         postedDate: formatISODate(first.postedDate),
+        createdByUserId: first.createdByUserId ?? null,
         createdAt: first.createdAt,
         updatedAt: first.updatedAt,
       };
@@ -227,6 +228,7 @@ export function mapDetailedRows(rows: DetailedTransactionRow[]): TransactionResp
       includeInBudget: first.includeInBudget,
       purchaseDate: formatISODate(first.purchaseDate),
       postedDate: formatISODate(first.postedDate),
+      createdByUserId: first.createdByUserId ?? null,
       createdAt: first.createdAt,
       updatedAt: first.updatedAt,
     };
@@ -305,6 +307,7 @@ export function mapCreditCardInstallmentRowsToFeedRows(
       includeInBudget: first.includeInBudget,
       purchaseDate: formatISODate(first.purchaseDate),
       postedDate: formatISODate(first.postedDate),
+      createdByUserId: first.createdByUserId ?? null,
       createdAt: first.createdAt,
       updatedAt: first.updatedAt,
       rowId: first.installmentId,

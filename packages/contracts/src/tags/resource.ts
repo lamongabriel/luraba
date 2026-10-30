@@ -1,11 +1,12 @@
 import { z } from "zod";
-import { hexColorSchema, iconNameSchema } from "../common.js";
+import { createdByUserIdSchema, hexColorSchema, iconNameSchema } from "../common.js";
 
 export const tagSchema = z.object({
   id: z.uuid(),
   name: z.string(),
   color: hexColorSchema.nullable(),
   icon: iconNameSchema.nullable(),
+  createdByUserId: createdByUserIdSchema,
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });

@@ -23,6 +23,7 @@ const base = {
   installmentCount: 1,
   includeInBudget: true,
   tagIds: [],
+  items: [],
 };
 
 describe("createEditTransactionFormSchema", () => {
@@ -95,5 +96,39 @@ describe("createEditTransactionFormSchema", () => {
         message: "Enter or quote a destination amount.",
       }),
     );
+  });
+});
+
+describe("transaction items", () => {
+  const expense = {
+    ...base,
+    kind: "expense" as const,
+    accountId: ACCOUNT_ID,
+    paymentMethodCode: "pix",
+  };
+
+  it("accepts typed and product-backed items", () => {
+    const result = createEditTransactionFormSchema.safeParse({
+      ...expense,
+      items: [
+        { productId: "", name: "Cable", quantity: 2, unitPrice: 15, saveAsProductPrice: true },
+        {
+          productId: CATEGORY_ID,
+          name: "Burger",
+          quantity: 1,
+          unitPrice: 9.5,
+          saveAsProductPrice: false,
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an item without a name, quantity or price", () => {
+    const result = createEditTransactionFormSchema.safeParse({
+      ...expense,
+      items: [{ productId: "", name: " ", quantity: "", unitPrice: "", saveAsProductPrice: false }],
+    });
+    expect(result.success).toBe(false);
   });
 });

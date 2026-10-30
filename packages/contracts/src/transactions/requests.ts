@@ -105,6 +105,8 @@ const commonFilterShape = {
   categoryIds: commaSeparatedArraySchema(z.uuid()),
   uncategorized: booleanQuerySchema.optional(),
   merchantIds: commaSeparatedArraySchema(z.uuid()),
+  /** Only rows created by these household members ("who spent it"). */
+  createdByUserIds: commaSeparatedArraySchema(z.uuid()),
   tagIds: commaSeparatedArraySchema(z.uuid()),
   paymentMethodCodes: commaSeparatedArraySchema(paymentMethodCodeSchema),
   currencyCodes: commaSeparatedArraySchema(currencyCodeSchema),
@@ -164,3 +166,21 @@ export type TransactionSortField =
   | "originType"
   | "postedDate"
   | "purchaseDate";
+
+export const transactionItemInputSchema = z.object({
+  /** A product from the catalog. Without it the item is free text. */
+  productId: z.uuid().nullable().optional(),
+  name: z.string().trim().min(1).max(255),
+  quantity: z.number().int().min(1).max(10_000).default(1),
+  unitPrice: moneyAmountSchema,
+  /**
+   * Remember this price on the product (creating the product from `name` when there is no
+   * `productId`), so the catalog follows what was actually paid.
+   */
+  saveAsProductPrice: z.boolean().default(false),
+});
+/** Replaces the whole list of items of a transaction; an empty list removes them. */
+export const replaceTransactionItemsBodySchema = z.object({
+  items: z.array(transactionItemInputSchema).max(200),
+});
+export type ReplaceTransactionItemsInput = z.input<typeof replaceTransactionItemsBodySchema>;

@@ -9,5 +9,7 @@ export { AmountDisplay } from "./amount-display";
 export * from "./constants";
 export { DisplayMark } from "./display-mark";
 export { CategoryDisplay, TagDisplay } from "./label-display";
+export { MemberDisplay, MemberMark } from "./member-display";
 export { MerchantDisplay, MerchantMark } from "./merchant-display";
+export { ProductDisplay, ProductMark } from "./product-display";
 export { getTransactionTypeLabel, TransactionTypeDisplay } from "./transaction-type-display";

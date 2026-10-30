@@ -8,6 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { categoryTypeEnum } from "./enums.schema.js";
 import { householdsTable } from "./households.schema.js";
+import { usersTable } from "./users.schema.js";
 
 export const categoriesTable = pgTable(
   "categories",
@@ -23,6 +24,10 @@ export const categoriesTable = pgTable(
     type: categoryTypeEnum().notNull(),
     color: varchar({ length: 7 }),
     icon: varchar({ length: 128 }),
+    /** Who created the record. Null for rows that predate tracking or whose user was deleted. */
+    createdByUserId: uuid("created_by_user_id").references(() => usersTable.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

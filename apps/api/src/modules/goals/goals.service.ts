@@ -121,6 +121,7 @@ function mapGoal(
         ? formatISODate(estimate.projectedCompletionDate)
         : null,
     },
+    createdByUserId: goal.createdByUserId,
     createdAt: formatISODateTime(goal.createdAt),
     updatedAt: formatISODateTime(goal.updatedAt),
   };

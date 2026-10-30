@@ -5,6 +5,7 @@ import { categoriesTable } from "@luraba/db/schemas/categories.schema";
 import { creditCardsTable } from "@luraba/db/schemas/credit-cards.schema";
 import { householdMembersTable } from "@luraba/db/schemas/households.schema";
 import { merchantsTable } from "@luraba/db/schemas/merchants.schema";
+import { productsTable } from "@luraba/db/schemas/products.schema";
 import { splitsTable } from "@luraba/db/schemas/splits.schema";
 import { transactionsTable } from "@luraba/db/schemas/transactions.schema";
 import { usersTable } from "@luraba/db/schemas/users.schema";
@@ -20,6 +21,7 @@ type HouseholdTargetTable = PgTable & { id: PgColumn; householdId: PgColumn };
  */
 const HOUSEHOLD_TARGET_TABLES = {
   merchant: merchantsTable,
+  product: productsTable,
   account: accountsTable,
   credit_card: creditCardsTable,
   category: categoriesTable,

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { wireDateTimeSchema } from "../common.js";
+import { createdByUserIdSchema, wireDateTimeSchema } from "../common.js";
 import { splitInstallmentStateSchema, splitStatusSchema } from "./catalog.js";
 
 const wireDateSchema = z.string();
@@ -70,6 +70,7 @@ export const splitSchema = z.object({
   status: splitStatusSchema,
   sourceTransactionId: z.uuid().nullable(),
   summary: splitSummarySchema,
+  createdByUserId: createdByUserIdSchema,
   createdAt: wireDateTimeSchema,
   updatedAt: wireDateTimeSchema,
 });

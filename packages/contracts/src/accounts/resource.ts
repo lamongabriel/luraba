@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { currencyCodeSchema, moneyBalanceSchema, wireDateTimeSchema } from "../common.js";
+import {
+  createdByUserIdSchema,
+  currencyCodeSchema,
+  moneyBalanceSchema,
+  wireDateTimeSchema,
+} from "../common.js";
 import {
   cashAccountDetailsSchema,
   cryptoAccountDetailsSchema,
@@ -24,6 +29,7 @@ export const accountSchema = z.object({
   classification: accountClassificationSchema,
   type: accountTypeSchema,
   currencyCode: currencyCodeSchema,
+  createdByUserId: createdByUserIdSchema,
   createdAt: wireDateTimeSchema,
   updatedAt: wireDateTimeSchema,
 });

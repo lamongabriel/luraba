@@ -4,6 +4,7 @@ import { listMetaSchema, listMetaWithSummarySchema } from "../list.js";
 import {
   createTransactionInputSchema,
   listTransactionsQuerySchema,
+  replaceTransactionItemsBodySchema,
   transactionAnalyticsQuerySchema,
   transactionIdParamsSchema,
   upcomingTransactionsQuerySchema,
@@ -12,6 +13,7 @@ import {
 import {
   transactionAnalyticsSchema,
   transactionFeedRowSchema,
+  transactionItemSchema,
   transactionListSummarySchema,
   transactionSchema,
   upcomingTransactionSchema,
@@ -54,6 +56,21 @@ export const transactionsEndpoints = {
     params: transactionIdParamsSchema,
     body: updateTransactionInputSchema,
     response: transactionSchema,
+    status: 200,
+  }),
+  listItems: defineEndpoint({
+    method: "get",
+    path: "/transactions/:id/items",
+    params: transactionIdParamsSchema,
+    response: z.array(transactionItemSchema),
+    status: 200,
+  }),
+  replaceItems: defineEndpoint({
+    method: "put",
+    path: "/transactions/:id/items",
+    params: transactionIdParamsSchema,
+    body: replaceTransactionItemsBodySchema,
+    response: z.array(transactionItemSchema),
     status: 200,
   }),
   delete: defineEndpoint({

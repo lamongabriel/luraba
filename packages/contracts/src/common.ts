@@ -8,6 +8,9 @@ export const moneyBalanceSchema = z.coerce
   .min(-MAX_SAFE_MINOR_UNITS)
   .max(MAX_SAFE_MINOR_UNITS);
 
+/** Who created a record: a household member's user id, or null when unknown (older rows, deleted user). */
+export const createdByUserIdSchema = z.uuid().nullable();
+
 export const currencyCodeSchema = z
   .string()
   .trim()

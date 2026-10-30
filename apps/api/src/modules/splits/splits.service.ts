@@ -184,6 +184,7 @@ async function buildDetails(
       sourceTransactionId: split.sourceTransactionId,
       summary: summarize(participants),
       participants,
+      createdByUserId: split.createdByUserId,
       createdAt: formatISODateTime(split.createdAt),
       updatedAt: formatISODateTime(split.updatedAt),
     };

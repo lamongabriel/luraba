@@ -58,6 +58,7 @@ function buildAccount(
     balance: 0,
     classification:
       details.kind === "loan" || details.kind === "other_liability" ? "liability" : "asset",
+    createdByUserId: null,
     createdAt: "2026-01-01T00:00:00.000Z",
     currencyCode: "USD",
     details,
@@ -107,6 +108,7 @@ describe("CreateEditAccountForm", () => {
             emailVerified: true,
             defaultHouseholdId: "household-1",
             lastActiveAt: null,
+            createdByUserId: null,
             createdAt: "2026-01-01T00:00:00.000Z",
             updatedAt: "2026-01-01T00:00:00.000Z",
           },

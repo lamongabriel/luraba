@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { wireDateTimeSchema } from "../common.js";
+import { createdByUserIdSchema, wireDateTimeSchema } from "../common.js";
 import { goalKindSchema, goalStateSchema, goalStatusSchema } from "./catalog.js";
 
 const wireDateSchema = z.string();
@@ -69,6 +69,7 @@ export const goalSchema = z.object({
   /** The date the contributions first reached the target; null while below it. */
   achievedOn: wireDateSchema.nullable(),
   estimate: goalEstimateSchema,
+  createdByUserId: createdByUserIdSchema,
   createdAt: wireDateTimeSchema,
   updatedAt: wireDateTimeSchema,
 });

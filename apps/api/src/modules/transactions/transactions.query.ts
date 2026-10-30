@@ -65,6 +65,9 @@ export function buildTransactionFeedWhere(query: TransactionFilterQuery): SQL | 
     query.merchantIds.length > 0
       ? sql`merchant_id = any(${sqlArray(query.merchantIds, "uuid")})`
       : undefined,
+    query.createdByUserIds.length > 0
+      ? sql`created_by_user_id = any(${sqlArray(query.createdByUserIds, "uuid")})`
+      : undefined,
     query.tagIds.length > 0 ? sql`tag_ids && ${sqlArray(query.tagIds, "uuid")}` : undefined,
     query.paymentMethodCodes.length > 0
       ? sql`payment_method_code = any(${sqlArray(query.paymentMethodCodes, "text")})`
@@ -192,6 +195,7 @@ export function buildTransactionFeedCte(
         ${transactionsTable.includeInBudget} as include_in_budget,
         ${transactionsTable.categoryId} as category_id,
         ${transactionsTable.merchantId} as merchant_id,
+        ${transactionsTable.createdByUserId} as created_by_user_id,
         ${paymentMethodsTable.code} as payment_method_code,
         ${creditCardPaymentsTable.creditCardId} as credit_card_id,
         entry_rollup.account_ids,
@@ -246,6 +250,7 @@ export function buildTransactionFeedCte(
         ${creditCardPurchasesTable.includeInBudget} as include_in_budget,
         ${transactionsTable.categoryId} as category_id,
         ${transactionsTable.merchantId} as merchant_id,
+        ${transactionsTable.createdByUserId} as created_by_user_id,
         ${paymentMethodsTable.code} as payment_method_code,
         ${creditCardsTable.id} as credit_card_id,
         array[${creditCardsTable.ledgerAccountId}]::uuid[] as account_ids,

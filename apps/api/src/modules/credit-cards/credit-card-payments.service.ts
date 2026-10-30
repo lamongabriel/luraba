@@ -228,6 +228,7 @@ export async function createPayment(
   const payment = await db.transaction(async (tx) => {
     const transaction = await createUnderlyingPaymentTransaction(tx, {
       householdId: context.householdId,
+      createdByUserId: context.userId,
       card,
       fromAccountId: dto.fromAccountId,
       description: dto.description ?? `Payment to ${card.name}`,

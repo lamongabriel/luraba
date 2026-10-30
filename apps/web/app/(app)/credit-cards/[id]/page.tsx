@@ -155,6 +155,7 @@ export default function CreditCardDetailPage() {
   return (
     <InternalPageLayout
       title={card.name}
+      createdBy={card.createdByUserId}
       subtitle="Invoices, limit and the purchases behind each one."
       back={{ href: "/credit-cards", label: "Credit cards" }}
       actions={

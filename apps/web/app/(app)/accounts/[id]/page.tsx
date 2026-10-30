@@ -85,6 +85,7 @@ export default function AccountDetailsPage() {
       {account ? (
         <InternalPageLayout
           title={account.name}
+          createdBy={account.createdByUserId}
           subtitle="Balance, activity and details."
           back={{ href: "/accounts", label: "Accounts" }}
           actions={

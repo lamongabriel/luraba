@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { hexColorSchema, iconNameSchema } from "../common.js";
+import { createdByUserIdSchema, hexColorSchema, iconNameSchema } from "../common.js";
 
 export const categoryTypeSchema = z.enum(["expense", "income"]);
 export const categoryColorSchema = hexColorSchema;
@@ -11,6 +11,7 @@ export const categorySchema = z.object({
   type: categoryTypeSchema,
   color: categoryColorSchema.nullable(),
   icon: categoryIconSchema.nullable(),
+  createdByUserId: createdByUserIdSchema,
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });

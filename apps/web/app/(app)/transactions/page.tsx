@@ -126,6 +126,7 @@ export default function TransactionsPage() {
         includeInBudget: true,
         purchaseDate: row.effectiveDate,
         postedDate: row.effectiveDate,
+        createdByUserId: null,
         createdAt: row.effectiveDate,
         updatedAt: row.effectiveDate,
         rowId: row.sourceId,

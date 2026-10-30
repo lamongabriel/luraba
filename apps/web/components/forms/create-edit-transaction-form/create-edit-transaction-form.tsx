@@ -3,15 +3,21 @@
 import { SaveMoneyDollarIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { TransactionFeedRow } from "@luraba/contracts";
+import { MAX_PER_PAGE } from "@luraba/contracts";
 import { useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
+import { useProductsQuery } from "@/queries/products/use-products-query";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
-import type { TransactionFormDetails } from "./create-edit-transaction-form.utils";
+import {
+  getCurrencyPrecision,
+  type TransactionFormDetails,
+} from "./create-edit-transaction-form.utils";
 import { CommonSection } from "./sections/common-section";
 import { CreditCardPaymentSection } from "./sections/credit-card-payment-section";
 import { CreditCardPurchaseSection } from "./sections/credit-card-purchase-section";
 import { ExpenseIncomeSection } from "./sections/expense-income-section";
+import { ItemsSection } from "./sections/items-section";
 import { SettingsSection } from "./sections/settings-section";
 import { TransferSection } from "./sections/transfer-section";
 import { useCreateEditTransactionForm } from "./use-create-edit-transaction-form";
@@ -67,6 +73,11 @@ export function CreateEditTransactionForm({
         method.currencyCode === selectedAccount.currencyCode),
   );
 
+  const productsQuery = useProductsQuery({ perPage: MAX_PER_PAGE });
+  const itemsCurrencyCode =
+    kind === "credit_card_purchase" ? selectedCard?.currencyCode : selectedAccount?.currencyCode;
+  const precisionOf = (code: string | undefined) => getCurrencyPrecision(lookups, code);
+
   return (
     <form className="space-y-7" onSubmit={onSubmit} noValidate>
       <CommonSection
@@ -116,6 +127,16 @@ export function CreateEditTransactionForm({
           cards={lookups.creditCards}
           control={form.control}
           isEdit={isEdit}
+        />
+      ) : null}
+
+      {kind === "expense" || kind === "income" || kind === "credit_card_purchase" ? (
+        <ItemsSection
+          control={form.control}
+          products={productsQuery.data?.data ?? []}
+          currencyCode={itemsCurrencyCode}
+          precisionOf={precisionOf}
+          productPrecisionOf={precisionOf}
         />
       ) : null}
 

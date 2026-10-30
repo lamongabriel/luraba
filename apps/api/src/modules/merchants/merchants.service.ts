@@ -24,6 +24,7 @@ function mapMerchantRecord(merchant: MerchantRecord): Merchant {
     domain: merchant.domain ?? null,
     logoUrl: merchant.logoUrl ?? null,
     imageUploadId: merchant.imageUploadId ?? null,
+    createdByUserId: merchant.createdByUserId,
     createdAt: formatISODateTime(merchant.createdAt),
     updatedAt: formatISODateTime(merchant.updatedAt),
   };

@@ -172,6 +172,7 @@ function mapBill(bill: BillRecord, summary: BillSummary): Bill {
     remindDaysBefore: bill.remindDaysBefore,
     audience: bill.audience,
     summary,
+    createdByUserId: bill.createdByUserId,
     createdAt: formatISODateTime(bill.createdAt),
     updatedAt: formatISODateTime(bill.updatedAt),
   };

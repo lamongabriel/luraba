@@ -42,6 +42,10 @@ export const ATTACHMENT_TARGETS = {
     scope: "household",
     roles: { logo: { cardinality: "one", kinds: ["image"], label: "Logo" } },
   },
+  product: {
+    scope: "household",
+    roles: { image: { cardinality: "one", kinds: ["image"], label: "Product picture" } },
+  },
   account: {
     scope: "household",
     roles: { image: { cardinality: "one", kinds: ["image"], label: "Image" } },

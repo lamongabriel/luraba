@@ -3,6 +3,7 @@
 import { MAX_PER_PAGE, type Split } from "@luraba/contracts";
 import Link from "next/link";
 import type * as React from "react";
+import { MemberDisplay } from "@/components/display";
 import { ErrorState } from "@/components/error-state";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
@@ -34,6 +35,7 @@ function SplitCard({ split, language }: { split: Split; language: string }) {
           <Typography variant="small-muted">
             {summary.participantCount} {summary.participantCount === 1 ? "person" : "people"}
           </Typography>
+          <MemberDisplay userId={split.createdByUserId} size="xs" className="mt-1" />
         </div>
         <div className="flex shrink-0 gap-2">
           {summary.overdueCount > 0 ? (

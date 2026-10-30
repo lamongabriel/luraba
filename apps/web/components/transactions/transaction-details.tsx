@@ -5,7 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { CreditCardPayment, CreditCardPurchase, TransactionFeedRow } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
 import * as React from "react";
-import { CategoryDisplay, TransactionTypeDisplay } from "@/components/display";
+import { CategoryDisplay, MemberDisplay, TransactionTypeDisplay } from "@/components/display";
 import { MoneyValue } from "@/components/finance/money-value";
 import { ComboboxControl } from "@/components/forms/form-combobox";
 import { TagSelectControl } from "@/components/forms/form-tag-select";
@@ -15,6 +15,7 @@ import {
   SidePanelSection,
   SidePanelSettingCard,
 } from "@/components/side-panel/side-panel-section";
+import { TransactionItemsList } from "@/components/transactions/transaction-items-list";
 import { useTransactionInlineUpdates } from "@/components/transactions/use-transaction-inline-updates";
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
@@ -73,6 +74,9 @@ export function TransactionDetails({
       <SidePanelSection title="Overview">
         <SidePanelDetailRow label="Type">
           <TransactionTypeDisplay type={row.originType} />
+        </SidePanelDetailRow>
+        <SidePanelDetailRow label="Created by">
+          <MemberDisplay userId={row.createdByUserId} />
         </SidePanelDetailRow>
         <SidePanelDetailRow label="Purchase date">
           {formatShortDate(row.purchaseDate, language)}
@@ -192,6 +196,14 @@ export function TransactionDetails({
             </SidePanelDetailRow>
           ))}
         </SidePanelSection>
+      ) : null}
+
+      {row.rowKind !== "credit_card_payment" && row.originType !== "transfer" ? (
+        <TransactionItemsList
+          transactionId={row.id}
+          currencyCode={row.currencyCode}
+          precision={precision}
+        />
       ) : null}
 
       {row.rowKind === "transaction" ? (

@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Typography } from "@/components/ui/typography";
+import { useMemberLookup } from "@/hooks/use-member-lookup";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
 
 function parseDate(value: string) {
@@ -116,6 +117,7 @@ export function TransactionsTableToolbar({
         ? value.length > 0
         : value !== null,
   ).length;
+  const { members } = useMemberLookup();
   const accountOptions = lookups.accounts.map((account) => ({
     value: account.id,
     label: `${account.name} · ${account.currencyCode}`,
@@ -225,6 +227,18 @@ export function TransactionsTableToolbar({
                   label: merchant.name,
                 }))}
                 onValueChange={(value) => setFilter("merchantIds", value ?? null)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Typography variant="small-strong">Created by</Typography>
+              <FilterFaceted
+                multiple
+                value={filters.createdByUserIds}
+                options={members.map((member) => ({
+                  value: member.userId,
+                  label: member.name,
+                }))}
+                onValueChange={(value) => setFilter("createdByUserIds", value ?? null)}
               />
             </div>
             <div className="space-y-1.5">

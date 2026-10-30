@@ -4,6 +4,7 @@ import { currenciesTable } from "./currencies.schema.js";
 import { accountClassificationEnum, accountTypeEnum } from "./enums.schema.js";
 import { householdsTable } from "./households.schema.js";
 import { uploadsTable } from "./uploads.schema.js";
+import { usersTable } from "./users.schema.js";
 
 export const accountsTable = pgTable(
   "accounts",
@@ -26,6 +27,10 @@ export const accountsTable = pgTable(
     currencyId: varchar("currency_id", { length: 3 })
       .notNull()
       .references(() => currenciesTable.code, { onDelete: "restrict" }),
+    /** Who created the record. Null for rows that predate tracking or whose user was deleted. */
+    createdByUserId: uuid("created_by_user_id").references(() => usersTable.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

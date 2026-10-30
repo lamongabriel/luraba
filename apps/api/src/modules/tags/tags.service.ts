@@ -13,6 +13,7 @@ function mapTagRecord(tag: TagRecord): Tag {
     name: tag.name,
     color: tag.color ?? null,
     icon: tag.icon ?? null,
+    createdByUserId: tag.createdByUserId,
     createdAt: formatISODateTime(tag.createdAt),
     updatedAt: formatISODateTime(tag.updatedAt),
   };

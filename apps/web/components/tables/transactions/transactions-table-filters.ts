@@ -11,6 +11,7 @@ export interface TransactionTableFilters {
   categoryIds: string[];
   uncategorized: boolean | null;
   merchantIds: string[];
+  createdByUserIds: string[];
   tagIds: string[];
   paymentMethodCodes: string[];
   currencyCodes: string[];
@@ -34,6 +35,7 @@ export const TRANSACTION_FILTERS = {
   categoryIds: { type: "stringArray" },
   uncategorized: { type: "boolean" },
   merchantIds: { type: "stringArray" },
+  createdByUserIds: { type: "stringArray" },
   tagIds: { type: "stringArray" },
   paymentMethodCodes: { type: "stringArray" },
   currencyCodes: { type: "stringArray" },

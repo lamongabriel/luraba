@@ -197,6 +197,7 @@ export default function GoalDetailsPage() {
   return (
     <InternalPageLayout
       title={goal.name}
+      createdBy={goal.createdByUserId}
       subtitle="Progress, monthly plan and contributions."
       back={{ href: "/goals", label: "Goals" }}
       actions={

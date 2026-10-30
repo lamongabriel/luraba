@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { currencyCodeSchema, wireDateTimeSchema } from "../common.js";
+import { createdByUserIdSchema, currencyCodeSchema, wireDateTimeSchema } from "../common.js";
 import { creditExpenseTimingSchema, creditInstallmentBudgetModeSchema } from "../preferences.js";
 import { tagSummarySchema } from "../tags/resource.js";
 
@@ -73,6 +73,7 @@ export const creditCardSchema = z.object({
   creditLimitAmount: z.number().int(),
   remainingCreditAmount: z.number().int().nullable(),
   balance: z.number().int(),
+  createdByUserId: createdByUserIdSchema,
   createdAt: wireDateTimeSchema,
   updatedAt: wireDateTimeSchema,
 });

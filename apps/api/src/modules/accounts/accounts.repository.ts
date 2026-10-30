@@ -166,6 +166,7 @@ class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
           classification: accountsTable.classification,
           type: accountsTable.type,
           currencyId: accountsTable.currencyId,
+          createdByUserId: accountsTable.createdByUserId,
           createdAt: accountsTable.createdAt,
           updatedAt: accountsTable.updatedAt,
           balance: rawBalance,
@@ -197,6 +198,7 @@ class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
       .values({
         ...values,
         householdId: context.householdId,
+        createdByUserId: context.userId,
         createdAt: timestamp,
         updatedAt: timestamp,
       })

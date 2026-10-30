@@ -19,6 +19,7 @@ function mapCategoryRecord(category: CategoryRecord): Category {
     type: category.type,
     color: category.color ?? null,
     icon: category.icon ?? null,
+    createdByUserId: category.createdByUserId,
     createdAt: formatISODateTime(category.createdAt),
     updatedAt: formatISODateTime(category.updatedAt),
   };

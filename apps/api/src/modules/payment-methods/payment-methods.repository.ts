@@ -94,6 +94,7 @@ class PaymentMethodsRepository {
       .insert(paymentMethodsTable)
       .values({
         householdId: context.householdId,
+        createdByUserId: context.userId,
         code: values.code,
         name: values.name,
         currencyId: values.currencyId ?? null,

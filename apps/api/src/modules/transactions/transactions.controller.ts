@@ -2,6 +2,7 @@ import { transactionsEndpoints } from "@luraba/contracts";
 import { formatISODate, getTodayInTimezone } from "@luraba/domain";
 import { createHouseholdHandler } from "@/shared/controllers/household.controller";
 import { withApiMeta } from "@/shared/response";
+import * as itemsService from "./transaction-items.service";
 import * as analyticsService from "./transactions.analytics.service";
 import * as transactionsService from "./transactions.service";
 import * as upcomingService from "./transactions.upcoming.service";
@@ -53,4 +54,18 @@ export const deleteTransaction = createHouseholdHandler({
   params: transactionsEndpoints.delete.params,
   status: "no-content",
   handle: ({ household, params }) => transactionsService.deleteTransaction(household, params.id),
+});
+
+export const listItems = createHouseholdHandler({
+  params: transactionsEndpoints.listItems.params,
+  response: transactionsEndpoints.listItems.response,
+  handle: ({ household, params }) => itemsService.listTransactionItems(household, params.id),
+});
+
+export const replaceItems = createHouseholdHandler({
+  params: transactionsEndpoints.replaceItems.params,
+  body: transactionsEndpoints.replaceItems.body,
+  response: transactionsEndpoints.replaceItems.response,
+  handle: ({ household, params, body }) =>
+    itemsService.replaceTransactionItems(household, params.id, body),
 });

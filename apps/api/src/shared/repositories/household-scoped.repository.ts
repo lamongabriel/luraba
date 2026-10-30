@@ -9,6 +9,7 @@ type HouseholdScopedTable = PgTable & {
   householdId: PgColumn;
   createdAt?: PgColumn;
   updatedAt?: PgColumn;
+  createdByUserId?: PgColumn;
 };
 
 type RepositoryOptions = {
@@ -102,6 +103,10 @@ export abstract class HouseholdScopedRepository<
 
     if (nextValues.householdId === undefined) {
       nextValues.householdId = context.householdId;
+    }
+
+    if (this.table.createdByUserId && nextValues.createdByUserId === undefined) {
+      nextValues.createdByUserId = context.userId;
     }
 
     if (this.table.createdAt && nextValues.createdAt === undefined) {

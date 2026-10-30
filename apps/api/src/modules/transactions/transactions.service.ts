@@ -111,6 +111,7 @@ async function createBaseTransaction(
 ): Promise<string> {
   const transaction = await txRepository.createTransaction(tx, {
     householdId: context.householdId,
+    createdByUserId: context.userId,
     type: values.type,
     paymentMethodId: values.paymentMethodId ?? null,
     categoryId: values.categoryId ?? null,

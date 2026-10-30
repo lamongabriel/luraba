@@ -61,6 +61,17 @@ and grace period pass, otherwise scheduled. Per-person and per-split totals
 (received, outstanding, written off) are computed on read. Splits send no
 notifications.
 
+### Products and transaction items
+
+`products` is the household's reusable catalog (name, picture, latest price). A transaction may list `transaction_items` (name, quantity, unit price snapshot, optional product link) via `PUT /transactions/:id/items`; saving an item can update the product's price so the catalog follows the latest store price while old transactions keep what was actually paid.
+
+### Who created what
+
+Records carry `created_by_user_id` (set once, from the signed-in member, in `HouseholdScopedRepository.create`
+or by the explicit inserts) so a household can see who spent or created something. The web resolves ids
+through the household members and shows them with `MemberDisplay`; transactions can be filtered by creator.
+Older rows have no creator and show "Unknown".
+
 ### Budgets
 
 A month's budget (`budgets`) is a planned amount per income or expense category; actuals are computed on

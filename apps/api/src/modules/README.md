@@ -42,6 +42,17 @@ Use it for every table that has `id` and `household_id`. Do not use it for:
 - rows that can be personal as well as household-owned (`uploads`, scope `user`);
 - user-level data (notifications, preferences).
 
+## Who created a record
+
+User-created household data has a nullable `created_by_user_id` (transactions, accounts, credit cards,
+merchants, categories, tags, payment methods; bills, goals and splits have it as required). A table with
+a `createdByUserId` column gets it filled from `context.userId` by `HouseholdScopedRepository.create`, so
+use `create` rather than a raw insert. Tables inserted by hand (`transactions` through
+`createTransaction`, accounts, credit cards, payment methods) must pass `createdByUserId: context.userId`
+themselves; a credit-card purchase or payment stamps its underlying transaction. The wire resources
+expose `createdByUserId` (a user id, null for older rows or deleted users); the web resolves it to a name
+through the household members (see `MemberDisplay`). `GET /transactions` filters with `createdByUserIds`.
+
 A scoped `update`/`delete` returns `undefined` when nothing matched: turn that into `NotFoundError`.
 
 ## Rules
@@ -78,6 +89,7 @@ A scoped `update`/`delete` returns `undefined` when nothing matched: turn that i
 | [ledger-accounts](ledger-accounts/README.md) | Ledger accounts backing entries |
 | [mail](mail/README.md) | SMTP mail service and templates |
 | [merchants](merchants/README.md) | Merchants |
+| [products](products/README.md) | Reusable product catalog (name, picture, latest price) |
 | [notifications](notifications/README.md) | In-app notifications, preferences, delivery queueing |
 | [onboarding](onboarding/README.md) | First-run options |
 | [payment-methods](payment-methods/README.md) | Household payment methods |

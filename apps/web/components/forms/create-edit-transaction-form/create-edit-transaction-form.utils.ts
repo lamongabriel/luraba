@@ -1,4 +1,9 @@
-import type { CreditCardPayment, CreditCardPurchase, TransactionFeedRow } from "@luraba/contracts";
+import type {
+  CreditCardPayment,
+  CreditCardPurchase,
+  TransactionFeedRow,
+  TransactionItem,
+} from "@luraba/contracts";
 import { formatDatePattern as format, now } from "@luraba/domain";
 import { minorToMajorUnits } from "@/lib/finance";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
@@ -52,6 +57,7 @@ export function getTransactionFormDefaultValues(
   lookups: TransactionLookups,
   row?: TransactionFeedRow | null,
   details: TransactionFormDetails = {},
+  items: TransactionItem[] = [],
 ): CreateEditTransactionFormValues {
   const today = format(now(), "yyyy-MM-dd");
   const kind = getTransactionFormKind(row);
@@ -82,6 +88,13 @@ export function getTransactionFormDefaultValues(
     installmentCount: purchase?.installmentCount ?? row?.installmentCount ?? 1,
     includeInBudget: purchase?.includeInBudget ?? row?.includeInBudget ?? true,
     tagIds: purchase?.tags.map((tag) => tag.id) ?? row?.tags.map((tag) => tag.id) ?? [],
+    items: items.map((item) => ({
+      productId: item.productId ?? "",
+      name: item.name,
+      quantity: item.quantity,
+      unitPrice: Number(toMajorAmount(item.unitPrice, currencyCode, lookups)),
+      saveAsProductPrice: false,
+    })),
   };
 }
 

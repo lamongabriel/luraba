@@ -288,6 +288,7 @@ export default function SplitDetailsPage() {
   return (
     <InternalPageLayout
       title={split.title}
+      createdBy={split.createdByUserId}
       subtitle="Who owes what, installments and payments."
       back={{ href: "/splits", label: "Splits" }}
       actions={

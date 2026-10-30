@@ -7,6 +7,7 @@ import { DataTableColumnHeader } from "@/components/data-table/data-table-column
 import {
   AmountDisplay,
   amountKindForTransactionType,
+  MemberDisplay,
   TransactionTypeDisplay,
 } from "@/components/display";
 import { MoneyValue } from "@/components/finance/money-value";
@@ -124,6 +125,13 @@ export function getTransactionsTableColumns({
       ),
       enableSorting: false,
       meta: { label: "Merchant" },
+    },
+    {
+      id: "createdBy",
+      header: "Created by",
+      cell: ({ row }) => <MemberDisplay userId={row.original.createdByUserId} size="xs" />,
+      enableSorting: false,
+      meta: { label: "Created by" },
     },
     {
       accessorKey: "amount",

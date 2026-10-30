@@ -288,6 +288,20 @@
       "when": 1789104600000,
       "tag": "0040_budget_month_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1789191000000,
+      "tag": "0041_created_by_user",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1789277400000,
+      "tag": "0042_products_and_transaction_items",
+      "breakpoints": true
     }
   ]
 }

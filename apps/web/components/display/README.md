@@ -1,6 +1,6 @@
 # Display components
 
-The one way to show an **account, credit card, transaction type, merchant, amount, category or tag**
+The one way to show an **account, credit card, transaction type, merchant, product, amount, category or tag**
 anywhere in the web app (tables, drawers, cards, forms, pickers). Do not build a local avatar, icon,
 badge or colored money text for these. If the case you need is missing, extend this folder.
 
@@ -11,8 +11,10 @@ import { AccountDisplay, AmountDisplay, CategoryDisplay, MerchantDisplay, TagDis
 | Component | Shows | Key props |
 | --- | --- | --- |
 | `AccountDisplay` / `AccountMark` | Any account object (`Account`, `AccountSummary`, `AccountDetails`, `CreditCard`): picture or icon + name | `account` (null renders "No account"), `size`, `detail="type"` |
+| `MemberDisplay` / `MemberMark` | Who created a record: a household member's picture or initials + name | `userId` (a record's `createdByUserId`; unknown or null renders "Unknown"), `size` |
 | `TransactionTypeDisplay` | Expense, income, transfer, adjustment, installment, card payment | `type`, `variant="badge" \| "inline" \| "icon"`, `size` |
 | `MerchantDisplay` / `MerchantMark` | Logo, else a shop icon, + name | `merchant`, `size`, `detail="domain"` |
+| `ProductDisplay` / `ProductMark` | Product (or a transaction item): picture, else a package icon, + name, optional `detail` line | `product`, `size`, `detail` |
 | `AmountDisplay` | Money with the right sign and color | `amount` (minor units), `currencyCode`, `kind`, `size` |
 | `CategoryDisplay` | Category chip; `null` renders "Uncategorized" | `category`, `variant="chip" \| "inline"`, `size` |
 | `TagDisplay` | Tag chip | `tag`, `variant`, `size` |
@@ -47,5 +49,9 @@ TypeScript forces it).
 ## Merchants
 
 `MerchantDisplay` shows the uploaded logo (`imageUploadId`), else the domain-derived `logoUrl`, else a shop icon. Logos are uploaded from the merchant sheet on `/merchants` (`components/merchants/merchant-image-field.tsx`, built on the shared `components/uploads/entity-image-field.tsx`).
+
+## Products
+
+`ProductDisplay` shows the uploaded picture (`imageUploadId`), else a package icon. It accepts a product or a transaction item (anything with `name` and `imageUploadId`). Pictures are uploaded from the product sheet (opened from the transaction form) (`components/products/product-image-field.tsx`).
 
 Tests: `__tests__/display.test.tsx`.

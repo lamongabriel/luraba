@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { accountClassificationSchema } from "../accounts/values.js";
-import { currencyCodeSchema, wireDateTimeSchema } from "../common.js";
+import { createdByUserIdSchema, currencyCodeSchema, wireDateTimeSchema } from "../common.js";
 import { tagSummarySchema } from "../tags/resource.js";
 
 export const transactionTypeSchema = z.enum(["expense", "income", "transfer", "adjustment"]);
@@ -30,6 +30,7 @@ export const transactionSchema = z.object({
   includeInBudget: z.boolean(),
   purchaseDate: z.string(),
   postedDate: z.string(),
+  createdByUserId: createdByUserIdSchema,
   createdAt: wireDateTimeSchema,
   updatedAt: wireDateTimeSchema,
 });
@@ -127,3 +128,17 @@ export type TransactionAnalyticsMetric = TransactionAnalytics["metrics"]["moneyI
 export type TransactionExpenseBreakdownItem =
   TransactionAnalytics["expenseBreakdown"]["items"][number];
 export type UpcomingTransactionSourceType = z.output<typeof upcomingTransactionSourceSchema>;
+
+/** One thing a transaction bought. `name` and `unitPrice` are snapshots; `productId` links the catalog. */
+export const transactionItemSchema = z.object({
+  id: z.uuid(),
+  productId: z.uuid().nullable(),
+  name: z.string(),
+  quantity: z.number().int(),
+  /** Unit price in minor units, in the transaction's currency. */
+  unitPrice: z.number().int(),
+  position: z.number().int(),
+  /** The linked product's picture, when it has one. */
+  imageUploadId: z.uuid().nullable(),
+});
+export type TransactionItem = z.output<typeof transactionItemSchema>;

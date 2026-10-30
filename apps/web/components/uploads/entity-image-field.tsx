@@ -25,7 +25,7 @@ export function EntityImageField({
   noun = "picture",
   onChange,
 }: {
-  targetType: "account" | "merchant";
+  targetType: "account" | "merchant" | "product";
   targetId: string;
   attachmentRole?: string;
   uploadId: string | null;

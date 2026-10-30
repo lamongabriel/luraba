@@ -10,6 +10,7 @@ import {
   CategoryDisplay,
   getAccountVisual,
   MerchantDisplay,
+  ProductDisplay,
   TagDisplay,
   TRANSACTION_TYPE_DISPLAY,
   TransactionTypeDisplay,
@@ -95,5 +96,19 @@ describe("other displays", () => {
     expect(screen.getByText("Whole Foods")).toBeInTheDocument();
     expect(screen.getByText("Uncategorized")).toBeInTheDocument();
     expect(screen.getByText("Trip")).toBeInTheDocument();
+  });
+});
+
+describe("product display", () => {
+  it("renders the name and detail, or the empty label", () => {
+    render(
+      <div>
+        <ProductDisplay product={{ name: "Cheeseburger" }} detail="2 x $9.00" />
+        <ProductDisplay product={null} />
+      </div>,
+    );
+    expect(screen.getByText("Cheeseburger")).toBeInTheDocument();
+    expect(screen.getByText("2 x $9.00")).toBeInTheDocument();
+    expect(screen.getByText("No product")).toBeInTheDocument();
   });
 });

@@ -59,6 +59,7 @@ function mapAccountRecord(account: AccountRecord): Account {
     classification: account.classification,
     type: account.type,
     currencyCode: account.currencyId,
+    createdByUserId: account.createdByUserId,
     createdAt: formatISODateTime(account.createdAt),
     updatedAt: formatISODateTime(account.updatedAt),
   };

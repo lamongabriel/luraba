@@ -53,6 +53,7 @@ function account(id: string, name: string, currencyCode: string) {
     institutionLogoUrl: null,
     imageUploadId: null,
     notes: null,
+    createdByUserId: null,
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
   };
@@ -93,6 +94,7 @@ function values(overrides: Partial<CreateEditTransactionFormValues> = {}) {
     installmentCount: 1,
     includeInBudget: false,
     tagIds: [],
+    items: [],
     ...overrides,
   };
 }

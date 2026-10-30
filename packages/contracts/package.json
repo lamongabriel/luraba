@@ -103,6 +103,10 @@
       "types": "./dist/merchants/index.d.ts",
       "import": "./dist/merchants/index.js"
     },
+    "./products": {
+      "types": "./dist/products/index.d.ts",
+      "import": "./dist/products/index.js"
+    },
     "./payment-methods": {
       "types": "./dist/payment-methods/index.d.ts",
       "import": "./dist/payment-methods/index.js"
