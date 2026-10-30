@@ -151,7 +151,8 @@ export class MarketDataRouter {
         if (typed.code === "RATE_LIMITED") limiter?.exhaustDay();
         this.registry.recordFailure(id, typed.code, typed.message);
         attempts.push({ provider: id, ok: false, code: typed.code, message: typed.message });
-        logger.warn(
+        // "Not found" is routine (a provider simply does not carry the symbol or series).
+        logger[typed.code === "NOT_FOUND" ? "debug" : "warn"](
           { provider: id, capability, market, code: typed.code, message: typed.message },
           "[market-data] provider failed, trying the next one",
         );

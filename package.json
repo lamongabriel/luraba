@@ -18,7 +18,7 @@
     "pnpm": ">=10.28.2"
   },
   "scripts": {
-    "dev": "docker compose up -d db redis minio && pnpm --filter @luraba/api db:migrate && turbo run dev",
+    "dev": "docker compose up -d --wait db redis minio && pnpm --filter @luraba/api db:migrate && turbo run dev",
     "build": "turbo run build",
     "check": "biome check .",
     "fix": "biome check --write .",
@@ -26,8 +26,8 @@
     "format": "biome format .",
     "lint": "biome lint .",
     "prepare": "husky",
-    "seed:mock": "docker compose up -d db && pnpm --filter @luraba/api db:migrate && pnpm --filter @luraba/api seed:mock",
-    "test": "docker compose up -d db && turbo run test:unit && pnpm --filter @luraba/api test:integration",
+    "seed:mock": "docker compose up -d --wait db && pnpm --filter @luraba/api db:migrate && pnpm --filter @luraba/api seed:mock",
+    "test": "docker compose up -d --wait db && turbo run test:unit && pnpm --filter @luraba/api test:integration",
     "typecheck": "turbo run typecheck",
     "verify": "pnpm check && pnpm typecheck && pnpm test && pnpm build"
   },

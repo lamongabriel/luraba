@@ -8,6 +8,7 @@ import { addIsoDays } from "@luraba/domain";
 import { eq, min, sql } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
+import { MarketDataRouteError } from "@/modules/market-data/market-data.router";
 import { isMarketOpen, marketDataService } from "@/modules/market-data/market-data.service";
 import { MACRO_SERIES } from "@/modules/market-data/market-data.types";
 import { logger } from "@/shared/logger";
@@ -133,7 +134,12 @@ export async function syncMacro(): Promise<number> {
     try {
       total += await marketDataService.syncMacro(series, from, today);
     } catch (err) {
-      logger.debug({ err, series }, "[investments] Macro sync failed");
+      // A series no provider serves yet (US CPI today) is not a failure worth a warning.
+      if (err instanceof MarketDataRouteError && err.code === "NOT_FOUND") continue;
+      logger.warn(
+        { series, reason: err instanceof Error ? err.message : String(err) },
+        "[investments] Macro sync incomplete, will resume on the next run",
+      );
     }
   }
   if (total > 0) clearReferenceCaches();

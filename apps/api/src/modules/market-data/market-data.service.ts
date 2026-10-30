@@ -29,6 +29,15 @@ import type {
 } from "./market-data.types";
 
 /** Opening hours by market, local time. Only used to pick the cache TTL, not to gate requests. */
+/** Days per macro request: big enough to be few calls, small enough for the BCB to answer fast. */
+const MACRO_WINDOW_DAYS = 730;
+/** The BCB answers slowly at times; macro sync is a background job, so it can wait. */
+const MACRO_TIMEOUT_MS = 40_000;
+
+function minIso(a: string, b: string): string {
+  return a < b ? a : b;
+}
+
 const MARKET_HOURS: Record<string, { timeZone: string; open: number; close: number }> = {
   BR: { timeZone: "America/Sao_Paulo", open: 10 * 60, close: 18 * 60 },
   US: { timeZone: "America/New_York", open: 9 * 60 + 30, close: 16 * 60 },
@@ -330,14 +339,22 @@ export class MarketDataService {
     const range = await this.repository.getMacroRange(series);
     const start = range.max && range.max >= from ? addIsoDays(range.max, 1) : from;
     if (start > to) return 0;
-    const { value, provider } = await this.router.run(
-      "macro",
-      "BR",
-      (p, ctx) => p.getSeries?.(series, start, to, ctx) as Promise<MacroPoint[]>,
-      {},
-    );
-    await this.repository.upsertMacro(series, value, provider);
-    return value.length;
+    // Long daily series time out as one request, so pull them in short windows and store each
+    // one as it arrives: a failure keeps what was already saved and the next run resumes there.
+    let stored = 0;
+    for (let windowStart = start; windowStart <= to; ) {
+      const windowEnd = minIso(addIsoDays(windowStart, MACRO_WINDOW_DAYS), to);
+      const { value, provider } = await this.router.run(
+        "macro",
+        "BR",
+        (p, ctx) => p.getSeries?.(series, windowStart, windowEnd, ctx) as Promise<MacroPoint[]>,
+        { timeoutMs: MACRO_TIMEOUT_MS },
+      );
+      await this.repository.upsertMacro(series, value, provider);
+      stored += value.length;
+      windowStart = addIsoDays(windowEnd, 1);
+    }
+    return stored;
   }
 
   /** Stores the Tesouro buyback prices on the matching Tesouro assets (source `tesouro`). */
