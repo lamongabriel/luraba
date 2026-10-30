@@ -6,8 +6,13 @@ export {
   getAccountVisual,
 } from "./account-display";
 export { AmountDisplay } from "./amount-display";
+export { AssetDisplay, type AssetDisplayInput, AssetMark } from "./asset-display";
 export * from "./constants";
 export { DisplayMark } from "./display-mark";
+export {
+  getInvestmentEventTypeLabel,
+  InvestmentEventTypeDisplay,
+} from "./investment-event-type-display";
 export { CategoryDisplay, TagDisplay } from "./label-display";
 export { MemberDisplay, MemberMark } from "./member-display";
 export { MerchantDisplay, MerchantMark } from "./merchant-display";

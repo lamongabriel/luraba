@@ -305,6 +305,7 @@ export const refreshBodySchema = z.object({ accountId: optionalUuid, assetId: op
 
 export { idParamsSchema };
 export type CreateInvestmentAccountInput = z.input<typeof createInvestmentAccountBodySchema>;
+export type InvestmentExportKind = z.output<typeof exportKindParamsSchema>["kind"];
 export type EventBodyInput = z.input<typeof eventBodySchema>;
 export type CashMovementInput = z.input<typeof cashMovementBodySchema>;
 export type CreateAssetInput = z.input<typeof createAssetBodySchema>;

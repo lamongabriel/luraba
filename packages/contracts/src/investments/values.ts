@@ -112,3 +112,13 @@ export const nonNegativeDecimalSchema = decimalStringSchema.refine(
   "Must not be negative",
 );
 export const isoDateSchema = z.iso.date();
+
+export type AssetClass = (typeof ASSET_CLASSES)[number];
+export type InvestmentEventType = (typeof INVESTMENT_EVENT_TYPES)[number];
+export type CostBasisMethod = (typeof COST_BASIS_METHODS)[number];
+export type TaxProfile = (typeof TAX_PROFILES)[number];
+export type Indexer = (typeof INDEXERS)[number];
+export type RateForm = (typeof RATE_FORMS)[number];
+export type AllocationDimension = (typeof ALLOCATION_DIMENSIONS)[number];
+export type PerformancePeriod = (typeof PERFORMANCE_PERIODS)[number];
+export type Benchmark = (typeof BENCHMARKS)[number];

@@ -1,6 +1,12 @@
 "use client";
 
-import type { Account, AccountDetails, AccountSummary, CreditCard } from "@luraba/contracts";
+import type {
+  Account,
+  AccountDetails,
+  AccountSummary,
+  CreditCard,
+  InvestmentAccount,
+} from "@luraba/contracts";
 
 import { CreditCardBrandMark } from "@/components/credit-cards/credit-card-brand";
 import { uploadContentUrl } from "@/lib/uploads";
@@ -17,7 +23,17 @@ import {
 import { DisplayMark } from "./display-mark";
 
 /** Anything the app calls an account: a plain account, a summary/details, or a credit card. */
-export type AccountDisplayInput = Account | AccountSummary | AccountDetails | CreditCard;
+export type AccountDisplayInput =
+  | Account
+  | AccountSummary
+  | AccountDetails
+  | CreditCard
+  | InvestmentAccount;
+
+/** An investment account has no `type` field; it is always the investment type. */
+function typeOf(account: Exclude<AccountDisplayInput, CreditCard>) {
+  return "type" in account ? account.type : ("investment" as const);
+}
 
 function isCard(account: AccountDisplayInput): account is CreditCard {
   return "brand" in account && "last4" in account;
@@ -30,7 +46,7 @@ export function getAccountVisual(account: AccountDisplayInput): {
   color: string;
   cardBrand: string | null;
 } {
-  const type = isCard(account) ? "credit_card" : account.type;
+  const type = isCard(account) ? "credit_card" : typeOf(account);
   const config = ACCOUNT_TYPE_DISPLAY[type];
   const subtype = "subtype" in account ? account.subtype : undefined;
   const upload = "imageUploadId" in account ? account.imageUploadId : null;
@@ -51,6 +67,9 @@ export function getAccountVisual(account: AccountDisplayInput): {
 export function getAccountLabels(account: AccountDisplayInput): { name: string; detail: string } {
   if (isCard(account)) {
     return { name: account.name, detail: `${account.brand} •••• ${account.last4}` };
+  }
+  if (!("type" in account)) {
+    return { name: account.name, detail: account.broker ?? ACCOUNT_TYPE_DISPLAY.investment.label };
   }
   return { name: account.name, detail: ACCOUNT_TYPE_DISPLAY[account.type].label };
 }
