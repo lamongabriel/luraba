@@ -42,6 +42,7 @@ const permissionActionLabels = {
   update: "Manage",
   delete: "Delete",
   manage: "Manage",
+  write: "Edit",
 } as const;
 
 const permissionActionDescriptions = {
@@ -50,6 +51,7 @@ const permissionActionDescriptions = {
   update: "Update household data.",
   delete: "Delete household data.",
   manage: "Manage household access.",
+  write: "Create, edit and remove household data.",
 } as const;
 
 function humanizePermissionResource(resource: string): string {
