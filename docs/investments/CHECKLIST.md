@@ -27,10 +27,10 @@ background, then update the screen. Weekends/closed markets are skipped. Use Yah
 - [x] Tests: staleness rule, market-hours skip, job refreshes only held assets, cache hit/miss
 
 ## B. Remaining API
-- [ ] Optional migration 0044: benchmark assets (^BVSP, IFIX, ^GSPC), import batch + mapping tables
+- [x] Optional migration 0044: benchmark assets (^BVSP, IFIX, ^GSPC), import batch + mapping tables
 - [ ] Accounts hook: investment account balance in the accounts list / net worth uses investment valuation
-- [ ] Import: app CSV, B3 Negociação, B3 Movimentação, generic CSV with mapping, JSON backup; preview + commit + dedupe + template download
-- [ ] Export: events, positions, income, realized, tax, backup (CSV/JSON)
+- [x] Import: app CSV, B3 Negociação, B3 Movimentação, generic CSV with mapping, JSON backup; preview + commit + dedupe + template download
+- [x] Export: events, positions, income, realized, tax, backup (CSV/JSON)
 - [ ] Corporate-action suggestions job (splits/bonus from providers, user confirms)
 - [ ] Monthly apuração notification (DARF due), maturity reminders via existing notifications
 - [ ] Remaining worker jobs: macro sync (CDI/IPCA/Selic/IGP-M), Tesouro prices, fixed-income accrual snapshot, portfolio snapshot
@@ -66,3 +66,4 @@ background, then update the screen. Weekends/closed markets are skipped. Use Yah
 ## Log (append one line per finished group)
 - 1b88b82 API backend done.
 - Group A freshness: jobs in API process (BullMQ market-data queue, timers w/o Redis), refresh-on-read, tests.
+- Group B1: migration 0044 (benchmarks, import tables), import (5 formats) + export (6 kinds) + template, parser unit tests, HTTP test.

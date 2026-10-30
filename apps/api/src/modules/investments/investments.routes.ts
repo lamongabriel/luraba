@@ -1,7 +1,15 @@
-import { investmentsEndpoints as e, getEndpointRouterPath, PERMISSIONS } from "@luraba/contracts";
+import {
+  investmentsEndpoints as e,
+  exportKindParamsSchema,
+  getEndpointRouterPath,
+  investmentExportQuerySchema,
+  PERMISSIONS,
+} from "@luraba/contracts";
 import { Router } from "express";
 import { requireAccess } from "@/middleware/access.middleware";
+import { APP_CSV_TEMPLATE } from "./imports/parsers";
 import * as c from "./investments.controller";
+import { buildInvestmentExport } from "./investments.export.service";
 
 const router = Router();
 const read = requireAccess({ permission: PERMISSIONS.INVESTMENTS_READ });
@@ -55,5 +63,28 @@ router.get(path(e.getRebalance), read, c.getRebalance);
 router.get(path(e.listProviders), read, c.listProviders);
 router.patch(path(e.updateProvider), write, c.updateProvider);
 router.post(path(e.refreshPrices), write, c.refreshPrices);
+
+router.post(path(e.previewImport), write, c.previewImport);
+router.post(path(e.commitImport), write, c.commitImport);
+
+router.get("/imports/template", read, (_req, res) => {
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", 'attachment; filename="investments-template.csv"');
+  res.send(APP_CSV_TEMPLATE);
+});
+
+/** File download, so a plain route outside the contract registry. */
+router.get("/export/:kind", read, async (req, res) => {
+  const { kind } = exportKindParamsSchema.parse(req.params);
+  const query = investmentExportQuerySchema.parse(req.query);
+  const file = await buildInvestmentExport(
+    req.household as NonNullable<typeof req.household>,
+    kind,
+    query,
+  );
+  res.setHeader("Content-Type", file.contentType);
+  res.setHeader("Content-Disposition", `attachment; filename="${file.fileName}"`);
+  res.send(file.body);
+});
 
 export default router;

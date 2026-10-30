@@ -4,6 +4,7 @@ import { withApiMeta } from "@/shared/response";
 import * as accounts from "./investments.accounts.service";
 import * as assets from "./investments.assets.service";
 import * as events from "./investments.events.service";
+import * as importer from "./investments.import.service";
 import * as reports from "./investments.reports.service";
 
 export const getSettings = createHouseholdHandler({
@@ -223,4 +224,17 @@ export const refreshPrices = createHouseholdHandler({
   body: e.refreshPrices.body,
   response: e.refreshPrices.response,
   handle: ({ household, body }) => assets.refreshPrices(household, body),
+});
+
+export const previewImport = createHouseholdHandler({
+  body: e.previewImport.body,
+  response: e.previewImport.response,
+  status: "created",
+  handle: ({ household, body }) => importer.previewImport(household, body),
+});
+export const commitImport = createHouseholdHandler({
+  params: e.commitImport.params,
+  body: e.commitImport.body,
+  response: e.commitImport.response,
+  handle: ({ household, params, body }) => importer.commitImport(household, params.batchId, body),
 });

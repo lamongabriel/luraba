@@ -8,6 +8,8 @@ import {
   householdAssetSettingsTable,
   investmentAccountSettingsTable,
   investmentEventsTable,
+  investmentImportBatchesTable,
+  investmentImportMappingsTable,
   investmentPortfoliosTable,
   investmentSettingsTable,
 } from "@luraba/db/schemas/investments.schema";
@@ -527,4 +529,101 @@ export async function findBenchmarkAsset(symbol: string): Promise<AssetRecord | 
     .from(assetsTable)
     .where(and(eq(assetsTable.symbol, symbol), isNull(assetsTable.householdId)));
   return row;
+}
+
+/** Symbols to assets for imports: the household's own asset wins, then the global catalog entry (BR first for B3 files). */
+export async function findAssetsBySymbols(
+  context: HouseholdContext,
+  symbols: string[],
+  preferCountry?: string,
+): Promise<Map<string, AssetRecord>> {
+  if (symbols.length === 0) return new Map();
+  const rows = await db
+    .select()
+    .from(assetsTable)
+    .where(and(inArray(assetsTable.symbol, symbols), visibleTo(context.householdId)));
+  const score = (asset: AssetRecord) =>
+    (asset.householdId ? 0 : 2) + (preferCountry && asset.country === preferCountry ? 0 : 1);
+  const result = new Map<string, AssetRecord>();
+  for (const asset of rows) {
+    const current = result.get(asset.symbol);
+    if (!current || score(asset) < score(current)) result.set(asset.symbol, asset);
+  }
+  return result;
+}
+
+/** How many stored events of the account carry each dedup hash (identical trades on one day are legitimate). */
+export async function dedupHashCounts(
+  context: HouseholdContext,
+  accountId: string,
+  hashes: string[],
+): Promise<Map<string, number>> {
+  if (hashes.length === 0) return new Map();
+  const rows = await db
+    .select({ hash: investmentEventsTable.dedupHash, count: sql<number>`count(*)::integer` })
+    .from(investmentEventsTable)
+    .where(
+      and(
+        eq(investmentEventsTable.householdId, context.householdId),
+        eq(investmentEventsTable.accountId, accountId),
+        inArray(investmentEventsTable.dedupHash, hashes),
+      ),
+    )
+    .groupBy(investmentEventsTable.dedupHash);
+  return new Map(rows.map((r) => [r.hash as string, r.count]));
+}
+
+export async function insertImportBatch(values: typeof investmentImportBatchesTable.$inferInsert) {
+  const [row] = await db.insert(investmentImportBatchesTable).values(values).returning();
+  return row as typeof investmentImportBatchesTable.$inferSelect;
+}
+
+export async function getImportBatch(context: HouseholdContext, id: string) {
+  const [row] = await db
+    .select()
+    .from(investmentImportBatchesTable)
+    .where(
+      and(
+        eq(investmentImportBatchesTable.id, id),
+        eq(investmentImportBatchesTable.householdId, context.householdId),
+      ),
+    );
+  return row;
+}
+
+export async function markImportBatchCommitted(id: string): Promise<void> {
+  await db
+    .update(investmentImportBatchesTable)
+    .set({ status: "committed", rows: [] })
+    .where(eq(investmentImportBatchesTable.id, id));
+}
+
+export async function saveImportMapping(
+  context: HouseholdContext,
+  name: string,
+  mapping: Record<string, string>,
+): Promise<void> {
+  await db
+    .insert(investmentImportMappingsTable)
+    .values({ householdId: context.householdId, name, mapping })
+    .onConflictDoUpdate({
+      target: [investmentImportMappingsTable.householdId, investmentImportMappingsTable.name],
+      set: { mapping, updatedAt: new Date() },
+    });
+}
+
+export async function getImportMapping(
+  context: HouseholdContext,
+  name: string,
+): Promise<Record<string, string> | undefined> {
+  const [row] = await db
+    .select()
+    .from(investmentImportMappingsTable)
+    .where(
+      and(
+        eq(investmentImportMappingsTable.householdId, context.householdId),
+        eq(investmentImportMappingsTable.name, name),
+      ),
+    );
+  return row?.mapping;
 }

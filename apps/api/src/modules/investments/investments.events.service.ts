@@ -462,3 +462,25 @@ export async function addCashMovement(
   accountTotalsInvalidate(account.id);
   return getAccountCash(context, accountId);
 }
+
+/** Inserts many prepared events at once after checking the whole account ledger still holds together. */
+export async function insertEventsBulk(
+  context: HouseholdContext,
+  account: InvestmentAccountRecord,
+  values: EventValues[],
+): Promise<number> {
+  if (values.length === 0) return 0;
+  await assertLedgerValid(context, account, (events) => [
+    ...events,
+    ...values.map((value, i) =>
+      provisional(value, `00000000-0000-0000-0000-${String(i).padStart(12, "0")}`),
+    ),
+  ]);
+  await db.transaction(async (tx) => {
+    for (let i = 0; i < values.length; i += 500) {
+      await tx.insert(investmentEventsTable).values(values.slice(i, i + 500));
+    }
+  });
+  accountTotalsInvalidate(account.id);
+  return values.length;
+}

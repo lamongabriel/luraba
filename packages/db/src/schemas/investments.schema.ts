@@ -391,3 +391,43 @@ export const darfPaymentsTable = pgTable(
   },
   (table) => [uniqueIndex("darf_payments_unique").on(table.accountId, table.month, table.bucket)],
 );
+
+/** A previewed statement import: parsed rows are staged here until the user commits them. */
+export const investmentImportBatchesTable = pgTable(
+  "investment_import_batches",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => householdsTable.id, { onDelete: "cascade" }),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => accountsTable.id, { onDelete: "cascade" }),
+    format: varchar({ length: 32 }).notNull(),
+    fileName: varchar("file_name", { length: 255 }),
+    status: varchar({ length: 16 }).notNull().default("previewed"),
+    rows: jsonb().$type<unknown[]>().notNull().default([]),
+    summary: jsonb().$type<Record<string, unknown>>().notNull().default({}),
+    createdByUserId: uuid("created_by_user_id").references(() => usersTable.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("investment_import_batches_household_idx").on(table.householdId, table.createdAt),
+  ],
+);
+
+/** Saved column mappings for generic CSV imports. */
+export const investmentImportMappingsTable = pgTable(
+  "investment_import_mappings",
+  {
+    householdId: uuid("household_id")
+      .notNull()
+      .references(() => householdsTable.id, { onDelete: "cascade" }),
+    name: varchar({ length: 128 }).notNull(),
+    mapping: jsonb().$type<Record<string, string>>().notNull().default({}),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.householdId, table.name] })],
+);
