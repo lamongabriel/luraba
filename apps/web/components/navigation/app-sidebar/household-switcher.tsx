@@ -155,14 +155,14 @@ export function HouseholdSwitcher({
               className="h-11 rounded-xl border border-sidebar-border/70 bg-card/80 px-2.5 py-2 hover:bg-accent/60"
             >
               <HouseholdMark
-                key={selectedHousehold.id}
+                key={`mark-${selectedHousehold.id}`}
                 household={selectedHousehold}
                 size="md"
                 className="size-7 rounded-lg duration-300 animate-in fade-in zoom-in-75"
               />
 
               <div
-                key={selectedHousehold.id}
+                key={`name-${selectedHousehold.id}`}
                 className="min-w-0 flex-1 text-left duration-300 animate-in fade-in slide-in-from-left-1"
               >
                 <Typography
