@@ -23,6 +23,7 @@ function mapUserRecordToSessionUser(user: UserRecord): SessionUser {
     id: user.id,
     name: user.name,
     email: user.email,
+    image: user.image,
     phoneNumber: user.phoneNumber,
     countryCode: user.countryCode,
     dateOfBirth: user.dateOfBirth,

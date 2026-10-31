@@ -4,7 +4,7 @@ import { MoreVerticalIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +27,7 @@ interface NavUserProps {
   user: {
     name: string;
     email: string;
+    image?: string | null;
     role?: string;
   } | null;
   onSignOut?: () => void;
@@ -53,6 +54,7 @@ export function NavUser({ user, onSignOut }: NavUserProps) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg" className="rounded-xl px-3 py-2.5">
               <Avatar className="size-8 rounded-lg">
+                <AvatarImage src={user.image ?? undefined} alt="" />
                 <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
               </Avatar>
 
@@ -86,6 +88,7 @@ export function NavUser({ user, onSignOut }: NavUserProps) {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="size-8 rounded-lg">
+                  <AvatarImage src={user.image ?? undefined} alt="" />
                   <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
                 </Avatar>
                 <div className="grid min-w-0 flex-1 gap-0.5 text-left leading-tight">

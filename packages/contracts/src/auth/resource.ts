@@ -29,6 +29,8 @@ export const sessionUserSchema = z.object({
   id: z.uuid(),
   name: z.string(),
   email: z.email(),
+  /** The profile picture URL (set through Better Auth), or null. */
+  image: z.string().nullable(),
   ...userProfileSchema.shape,
   defaultHouseholdId: z.uuid().nullable(),
   preferences: userPreferencesSchema,

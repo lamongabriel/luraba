@@ -43,6 +43,7 @@ describe("auth routes", () => {
 
     const me = await request(app).get("/api/v1/auth/me").set(headers);
     expect(me.body.data.user.phoneNumber).toBe("+15551234567");
+    expect(me.body.data.user).toHaveProperty("image", null);
 
     const cleared = await request(app)
       .patch("/api/v1/auth/me/profile")

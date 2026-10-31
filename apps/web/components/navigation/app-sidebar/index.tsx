@@ -122,6 +122,7 @@ export function AppSidebar() {
         <NavUser
           user={{
             email: user.email,
+            image: user.image,
             name: user.name,
           }}
           onSignOut={handleSignOut}

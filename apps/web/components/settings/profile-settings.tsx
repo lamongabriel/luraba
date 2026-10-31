@@ -50,10 +50,7 @@ export function ProfileSettings() {
       // The mutations already toasted the failure.
     }
   }
-  const currentImage =
-    user.data && "image" in user.data.user && typeof user.data.user.image === "string"
-      ? user.data.user.image
-      : null;
+  const currentImage = user.data?.user.image ?? null;
   if (user.isLoading) return <Skeleton className="h-72" />;
   if (user.isError || !user.data)
     return (
