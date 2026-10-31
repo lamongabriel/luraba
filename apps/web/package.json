@@ -14,7 +14,7 @@
     "url": "https://github.com/lamongabriel/luraba"
   },
   "scripts": {
-    "dev": "next dev --webpack --port ${PORT:-3000}",
+    "dev": "next dev --port ${PORT:-3000}",
     "build": "next build --webpack",
     "start": "next start",
     "test:unit": "vitest run",
