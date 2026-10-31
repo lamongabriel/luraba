@@ -1,14 +1,7 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
 
-const protectedPrefixes = [
-  "/accounts",
-  "/dashboard",
-  "/settings",
-  "/household",
-  "/households",
-  "/transactions",
-];
+const protectedPrefixes = ["/accounts", "/dashboard", "/settings", "/household", "/transactions"];
 
 function isProtectedPath(pathname: string) {
   return protectedPrefixes.some(

@@ -80,7 +80,6 @@ export const mainNav: NavigationItem[] = [
 export const userMenuLinks = [
   { label: "Settings", href: "/settings", icon: Settings02Icon },
   { label: "Household", href: "/household", icon: UserGroupIcon },
-  { label: "All households", href: "/households", icon: UserGroupIcon },
 ] as const;
 
 export function getFirstAccessibleRoute(permissions: readonly string[]): string {

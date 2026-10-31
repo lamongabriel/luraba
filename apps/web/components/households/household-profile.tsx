@@ -56,7 +56,7 @@ export function HouseholdProfile() {
       setActiveHouseholdId("");
       setDeleteOpen(false);
       await client.invalidateQueries({ queryKey: householdQueryKeys.all });
-      router.push("/households");
+      router.push("/dashboard");
     },
   });
   const household = query.data;
