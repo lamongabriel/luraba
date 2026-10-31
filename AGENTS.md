@@ -35,6 +35,15 @@ add its README in the same change, and update the READMEs you rely on if the rul
 > them there and the whole app follows. If a case is missing, extend that folder instead of working
 > around it. Read its README before touching any UI that shows these things.
 
+> ## STOP: every page needs a title (web app)
+>
+> **Every `page.tsx` exports `export const metadata = pageMetadata({ title: "Transactions", description })`
+> from `@/lib/metadata`** (or `generateMetadata` for dynamic pages; a `"use client"` page puts it in the
+> `layout.tsx` next to it). The root layout adds the `| Luraba` suffix, Open Graph, Twitter card, icons and
+> default image, so never write those by hand. The logo and brand colors come only from
+> [`apps/web/components/brand/`](apps/web/components/brand/README.md) (`Logo`, `BrandMark`); never hand-roll a
+> logo. A page without a title fails `apps/web/test/conventions.test.ts`.
+
 ## Where to read
 
 | You are touching | Read first |
@@ -53,6 +62,7 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | Budget page (monthly plan, card settings) | [apps/web/components/budgets/README.md](apps/web/components/budgets/README.md), [apps/api/src/modules/budgets/README.md](apps/api/src/modules/budgets/README.md) |
 | Credit cards UI (overview, card detail, invoices) | [apps/web/components/credit-cards/README.md](apps/web/components/credit-cards/README.md) |
 | The web app | [apps/web/README.md](apps/web/README.md) (data layer, components, forms, permissions) |
+| A new page (its title/SEO), the logo, favicons, OG image | [apps/web/components/brand/README.md](apps/web/components/brand/README.md) (**mandatory**) |
 | Choosing or showing a currency, country, language, time zone, date format, default period or theme | [packages/contracts/src/catalogs/README.md](packages/contracts/src/catalogs/README.md) and the selects in [display](apps/web/components/display/README.md) (**mandatory**) |
 | A page's loading, error or empty state; skeletons | [apps/web/components/states/README.md](apps/web/components/states/README.md) (**mandatory**) |
 | KPIs / headline numbers | [apps/web/components/kpi/README.md](apps/web/components/kpi/README.md) (**mandatory**) |
@@ -114,6 +124,9 @@ add its README in the same change, and update the READMEs you rely on if the rul
     `AmountDisplay`, numeric inputs through `MoneyInput` / `NumberInput` / `DateInput` (never
     `type="number"`), dates through the UTC helpers in `@luraba/domain`. See
     [docs/formatting.md](docs/formatting.md).
+14. **Every page has metadata.** `pageMetadata({ title })` from `@/lib/metadata` on every `page.tsx` (or its
+    same-folder `layout.tsx` for client pages); brand pieces come from `components/brand`. See
+    [apps/web/components/brand/README.md](apps/web/components/brand/README.md).
 
 ## Commands
 

@@ -19,6 +19,7 @@
     "start": "next start",
     "test:unit": "vitest run",
     "test:watch": "vitest",
+    "brand:generate": "node scripts/generate-brand-assets.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

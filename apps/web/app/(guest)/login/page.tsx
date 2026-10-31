@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import { AuthPageHeader } from "@/components/auth/auth-page-header";
 import { LoginForm } from "@/components/forms/auth/login-form";
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
-import { createPageMetadata } from "@/lib/metadata";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = createPageMetadata({
+export const metadata: Metadata = pageMetadata({
   title: "Sign in",
   description: "Sign in to access your Luraba workspace.",
 });

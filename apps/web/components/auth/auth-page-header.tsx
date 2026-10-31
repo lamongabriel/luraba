@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 
-import { Logo } from "@/components/logo";
+import { Logo } from "@/components/brand";
 import { Typography } from "@/components/ui/typography";
 
 type AuthPageHeaderProps = {

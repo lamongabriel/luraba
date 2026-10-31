@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -97,5 +97,58 @@ describe("page state conventions (AGENTS.md: reuse before you build)", () => {
 
   it("has no page-local KPI tiles (use components/kpi)", () => {
     expect(offenders(/function (?:Stat|StatCard|SummaryTile|MetricCard|KpiTile)\b/u)).toEqual([]);
+  });
+});
+
+describe("page metadata conventions (components/brand/README.md)", () => {
+  /** Pages that only redirect and never render, so there is nothing to title. */
+  const REDIRECT_ONLY = new Set(["app/page.tsx"]);
+
+  const pages = (() => {
+    const found: string[] = [];
+    const walk = (dir: string) => {
+      for (const name of readdirSync(dir)) {
+        const path = join(dir, name);
+        if (statSync(path).isDirectory()) walk(path);
+        else if (name === "page.tsx") found.push(path);
+      }
+    };
+    walk(join(ROOT, "app"));
+    return found.map((path) => relative(ROOT, path));
+  })();
+
+  const exportsMetadata = (path: string) =>
+    /export (?:const metadata\b|(?:async )?function generateMetadata\b)/u.test(
+      readFileSync(join(ROOT, path), "utf8"),
+    );
+
+  it("finds the pages", () => {
+    expect(pages.length).toBeGreaterThan(30);
+  });
+
+  it("gives every page a title through pageMetadata (on the page, or its own layout.tsx for client pages)", () => {
+    const missing = pages
+      .filter((page) => !REDIRECT_ONLY.has(page))
+      .filter((page) => {
+        const layout = page.replace(/page\.tsx$/u, "layout.tsx");
+        const owners = [page, ...(existsSync(join(ROOT, layout)) ? [layout] : [])];
+        return !owners.some(exportsMetadata);
+      });
+    expect(missing).toEqual([]);
+  });
+
+  it("builds titles with pageMetadata, never hand-written openGraph or a '| Luraba' suffix", () => {
+    const offenders = pages.filter((page) => {
+      const source = readFileSync(join(ROOT, page), "utf8");
+      return /\| Luraba|openGraph:/u.test(source);
+    });
+    expect(offenders).toEqual([]);
+  });
+
+  it("keeps the title template and the shared brand assets in the root", () => {
+    const layout = readFileSync(join(ROOT, "app/layout.tsx"), "utf8");
+    expect(layout).toMatch(/rootMetadata\(\)/u);
+    const meta = readFileSync(join(ROOT, "lib/metadata.ts"), "utf8");
+    expect(meta).toMatch(/template: `%s \| \$\{BRAND\.name\}`/u);
   });
 });

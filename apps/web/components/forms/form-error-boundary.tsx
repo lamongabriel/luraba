@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { Logo } from "@/components/logo";
+import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 
