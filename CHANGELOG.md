@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.4.0](https://github.com/lamongabriel/luraba/compare/v1.3.0...v1.4.0) (2026-10-31)
+
+
+### Features
+
+* **households:** role-based permissions UI, owner-takeover fix, household section and import wizard ([3412778](https://github.com/lamongabriel/luraba/commit/3412778ba97671d0cc25eaa6f2cec0e6775a3b19))
+* **web:** add brand module, favicon/OG assets and page metadata on every page ([e07677a](https://github.com/lamongabriel/luraba/commit/e07677a031550e8dc2f1376c50cfecd384a91ec5))
+* **web:** simpler household switcher with view, create and selection animation ([bb371b0](https://github.com/lamongabriel/luraba/commit/bb371b0929713022760a580c56c909db1711c5af))
+
+
+### Bug Fixes
+
+* **auth:** return the profile picture with the session and show it in the sidebar ([3bcf832](https://github.com/lamongabriel/luraba/commit/3bcf832823a191bc0977a087eba120122be77925))
+* **dev:** wait for services on start and make BCB macro sync resilient ([dc905b8](https://github.com/lamongabriel/luraba/commit/dc905b8222c0731530a08c978bc12d41d0c8f319))
+* **web:** stop the household switcher trigger from duplicating on select ([0522cc8](https://github.com/lamongabriel/luraba/commit/0522cc836c75e6f191e302a6cae81d9f2e7432c8))
+
+
+### Performance
+
+* **web:** build with Turbopack too ([2482b7a](https://github.com/lamongabriel/luraba/commit/2482b7a43cf6b6d2d9c995e8530ef207b81f55d7))
+* **web:** per-icon hugeicons imports to shrink dev bundles ([087cf7c](https://github.com/lamongabriel/luraba/commit/087cf7cce6a3cb0cf3ec4576dd492bda9d617072))
+* **web:** run the dev server with Turbopack ([ff50e58](https://github.com/lamongabriel/luraba/commit/ff50e58413f8b01b138aa6e5a7477044dfafab7d))
+
 ## [1.3.0](https://github.com/lamongabriel/luraba/compare/v1.2.1...v1.3.0) (2026-10-30)
 
 
