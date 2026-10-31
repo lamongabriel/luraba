@@ -19,9 +19,9 @@ authorization logic in `apps/api` instead of importing it into this workspace.
 
 ## Dev performance
 
-`pnpm dev` runs Turbopack (`next dev`); `build` still uses webpack. On this app Turbopack serves ~1 MB
+`pnpm dev` runs Turbopack (`next dev`); `build` uses it too (12 s cold). On this app Turbopack serves ~1 MB
 client chunks per page versus ~16 MB with webpack dev, and compiles routes in about a second.
-If a change only misbehaves in Turbopack, run `next dev --webpack` to compare.
+If a change only misbehaves in Turbopack, run `next dev --webpack` or `next build --webpack` to compare.
 
 `@hugeicons/core-free-icons` ships one 20 MB index holding ~5,400 icons, and webpack dev mode does
 not tree-shake it, so every page chunk used to carry all of them (30+ MB per chunk, GBs of RAM and

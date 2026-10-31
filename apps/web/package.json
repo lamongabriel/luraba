@@ -15,7 +15,7 @@
   },
   "scripts": {
     "dev": "next dev --port ${PORT:-3000}",
-    "build": "next build --webpack",
+    "build": "next build",
     "start": "next start",
     "test:unit": "vitest run",
     "test:watch": "vitest",
