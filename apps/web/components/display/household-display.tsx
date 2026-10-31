@@ -33,7 +33,7 @@ export function HouseholdMark({
     <DisplayMark
       imageUrl={household.imageUploadId ? uploadContentUrl(household.imageUploadId) : null}
       fallback={
-        <span className="text-[0.6em] font-semibold text-primary-foreground">
+        <span className="text-[0.6em] font-semibold text-primary-foreground!">
           {initialsOf(household.name)}
         </span>
       }

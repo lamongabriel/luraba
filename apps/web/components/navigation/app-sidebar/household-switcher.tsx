@@ -1,18 +1,23 @@
 "use client";
 
-import { ArrowRight01Icon, Settings02Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, ArrowRight01Icon, Tick02Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { HouseholdContext, HouseholdSummary, User } from "@luraba/contracts";
-import Link from "next/link";
+import {
+  HOUSEHOLD_ROLE_METADATA,
+  type HouseholdContext,
+  type HouseholdSummary,
+  type User,
+} from "@luraba/contracts";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { HouseholdMark } from "@/components/display";
+import { HouseholdSettingsSheet } from "@/components/households/household-settings-sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -25,6 +30,9 @@ import {
 import { Typography } from "@/components/ui/typography";
 import { STORAGE_KEYS } from "@/config/storage";
 import { readStorage, writeStorage } from "@/lib/local-storage";
+import { useCreateHouseholdMutation } from "@/mutations/households/use-household-mutations";
+import { authQueryKeys } from "@/queries/auth/use-auth-providers-query";
+import { householdQueryKeys } from "@/queries/households/use-households-query";
 
 const HOUSEHOLD_CHANGED_EVENT = "luraba:household-change";
 const FALLBACK_HOUSEHOLD_TIMESTAMP = "2026-06-11T01:38:36.604Z";
@@ -38,10 +46,6 @@ interface HouseholdSwitcherProps {
   initialHousehold: HouseholdContext;
   households: HouseholdSummary[];
   onHouseholdChange?: (householdId: string) => void;
-}
-
-function createFallbackDescription(household: HouseholdWorkspace) {
-  return `${household.defaultCurrencyId} budgeting for ${household.countryCode} in ${household.timezone.replaceAll("_", " ")}.`;
 }
 
 function mergeHouseholds(
@@ -84,6 +88,9 @@ export function HouseholdSwitcher({
   onHouseholdChange,
 }: HouseholdSwitcherProps) {
   const { isMobile } = useSidebar();
+  const router = useRouter();
+  const client = useQueryClient();
+  const [createOpen, setCreateOpen] = React.useState(false);
   const households = React.useMemo(
     () => mergeHouseholds(initialHousehold, initialHouseholds),
     [initialHousehold, initialHouseholds],
@@ -116,6 +123,24 @@ export function HouseholdSwitcher({
     );
   }, [selectedHousehold]);
 
+  const select = React.useCallback(
+    (householdId: string) => {
+      setSelectedHouseholdId(householdId);
+      onHouseholdChange?.(householdId);
+    },
+    [onHouseholdChange],
+  );
+  const create = useCreateHouseholdMutation({
+    onSuccess: async (created) => {
+      setCreateOpen(false);
+      await Promise.all([
+        client.invalidateQueries({ queryKey: authQueryKeys.session }),
+        client.invalidateQueries({ queryKey: householdQueryKeys.all }),
+      ]);
+      select(created.id);
+    },
+  });
+
   if (!selectedHousehold) {
     return null;
   }
@@ -130,12 +155,16 @@ export function HouseholdSwitcher({
               className="h-11 rounded-xl border border-sidebar-border/70 bg-card/80 px-2.5 py-2 hover:bg-accent/60"
             >
               <HouseholdMark
+                key={selectedHousehold.id}
                 household={selectedHousehold}
                 size="md"
-                className="size-7 rounded-lg"
+                className="size-7 rounded-lg duration-300 animate-in fade-in zoom-in-75"
               />
 
-              <div className="min-w-0 flex-1 text-left">
+              <div
+                key={selectedHousehold.id}
+                className="min-w-0 flex-1 text-left duration-300 animate-in fade-in slide-in-from-left-1"
+              >
                 <Typography
                   as="span"
                   variant="sidebar-title"
@@ -170,49 +199,75 @@ export function HouseholdSwitcher({
               </Typography>
             </DropdownMenuLabel>
 
-            <DropdownMenuRadioGroup
-              value={selectedHousehold.id}
-              onValueChange={(householdId) => {
-                setSelectedHouseholdId(householdId);
-                onHouseholdChange?.(householdId);
-              }}
-            >
-              {households.map((household) => (
-                <DropdownMenuRadioItem
-                  key={household.id}
-                  value={household.id}
-                  className="items-center gap-2.5 rounded-none px-3 py-3 first:mt-1"
-                >
-                  <HouseholdMark household={household} size="md" className="rounded-lg" />
-
-                  <div className="min-w-0 flex-1">
-                    <Typography
-                      as="span"
-                      variant="small-strong"
-                      className="block truncate text-[0.84rem] font-medium text-foreground"
+            <div className="p-1">
+              {households.map((household) => {
+                const active = household.id === selectedHousehold.id;
+                return (
+                  <DropdownMenuItem
+                    key={household.id}
+                    onSelect={() => select(household.id)}
+                    className="group/household gap-2.5 rounded-lg px-2 py-2 transition-colors duration-200"
+                  >
+                    <HouseholdMark household={household} size="md" className="rounded-lg" />
+                    <div className="min-w-0 flex-1">
+                      <Typography
+                        as="span"
+                        variant="small-strong"
+                        className="block truncate text-[0.84rem] font-medium text-foreground"
+                      >
+                        {household.name}
+                      </Typography>
+                      <Typography
+                        as="span"
+                        variant="small-muted"
+                        className="block truncate text-[0.68rem] text-muted-foreground"
+                      >
+                        {HOUSEHOLD_ROLE_METADATA[household.role].label}
+                      </Typography>
+                    </div>
+                    <button
+                      type="button"
+                      title="View household"
+                      aria-label={`View ${household.name}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        select(household.id);
+                        router.push("/household");
+                      }}
+                      className="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-foreground/10 hover:text-foreground focus-visible:opacity-100 group-hover/household:opacity-100 group-data-highlighted/household:opacity-100"
                     >
-                      {household.name}
-                    </Typography>
-                    <Typography
-                      as="span"
-                      variant="small-muted"
-                      className="block truncate text-[0.68rem] text-muted-foreground/72"
-                    >
-                      {household.description ?? createFallbackDescription(household)}
-                    </Typography>
-                  </div>
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="gap-2 px-3 py-2.5">
-              <Link href="/households">
-                <HugeiconsIcon icon={Settings02Icon} strokeWidth={1.8} />
-                Manage households
-              </Link>
-            </DropdownMenuItem>
+                      <HugeiconsIcon icon={ViewIcon} strokeWidth={2} className="size-3.5" />
+                    </button>
+                    {active ? (
+                      <HugeiconsIcon
+                        icon={Tick02Icon}
+                        strokeWidth={2.4}
+                        className="size-3.5 text-primary duration-200 animate-in zoom-in-50 fade-in"
+                      />
+                    ) : null}
+                  </DropdownMenuItem>
+                );
+              })}
+            </div>
+            <DropdownMenuSeparator className="my-0" />
+            <div className="p-1">
+              <DropdownMenuItem
+                className="gap-2 rounded-lg px-2 py-2"
+                onSelect={() => setCreateOpen(true)}
+              >
+                <HugeiconsIcon icon={Add01Icon} strokeWidth={1.8} />
+                New household
+              </DropdownMenuItem>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
+        <HouseholdSettingsSheet
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          mode="create"
+          onSubmit={(body) => create.mutate(body)}
+          isPending={create.isPending}
+        />
       </SidebarMenuItem>
     </SidebarMenu>
   );
