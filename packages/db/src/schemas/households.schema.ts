@@ -74,7 +74,6 @@ export const householdInvitesTable = pgTable(
       .references(() => householdsTable.id, { onDelete: "cascade" }),
     email: varchar({ length: 255 }).notNull(),
     /** Optional name the inviter gave the invitee; shown in the invitations list. */
-    inviteeName: varchar("invitee_name", { length: 255 }),
     role: householdRoleEnum().notNull(),
     status: householdInviteStatusEnum().notNull().default("pending"),
     invitedByUserId: uuid("invited_by_user_id")

@@ -224,6 +224,26 @@ export function diffRoles(from: HouseholdRole, to: HouseholdRole): RolePermissio
   };
 }
 
+/** A one-line digest of a role, e.g. "Sees all 20 areas · changes 14 · deletes in 9". */
+export function summarizeRole(role: HouseholdRole): string {
+  const count = (actions: PermissionAction[]) =>
+    PERMISSION_GROUPS.filter((group) =>
+      group.permissions.some(
+        (p) => actions.includes(getPermissionAction(p)) && roleHasPermission(role, p),
+      ),
+    ).length;
+  const total = PERMISSION_GROUPS.length;
+  const access = PERMISSION_GROUPS.filter((group) =>
+    group.permissions.some((p) => roleHasPermission(role, p)),
+  ).length;
+  const parts = [access === total ? `Sees all ${total} areas` : `Sees ${access} of ${total} areas`];
+  const change = count(["create", "edit", "manage"]);
+  const remove = count(["delete"]);
+  parts.push(change === 0 ? "changes nothing" : `changes ${change}`);
+  if (remove > 0) parts.push(`deletes in ${remove}`);
+  return parts.join(" · ");
+}
+
 export function countRolePermissions(role: HouseholdRole): number {
   return HOUSEHOLD_ROLE_PERMISSIONS[role].size;
 }

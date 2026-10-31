@@ -53,8 +53,6 @@ export const createHouseholdInviteBodySchema = z.object({
     .email()
     .max(255)
     .transform((value) => value.trim().toLowerCase()),
-  /** Who this is for; only shown to household managers. */
-  name: z.string().trim().max(255).optional(),
   role: householdRoleSchema.exclude(["owner"]).default("member"),
 });
 const inviteTokenSchema = z.string().min(1).max(256);

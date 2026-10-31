@@ -35,14 +35,6 @@ export function CreateHouseholdInviteForm({
     <form className="space-y-6" onSubmit={submit} noValidate>
       <FormItem
         control={form.control}
-        name="name"
-        label="Name (optional)"
-        placeholder="John Doe"
-        autoComplete="off"
-        disabled={isPending}
-      />
-      <FormItem
-        control={form.control}
         name="email"
         label="Email address"
         inputType="email"

@@ -1,14 +1,13 @@
 "use client";
 
-import { HOUSEHOLD_ROLE_METADATA, type HouseholdRole } from "@luraba/contracts";
-import { countRolePermissions, TOTAL_PERMISSIONS } from "@/lib/permission-catalog";
+import type { HouseholdRole } from "@luraba/contracts";
+import { summarizeRole } from "@/lib/permission-catalog";
 import { cn } from "@/lib/utils";
 import { RoleBadge } from "./role-badge";
-import { RolePermissions } from "./role-permissions";
 
 /**
- * Pick a role by reading what it means: one card per role you are allowed to give, and below them
- * the full list of what the chosen role can do. Replaces a bare "Admin / Member / Viewer" select.
+ * Pick a role: one compact row per role you are allowed to give, each with a one-line summary of
+ * what it can do. The full list is on the Roles page.
  */
 export function RolePicker({
   roles,
@@ -40,23 +39,12 @@ export function RolePicker({
             >
               <span className="flex items-center justify-between gap-2">
                 <RoleBadge role={role} />
-                <span className="text-[0.68rem] text-muted-foreground">
-                  {countRolePermissions(role)} of {TOTAL_PERMISSIONS} permissions
-                </span>
-              </span>
-              <span className="mt-1.5 block text-xs text-muted-foreground">
-                {HOUSEHOLD_ROLE_METADATA[role].description}
+                <span className="text-[0.68rem] text-muted-foreground">{summarizeRole(role)}</span>
               </span>
             </button>
           );
         })}
       </fieldset>
-      <div className="rounded-lg border border-dashed border-border p-3">
-        <p className="mb-2 text-xs font-medium">
-          What {HOUSEHOLD_ROLE_METADATA[value].label.toLowerCase()}s can do
-        </p>
-        <RolePermissions role={value} />
-      </div>
     </div>
   );
 }

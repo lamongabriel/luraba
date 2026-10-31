@@ -86,7 +86,6 @@ export type HouseholdInviteListRow = {
   householdId: string;
   householdName: string;
   email: string;
-  inviteeName: string | null;
   role: HouseholdInviteRecord["role"];
   status: HouseholdInviteRecord["status"];
   computedStatus: string;
@@ -152,7 +151,6 @@ const householdInviteListSelect = {
   householdId: householdInvitesTable.householdId,
   householdName: householdsTable.name,
   email: householdInvitesTable.email,
-  inviteeName: householdInvitesTable.inviteeName,
   role: householdInvitesTable.role,
   status: householdInvitesTable.status,
   computedStatus: householdInviteComputedStatusSql,
@@ -541,7 +539,6 @@ class HouseholdsRepository {
   async createInvite(values: {
     householdId: string;
     email: string;
-    inviteeName?: string | null;
     role: HouseholdInviteRecord["role"];
     invitedByUserId: string;
     tokenHash: string;
@@ -554,7 +551,6 @@ class HouseholdsRepository {
   async refreshInvite(
     inviteId: string,
     values: {
-      inviteeName?: string | null;
       role?: HouseholdInviteRecord["role"];
       invitedByUserId?: string;
       tokenHash: string;

@@ -22,5 +22,3 @@ web UI, so the UI never offers what the API refuses.
   route param and only falls back to `X-Household-Id`. Before, the header won, so a role in another
   household authorized the call (an admin who owned a second household could demote the first
   one's owner). `households.security.http.test.ts` covers this.
-- **Invitee name.** Invites carry an optional `name` (`invitee_name`, migration `0049_invite_name`)
-  shown in the invitations table.

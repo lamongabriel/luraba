@@ -104,7 +104,6 @@ function mapHouseholdInvite(record: HouseholdInviteListRow): HouseholdInvite {
     householdId: record.householdId,
     householdName: record.householdName,
     email: record.email,
-    name: record.inviteeName,
     role: record.role,
     status: record.status,
     computedStatus: householdInviteComputedStatusSchema.parse(record.computedStatus),
@@ -428,7 +427,6 @@ export async function createInvite(
 
   const created = pending
     ? await householdsRepository.refreshInvite(pending.id, {
-        inviteeName: body.name || null,
         role: body.role,
         invitedByUserId: context.userId,
         tokenHash: token.tokenHash,
@@ -437,7 +435,6 @@ export async function createInvite(
     : await householdsRepository.createInvite({
         householdId,
         email,
-        inviteeName: body.name || null,
         role: body.role,
         invitedByUserId: context.userId,
         tokenHash: token.tokenHash,

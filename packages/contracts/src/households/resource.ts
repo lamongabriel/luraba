@@ -79,7 +79,6 @@ export const householdInviteSchema = z.object({
   householdId: z.uuid(),
   householdName: z.string(),
   email: z.email(),
-  name: z.string().nullable(),
   role: householdRoleSchema,
   status: storedHouseholdInviteStatusSchema,
   computedStatus: householdInviteComputedStatusSchema,

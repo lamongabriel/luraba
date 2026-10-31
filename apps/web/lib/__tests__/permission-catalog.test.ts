@@ -5,6 +5,7 @@ import {
   diffRoles,
   PERMISSION_GROUPS,
   roleHasPermission,
+  summarizeRole,
   TOTAL_PERMISSIONS,
 } from "../permission-catalog";
 
@@ -29,6 +30,14 @@ describe("permission catalog", () => {
     const down = diffRoles("admin", "viewer");
     expect(down.gained).toHaveLength(0);
     expect(roleHasPermission("viewer", PERMISSIONS.TRANSACTIONS_DELETE)).toBe(false);
+  });
+});
+
+describe("summarizeRole", () => {
+  it("is a short line that grows with the role", () => {
+    expect(summarizeRole("viewer")).toContain("changes nothing");
+    expect(summarizeRole("owner")).toContain(`all ${PERMISSION_GROUPS.length} areas`);
+    expect(summarizeRole("admin")).toContain("deletes in");
   });
 });
 

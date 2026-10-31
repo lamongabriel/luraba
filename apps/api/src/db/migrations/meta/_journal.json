@@ -351,6 +351,13 @@
       "when": 1789882200000,
       "tag": "0049_invite_name",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1789968600000,
+      "tag": "0050_drop_invite_name",
+      "breakpoints": true
     }
   ]
 }

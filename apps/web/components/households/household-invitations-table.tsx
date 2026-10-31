@@ -131,8 +131,8 @@ export function HouseholdInvitationsTable({
           <UserDisplay
             compact
             user={{
-              name: row.original.name || row.original.email,
-              email: row.original.name ? row.original.email : "Invitation recipient",
+              name: row.original.email,
+              email: "Invitation recipient",
             }}
           />
         ),
