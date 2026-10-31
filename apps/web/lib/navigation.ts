@@ -9,7 +9,7 @@ import {
   Settings02Icon,
   UserGroupIcon,
   UserMultiple02Icon,
-  WalletIcon,
+  Wallet01Icon as WalletIcon,
 } from "@hugeicons/core-free-icons";
 import { PERMISSIONS, type PermissionKey } from "@luraba/contracts";
 

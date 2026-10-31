@@ -1,6 +1,6 @@
 "use client";
 
-import { WalletIcon } from "@hugeicons/core-free-icons";
+import { Wallet01Icon as WalletIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 import { EmptyState } from "@/components/empty-state";

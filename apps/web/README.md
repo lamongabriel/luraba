@@ -17,6 +17,15 @@ Shared HTTP contracts come from `@luraba/contracts` and framework-free finance
 helpers come from `@luraba/domain`. Keep API persistence and server-only
 authorization logic in `apps/api` instead of importing it into this workspace.
 
+## Dev performance
+
+`@hugeicons/core-free-icons` ships one 20 MB index holding ~5,400 icons, and webpack dev mode does
+not tree-shake it, so every page chunk used to carry all of them (30+ MB per chunk, GBs of RAM and
+swap). `next.config.mjs` rewrites named imports to per-icon modules (`modularizeImports`), which
+needs each imported name to have its own file. Import the real icon name (`Search01Icon`), not a
+barrel alias (`SearchIcon`); use `import { Search01Icon as SearchIcon }` if you want a local alias.
+A missing file shows up as `Can't resolve '@hugeicons/core-free-icons/<Name>'`.
+
 ## Structure
 
 | Folder | Role |
@@ -41,6 +50,8 @@ that invalidates the key. Reusable file/attachment UI is documented in
 Credit cards UI (month overview, card detail, invoices): [components/credit-cards/README.md](components/credit-cards/README.md).
 
 Budget UI (monthly plan, card settings): [components/budgets/README.md](components/budgets/README.md).
+
+**Page metadata (mandatory).** Every `page.tsx` exports `metadata = pageMetadata({ title, description })` (`lib/metadata.ts`; client pages do it in their same-folder `layout.tsx`). The root layout supplies the `| Luraba` suffix, Open Graph, Twitter and icons; the logo and brand assets live in [components/brand](components/brand/README.md). Enforced by `test/conventions.test.ts`.
 
 **Page titles.** Every page in `(app)` renders `InternalPageLayout` (which wraps `components/finance/page-header.tsx`):
 `title`, a mandatory `subtitle`, an optional `back={{ href, label }}` ("Back to {label}", use it on every detail page) and an

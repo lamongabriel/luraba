@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarIcon, CancelCircleIcon } from "@hugeicons/core-free-icons";
+import { Calendar01Icon as CalendarIcon, CancelCircleIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { formatDate, toDate } from "@luraba/domain";
 import type { Column } from "@tanstack/react-table";

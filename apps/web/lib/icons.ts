@@ -33,7 +33,7 @@ import {
   PaintBrush02Icon,
   PiggyBankIcon,
   Pizza01Icon,
-  Receipt,
+  Invoice01Icon as Receipt,
   Restaurant01Icon,
   SecurityCheckIcon,
   Shirt01Icon,

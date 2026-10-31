@@ -35,7 +35,7 @@ import {
   Store01Icon,
   TradeDownIcon,
   TradeUpIcon,
-  WalletIcon,
+  Wallet01Icon as WalletIcon,
 } from "@hugeicons/core-free-icons";
 import type { HugeiconsIcon } from "@hugeicons/react";
 import type {
