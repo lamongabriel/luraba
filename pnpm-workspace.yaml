@@ -9,4 +9,4 @@ catalog:
   turbo: 2.10.9
   typescript: ^5.9.3
   vitest: ^4.1.8
-  zod: ^4.3.6
+  zod: ^4.5.4
