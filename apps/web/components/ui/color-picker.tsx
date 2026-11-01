@@ -68,16 +68,37 @@ export const ColorPicker = ({
   const selectedColor = Color(value ?? defaultValue);
   const defaultColor = Color(defaultValue);
 
-  const [hue, setHue] = useState(selectedColor.hue() || defaultColor.hue() || 0);
-  const [saturation, setSaturation] = useState(
+  const [hue, setHueState] = useState(selectedColor.hue() || defaultColor.hue() || 0);
+  const [saturation, setSaturationState] = useState(
     selectedColor.saturationl() || defaultColor.saturationl() || 100,
   );
-  const [lightness, setLightness] = useState(
+  const [lightness, setLightnessState] = useState(
     selectedColor.lightness() || defaultColor.lightness() || 50,
   );
-  const [alpha, setAlpha] = useState(selectedColor.alpha() * 100 || defaultColor.alpha() * 100);
+  const [alpha, setAlphaState] = useState(
+    selectedColor.alpha() * 100 || defaultColor.alpha() * 100,
+  );
   const [mode, setMode] = useState("hex");
   const onChangeRef = useRef(onChange);
+  // Only a person's interaction may call `onChange`; syncing from `value` or mounting must not,
+  // otherwise opening the picker rewrites the color (a hex -> HSL -> hex round trip drifts).
+  const userChangeRef = useRef(false);
+  const setHue = useCallback((next: number) => {
+    userChangeRef.current = true;
+    setHueState(next);
+  }, []);
+  const setSaturation = useCallback((next: number) => {
+    userChangeRef.current = true;
+    setSaturationState(next);
+  }, []);
+  const setLightness = useCallback((next: number) => {
+    userChangeRef.current = true;
+    setLightnessState(next);
+  }, []);
+  const setAlpha = useCallback((next: number) => {
+    userChangeRef.current = true;
+    setAlphaState(next);
+  }, []);
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -88,15 +109,17 @@ export const ColorPicker = ({
     if (value) {
       const [nextHue, nextSaturation, nextLightness] = Color(value).hsl().array();
 
-      setHue(nextHue);
-      setSaturation(nextSaturation);
-      setLightness(nextLightness);
-      setAlpha(Color(value).alpha() * 100);
+      setHueState(nextHue);
+      setSaturationState(nextSaturation);
+      setLightnessState(nextLightness);
+      setAlphaState(Color(value).alpha() * 100);
     }
   }, [value]);
 
   // Notify parent of changes
   useEffect(() => {
+    if (!userChangeRef.current) return;
+    userChangeRef.current = false;
     if (onChangeRef.current) {
       const color = Color.hsl(hue, saturation, lightness).alpha(alpha / 100);
       const rgba = color.rgb().array();
@@ -143,6 +166,11 @@ export const ColorPickerSelection = memo(({ className, ...props }: ColorPickerSe
   const handlePointerMove = useCallback(
     (event: PointerEvent) => {
       if (!(isDragging && containerRef.current)) {
+        return;
+      }
+      // The button was released outside the window: stop following the pointer on hover.
+      if (event.buttons === 0) {
+        setIsDragging(false);
         return;
       }
       const rect = containerRef.current.getBoundingClientRect();

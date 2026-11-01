@@ -152,3 +152,25 @@ describe("page metadata conventions (components/brand/README.md)", () => {
     expect(meta).toMatch(/template: `%s \| \$\{BRAND\.name\}`/u);
   });
 });
+
+describe("chart conventions (components/charts/README.md)", () => {
+  /** Charts drawn straight with Recharts before the library existed. Migrate them, never add to it. */
+  const LEGACY_RECHARTS = new Set([
+    "components/analytics/expense-breakdown-panel.tsx",
+    "components/credit-cards/invoice-history-chart.tsx",
+    "components/goals/goal-progress-chart.tsx",
+    "components/investments/asset-price-chart.tsx",
+    "components/investments/performance-chart.tsx",
+    "components/kpi/kpi-card.tsx",
+    "components/ui/chart.tsx",
+  ]);
+
+  it("draws new charts with components/charts, not with Recharts directly", () => {
+    const direct = ["app", "components"]
+      .flatMap((dir) => sourceFiles(join(ROOT, dir)))
+      .map((path) => relative(ROOT, path))
+      .filter((path) => !path.startsWith("components/charts/") && !LEGACY_RECHARTS.has(path))
+      .filter((path) => /from "recharts"/u.test(readFileSync(join(ROOT, path), "utf8")));
+    expect(direct).toEqual([]);
+  });
+});

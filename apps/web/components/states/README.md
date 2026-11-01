@@ -26,6 +26,15 @@ Every data page and data section has three states built from shared parts, never
 Detail pages (`[id]`) need `_loading.tsx` and `_error.tsx`; their loading file renders the whole
 `InternalPageLayout` (title, back link) so the header never jumps.
 
+## Pages that fill the viewport
+
+A list page (transactions) can fill the screen: the page body is a flex column (`flex flex-1 flex-col`),
+the table block `flex-1`, and `DataTable`/`DataTableSkeleton` take `fill` so the bordered table grows
+to the leftover height and the pager stays at the bottom. No pixel heights. Side panels next to it are
+`PanelCard fill` (`components/finance/panel-card.tsx`, one header: title, icon, description, actions),
+so they always match the table's height; their loading twin is `PanelCardSkeleton`, and an empty panel
+uses `<EmptyState variant="embedded" />` (no border or card, because it already sits in a card).
+
 ## Loading skeletons match the page one to one
 
 If the layout moves by a single pixel when data arrives, the page is wrong. Rules:

@@ -2,9 +2,11 @@
 
 import type {
   CreditCardForecastQuery,
+  CreditCardInsightsQuery,
   CreditCardOverviewQuery,
   GetCreditCardCycleResult,
   GetCreditCardForecastResult,
+  GetCreditCardInsightsResult,
   GetCreditCardOverviewResult,
   GetCreditCardPaymentResult,
   GetCreditCardPurchaseResult,
@@ -20,6 +22,7 @@ import {
   getCreditCard,
   getCreditCardCycle,
   getCreditCardForecast,
+  getCreditCardInsights,
   getCreditCardOverview,
   getCreditCardPayment,
   getCreditCardPurchase,
@@ -33,6 +36,8 @@ export const creditCardQueryKeys = {
   list: (query: ListCreditCardsQuery = {}) => [...creditCardQueryKeys.lists(), query] as const,
   overview: (query: CreditCardOverviewQuery = {}) =>
     [...creditCardQueryKeys.all, "overview", query] as const,
+  insights: (query: CreditCardInsightsQuery) =>
+    [...creditCardQueryKeys.all, "insights", query] as const,
   details: () => [...creditCardQueryKeys.all, "detail"] as const,
   detail: (creditCardId: string) => [...creditCardQueryKeys.details(), creditCardId] as const,
   cycles: (creditCardId: string, query: ListCreditCardCyclesQuery = {}) =>
@@ -143,6 +148,18 @@ export function useCreditCardOverviewQuery<TData = GetCreditCardOverviewResult>(
   return useQuery({
     queryKey: creditCardQueryKeys.overview(query),
     queryFn: () => getCreditCardOverview(query),
+    placeholderData: (previousData) => previousData,
+    ...options,
+  });
+}
+
+export function useCreditCardInsightsQuery<TData = GetCreditCardInsightsResult>(
+  query: CreditCardInsightsQuery,
+  options?: AppQueryOptions<GetCreditCardInsightsResult, TData>,
+) {
+  return useQuery({
+    queryKey: creditCardQueryKeys.insights(query),
+    queryFn: () => getCreditCardInsights(query),
     placeholderData: (previousData) => previousData,
     ...options,
   });

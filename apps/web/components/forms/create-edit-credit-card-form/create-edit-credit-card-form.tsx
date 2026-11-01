@@ -1,8 +1,14 @@
 "use client";
 
 import type { CreditCard } from "@luraba/contracts";
+import type * as React from "react";
+import {
+  renderCreditCardBrandOption,
+  renderCreditCardBrandValue,
+} from "@/components/credit-cards/credit-card-brand";
 import { CreditCardPreview } from "@/components/credit-cards/credit-card-preview";
 import { CurrencySelect } from "@/components/display";
+import { FormActions } from "@/components/forms/form-actions";
 import { FormItem } from "@/components/forms/form-item";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
@@ -16,11 +22,14 @@ export function CreateEditCreditCardForm({
   defaultCurrencyCode,
   onCancel,
   onSuccess,
+  editExtras,
 }: {
   card?: CreditCard;
   defaultCurrencyCode: string;
   onCancel: () => void;
   onSuccess: () => void;
+  /** Rendered above the actions when editing (the delete section). */
+  editExtras?: React.ReactNode;
 }) {
   const {
     accountsQuery,
@@ -73,6 +82,8 @@ export function CreateEditCreditCardForm({
             value: option.value,
             label: option.label,
           }))}
+          renderOption={renderCreditCardBrandOption}
+          renderValue={renderCreditCardBrandValue}
           disabled={isPending}
         />
       </div>
@@ -161,7 +172,7 @@ export function CreateEditCreditCardForm({
           control={form.control}
           name="creditLimitAmount"
           label="Credit limit"
-          placeholder="No limit"
+          placeholder="0.00"
           disabled={isPending}
         />
       </div>
@@ -183,14 +194,20 @@ export function CreateEditCreditCardForm({
       ) : null}
       {errorMessage ? <Typography variant="small-destructive">{errorMessage}</Typography> : null}
 
-      <div className="flex flex-col gap-3 border-t border-border/70 pt-5 sm:flex-row sm:justify-end">
-        <Button type="button" variant="ghost" onClick={onCancel}>
+      {isEdit ? editExtras : null}
+
+      <FormActions>
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={isPending}>
           Cancel
         </Button>
-        <Button type="submit" isLoading={isPending}>
+        <Button
+          type="submit"
+          isLoading={isPending}
+          loadingText={isEdit ? "Saving..." : "Creating card..."}
+        >
           {isEdit ? "Save changes" : "Create credit card"}
         </Button>
-      </div>
+      </FormActions>
     </form>
   );
 }

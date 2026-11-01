@@ -1,3 +1,4 @@
+import { MAX_LOAN_TERM_MONTHS, MAX_PROPERTY_AREA, MAX_VEHICLE_MILEAGE } from "@luraba/contracts";
 import { getUTCFullYear, isValidDate as isValid, now, parseDate as parseISO } from "@luraba/domain";
 import { z } from "zod";
 
@@ -90,7 +91,10 @@ export const createEditAccountFormSchema = z
       postalCode: optionalText("Postal code", 32),
       countryCode: z.string().regex(/^$|^[A-Za-z]{2}$/, "Use a two-letter country code."),
       area: optionalNumber(
-        z.number({ error: "Enter a valid area." }).positive("Area must be greater than zero."),
+        z
+          .number({ error: "Enter a valid area." })
+          .positive("Area must be greater than zero.")
+          .max(MAX_PROPERTY_AREA, "Area is too large."),
       ),
       areaUnit: z.enum(["", "sqm", "sqft"], {
         error: "Choose a valid area unit.",
@@ -126,7 +130,8 @@ export const createEditAccountFormSchema = z
         z
           .number({ error: "Enter a valid mileage." })
           .int("Mileage must be a whole number.")
-          .nonnegative("Mileage cannot be negative."),
+          .nonnegative("Mileage cannot be negative.")
+          .max(MAX_VEHICLE_MILEAGE, "Mileage is too large."),
       ),
       mileageUnit: z.enum(["", "km", "mi"], {
         error: "Choose a valid mileage unit.",
@@ -157,7 +162,8 @@ export const createEditAccountFormSchema = z
         z
           .number({ error: "Enter a valid loan term." })
           .int("Loan term must use whole months.")
-          .positive("Loan term must be at least one month."),
+          .min(1, "Loan term must be at least one month.")
+          .max(MAX_LOAN_TERM_MONTHS, `Loan term cannot exceed ${MAX_LOAN_TERM_MONTHS} months.`),
       ),
       startDate: optionalDate("start date"),
       maturityDate: optionalDate("maturity date"),
@@ -194,6 +200,38 @@ export const createEditAccountFormSchema = z
     }),
   ])
   .superRefine((values, context) => {
+    if (
+      values.type === "property" &&
+      values.area !== undefined &&
+      values.area !== "" &&
+      !values.areaUnit
+    ) {
+      context.addIssue({ code: "custom", path: ["areaUnit"], message: "Choose an area unit." });
+    }
+    if (
+      values.type === "vehicle" &&
+      values.mileage !== undefined &&
+      values.mileage !== "" &&
+      !values.mileageUnit
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["mileageUnit"],
+        message: "Choose a mileage unit.",
+      });
+    }
+    if (
+      values.type === "loan" &&
+      values.paymentAmount !== undefined &&
+      values.paymentAmount !== "" &&
+      !values.paymentFrequency
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["paymentFrequency"],
+        message: "Choose how often payments are due.",
+      });
+    }
     if (
       values.type === "loan" &&
       values.startDate &&

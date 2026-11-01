@@ -40,7 +40,7 @@ replaces (not merges) those objects when a page sets its own.
   same-folder layout only, so every page gets its own title.
 - **Detail pages** (`[id]`): use a generic title (`Account`, `Goal`) or `generateMetadata` that calls
   `pageMetadata({ title: name })` when the name is cheaply available on the server. Record names
-  need the user's session, so we use the generic form.
+  need the user's session and the active household (browser only), so the server gives the generic title and the page then sets the real one with `usePageTitle(name)` (`hooks/use-page-title.ts`, `<name> | Luraba`); the account page does this.
 - Never write `"... | Luraba"` or `openGraph:` by hand in a page; the test rejects it.
 - `app/robots.ts` disallows everything and there is no sitemap, on purpose.
 

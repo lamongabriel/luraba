@@ -33,7 +33,7 @@ export function FormSheet({
           <SidePanelTitle>{title}</SidePanelTitle>
           {description ? <SidePanelDescription>{description}</SidePanelDescription> : null}
         </SidePanelHeader>
-        <SidePanelBody className="space-y-6">{children}</SidePanelBody>
+        <SidePanelBody className="flex-1 space-y-6">{children}</SidePanelBody>
       </SidePanelContent>
     </SidePanel>
   );

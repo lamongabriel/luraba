@@ -1,10 +1,12 @@
 "use client";
 
 import {
+  type AccountInsightsQuery,
   accountsEndpoints,
   type CreateAccountInput,
   type CreateAccountResult,
   type DeleteAccountResult,
+  type GetAccountInsightsResult,
   type GetAccountResult,
   type ListAccountsQuery,
   type ListAccountsResult,
@@ -21,6 +23,13 @@ export function listAccounts(query: ListAccountsQuery = {}): Promise<ListAccount
 
 export function getAccount(id: string): Promise<GetAccountResult> {
   return requestContract(accountsEndpoints.get, { params: { id } });
+}
+
+export function getAccountInsights(
+  id: string,
+  query: AccountInsightsQuery = {},
+): Promise<GetAccountInsightsResult> {
+  return requestContract(accountsEndpoints.insights, { params: { id }, query });
 }
 
 export function listAccountTransactions(

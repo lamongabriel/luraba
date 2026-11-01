@@ -148,7 +148,7 @@ describe("CreateEditAccountForm", () => {
     expect(details).not.toBeNull();
     expect(within(details as HTMLElement).getByLabelText("Original principal")).toBeVisible();
     expect(within(details as HTMLElement).getByLabelText("Rate type")).toBeVisible();
-    expect(within(details as HTMLElement).getByLabelText("Secured asset")).toBeVisible();
+    expect(within(details as HTMLElement).getByLabelText("Secured by")).toBeVisible();
   });
 
   it.each([

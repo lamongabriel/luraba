@@ -77,6 +77,25 @@ export const createEditTransactionFormSchema = z
       });
     }
 
+    const supportsItems =
+      values.kind === "expense" ||
+      values.kind === "income" ||
+      values.kind === "credit_card_purchase";
+    if (supportsItems && typeof values.amount === "number" && values.items.length > 0) {
+      // Compared in major units rounded to 6 places so float noise never trips the rule.
+      const itemsTotal = values.items.reduce(
+        (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0),
+        0,
+      );
+      if (Math.round(itemsTotal * 1e6) > Math.round(values.amount * 1e6)) {
+        context.addIssue({
+          code: "custom",
+          path: ["items"],
+          message: "Items add up to more than the transaction amount.",
+        });
+      }
+    }
+
     if (values.kind === "expense" || values.kind === "income") {
       requireId("accountId", "Choose an account.");
       if (!values.paymentMethodCode) {

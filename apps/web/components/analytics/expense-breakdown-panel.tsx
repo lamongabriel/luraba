@@ -1,10 +1,13 @@
 "use client";
 
+import { PieChart01Icon as PieChartIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { TransactionAnalytics } from "@luraba/contracts";
 import * as React from "react";
 import { Pie, PieChart, Sector } from "recharts";
 import type { PieSectorShapeProps } from "recharts/types/polar/Pie";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/empty-state";
+import { PanelCard } from "@/components/finance/panel-card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { formatCurrency } from "@/lib/finance";
 import { CURATED_COLOR_PRESETS } from "@/lib/icons";
@@ -26,70 +29,73 @@ export function ExpenseBreakdownPanel({
   }));
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Expense breakdown</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {chartItems.length === 0 ? (
-          <p className="py-8 text-center text-xs text-muted-foreground">
-            No expenses in this period.
-          </p>
-        ) : (
-          <>
-            <ChartContainer
-              config={{
-                amount: { label: "Amount", color: "var(--color-primary)" },
-              }}
-              className="mx-auto h-36 w-full max-w-48"
-            >
-              <PieChart accessibilityLayer>
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Pie
-                  data={chartItems}
-                  dataKey="amount"
-                  nameKey="name"
-                  innerRadius={38}
-                  outerRadius={58}
-                  strokeWidth={2}
-                  stroke="var(--color-card)"
-                  shape={({ index, outerRadius = 0, ...props }: PieSectorShapeProps) =>
-                    index === activeIndex ? (
-                      <Sector {...props} outerRadius={outerRadius + 6} />
-                    ) : (
-                      <Sector {...props} outerRadius={outerRadius} />
-                    )
-                  }
-                  onMouseEnter={(_, index) => setActiveIndex(index)}
-                  onMouseLeave={() => setActiveIndex(0)}
-                  isAnimationActive={false}
+    <PanelCard
+      fill
+      title="Expense breakdown"
+      icon={<HugeiconsIcon icon={PieChartIcon} strokeWidth={2} />}
+      contentClassName="space-y-4"
+    >
+      {chartItems.length === 0 ? (
+        <EmptyState
+          variant="embedded"
+          icon={<HugeiconsIcon icon={PieChartIcon} strokeWidth={1.8} className="size-5" />}
+          title="No expenses in this period"
+          description="Expenses you add or import show up here by category."
+        />
+      ) : (
+        <>
+          <ChartContainer
+            config={{
+              amount: { label: "Amount", color: "var(--color-primary)" },
+            }}
+            className="mx-auto h-36 w-full max-w-48"
+          >
+            <PieChart accessibilityLayer>
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Pie
+                data={chartItems}
+                dataKey="amount"
+                nameKey="name"
+                innerRadius={38}
+                outerRadius={58}
+                strokeWidth={2}
+                stroke="var(--color-card)"
+                shape={({ index, outerRadius = 0, ...props }: PieSectorShapeProps) =>
+                  index === activeIndex ? (
+                    <Sector {...props} outerRadius={outerRadius + 6} />
+                  ) : (
+                    <Sector {...props} outerRadius={outerRadius} />
+                  )
+                }
+                onMouseEnter={(_, index) => setActiveIndex(index)}
+                onMouseLeave={() => setActiveIndex(0)}
+                isAnimationActive={false}
+              />
+            </PieChart>
+          </ChartContainer>
+          <ul className="space-y-2" aria-label="Expense categories">
+            {chartItems.map((item) => (
+              <li key={item.id ?? "uncategorized"} className="flex items-center gap-2">
+                <span
+                  className="size-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: item.fill }}
+                  aria-hidden="true"
                 />
-              </PieChart>
-            </ChartContainer>
-            <ul className="space-y-2" aria-label="Expense categories">
-              {chartItems.map((item) => (
-                <li key={item.id ?? "uncategorized"} className="flex items-center gap-2">
-                  <span
-                    className="size-2 shrink-0 rounded-full"
-                    style={{ backgroundColor: item.fill }}
-                    aria-hidden="true"
-                  />
-                  <span className="min-w-0 flex-1 truncate text-xs">{item.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatCurrency(
-                      item.amount,
-                      analytics.currencyCode,
-                      language,
-                      undefined,
-                      precision,
-                    )}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </CardContent>
-    </Card>
+                <span className="min-w-0 flex-1 truncate text-xs">{item.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatCurrency(
+                    item.amount,
+                    analytics.currencyCode,
+                    language,
+                    undefined,
+                    precision,
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </PanelCard>
   );
 }

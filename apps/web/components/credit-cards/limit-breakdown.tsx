@@ -1,12 +1,13 @@
 "use client";
 
 import type { CreditCardLimitBreakdown } from "@luraba/contracts";
-import { MoneyValue } from "@/components/finance/money-value";
-import { Typography } from "@/components/ui/typography";
+import { AmountDisplay } from "@/components/display";
+import { PageSection } from "@/components/finance/page-section";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LIMIT_SEGMENTS } from "@/lib/credit-card-invoices";
 
 /**
- * The credit limit as a segmented bar (closed invoice, open invoice, future installments,
+ * The credit limit (a plain section) as a segmented bar (closed invoice, open invoice, future installments,
  * available) with a legend, like a bank's limit screen.
  */
 export function LimitBreakdown({
@@ -28,25 +29,23 @@ export function LimitBreakdown({
   })).filter((segment) => breakdown.limit !== null || segment.key !== "available");
   const total = Math.max(breakdown.limit ?? 0, breakdown.used);
   const money = (amount: number) => (
-    <MoneyValue
+    <AmountDisplay
       amount={amount}
       currencyCode={currencyCode}
       language={language}
       precision={precision}
+      showSign={false}
     />
   );
 
   return (
-    <section className="rounded-xl border border-border/60 p-4" aria-label={title}>
-      <div className="flex items-baseline justify-between gap-3">
-        <Typography variant="small-strong">{title}</Typography>
-        <Typography variant="small-muted">
-          {breakdown.limit === null ? "No limit set" : <>of {money(breakdown.limit)}</>}
-        </Typography>
-      </div>
-
+    <PageSection
+      divider
+      title={title}
+      description={breakdown.limit === null ? "No limit set" : <>of {money(breakdown.limit)}</>}
+    >
       <div
-        className="mt-3 flex h-3 overflow-hidden rounded-full bg-muted"
+        className="flex h-3 overflow-hidden rounded-full bg-muted"
         role="img"
         aria-label={`${title}: ${segments.map((segment) => segment.label).join(", ")}`}
       >
@@ -61,7 +60,7 @@ export function LimitBreakdown({
           ))}
       </div>
 
-      <dl className="mt-4 space-y-2">
+      <dl className="space-y-2">
         {segments.map((segment) => (
           <div key={segment.key} className="flex items-center justify-between gap-3 text-sm">
             <dt className="flex items-center gap-2 text-muted-foreground">
@@ -76,6 +75,22 @@ export function LimitBreakdown({
           </div>
         ))}
       </dl>
-    </section>
+    </PageSection>
+  );
+}
+
+/** Loading twin of `LimitBreakdown`: the bar and four legend rows. */
+export function LimitBreakdownSkeleton({ title = "Credit limit" }: { title?: string }) {
+  return (
+    <PageSection divider title={title}>
+      <div role="status" aria-busy="true" aria-label="Loading credit limit" className="space-y-3">
+        <Skeleton className="h-3 w-full rounded-full" />
+        <div className="space-y-2">
+          {[0, 1, 2, 3].map((key) => (
+            <Skeleton key={key} className="h-5 w-full" />
+          ))}
+        </div>
+      </div>
+    </PageSection>
   );
 }

@@ -46,8 +46,8 @@ export const mainNav: NavigationItem[] = [
     permission: PERMISSIONS.CREDIT_CARDS_READ,
   },
   {
-    title: "Budget",
-    href: "/budget",
+    title: "Budgets",
+    href: "/budgets",
     icon: Coins01Icon,
     permission: PERMISSIONS.BUDGETS_READ,
   },
@@ -87,4 +87,13 @@ export function getFirstAccessibleRoute(permissions: readonly string[]): string 
   const item = mainNav.find(({ permission }) => !permission || granted.has(permission));
 
   return item?.href ?? "/dashboard";
+}
+
+/**
+ * Whether a nav item is the current section: the page itself or any page nested under it, so
+ * `/accounts/123` keeps "Accounts" highlighted (and `/credit-cards/1/invoices/2` "Credit Cards").
+ */
+export function isNavItemActive(pathname: string | null | undefined, href: string): boolean {
+  if (!pathname) return false;
+  return pathname === href || pathname.startsWith(`${href}/`);
 }

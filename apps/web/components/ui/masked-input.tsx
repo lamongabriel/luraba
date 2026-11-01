@@ -1,6 +1,7 @@
 "use client";
 
 import type * as React from "react";
+import { DatePicker, type DatePickerProps } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import {
   getNumberSeparators,
@@ -9,6 +10,7 @@ import {
   unmaskDecimalString,
   unmaskMoneyString,
 } from "@/lib/number-format";
+import { cn } from "@/lib/utils";
 
 type MaskedValue = string | number | null | undefined;
 
@@ -68,46 +70,63 @@ export function NumberInput({
   onValueChange,
   decimals = 0,
   allowNegative = false,
+  max,
+  suffix,
   language = "en",
+  className,
   ...props
-}: MaskedInputBaseProps & { decimals?: number; allowNegative?: boolean }) {
+}: MaskedInputBaseProps & {
+  decimals?: number;
+  allowNegative?: boolean;
+  /** Typing past this value is ignored (a percentage passes 100). */
+  max?: number;
+  /** A unit shown inside the field on the right (`%`). */
+  suffix?: string;
+}) {
   const canonical = toCanonicalString(value);
-  return (
+  const input = (
     <Input
       {...props}
+      className={suffix ? cn("pr-7", className) : className}
       type="text"
       inputMode={decimals > 0 ? "decimal" : "numeric"}
       autoComplete="off"
       value={canonical === "-" ? "-" : maskDecimalString(canonical, language)}
-      onChange={(event) =>
-        onValueChange(
-          unmaskDecimalString(event.target.value, { decimals, allowNegative, language }),
-        )
-      }
+      onChange={(event) => {
+        const next = unmaskDecimalString(event.target.value, { decimals, allowNegative, language });
+        if (max !== undefined && next !== "" && Number(next) > max) return;
+        onValueChange(next);
+      }}
     />
+  );
+  if (!suffix) return input;
+  return (
+    <div className="relative">
+      {input}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-xs text-muted-foreground"
+      >
+        {suffix}
+      </span>
+    </div>
   );
 }
 
 /**
- * A calendar date, `YYYY-MM-DD`. The value is a plain date string, never a local `Date`, so it
- * means the same day everywhere (dates are UTC across the app; see `@luraba/domain` date helpers).
+ * A calendar date, `YYYY-MM-DD`, picked from a calendar popover (`DatePicker`). The value is a plain
+ * date string, never a local `Date`, so it means the same day everywhere (dates are UTC across the
+ * app; see `@luraba/domain` date helpers).
  */
 export function DateInput({
   value,
   onValueChange,
   ...props
-}: Omit<React.ComponentProps<typeof Input>, "type" | "value" | "onChange"> & {
+}: Omit<DatePickerProps, "value" | "onValueChange"> & {
   value: string | null | undefined;
   onValueChange: (value: string) => void;
 }) {
-  return (
-    <Input
-      {...props}
-      type="date"
-      value={value ?? ""}
-      onChange={(event) => onValueChange(event.target.value)}
-    />
-  );
+  return <DatePicker {...props} value={value} onValueChange={onValueChange} />;
 }
 
 export { getNumberSeparators };

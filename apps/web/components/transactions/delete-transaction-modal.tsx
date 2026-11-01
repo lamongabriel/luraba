@@ -1,9 +1,7 @@
 "use client";
 
-import { Alert02Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { TransactionFeedRow } from "@luraba/contracts";
-import { Modal, ModalBody, ModalContent, ModalFooter } from "@/components/ui/modal";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Typography } from "@/components/ui/typography";
 import { queryClient } from "@/lib/query-client";
 import {
@@ -15,11 +13,17 @@ import { accountQueryKeys } from "@/queries/accounts/use-accounts-query";
 import { creditCardQueryKeys } from "@/queries/credit-cards/use-credit-cards-query";
 import { transactionQueryKeys } from "@/queries/transactions/use-transactions-query";
 
+/**
+ * Confirms deleting a transaction. It opens above the details sheet: cancelling only closes this
+ * dialog, and a successful delete closes it and calls `onDeleted` so the page can close the sheet.
+ */
 export function DeleteTransactionModal({
+  onDeleted,
   onOpenChange,
   open,
   row,
 }: {
+  onDeleted?: () => void;
   onOpenChange: (open: boolean) => void;
   open: boolean;
   row?: TransactionFeedRow | null;
@@ -31,16 +35,11 @@ export function DeleteTransactionModal({
       queryClient.invalidateQueries({ queryKey: creditCardQueryKeys.all }),
     ]);
     onOpenChange(false);
+    onDeleted?.();
   };
-  const transactionMutation = useDeleteTransactionMutation({
-    onSuccess: finish,
-  });
-  const purchaseMutation = useDeleteCreditCardPurchaseMutation({
-    onSuccess: finish,
-  });
-  const paymentMutation = useDeleteCreditCardPaymentMutation({
-    onSuccess: finish,
-  });
+  const transactionMutation = useDeleteTransactionMutation({ onSuccess: finish });
+  const purchaseMutation = useDeleteCreditCardPurchaseMutation({ onSuccess: finish });
+  const paymentMutation = useDeleteCreditCardPaymentMutation({ onSuccess: finish });
   const mutation =
     row?.rowKind === "credit_card_installment"
       ? purchaseMutation
@@ -52,18 +51,12 @@ export function DeleteTransactionModal({
     if (!row) return;
 
     if (row.rowKind === "credit_card_installment" && row.creditCardId && row.purchaseId) {
-      purchaseMutation.mutate({
-        creditCardId: row.creditCardId,
-        purchaseId: row.purchaseId,
-      });
+      purchaseMutation.mutate({ creditCardId: row.creditCardId, purchaseId: row.purchaseId });
       return;
     }
 
     if (row.rowKind === "credit_card_payment" && row.creditCardId && row.paymentId) {
-      paymentMutation.mutate({
-        creditCardId: row.creditCardId,
-        paymentId: row.paymentId,
-      });
+      paymentMutation.mutate({ creditCardId: row.creditCardId, paymentId: row.paymentId });
       return;
     }
 
@@ -71,35 +64,22 @@ export function DeleteTransactionModal({
   };
 
   return (
-    <Modal open={open} onOpenChange={onOpenChange}>
-      <ModalContent
-        variant="destructive"
-        icon={<HugeiconsIcon icon={Alert02Icon} strokeWidth={2} />}
-        title="Delete transaction?"
-        description={
-          row?.rowKind === "credit_card_installment"
-            ? "This installment belongs to a credit card purchase. Deleting it removes the parent purchase and every installment in its schedule."
-            : "This transaction and its ledger entries will be permanently removed."
-        }
-        isLoading={mutation.isPending}
-        size="sm"
-      >
-        <ModalBody>
-          {row ? <Typography variant="small-muted">{row.description}</Typography> : null}
-          {mutation.errorMessage ? (
-            <div className="rounded-lg bg-destructive/10 px-3 py-2.5">
-              <Typography variant="small-destructive">{mutation.errorMessage}</Typography>
-            </div>
-          ) : null}
-        </ModalBody>
-        <ModalFooter
-          confirmLabel="Delete transaction"
-          confirmVariant="destructive"
-          loadingLabel="Deleting..."
-          isLoading={mutation.isPending}
-          onConfirm={handleDelete}
-        />
-      </ModalContent>
-    </Modal>
+    <ConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Delete transaction?"
+      description={
+        row?.rowKind === "credit_card_installment"
+          ? "This installment belongs to a credit card purchase. Deleting it removes the parent purchase and every installment in its schedule."
+          : "This transaction and its ledger entries will be permanently removed."
+      }
+      confirmLabel="Delete transaction"
+      loadingLabel="Deleting..."
+      isLoading={mutation.isPending}
+      errorMessage={mutation.errorMessage || undefined}
+      onConfirm={handleDelete}
+    >
+      {row ? <Typography variant="small-muted">{row.description}</Typography> : null}
+    </ConfirmDialog>
   );
 }

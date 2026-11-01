@@ -10,10 +10,20 @@ function Detail({ label, value }: { label: string; value: ReactNode }) {
   if (value === null || value === undefined || value === "") return null;
 
   return (
-    <div className="flex items-start justify-between gap-6 border-b border-border/60 py-3 last:border-b-0">
+    <div className="min-w-0 space-y-1">
       <Typography variant="small-muted">{label}</Typography>
-      <div className="text-right text-sm text-foreground">{value}</div>
+      <div className="break-words text-sm font-medium text-foreground">{value}</div>
     </div>
+  );
+}
+
+/**
+ * Whether the account has type-specific facts to show. The subtype is not one: the header already
+ * says it, so a plain checking account has no details block at all.
+ */
+export function hasAccountProfileDetails(account: AccountDetails): boolean {
+  return Object.entries(account.details).some(
+    ([key, value]) => key !== "kind" && key !== "subtype" && value !== null && value !== "",
   );
 }
 
@@ -31,8 +41,7 @@ export function AccountProfileDetails({
     );
 
   return (
-    <div>
-      <Detail label="Subtype" value={formatAccountSubtypeLabel(details.subtype)} />
+    <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
       {details.kind === "crypto" ? (
         <>
           <Detail label="Network" value={details.network} />

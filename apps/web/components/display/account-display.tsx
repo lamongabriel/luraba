@@ -28,6 +28,7 @@ export type AccountDisplayInput =
   | AccountSummary
   | AccountDetails
   | CreditCard
+  | CreditCard["ownerAccount"]
   | InvestmentAccount;
 
 /** An investment account has no `type` field; it is always the investment type. */
@@ -74,6 +75,13 @@ export function getAccountLabels(account: AccountDisplayInput): { name: string; 
   return { name: account.name, detail: ACCOUNT_TYPE_DISPLAY[account.type].label };
 }
 
+/** `Institution · Type · CUR`, the fuller second line used by account pickers. */
+export function getAccountFullDetail(account: AccountDisplayInput): string {
+  const institution = "institutionName" in account ? account.institutionName : null;
+  const currency = "currencyCode" in account ? account.currencyCode : null;
+  return [institution, getAccountLabels(account).detail, currency].filter(Boolean).join(" · ");
+}
+
 /** Just the tile (picture, card brand or type icon). */
 export function AccountMark({
   account,
@@ -114,8 +122,11 @@ export function AccountDisplay({
 }: {
   account: AccountDisplayInput | null | undefined;
   size?: DisplaySize;
-  /** "type" shows the account type (or `Brand •••• 1234` for cards) under the name. */
-  detail?: "none" | "type";
+  /**
+   * "type" shows the account type (or `Brand •••• 1234` for cards) under the name; "full" adds the
+   * institution and currency (`Chase · Checking · USD`).
+   */
+  detail?: "none" | "type" | "full";
   className?: string;
   emptyLabel?: string;
 }) {
@@ -131,9 +142,9 @@ export function AccountDisplay({
       <AccountMark account={account} size={size} />
       <span className="min-w-0">
         <span className={cn("block truncate font-medium", dims.text)}>{labels.name}</span>
-        {detail === "type" ? (
+        {detail !== "none" ? (
           <span className={cn("block truncate text-muted-foreground", dims.subtext)}>
-            {labels.detail}
+            {detail === "full" ? getAccountFullDetail(account) : labels.detail}
           </span>
         ) : null}
       </span>

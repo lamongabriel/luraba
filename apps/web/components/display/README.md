@@ -10,12 +10,13 @@ import { AccountDisplay, AmountDisplay, CategoryDisplay, MerchantDisplay, TagDis
 
 | Component | Shows | Key props |
 | --- | --- | --- |
-| `AccountDisplay` / `AccountMark` | Any account object (`Account`, `AccountSummary`, `AccountDetails`, `CreditCard`): picture or icon + name | `account` (null renders "No account"), `size`, `detail="type"` |
+| `AccountDisplay` / `AccountMark` | Any account object (`Account`, `AccountSummary`, `AccountDetails`, `CreditCard`): picture or icon + name | `account` (null renders "No account"), `size`, `detail="none" \| "type" \| "full"` (`full` = `Institution · Type · CUR`) |
+| `CreditCardDisplay` | A credit card led by its institution: bank logo (else bank icon) + institution name, then `Card name ••1234` with the brand mark. Use it where several cards sit together and the bank matters | `card` (a `CreditCard` or overview card), `size` |
 | `MemberDisplay` / `MemberMark` | Who created a record: a household member's picture or initials + name | `userId` (a record's `createdByUserId`; unknown or null renders "Unknown"), `size` |
 | `TransactionTypeDisplay` | Expense, income, transfer, adjustment, installment, card payment | `type`, `variant="badge" \| "inline" \| "icon"`, `size` |
 | `MerchantDisplay` / `MerchantMark` | Logo, else a shop icon, + name | `merchant`, `size`, `detail="domain"` |
 | `HouseholdDisplay` / `HouseholdMark` | Uploaded picture, else initials, + name | `household`, `size` |
-| `ProductDisplay` / `ProductMark` | Product (or a transaction item): picture, else a package icon, + name, optional `detail` line | `product`, `size`, `detail` |
+| `ProductDisplay` / `ProductMark` | Product (or a transaction item): picture, else a package icon, + name on one compact line, optional muted `detail` (price) after the name | `product`, `size`, `detail` |
 | `AmountDisplay` | Money with the right sign and color | `amount` (minor units), `currencyCode`, `kind`, `size` |
 | `CurrencyDisplay` | A currency: country flag + 3-letter code + symbol (`🇧🇷 BRL R$`), optional name | `currencyCode`, `showName`, `size` |
 | `CategoryDisplay` | Category chip; `null` renders "Uncategorized" | `category`, `variant="chip" \| "inline"`, `size` |
@@ -35,6 +36,7 @@ look: `XSelect` for react-hook-form (`control`, `name`, `label`, `description`, 
 | `TimeZoneSelect` | API `/reference-data/locations` | IANA name, friendly name, GMT offset |
 | `LanguageSelect` | `LANGUAGE_CATALOG` | flag, English and native name |
 | `DateFormatSelect` | `DATE_FORMAT_CATALOG` | format with an example date |
+| `AccountSelect` / `AccountSelectControl` (`accounts`) | Any accounts or credit cards you pass | picture or icon, name, institution · type · currency (`Visa •••• 1234` for cards) |
 | `PreferredPeriodSelectControl`, `PreferredThemeSelectControl` | `@luraba/contracts` `catalogs/preferences.ts` | capitalized label |
 
 The lists, labels and flags live in [`@luraba/contracts` catalogs](../../../../packages/contracts/src/catalogs/README.md); change them there.

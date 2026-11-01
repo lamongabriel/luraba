@@ -1,5 +1,7 @@
 "use client";
 
+import { MAX_VEHICLE_MILEAGE } from "@luraba/contracts";
+
 import { FormItem } from "@/components/forms/form-item";
 import { MILEAGE_UNIT_OPTIONS } from "@/lib/accounts";
 
@@ -32,10 +34,11 @@ export function VehicleFormSection({ disabled, form }: CreateEditAccountSectionP
         disabled={disabled}
       />
       <FormItem
-        type="int"
         control={form.control}
         name="mileage"
         label="Mileage"
+        inputType="integer"
+        max={MAX_VEHICLE_MILEAGE}
         disabled={disabled}
       />
       <FormItem

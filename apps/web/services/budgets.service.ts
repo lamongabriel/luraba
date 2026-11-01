@@ -2,6 +2,8 @@
 
 import {
   budgetsEndpoints,
+  type GetBudgetInsightsQuery,
+  type GetBudgetInsightsResult,
   type GetMonthlyBudgetQuery,
   type GetMonthlyBudgetResult,
   type ReplaceMonthlyBudgetInput,
@@ -28,3 +30,9 @@ export const updateBudgetMonthSettings = (
   input: UpdateBudgetMonthSettingsInput,
 ): Promise<UpdateBudgetMonthSettingsResult> =>
   requestContract(budgetsEndpoints.updateMonthSettings, { params: { month }, body: input });
+
+export const getBudgetInsights = (
+  month: string,
+  query: GetBudgetInsightsQuery = {},
+): Promise<GetBudgetInsightsResult> =>
+  requestContract(budgetsEndpoints.insights, { params: { month }, query });

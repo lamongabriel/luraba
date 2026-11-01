@@ -29,7 +29,10 @@ export function ProductMark({
   );
 }
 
-/** How a product (or a transaction item) is shown everywhere: picture + name, optional detail line. */
+/**
+ * How a product (or a transaction item) is shown everywhere: picture + name on one compact line,
+ * with an optional `detail` (a formatted price, "2 × $15.00") after the name in muted text.
+ */
 export function ProductDisplay({
   product,
   size = "sm",
@@ -39,7 +42,7 @@ export function ProductDisplay({
 }: {
   product: ProductLike | null | undefined;
   size?: DisplaySize;
-  /** A second line, e.g. a formatted price or "2 × $15.00". */
+  /** Muted text after the name, e.g. a formatted price or "2 × $15.00". */
   detail?: React.ReactNode;
   className?: string;
   emptyLabel?: string;
@@ -52,12 +55,10 @@ export function ProductDisplay({
   return (
     <span className={cn("flex min-w-0 items-center", dims.gap, className)}>
       <ProductMark product={product} size={size} />
-      <span className="min-w-0">
-        <span className={cn("block truncate font-medium", dims.text)}>{product.name}</span>
-        {detail ? (
-          <span className={cn("block truncate text-muted-foreground", dims.subtext)}>{detail}</span>
-        ) : null}
-      </span>
+      <span className={cn("min-w-0 truncate font-medium", dims.text)}>{product.name}</span>
+      {detail ? (
+        <span className={cn("shrink-0 text-muted-foreground", dims.text)}>{detail}</span>
+      ) : null}
     </span>
   );
 }

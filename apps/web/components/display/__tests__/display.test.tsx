@@ -8,6 +8,7 @@ import {
   AmountDisplay,
   amountKindForTransactionType,
   CategoryDisplay,
+  CreditCardDisplay,
   getAccountVisual,
   MerchantDisplay,
   ProductDisplay,
@@ -110,5 +111,34 @@ describe("product display", () => {
     expect(screen.getByText("Cheeseburger")).toBeInTheDocument();
     expect(screen.getByText("2 x $9.00")).toBeInTheDocument();
     expect(screen.getByText("No product")).toBeInTheDocument();
+  });
+});
+
+describe("CreditCardDisplay", () => {
+  it("leads with the institution and shows the card name and last four digits", () => {
+    render(
+      <CreditCardDisplay
+        card={{
+          name: "Sapphire Preferred",
+          institutionName: "Chase",
+          institutionLogoUrl: null,
+          brand: "Visa",
+          last4: "4242",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Chase")).toBeInTheDocument();
+    expect(screen.getByText("Sapphire Preferred ••4242")).toBeInTheDocument();
+  });
+
+  it("says when the card has no institution", () => {
+    render(
+      <CreditCardDisplay
+        card={{ name: "Travel", institutionName: null, brand: "Visa", last4: "1111" }}
+      />,
+    );
+
+    expect(screen.getByText("No institution")).toBeInTheDocument();
   });
 });

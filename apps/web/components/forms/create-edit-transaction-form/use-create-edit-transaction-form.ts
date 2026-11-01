@@ -133,7 +133,7 @@ export function useCreateEditTransactionForm({
   });
   const updateTransactionMutation = useUpdateTransactionMutation({
     onSuccess: (updated) => finish(updated.id),
-    successToast: { title: "Transaction updated" },
+    successToast: false,
   });
   const createPurchaseMutation = useCreateCreditCardPurchaseMutation({
     onSuccess: (created) => finish(created.transactionId),
@@ -141,7 +141,7 @@ export function useCreateEditTransactionForm({
   });
   const updatePurchaseMutation = useUpdateCreditCardPurchaseMutation({
     onSuccess: (updated) => finish(updated.transactionId),
-    successToast: { title: "Credit card purchase updated" },
+    successToast: false,
   });
   const createPaymentMutation = useCreateCreditCardPaymentMutation({
     onSuccess: () => finish(),
@@ -149,7 +149,7 @@ export function useCreateEditTransactionForm({
   });
   const updatePaymentMutation = useUpdateCreditCardPaymentMutation({
     onSuccess: () => finish(),
-    successToast: { title: "Credit card payment updated" },
+    successToast: false,
   });
 
   const resetMutations = () => {

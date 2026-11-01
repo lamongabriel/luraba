@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { createEditCreditCardFormSchema } from "../create-edit-credit-card-form.schema";
 import {
   buildCreateCreditCardPayload,
   buildUpdateCreditCardPayload,
+  getCreateEditCreditCardDefaultValues,
 } from "../create-edit-credit-card-form.utils";
 
 const values = {
@@ -21,6 +23,21 @@ const values = {
 };
 
 describe("credit card form payload helpers", () => {
+  it("starts empty when a legacy card has no limit, and defaults to dark gray", () => {
+    const defaults = getCreateEditCreditCardDefaultValues("USD");
+    expect(defaults.color).toBe("#3f3f46");
+    expect(defaults.creditLimitAmount).toBe("");
+  });
+
+  it("requires a positive credit limit", () => {
+    const parse = (creditLimitAmount: number | "") =>
+      createEditCreditCardFormSchema.safeParse({ ...values, creditLimitAmount }).success;
+
+    expect(parse("")).toBe(false);
+    expect(parse(0)).toBe(false);
+    expect(parse(1500)).toBe(true);
+  });
+
   it("sends the owner account and omits derived currency on create", () => {
     expect(buildCreateCreditCardPayload(values, 2)).toEqual({
       brand: "Visa",

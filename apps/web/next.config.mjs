@@ -24,6 +24,7 @@ const nextConfig = {
       { source: "/categories", destination: "/household/categories", permanent: true },
       { source: "/tags", destination: "/household/tags", permanent: true },
       { source: "/merchants", destination: "/household/merchants", permanent: true },
+      { source: "/budget", destination: "/budgets", permanent: true },
       { source: "/settings/import-export", destination: "/household/import", permanent: true },
     ];
   },

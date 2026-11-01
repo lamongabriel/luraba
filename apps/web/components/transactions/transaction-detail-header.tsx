@@ -1,48 +1,47 @@
 "use client";
 
-import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { TransactionFeedRow } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
-import { TransactionTypeDisplay } from "@/components/display";
-import { MoneyValue } from "@/components/finance/money-value";
-import { PERMISSIONS, PermissionButton } from "@/components/permissions";
-import { SidePanelTitle } from "@/components/side-panel/side-panel";
-import { SidePanelEntityRow } from "@/components/side-panel/side-panel-entity-row";
 import {
-  TransactionAccountPanelDisplay,
-  TransactionMerchantPanelDisplay,
-} from "@/components/tables/transactions/transaction-resource-display";
+  AmountDisplay,
+  amountKindForTransactionType,
+  TransactionTypeDisplay,
+} from "@/components/display";
+import { PERMISSIONS, PermissionButton } from "@/components/permissions";
+import { SidePanelDescription, SidePanelTitle } from "@/components/side-panel/side-panel";
+import { Button } from "@/components/ui/button";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
 
-export function TransactionDetailHeader({
+/**
+ * The header every transaction sheet shares. A top row with the type badge (or "Back to details"
+ * while editing) and the primary action, then the title, then either the amount and date (details)
+ * or a one-line hint (create and edit). The sheet itself never changes between modes, only this.
+ */
+export function TransactionSheetHeader({
   language,
   lookups,
-  merchantId,
+  mode,
+  onBack,
   onEdit,
   row,
 }: {
   language: string;
   lookups: TransactionLookups;
-  merchantId: string | null;
-  onEdit: () => void;
-  row: TransactionFeedRow;
+  mode: "create" | "edit" | "view";
+  onBack?: () => void;
+  onEdit?: () => void;
+  row?: TransactionFeedRow | null;
 }) {
-  const precision =
-    lookups.currencies.find((item) => item.code === row.currencyCode)?.precision ?? 2;
+  if (mode === "view" && row) {
+    const precision =
+      lookups.currencies.find((item) => item.code === row.currencyCode)?.precision ?? 2;
 
-  return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 space-y-2">
-          <SidePanelTitle className="truncate text-lg font-semibold tracking-tight">
-            {row.description}
-          </SidePanelTitle>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <TransactionTypeDisplay type={row.originType} />
-            <span aria-hidden="true">•</span>
-            <span>{formatShortDate(row.postedDate, language)}</span>
-          </div>
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <TransactionTypeDisplay type={row.originType} />
           <PermissionButton
             permission={PERMISSIONS.TRANSACTIONS_UPDATE}
             variant="outline"
@@ -53,35 +52,48 @@ export function TransactionDetailHeader({
             Edit
           </PermissionButton>
         </div>
-        <div className="shrink-0 pt-1 text-right">
-          <MoneyValue
-            amount={row.amount}
-            currencyCode={row.currencyCode}
-            language={language}
-            precision={precision}
-            className="text-lg font-semibold"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-1">
-        <SidePanelEntityRow label={row.originType === "transfer" ? "From" : "Account"}>
-          <TransactionAccountPanelDisplay row={row} lookups={lookups} />
-        </SidePanelEntityRow>
-        {row.originType === "transfer" ? (
-          <SidePanelEntityRow label="To">
-            <TransactionAccountPanelDisplay
-              accountId={row.toAccountId}
-              accountName={row.toAccountName}
-              row={row}
-              lookups={lookups}
+        <div className="space-y-1">
+          <SidePanelTitle className="line-clamp-2 text-xl font-semibold tracking-tight">
+            {row.description}
+          </SidePanelTitle>
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <AmountDisplay
+              amount={row.amount}
+              currencyCode={row.currencyCode}
+              kind={amountKindForTransactionType(row.originType)}
+              language={language}
+              precision={precision}
+              className="text-2xl font-semibold tracking-tight"
             />
-          </SidePanelEntityRow>
-        ) : (
-          <SidePanelEntityRow label="Merchant">
-            <TransactionMerchantPanelDisplay merchantId={merchantId} lookups={lookups} />
-          </SidePanelEntityRow>
-        )}
+            <span className="text-xs text-muted-foreground">
+              Posted {formatShortDate(row.postedDate, language)}
+            </span>
+          </div>
+        </div>
+        <SidePanelDescription className="sr-only">
+          Transaction details for {row.description}
+        </SidePanelDescription>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {mode === "edit" && onBack ? (
+        <Button type="button" variant="ghost" size="sm" className="-ml-2 w-fit" onClick={onBack}>
+          <HugeiconsIcon icon={ArrowLeft01Icon} strokeWidth={2} />
+          Back to details
+        </Button>
+      ) : null}
+      <div className="space-y-1">
+        <SidePanelTitle className="text-xl font-semibold tracking-tight">
+          {mode === "edit" ? "Edit transaction" : "New transaction"}
+        </SidePanelTitle>
+        <SidePanelDescription>
+          {mode === "edit" && row
+            ? row.description
+            : "Add income, an expense, a transfer or a card transaction."}
+        </SidePanelDescription>
       </div>
     </div>
   );

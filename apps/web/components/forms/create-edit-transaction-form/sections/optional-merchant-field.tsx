@@ -1,17 +1,12 @@
 import type { Merchant } from "@luraba/contracts";
 import { type Control, Controller } from "react-hook-form";
+import { MerchantDisplay } from "@/components/display";
+import { ComboboxControl } from "@/components/forms/form-combobox";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema";
 
-const EMPTY_MERCHANT = "__none__";
+const NO_MERCHANT = "__none__";
 
 export function OptionalMerchantField({
   control,
@@ -20,6 +15,12 @@ export function OptionalMerchantField({
   control: Control<CreateEditTransactionFormValues>;
   merchants: Merchant[];
 }) {
+  const options = [
+    { value: NO_MERCHANT, label: "No merchant" },
+    ...merchants.map((merchant) => ({ value: merchant.id, label: merchant.name })),
+  ];
+  const byId = new Map(merchants.map((merchant) => [merchant.id, merchant]));
+
   return (
     <Controller
       control={control}
@@ -27,22 +28,30 @@ export function OptionalMerchantField({
       render={({ field, fieldState }) => (
         <Field data-invalid={Boolean(fieldState.error)}>
           <FieldLabel htmlFor="merchantId">Merchant</FieldLabel>
-          <Select
-            value={field.value || EMPTY_MERCHANT}
-            onValueChange={(value) => field.onChange(value === EMPTY_MERCHANT ? "" : value)}
-          >
-            <SelectTrigger id="merchantId" aria-invalid={Boolean(fieldState.error)}>
-              <SelectValue placeholder="No merchant" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={EMPTY_MERCHANT}>No merchant</SelectItem>
-              {merchants.map((merchant) => (
-                <SelectItem key={merchant.id} value={merchant.id}>
-                  {merchant.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ComboboxControl
+            id="merchantId"
+            value={field.value || NO_MERCHANT}
+            options={options}
+            onChange={(value) => field.onChange(value === NO_MERCHANT ? "" : value)}
+            placeholder="No merchant"
+            searchPlaceholder="Search merchants..."
+            emptyMessage="No merchants found."
+            ariaInvalid={Boolean(fieldState.error)}
+            renderOption={(option) =>
+              option.value === NO_MERCHANT ? (
+                <span className="text-muted-foreground">No merchant</span>
+              ) : (
+                <MerchantDisplay merchant={byId.get(option.value)} size="sm" />
+              )
+            }
+            renderValue={(option) =>
+              option && option.value !== NO_MERCHANT ? (
+                <MerchantDisplay merchant={byId.get(option.value)} size="sm" />
+              ) : (
+                <span className="text-muted-foreground">No merchant</span>
+              )
+            }
+          />
           <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
         </Field>
       )}

@@ -1,5 +1,7 @@
 "use client";
 
+import { MAX_PROPERTY_AREA } from "@luraba/contracts";
+
 import { CountrySelect } from "@/components/display";
 import { FormItem } from "@/components/forms/form-item";
 import { Typography } from "@/components/ui/typography";
@@ -35,6 +37,8 @@ export function PropertyFormSection({ disabled, form }: CreateEditAccountSection
         label="Area"
         inputType="decimal"
         decimals={2}
+        max={MAX_PROPERTY_AREA}
+        description="Pick the unit next to it."
         disabled={disabled}
       />
       <FormItem

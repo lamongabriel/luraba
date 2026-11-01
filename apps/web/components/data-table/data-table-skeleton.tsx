@@ -19,6 +19,8 @@ interface DataTableSkeletonProps extends React.ComponentProps<"div"> {
   withViewOptions?: boolean;
   withPagination?: boolean;
   shrinkZero?: boolean;
+  /** Same as `DataTable fill`: stretch to the parent's height. */
+  fill?: boolean;
 }
 
 export function DataTableSkeleton({
@@ -30,6 +32,7 @@ export function DataTableSkeleton({
   withViewOptions = true,
   withPagination = true,
   shrinkZero = false,
+  fill = false,
   className,
   ...props
 }: DataTableSkeletonProps) {
@@ -39,7 +42,14 @@ export function DataTableSkeleton({
   );
 
   return (
-    <div className={cn("flex w-full flex-col gap-2.5 overflow-auto", className)} {...props}>
+    <div
+      className={cn(
+        "flex w-full flex-col gap-2.5 overflow-auto",
+        fill && "min-h-0 flex-1",
+        className,
+      )}
+      {...props}
+    >
       {withToolbar ? (
         <div className="flex w-full items-center justify-between gap-2 overflow-auto p-1">
           <div className="flex flex-1 items-center gap-2">
@@ -52,7 +62,7 @@ export function DataTableSkeleton({
           {withViewOptions ? <Skeleton className="ml-auto hidden h-7 w-18 lg:flex" /> : null}
         </div>
       ) : null}
-      <div className="rounded-md border">
+      <div className={cn("rounded-md border", fill && "flex-1")}>
         <Table>
           <TableHeader>
             {Array.from({ length: 1 }).map((_, i) => (

@@ -69,7 +69,6 @@ export default function TransactionsPage() {
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const [sheetMode, setSheetMode] = React.useState<TransactionSheetMode>("create");
   const [selectedRow, setSelectedRow] = React.useState<TransactionFeedRow | null>(null);
-  const [deleteRow, setDeleteRow] = React.useState<TransactionFeedRow | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
 
   const openCreate = React.useCallback(() => {
@@ -85,14 +84,15 @@ export default function TransactionsPage() {
   }, []);
 
   const openDelete = React.useCallback((row: TransactionFeedRow) => {
-    setDeleteRow(row);
-    setSheetOpen(false);
+    setSelectedRow(row);
     setDeleteOpen(true);
   }, []);
 
-  const handleDeleteOpenChange = React.useCallback((open: boolean) => {
-    setDeleteOpen(open);
-    if (!open) setDeleteRow(null);
+  // After a save the list refetches; swap the open row for its fresh copy so the details update.
+  const syncSelectedRow = React.useCallback((rows: TransactionFeedRow[]) => {
+    setSelectedRow((current) =>
+      current ? (rows.find((row) => row.rowId === current.rowId) ?? current) : current,
+    );
   }, []);
 
   const openUpcoming = React.useCallback(
@@ -161,6 +161,7 @@ export default function TransactionsPage() {
       language={language}
       lookups={lookupsQuery.data}
       onCreate={openCreate}
+      onRows={syncSelectedRow}
       onView={(row) => openRow(row, "view")}
       params={params}
     />
@@ -168,6 +169,7 @@ export default function TransactionsPage() {
 
   return (
     <InternalPageLayout
+      className="flex flex-1 flex-col"
       title="Transactions"
       subtitle="Every purchase, payment and transfer across your accounts and cards."
       actions={
@@ -181,14 +183,14 @@ export default function TransactionsPage() {
         </PermissionButton>
       }
     >
-      <div className="space-y-5">
+      <div className="flex min-h-0 flex-1 flex-col gap-5">
         <TransactionAnalyticsSummary
           query={analyticsQuery}
           language={language}
           precision={precision}
         />
-        <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
-          <div className="min-w-0">{tableContent}</div>
+        <div className="grid min-h-0 min-w-0 flex-1 gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
+          <div className="flex min-h-0 min-w-0 flex-col">{tableContent}</div>
           <TransactionAnalyticsRail
             analyticsQuery={analyticsQuery}
             upcomingQuery={upcomingQuery}
@@ -213,8 +215,9 @@ export default function TransactionsPage() {
 
       <DeleteTransactionModal
         open={deleteOpen}
-        onOpenChange={handleDeleteOpenChange}
-        row={deleteRow}
+        onOpenChange={setDeleteOpen}
+        onDeleted={() => setSheetOpen(false)}
+        row={selectedRow}
       />
     </InternalPageLayout>
   );

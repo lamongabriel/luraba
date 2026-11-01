@@ -1,5 +1,6 @@
 import type { AccountSummary, CreditCard } from "@luraba/contracts";
 import type { Control } from "react-hook-form";
+import { AccountSelect } from "@/components/display";
 import { FormItem } from "@/components/forms/form-item";
 
 import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema";
@@ -16,35 +17,22 @@ export function CreditCardPaymentSection({
   control: Control<CreateEditTransactionFormValues>;
   isEdit: boolean;
 }) {
-  const cardOptions = cards.map((card) => ({
-    value: card.id,
-    label: card.name,
-    description: `${card.brand} · •••• ${card.last4} · ${card.currencyCode}`,
-  }));
-  const accountOptions = accounts.map((account) => ({
-    value: account.id,
-    label: account.name,
-    description: account.currencyCode,
-  }));
-
   return (
     <TransactionFormSection title="Credit card payment">
-      <FormItem
-        type="combobox"
+      <AccountSelect
         control={control}
         name="creditCardId"
         label="Credit card"
-        options={cardOptions}
+        accounts={cards}
         placeholder="Choose a card"
         disabled={isEdit}
         description={isEdit ? "The payment card cannot be changed." : undefined}
       />
-      <FormItem
-        type="combobox"
+      <AccountSelect
         control={control}
         name="fromAccountId"
         label="Source account"
-        options={accountOptions}
+        accounts={accounts}
         placeholder="Choose an asset account"
       />
       <FormItem

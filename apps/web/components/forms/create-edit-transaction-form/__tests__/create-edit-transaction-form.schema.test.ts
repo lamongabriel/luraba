@@ -131,4 +131,40 @@ describe("transaction items", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  describe("items", () => {
+    const expense = {
+      ...base,
+      kind: "expense",
+      accountId: ACCOUNT_ID,
+      paymentMethodCode: "pix",
+    };
+    const item = (quantity: number, unitPrice: number) => ({
+      productId: "",
+      name: "Cheeseburger",
+      quantity,
+      unitPrice,
+      saveAsProductPrice: true,
+    });
+
+    it("accepts items that add up to the transaction amount or less", () => {
+      expect(
+        createEditTransactionFormSchema.safeParse({
+          ...expense,
+          items: [item(2, 25), item(1, 50)],
+        }).success,
+      ).toBe(true);
+    });
+
+    it("rejects items that add up to more than the transaction amount", () => {
+      const result = createEditTransactionFormSchema.safeParse({
+        ...expense,
+        items: [item(2, 25), item(1, 50.01)],
+      });
+      expect(result.success).toBe(false);
+      expect(result.error?.issues.find((issue) => issue.path[0] === "items")?.message).toBe(
+        "Items add up to more than the transaction amount.",
+      );
+    });
+  });
 });

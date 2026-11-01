@@ -1,68 +1,79 @@
 import { CreditCardIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { CreditCard, Merchant } from "@luraba/contracts";
-import type { Control } from "react-hook-form";
+import { type Control, useWatch } from "react-hook-form";
+import { AccountSelect } from "@/components/display";
 import { FormItem } from "@/components/forms/form-item";
 import { Typography } from "@/components/ui/typography";
+import { describeInstallments, INSTALLMENT_COUNT_OPTIONS } from "@/lib/installments";
 
 import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema";
-import { OptionalMerchantField } from "./optional-merchant-field";
+import { ClassificationFields } from "./classification-fields";
 import { TransactionFormSection } from "./transaction-form-section";
 
 export function CreditCardPurchaseSection({
   cards,
   control,
+  currencyCode,
   isEdit,
+  language,
   merchants,
+  precision,
 }: {
   cards: CreditCard[];
   control: Control<CreateEditTransactionFormValues>;
+  currencyCode?: string;
   isEdit: boolean;
+  language: string;
   merchants: Merchant[];
+  precision: number;
 }) {
-  const cardOptions = cards.map((card) => ({
-    value: card.id,
-    label: card.name,
-    description: `${card.brand} · •••• ${card.last4} · ${card.currencyCode}`,
-  }));
+  const amount = useWatch({ control, name: "amount" });
+  const installmentCount = useWatch({ control, name: "installmentCount" });
+  const totalMinor = Math.round((Number(amount) || 0) * 10 ** precision);
+  const preview = currencyCode
+    ? describeInstallments(totalMinor, Number(installmentCount), currencyCode, language, precision)
+    : "";
+  const countOptions = INSTALLMENT_COUNT_OPTIONS.some(
+    (option) => option.value === String(installmentCount),
+  )
+    ? INSTALLMENT_COUNT_OPTIONS
+    : [
+        ...INSTALLMENT_COUNT_OPTIONS,
+        { value: String(installmentCount), label: `${installmentCount}x` },
+      ];
 
   return (
     <TransactionFormSection title="Credit card purchase">
-      <FormItem
-        type="combobox"
+      <AccountSelect
         control={control}
         name="creditCardId"
         label="Credit card"
-        options={cardOptions}
+        accounts={cards}
         placeholder="Choose a card"
         disabled={isEdit}
         description={isEdit ? "The purchase card cannot be changed." : undefined}
       />
-      <FormItem
-        control={control}
-        name="amount"
-        label="Purchase amount"
-        inputType="money"
-        placeholder="0.00"
-      />
       <div className="grid gap-3 sm:grid-cols-2">
         <FormItem
-          type="category"
           control={control}
-          name="categoryId"
-          label="Category"
-          categoryType="expense"
-          placeholder="Choose a category"
+          name="amount"
+          label="Purchase amount"
+          inputType="money"
+          precision={precision}
+          placeholder="0.00"
         />
-        <OptionalMerchantField control={control} merchants={merchants} />
+        <FormItem
+          type="select"
+          control={control}
+          name="installmentCount"
+          label="Installments"
+          options={countOptions}
+          parseValue={Number}
+          description={preview || undefined}
+        />
       </div>
-      <FormItem
-        type="int"
-        control={control}
-        name="installmentCount"
-        label="Installments"
-        placeholder="1"
-      />
+      <ClassificationFields categoryType="expense" control={control} merchants={merchants} />
       {isEdit ? (
         <div className="flex items-start gap-3 rounded-xl border border-border/70 bg-[var(--color-container-inset)] px-3 py-3">
           <HugeiconsIcon

@@ -15,6 +15,11 @@ interface EmptyStateProps extends Omit<React.ComponentProps<typeof Empty>, "titl
   description?: React.ReactNode;
   icon?: React.ReactNode;
   action?: React.ReactNode;
+  /**
+   * `card` (default) draws the dashed bordered card. `embedded` has no border or background, for an
+   * empty state that already sits inside a card; it fills the space it is given and centers.
+   */
+  variant?: "card" | "embedded";
 }
 
 export function EmptyState({
@@ -22,6 +27,7 @@ export function EmptyState({
   description,
   icon,
   action,
+  variant = "card",
   className,
   ...props
 }: EmptyStateProps) {
@@ -33,7 +39,9 @@ export function EmptyState({
       aria-labelledby={titleId}
       aria-describedby={description ? descriptionId : undefined}
       className={cn(
-        "min-h-72 rounded-[1.75rem] border border-dashed border-border/75 bg-(--color-container) px-6 py-12",
+        variant === "embedded"
+          ? "min-h-0 flex-1 px-6 py-10"
+          : "min-h-72 rounded-[1.75rem] border border-dashed border-border/75 bg-(--color-container) px-6 py-12",
         className,
       )}
       {...props}

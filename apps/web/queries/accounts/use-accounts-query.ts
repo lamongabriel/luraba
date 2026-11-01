@@ -1,6 +1,8 @@
 "use client";
 
 import type {
+  AccountInsightsQuery,
+  GetAccountInsightsResult,
   GetAccountResult,
   ListAccountsQuery,
   ListAccountsResult,
@@ -9,7 +11,12 @@ import type {
 } from "@luraba/contracts";
 import { useQuery } from "@tanstack/react-query";
 import type { AppQueryOptions } from "@/queries/query-options";
-import { getAccount, listAccounts, listAccountTransactions } from "@/services/accounts.service";
+import {
+  getAccount,
+  getAccountInsights,
+  listAccounts,
+  listAccountTransactions,
+} from "@/services/accounts.service";
 
 export const accountQueryKeys = {
   all: ["accounts"] as const,
@@ -17,6 +24,8 @@ export const accountQueryKeys = {
   list: (query: ListAccountsQuery = {}) => [...accountQueryKeys.lists(), query] as const,
   details: () => [...accountQueryKeys.all, "detail"] as const,
   detail: (id: string) => [...accountQueryKeys.details(), id] as const,
+  insights: (id: string, query: AccountInsightsQuery = {}) =>
+    [...accountQueryKeys.detail(id), "insights", query] as const,
   transactions: (id: string, query: ListAccountTransactionsQuery = {}) =>
     [...accountQueryKeys.detail(id), "transactions", query] as const,
 };
@@ -52,6 +61,20 @@ export function useAccountTransactionsQuery<TData = ListAccountTransactionsResul
   return useQuery({
     queryKey: accountQueryKeys.transactions(id, query),
     queryFn: () => listAccountTransactions(id, query),
+    placeholderData: (previousData) => previousData,
+    ...options,
+    enabled: Boolean(id) && (options?.enabled ?? true),
+  });
+}
+
+export function useAccountInsightsQuery<TData = GetAccountInsightsResult>(
+  id: string,
+  query: AccountInsightsQuery = {},
+  options?: AppQueryOptions<GetAccountInsightsResult, TData>,
+) {
+  return useQuery({
+    queryKey: accountQueryKeys.insights(id, query),
+    queryFn: () => getAccountInsights(id, query),
     placeholderData: (previousData) => previousData,
     ...options,
     enabled: Boolean(id) && (options?.enabled ?? true),

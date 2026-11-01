@@ -1,3 +1,4 @@
+import { PanelCard } from "@/components/finance/panel-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -47,5 +48,37 @@ export function LoadingRegion({
     <div role="status" aria-busy="true" aria-label={label} className={className}>
       {children}
     </div>
+  );
+}
+
+/**
+ * Loading twin of a `PanelCard` (`components/finance/panel-card.tsx`): the same card, header
+ * (icon tile, title) and fill behaviour, with a skeleton body, so the panel keeps its height.
+ */
+export function PanelCardSkeleton({
+  label,
+  withIcon = true,
+  fill = true,
+  lines = 4,
+}: {
+  label: string;
+  withIcon?: boolean;
+  fill?: boolean;
+  lines?: number;
+}) {
+  return (
+    <PanelCard
+      fill={fill}
+      title={<Skeleton className="h-5 w-36" />}
+      icon={withIcon ? <Skeleton className="size-6 rounded-md" /> : undefined}
+      iconFrame={false}
+    >
+      <div role="status" aria-busy="true" aria-label={label} className="flex-1 space-y-3">
+        {Array.from({ length: lines }, (_, index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: static placeholders
+          <Skeleton key={index} className="h-8 w-full" />
+        ))}
+      </div>
+    </PanelCard>
   );
 }

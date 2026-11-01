@@ -1,50 +1,41 @@
 "use client";
 
-import { Delete02Icon, MoreHorizontalIcon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { TransactionFeedRow } from "@luraba/contracts";
+import type { ListTransactionsQuery, TransactionFeedRow } from "@luraba/contracts";
 import { buildLimitBreakdown, todayISODate } from "@luraba/domain";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
+import { CardPurchasesTable } from "@/components/credit-cards/card-purchases-table";
 import { CardTransactionSheet } from "@/components/credit-cards/card-transaction-sheet";
+import { CreditCardDetailsPanel } from "@/components/credit-cards/credit-card-details-panel";
 import { CreditCardPreview } from "@/components/credit-cards/credit-card-preview";
 import { CreditCardSheet } from "@/components/credit-cards/credit-card-sheet";
-import { InvoiceDetail } from "@/components/credit-cards/invoice-detail";
+import {
+  InvoiceComposition,
+  InvoicePayments,
+  InvoiceSummary,
+} from "@/components/credit-cards/invoice-detail";
 import { InvoiceHistoryChart } from "@/components/credit-cards/invoice-history-chart";
-import { InvoiceStrip } from "@/components/credit-cards/invoice-strip";
-import { LimitBreakdown } from "@/components/credit-cards/limit-breakdown";
+import { InvoiceList, InvoiceListSkeleton } from "@/components/credit-cards/invoice-list";
+import { LimitBreakdown, LimitBreakdownSkeleton } from "@/components/credit-cards/limit-breakdown";
 import { PayInvoiceModal } from "@/components/credit-cards/pay-invoice-modal";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MonthSelector } from "@/components/finance/month-selector";
-import { PERMISSIONS, useCan } from "@/components/permissions";
+import { PageSection } from "@/components/finance/page-section";
+import { PERMISSIONS, PermissionButton } from "@/components/permissions";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Modal, ModalBody, ModalContent, ModalFooter } from "@/components/ui/modal";
-import { Typography } from "@/components/ui/typography";
 import { useCurrencyPrecision } from "@/hooks/use-currency-precision";
 import { useDisclosure } from "@/hooks/use-disclosure";
-import {
-  currentMonthKey,
-  type InvoiceLine,
-  invoiceLineToFeedRow,
-  invoiceMonthKey,
-  shiftMonthKey,
-} from "@/lib/credit-card-invoices";
+import { currentMonthKey, invoiceMonthKey, shiftMonthKey } from "@/lib/credit-card-invoices";
 import { FALLBACK_CURRENCY_CODE } from "@/lib/finance";
-import { queryClient } from "@/lib/query-client";
-import { useDeleteCreditCardMutation } from "@/mutations/credit-cards/use-credit-card-mutations";
 import {
-  creditCardQueryKeys,
   useCreditCardCycleQuery,
   useCreditCardForecastQuery,
   useCreditCardOverviewQuery,
   useCreditCardQuery,
 } from "@/queries/credit-cards/use-credit-cards-query";
+import { useTransactionLookupsQuery } from "@/queries/transactions/use-transaction-lookups-query";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
 import { InvoicesEmpty } from "./_empty";
 import { CreditCardDetailError, InvoicesError } from "./_error";
@@ -57,13 +48,11 @@ const MONTHS_SHOWN = 24;
 export default function CreditCardDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const can = useCan();
   const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
   const timezone = useAuthSessionStore((state) => state.user?.preferences.timezone ?? "UTC");
   const precisionOf = useCurrencyPrecision();
   const editSheet = useDisclosure();
   const payModal = useDisclosure();
-  const deleteModal = useDisclosure();
   const [chosenCycleId, setChosenCycleId] = React.useState<string | undefined>();
   const [selectedRow, setSelectedRow] = React.useState<TransactionFeedRow | null>(null);
 
@@ -74,13 +63,7 @@ export default function CreditCardDetailPage() {
     months: MONTHS_SHOWN,
   });
   const overviewQuery = useCreditCardOverviewQuery({ month: thisMonth });
-  const deleteMutation = useDeleteCreditCardMutation({
-    successToast: { title: "Credit card deleted" },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: creditCardQueryKeys.all });
-      router.push("/credit-cards");
-    },
-  });
+  const lookupsQuery = useTransactionLookupsQuery();
 
   const cycles = React.useMemo(
     () =>
@@ -94,16 +77,25 @@ export default function CreditCardDetailPage() {
     cycles.find((cycle) => cycle.displayStatus === "current") ??
     cycles[0];
   const selectedCycle = cycles.find((cycle) => cycle.id === chosenCycleId) ?? defaultCycle;
+  const currentCycle = cycles.find((cycle) => cycle.displayStatus === "current");
   const selectedIndex = selectedCycle ? cycles.indexOf(selectedCycle) : -1;
   const cycleQuery = useCreditCardCycleQuery(id, selectedCycle?.id ?? "");
   const card = cardQuery.data;
   const precision = precisionOf(card?.currencyCode ?? FALLBACK_CURRENCY_CODE);
-  const limit = React.useMemo(
-    () => (card ? buildLimitBreakdown(card.creditLimitAmount, cycles, todayISODate()) : null),
-    [card, cycles],
+  const limitBreakdown = React.useMemo(
+    () =>
+      overviewQuery.data?.cards.find((item) => item.creditCardId === id)?.limit ??
+      (card ? buildLimitBreakdown(card.creditLimitAmount, cycles, todayISODate()) : null),
+    [overviewQuery.data, id, card, cycles],
   );
-  const cardOverview = overviewQuery.data?.cards.find((item) => item.creditCardId === id);
-  const limitBreakdown = cardOverview?.limit ?? limit;
+  const tableFilters = React.useMemo<Partial<ListTransactionsQuery>>(
+    () => ({
+      creditCardIds: [id],
+      originTypes: ["credit_card_installment"],
+      billingCycleIds: selectedCycle ? [selectedCycle.id] : [],
+    }),
+    [id, selectedCycle],
+  );
 
   // Everything unpaid up to the selected invoice, since payments settle the oldest invoice first.
   const unpaidUpToSelected = selectedCycle
@@ -136,14 +128,70 @@ export default function CreditCardDetailPage() {
     );
   }
 
+  const hasPayments = (cycleQuery.data?.payments.length ?? 0) > 0;
+  const invoiceSection = forecastQuery.isPending ? (
+    <InvoicesLoading />
+  ) : forecastQuery.isError ? (
+    <InvoicesError
+      message={forecastQuery.error.message}
+      onRetry={() => void forecastQuery.refetch()}
+    />
+  ) : cycles.length === 0 || !selectedCycle ? (
+    <InvoicesEmpty />
+  ) : (
+    <div className="space-y-6">
+      <InvoiceHistoryChart
+        cycles={cycles}
+        selectedId={selectedCycle.id}
+        onSelect={setChosenCycleId}
+        currencyCode={card.currencyCode}
+        language={language}
+        precision={precision}
+      />
+      <div className="border-t border-border/60 pt-5">
+        <InvoiceSummary
+          cycle={selectedCycle}
+          previousAmount={
+            selectedIndex > 0 ? (cycles[selectedIndex - 1]?.statementAmount ?? null) : null
+          }
+          details={cycleQuery.data}
+          cardName={card.name}
+          onPay={payModal.onOpen}
+          currencyCode={card.currencyCode}
+          language={language}
+          precision={precision}
+        />
+      </div>
+      {hasPayments && cycleQuery.data ? (
+        <InvoicePayments
+          payments={cycleQuery.data.payments}
+          currencyCode={card.currencyCode}
+          language={language}
+          precision={precision}
+        />
+      ) : null}
+      <div className="mt-2">
+        <CardPurchasesTable
+          divider={hasPayments}
+          title="Invoice expenses"
+          description="Purchases and installments on this invoice"
+          filters={tableFilters}
+          language={language}
+          onView={setSelectedRow}
+          emptyTitle="No purchases on this invoice"
+          emptyDescription="Purchases made in this billing period appear here."
+        />
+      </div>
+    </div>
+  );
+
   return (
     <InternalPageLayout
       title={card.name}
-      createdBy={card.createdByUserId}
-      subtitle="Invoices, limit and the purchases behind each one."
+      subtitle={`${card.institutionName ? `${card.institutionName} · ` : ""}${card.brand} •••• ${card.last4}`}
       back={{ href: "/credit-cards", label: "Credit cards" }}
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {selectedCycle ? (
             <MonthSelector
               value={invoiceMonthKey(selectedCycle)}
@@ -156,35 +204,29 @@ export default function CreditCardDetailPage() {
               language={language}
             />
           ) : null}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Card actions">
-                <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                disabled={!can(PERMISSIONS.CREDIT_CARDS_UPDATE)}
-                onSelect={editSheet.onOpen}
-              >
-                <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} />
-                Edit card
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                variant="destructive"
-                disabled={!can(PERMISSIONS.CREDIT_CARDS_DELETE)}
-                onSelect={deleteModal.onOpen}
-              >
-                <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
-                Delete card
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {currentCycle && selectedCycle && selectedCycle.id !== currentCycle.id ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setChosenCycleId(currentCycle.id)}
+            >
+              Current invoice
+            </Button>
+          ) : null}
+          <PermissionButton
+            permission={PERMISSIONS.CREDIT_CARDS_UPDATE}
+            deniedMessage="Your household role cannot edit credit cards."
+            variant="outline"
+            onClick={editSheet.onOpen}
+          >
+            <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} />
+            Edit
+          </PermissionButton>
         </div>
       }
     >
-      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)]">
-        <div className="space-y-3">
+      <div className="grid min-w-0 items-stretch gap-8 lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)]">
+        <aside className="flex min-w-0 flex-col gap-5">
           <CreditCardPreview
             brand={card.brand}
             color={card.color ?? undefined}
@@ -192,20 +234,7 @@ export default function CreditCardDetailPage() {
             last4={card.last4}
             name={card.name}
           />
-          <dl className="grid grid-cols-2 gap-3 rounded-xl border border-border/60 p-4 text-sm">
-            <div>
-              <dt className="text-muted-foreground">Invoice closes</dt>
-              <dd className="font-medium">Day {card.closingDay}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Invoice due</dt>
-              <dd className="font-medium">Day {card.dueDay}</dd>
-            </div>
-            <div className="col-span-2">
-              <dt className="text-muted-foreground">Account that pays it</dt>
-              <dd className="font-medium">{card.ownerAccount.name}</dd>
-            </div>
-          </dl>
+          <CreditCardDetailsPanel card={card} />
           {limitBreakdown ? (
             <LimitBreakdown
               breakdown={limitBreakdown}
@@ -213,69 +242,45 @@ export default function CreditCardDetailPage() {
               language={language}
               precision={precision}
             />
+          ) : overviewQuery.isPending ? (
+            <LimitBreakdownSkeleton />
           ) : null}
-        </div>
-
-        <div className="min-w-0 space-y-4">
-          {forecastQuery.isPending ? (
-            <InvoicesLoading />
-          ) : forecastQuery.isError ? (
-            <InvoicesError
-              message={forecastQuery.error.message}
-              onRetry={() => void forecastQuery.refetch()}
-            />
-          ) : cycles.length === 0 || !selectedCycle ? (
-            <InvoicesEmpty />
-          ) : (
-            <>
-              <section className="rounded-xl border border-border/60 p-4">
-                <Typography variant="small-strong" className="mb-2">
-                  Invoices
-                </Typography>
-                <InvoiceHistoryChart
+          <InvoiceComposition
+            details={cycleQuery.data}
+            isLoading={forecastQuery.isPending || cycleQuery.isPending}
+            error={cycleQuery.error}
+            onRetry={() => void cycleQuery.refetch()}
+            categories={lookupsQuery.data?.categories}
+            currencyCode={card.currencyCode}
+            language={language}
+            precision={precision}
+          />
+          <PageSection divider title="All invoices" className="flex flex-1 flex-col">
+            <div className="relative min-h-52 flex-1">
+              {forecastQuery.isPending ? (
+                <InvoiceListSkeleton />
+              ) : (
+                <InvoiceList
                   cycles={cycles}
-                  selectedId={selectedCycle.id}
+                  selectedId={selectedCycle?.id}
                   onSelect={setChosenCycleId}
                   currencyCode={card.currencyCode}
                   language={language}
                   precision={precision}
                 />
-                <div className="mt-3">
-                  <InvoiceStrip
-                    cycles={cycles}
-                    selectedId={selectedCycle.id}
-                    onSelect={setChosenCycleId}
-                    currencyCode={card.currencyCode}
-                    language={language}
-                    precision={precision}
-                  />
-                </div>
-              </section>
-
-              <InvoiceDetail
-                cycle={selectedCycle}
-                previousAmount={
-                  selectedIndex > 0 ? (cycles[selectedIndex - 1]?.statementAmount ?? null) : null
-                }
-                details={cycleQuery.data}
-                isLoading={cycleQuery.isPending}
-                error={cycleQuery.error}
-                onRetry={() => void cycleQuery.refetch()}
-                currencyCode={card.currencyCode}
-                language={language}
-                precision={precision}
-                cardName={card.name}
-                onSelectLine={(line: InvoiceLine) =>
-                  setSelectedRow(invoiceLineToFeedRow(line, card))
-                }
-                onPay={payModal.onOpen}
-              />
-            </>
-          )}
-        </div>
+              )}
+            </div>
+          </PageSection>
+        </aside>
+        <div className="min-w-0">{invoiceSection}</div>
       </div>
 
-      <CreditCardSheet open={editSheet.isOpen} onOpenChange={editSheet.setIsOpen} card={card} />
+      <CreditCardSheet
+        open={editSheet.isOpen}
+        onOpenChange={editSheet.setIsOpen}
+        card={card}
+        onDeleted={() => router.push("/credit-cards")}
+      />
       <PayInvoiceModal
         open={payModal.isOpen}
         onOpenChange={payModal.setIsOpen}
@@ -285,27 +290,6 @@ export default function CreditCardDetailPage() {
         coversOlderInvoices={coversOlder}
       />
       <CardTransactionSheet row={selectedRow} onClose={() => setSelectedRow(null)} />
-      <Modal open={deleteModal.isOpen} onOpenChange={deleteModal.setIsOpen}>
-        <ModalContent
-          title="Delete this card?"
-          description={`${card.name} and its invoices will be removed. This can't be undone.`}
-          variant="destructive"
-          isLoading={deleteMutation.isPending}
-          size="sm"
-        >
-          <ModalBody>
-            {deleteMutation.errorMessage ? (
-              <Typography variant="small-destructive">{deleteMutation.errorMessage}</Typography>
-            ) : null}
-          </ModalBody>
-          <ModalFooter
-            cancelLabel="Cancel"
-            confirmLabel="Delete"
-            isLoading={deleteMutation.isPending}
-            onConfirm={() => deleteMutation.mutate(card.id)}
-          />
-        </ModalContent>
-      </Modal>
     </InternalPageLayout>
   );
 }

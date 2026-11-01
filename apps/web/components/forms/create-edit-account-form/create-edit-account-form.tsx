@@ -1,6 +1,8 @@
 "use client";
 
 import type { AccountDetails } from "@luraba/contracts";
+import type * as React from "react";
+import { FormActions } from "@/components/forms/form-actions";
 import { FormItem } from "@/components/forms/form-item";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
@@ -15,11 +17,14 @@ export function CreateEditAccountForm({
   defaultCurrencyCode,
   onCancel,
   onSuccess,
+  editExtras,
 }: {
   account?: AccountDetails;
   defaultCurrencyCode: string;
   onCancel: () => void;
   onSuccess: () => void;
+  /** Extra sections for edit mode, shown above the buttons (balance adjustment, delete). */
+  editExtras?: React.ReactNode;
 }) {
   const { currenciesQuery, errorMessage, form, isEdit, isPending, onSubmit, type, typeOptions } =
     useCreateEditAccountForm({
@@ -57,7 +62,9 @@ export function CreateEditAccountForm({
       ) : null}
       {errorMessage ? <Typography variant="small-destructive">{errorMessage}</Typography> : null}
 
-      <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
+      {isEdit ? editExtras : null}
+
+      <FormActions>
         <Button type="button" variant="ghost" onClick={onCancel} disabled={isPending}>
           Cancel
         </Button>
@@ -68,7 +75,7 @@ export function CreateEditAccountForm({
         >
           {isEdit ? "Save changes" : "Create account"}
         </Button>
-      </div>
+      </FormActions>
     </form>
   );
 }

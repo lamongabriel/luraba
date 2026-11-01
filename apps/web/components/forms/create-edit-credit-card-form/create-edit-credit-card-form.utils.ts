@@ -1,5 +1,9 @@
 import type { CreateCreditCardInput, CreditCard, UpdateCreditCardInput } from "@luraba/contracts";
-import { CREDIT_CARD_BRAND_VALUES, type CreditCardBrand } from "@/lib/credit-cards";
+import {
+  CREDIT_CARD_BRAND_VALUES,
+  type CreditCardBrand,
+  DEFAULT_CREDIT_CARD_COLOR,
+} from "@/lib/credit-cards";
 import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance";
 
 import type { CreateEditCreditCardFormValues } from "./create-edit-credit-card-form.schema";
@@ -20,11 +24,12 @@ export function getCreateEditCreditCardDefaultValues(
     notes: card?.notes ?? "",
     brand: brand as CreditCardBrand,
     last4: card?.last4 ?? "",
-    color: card?.color ?? "#164e63",
+    color: card?.color ?? DEFAULT_CREDIT_CARD_COLOR,
     closingDay: card?.closingDay ?? 1,
     dueDay: card?.dueDay ?? 15,
+    // Cards stored before the limit became required hold -1: the person must enter one on save.
     creditLimitAmount:
-      card && card.creditLimitAmount >= 0
+      card && card.creditLimitAmount > 0
         ? minorToMajorUnits(card.creditLimitAmount, precision)
         : "",
   };
@@ -49,10 +54,7 @@ export function buildCreateCreditCardPayload(
     color: values.color || undefined,
     closingDay: values.closingDay,
     dueDay: values.dueDay,
-    creditLimitAmount:
-      values.creditLimitAmount === ""
-        ? undefined
-        : majorToMinorUnits(values.creditLimitAmount, precision),
+    creditLimitAmount: majorToMinorUnits(Number(values.creditLimitAmount), precision),
   };
 }
 
@@ -70,9 +72,6 @@ export function buildUpdateCreditCardPayload(
     color: values.color || null,
     closingDay: values.closingDay,
     dueDay: values.dueDay,
-    creditLimitAmount:
-      values.creditLimitAmount === ""
-        ? undefined
-        : majorToMinorUnits(values.creditLimitAmount, precision),
+    creditLimitAmount: majorToMinorUnits(Number(values.creditLimitAmount), precision),
   };
 }

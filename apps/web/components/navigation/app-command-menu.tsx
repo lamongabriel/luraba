@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/command";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { Typography } from "@/components/ui/typography";
-import { mainNav, userMenuLinks } from "@/lib/navigation";
+import { isNavItemActive, mainNav, userMenuLinks } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 type CommandEntry = {
@@ -169,7 +169,7 @@ export function AppCommandMenu({ className }: { className?: string }) {
                       <span className="truncate">{item.label}</span>
                     </span>
                     <CommandShortcut>
-                      {pathname === item.href ? "Current" : item.href}
+                      {isNavItemActive(pathname, item.href) ? "Current" : item.href}
                     </CommandShortcut>
                   </CommandItem>
                 ))}
@@ -193,7 +193,7 @@ export function AppCommandMenu({ className }: { className?: string }) {
                       <span className="truncate">{item.label}</span>
                     </span>
                     <CommandShortcut>
-                      {pathname === item.href ? "Current" : item.href}
+                      {isNavItemActive(pathname, item.href) ? "Current" : item.href}
                     </CommandShortcut>
                   </CommandItem>
                 ))}

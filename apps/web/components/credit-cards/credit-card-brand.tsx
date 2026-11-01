@@ -10,17 +10,20 @@ export function CreditCardBrand({
   brand,
   label,
   className,
+  chip = false,
 }: {
   brand: string;
   label?: string;
   className?: string;
+  /** Put the logo on a white chip so it stays readable on any card color. */
+  chip?: boolean;
 }) {
   const option = getCreditCardBrand(brand);
 
   return (
     <span className={cn("flex min-w-0 items-center gap-2.5", className)}>
       <span className="flex h-7 w-10 shrink-0 items-center justify-center">
-        <PaymentIcon type={option.paymentType} format="logo" />
+        <PaymentIcon type={option.paymentType} format={chip ? "logoBorder" : "logo"} />
       </span>
       {label === undefined ? null : <span className="truncate">{label}</span>}
     </span>

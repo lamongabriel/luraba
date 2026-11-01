@@ -4,9 +4,9 @@ import { Delete02Icon, Download01Icon, File01Icon, Upload01Icon } from "@hugeico
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { Attachment } from "@luraba/contracts";
 import * as React from "react";
-import { toast } from "sonner";
 import { PERMISSIONS, PermissionButton } from "@/components/permissions";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatBytes, uploadContentUrl } from "@/lib/uploads";
 import {
@@ -50,6 +50,7 @@ export function AttachmentGallery({
   const attach = useCreateAttachmentMutation();
   const detach = useDeleteAttachmentMutation();
   const busy = upload.isPending || attach.isPending;
+  const [pendingRemoval, setPendingRemoval] = React.useState<Attachment | null>(null);
 
   if (config.data && !config.data.enabled) {
     return (
@@ -76,7 +77,6 @@ export function AttachmentGallery({
         // The mutation toasts the error; keep going so one bad file doesn't drop the rest.
       }
     }
-    if (picked.length > 0) toast.success(picked.length === 1 ? "File attached" : "Files attached");
   }
 
   return (
@@ -91,10 +91,27 @@ export function AttachmentGallery({
             key={attachment.id}
             attachment={attachment}
             removing={detach.isPending && detach.variables === attachment.id}
-            onRemove={() => detach.mutate(attachment.id)}
+            onRemove={() => setPendingRemoval(attachment)}
           />
         ))}
       </ul>
+      <ConfirmDialog
+        open={pendingRemoval !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingRemoval(null);
+        }}
+        title="Remove this file?"
+        description="The file is detached from this record and can't be recovered."
+        confirmLabel="Remove file"
+        loadingLabel="Removing..."
+        isLoading={detach.isPending}
+        onConfirm={() => {
+          if (!pendingRemoval) return;
+          detach.mutate(pendingRemoval.id, { onSuccess: () => setPendingRemoval(null) });
+        }}
+      >
+        <p className="truncate text-xs text-muted-foreground">{pendingRemoval?.upload.filename}</p>
+      </ConfirmDialog>
       <input
         ref={inputRef}
         type="file"

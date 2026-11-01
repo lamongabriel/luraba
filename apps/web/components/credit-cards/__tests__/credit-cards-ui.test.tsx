@@ -1,10 +1,24 @@
-import type { CreditCardCycle, TransactionFeedRow } from "@luraba/contracts";
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import type { CreditCardCycle } from "@luraba/contracts";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render as baseRender, screen } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { InvoiceStrip } from "../invoice-strip";
-import { dedupeCardRows } from "../latest-card-transactions";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { InvoiceSummary } from "../invoice-detail";
 import { LimitBreakdown } from "../limit-breakdown";
+
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
+const render = (ui: ReactElement) =>
+  baseRender(
+    <QueryClientProvider client={new QueryClient()}>
+      <TooltipProvider>{ui}</TooltipProvider>
+    </QueryClientProvider>,
+  );
 
 const cycle = (overrides: Partial<CreditCardCycle>): CreditCardCycle => ({
   id: crypto.randomUUID(),
@@ -71,42 +85,43 @@ describe("LimitBreakdown", () => {
   });
 });
 
-describe("InvoiceStrip", () => {
-  it("shows each invoice's status and selects on click", async () => {
-    Element.prototype.scrollIntoView = vi.fn();
-    const paid = cycle({ displayStatus: "paid", dueDate: "2026-10-05" });
-    const overdue = cycle({ displayStatus: "overdue", dueDate: "2026-11-05" });
-    const onSelect = vi.fn();
+describe("InvoiceSummary", () => {
+  it("shows the invoice name, status and facts once, and offers to pay an unpaid invoice", () => {
     render(
-      <InvoiceStrip
-        cycles={[paid, overdue]}
-        selectedId={paid.id}
-        onSelect={onSelect}
+      <InvoiceSummary
+        cycle={cycle({ displayStatus: "overdue", remainingAmount: 50_000, paidAmount: 19_593 })}
+        previousAmount={50_000}
+        details={undefined}
+        cardName="Chase Sapphire"
+        onPay={vi.fn()}
         currencyCode="USD"
         language="en"
         precision={2}
       />,
     );
 
-    expect(screen.getByText("Paid")).toBeInTheDocument();
-    expect(screen.getByText("Overdue")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: /Nov 26/ }));
-    expect(onSelect).toHaveBeenCalledWith(overdue.id);
+    expect(screen.getByText("November 2026 invoice")).toBeInTheDocument();
+    expect(screen.getAllByText("Overdue").length).toBeGreaterThan(0);
+    expect(screen.getByText("Invoice total")).toBeInTheDocument();
+    expect(screen.getByText("Closing date")).toBeInTheDocument();
+    expect(screen.getByText(/↑ 39% vs previous/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pay invoice" })).toBeInTheDocument();
   });
-});
 
-describe("dedupeCardRows", () => {
-  it("keeps one row per purchase or payment, newest first", () => {
-    const row = (rowId: string, purchaseId: string | null, paymentId: string | null) =>
-      ({ rowId, purchaseId, paymentId }) as TransactionFeedRow;
-    const rows = [
-      row("a1", "p1", null),
-      row("a2", "p1", null),
-      row("b", null, "pay1"),
-      row("c", "p2", null),
-    ];
+  it("does not offer to pay a paid invoice", () => {
+    render(
+      <InvoiceSummary
+        cycle={cycle({ displayStatus: "paid", remainingAmount: 0, paidAmount: 69_593 })}
+        previousAmount={null}
+        details={undefined}
+        cardName="Chase Sapphire"
+        onPay={vi.fn()}
+        currencyCode="USD"
+        language="en"
+        precision={2}
+      />,
+    );
 
-    expect(dedupeCardRows(rows, 3).map((item) => item.rowId)).toEqual(["a1", "b", "c"]);
-    expect(dedupeCardRows(rows, 2)).toHaveLength(2);
+    expect(screen.queryByRole("button", { name: "Pay invoice" })).not.toBeInTheDocument();
   });
 });

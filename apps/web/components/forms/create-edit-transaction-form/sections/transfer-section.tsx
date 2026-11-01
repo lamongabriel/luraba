@@ -2,6 +2,7 @@ import { Exchange01Icon, RefreshIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AccountSummary, CurrencyRate } from "@luraba/contracts";
 import { type Control, Controller } from "react-hook-form";
+import { AccountSelect } from "@/components/display";
 import { FormItem } from "@/components/forms/form-item";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
@@ -36,32 +37,24 @@ export function TransferSection({
   toCurrencyCode?: string;
   usesMarketRate: boolean;
 }) {
-  const accountOptions = accounts.map((account) => ({
-    value: account.id,
-    label: account.name,
-    description: account.currencyCode,
-  }));
-
   return (
     <TransactionFormSection
       title="Transfer"
       description="Move money between two accounts and confirm the exact amount received."
     >
       <div className="grid gap-3 sm:grid-cols-2">
-        <FormItem
-          type="combobox"
+        <AccountSelect
           control={control}
           name="fromAccountId"
           label="From account"
-          options={accountOptions}
+          accounts={accounts}
           placeholder="Choose source"
         />
-        <FormItem
-          type="combobox"
+        <AccountSelect
           control={control}
           name="toAccountId"
           label="To account"
-          options={accountOptions}
+          accounts={accounts}
           placeholder="Choose destination"
         />
       </div>
@@ -136,6 +129,8 @@ export function TransferSection({
           ) : null}
         </div>
       ) : null}
+
+      <FormItem type="tag" control={control} name="tagIds" label="Tags" placeholder="Add tags" />
     </TransactionFormSection>
   );
 }

@@ -16,6 +16,7 @@ export function TransactionsEmpty({
 }) {
   return (
     <EmptyState
+      className="flex-1"
       icon={<HugeiconsIcon icon={ArrowLeftRightIcon} strokeWidth={1.8} className="size-5" />}
       title={hasFilters ? "No matching transactions" : "No transactions yet"}
       description={

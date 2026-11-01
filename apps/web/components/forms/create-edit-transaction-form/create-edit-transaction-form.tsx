@@ -5,10 +5,12 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { TransactionFeedRow } from "@luraba/contracts";
 import { MAX_PER_PAGE } from "@luraba/contracts";
 import { useWatch } from "react-hook-form";
+import { FormActions } from "@/components/forms/form-actions";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { useProductsQuery } from "@/queries/products/use-products-query";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
+import { useAuthSessionStore } from "@/stores/auth-session-store";
 import {
   getCurrencyPrecision,
   type TransactionFormDetails,
@@ -49,6 +51,7 @@ export function CreateEditTransactionForm({
     toCurrencyCode,
     usesMarketRate,
   } = useCreateEditTransactionForm({ details, lookups, onSuccess, row });
+  const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
   const selectedAccountId = useWatch({
     control: form.control,
     name: "accountId",
@@ -79,7 +82,11 @@ export function CreateEditTransactionForm({
   const precisionOf = (code: string | undefined) => getCurrencyPrecision(lookups, code);
 
   return (
-    <form className="space-y-7" onSubmit={onSubmit} noValidate>
+    <form
+      className="space-y-6 [&>section]:border-t [&>section]:border-border/70 [&>section]:pt-6 [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0"
+      onSubmit={onSubmit}
+      noValidate
+    >
       <CommonSection
         control={form.control}
         isEdit={isEdit}
@@ -116,8 +123,11 @@ export function CreateEditTransactionForm({
         <CreditCardPurchaseSection
           cards={lookups.creditCards}
           control={form.control}
+          currencyCode={selectedCard?.currencyCode}
           isEdit={isEdit}
+          language={language}
           merchants={lookups.merchants}
+          precision={precisionOf(selectedCard?.currencyCode)}
         />
       ) : null}
 
@@ -140,11 +150,7 @@ export function CreateEditTransactionForm({
         />
       ) : null}
 
-      <SettingsSection
-        control={form.control}
-        showBudget={kind !== "credit_card_payment"}
-        showTags={kind !== "credit_card_payment"}
-      />
+      {kind !== "credit_card_payment" ? <SettingsSection control={form.control} /> : null}
 
       {errorMessage ? (
         <div className="rounded-xl bg-destructive/10 px-3 py-3">
@@ -152,7 +158,7 @@ export function CreateEditTransactionForm({
         </div>
       ) : null}
 
-      <div className="flex items-center justify-end gap-2 border-t border-border/70 pt-5">
+      <FormActions>
         {onCancel ? (
           <Button type="button" variant="outline" disabled={isPending} onClick={onCancel}>
             Cancel
@@ -162,7 +168,7 @@ export function CreateEditTransactionForm({
           <HugeiconsIcon icon={SaveMoneyDollarIcon} strokeWidth={2} />
           {isEdit ? "Save changes" : "Create transaction"}
         </Button>
-      </div>
+      </FormActions>
     </form>
   );
 }

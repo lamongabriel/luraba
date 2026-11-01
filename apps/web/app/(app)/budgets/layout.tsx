@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 import { pageMetadata } from "@/lib/metadata";
-import { BudgetAccess } from "./_access";
+import { BudgetsAccess } from "./_access";
 
 export const metadata = pageMetadata({
-  title: "Budget",
-  description: "Your monthly spending plan.",
-  path: "/budget",
+  title: "Budgets",
+  description: "Plan your monthly spending by category and see how it is going.",
+  path: "/budgets",
 });
 
-export default function BudgetLayout({ children }: { children: ReactNode }) {
-  return <BudgetAccess>{children}</BudgetAccess>;
+export default function BudgetsLayout({ children }: { children: ReactNode }) {
+  return <BudgetsAccess>{children}</BudgetsAccess>;
 }

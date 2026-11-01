@@ -1,33 +1,22 @@
-import { Delete02Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, Delete02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { Product } from "@luraba/contracts";
-import * as React from "react";
-import { type Control, Controller, useFieldArray, useWatch } from "react-hook-form";
-import { AmountDisplay, ProductDisplay } from "@/components/display";
-import { PERMISSIONS, PermissionButton } from "@/components/permissions";
-import { ProductSheet } from "@/components/products/product-sheet";
+import { type Control, Controller, useFieldArray, useFormState, useWatch } from "react-hook-form";
+import { AmountDisplay } from "@/components/display";
+import { ProductPicker } from "@/components/products/product-picker";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { MoneyInput, NumberInput } from "@/components/ui/masked-input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
 import { minorToMajorUnits } from "@/lib/finance";
+import { itemsTotalMinor, remainingToAllocate } from "@/lib/transaction-items";
+import { cn } from "@/lib/utils";
 
 import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema";
 import { TransactionFormSection } from "./transaction-form-section";
 
-const CUSTOM_ITEM = "__custom__";
-
 type ItemsControl = Control<CreateEditTransactionFormValues>;
+
+const ROW_GRID = "grid grid-cols-[minmax(0,1fr)_4rem_6.5rem_1.75rem] items-start gap-2";
 
 function ItemRow({
   index,
@@ -35,174 +24,135 @@ function ItemRow({
   products,
   currencyCode,
   precisionOf,
-  productPrecisionOf,
   onRemove,
-  onEditProduct,
-  onProductPicked,
+  onPick,
 }: {
   index: number;
   control: ItemsControl;
-  products: Product[];
+  products: readonly Product[];
   currencyCode: string | undefined;
   precisionOf: (code: string | undefined) => number;
-  productPrecisionOf: (code: string | undefined) => number;
   onRemove: () => void;
-  onEditProduct: (product: Product) => void;
-  onProductPicked: (productId: string, product: Product | undefined) => void;
+  onPick: (product: Product) => void;
 }) {
-  const productId = useWatch({ control, name: `items.${index}.productId` });
-  const name = useWatch({ control, name: `items.${index}.name` });
-  const product = products.find((p) => p.id === productId);
-
   return (
-    <div className="space-y-3 rounded-xl border border-border/60 p-3">
-      <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-        <Field>
-          <FieldLabel htmlFor={`items.${index}.productId`}>Product</FieldLabel>
-          <Select
-            value={productId || CUSTOM_ITEM}
-            onValueChange={(value) =>
-              onProductPicked(
-                value === CUSTOM_ITEM ? "" : value,
-                products.find((p) => p.id === value),
-              )
-            }
-          >
-            <SelectTrigger id={`items.${index}.productId`}>
-              <SelectValue placeholder="Something else" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={CUSTOM_ITEM}>Something else (type a name)</SelectItem>
-              {products.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  <ProductDisplay
-                    product={p}
-                    size="xs"
-                    detail={
-                      p.price != null ? (
-                        <AmountDisplay
-                          amount={p.price}
-                          currencyCode={p.currencyCode}
-                          precision={productPrecisionOf(p.currencyCode)}
-                          showSign={false}
-                          size="xs"
-                        />
-                      ) : undefined
-                    }
-                  />
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="self-end"
-          onClick={onRemove}
-        >
-          <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
-          <span className="sr-only">Remove item</span>
-        </Button>
-      </div>
-
-      {product ? (
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          className="h-auto self-start p-0 text-xs"
-          onClick={() => onEditProduct(product)}
-        >
-          Edit picture or name
-        </Button>
-      ) : null}
-
-      {productId ? null : (
+    <div className="space-y-1">
+      <div className={ROW_GRID}>
         <Controller
           control={control}
           name={`items.${index}.name`}
           render={({ field, fieldState }) => (
-            <Field data-invalid={Boolean(fieldState.error)}>
-              <FieldLabel htmlFor={field.name}>Item name</FieldLabel>
-              <Input
-                id={field.name}
-                value={field.value}
-                placeholder="Lightning cable"
-                aria-invalid={Boolean(fieldState.error)}
-                onBlur={field.onBlur}
-                onChange={(event) => field.onChange(event.target.value)}
-              />
-              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
-            </Field>
+            <ItemProductField
+              control={control}
+              index={index}
+              text={field.value}
+              products={products}
+              invalid={Boolean(fieldState.error)}
+              precisionOf={precisionOf}
+              onBlur={field.onBlur}
+              onChange={field.onChange}
+              onPick={onPick}
+            />
           )}
         />
-      )}
-
-      <div className="grid gap-3 sm:grid-cols-2">
         <Controller
           control={control}
           name={`items.${index}.quantity`}
           render={({ field, fieldState }) => (
-            <Field data-invalid={Boolean(fieldState.error)}>
-              <FieldLabel htmlFor={field.name}>Quantity</FieldLabel>
-              <NumberInput
-                id={field.name}
-                value={field.value}
-                aria-invalid={Boolean(fieldState.error)}
-                onBlur={field.onBlur}
-                onValueChange={(value) => field.onChange(value === "" ? "" : Number(value))}
-              />
-              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
-            </Field>
+            <NumberInput
+              id={field.name}
+              aria-label="Quantity"
+              value={field.value}
+              aria-invalid={Boolean(fieldState.error)}
+              onBlur={field.onBlur}
+              onValueChange={(value) => field.onChange(value === "" ? "" : Number(value))}
+            />
           )}
         />
         <Controller
           control={control}
           name={`items.${index}.unitPrice`}
           render={({ field, fieldState }) => (
-            <Field data-invalid={Boolean(fieldState.error)}>
-              <FieldLabel htmlFor={field.name}>
-                Price each{currencyCode ? ` (${currencyCode})` : ""}
-              </FieldLabel>
-              <MoneyInput
-                id={field.name}
-                value={field.value}
-                precision={precisionOf(currencyCode)}
-                aria-invalid={Boolean(fieldState.error)}
-                onBlur={field.onBlur}
-                onValueChange={(value) => field.onChange(value === "" ? "" : Number(value))}
-              />
-              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
-            </Field>
+            <MoneyInput
+              id={field.name}
+              aria-label={`Price each${currencyCode ? ` (${currencyCode})` : ""}`}
+              value={field.value}
+              precision={precisionOf(currencyCode)}
+              aria-invalid={Boolean(fieldState.error)}
+              onBlur={field.onBlur}
+              onValueChange={(value) => field.onChange(value === "" ? "" : Number(value))}
+            />
           )}
         />
+        <Button type="button" variant="ghost" size="icon" onClick={onRemove}>
+          <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
+          <span className="sr-only">Remove item</span>
+        </Button>
       </div>
-
-      {productId || name.trim() ? (
-        <Controller
-          control={control}
-          name={`items.${index}.saveAsProductPrice`}
-          render={({ field }) => (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Switch id={field.name} checked={field.value} onCheckedChange={field.onChange} />
-              <Label htmlFor={field.name} className="text-xs font-normal text-muted-foreground">
-                {product
-                  ? `Update ${product.name}'s saved price to this one`
-                  : "Save as a product with this price"}
-              </Label>
-            </div>
-          )}
-        />
-      ) : null}
+      <ItemRowErrors control={control} index={index} />
     </div>
   );
 }
 
+function ItemProductField({
+  control,
+  index,
+  text,
+  products,
+  invalid,
+  precisionOf,
+  onBlur,
+  onChange,
+  onPick,
+}: {
+  control: ItemsControl;
+  index: number;
+  text: string;
+  products: readonly Product[];
+  invalid: boolean;
+  precisionOf: (code: string | undefined) => number;
+  onBlur: () => void;
+  onChange: (value: string) => void;
+  onPick: (product: Product) => void;
+}) {
+  const productId = useWatch({ control, name: `items.${index}.productId` });
+  return (
+    <Controller
+      control={control}
+      name={`items.${index}.productId`}
+      render={({ field: productField }) => (
+        <ProductPicker
+          id={`items.${index}.name`}
+          text={text}
+          products={products}
+          linkedProductId={productId || undefined}
+          precisionOf={precisionOf}
+          invalid={invalid}
+          onBlur={onBlur}
+          onTextChange={(next) => {
+            if (productField.value) productField.onChange("");
+            onChange(next);
+          }}
+          onPick={onPick}
+        />
+      )}
+    />
+  );
+}
+
+function ItemRowErrors({ control, index }: { control: ItemsControl; index: number }) {
+  const { errors } = useFormState({ control, name: `items.${index}` });
+  const rowErrors = errors.items?.[index];
+  const message =
+    rowErrors?.name?.message ?? rowErrors?.quantity?.message ?? rowErrors?.unitPrice?.message;
+  return message ? <Typography variant="small-destructive">{message}</Typography> : null;
+}
+
 /**
- * Optional list of what the transaction bought. Pick a saved product (its latest price is
- * suggested) or type a name; switch on "save price" to keep this price on the product for next time.
+ * Optional list of what the transaction bought, one compact row per item. The name field suggests
+ * saved products (picture and latest price) as you type; picking one fills the price, a new name is
+ * saved as a product when the transaction is saved. The items may not add up to more than the
+ * transaction amount, and the header shows what is left to allocate.
  */
 export function ItemsSection({
   control,
@@ -212,7 +162,7 @@ export function ItemsSection({
   productPrecisionOf,
 }: {
   control: ItemsControl;
-  products: Product[];
+  products: readonly Product[];
   /** The transaction's currency; items are priced in it. */
   currencyCode: string | undefined;
   precisionOf: (code: string | undefined) => number;
@@ -220,48 +170,53 @@ export function ItemsSection({
 }) {
   const { fields, append, remove, update } = useFieldArray({ control, name: "items" });
   const items = useWatch({ control, name: "items" });
-  const [sheet, setSheet] = React.useState<{ open: boolean; product?: Product; row?: number }>({
-    open: false,
-  });
-  const totalMinor = items.reduce((sum, item) => {
-    const quantity = Number(item.quantity) || 0;
-    const price = Number(item.unitPrice) || 0;
-    return sum + Math.round(quantity * price * 10 ** precisionOf(currencyCode));
-  }, 0);
+  const amount = useWatch({ control, name: "amount" });
+  const precision = precisionOf(currencyCode);
+  const totalMinor = Math.round((Number(amount) || 0) * 10 ** precision);
+  const allocatedMinor = itemsTotalMinor(items, precision);
+  const remaining = remainingToAllocate(totalMinor, allocatedMinor);
+  const over = remaining < 0;
+  const { errors } = useFormState({ control, name: "items" });
+  const listError = errors.items?.message ?? errors.items?.root?.message;
 
-  const pick = (index: number, productId: string, product: Product | undefined) => {
+  const pick = (index: number, product: Product) => {
     const current = items[index];
-    const samePrice = product?.price != null && product.currencyCode === currencyCode;
+    const samePrice = product.price != null && product.currencyCode === currencyCode;
     update(index, {
       ...current,
-      productId,
-      name: product?.name ?? (productId ? current.name : ""),
+      productId: product.id,
+      name: product.name,
       unitPrice: samePrice
         ? minorToMajorUnits(product.price as number, productPrecisionOf(product.currencyCode))
         : current.unitPrice,
-      saveAsProductPrice: false,
+      saveAsProductPrice: true,
     });
   };
 
   return (
-    <TransactionFormSection
-      title="Items"
-      description="Optional. List what you bought so you can track it and reuse it later."
-    >
-      {fields.map((field, index) => (
-        <ItemRow
-          key={field.id}
-          index={index}
-          control={control}
-          products={products}
-          currencyCode={currencyCode}
-          precisionOf={precisionOf}
-          productPrecisionOf={productPrecisionOf}
-          onRemove={() => remove(index)}
-          onEditProduct={(p) => setSheet({ open: true, product: p, row: index })}
-          onProductPicked={(productId, product) => pick(index, productId, product)}
-        />
-      ))}
+    <TransactionFormSection title="Items">
+      {fields.length > 0 ? (
+        <div className="space-y-2">
+          <div className={cn(ROW_GRID, "text-[0.65rem] font-medium text-muted-foreground")}>
+            <span>Product</span>
+            <span>Qty</span>
+            <span>Price{currencyCode ? ` (${currencyCode})` : ""}</span>
+            <span />
+          </div>
+          {fields.map((field, index) => (
+            <ItemRow
+              key={field.id}
+              index={index}
+              control={control}
+              products={products}
+              currencyCode={currencyCode}
+              precisionOf={precisionOf}
+              onRemove={() => remove(index)}
+              onPick={(product) => pick(index, product)}
+            />
+          ))}
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Button
           type="button"
@@ -273,44 +228,32 @@ export function ItemsSection({
               name: "",
               quantity: 1,
               unitPrice: "" as never,
-              saveAsProductPrice: false,
+              saveAsProductPrice: true,
             })
           }
         >
+          <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
           Add item
         </Button>
-        <PermissionButton
-          permission={PERMISSIONS.PRODUCTS_CREATE}
-          deniedMessage="Your household role cannot create products."
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setSheet({ open: true })}
-        >
-          New product
-        </PermissionButton>
-        {items.length > 0 && currencyCode ? (
-          <Typography variant="small-muted">
-            Items total{" "}
+        {items.length > 0 && currencyCode && totalMinor > 0 ? (
+          <Typography
+            variant={over ? "small-destructive" : "small-muted"}
+            aria-live="polite"
+            data-testid="items-remaining"
+          >
+            {over ? "Over by " : "Remaining to allocate: "}
             <AmountDisplay
-              amount={totalMinor}
+              amount={Math.abs(remaining)}
               currencyCode={currencyCode}
-              precision={precisionOf(currencyCode)}
+              precision={precision}
               showSign={false}
               size="xs"
+              kind="neutral"
             />
           </Typography>
         ) : null}
       </div>
-      <ProductSheet
-        open={sheet.open}
-        onOpenChange={(open) => setSheet((current) => ({ ...current, open }))}
-        product={sheet.product}
-        onSaved={(saved) => {
-          if (sheet.row === undefined) return;
-          pick(sheet.row, saved.id, saved);
-        }}
-      />
+      {listError ? <Typography variant="small-destructive">{listError}</Typography> : null}
     </TransactionFormSection>
   );
 }

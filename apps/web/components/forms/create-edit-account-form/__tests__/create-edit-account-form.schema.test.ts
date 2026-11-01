@@ -123,4 +123,70 @@ describe("createEditAccountFormSchema", () => {
     expect(parsed.type).toBe("cash");
     expect("make" in parsed).toBe(false);
   });
+
+  describe("numeric bounds and paired fields", () => {
+    const loan = {
+      ...common,
+      type: "loan",
+      subtype: "personal",
+      interestRateType: "",
+      startDate: "",
+      maturityDate: "",
+      paymentFrequency: "",
+      securedAssetAccountId: "",
+      openingBalance: undefined,
+      balanceAsOfDate: "",
+    } as const;
+
+    it("keeps the interest rate between 0 and 100 and the term within 100 years", () => {
+      expect(
+        createEditAccountFormSchema.safeParse({ ...loan, annualInterestRate: 100 }).success,
+      ).toBe(true);
+      expect(
+        createEditAccountFormSchema.safeParse({ ...loan, annualInterestRate: 101 }).success,
+      ).toBe(false);
+      expect(
+        createEditAccountFormSchema.safeParse({ ...loan, annualInterestRate: -1 }).success,
+      ).toBe(false);
+      expect(createEditAccountFormSchema.safeParse({ ...loan, termMonths: 1200 }).success).toBe(
+        true,
+      );
+      expect(createEditAccountFormSchema.safeParse({ ...loan, termMonths: 1201 }).success).toBe(
+        false,
+      );
+    });
+
+    it("asks for the payment frequency when there is a payment amount", () => {
+      const result = createEditAccountFormSchema.safeParse({ ...loan, paymentAmount: 500 });
+      expect(result.success).toBe(false);
+      expect(
+        createEditAccountFormSchema.safeParse({
+          ...loan,
+          paymentAmount: 500,
+          paymentFrequency: "biweekly",
+        }).success,
+      ).toBe(true);
+    });
+
+    it("asks for the unit when there is an area or a mileage", () => {
+      const property = {
+        ...common,
+        type: "property",
+        subtype: "house",
+        addressLine1: "",
+        addressLine2: "",
+        city: "",
+        region: "",
+        postalCode: "",
+        countryCode: "",
+        areaUnit: "",
+        openingBalance: undefined,
+        balanceAsOfDate: "",
+      } as const;
+      expect(createEditAccountFormSchema.safeParse({ ...property, area: 90 }).success).toBe(false);
+      expect(
+        createEditAccountFormSchema.safeParse({ ...property, area: 90, areaUnit: "sqft" }).success,
+      ).toBe(true);
+    });
+  });
 });

@@ -26,6 +26,8 @@ interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   showPagination?: boolean;
   totalCount?: number;
   itemLabel?: string;
+  /** Stretch to the height of the parent (a flex column or grid cell) so the table fills it. */
+  fill?: boolean;
 }
 
 export function DataTable<TData>({
@@ -39,15 +41,25 @@ export function DataTable<TData>({
   showPagination = true,
   totalCount,
   itemLabel,
+  fill = false,
   ...props
 }: DataTableProps<TData>) {
   return (
     <div
-      className={cn("flex min-w-0 w-full max-w-full flex-col gap-2.5 overflow-hidden", className)}
+      className={cn(
+        "flex min-w-0 w-full max-w-full flex-col gap-2.5 overflow-hidden",
+        fill && "min-h-0 flex-1",
+        className,
+      )}
       {...props}
     >
       {children}
-      <div className="min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-md border">
+      <div
+        className={cn(
+          "min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-md border",
+          fill && "flex-1",
+        )}
+      >
         <Table className="min-w-[72rem]">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

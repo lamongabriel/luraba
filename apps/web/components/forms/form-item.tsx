@@ -14,6 +14,7 @@ import type { FormComboboxOption } from "@/components/forms/form-combobox";
 import { ComboboxControl } from "@/components/forms/form-combobox";
 import { IconPickerControl } from "@/components/forms/form-icon-picker";
 import { TagSelectControl } from "@/components/forms/form-tag-select";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { MoneyInput, NumberInput } from "@/components/ui/masked-input";
@@ -51,6 +52,10 @@ type InputFormItemProps<TFieldValues extends FieldValues> = BaseFormItemProps<TF
   precision?: number;
   /** Fraction digits for `decimal`. Defaults to 2. */
   decimals?: number;
+  /** Largest value `integer` / `decimal` accepts while typing (a percentage passes 100). */
+  max?: number;
+  /** A unit drawn inside `integer` / `decimal` fields (`%`). */
+  suffix?: string;
   allowNegative?: boolean;
   readOnly?: boolean;
   format?: (value: string) => string;
@@ -186,6 +191,8 @@ export function FormItem<TFieldValues extends FieldValues>(props: FormItemProps<
                   ref={field.ref}
                   precision={props.precision}
                   decimals={props.decimals}
+                  max={props.max}
+                  suffix={props.suffix}
                   allowNegative={props.allowNegative}
                   placeholder={placeholder}
                   readOnly={props.readOnly}
@@ -195,7 +202,23 @@ export function FormItem<TFieldValues extends FieldValues>(props: FormItemProps<
                 />
               )}
 
+            {(props.type === undefined || props.type === "input") && props.inputType === "date" && (
+              <DatePicker
+                id={inputId}
+                name={field.name}
+                ref={field.ref}
+                value={typeof field.value === "string" ? field.value : ""}
+                onValueChange={field.onChange}
+                onBlur={field.onBlur}
+                placeholder={placeholder}
+                disabled={disabled}
+                aria-invalid={hasError}
+                className={props.inputClassName}
+              />
+            )}
+
             {(props.type === undefined || props.type === "input") &&
+              props.inputType !== "date" &&
               props.inputType !== "money" &&
               props.inputType !== "integer" &&
               props.inputType !== "decimal" && (
@@ -381,6 +404,8 @@ function MaskedFormInput({
   precision,
   decimals,
   allowNegative,
+  max,
+  suffix,
   ...props
 }: Omit<React.ComponentProps<typeof MoneyInput>, "value" | "onValueChange" | "onChange"> & {
   kind: "money" | "integer" | "decimal";
@@ -388,6 +413,8 @@ function MaskedFormInput({
   onChange: (value: number | "") => void;
   precision?: number;
   decimals?: number;
+  max?: number;
+  suffix?: string;
 }) {
   const emit = (text: string) => {
     const parsed = Number(text);
@@ -409,6 +436,8 @@ function MaskedFormInput({
       onValueChange={emit}
       decimals={kind === "integer" ? 0 : (decimals ?? 2)}
       allowNegative={allowNegative}
+      max={max}
+      suffix={suffix}
     />
   );
 }

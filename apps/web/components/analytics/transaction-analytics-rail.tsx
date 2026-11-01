@@ -5,7 +5,7 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { ExpenseBreakdownPanel } from "@/components/analytics/expense-breakdown-panel";
 import { UpcomingTransactionsPanel } from "@/components/analytics/upcoming-transactions-panel";
 import { ErrorState } from "@/components/error-state";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PanelCardSkeleton } from "@/components/states";
 import type { AppClientError } from "@/services/error-client";
 
 type AnalyticsQuery = UseQueryResult<TransactionAnalytics, AppClientError>;
@@ -25,9 +25,9 @@ export function TransactionAnalyticsRail({
   onSelectUpcoming?: (row: UpcomingTransaction) => void;
 }) {
   return (
-    <aside className="min-w-0 space-y-3" aria-label="Transaction insights">
+    <aside className="flex min-w-0 flex-col gap-3" aria-label="Transaction insights">
       {analyticsQuery.isPending ? (
-        <Skeleton className="h-96" aria-label="Loading expense breakdown" />
+        <PanelCardSkeleton label="Loading expense breakdown" lines={5} />
       ) : analyticsQuery.isError || !analyticsQuery.data ? (
         <ErrorState
           title="Couldn&apos;t load expense breakdown"
@@ -43,7 +43,7 @@ export function TransactionAnalyticsRail({
       )}
 
       {upcomingQuery.isPending ? (
-        <Skeleton className="h-72" aria-label="Loading upcoming transactions" />
+        <PanelCardSkeleton label="Loading upcoming transactions" lines={4} />
       ) : upcomingQuery.isError ? (
         <ErrorState
           title="Couldn&apos;t load upcoming transactions"

@@ -1,74 +1,82 @@
 "use client";
 
-import type { TransactionFeedRow } from "@luraba/contracts";
-import { formatShortDate } from "@luraba/domain";
+import { ArrowUpRight01Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
-import { AccountProfileDetails } from "@/components/accounts/account-profile-details";
-import { AccountSheet } from "@/components/accounts/account-sheet";
-import { AdjustAccountBalanceSheet } from "@/components/accounts/adjust-account-balance-sheet";
-import { InternalPageLayout } from "@/components/finance/internal-page-layout";
-import { MoneyValue } from "@/components/finance/money-value";
-import { PERMISSIONS, PermissionButton, ResourceAccessBoundary } from "@/components/permissions";
-import { Typography } from "@/components/ui/typography";
-import { formatAccountSubtypeLabel, formatAccountTypeLabel } from "@/lib/accounts";
-import { queryClient } from "@/lib/query-client";
-import { useDeleteAccountMutation } from "@/mutations/accounts/use-account-mutations";
 import {
-  accountQueryKeys,
-  useAccountQuery,
-  useAccountTransactionsQuery,
-} from "@/queries/accounts/use-accounts-query";
+  AccountCashFlowChart,
+  AccountExpenseBreakdownChart,
+} from "@/components/accounts/account-charts";
+import { AccountCreditCards } from "@/components/accounts/account-credit-cards";
+import {
+  ACCOUNT_MAIN_COLUMN,
+  ACCOUNT_PAGE_GRID,
+  ACCOUNT_SIDE_COLUMN,
+  ACCOUNT_STAT_COUNT,
+} from "@/components/accounts/account-detail-layout";
+import { AccountDetailsSection } from "@/components/accounts/account-details-section";
+import { AccountLoanOutlook } from "@/components/accounts/account-loan-outlook";
+import { AccountOverview } from "@/components/accounts/account-overview";
+import { AccountRecentTransactions } from "@/components/accounts/account-recent-transactions";
+import { AccountSheet } from "@/components/accounts/account-sheet";
+import { AccountStats } from "@/components/accounts/account-stats";
+import { AccountTopMerchants } from "@/components/accounts/account-top-merchants";
+import { AccountUpcoming } from "@/components/accounts/account-upcoming";
+import { AccountMark, getAccountFullDetail } from "@/components/display";
+import { PeriodFilter, usePeriodFilter } from "@/components/filters/period-filter";
+import { InternalPageLayout } from "@/components/finance/internal-page-layout";
+import { KpiStripSkeleton } from "@/components/kpi";
+import { PERMISSIONS, PermissionButton, ResourceAccessBoundary } from "@/components/permissions";
+import { Button } from "@/components/ui/button";
+import { useCurrencyPrecision } from "@/hooks/use-currency-precision";
+import { usePageTitle } from "@/hooks/use-page-title";
+import { useAccountInsightsQuery, useAccountQuery } from "@/queries/accounts/use-accounts-query";
+import { useUpcomingTransactionsQuery } from "@/queries/transactions/use-transaction-analytics-query";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
 
 import { AccountDetailsError } from "./_error";
 import { AccountDetailsLoading } from "./_loading";
 
-function RecentActivityRow({ row, language }: { row: TransactionFeedRow; language: string }) {
-  return (
-    <div className="flex items-center justify-between gap-5 border-b border-border/60 py-3 last:border-b-0">
-      <div className="min-w-0">
-        <Typography variant="small-strong" className="truncate">
-          {row.description}
-        </Typography>
-        <Typography variant="small-muted" className="mt-1">
-          {formatShortDate(row.postedDate, language)}
-        </Typography>
-      </div>
-      <MoneyValue
-        amount={row.amount}
-        currencyCode={row.currencyCode}
-        language={language}
-        signed
-        className="shrink-0 text-sm"
-      />
-    </div>
-  );
-}
-
 export default function AccountDetailsPage() {
   const { id = "" } = useParams<{ id: string }>();
   const router = useRouter();
   const [editOpen, setEditOpen] = React.useState(false);
-  const [adjustOpen, setAdjustOpen] = React.useState(false);
   const accountQuery = useAccountQuery(id);
   const account = accountQuery.data;
   const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
-  const accountActivity = useAccountTransactionsQuery(
-    id,
-    { page: 1, perPage: 8, sort: "postedDate", sortDirection: "desc" },
+  const precisionFor = useCurrencyPrecision();
+  const { selection, selectPeriod, selectRange } = usePeriodFilter();
+  const range = { dateFrom: selection.dateFrom, dateTo: selection.dateTo };
+  const insightsQuery = useAccountInsightsQuery(id, range, { enabled: Boolean(account) });
+  const upcomingQuery = useUpcomingTransactionsQuery(
+    { accountIds: [id], perPage: 100 },
     { enabled: Boolean(account) },
   );
-  const deleteAccountMutation = useDeleteAccountMutation({
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: accountQueryKeys.all });
-      router.replace("/accounts");
-    },
-  });
+  usePageTitle(account?.name);
 
   if (accountQuery.isPending) {
     return <AccountDetailsLoading />;
   }
+
+  const precision = precisionFor(account?.currencyCode ?? "");
+  const upcomingRows = (upcomingQuery.data?.data ?? []).filter(
+    (row) => row.currencyCode === account?.currencyCode,
+  );
+  const upcomingTotal = upcomingRows.reduce((total, row) => total + row.amount, 0);
+  const insights = insightsQuery.data;
+  const chartStatus = insightsQuery.isError ? "error" : insights ? "ready" : "loading";
+  const chartProps = {
+    insights,
+    status: chartStatus,
+    errorMessage: insightsQuery.error?.message,
+    onRetry: () => void insightsQuery.refetch(),
+    currencyCode: account?.currencyCode ?? "",
+    language,
+    precision,
+  } as const;
+  const retryInsights = () => void insightsQuery.refetch();
 
   return (
     <ResourceAccessBoundary
@@ -85,28 +93,34 @@ export default function AccountDetailsPage() {
       {account ? (
         <InternalPageLayout
           title={account.name}
-          createdBy={account.createdByUserId}
-          subtitle="Balance, activity and details."
+          leading={<AccountMark account={account} size="lg" />}
+          subtitle={getAccountFullDetail(account)}
           back={{ href: "/accounts", label: "Accounts" }}
           actions={
-            <div className="flex items-center gap-2">
-              <PermissionButton
-                permission={PERMISSIONS.TRANSACTIONS_CREATE}
-                variant="outline"
-                size="sm"
-                onClick={() => setAdjustOpen(true)}
-              >
-                Adjust balance
-              </PermissionButton>
+            <>
+              {account.type === "investment" ? (
+                <Button asChild variant="outline">
+                  <Link href={`/investments/accounts/${account.id}`}>
+                    Open in Investments
+                    <HugeiconsIcon icon={ArrowUpRight01Icon} strokeWidth={2} />
+                  </Link>
+                </Button>
+              ) : null}
+              <PeriodFilter
+                selection={selection}
+                language={language}
+                onPeriodChange={selectPeriod}
+                onRangeChange={selectRange}
+              />
               <PermissionButton
                 permission={PERMISSIONS.ACCOUNTS_UPDATE}
                 variant="outline"
-                size="sm"
                 onClick={() => setEditOpen(true)}
               >
+                <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} />
                 Edit
               </PermissionButton>
-            </div>
+            </>
           }
         >
           <AccountSheet
@@ -114,105 +128,68 @@ export default function AccountDetailsPage() {
             open={editOpen}
             onOpenChange={setEditOpen}
             defaultCurrencyCode={account.currencyCode}
-          />
-          <AdjustAccountBalanceSheet
-            account={account}
-            open={adjustOpen}
-            onOpenChange={setAdjustOpen}
+            onDeleted={() => router.replace("/accounts")}
           />
 
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-            <div className="space-y-6">
-              <section className="rounded-[1.5rem] border border-border/70 bg-[var(--color-container)] p-6 shadow-none">
-                <Typography variant="eyebrow">
-                  {formatAccountTypeLabel(account.type)} ·{" "}
-                  {formatAccountSubtypeLabel(account.details.subtype)}
-                </Typography>
-                <Typography variant="small-muted" className="mt-3">
-                  {account.classification === "liability"
-                    ? account.balance < 0
-                      ? "Overpayment"
-                      : "Amount owed"
-                    : "Current balance"}
-                </Typography>
-                <MoneyValue
-                  amount={account.balance}
-                  currencyCode={account.currencyCode}
+          <div className={ACCOUNT_PAGE_GRID}>
+            <div className={ACCOUNT_MAIN_COLUMN}>
+              <AccountOverview
+                account={account}
+                insights={insights}
+                status={chartStatus}
+                errorMessage={insightsQuery.error?.message}
+                onRetry={retryInsights}
+                language={language}
+                precision={precision}
+              />
+
+              {insights ? (
+                <AccountStats
+                  account={account}
+                  insights={insights}
+                  upcomingTotal={upcomingTotal}
                   language={language}
-                  className={`mt-1 block text-3xl ${
-                    account.classification === "liability" && account.balance > 0
-                      ? "text-destructive"
-                      : account.classification === "liability" && account.balance < 0
-                        ? "text-emerald-300"
-                        : "text-foreground"
-                  }`}
+                  precision={precision}
                 />
-                {account.institutionName ? (
-                  <Typography variant="body-muted" className="mt-3">
-                    {account.institutionName}
-                  </Typography>
-                ) : null}
-              </section>
+              ) : insightsQuery.isError ? null : (
+                <KpiStripSkeleton count={ACCOUNT_STAT_COUNT} />
+              )}
 
-              <section className="rounded-[1.5rem] border border-border/70 bg-[var(--color-container)] p-6 shadow-none">
-                <Typography as="h2" variant="section-title">
-                  Recent activity
-                </Typography>
-                <div className="mt-4">
-                  {accountActivity.data?.data.map((row) => (
-                    <RecentActivityRow key={row.rowId} row={row} language={language} />
-                  ))}
-                  {accountActivity.data?.data.length === 0 ? (
-                    <Typography variant="body-muted" className="py-6">
-                      No activity for this account yet.
-                    </Typography>
-                  ) : null}
-                </div>
-              </section>
+              <AccountCashFlowChart {...chartProps} />
+
+              <AccountRecentTransactions
+                accountId={account.id}
+                dateFrom={selection.dateFrom}
+                dateTo={selection.dateTo}
+                language={language}
+              />
             </div>
 
-            <div className="space-y-6">
-              <section className="rounded-[1.5rem] border border-border/70 bg-[var(--color-container)] p-6 shadow-none">
-                <Typography as="h2" variant="section-title">
-                  Details
-                </Typography>
-                <div className="mt-3">
-                  <AccountProfileDetails account={account} language={language} />
-                </div>
-              </section>
-              {account.notes ? (
-                <section className="rounded-[1.5rem] border border-border/70 bg-[var(--color-container)] p-6 shadow-none">
-                  <Typography as="h2" variant="section-title">
-                    Notes
-                  </Typography>
-                  <Typography variant="body-muted" className="mt-3 whitespace-pre-wrap">
-                    {account.notes}
-                  </Typography>
-                </section>
-              ) : null}
-              <section className="rounded-[1.5rem] border border-destructive/30 bg-destructive/5 p-6 shadow-none">
-                <Typography as="h2" variant="section-title">
-                  Delete account
-                </Typography>
-                <Typography variant="small-muted" className="mt-2">
-                  This permanently removes the account and its activity.
-                </Typography>
-                <PermissionButton
-                  permission={PERMISSIONS.ACCOUNTS_DELETE}
-                  variant="destructive"
-                  size="sm"
-                  className="mt-4 shadow-none"
-                  isLoading={deleteAccountMutation.isPending}
-                  onClick={() => {
-                    if (!window.confirm(`Delete ${account.name}? This cannot be undone.`)) return;
-                    deleteAccountMutation.mutate(account.id);
-                  }}
-                >
-                  Delete permanently
-                </PermissionButton>
-              </section>
-            </div>
+            <aside className={ACCOUNT_SIDE_COLUMN} aria-label="Account details">
+              <AccountCreditCards account={account} language={language} precision={precision} />
+              <AccountLoanOutlook account={account} language={language} precision={precision} />
+              <AccountExpenseBreakdownChart {...chartProps} />
+              <AccountTopMerchants
+                insights={insights}
+                isPending={insightsQuery.isPending}
+                error={insightsQuery.error}
+                onRetry={retryInsights}
+                currencyCode={account.currencyCode}
+                language={language}
+                precision={precision}
+              />
+              <AccountUpcoming
+                rows={upcomingRows}
+                isPending={upcomingQuery.isPending}
+                error={upcomingQuery.error}
+                onRetry={() => void upcomingQuery.refetch()}
+                language={language}
+                precision={precision}
+              />
+            </aside>
           </div>
+
+          <AccountDetailsSection account={account} language={language} />
         </InternalPageLayout>
       ) : null}
     </ResourceAccessBoundary>

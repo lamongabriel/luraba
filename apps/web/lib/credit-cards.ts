@@ -28,9 +28,12 @@ export const CREDIT_CARD_BRAND_VALUES = CREDIT_CARD_BRAND_OPTIONS.map((brand) =>
 
 export type CreditCardBrand = (typeof CREDIT_CARD_BRAND_OPTIONS)[number]["value"];
 
+/** Dark gray: the brand logo chip and white text stay readable on it. */
+export const DEFAULT_CREDIT_CARD_COLOR = "#3f3f46";
+
 export const CREDIT_CARD_COLOR_PRESETS = [
   { label: "Silver", value: "#d4d4d8" },
-  { label: "Midnight", value: "#18181b" },
+  { label: "Graphite", value: DEFAULT_CREDIT_CARD_COLOR },
   { label: "Ocean", value: "#164e63" },
   { label: "Forest", value: "#25543d" },
   { label: "Clay", value: "#8c3f2e" },

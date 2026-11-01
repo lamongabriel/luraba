@@ -6,13 +6,16 @@ import { INSTITUTION_DOMAIN_ERROR, isValidInstitutionDomain } from "@/lib/domain
 const optionalText = (label: string, max: number) =>
   z.string().trim().max(max, `${label} must be ${max} characters or fewer.`);
 
-const optionalAmount = z.union([
-  z
-    .number({ error: "Enter a valid credit limit." })
-    .finite()
-    .nonnegative("Credit limit cannot be negative."),
-  z.literal(""),
-]);
+/** The limit is required; `""` is only the empty state of the money input before it is filled. */
+const requiredAmount = z
+  .union([
+    z
+      .number({ error: "Enter a valid credit limit." })
+      .finite()
+      .positive("Credit limit must be greater than zero."),
+    z.literal(""),
+  ])
+  .refine((value): boolean => value !== "", "Enter the credit limit.");
 
 export const createEditCreditCardFormSchema = z.object({
   name: z
@@ -53,7 +56,7 @@ export const createEditCreditCardFormSchema = z.object({
     .int("Due day must be a whole number.")
     .min(1, "Due day must be between 1 and 31.")
     .max(31, "Due day must be between 1 and 31."),
-  creditLimitAmount: optionalAmount,
+  creditLimitAmount: requiredAmount,
 });
 
 export type CreateEditCreditCardFormValues = z.infer<typeof createEditCreditCardFormSchema>;

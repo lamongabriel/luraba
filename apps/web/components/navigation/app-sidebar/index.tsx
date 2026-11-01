@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Typography } from "@/components/ui/typography";
 import { logout } from "@/lib/auth/logout";
-import { mainNav } from "@/lib/navigation";
+import { isNavItemActive, mainNav } from "@/lib/navigation";
 import { queryClient } from "@/lib/query-client";
 import { authQueryKeys } from "@/queries/auth/use-auth-providers-query";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
@@ -73,7 +73,7 @@ export function AppSidebar() {
         <SidebarGroup className="px-4">
           <SidebarMenu className="gap-2">
             {navigationItems.map((item, index) => {
-              const active = pathname === item.href;
+              const active = isNavItemActive(pathname, item.href);
 
               return (
                 <SidebarMenuItem key={item.href}>

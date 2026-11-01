@@ -16,6 +16,7 @@ import {
   SidePanelSettingCard,
 } from "@/components/side-panel/side-panel-section";
 import { TransactionItemsList } from "@/components/transactions/transaction-items-list";
+import { TransactionParties } from "@/components/transactions/transaction-parties";
 import { useTransactionInlineUpdates } from "@/components/transactions/use-transaction-inline-updates";
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
@@ -70,7 +71,15 @@ export function TransactionDetails({
   ];
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-6 [&>section]:border-t [&>section]:border-border/70 [&>section]:pt-6 [&>section:first-child]:border-t-0 [&>section:first-child]:pt-0">
+      <section>
+        <TransactionParties
+          lookups={lookups}
+          merchantId={purchase?.merchantId ?? row.merchantId}
+          row={row}
+        />
+      </section>
+
       <SidePanelSection title="Overview">
         <SidePanelDetailRow label="Type">
           <TransactionTypeDisplay type={row.originType} />
@@ -208,13 +217,15 @@ export function TransactionDetails({
 
       {row.rowKind === "transaction" ? (
         <SidePanelSection title="Receipts">
-          <AttachmentGallery
-            targetType="transaction"
-            targetId={row.id}
-            attachmentRole="receipt"
-            addLabel="Add receipt"
-            emptyLabel="Attach a photo or PDF of the receipt to keep it for warranty or returns."
-          />
+          <div className="rounded-xl border border-border/70 bg-[var(--color-container-inset)] p-3">
+            <AttachmentGallery
+              targetType="transaction"
+              targetId={row.id}
+              attachmentRole="receipt"
+              addLabel="Add receipt"
+              emptyLabel="Attach a photo or PDF of the receipt to keep it for warranty or returns."
+            />
+          </div>
         </SidePanelSection>
       ) : null}
 

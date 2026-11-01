@@ -25,12 +25,15 @@ export function TransactionsTable({
   language,
   lookups,
   onCreate,
+  onRows,
   onView,
   params,
 }: {
   language: string;
   lookups: TransactionLookups;
   onCreate: () => void;
+  /** Called with the rows on screen whenever they change, so an open sheet can show fresh data. */
+  onRows?: (rows: TransactionFeedRow[]) => void;
   onView: (row: TransactionFeedRow) => void;
   params: ReturnType<typeof useTransactionParams>;
 }) {
@@ -38,7 +41,10 @@ export function TransactionsTable({
   const transactionFilters = params.filters as TransactionTableFilters;
   const hasTransactionFilters = params.hasFilters;
   const query = useTransactionsQuery(queryParams, { enabled: params.ready });
-  const rows = query.data?.data ?? [];
+  const rows = React.useMemo(() => query.data?.data ?? [], [query.data]);
+  React.useEffect(() => {
+    if (query.data) onRows?.(query.data.data);
+  }, [onRows, query.data]);
   const pagination = query.data?.meta.pagination;
   const columns = React.useMemo(
     () =>
@@ -84,7 +90,7 @@ export function TransactionsTable({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-2.5">
       <TransactionsTableToolbar
         table={table}
         lookups={lookups}
@@ -107,6 +113,7 @@ export function TransactionsTable({
         <DataTable
           table={table}
           onRowClick={(row) => onView(row.original)}
+          fill
           totalCount={pagination?.totalCount}
           pageSizeOptions={[10, 20, 50, 100]}
         />

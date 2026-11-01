@@ -1,12 +1,13 @@
 import type { AccountSummary, Merchant, PaymentMethod } from "@luraba/contracts";
 import type { Control } from "react-hook-form";
+import { AccountSelect } from "@/components/display";
 import { FormItem } from "@/components/forms/form-item";
 
 import type {
   CreateEditTransactionFormValues,
   TransactionFormKind,
 } from "../create-edit-transaction-form.schema";
-import { OptionalMerchantField } from "./optional-merchant-field";
+import { ClassificationFields } from "./classification-fields";
 import { TransactionFormSection } from "./transaction-form-section";
 
 export function ExpenseIncomeSection({
@@ -22,25 +23,18 @@ export function ExpenseIncomeSection({
   merchants: Merchant[];
   paymentMethods: PaymentMethod[];
 }) {
-  const accountOptions = accounts.map((account) => ({
-    value: account.id,
-    label: account.name,
-    description: account.currencyCode,
-  }));
   const paymentMethodOptions = paymentMethods.map((method) => ({
     value: method.code,
     label: method.name,
-    description: method.currencyCode ?? "All currencies",
   }));
 
   return (
     <TransactionFormSection title={kind === "income" ? "Income" : "Expense"}>
-      <FormItem
-        type="combobox"
+      <AccountSelect
         control={control}
         name="accountId"
         label="Account"
-        options={accountOptions}
+        accounts={accounts}
         placeholder="Choose an account"
       />
       <FormItem
@@ -50,17 +44,7 @@ export function ExpenseIncomeSection({
         inputType="money"
         placeholder="0.00"
       />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <FormItem
-          type="category"
-          control={control}
-          name="categoryId"
-          label="Category"
-          categoryType={kind}
-          placeholder="Choose a category"
-        />
-        <OptionalMerchantField control={control} merchants={merchants} />
-      </div>
+      <ClassificationFields categoryType={kind} control={control} merchants={merchants} />
       <FormItem
         type="combobox"
         control={control}

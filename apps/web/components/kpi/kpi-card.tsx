@@ -14,7 +14,10 @@ export interface KpiCardProps {
   title: string;
   /** The headline number. Children work too, for values built from several parts. */
   value?: ReactNode;
+  /** Several parts (one amount per currency) stack under each other with a gap, never glued. */
   children?: ReactNode;
+  /** A smaller, muted line right under the value: "of $500", a delta, a second figure. */
+  secondary?: ReactNode;
   icon?: ReactNode;
   description?: ReactNode;
   comparison?: {
@@ -23,6 +26,8 @@ export interface KpiCardProps {
     state?: KpiTrendState;
   };
   trend?: Array<{ date: string; value: number }>;
+  /** Extra classes for the card, e.g. a status border and tint. */
+  className?: string;
 }
 
 const trendClasses: Record<KpiTrendState, string> = {
@@ -38,10 +43,12 @@ export function KpiCard({
   title,
   value,
   children,
+  secondary,
   icon,
   description,
   comparison,
   trend = [],
+  className,
 }: KpiCardProps) {
   const state = comparison?.state ?? "neutral";
   const comparisonText =
@@ -54,7 +61,7 @@ export function KpiCard({
   return (
     <Card
       aria-label={title}
-      className={cn("relative isolate overflow-hidden", KPI_CARD_MIN_HEIGHT)}
+      className={cn("relative isolate overflow-hidden", KPI_CARD_MIN_HEIGHT, className)}
     >
       <CardHeader className="relative z-10 flex flex-row items-start justify-between gap-3 pb-2">
         <CardTitle className="text-xs font-medium text-muted-foreground">{title}</CardTitle>
@@ -62,7 +69,12 @@ export function KpiCard({
       </CardHeader>
       <CardContent className="relative z-10">
         <div className={cn("min-w-0", trend.length > 1 && "max-w-[60%]")}>
-          <div className="text-xl font-semibold tracking-tight">{value ?? children}</div>
+          <div className="flex flex-col items-start gap-1 text-xl font-semibold tracking-tight">
+            {value ?? children}
+          </div>
+          {secondary ? (
+            <div className="mt-1 text-xs font-normal text-muted-foreground">{secondary}</div>
+          ) : null}
           {description ? <p className="mt-1 text-xs text-muted-foreground">{description}</p> : null}
           {comparisonText ? (
             <p className={cn("mt-2 text-xs font-medium", trendClasses[state])}>{comparisonText}</p>

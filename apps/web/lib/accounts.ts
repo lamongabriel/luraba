@@ -134,3 +134,20 @@ export function formatAccountSubtypeLabel(subtype: string) {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 }
+
+/**
+ * Which way a balance reads for display: an asset above zero is good, a liability above zero is
+ * debt (bad) and below zero an overpayment (good). Feeds `AmountDisplay kind`.
+ */
+export function accountBalanceKind(
+  classification: "asset" | "liability",
+  balance: number,
+): "income" | "expense" | "neutral" {
+  if (balance === 0) return "neutral";
+  const good = classification === "asset" ? balance > 0 : balance < 0;
+  return good ? "income" : "expense";
+}
+
+/** The accounts list row; its loading twin (`app/(app)/accounts/_loading.tsx`) uses the same class. */
+export const ACCOUNT_ROW_CLASS =
+  "flex items-center gap-2 rounded-[1.35rem] bg-[var(--color-container-inset)] px-3.5 py-3.5 md:px-4";

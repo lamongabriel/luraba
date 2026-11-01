@@ -8,6 +8,7 @@ import {
   type CreateCreditCardPurchaseResult,
   type CreateCreditCardResult,
   type CreditCardForecastQuery,
+  type CreditCardInsightsQuery,
   type CreditCardOverviewQuery,
   creditCardsEndpoints,
   type DeleteCreditCardPaymentResult,
@@ -15,6 +16,7 @@ import {
   type DeleteCreditCardResult,
   type GetCreditCardCycleResult,
   type GetCreditCardForecastResult,
+  type GetCreditCardInsightsResult,
   type GetCreditCardOverviewResult,
   type GetCreditCardPaymentResult,
   type GetCreditCardPurchaseResult,
@@ -42,6 +44,12 @@ export function getCreditCardOverview(
   query: CreditCardOverviewQuery = {},
 ): Promise<GetCreditCardOverviewResult> {
   return requestContract(creditCardsEndpoints.overview, { query });
+}
+
+export function getCreditCardInsights(
+  query: CreditCardInsightsQuery,
+): Promise<GetCreditCardInsightsResult> {
+  return requestContract(creditCardsEndpoints.insights, { query });
 }
 
 export function createCreditCard(input: CreateCreditCardInput): Promise<CreateCreditCardResult> {

@@ -3,6 +3,7 @@
 import type { AccountDetails } from "@luraba/contracts";
 import * as React from "react";
 import { AccountImageField } from "@/components/accounts/account-image-field";
+import { AccountManageSection } from "@/components/accounts/account-manage-section";
 import { CreateEditAccountForm } from "@/components/forms/create-edit-account-form/create-edit-account-form";
 import { FormErrorBoundary } from "@/components/forms/form-error-boundary";
 import { FormSheet } from "@/components/forms/form-sheet";
@@ -12,11 +13,14 @@ export function AccountSheet({
   defaultCurrencyCode,
   open,
   onOpenChange,
+  onDeleted,
 }: {
   account?: AccountDetails;
   defaultCurrencyCode: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Called after the account was deleted from the edit sheet (the sheet is already closing). */
+  onDeleted?: () => void;
 }) {
   const isEdit = Boolean(account);
 
@@ -34,7 +38,7 @@ export function AccountSheet({
       title={isEdit ? "Edit account" : "New account"}
       description={
         isEdit
-          ? "Update the account details while keeping ledger-safe fields locked."
+          ? "Update the details, adjust the balance or delete the account."
           : "Add a new account and keep the details clean from the start."
       }
       className="border-l-0 shadow-none before:hidden data-[side=right]:sm:max-w-xl"
@@ -52,6 +56,17 @@ export function AccountSheet({
           defaultCurrencyCode={account?.currencyCode ?? defaultCurrencyCode}
           onCancel={() => handleOpenChange(false)}
           onSuccess={() => handleOpenChange(false)}
+          editExtras={
+            account ? (
+              <AccountManageSection
+                account={account}
+                onDeleted={() => {
+                  handleOpenChange(false);
+                  onDeleted?.();
+                }}
+              />
+            ) : null
+          }
         />
       </FormErrorBoundary>
     </FormSheet>
