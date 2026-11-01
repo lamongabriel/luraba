@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { AuthPageHeader } from "@/components/auth/auth-page-header";
 import { LoginForm } from "@/components/forms/auth/login-form";
@@ -27,9 +28,12 @@ export default function LoginPage() {
             description="Continue to your workspace."
           />
 
-          <FormErrorBoundary>
-            <LoginForm />
-          </FormErrorBoundary>
+          {/* LoginForm reads ?next= / OAuth params with useSearchParams, which needs a Suspense boundary. */}
+          <Suspense fallback={null}>
+            <FormErrorBoundary>
+              <LoginForm />
+            </FormErrorBoundary>
+          </Suspense>
         </div>
       </section>
     </main>
