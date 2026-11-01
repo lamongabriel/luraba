@@ -16,8 +16,6 @@
   `report_goals`, `report_top_expenses`.
 - **Resources**: `luraba://guide/overview` and `luraba://guide/transactions`.
 
-The grouped tool list on Settings > MCP comes from `MCP_TOOL_GROUPS` in `packages/contracts/src/mcp/catalog.ts`; a unit test fails when it differs from the server's registry.
-
 Safety: destructive tools need `confirm: true`; bulk tools take `dryRun: true` and are capped at 300 rows;
 ambiguous names return candidates (`needs_clarification`) instead of guessing; amounts are major units with a currency.
 
@@ -29,7 +27,7 @@ Example prompts: "How much do I owe on my credit cards this month?", "How many c
 
 Open **Settings > MCP**. It shows the endpoint (`<public URL>/mcp`, `http://localhost:3001/mcp` locally), a live
 status badge, copy-paste setup for Claude Code, Claude Desktop / claude.ai, Codex and a generic JSON config (each
-with OAuth or an API key), the tools grouped by area and the agents already connected.
+with OAuth or an API key) and the agents already connected.
 
 ### With OAuth (recommended)
 
@@ -86,7 +84,7 @@ AI client --HTTPS--> <public URL>/mcp --(API proxy)--> mcp service :3333 --(Bear
 | Variable | Where | Purpose |
 | --- | --- | --- |
 | `BASE_URL` | API | The public origin (`https://luraba.example.com`). The MCP URL is `BASE_URL/mcp`; Settings > MCP shows it. Already required. |
-| `MCP_INTERNAL_URL` | API | Where the API reaches the MCP service (`http://mcp:3333` in both Compose files; `http://127.0.0.1:3333` locally). Empty disables `/mcp` and shows "Not configured". |
+| `MCP_INTERNAL_URL` | API | Where the API reaches the MCP service (`http://mcp:3333` in both Compose files; `http://127.0.0.1:3333` locally, and the default when `NODE_ENV=development`). Empty disables `/mcp` and shows "Not configured". |
 | `LURABA_API_URL` | MCP service | The API's internal address (`http://api:3001`). |
 | `MCP_PUBLIC_URL` | MCP service | Optional public MCP URL, used in the `WWW-Authenticate` header when no proxy sets `X-Forwarded-*` (the API does). |
 | `MCP_TRANSPORT`, `MCP_HTTP_HOST`, `MCP_HTTP_PORT` | MCP service | `http`, `0.0.0.0`, `3333` (set by `apps/mcp/Dockerfile` and Compose). |
@@ -110,3 +108,11 @@ Put it behind TLS if it is not on localhost.
 ## Future work
 
 Per-agent scopes (read-only agents), an audit log of agent writes, and remembering consent per agent so a returning client skips the screen.
+
+## Local development
+
+`pnpm dev` runs migrations (including `0052_oauth_mcp`) and starts the MCP service over HTTP on port 3333; the API
+proxies `http://localhost:3001/mcp` to it by default, so Settings > MCP shows **Online** with no extra setup. If you
+start the API by hand, run `pnpm --filter @luraba/api db:migrate` first and start `pnpm --filter @luraba/mcp dev`
+too. Without the OAuth tables the connected-agents list is simply empty; without the MCP service the status says
+**Offline**, and with `MCP_INTERNAL_URL` unset in production it says **Not configured**.

@@ -6,7 +6,6 @@ database, so every call goes through the same authentication, household selectio
 checks as the web app; the agent has exactly its key owner's permissions.
 
 `Dockerfile` builds the HTTP service (`MCP_TRANSPORT=http`, port 3333) used by both Compose files; `pnpm dev` starts it too.
-The grouped tool list shown in Settings > MCP is `MCP_TOOL_GROUPS` in `@luraba/contracts` and must match `src/tools/registry.ts` (unit test).
 
 Setup and usage for humans: [docs/api-keys-mcp/mcp.md](../../docs/api-keys-mcp/mcp.md).
 
@@ -43,8 +42,7 @@ Setup and usage for humans: [docs/api-keys-mcp/mcp.md](../../docs/api-keys-mcp/m
    require `confirm: true`; bulk tools cap at `BULK_LIMIT` (300) and run with limited concurrency.
 6. Return `{ summary?, data }`; failures that are the caller's to fix set `isError`. API errors are turned
    into agent-friendly messages by `describeApiError`; never include the key or raw upstream bodies.
-7. Adding a tool also means adding it to `MCP_TOOL_GROUPS` (`packages/contracts/src/mcp/catalog.ts`).
-8. A new public endpoint should consider an MCP tool. Add the tool, a unit test and, for flows that
+7. A new public endpoint should consider an MCP tool. Add the tool, a unit test and, for flows that
    matter, a case in the end-to-end test.
 
 ## Tests

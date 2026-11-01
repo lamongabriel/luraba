@@ -1,12 +1,14 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { AddressInfo } from "node:net";
 import request from "supertest";
+import { vi } from "vitest";
 import app from "@/app";
 import { createAuthenticatedContext, createAuthHeaders } from "@/test/auth";
 import { loadConfig } from "../../../../../mcp/src/config";
 import { createHttpApp } from "../../../../../mcp/src/http/app";
 import { createLogger } from "../../../../../mcp/src/logger";
 import { connectHttpClient } from "../../../../../mcp/src/testing/connect";
+import { mcpRepository } from "../mcp.repository";
 
 const REDIRECT_URI = "http://127.0.0.1:9999/callback";
 
@@ -237,5 +239,19 @@ describe("MCP OAuth", () => {
       mcpServer.close();
       api.close();
     }
+  });
+
+  it("lists no agents (not a server error) when the OAuth tables are missing", async () => {
+    const context = await createAuthenticatedContext();
+    const missing = Object.assign(new Error('relation "oauth_access_tokens" does not exist'), {
+      cause: { code: "42P01" },
+    });
+    const spy = vi.spyOn(mcpRepository, "listConnections").mockRejectedValueOnce(missing);
+    const list = await request(app)
+      .get("/api/v1/mcp/connections")
+      .set(createAuthHeaders(context.token));
+    expect(list.status).toBe(200);
+    expect(list.body.data).toEqual([]);
+    spy.mockRestore();
   });
 });

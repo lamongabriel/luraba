@@ -36,8 +36,19 @@ export async function getServerInfo(): Promise<McpServerInfo> {
   };
 }
 
+/** True when Postgres reports a missing table (the OAuth migration was not applied yet). */
+function isMissingTable(error: unknown): boolean {
+  const code = (error as { code?: string; cause?: { code?: string } } | null) ?? {};
+  return code.code === "42P01" || code.cause?.code === "42P01";
+}
+
 export async function listConnections(userId: string): Promise<McpConnection[]> {
-  const rows = await mcpRepository.listConnections(userId);
+  // The OAuth tables come with migration 0052. Until it is applied there are no connected agents;
+  // that must not turn the Settings page into a server error.
+  const rows = await mcpRepository.listConnections(userId).catch((error: unknown) => {
+    if (isMissingTable(error)) return [];
+    throw error;
+  });
   return rows
     .filter((row) => row.grantedAt)
     .map((row) => ({
@@ -52,12 +63,18 @@ export async function listConnections(userId: string): Promise<McpConnection[]> 
 }
 
 export async function revokeConnection(userId: string, clientId: string): Promise<void> {
-  const removed = await mcpRepository.revoke(userId, clientId);
+  const removed = await mcpRepository.revoke(userId, clientId).catch((error: unknown) => {
+    if (isMissingTable(error)) return 0;
+    throw error;
+  });
   if (removed === 0) throw new NotFoundError("Connected agent");
 }
 
 export async function getClient(clientId: string): Promise<McpClient> {
-  const client = await mcpRepository.findClient(clientId);
+  const client = await mcpRepository.findClient(clientId).catch((error: unknown) => {
+    if (isMissingTable(error)) return undefined;
+    throw error;
+  });
   if (!client || client.disabled) throw new NotFoundError("Agent");
   let redirectHost: string | null = null;
   try {

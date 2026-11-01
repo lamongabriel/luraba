@@ -183,7 +183,10 @@ export const env = {
   port: parsedEnv.data.PORT,
   baseUrl: parsedEnv.data.BASE_URL,
   frontendOrigin: parsedEnv.data.FRONTEND_ORIGIN,
-  mcpInternalUrl: parsedEnv.data.MCP_INTERNAL_URL,
+  // In development the MCP service (started by `pnpm dev`) listens on its default port.
+  mcpInternalUrl:
+    parsedEnv.data.MCP_INTERNAL_URL ??
+    (parsedEnv.data.NODE_ENV === "development" ? "http://127.0.0.1:3333" : undefined),
   logLevel: parsedEnv.data.LOG_LEVEL,
   dbHost: parsedEnv.data.DB_HOST,
   dbPort: parsedEnv.data.DB_PORT,

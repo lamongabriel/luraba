@@ -51,11 +51,3 @@ describe("MCP server over a mocked API", () => {
     await close();
   });
 });
-
-describe("tool catalog", () => {
-  it("lists exactly the registered tools in the Settings > MCP catalog", async () => {
-    const { MCP_TOOL_GROUPS } = await import("@luraba/contracts");
-    const catalog = MCP_TOOL_GROUPS.flatMap((group) => [...group.tools]).sort();
-    expect(catalog).toEqual(tools.map((tool) => tool.name).sort());
-  });
-});

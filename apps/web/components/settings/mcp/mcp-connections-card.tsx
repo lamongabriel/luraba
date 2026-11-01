@@ -17,7 +17,11 @@ import { Button } from "@/components/ui/button";
 import { Modal, ModalContent, ModalFooter } from "@/components/ui/modal";
 import { useDataTable } from "@/hooks/use-data-table";
 import { useRevokeMcpConnectionMutation } from "@/mutations/mcp/use-mcp-mutations";
-import { mcpQueryKeys, useMcpConnectionsQuery } from "@/queries/mcp/use-mcp-queries";
+import {
+  mcpQueryKeys,
+  useMcpConnectionsQuery,
+  useMcpServerQuery,
+} from "@/queries/mcp/use-mcp-queries";
 
 const NEVER = "Not yet";
 const COLUMN_COUNT = 4;
@@ -88,6 +92,8 @@ function ConnectionsTable({
 export function McpConnectionsCard() {
   const client = useQueryClient();
   const query = useMcpConnectionsQuery();
+  const server = useMcpServerQuery();
+  const disabled = server.data?.status === "disabled";
   const [revoking, setRevoking] = React.useState<McpConnection | null>(null);
   const revoke = useRevokeMcpConnectionMutation({
     onSuccess: async () => {
@@ -121,8 +127,12 @@ export function McpConnectionsCard() {
           empty={
             <EmptyState
               icon={<HugeiconsIcon icon={RoboticIcon} strokeWidth={1.8} className="size-5" />}
-              title="No connected agents"
-              description="When you connect an AI client with the OAuth sign-in, it shows up here."
+              title={disabled ? "MCP is not enabled on this deployment" : "No connected agents"}
+              description={
+                disabled
+                  ? "Set MCP_INTERNAL_URL on the API (and run the mcp service) to let AI clients connect."
+                  : "When you connect an AI client with the OAuth sign-in, it shows up here."
+              }
             />
           }
         >
