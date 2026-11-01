@@ -1,4 +1,5 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { LurabaClient } from "../client/luraba-client.js";
 import { createLogger } from "../logger.js";
@@ -31,4 +32,15 @@ export async function connectTestClient(options: {
     };
   }
   return { mcp, call, close: () => mcp.close() };
+}
+
+/** A real MCP client over streamable HTTP, e.g. to `<api>/mcp` (through the API's proxy). */
+export async function connectHttpClient(url: string, accessToken: string) {
+  const mcp = new Client({ name: "test-http", version: "0.0.0" });
+  await mcp.connect(
+    new StreamableHTTPClientTransport(new URL(url), {
+      requestInit: { headers: { Authorization: `Bearer ${accessToken}` } },
+    }),
+  );
+  return mcp;
 }

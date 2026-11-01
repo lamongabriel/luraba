@@ -71,6 +71,8 @@ that invalidates the key. Reusable file/attachment UI is documented in
 
 **Charts (mandatory).** Every chart is `AreaChartCard`, `BarChartCard` or `DonutChartCard` from [components/charts](components/charts/README.md). **Period filter.** Pages filtered by dates use `usePeriodFilter` + `PeriodFilter` (`components/filters/period-filter.tsx`): one button that opens a popover with the presets beside a day-range calendar. Accounts UI: [components/accounts/README.md](components/accounts/README.md).
 
+MCP UI (`/settings/mcp`, `components/settings/mcp/`): endpoint with copy and live status, setup snippets per client (`lib/mcp-snippets.ts`), connected agents with revoke, grouped tool list. The OAuth consent screen is `/oauth/consent` (`components/oauth/`); `/login?next=` (`lib/safe-next.ts`, accepts only app paths or the API authorize URL) resumes an agent's connection after sign-in. Usage: [docs/api-keys-mcp/mcp.md](../../docs/api-keys-mcp/mcp.md).
+
 API keys UI (`/settings/api-keys`, `components/settings/api-keys/`): list, create sheet, one-time secret modal, inline rename, revoke switch and delete modal; usage in [docs/api-keys-mcp/api-keys.md](../../docs/api-keys-mcp/api-keys.md).
 
 Credit cards UI (month overview, card detail, invoices): [components/credit-cards/README.md](components/credit-cards/README.md).

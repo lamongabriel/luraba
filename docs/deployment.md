@@ -42,3 +42,10 @@ domain, proxy, or non-default port.
 (`USE_MINIO=true`). Set the `MINIO_*` credentials in `apps/api/.env` before exposing the host, and back
 up the `minio_data` volume with the database. To use an external bucket, set `USE_MINIO=false` and the
 `STORAGE_*` variables; see [storage.md](storage.md).
+
+## MCP server
+
+`compose.yaml` also runs the `mcp` service (`apps/mcp`). The API serves it at `BASE_URL/mcp` by proxying to
+`MCP_INTERNAL_URL` (`http://mcp:3333` in Compose, `http://127.0.0.1:3333` for `pnpm dev`, which starts it). Put your
+reverse proxy in front of the API for `/mcp*` and `/.well-known/*` (and the web app for everything else) on the same
+public origin as `BASE_URL`. Setup for users and the OAuth flow: [api-keys-mcp/mcp.md](api-keys-mcp/mcp.md).

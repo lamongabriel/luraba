@@ -39,3 +39,15 @@ Resume point for the unattended build. Tick items as they are done and verified.
 - `GET /transactions/:id` was added to the contracts and API because agents need to read one transaction.
 - The MCP end-to-end test lives in `apps/api` (needs the test DB harness) and imports `apps/mcp/src/testing/connect.ts`.
 - Not done (future work): Dockerfile and Compose/Coolify service for the MCP HTTP transport.
+
+## Phase 3: MCP tab, OAuth 2 for agents, deployment
+
+- [x] OAuth 2 for MCP clients with Better Auth's `mcp` plugin (migration `0052_oauth_mcp`, tables `oauth_applications`, `oauth_access_tokens`, `oauth_consents`): discovery at `/.well-known/*`, dynamic client registration, authorization code + PKCE (S256 required)
+- [x] Authorize wrapper: signed-out users go to `/login?next=...`; consent is always required (`/oauth/consent`); web `?next=` accepts only app paths or the API authorize URL
+- [x] OAuth bearer tokens accepted by the access middleware (same household/permission path as API keys); agents and keys cannot manage agents or keys
+- [x] `/mcp` served by the stack: API reverse proxy to the `mcp` service (`MCP_INTERNAL_URL`), `apps/mcp/Dockerfile`, `mcp` service in `compose.yaml` and `compose.coolify.yaml`, Caddy routes `/mcp*` and `/.well-known/*`, `pnpm dev` starts it, turbo `concurrency: 20`
+- [x] MCP HTTP transport: 401 + `WWW-Authenticate` resource metadata, credentials verified at session start, no server-side key fallback
+- [x] Settings > MCP: endpoint (from `BASE_URL`) with copy, live status, setup snippets (Claude Code, Claude Desktop, Codex, JSON; OAuth and API key), connected agents with revoke, grouped tool list; three states; verified in a browser
+- [x] Tests: API integration (full OAuth flow, revoke, proxy + real MCP server), contracts inventory (219), web unit tests, MCP unit tests (catalog matches the registry)
+- [x] Docs: mcp.md, coolify.md, deployment.md, module README, web README, AGENTS.md, architecture
+- [ ] Verify, commit, push (see git log)

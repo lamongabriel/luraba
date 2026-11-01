@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "dev": "tsx watch src/index.ts",
+    "dev": "MCP_TRANSPORT=http tsx watch src/index.ts",
     "start": "node dist/index.js",
     "start:stdio": "tsx src/index.ts",
     "create-dev-key": "tsx --tsconfig ../api/tsconfig.json scripts/create-dev-key.ts",

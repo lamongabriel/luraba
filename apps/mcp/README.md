@@ -5,6 +5,9 @@ household. It is a **thin client of the REST API** built on `@luraba/contracts`.
 database, so every call goes through the same authentication, household selection and `requireAccess`
 checks as the web app; the agent has exactly its key owner's permissions.
 
+`Dockerfile` builds the HTTP service (`MCP_TRANSPORT=http`, port 3333) used by both Compose files; `pnpm dev` starts it too.
+The grouped tool list shown in Settings > MCP is `MCP_TOOL_GROUPS` in `@luraba/contracts` and must match `src/tools/registry.ts` (unit test).
+
 Setup and usage for humans: [docs/api-keys-mcp/mcp.md](../../docs/api-keys-mcp/mcp.md).
 
 ## Layout
@@ -16,7 +19,7 @@ Setup and usage for humans: [docs/api-keys-mcp/mcp.md](../../docs/api-keys-mcp/m
 | `src/logger.ts` | pino to **stderr** (stdout carries the protocol in stdio mode), with the key redacted. |
 | `src/client/` | `LurabaClient` (typed by the contract: validates requests and responses), `fetchAllPages`, error mapping. |
 | `src/mcp/` | `createMcpServer` (low-level `Server`, tools + resources) and the zod to JSON Schema helper. |
-| `src/http/app.ts` | Express + streamable HTTP. A session is bound to the `Authorization: Bearer lur_...` key that opened it. |
+| `src/http/app.ts` | Express + streamable HTTP. A session is bound to the bearer credential that opened it (API key or OAuth token, verified once against the API); missing or bad credentials get a 401 with `WWW-Authenticate: Bearer resource_metadata=...` so OAuth clients start the sign-in. Served publicly at `<base URL>/mcp` through the API proxy. |
 | `src/tools/` | One file per area; `registry.ts` is the list the server exposes. |
 | `src/resolve/` | Forgiving name resolution (`id`, exact, partial) that returns candidates instead of guessing. |
 | `src/format/` | Money (major units + currency), periods, transaction summaries. |
@@ -40,7 +43,8 @@ Setup and usage for humans: [docs/api-keys-mcp/mcp.md](../../docs/api-keys-mcp/m
    require `confirm: true`; bulk tools cap at `BULK_LIMIT` (300) and run with limited concurrency.
 6. Return `{ summary?, data }`; failures that are the caller's to fix set `isError`. API errors are turned
    into agent-friendly messages by `describeApiError`; never include the key or raw upstream bodies.
-7. A new public endpoint should consider an MCP tool. Add the tool, a unit test and, for flows that
+7. Adding a tool also means adding it to `MCP_TOOL_GROUPS` (`packages/contracts/src/mcp/catalog.ts`).
+8. A new public endpoint should consider an MCP tool. Add the tool, a unit test and, for flows that
    matter, a case in the end-to-end test.
 
 ## Tests

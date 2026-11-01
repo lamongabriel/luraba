@@ -11,6 +11,8 @@ x-api-environment: &api-environment
   DB_SSL: "false"
   BASE_URL: ${BASE_URL:-http://localhost:${API_PORT:-3001}}
   FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:${WEB_PORT:-3000}}
+  # The API proxies BASE_URL/mcp to the mcp service.
+  MCP_INTERNAL_URL: http://mcp:3333
   REDIS_URL: redis://redis:6379
   MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
 
@@ -119,6 +121,31 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+
+  mcp:
+    build:
+      context: .
+      dockerfile: apps/mcp/Dockerfile
+    restart: unless-stopped
+    environment:
+      MCP_TRANSPORT: http
+      MCP_HTTP_HOST: 0.0.0.0
+      MCP_HTTP_PORT: 3333
+      # The MCP server talks to the API over the internal network; clients reach it at <public URL>/mcp
+      # through the API, which proxies to this service and holds the OAuth sign-in.
+      LURABA_API_URL: http://api:3001
+      MCP_PUBLIC_URL: ${BASE_URL:-http://localhost:${API_PORT:-3001}}/mcp
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        ["CMD-SHELL", "wget -q -T 5 -O - http://127.0.0.1:3333/health/live >/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 10s
 
   web:
     build:

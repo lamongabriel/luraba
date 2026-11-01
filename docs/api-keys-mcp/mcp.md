@@ -16,6 +16,8 @@
   `report_goals`, `report_top_expenses`.
 - **Resources**: `luraba://guide/overview` and `luraba://guide/transactions`.
 
+The grouped tool list on Settings > MCP comes from `MCP_TOOL_GROUPS` in `packages/contracts/src/mcp/catalog.ts`; a unit test fails when it differs from the server's registry.
+
 Safety: destructive tools need `confirm: true`; bulk tools take `dryRun: true` and are capped at 300 rows;
 ambiguous names return candidates (`needs_clarification`) instead of guessing; amounts are major units with a currency.
 
@@ -23,21 +25,76 @@ Example prompts: "How much do I owe on my credit cards this month?", "How many c
 "How much money do I have in Chase?", "Create a $42.50 grocery expense at Whole Foods on my Chase checking",
 "Recategorize every Uber transaction this year as Transport (dry run first)".
 
-## Connect it to Claude Code
+## Connect an AI client
 
-1. Create a key in **Settings > API keys** (the secret is shown once). For local development run
-   `pnpm --filter @luraba/mcp create-dev-key` instead: it creates a key for the oldest user in the dev database
-   (or `LURABA_DEV_USER_EMAIL`) and writes it to the gitignored `apps/mcp/.env`.
-2. The repository's [`.mcp.json`](../../.mcp.json) registers a `luraba` stdio server. Open the project in
-   Claude Code and approve it (or run `/mcp`). It reads `apps/mcp/.env` automatically, or `LURABA_API_URL` /
-   `LURABA_API_KEY` from your environment.
-3. Equivalent manual registration from any folder:
+Open **Settings > MCP**. It shows the endpoint (`<public URL>/mcp`, `http://localhost:3001/mcp` locally), a live
+status badge, copy-paste setup for Claude Code, Claude Desktop / claude.ai, Codex and a generic JSON config (each
+with OAuth or an API key), the tools grouped by area and the agents already connected.
+
+### With OAuth (recommended)
+
+```sh
+claude mcp add --transport http luraba https://luraba.example.com/mcp
+```
+
+Then run `/mcp` in Claude Code and choose **Authenticate**. The client discovers the sign-in by itself: it reads
+`/.well-known/oauth-protected-resource`, registers itself (dynamic client registration), and opens the browser. You
+sign in to Luraba if you are not already, then a consent screen asks *"Allow <agent> to access your Luraba household
+with these permissions?"*. After **Allow**, the agent gets an access token (30 days, refreshable for 90) that acts as
+you: same household and role, same permission checks as an API key. **Settings > MCP > Connected agents** lists each
+agent with when you allowed it and when it last called the API, and **Revoke** removes its access immediately.
+
+### With an API key
+
+Create a key in **Settings > API keys** (or `pnpm --filter @luraba/mcp create-dev-key` for local development, which
+writes a key to the gitignored `apps/mcp/.env`) and send it as a bearer token:
+
+```sh
+claude mcp add --transport http luraba https://luraba.example.com/mcp --header "Authorization: Bearer lur_yourkey"
+```
+
+### Local stdio (no network hop)
+
+The repository's [`.mcp.json`](../../.mcp.json) registers a `luraba` stdio server that reads `apps/mcp/.env`
+(run `pnpm --filter @luraba/mcp create-dev-key` once) or `LURABA_API_URL` / `LURABA_API_KEY` from your environment.
+Open the project in Claude Code and approve it, or run `/mcp`. From any folder:
 
 ```sh
 claude mcp add luraba --env LURABA_API_URL=http://127.0.0.1:3001 --env LURABA_API_KEY=lur_yourkey -- pnpm --silent --dir /path/to/luraba/apps/mcp exec tsx src/index.ts
 ```
 
-## Configuration
+## How it is wired
+
+```text
+AI client --HTTPS--> <public URL>/mcp --(API proxy)--> mcp service :3333 --(Bearer, same token)--> API /api/v1
+                     /.well-known/*, /api/auth/mcp/*, /oauth/consent: OAuth (Better Auth `mcp` plugin + web)
+```
+
+- The API serves `/mcp` by proxying to the MCP service (`MCP_INTERNAL_URL`); the MCP service never touches the
+  database and forwards the caller's token to the API, which authenticates it like a session or an API key.
+- The MCP service rejects missing or invalid credentials with `401` and
+  `WWW-Authenticate: Bearer resource_metadata="<public URL>/.well-known/oauth-protected-resource"`, which is what makes
+  an OAuth-capable client start the sign-in.
+- OAuth is Better Auth's `mcp` plugin: discovery documents, dynamic client registration (`/api/auth/mcp/register`),
+  authorization code with PKCE (S256 required), token and refresh. Two Luraba additions in `apps/api/src/modules/mcp`:
+  the authorize endpoint is wrapped so a signed-out user is sent to `/login?next=...` and **every** agent must pass the
+  consent screen (`/oauth/consent`), and OAuth bearer tokens are accepted by the access middleware next to API keys
+  and sessions. Agents and API keys cannot manage agents, keys or consents (sessions only).
+
+## Deployment
+
+| Variable | Where | Purpose |
+| --- | --- | --- |
+| `BASE_URL` | API | The public origin (`https://luraba.example.com`). The MCP URL is `BASE_URL/mcp`; Settings > MCP shows it. Already required. |
+| `MCP_INTERNAL_URL` | API | Where the API reaches the MCP service (`http://mcp:3333` in both Compose files; `http://127.0.0.1:3333` locally). Empty disables `/mcp` and shows "Not configured". |
+| `LURABA_API_URL` | MCP service | The API's internal address (`http://api:3001`). |
+| `MCP_PUBLIC_URL` | MCP service | Optional public MCP URL, used in the `WWW-Authenticate` header when no proxy sets `X-Forwarded-*` (the API does). |
+| `MCP_TRANSPORT`, `MCP_HTTP_HOST`, `MCP_HTTP_PORT` | MCP service | `http`, `0.0.0.0`, `3333` (set by `apps/mcp/Dockerfile` and Compose). |
+
+The gateway must send `/mcp*` and `/.well-known/*` to the API (Coolify's Caddyfile in `compose.coolify.yaml` does);
+`/oauth/consent` and `/login` go to the web app like every other page. Details: [coolify.md](../coolify.md).
+
+## Configuration (stdio and the MCP service)
 
 | Variable | Default | Notes |
 | --- | --- | --- |
@@ -47,9 +104,9 @@ claude mcp add luraba --env LURABA_API_URL=http://127.0.0.1:3001 --env LURABA_AP
 | `MCP_TRANSPORT` | `stdio` | `http` serves streamable HTTP on `MCP_HTTP_HOST:MCP_HTTP_PORT` (`127.0.0.1:3333`, `/mcp`) |
 | `LOG_LEVEL`, `REQUEST_TIMEOUT_MS` | `info`, `30000` | logs go to stderr; the key is never logged |
 
-With the HTTP transport each client sends its own `Authorization: Bearer lur_...`; the env key is only a fallback.
+With the HTTP transport each client sends its own `Authorization: Bearer ...` (API key or OAuth token); the server never falls back to a key of its own, so an anonymous caller gets a 401.
 Put it behind TLS if it is not on localhost.
 
 ## Future work
 
-Docker image and Compose/Coolify service for the HTTP transport; OAuth-style key exchange for remote clients.
+Per-agent scopes (read-only agents), an audit log of agent writes, and remembering consent per agent so a returning client skips the screen.

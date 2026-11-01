@@ -71,6 +71,43 @@ application setting passed as a Docker build argument; credentials are runtime
 environment variables. Internal ports, database host, and `DB_SSL=false` are
 already wired for the bundled Postgres service.
 
+## MCP server for AI agents
+
+The stack includes an `mcp` service (`apps/mcp/Dockerfile`) next to the API. Nothing to configure by hand: the
+gateway routes `/mcp*` and `/.well-known/*` to the API, which proxies `/mcp` to the `mcp` service
+(`MCP_INTERNAL_URL=http://mcp:3333`), and the web app serves the sign-in and consent screens. The MCP URL is your
+service domain plus `/mcp` (for example `https://finance.example.com/mcp`); Settings > MCP shows it and its status.
+
+Deploy steps: pull the latest code, reload the Compose file so Coolify sees the new `mcp` service (leave it without a
+public domain, like the other internal services), then redeploy. The migration `0052_oauth_mcp` creates the OAuth
+tables. Environment variables: **none new for you to set**. These are wired in `compose.coolify.yaml`:
+
+| Variable | Service | Value |
+| --- | --- | --- |
+| `MCP_INTERNAL_URL` | api (and worker/migrate, unused) | `http://mcp:3333` |
+| `LURABA_API_URL` | mcp | `http://api:3001` |
+| `MCP_PUBLIC_URL` | mcp | `${SERVICE_URL_LURABA}/mcp` |
+| `MCP_TRANSPORT`, `MCP_HTTP_HOST`, `MCP_HTTP_PORT` | mcp | `http`, `0.0.0.0`, `3333` |
+
+The existing `BASE_URL` / `FRONTEND_ORIGIN` (both `SERVICE_URL_LURABA`) are what OAuth uses for issuer, redirects and
+cookies, so the domain must be HTTPS and the same one users open in the browser. Check after deploying:
+
+```sh
+curl -s https://finance.example.com/.well-known/oauth-protected-resource
+curl -s -o /dev/null -w "%{http_code}\n" -X POST https://finance.example.com/mcp   # 401 with a WWW-Authenticate header
+```
+
+Then open Settings > MCP: the status badge should read **Online**. Usage: [api-keys-mcp/mcp.md](api-keys-mcp/mcp.md).
+
+### Checklist: enable /mcp and OAuth on an existing deployment
+
+- [ ] Pull and deploy this commit (it adds the `mcp` service, the Caddy routes and migration `0052_oauth_mcp`).
+- [ ] In Coolify, reload the Compose file so the new `mcp` service appears. Give it no domain.
+- [ ] Add no environment variables: `MCP_INTERNAL_URL`, `LURABA_API_URL`, `MCP_PUBLIC_URL` and the MCP transport settings are in `compose.coolify.yaml`.
+- [ ] Confirm the domain on the **luraba** service is the HTTPS origin users open (OAuth uses it for issuer and redirects).
+- [ ] Redeploy, wait for `migrate` to finish and `mcp` to be healthy.
+- [ ] Run the two `curl` checks above, then open Settings > MCP (status **Online**) and connect a client.
+
 ## Clean up an existing Coolify resource
 
 If you previously loaded `compose.yaml`, or a version that asked for `BASE_URL`,

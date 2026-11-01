@@ -11,6 +11,8 @@ const configSchema = z.object({
     })
     .optional(),
   LURABA_HOUSEHOLD_ID: z.uuid().optional(),
+  // Public URL of this server (https://luraba.example.com/mcp); only needed when no proxy sets X-Forwarded-*.
+  MCP_PUBLIC_URL: z.url().optional(),
   MCP_TRANSPORT: z.enum(["stdio", "http"]).default("stdio"),
   MCP_HTTP_HOST: z.string().min(1).default("127.0.0.1"),
   MCP_HTTP_PORT: z.coerce.number().int().min(1).max(65535).default(3333),

@@ -1,7 +1,19 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
+import { safeNext } from "@/lib/safe-next";
 
-const protectedPrefixes = ["/accounts", "/dashboard", "/settings", "/household", "/transactions"];
+const protectedPrefixes = [
+  "/accounts",
+  "/dashboard",
+  "/settings",
+  "/household",
+  "/transactions",
+  "/oauth",
+];
+
+function apiOrigin() {
+  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+}
 
 function isProtectedPath(pathname: string) {
   return protectedPrefixes.some(
@@ -18,11 +30,18 @@ export function proxy(request: NextRequest) {
   const hasSessionCookie = Boolean(getSessionCookie(request));
 
   if (isGuestPath(pathname) && hasSessionCookie) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const next = safeNext(request.nextUrl.searchParams.get("next"), apiOrigin());
+    return NextResponse.redirect(
+      next ? new URL(next, request.url) : new URL("/dashboard", request.url),
+    );
   }
 
   if (isProtectedPath(pathname) && !hasSessionCookie) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const login = new URL("/login", request.url);
+    if (pathname.startsWith("/oauth")) {
+      login.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+    }
+    return NextResponse.redirect(login);
   }
 
   return NextResponse.next();
@@ -38,5 +57,6 @@ export const config = {
     "/household/:path*",
     "/households/:path*",
     "/transactions/:path*",
+    "/oauth/:path*",
   ],
 };
