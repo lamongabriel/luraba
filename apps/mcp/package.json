@@ -1,0 +1,40 @@
+{
+  "name": "@luraba/mcp",
+  "version": "1.3.0",
+  "description": "Luraba MCP server: lets AI agents read and manage a household through the Luraba API with an API key",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "luraba-mcp": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "start:stdio": "tsx src/index.ts",
+    "create-dev-key": "tsx scripts/create-dev-key.ts",
+    "test:unit": "vitest run --config vitest.unit.config.ts",
+    "test:e2e": "DOTENV_CONFIG_PATH=../api/.env.test NODE_ENV=test RUN_DB_TESTS=1 vitest run --config vitest.e2e.config.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@luraba/contracts": "workspace:*",
+    "@luraba/domain": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "express": "^5.2.1",
+    "pino": "^10.3.1",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "catalog:",
+    "tsx": "^4.21.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

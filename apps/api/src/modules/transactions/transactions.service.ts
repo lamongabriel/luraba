@@ -589,6 +589,16 @@ export async function listTransactions(
 // Update + Delete Flows
 // -----------------------------------------------------------------------------
 
+export async function getTransaction(
+  context: HouseholdContext,
+  transactionId: string,
+): Promise<TransactionResponse> {
+  const rows = await txRepository.listDetailedByTransactionIds(context, [transactionId]);
+  const [transaction] = mapDetailedRows(rows);
+  if (!transaction) throw new NotFoundError("Transaction");
+  return transaction;
+}
+
 export async function updateTransaction(
   context: HouseholdContext,
   transactionId: string,

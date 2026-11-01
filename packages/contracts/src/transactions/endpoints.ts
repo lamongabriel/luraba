@@ -50,6 +50,13 @@ export const transactionsEndpoints = {
     response: transactionSchema,
     status: 201,
   }),
+  get: defineEndpoint({
+    method: "get",
+    path: "/transactions/:id",
+    params: transactionIdParamsSchema,
+    response: transactionSchema,
+    status: 200,
+  }),
   update: defineEndpoint({
     method: "patch",
     path: "/transactions/:id",

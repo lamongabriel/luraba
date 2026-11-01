@@ -42,6 +42,12 @@ export const create = createHouseholdHandler({
   status: "created",
 });
 
+export const get = createHouseholdHandler({
+  params: transactionsEndpoints.get.params,
+  response: transactionsEndpoints.get.response,
+  handle: ({ household, params }) => transactionsService.getTransaction(household, params.id),
+});
+
 export const update = createHouseholdHandler({
   params: transactionsEndpoints.update.params,
   body: transactionsEndpoints.update.body,

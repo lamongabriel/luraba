@@ -35,6 +35,11 @@ router.put(
   requireAccess({ permission: PERMISSIONS.TRANSACTIONS_CREATE }),
   transactionsController.replaceItems,
 );
+router.get(
+  getEndpointRouterPath(transactionsEndpoints.get),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_READ }),
+  transactionsController.get,
+);
 router.patch(
   getEndpointRouterPath(transactionsEndpoints.update),
   requireAccess({ permission: PERMISSIONS.TRANSACTIONS_UPDATE }),
