@@ -155,7 +155,7 @@ describe("transactions routes", () => {
           installmentNumber: 1,
           installmentCount: 3,
           amount: 40_000,
-          postedDate: "2026-05-25",
+          postedDate: "2026-04-20",
           accountId: card.ledgerAccountId,
         }),
         expect.objectContaining({
@@ -165,7 +165,7 @@ describe("transactions routes", () => {
           installmentNumber: 2,
           installmentCount: 3,
           amount: 40_000,
-          postedDate: "2026-06-25",
+          postedDate: "2026-05-20",
         }),
         expect.objectContaining({
           id: purchase.transactionId,
@@ -174,7 +174,7 @@ describe("transactions routes", () => {
           installmentNumber: 3,
           installmentCount: 3,
           amount: 40_000,
-          postedDate: "2026-07-25",
+          postedDate: "2026-06-20",
         }),
       ]),
     );

@@ -24,8 +24,12 @@ purchases with the regular transactions table.
 
 ## What the list shows
 
-`GET /transactions` only returns rows whose posted date is today (household time zone) or earlier. A credit card
-installment posts on its billing cycle's closing date, so a purchase made today on a card that closes later this
-month is not in the list yet: it appears in `GET /transactions/upcoming` (the Upcoming rail) and on the card's
-invoice. Rows created through an API key or the MCP server go through the same endpoints as the web form and are
-listed the same way.
+`GET /transactions` returns rows whose posted date is today (household time zone) or earlier. A credit card
+installment lands on the purchase date plus `installmentNumber - 1` months (`installmentPostedDate` in
+`transactions.query.ts`; Postgres clamps to the month end, so Jan 31 + 1 month is Feb 28). Its invoice's closing and
+due dates are not used for listing, sorting or `dateFrom`/`dateTo`; they live on the invoice
+(`/credit-cards/:id/cycles`). Later installments appear in `GET /transactions/upcoming` until their day.
+A query scoped with `billingCycleIds` (the invoice view) is not clamped to today, so an invoice lists all of its
+installments, including those that land in future months. Analytics, the monthly summary and the upcoming rail
+use the same posted date, so a purchase counts in the month it was made. Rows created through an API key or the MCP
+server use the same endpoints as the web form and are listed the same way.

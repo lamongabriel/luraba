@@ -12,8 +12,12 @@ export const list = createHouseholdHandler({
   response: transactionsEndpoints.list.response,
   meta: transactionsEndpoints.list.meta,
   handle: async ({ household, query }) => {
+    // The list hides rows dated after today, except when it is scoped to invoices: an invoice's
+    // later installments belong to it even though they land in future months.
     const result = await transactionsService.listTransactions(household, query, {
-      maxPostedDate: formatISODate(getTodayInTimezone(household.timezone)),
+      ...(query.billingCycleIds?.length
+        ? {}
+        : { maxPostedDate: formatISODate(getTodayInTimezone(household.timezone)) }),
     });
     return withApiMeta(result.data, result.meta);
   },

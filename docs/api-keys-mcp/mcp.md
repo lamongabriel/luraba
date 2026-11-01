@@ -31,10 +31,11 @@
   `report_goals`, `report_top_expenses`.
 - **Resources**: `luraba://guide/overview` and `luraba://guide/transactions`.
 
-Where rows show up: the Transactions page lists rows whose posted date is today or earlier. A credit card purchase
-posts on its invoice closing date, so until then the app shows it under **Upcoming** (and on the card's invoice),
-not in the main list; the tool result says the date. Rows created through the API or MCP appear after a refresh
-(the page also refetches when you return to the tab).
+Where rows show up: the Transactions page lists rows dated today or earlier. A credit card purchase is listed on the
+day it was made, and installment n a month later each time (same day of the month, clamped to the month end);
+the invoice closing and due dates stay on the invoice, which always lists its own purchases, later installments
+included. Later installments show under **Upcoming** until their day. Rows created through the API or MCP appear
+after a refresh (the page also refetches when you return to the tab).
 
 Safety: destructive tools need `confirm: true`; bulk tools take `dryRun: true` and are capped at 300 rows;
 ambiguous names return candidates (`needs_clarification`) instead of guessing; amounts are major units with a currency.

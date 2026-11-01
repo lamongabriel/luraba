@@ -19,6 +19,7 @@ import { type DbListPage, getPagination } from "@/shared/list";
 import {
   buildTransactionFeedCte,
   buildTransactionFeedOrder,
+  installmentPostedDate,
   type ListTransactionsQuery,
 } from "./transactions.query";
 import type { TransactionFeedRowKind, TransactionListSummary } from "./transactions.types";
@@ -73,7 +74,9 @@ const creditCardInstallmentFeedSelect = {
   includeInBudget: creditCardPurchasesTable.includeInBudget,
   merchantId: transactionsTable.merchantId,
   purchaseDate: transactionsTable.purchaseDate,
-  postedDate: creditCardBillingCyclesTable.closingDate,
+  postedDate: sql<Date>`${installmentPostedDate}`.mapWith(
+    (value: string | Date) => new Date(value),
+  ),
   createdByUserId: transactionsTable.createdByUserId,
   createdAt: creditCardInstallmentsTable.createdAt,
   updatedAt: transactionsTable.updatedAt,

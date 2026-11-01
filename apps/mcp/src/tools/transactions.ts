@@ -518,7 +518,7 @@ async function createCardPurchase(
         })),
       },
       alsoCreated: classification.created,
-      note: `A card purchase appears in the Transactions list from its invoice closing date (${created.installments[0]?.closingDate ?? "the cycle's closing date"}); until then the app shows it under Upcoming and on the card's invoice.`,
+      note: `Listed in Transactions on the purchase date (installment n a month later each time); the invoice closing and due dates are in installments[].`,
     },
   };
 }

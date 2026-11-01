@@ -583,7 +583,7 @@ describe("transactions service", () => {
           creditCardId: card.id,
           installmentNumber: 1,
           installmentCount: 3,
-          postedDate: "2026-05-25",
+          postedDate: "2026-04-20",
           includeInBudget: true,
           tags: [expect.objectContaining({ id: tag.id })],
         }),
@@ -591,13 +591,13 @@ describe("transactions service", () => {
           rowId: purchase.installments[1].installmentId,
           rowKind: "credit_card_installment",
           installmentNumber: 2,
-          postedDate: "2026-06-25",
+          postedDate: "2026-05-20",
         }),
         expect.objectContaining({
           rowId: purchase.installments[2].installmentId,
           rowKind: "credit_card_installment",
           installmentNumber: 3,
-          postedDate: "2026-07-25",
+          postedDate: "2026-06-20",
         }),
       ]),
     );
@@ -626,7 +626,7 @@ describe("transactions service", () => {
     );
   });
 
-  it("filters credit card installments by posted billing date, not creation date", async () => {
+  it("filters credit card installments by the date each one lands, not creation date", async () => {
     const context = await createAuthenticatedContext();
     const ownerAccount = await accountsService.createAccount(
       context.householdContext,
@@ -655,7 +655,9 @@ describe("transactions service", () => {
       buildListQuery({ dateFrom: "2026-08-01", dateTo: "2026-08-05" }),
     );
 
-    expect(filteredFeed.data).toEqual([]);
+    expect(filteredFeed.data).toEqual([
+      expect.objectContaining({ installmentNumber: 1, postedDate: "2026-08-05" }),
+    ]);
   });
 
   it("creates adjustment transactions by setting the balance at the start of the posted date", async () => {
