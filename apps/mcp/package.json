@@ -16,9 +16,8 @@
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "start:stdio": "tsx src/index.ts",
-    "create-dev-key": "tsx scripts/create-dev-key.ts",
+    "create-dev-key": "tsx --tsconfig ../api/tsconfig.json scripts/create-dev-key.ts",
     "test:unit": "vitest run --config vitest.unit.config.ts",
-    "test:e2e": "DOTENV_CONFIG_PATH=../api/.env.test NODE_ENV=test RUN_DB_TESTS=1 vitest run --config vitest.e2e.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "license": "MIT",

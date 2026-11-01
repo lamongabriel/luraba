@@ -21,6 +21,6 @@
     "sourceMap": true,
     "types": ["node"]
   },
-  "include": ["src/**/*", "scripts/**/*", "*.config.ts"],
+  "include": ["src/**/*", "*.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

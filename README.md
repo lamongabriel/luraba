@@ -2,7 +2,8 @@
 
 Luraba is a self-hosted personal-finance workspace. It is a pnpm workspace and
 Turborepo containing an Express API, a Next.js web application, and shared
-contracts/domain packages.
+contracts/domain packages. `apps/mcp` is an MCP server that lets AI agents use a household
+through a personal API key ([docs](docs/api-keys-mcp/mcp.md)).
 
 ## Quick start
 

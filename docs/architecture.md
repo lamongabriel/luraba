@@ -1,11 +1,12 @@
 # Architecture
 
-Luraba is a single product release composed of four workspace packages:
+Luraba is a single product release composed of these workspace packages:
 
 | Area | Responsibility |
 | --- | --- |
 | `apps/api` | Express endpoints, authentication integration, authorization, database access, migrations, and service internals |
 | `apps/web` | Next.js UI, browser state, form state, and contract-backed API services |
+| `apps/mcp` | MCP server for AI agents: a thin client of the REST API (contract-typed, API-key authenticated); see [api-keys-mcp/mcp.md](api-keys-mcp/mcp.md) |
 | `apps/worker` | BullMQ consumers and scheduled jobs: notification delivery over email, web push, and SMS |
 | `packages/contracts` | Public HTTP endpoint definitions, request schemas, response resources, and wire types |
 | `packages/db` | Drizzle schema and database client shared by the API and worker; migrations live in `apps/api` |

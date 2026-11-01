@@ -1,0 +1,52 @@
+# @luraba/mcp
+
+The Luraba MCP server: lets an AI agent (Claude Code, Claude Desktop, any MCP client) read and manage a
+household. It is a **thin client of the REST API** built on `@luraba/contracts`. It never touches the
+database, so every call goes through the same authentication, household selection and `requireAccess`
+checks as the web app; the agent has exactly its key owner's permissions.
+
+Setup and usage for humans: [docs/api-keys-mcp/mcp.md](../../docs/api-keys-mcp/mcp.md).
+
+## Layout
+
+| Path | What |
+| --- | --- |
+| `src/index.ts` | Entry. stdio by default, `MCP_TRANSPORT=http` for streamable HTTP. Loads `apps/mcp/.env` without overriding real env vars. |
+| `src/config.ts` | Env validation (`LURABA_API_URL`, `LURABA_API_KEY`, `LURABA_HOUSEHOLD_ID`, ...). Errors name the variable, never its value. |
+| `src/logger.ts` | pino to **stderr** (stdout carries the protocol in stdio mode), with the key redacted. |
+| `src/client/` | `LurabaClient` (typed by the contract: validates requests and responses), `fetchAllPages`, error mapping. |
+| `src/mcp/` | `createMcpServer` (low-level `Server`, tools + resources) and the zod to JSON Schema helper. |
+| `src/http/app.ts` | Express + streamable HTTP. A session is bound to the `Authorization: Bearer lur_...` key that opened it. |
+| `src/tools/` | One file per area; `registry.ts` is the list the server exposes. |
+| `src/resolve/` | Forgiving name resolution (`id`, exact, partial) that returns candidates instead of guessing. |
+| `src/format/` | Money (major units + currency), periods, transaction summaries. |
+| `src/context/resources.ts` | `luraba://guide/...` resources an agent can read first. |
+| `src/testing/connect.ts` | Connects a real MCP client to the real server in-process (tests). |
+| `scripts/create-dev-key.ts` | `pnpm --filter @luraba/mcp create-dev-key`: dev key to the gitignored `.env`; never prints the secret. |
+
+## Rules for tools
+
+1. A tool is `defineTool({ name, title, description, input, annotations, handler })` in `src/tools/*.ts`,
+   registered in `registry.ts`. Names are `snake_case` verbs. The description says what it answers and
+   what to do on ambiguity; agents read it.
+2. Tools call the API only through `context.client.request(endpoint, ...)` with a contract endpoint. Never
+   redefine request/response types and never import API or DB code.
+3. Amounts in and out are **major units with a currency** (`12.5`, `USD`); convert with `majorToMinor` /
+   `toMoney`. Never mix currencies in one total.
+4. Names for accounts, cards, categories, merchants and tags go through `context.refs.resolve*`. If a
+   name is ambiguous or unknown, return `clarificationOutput(problems)` (status `needs_clarification`,
+   nothing changed) rather than guessing. `createMissing` is opt-in.
+5. Writes support `dryRun` where a preview is meaningful. Destructive tools (`DESTRUCTIVE` annotations)
+   require `confirm: true`; bulk tools cap at `BULK_LIMIT` (300) and run with limited concurrency.
+6. Return `{ summary?, data }`; failures that are the caller's to fix set `isError`. API errors are turned
+   into agent-friendly messages by `describeApiError`; never include the key or raw upstream bodies.
+7. A new public endpoint should consider an MCP tool. Add the tool, a unit test and, for flows that
+   matter, a case in the end-to-end test.
+
+## Tests
+
+- `pnpm --filter @luraba/mcp test:unit`: config, name matching, periods, client and server with a mocked HTTP layer.
+- End to end: `apps/api/src/modules/api-keys/__tests__/mcp.e2e.http.test.ts` (run with
+  `pnpm --filter @luraba/api test:integration src/modules/api-keys`). It creates a user and a key through
+  the API, starts the API on a port with the test database and drives the tools through a real MCP client.
+  It lives in the API package because it needs the test database harness.

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "luraba": {
+      "type": "stdio",
+      "command": "pnpm",
+      "args": ["--silent", "--dir", "apps/mcp", "exec", "tsx", "src/index.ts"],
+      "env": {
+        "LURABA_API_URL": "${LURABA_API_URL:-http://127.0.0.1:3001}",
+        "LURABA_API_KEY": "${LURABA_API_KEY:-}"
+      }
+    }
+  }
+}

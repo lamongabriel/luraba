@@ -75,6 +75,7 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | Settings / Household pages, cards, section menus | [apps/web/components/section/README.md](apps/web/components/section/README.md) |
 | Importing statements (OFX/CSV) or exporting data | [apps/api/src/modules/imports/README.md](apps/api/src/modules/imports/README.md), [apps/api/src/modules/exports/README.md](apps/api/src/modules/exports/README.md), [apps/web/components/imports/README.md](apps/web/components/imports/README.md) |
 | API keys (create/use/revoke, how a key authenticates) | [docs/api-keys-mcp/api-keys.md](docs/api-keys-mcp/api-keys.md), [apps/api/src/modules/api-keys/README.md](apps/api/src/modules/api-keys/README.md) |
+| The MCP server for AI agents (tools, setup, adding a tool) | [apps/mcp/README.md](apps/mcp/README.md), [docs/api-keys-mcp/mcp.md](docs/api-keys-mcp/mcp.md) |
 | Deployment (Compose, Coolify) | [docs/deployment.md](docs/deployment.md), [docs/coolify.md](docs/coolify.md) |
 
 ## Rules that always apply
@@ -138,6 +139,9 @@ add its README in the same change, and update the READMEs you rely on if the rul
 16. **Pages follow the design language.** Pages are flows of sections on the page background, not piles
     of cards: no card in a card, no table in a card, one period control, balanced columns, the spacing
     scale, charts that are readable. See [docs/design-language.md](docs/design-language.md).
+16. **New public endpoints should consider an MCP tool.** If an agent would reasonably want it, add a tool in
+    `apps/mcp/src/tools` (contract endpoint only, major-unit amounts, `confirm`/`dryRun` for risky writes) and
+    a test. See [apps/mcp/README.md](apps/mcp/README.md).
 
 ## Commands
 
