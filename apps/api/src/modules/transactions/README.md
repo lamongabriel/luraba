@@ -21,3 +21,11 @@ General module conventions: [../README.md](../README.md).
 `billingCycleIds` on the list filters keeps only credit card installments on those invoices (billing cycles); the feed
 carries `billing_cycle_id` (null on standard rows). The credit card pages use it to list a month's or an invoice's
 purchases with the regular transactions table.
+
+## What the list shows
+
+`GET /transactions` only returns rows whose posted date is today (household time zone) or earlier. A credit card
+installment posts on its billing cycle's closing date, so a purchase made today on a card that closes later this
+month is not in the list yet: it appears in `GET /transactions/upcoming` (the Upcoming rail) and on the card's
+invoice. Rows created through an API key or the MCP server go through the same endpoints as the web form and are
+listed the same way.

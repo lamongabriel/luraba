@@ -198,6 +198,13 @@ describe("Luraba MCP server (end to end)", () => {
     });
     expect(expense.isError, expense.text).toBe(false);
     expect(expense.data.status).toBe("created");
+    expect(JSON.parse(expense.text).summary).toContain("130.00");
+    const feed = await request(app)
+      .get("/api/v1/transactions")
+      .set(createAuthHeaders(cookie, householdId));
+    expect(feed.body.data.map((row: { description: string }) => row.description)).toContain(
+      "Headphones",
+    );
     const categories = (await call("list_categories")).data.categories as {
       name: string;
       parent: string | null;

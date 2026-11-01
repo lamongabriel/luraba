@@ -19,6 +19,9 @@ export function useTransactionsQuery<TData = ListTransactionsResult>(
     queryKey: transactionQueryKeys.list(filters),
     queryFn: () => listTransactions(filters),
     placeholderData: (previousData) => previousData,
+    // Rows can also be written by the API and the MCP server, so never trust a minute-old list.
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     ...options,
   });
 }

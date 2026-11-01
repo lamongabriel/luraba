@@ -25,6 +25,8 @@ export function useTransactionAnalyticsQuery(
   return useQuery({
     queryKey: transactionAnalyticsQueryKeys.analytics(query),
     queryFn: () => getTransactionAnalytics(query),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     ...options,
   });
 }
@@ -36,6 +38,8 @@ export function useUpcomingTransactionsQuery(
   return useQuery({
     queryKey: transactionAnalyticsQueryKeys.upcoming(query),
     queryFn: () => listUpcomingTransactions(query),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
     ...options,
   });
 }

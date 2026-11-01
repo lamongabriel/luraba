@@ -10,7 +10,7 @@ import {
 } from "@luraba/contracts";
 import { z } from "zod";
 import { LurabaApiError } from "../client/errors.js";
-import { majorToMinor, toMoney } from "../format/money.js";
+import { majorToMinor, majorToMoney, toMoney } from "../format/money.js";
 import { loadNameMaps, summarizeRow, type TransactionSummary } from "../format/transactions.js";
 import { normalize } from "../resolve/match.js";
 import { clarificationOutput, Problems } from "../resolve/problems.js";
@@ -398,7 +398,10 @@ export const createTransaction = defineTool({
         summary: "Dry run: nothing was created.",
         data: {
           status: "dry_run",
-          wouldCreate: { ...(body ?? {}), amountDisplay: toMoney(args.amount, currency ?? "USD") },
+          wouldCreate: {
+            ...(body ?? {}),
+            amountDisplay: majorToMoney(args.amount, currency ?? "USD"),
+          },
           wouldAlsoCreate: args.createMissing
             ? (
                 await resolveClassification(
@@ -434,7 +437,7 @@ export const createTransaction = defineTool({
     });
     const names = await loadNameMaps(context.refs);
     return {
-      summary: `Created ${args.kind} "${created.description}" for ${toMoney(args.amount, created.currencyCode).formatted}.`,
+      summary: `Created ${args.kind} "${created.description}" for ${majorToMoney(args.amount, created.currencyCode).formatted}.`,
       data: {
         status: "created",
         transaction: summarizeRow(created, names),
@@ -469,7 +472,7 @@ async function createCardPurchase(
         wouldCreate: {
           creditCardId: cardId,
           ...purchase,
-          amountDisplay: toMoney(args.amount, currency),
+          amountDisplay: majorToMoney(args.amount, currency),
         },
         wouldAlsoCreate: args.createMissing
           ? (
@@ -515,6 +518,7 @@ async function createCardPurchase(
         })),
       },
       alsoCreated: classification.created,
+      note: `A card purchase appears in the Transactions list from its invoice closing date (${created.installments[0]?.closingDate ?? "the cycle's closing date"}); until then the app shows it under Upcoming and on the card's invoice.`,
     },
   };
 }

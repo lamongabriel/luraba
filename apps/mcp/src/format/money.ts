@@ -40,3 +40,8 @@ export function toMoney(amountMinor: number, currencyCode: string): Money {
 export function majorToMinor(amountMajor: number, currencyCode: string): number {
   return toMinorUnits(amountMajor, currencyPrecision(currencyCode));
 }
+
+/** Major units (what an agent typed, `130` = R$130.00) to the same display shape as `toMoney`. */
+export function majorToMoney(amountMajor: number, currencyCode: string): Money {
+  return toMoney(majorToMinor(amountMajor, currencyCode), currencyCode);
+}
