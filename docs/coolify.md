@@ -142,6 +142,30 @@ proxies every download). To use S3, Cloudflare R2 or Google Cloud Storage instea
 `USE_MINIO=false` and the `STORAGE_*` variables in Coolify. See [storage.md](storage.md). Back up the
 `minio_data` volume together with `postgres_data`.
 
+## Update checklist (apply by hand)
+
+Coolify does not deploy automatically. To ship a newer `main`, open the Luraba application and
+press **Deploy** (use **Force rebuild** when dependencies or Dockerfiles changed). Before deploying:
+
+1. Confirm the Compose location is still `/compose.coolify.yaml` and the **luraba** service domain is
+   set. The saved variables must include the generated `SERVICE_*` values listed above; do not
+   regenerate them (that would lock you out of existing data and encrypted integration credentials).
+2. Optional variables with safe defaults, set only if you want the feature: `ALPHA_VANTAGE_API_KEY`,
+   `ALPHA_VANTAGE_PREMIUM`, `BRAPI_TOKEN` (investment market data; without them the market-data jobs
+   have no real provider), `MARKET_DATA_JOBS_ENABLED` (default `true`), `IMPORT_WORKER_ENABLED`
+   (default `true`). Add them to the **api** and **worker** environment in `compose.coolify.yaml`
+   before relying on them: the Compose file only passes the variables it lists.
+3. Personal API keys (Better Auth) need no extra variable; they use `AUTH_SECRET` and `BASE_URL`.
+4. The MCP server (`apps/mcp`) is not part of `compose.coolify.yaml` yet, so it is not deployed.
+5. Migrations run in the one-shot `migrate` service before the API starts; check its logs if the
+   deploy stalls.
+6. Verify after deploying: `https://<domain>/health` returns 200, the login page loads, and an
+   unauthenticated API call returns 401.
+
+Coolify API notes: the API token contains a `|`, so never `source` an env file holding it; read it
+with `grep`/`cut`. The Coolify application status can show `running:unknown` for this multi-service
+stack even when `/health` is 200.
+
 ## Operations
 
 - Inspect the **migrate** logs if deployment stops before the API starts.
