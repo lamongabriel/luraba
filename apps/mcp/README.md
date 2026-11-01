@@ -54,3 +54,9 @@ Setup and usage for humans: [docs/api-keys-mcp/mcp.md](../../docs/api-keys-mcp/m
   `pnpm --filter @luraba/api test:integration src/modules/api-keys`). It creates a user and a key through
   the API, starts the API on a port with the test database and drives the tools through a real MCP client.
   It lives in the API package because it needs the test database harness.
+
+## Running test servers by hand
+
+Start them on their own ports (for example API 3101, web 3100, MCP 3433) and stop only what you started: keep the
+PID (`$!`) or use `lsof -tiTCP:<port> -sTCP:LISTEN | xargs kill`. Never `pkill -f` or `killall` with a command-line
+pattern such as `src/server.ts`: it matches every worktree's processes, including a developer's own `pnpm dev`.
