@@ -30,3 +30,15 @@ export const replaceMonth = createHouseholdHandler({
   handle: ({ household, params, body }) =>
     budgetsService.replaceMonthlyBudget(household, parseBudgetMonthKey(params.month), body),
 });
+
+export const insights = createHouseholdHandler({
+  params: budgetsEndpoints.insights.params,
+  query: budgetsEndpoints.insights.query,
+  response: budgetsEndpoints.insights.response,
+  handle: ({ household, params, query }) =>
+    budgetsService.getBudgetInsights(
+      household,
+      parseBudgetMonthKey(params.month),
+      query.displayCurrencyCode,
+    ),
+});

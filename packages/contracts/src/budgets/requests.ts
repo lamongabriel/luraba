@@ -9,6 +9,10 @@ export const getMonthlyBudgetQuerySchema = z.object({
   displayCurrencyCode: currencyCodeSchema.optional(),
 });
 
+export const getBudgetInsightsQuerySchema = z.object({
+  displayCurrencyCode: currencyCodeSchema.optional(),
+});
+
 export const replaceMonthlyBudgetBodySchema = z.object({
   income: z.array(z.object({ categoryId: z.uuid(), amount: moneyAmountSchema })).default([]),
   expense: z.array(z.object({ categoryId: z.uuid(), amount: moneyAmountSchema })).default([]),
@@ -23,3 +27,4 @@ export const updateBudgetMonthSettingsBodySchema = z.object({
 export type UpdateBudgetMonthSettingsInput = z.input<typeof updateBudgetMonthSettingsBodySchema>;
 export type GetMonthlyBudgetQuery = z.input<typeof getMonthlyBudgetQuerySchema>;
 export type ReplaceMonthlyBudgetInput = z.input<typeof replaceMonthlyBudgetBodySchema>;
+export type GetBudgetInsightsQuery = z.input<typeof getBudgetInsightsQuerySchema>;

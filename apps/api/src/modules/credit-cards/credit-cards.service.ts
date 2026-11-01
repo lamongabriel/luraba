@@ -9,6 +9,7 @@ import { ledgerAccountsRepository } from "@/modules/ledger-accounts/ledger-accou
 import { ConflictError, ValidationError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
 import * as cycleService from "./credit-card-cycles.service";
+import * as insightsService from "./credit-card-insights.service";
 import * as overviewService from "./credit-card-overview.service";
 import * as paymentService from "./credit-card-payments.service";
 import * as purchaseService from "./credit-card-purchases.service";
@@ -24,6 +25,7 @@ import type {
   CreditCardCycleSummary,
   CreditCardForecastQuery,
   CreditCardForecastResponse,
+  CreditCardInsightsQuery,
   CreditCardOverviewQuery,
   CreditCardPaymentResponse,
   CreditCardPurchaseResponse,
@@ -105,7 +107,7 @@ export async function createCreditCard(
         color: dto.color,
         closingDay: dto.closingDay,
         dueDay: dto.dueDay,
-        creditLimitAmount: dto.creditLimitAmount ?? -1,
+        creditLimitAmount: dto.creditLimitAmount,
       })
       .returning();
 
@@ -358,4 +360,8 @@ export async function getForecast(
 
 export async function getOverview(context: HouseholdContext, query: CreditCardOverviewQuery) {
   return overviewService.getOverview(context, query);
+}
+
+export async function getInsights(context: HouseholdContext, query: CreditCardInsightsQuery) {
+  return insightsService.getInsights(context, query);
 }

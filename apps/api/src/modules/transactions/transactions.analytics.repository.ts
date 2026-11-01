@@ -33,10 +33,6 @@ export async function aggregateTransactionFeed(
     from filtered
     left join categories on categories.id = filtered.category_id
     where filtered.origin_type in ('income', 'expense', 'credit_card_installment')
-      and (
-        filtered.origin_type = 'income'
-        or filtered.include_in_budget
-      )
     group by
       filtered.posted_date,
       filtered.origin_type,

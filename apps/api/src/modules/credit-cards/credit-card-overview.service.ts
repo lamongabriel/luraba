@@ -70,6 +70,7 @@ export async function getOverview(
         creditCardId: card.id,
         name: card.name,
         institutionName: card.institutionName,
+        institutionLogoUrl: card.institutionLogoUrl,
         brand: card.brand,
         last4: card.last4,
         color: card.color,

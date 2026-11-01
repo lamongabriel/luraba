@@ -15,6 +15,11 @@ router.get(
   requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
   creditCardsController.getOverview,
 );
+router.get(
+  getEndpointRouterPath(creditCardsEndpoints.insights),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
+  creditCardsController.getInsights,
+);
 router.post(
   getEndpointRouterPath(creditCardsEndpoints.create),
   requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_CREATE }),

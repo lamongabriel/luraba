@@ -16,6 +16,11 @@ router.get(
   accountsController.listTransactions,
 );
 router.get(
+  getEndpointRouterPath(accountsEndpoints.insights),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_READ }),
+  accountsController.insights,
+);
+router.get(
   getEndpointRouterPath(accountsEndpoints.get),
   requireAccess({ permission: PERMISSIONS.ACCOUNTS_READ }),
   accountsController.details,

@@ -1,6 +1,7 @@
 import { accountsEndpoints } from "@luraba/contracts";
 import { createHouseholdHandler } from "@/shared/controllers/household.controller";
 import { withApiMeta } from "@/shared/response";
+import * as insightsService from "./accounts.insights.service";
 import * as accountsService from "./accounts.service";
 
 export const create = createHouseholdHandler({
@@ -24,6 +25,14 @@ export const details = createHouseholdHandler({
   params: accountsEndpoints.get.params,
   response: accountsEndpoints.get.response,
   handle: ({ household, params }) => accountsService.getAccountDetails(household, params.id),
+});
+
+export const insights = createHouseholdHandler({
+  params: accountsEndpoints.insights.params,
+  query: accountsEndpoints.insights.query,
+  response: accountsEndpoints.insights.response,
+  handle: ({ household, params, query }) =>
+    insightsService.getAccountInsights(household, params.id, query),
 });
 
 export const listTransactions = createHouseholdHandler({

@@ -1,11 +1,12 @@
 import { defineEndpoint } from "../api.js";
 import {
   budgetMonthParamsSchema,
+  getBudgetInsightsQuerySchema,
   getMonthlyBudgetQuerySchema,
   replaceMonthlyBudgetBodySchema,
   updateBudgetMonthSettingsBodySchema,
 } from "./requests.js";
-import { monthlyBudgetSchema } from "./resource.js";
+import { budgetInsightsSchema, monthlyBudgetSchema } from "./resource.js";
 
 export const budgetsEndpoints = {
   getMonth: defineEndpoint({
@@ -14,6 +15,14 @@ export const budgetsEndpoints = {
     params: budgetMonthParamsSchema,
     query: getMonthlyBudgetQuerySchema,
     response: monthlyBudgetSchema,
+    status: 200,
+  }),
+  insights: defineEndpoint({
+    method: "get",
+    path: "/budgets/:month/insights",
+    params: budgetMonthParamsSchema,
+    query: getBudgetInsightsQuerySchema,
+    response: budgetInsightsSchema,
     status: 200,
   }),
   replaceMonth: defineEndpoint({

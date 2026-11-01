@@ -9,6 +9,7 @@ import {
   booleanQuerySchema,
   commaSeparatedArraySchema,
   createListQuerySchema,
+  dateQuerySchema,
   temporalQuerySchema,
   validateRange,
 } from "../list.js";
@@ -83,3 +84,12 @@ export const accountIdParamsSchema = idParamsSchema;
 export type ListAccountsQuery = z.input<typeof listAccountsQuerySchema>;
 export type CreateAccountInput = z.input<typeof createAccountInputSchema>;
 export type UpdateAccountInput = z.input<typeof updateAccountInputSchema>;
+
+/** Both bounds optional: no `dateFrom` means since the first entry, no `dateTo` means today. */
+export const accountInsightsQuerySchema = z
+  .strictObject({
+    dateFrom: dateQuerySchema.optional(),
+    dateTo: dateQuerySchema.optional(),
+  })
+  .superRefine((query, ctx) => validateRange(query, ctx, "dateFrom", "dateTo"));
+export type AccountInsightsQuery = z.input<typeof accountInsightsQuerySchema>;

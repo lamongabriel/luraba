@@ -21,7 +21,8 @@ import {
 
 const daySchema = z.number().int().min(1).max(31);
 const installmentCountSchema = z.coerce.number().int().min(1).max(60);
-const creditLimitSchema = z.coerce.number().int().min(-1);
+/** The limit in minor units. Required; legacy cards stored as -1 ("no limit") must be given one when edited. */
+const creditLimitSchema = z.coerce.number().int().min(1, "Enter the card credit limit.");
 export const creditCardIdParamsSchema = z.object({ id: z.uuid() });
 export const creditCardCycleParamsSchema = z.object({ id: z.uuid(), cycleId: z.uuid() });
 export const creditCardPurchaseParamsSchema = z.object({ id: z.uuid(), purchaseId: z.uuid() });
@@ -38,7 +39,7 @@ export const createCreditCardInputSchema = z.object({
   color: z.string().min(1).max(32).optional(),
   closingDay: daySchema,
   dueDay: daySchema,
-  creditLimitAmount: creditLimitSchema.optional(),
+  creditLimitAmount: creditLimitSchema,
 });
 export const updateCreditCardInputSchema = z.object({
   name: z.string().min(1).max(255).optional(),
@@ -114,6 +115,7 @@ export const creditCardOverviewQuerySchema = z.object({
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "month must use YYYY-MM format")
     .optional(),
 });
+export const creditCardInsightsQuerySchema = creditCardOverviewQuerySchema.required();
 export const listCreditCardsQuerySchema = createListQuerySchema(
   {
     brands: commaSeparatedArraySchema(z.string().trim().min(1).max(64)),
@@ -186,6 +188,7 @@ export const listCreditCardCyclesQuerySchema = createListQuerySchema(
 });
 
 export type CreditCardOverviewQuery = z.input<typeof creditCardOverviewQuerySchema>;
+export type CreditCardInsightsQuery = z.input<typeof creditCardInsightsQuerySchema>;
 export type ListCreditCardsQuery = z.input<typeof listCreditCardsQuerySchema>;
 export type ListCreditCardCyclesQuery = z.input<typeof listCreditCardCyclesQuerySchema>;
 export type CreditCardForecastQuery = z.input<typeof creditCardForecastQuerySchema>;

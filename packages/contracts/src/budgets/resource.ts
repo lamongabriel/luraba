@@ -56,3 +56,34 @@ export const monthlyBudgetSchema = z.object({
   }),
 });
 export type MonthlyBudget = z.output<typeof monthlyBudgetSchema>;
+
+/**
+ * What the Budgets page needs beyond one month: how the last months went against their budget and
+ * where the money goes this month compared with the month before. Expenses only, display currency.
+ */
+export const budgetInsightsSchema = z.object({
+  month: budgetMonthKeySchema,
+  budgetCurrencyCode: currencyCodeSchema,
+  displayCurrencyCode: currencyCodeSchema,
+  /** Oldest first, ending with `month`. */
+  history: z.array(
+    z.object({
+      month: budgetMonthKeySchema,
+      budgetedAmount: z.number().int(),
+      spentAmount: z.number().int(),
+    }),
+  ),
+  /** Every category with spending in `month`, biggest first (the page ranks them and shows the change on each row). */
+  mostExpenses: z.array(
+    z.object({
+      categoryId: z.uuid(),
+      categoryName: z.string(),
+      parentId: z.uuid().nullable(),
+      actualAmount: z.number().int(),
+      previousAmount: z.number().int(),
+      /** Percent versus the previous month; `null` when the previous month had no spending. */
+      changePercent: z.number().nullable(),
+    }),
+  ),
+});
+export type BudgetInsights = z.output<typeof budgetInsightsSchema>;

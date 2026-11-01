@@ -1,8 +1,10 @@
 import type {
+  BudgetInsights,
   MonthlyBudget,
   replaceMonthlyBudgetBodySchema,
   updateBudgetMonthSettingsBodySchema,
 } from "@luraba/contracts/budgets";
+import { shiftMonthKey } from "@luraba/domain";
 import type { z } from "zod";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
@@ -14,7 +16,7 @@ import { NotFoundError, ValidationError } from "@/shared/errors";
 import { budgetMonthSettingsRepository } from "./budget-month-settings.repository";
 import { budgetsRepository } from "./budgets.repository";
 import { getMonthBudgetSettings } from "./budgets.settings";
-import { formatBudgetMonthKey } from "./budgets.types";
+import { formatBudgetMonthKey, parseBudgetMonthKey } from "./budgets.types";
 
 type ReplaceMonthlyBudget = z.output<typeof replaceMonthlyBudgetBodySchema>;
 type UpdateBudgetMonthSettings = z.output<typeof updateBudgetMonthSettingsBodySchema>;
@@ -119,6 +121,14 @@ async function buildMonthlyBudgetResponse(params: {
     a.categoryName.localeCompare(b.categoryName),
   );
 
+  // A parent's budget is the cap for its subcategories, so their budgets are already inside it.
+  const budgetedParents = new Set(
+    expense.filter((item) => item.budgetedAmount > 0).map((item) => item.categoryId),
+  );
+  const expenseBudgeted = expense
+    .filter((item) => !(item.parentId && budgetedParents.has(item.parentId)))
+    .reduce((sum, item) => sum + item.budgetedAmount, 0);
+
   return {
     settings: params.settings,
     month: formatBudgetMonthKey(params.month),
@@ -127,7 +137,7 @@ async function buildMonthlyBudgetResponse(params: {
     totals: {
       incomeBudgeted: income.reduce((sum, item) => sum + item.budgetedAmount, 0),
       incomeActual: income.reduce((sum, item) => sum + item.actualAmount, 0),
-      expenseBudgeted: expense.reduce((sum, item) => sum + item.budgetedAmount, 0),
+      expenseBudgeted,
       expenseActual: expense.reduce((sum, item) => sum + item.actualAmount, 0),
     },
     categories: {
@@ -186,6 +196,63 @@ export async function getMonthlyBudget(
     creditCardActualRows,
     settings,
   });
+}
+
+const INSIGHTS_HISTORY_MONTHS = 6;
+
+/**
+ * The last months of expenses against their budget (oldest first, ending with `month`) and the
+ * categories with spending in `month` (biggest first), each compared with the month before. Every month is
+ * the same `getMonthlyBudget` the page uses, so the numbers always agree.
+ */
+export async function getBudgetInsights(
+  context: HouseholdContext,
+  month: Date,
+  displayCurrencyOverride?: string,
+): Promise<BudgetInsights> {
+  const monthKey = formatBudgetMonthKey(month);
+  const keys = Array.from({ length: INSIGHTS_HISTORY_MONTHS }, (_, index) =>
+    shiftMonthKey(monthKey, index - (INSIGHTS_HISTORY_MONTHS - 1)),
+  );
+  const months = await Promise.all(
+    keys.map((key) => getMonthlyBudget(context, parseBudgetMonthKey(key), displayCurrencyOverride)),
+  );
+
+  const current = months[months.length - 1];
+  const previous = months[months.length - 2];
+  if (!current || !previous) throw new NotFoundError("Budget");
+
+  const previousByCategory = new Map(
+    previous.categories.expense.map((item) => [item.categoryId, item.actualAmount]),
+  );
+
+  return {
+    month: monthKey,
+    budgetCurrencyCode: current.budgetCurrencyCode,
+    displayCurrencyCode: current.displayCurrencyCode,
+    history: months.map((item) => ({
+      month: item.month,
+      budgetedAmount: item.totals.expenseBudgeted,
+      spentAmount: item.totals.expenseActual,
+    })),
+    mostExpenses: current.categories.expense
+      .filter((item) => item.actualAmount > 0)
+      .sort((a, b) => b.actualAmount - a.actualAmount)
+      .map((item) => {
+        const previousAmount = previousByCategory.get(item.categoryId) ?? 0;
+        return {
+          categoryId: item.categoryId,
+          categoryName: item.categoryName,
+          parentId: item.parentId,
+          actualAmount: item.actualAmount,
+          previousAmount,
+          changePercent:
+            previousAmount > 0
+              ? Math.round(((item.actualAmount - previousAmount) / previousAmount) * 1000) / 10
+              : null,
+        };
+      }),
+  };
 }
 
 /**
@@ -252,6 +319,24 @@ export async function replaceMonthlyBudget(
     if (!category) throw new NotFoundError("Category");
     if (category.type !== "expense") {
       throw new ValidationError(`Category ${item.categoryId} must be of type expense`);
+    }
+  }
+
+  // A parent's budget caps its subcategories: together they cannot plan more than the parent.
+  const amountById = new Map(dto.expense.map((item) => [item.categoryId, item.amount]));
+  const allocated = new Map<string, number>();
+  for (const item of dto.expense) {
+    const parentId = categoriesById.get(item.categoryId)?.parentId;
+    if (parentId && (amountById.get(parentId) ?? 0) > 0) {
+      allocated.set(parentId, (allocated.get(parentId) ?? 0) + item.amount);
+    }
+  }
+  for (const [parentId, total] of allocated) {
+    if (total > (amountById.get(parentId) ?? 0)) {
+      const name = categoriesById.get(parentId)?.name ?? "the parent category";
+      throw new ValidationError(
+        `The subcategory budgets under ${name} add up to more than the ${name} budget. Lower them or raise the ${name} budget.`,
+      );
     }
   }
 

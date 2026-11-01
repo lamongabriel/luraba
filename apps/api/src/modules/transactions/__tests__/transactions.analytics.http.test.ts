@@ -94,6 +94,48 @@ describe("transaction analytics routes", () => {
     });
   });
 
+  it("counts expenses excluded from the budget in money out and the breakdown", async () => {
+    const context = await createAuthenticatedContext();
+    const account = await accountsService.createAccount(
+      context.householdContext,
+      buildAccountInput({ name: "Cashflow Checking", type: "cash", currencyCode: "BRL" }),
+    );
+    const category = await categoriesService.createCategory(
+      context.householdContext,
+      buildCategoryInput({ name: "Cashflow Rent", type: "expense" }),
+    );
+    const today = getTodayInTimezone(context.householdContext.timezone);
+
+    await transactionsService.createTransaction(context.householdContext, {
+      type: "expense",
+      description: "Cashflow outside budget",
+      amount: 50_000,
+      currencyCode: "BRL",
+      paymentMethodCode: "pix",
+      accountId: account.id,
+      categoryId: category.id,
+      includeInBudget: false,
+      purchaseDate: today,
+      postedDate: today,
+    });
+
+    const response = await request(app)
+      .get("/api/v1/transactions/analytics")
+      .set(createAuthHeaders(context.token, context.household.id))
+      .query({
+        search: "Cashflow outside budget",
+        dateFrom: formatISODate(today),
+        dateTo: formatISODate(today),
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.metrics.moneyOut.value).toBe(50_000);
+    expect(response.body.data.metrics.net.value).toBe(-50_000);
+    expect(response.body.data.expenseBreakdown.items).toEqual([
+      expect.objectContaining({ id: category.id, amount: 50_000 }),
+    ]);
+  });
+
   it("returns future installments as normalized upcoming rows", async () => {
     const context = await createAuthenticatedContext();
     const ownerAccount = await createCreditCardOwner(context.householdContext);

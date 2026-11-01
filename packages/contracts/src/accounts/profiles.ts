@@ -20,6 +20,12 @@ const optionalText = (max: number) => z.string().trim().min(1).max(max).optional
 const nullableText = (max: number) => z.string().trim().min(1).max(max).nullable().optional();
 const last4Schema = z.string().regex(/^\d{4}$/, "Must contain exactly four digits");
 const percentageSchema = z.coerce.number().min(0).max(100);
+/** Biggest area (square meters or feet) and odometer reading we accept. */
+export const MAX_PROPERTY_AREA = 100_000_000;
+export const MAX_VEHICLE_MILEAGE = 10_000_000;
+/** Longest sensible loan: 100 years. */
+export const MAX_LOAN_TERM_MONTHS = 1200;
+const loanTermMonthsSchema = z.coerce.number().int().min(1).max(MAX_LOAN_TERM_MONTHS);
 const nextCalendarYear = new Date().getUTCFullYear() + 1;
 export const cashAccountDetailsSchema = z.strictObject({
   kind: z.literal("cash"),
@@ -47,7 +53,7 @@ export const propertyAccountDetailsSchema = z.strictObject({
   region: z.string().nullable(),
   postalCode: z.string().nullable(),
   countryCode: countryCodeSchema.nullable(),
-  area: z.number().positive().nullable(),
+  area: z.number().positive().max(MAX_PROPERTY_AREA).nullable(),
   areaUnit: propertyAreaUnitSchema.nullable(),
   yearBuilt: z.number().int().min(0).max(nextCalendarYear).nullable(),
 });
@@ -61,7 +67,7 @@ export const vehicleAccountDetailsSchema = z.strictObject({
   trim: z.string().nullable(),
   vin: z.string().nullable(),
   licensePlate: z.string().nullable(),
-  mileage: z.number().int().nonnegative().nullable(),
+  mileage: z.number().int().nonnegative().max(MAX_VEHICLE_MILEAGE).nullable(),
   mileageUnit: vehicleMileageUnitSchema.nullable(),
 });
 
@@ -71,7 +77,7 @@ export const loanAccountDetailsSchema = z.strictObject({
   originalPrincipal: moneyAmountSchema.nullable(),
   annualInterestRate: percentageSchema.nullable(),
   interestRateType: loanInterestRateTypeSchema.nullable(),
-  termMonths: z.number().int().positive().nullable(),
+  termMonths: loanTermMonthsSchema.nullable(),
   startDate: z.iso.date().nullable(),
   maturityDate: z.iso.date().nullable(),
   paymentAmount: moneyAmountSchema.nullable(),
@@ -139,7 +145,7 @@ export const createAccountProfileSchema = z
       region: optionalText(128),
       postalCode: optionalText(32),
       countryCode: countryCodeSchema.optional(),
-      area: z.coerce.number().positive().optional(),
+      area: z.coerce.number().positive().max(MAX_PROPERTY_AREA).optional(),
       areaUnit: propertyAreaUnitSchema.optional(),
       yearBuilt: z.coerce.number().int().min(0).max(nextCalendarYear).optional(),
     }),
@@ -152,7 +158,7 @@ export const createAccountProfileSchema = z
       trim: optionalText(128),
       vin: optionalText(32),
       licensePlate: optionalText(32),
-      mileage: z.coerce.number().int().nonnegative().optional(),
+      mileage: z.coerce.number().int().nonnegative().max(MAX_VEHICLE_MILEAGE).optional(),
       mileageUnit: vehicleMileageUnitSchema.optional(),
     }),
     z.strictObject({
@@ -161,7 +167,7 @@ export const createAccountProfileSchema = z
       originalPrincipal: moneyAmountSchema.optional(),
       annualInterestRate: percentageSchema.optional(),
       interestRateType: loanInterestRateTypeSchema.optional(),
-      termMonths: z.coerce.number().int().positive().optional(),
+      termMonths: loanTermMonthsSchema.optional(),
       startDate: z.iso.date().optional(),
       maturityDate: z.iso.date().optional(),
       paymentAmount: moneyAmountSchema.optional(),
@@ -172,6 +178,23 @@ export const createAccountProfileSchema = z
     z.strictObject({ kind: z.literal("other_liability"), subtype: otherLiabilitySubtypeSchema }),
   ])
   .superRefine((details, ctx) => {
+    if (details.kind === "property" && details.area !== undefined && !details.areaUnit) {
+      ctx.addIssue({ code: "custom", path: ["areaUnit"], message: "Choose an area unit" });
+    }
+    if (details.kind === "vehicle" && details.mileage !== undefined && !details.mileageUnit) {
+      ctx.addIssue({ code: "custom", path: ["mileageUnit"], message: "Choose a mileage unit" });
+    }
+    if (
+      details.kind === "loan" &&
+      details.paymentAmount !== undefined &&
+      !details.paymentFrequency
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["paymentFrequency"],
+        message: "Choose how often payments are due",
+      });
+    }
     if (
       details.kind === "loan" &&
       details.startDate &&
@@ -211,7 +234,7 @@ export const updateAccountProfileSchema = z
       region: nullableText(128),
       postalCode: nullableText(32),
       countryCode: countryCodeSchema.nullable().optional(),
-      area: z.coerce.number().positive().nullable().optional(),
+      area: z.coerce.number().positive().max(MAX_PROPERTY_AREA).nullable().optional(),
       areaUnit: propertyAreaUnitSchema.nullable().optional(),
       yearBuilt: z.coerce.number().int().min(0).max(nextCalendarYear).nullable().optional(),
     }),
@@ -224,7 +247,7 @@ export const updateAccountProfileSchema = z
       trim: nullableText(128),
       vin: nullableText(32),
       licensePlate: nullableText(32),
-      mileage: z.coerce.number().int().nonnegative().nullable().optional(),
+      mileage: z.coerce.number().int().nonnegative().max(MAX_VEHICLE_MILEAGE).nullable().optional(),
       mileageUnit: vehicleMileageUnitSchema.nullable().optional(),
     }),
     z.strictObject({
@@ -233,7 +256,7 @@ export const updateAccountProfileSchema = z
       originalPrincipal: moneyAmountSchema.nullable().optional(),
       annualInterestRate: percentageSchema.nullable().optional(),
       interestRateType: loanInterestRateTypeSchema.nullable().optional(),
-      termMonths: z.coerce.number().int().positive().nullable().optional(),
+      termMonths: loanTermMonthsSchema.nullable().optional(),
       startDate: z.iso.date().nullable().optional(),
       maturityDate: z.iso.date().nullable().optional(),
       paymentAmount: moneyAmountSchema.nullable().optional(),

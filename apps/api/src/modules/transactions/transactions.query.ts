@@ -52,6 +52,9 @@ export function buildTransactionFeedWhere(query: TransactionFilterQuery): SQL | 
     query.creditCardIds.length > 0
       ? sql`credit_card_id = any(${sqlArray(query.creditCardIds, "uuid")})`
       : undefined,
+    query.billingCycleIds?.length
+      ? sql`billing_cycle_id = any(${sqlArray(query.billingCycleIds, "uuid")})`
+      : undefined,
     query.categoryIds.length > 0 || query.uncategorized === true
       ? sql`origin_type in ('expense', 'income', 'credit_card_installment') and (
           ${
@@ -182,6 +185,7 @@ export function buildTransactionFeedCte(
         null::uuid as installment_id,
         null::integer as installment_number,
         null::integer as installment_count,
+        null::uuid as billing_cycle_id,
         case
           when ${creditCardPaymentsTable.id} is not null then 'credit_card_payment'
           else ${transactionsTable.type}::text
@@ -240,6 +244,7 @@ export function buildTransactionFeedCte(
         ${creditCardInstallmentsTable.id} as installment_id,
         ${creditCardInstallmentsTable.installmentNumber} as installment_number,
         ${creditCardPurchasesTable.installmentCount} as installment_count,
+        ${creditCardInstallmentsTable.billingCycleId} as billing_cycle_id,
         'credit_card_installment' as origin_type,
         ${transactionsTable.description} as description,
         ${transactionsTable.purchaseDate} as purchase_date,

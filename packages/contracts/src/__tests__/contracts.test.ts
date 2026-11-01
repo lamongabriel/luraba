@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  accountInsightsQuerySchema,
   accountsEndpoints,
   allEndpoints,
   buildEndpointPath,
@@ -15,12 +16,12 @@ import {
 } from "../index.js";
 
 const EXPECTED_MODULE_COUNTS = {
-  accounts: 6,
+  accounts: 7,
   auth: 5,
   bills: 15,
-  budgets: 3,
+  budgets: 4,
   categories: 4,
-  creditCards: 18,
+  creditCards: 19,
   exports: 1,
   goals: 8,
   currencies: 2,
@@ -44,6 +45,7 @@ const EXPECTED_MODULE_COUNTS = {
 const EXPECTED_ENDPOINTS = [
   "GET /accounts",
   "GET /accounts/:id/transactions",
+  "GET /accounts/:id/insights",
   "GET /accounts/:id",
   "POST /accounts",
   "PATCH /accounts/:id",
@@ -69,6 +71,7 @@ const EXPECTED_ENDPOINTS = [
   "POST /bills/:id/occurrences/:occurrenceId/skip",
   "POST /bills/:id/occurrences/:occurrenceId/reset",
   "GET /budgets/:month",
+  "GET /budgets/:month/insights",
   "PUT /budgets/:month",
   "PUT /budgets/:month/settings",
   "GET /categories",
@@ -79,6 +82,7 @@ const EXPECTED_ENDPOINTS = [
   "GET /currencies/rate",
   "GET /credit-cards",
   "GET /credit-cards/overview",
+  "GET /credit-cards/insights",
   "POST /credit-cards",
   "GET /credit-cards/:id",
   "PATCH /credit-cards/:id",
@@ -252,7 +256,7 @@ const EXPECTED_ENDPOINTS = [
 ] as const;
 
 describe("HTTP contract inventory", () => {
-  it("contains the complete 207-route inventory by module", () => {
+  it("contains the complete 210-route inventory by module", () => {
     expect(
       Object.fromEntries(
         Object.entries(contractModules).map(([module, endpoints]) => [
@@ -261,7 +265,7 @@ describe("HTTP contract inventory", () => {
         ]),
       ),
     ).toEqual(EXPECTED_MODULE_COUNTS);
-    expect(allEndpoints).toHaveLength(207);
+    expect(allEndpoints).toHaveLength(210);
     expect(allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`)).toEqual(
       EXPECTED_ENDPOINTS,
     );
@@ -270,7 +274,7 @@ describe("HTTP contract inventory", () => {
   it("has unique method/path pairs and complete endpoint schemas", () => {
     const identities = allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`);
 
-    expect(new Set(identities).size).toBe(207);
+    expect(new Set(identities).size).toBe(210);
 
     for (const endpoint of allEndpoints) {
       expect(endpoint.path).toMatch(/^\/[a-z][a-z0-9/-]*(?::[A-Za-z][A-Za-z0-9_]*)?/);
@@ -352,5 +356,48 @@ describe("representative module contracts", () => {
 
   it("parses no-content operations as undefined", () => {
     expect(parseEndpointResponse(accountsEndpoints.delete, { ignored: true })).toBeUndefined();
+  });
+
+  describe("account profile bounds", () => {
+    const create = (details: Record<string, unknown>) =>
+      accountsEndpoints.create.body.safeParse({
+        name: "Test",
+        type: details.kind,
+        currencyCode: "USD",
+        details,
+      });
+
+    it("keeps loan numbers in range", () => {
+      const loan = { kind: "loan", subtype: "personal" };
+      expect(create({ ...loan, annualInterestRate: 100, termMonths: 1200 }).success).toBe(true);
+      expect(create({ ...loan, annualInterestRate: 100.5 }).success).toBe(false);
+      expect(create({ ...loan, annualInterestRate: -1 }).success).toBe(false);
+      expect(create({ ...loan, termMonths: 1201 }).success).toBe(false);
+      expect(create({ ...loan, termMonths: 0 }).success).toBe(false);
+    });
+
+    it("needs a frequency with a payment amount, a unit with an area or mileage", () => {
+      const loan = { kind: "loan", subtype: "personal", paymentAmount: 5_000 };
+      expect(create(loan).success).toBe(false);
+      expect(create({ ...loan, paymentFrequency: "biweekly" }).success).toBe(true);
+      const property = { kind: "property", subtype: "house", area: 90 };
+      expect(create(property).success).toBe(false);
+      expect(create({ ...property, areaUnit: "sqm" }).success).toBe(true);
+      const vehicle = { kind: "vehicle", subtype: "car", mileage: 1_000 };
+      expect(create(vehicle).success).toBe(false);
+      expect(create({ ...vehicle, mileageUnit: "mi" }).success).toBe(true);
+    });
+  });
+
+  it("validates the account insights range", () => {
+    expect(accountInsightsQuerySchema.safeParse({}).success).toBe(true);
+    expect(
+      accountInsightsQuerySchema.safeParse({ dateFrom: "2026-01-01", dateTo: "2026-01-31" })
+        .success,
+    ).toBe(true);
+    expect(
+      accountInsightsQuerySchema.safeParse({ dateFrom: "2026-02-01", dateTo: "2026-01-31" })
+        .success,
+    ).toBe(false);
   });
 });

@@ -8,6 +8,8 @@ import type {
   creditCardCycleSchema,
   creditCardForecastQuerySchema,
   creditCardForecastSchema,
+  creditCardInsightsQuerySchema,
+  creditCardInsightsSchema,
   creditCardOverviewQuerySchema,
   creditCardOverviewSchema,
   creditCardPaymentSchema,
@@ -38,5 +40,7 @@ export type UpdateCreditCardPurchaseDto = z.output<typeof updateCreditCardPurcha
 export type CreateCreditCardPaymentDto = z.output<typeof createCreditCardPaymentInputSchema>;
 export type UpdateCreditCardPaymentDto = z.output<typeof updateCreditCardPaymentInputSchema>;
 export type CreditCardForecastQuery = z.output<typeof creditCardForecastQuerySchema>;
+export type CreditCardInsightsQuery = z.output<typeof creditCardInsightsQuerySchema>;
+export type CreditCardInsightsResponse = z.input<typeof creditCardInsightsSchema>;
 export type CreditCardOverviewQuery = z.output<typeof creditCardOverviewQuerySchema>;
 export type CreditCardOverviewResponse = z.input<typeof creditCardOverviewSchema>;

@@ -5,11 +5,12 @@ import { listAccountTransactionsQuerySchema } from "../transactions/requests.js"
 import { transactionFeedRowSchema } from "../transactions/resource.js";
 import {
   accountIdParamsSchema,
+  accountInsightsQuerySchema,
   createAccountInputSchema,
   listAccountsQuerySchema,
   updateAccountInputSchema,
 } from "./requests.js";
-import { accountDetailsSchema, accountSummarySchema } from "./resource.js";
+import { accountDetailsSchema, accountInsightsSchema, accountSummarySchema } from "./resource.js";
 
 export const accountsEndpoints = {
   list: defineEndpoint({
@@ -27,6 +28,14 @@ export const accountsEndpoints = {
     query: listAccountTransactionsQuerySchema,
     response: z.array(transactionFeedRowSchema),
     meta: listMetaSchema(),
+    status: 200,
+  }),
+  insights: defineEndpoint({
+    method: "get",
+    path: "/accounts/:id/insights",
+    params: accountIdParamsSchema,
+    query: accountInsightsQuerySchema,
+    response: accountInsightsSchema,
     status: 200,
   }),
   get: defineEndpoint({

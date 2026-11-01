@@ -118,6 +118,8 @@ const allFilterShape = {
   ...commonFilterShape,
   accountIds: commaSeparatedArraySchema(z.uuid()),
   creditCardIds: commaSeparatedArraySchema(z.uuid()),
+  /** Only credit card installments on these invoices (billing cycles). */
+  billingCycleIds: commaSeparatedArraySchema(z.uuid()).optional(),
 } as const;
 const sortFields = [
   "amount",

@@ -10,6 +10,11 @@ router.get(
   requireAccess({ permission: PERMISSIONS.BUDGETS_READ }),
   budgetsController.getMonth,
 );
+router.get(
+  getEndpointRouterPath(budgetsEndpoints.insights),
+  requireAccess({ permission: PERMISSIONS.BUDGETS_READ }),
+  budgetsController.insights,
+);
 router.put(
   getEndpointRouterPath(budgetsEndpoints.replaceMonth),
   requireAccess({ permission: PERMISSIONS.BUDGETS_UPDATE }),

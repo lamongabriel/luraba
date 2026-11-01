@@ -112,6 +112,7 @@ export const creditCardOverviewCardSchema = z.object({
   creditCardId: z.uuid(),
   name: z.string(),
   institutionName: z.string().nullable(),
+  institutionLogoUrl: z.string().nullable(),
   brand: z.string(),
   last4: z.string(),
   color: z.string().nullable(),
@@ -134,6 +135,33 @@ export const creditCardOverviewSchema = z.object({
   cards: z.array(creditCardOverviewCardSchema),
   /** One entry per currency; amounts in different currencies are never added together. */
   totals: z.array(creditCardOverviewTotalsSchema),
+});
+const insightAmountSchema = z.number().int();
+export const creditCardInsightsGroupSchema = z.object({
+  currencyCode: currencyCodeSchema,
+  /** Sum of the installments on invoices due in the month. */
+  total: insightAmountSchema,
+  previousTotal: insightAmountSchema,
+  byCategory: z.array(
+    z.object({
+      categoryId: z.uuid().nullable(),
+      name: z.string(),
+      color: z.string().nullable(),
+      amount: insightAmountSchema,
+    }),
+  ),
+  /** Invoice totals for the six months up to and including the selected one. */
+  history: z.array(
+    z.object({ month: z.string().regex(/^\d{4}-\d{2}$/), amount: insightAmountSchema }),
+  ),
+  /** Installments already committed on the six invoices after the selected month. */
+  upcomingInstallments: z.array(
+    z.object({ month: z.string().regex(/^\d{4}-\d{2}$/), amount: insightAmountSchema }),
+  ),
+});
+export const creditCardInsightsSchema = z.object({
+  month: z.string().regex(/^\d{4}-\d{2}$/),
+  groups: z.array(creditCardInsightsGroupSchema),
 });
 export const creditCardPurchaseSchema = z.object({
   purchaseId: z.uuid(),
@@ -191,6 +219,8 @@ export type CreditCardLimitBreakdown = z.output<typeof creditCardLimitBreakdownS
 export type CreditCardOverview = z.output<typeof creditCardOverviewSchema>;
 export type CreditCardOverviewCard = z.output<typeof creditCardOverviewCardSchema>;
 export type CreditCardOverviewTotals = z.output<typeof creditCardOverviewTotalsSchema>;
+export type CreditCardInsights = z.output<typeof creditCardInsightsSchema>;
+export type CreditCardInsightsGroup = z.output<typeof creditCardInsightsGroupSchema>;
 export type CreditCardForecast = z.output<typeof creditCardForecastSchema>;
 export type CreditCardCycleStatus = z.output<typeof creditCardCycleStatusSchema>;
 export type CreditCardCycleDisplayStatus = z.output<typeof creditCardCycleDisplayStatusSchema>;

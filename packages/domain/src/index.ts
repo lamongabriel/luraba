@@ -4,6 +4,7 @@ export * from "./credit-cards.js";
 export * from "./date.js";
 export * from "./goals.js";
 export * from "./investments/index.js";
+export * from "./loans.js";
 export * from "./money.js";
 export * from "./periods.js";
 export * from "./recurrency.js";

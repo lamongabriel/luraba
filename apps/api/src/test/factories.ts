@@ -141,6 +141,7 @@ export function buildCreditCardInput(
     last4: "4242",
     closingDay: 25,
     dueDay: 5,
+    creditLimitAmount: 1_000_000,
     ...overrides,
   };
 }

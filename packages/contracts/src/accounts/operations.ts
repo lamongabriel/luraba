@@ -2,7 +2,12 @@ import type { EndpointParams, EndpointResult } from "../api.js";
 import type { accountsEndpoints } from "./endpoints.js";
 
 export type { ListAccountTransactionsQuery } from "../transactions/requests.js";
-export type { CreateAccountInput, ListAccountsQuery, UpdateAccountInput } from "./requests.js";
+export type {
+  AccountInsightsQuery,
+  CreateAccountInput,
+  ListAccountsQuery,
+  UpdateAccountInput,
+} from "./requests.js";
 export type GetAccountParams = EndpointParams<typeof accountsEndpoints.get>;
 export type ListAccountTransactionsParams = EndpointParams<typeof accountsEndpoints.transactions>;
 export type UpdateAccountParams = EndpointParams<typeof accountsEndpoints.update>;
@@ -13,3 +18,5 @@ export type GetAccountResult = EndpointResult<typeof accountsEndpoints.get>;
 export type CreateAccountResult = EndpointResult<typeof accountsEndpoints.create>;
 export type UpdateAccountResult = EndpointResult<typeof accountsEndpoints.update>;
 export type DeleteAccountResult = EndpointResult<typeof accountsEndpoints.delete>;
+export type GetAccountInsightsParams = EndpointParams<typeof accountsEndpoints.insights>;
+export type GetAccountInsightsResult = EndpointResult<typeof accountsEndpoints.insights>;

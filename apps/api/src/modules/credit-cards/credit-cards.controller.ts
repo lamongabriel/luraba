@@ -17,6 +17,11 @@ export const getOverview = createHouseholdHandler({
   response: creditCardsEndpoints.overview.response,
   handle: ({ household, query }) => service.getOverview(household, query),
 });
+export const getInsights = createHouseholdHandler({
+  query: creditCardsEndpoints.insights.query,
+  response: creditCardsEndpoints.insights.response,
+  handle: ({ household, query }) => service.getInsights(household, query),
+});
 export const create = createHouseholdHandler({
   body: creditCardsEndpoints.create.body,
   response: creditCardsEndpoints.create.response,

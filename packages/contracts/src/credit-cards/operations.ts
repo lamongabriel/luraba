@@ -6,6 +6,7 @@ export type {
   CreateCreditCardPaymentInput,
   CreateCreditCardPurchaseInput,
   CreditCardForecastQuery,
+  CreditCardInsightsQuery,
   CreditCardOverviewQuery,
   ListCreditCardCyclesQuery,
   ListCreditCardsQuery,
@@ -15,6 +16,7 @@ export type {
   UpdateCreditCardPurchaseInput,
 } from "./requests.js";
 export type GetCreditCardOverviewResult = EndpointResult<typeof creditCardsEndpoints.overview>;
+export type GetCreditCardInsightsResult = EndpointResult<typeof creditCardsEndpoints.insights>;
 export type GetCreditCardParams = EndpointParams<typeof creditCardsEndpoints.get>;
 export type UpdateCreditCardParams = EndpointParams<typeof creditCardsEndpoints.update>;
 export type DeleteCreditCardParams = EndpointParams<typeof creditCardsEndpoints.delete>;
