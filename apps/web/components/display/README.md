@@ -19,7 +19,7 @@ import { AccountDisplay, AmountDisplay, CategoryDisplay, MerchantDisplay, TagDis
 | `ProductDisplay` / `ProductMark` | Product (or a transaction item): picture, else a package icon, + name on one compact line, optional muted `detail` (price) after the name | `product`, `size`, `detail` |
 | `AmountDisplay` | Money with the right sign and color | `amount` (minor units), `currencyCode`, `kind`, `size` |
 | `CurrencyDisplay` | A currency: country flag + 3-letter code + symbol (`🇧🇷 BRL R$`), optional name | `currencyCode`, `showName`, `size` |
-| `CategoryDisplay` | Category chip; `null` renders "Uncategorized" | `category`, `variant="chip" \| "inline"`, `size` |
+| `CategoryDisplay` | Category chip; `null` renders "Uncategorized". A subcategory with no icon shows its parent's icon (looked up in the shared categories list when `parentId` is on the object) | `category`, `variant="chip" \| "inline"`, `size` |
 | `TagDisplay` | Tag chip | `tag`, `variant`, `size` |
 
 ## Option selects

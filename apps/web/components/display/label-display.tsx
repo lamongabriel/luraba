@@ -1,10 +1,10 @@
 "use client";
 
-import type { Category, Tag } from "@luraba/contracts";
-
+import { type Category, MAX_PER_PAGE, type Tag } from "@luraba/contracts";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
+import { useCategoriesQuery } from "@/queries/categories/use-categories-query";
 
 import { DISPLAY_SIZES, type DisplaySize, EMPTY_LABELS } from "./constants";
 
@@ -43,6 +43,24 @@ function LabelDisplay({
   );
 }
 
+/**
+ * A subcategory without its own icon shows its parent's icon (the app's generic default only when
+ * neither has one). The parent comes from the shared categories list, so callers just pass the category.
+ */
+function CategoryWithParentIcon({
+  category,
+  ...rest
+}: {
+  category: Pick<Category, "name" | "icon" | "color" | "parentId">;
+  size: DisplaySize;
+  variant: "chip" | "inline";
+  className?: string;
+}) {
+  const query = useCategoriesQuery({ perPage: MAX_PER_PAGE });
+  const parent = query.data?.data.find((item) => item.id === category.parentId);
+  return <LabelDisplay entity={{ ...category, icon: parent?.icon ?? null }} {...rest} />;
+}
+
 /** How a category is shown everywhere; `null` renders the "Uncategorized" state. */
 export function CategoryDisplay({
   category,
@@ -51,7 +69,10 @@ export function CategoryDisplay({
   className,
   emptyLabel = EMPTY_LABELS.category,
 }: {
-  category: Pick<Category, "name" | "icon" | "color"> | null | undefined;
+  category:
+    | (Pick<Category, "name" | "icon" | "color"> & Partial<Pick<Category, "parentId">>)
+    | null
+    | undefined;
   size?: DisplaySize;
   variant?: "chip" | "inline";
   className?: string;
@@ -66,6 +87,16 @@ export function CategoryDisplay({
         />
         {emptyLabel}
       </Badge>
+    );
+  }
+  if (!category.icon && category.parentId) {
+    return (
+      <CategoryWithParentIcon
+        category={{ ...category, parentId: category.parentId }}
+        size={size}
+        variant={variant}
+        className={className}
+      />
     );
   }
   return <LabelDisplay entity={category} size={size} variant={variant} className={className} />;

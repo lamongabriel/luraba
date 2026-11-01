@@ -18,6 +18,10 @@
   revalue a car). Deleting an account or card needs `confirm: true` and first reports how many transactions and
   cards go with it. Not in the API, so not in the tools: a business-account flag, account color or icon, archiving
   or closing an account, changing an account's currency or a card's paying account.
+- **Icons**: `list_icons` (optional `search`) lists the icon names a category can have; `create_category` and
+  `update_category` take `icon` (an unknown name returns `needs_clarification` with close matches) and
+  `update_category` takes `clearIcon`. `list_categories` returns each category's `icon` and `color`. In the app a
+  subcategory with no icon shows its parent's icon. The list is `CURATED_ICON_CATALOG` in `@luraba/contracts`.
 - **Categories**: a category can be a path, `Shopping > Electronics`, in `create_transaction` and the
   bulk tools; with `createMissing` the parent and child are created.
 - **Reference data**: `whoami`, `list_households`, `list_accounts`, `list_credit_cards`, and list/create/update for

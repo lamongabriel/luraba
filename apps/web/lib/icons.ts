@@ -49,6 +49,7 @@ import {
   Wifi01Icon,
 } from "@hugeicons/core-free-icons";
 import type { HugeiconsIcon } from "@hugeicons/react";
+import { CURATED_ICON_CATALOG, DEFAULT_ICON_NAME } from "@luraba/contracts";
 import type { ComponentProps } from "react";
 
 /**
@@ -71,162 +72,64 @@ export interface CuratedIconOption {
   keywords?: string;
 }
 
+/** Glyph per catalog name (`@luraba/contracts` `CURATED_ICON_CATALOG` owns which names exist). */
+const ICON_GLYPHS: Record<string, CuratedIconData> = {
+  ShoppingCart01Icon: ShoppingCart01Icon,
+  ShoppingBag03Icon: ShoppingBag03Icon,
+  Store01Icon: Store01Icon,
+  Restaurant01Icon: Restaurant01Icon,
+  Pizza01Icon: Pizza01Icon,
+  Coffee01Icon: Coffee01Icon,
+  BeerIcon: BeerIcon,
+  BirthdayCakeIcon: BirthdayCakeIcon,
+  Car01Icon: Car01Icon,
+  Fuel01Icon: Fuel01Icon,
+  Bus01Icon: Bus01Icon,
+  Train01Icon: Train01Icon,
+  Airplane01Icon: Airplane01Icon,
+  Home01Icon: Home01Icon,
+  Fire02Icon: Fire02Icon,
+  DropletIcon: DropletIcon,
+  Sun01Icon: Sun01Icon,
+  Wifi01Icon: Wifi01Icon,
+  SmartPhone01Icon: SmartPhone01Icon,
+  Tv01Icon: Tv01Icon,
+  GameController01Icon: GameController01Icon,
+  MusicNote01Icon: MusicNote01Icon,
+  Camera01Icon: Camera01Icon,
+  PaintBrush02Icon: PaintBrush02Icon,
+  FootballIcon: FootballIcon,
+  Dumbbell01Icon: Dumbbell01Icon,
+  Hospital01Icon: Hospital01Icon,
+  MedicineBottle01Icon: MedicineBottle01Icon,
+  Baby01Icon: Baby01Icon,
+  Bone01Icon: Bone01Icon,
+  Book02Icon: Book02Icon,
+  GraduationScrollIcon: GraduationScrollIcon,
+  Shirt01Icon: Shirt01Icon,
+  GiftIcon: GiftIcon,
+  Leaf01Icon: Leaf01Icon,
+  Wallet01Icon: Wallet01Icon,
+  MoneyBag02Icon: MoneyBag02Icon,
+  DollarCircleIcon: DollarCircleIcon,
+  BankIcon: BankIcon,
+  CreditCardIcon: CreditCardIcon,
+  PiggyBankIcon: PiggyBankIcon,
+  ChartLineData01Icon: ChartLineData01Icon,
+  Invoice01Icon: Invoice01Icon,
+  Receipt: Receipt,
+  SecurityCheckIcon: SecurityCheckIcon,
+  TagsIcon: TagsIcon,
+};
+
 /**
  * Curated palette of icons. Each `name` is a hugeicons export name and
  * therefore matches the API icon regex `^[A-Za-z][A-Za-z0-9]*$`.
  */
-export const CURATED_ICONS: readonly CuratedIconOption[] = [
-  {
-    name: "ShoppingCart01Icon",
-    icon: ShoppingCart01Icon,
-    keywords: "groceries shopping cart",
-  },
-  {
-    name: "ShoppingBag03Icon",
-    icon: ShoppingBag03Icon,
-    keywords: "shopping bag retail",
-  },
-  { name: "Store01Icon", icon: Store01Icon, keywords: "store shop market" },
-  {
-    name: "Restaurant01Icon",
-    icon: Restaurant01Icon,
-    keywords: "restaurant dining food",
-  },
-  { name: "Pizza01Icon", icon: Pizza01Icon, keywords: "pizza fast food" },
-  { name: "Coffee01Icon", icon: Coffee01Icon, keywords: "coffee cafe drink" },
-  { name: "BeerIcon", icon: BeerIcon, keywords: "beer alcohol bar drinks" },
-  {
-    name: "BirthdayCakeIcon",
-    icon: BirthdayCakeIcon,
-    keywords: "cake birthday party",
-  },
-  {
-    name: "Car01Icon",
-    icon: Car01Icon,
-    keywords: "car auto vehicle transport",
-  },
-  { name: "Fuel01Icon", icon: Fuel01Icon, keywords: "fuel gas petrol station" },
-  { name: "Bus01Icon", icon: Bus01Icon, keywords: "bus public transport" },
-  {
-    name: "Train01Icon",
-    icon: Train01Icon,
-    keywords: "train metro rail transport",
-  },
-  {
-    name: "Airplane01Icon",
-    icon: Airplane01Icon,
-    keywords: "flight travel plane trip",
-  },
-  {
-    name: "Home01Icon",
-    icon: Home01Icon,
-    keywords: "home rent house mortgage",
-  },
-  { name: "Fire02Icon", icon: Fire02Icon, keywords: "heating gas fire energy" },
-  { name: "DropletIcon", icon: DropletIcon, keywords: "water utilities bill" },
-  { name: "Sun01Icon", icon: Sun01Icon, keywords: "electricity energy solar" },
-  { name: "Wifi01Icon", icon: Wifi01Icon, keywords: "internet wifi network" },
-  {
-    name: "SmartPhone01Icon",
-    icon: SmartPhone01Icon,
-    keywords: "phone mobile bill",
-  },
-  { name: "Tv01Icon", icon: Tv01Icon, keywords: "tv streaming subscription" },
-  {
-    name: "GameController01Icon",
-    icon: GameController01Icon,
-    keywords: "games gaming entertainment",
-  },
-  {
-    name: "MusicNote01Icon",
-    icon: MusicNote01Icon,
-    keywords: "music audio subscription",
-  },
-  { name: "Camera01Icon", icon: Camera01Icon, keywords: "camera photo hobby" },
-  {
-    name: "PaintBrush02Icon",
-    icon: PaintBrush02Icon,
-    keywords: "art hobby creative",
-  },
-  {
-    name: "FootballIcon",
-    icon: FootballIcon,
-    keywords: "sports football soccer",
-  },
-  {
-    name: "Dumbbell01Icon",
-    icon: Dumbbell01Icon,
-    keywords: "gym fitness workout health",
-  },
-  {
-    name: "Hospital01Icon",
-    icon: Hospital01Icon,
-    keywords: "hospital health medical",
-  },
-  {
-    name: "MedicineBottle01Icon",
-    icon: MedicineBottle01Icon,
-    keywords: "medicine pharmacy health",
-  },
-  {
-    name: "Baby01Icon",
-    icon: Baby01Icon,
-    keywords: "baby kids children family",
-  },
-  { name: "Bone01Icon", icon: Bone01Icon, keywords: "pet dog cat animal" },
-  { name: "Book02Icon", icon: Book02Icon, keywords: "books reading education" },
-  {
-    name: "GraduationScrollIcon",
-    icon: GraduationScrollIcon,
-    keywords: "education tuition school",
-  },
-  {
-    name: "Shirt01Icon",
-    icon: Shirt01Icon,
-    keywords: "clothing clothes apparel",
-  },
-  { name: "GiftIcon", icon: GiftIcon, keywords: "gift present donation" },
-  { name: "Leaf01Icon", icon: Leaf01Icon, keywords: "nature eco plant garden" },
-  { name: "Wallet01Icon", icon: Wallet01Icon, keywords: "wallet cash money" },
-  {
-    name: "MoneyBag02Icon",
-    icon: MoneyBag02Icon,
-    keywords: "salary income money bag",
-  },
-  {
-    name: "DollarCircleIcon",
-    icon: DollarCircleIcon,
-    keywords: "dollar money income",
-  },
-  { name: "BankIcon", icon: BankIcon, keywords: "bank transfer account" },
-  {
-    name: "CreditCardIcon",
-    icon: CreditCardIcon,
-    keywords: "credit card payment",
-  },
-  {
-    name: "PiggyBankIcon",
-    icon: PiggyBankIcon,
-    keywords: "savings piggy bank invest",
-  },
-  {
-    name: "ChartLineData01Icon",
-    icon: ChartLineData01Icon,
-    keywords: "investment chart stocks",
-  },
-  {
-    name: "Invoice01Icon",
-    icon: Invoice01Icon,
-    keywords: "invoice bill payment",
-  },
-  { name: "Receipt", icon: Receipt, keywords: "receipt taxes expense" },
-  {
-    name: "SecurityCheckIcon",
-    icon: SecurityCheckIcon,
-    keywords: "insurance security protection",
-  },
-  { name: "TagsIcon", icon: TagsIcon, keywords: "tag label category other" },
-];
+export const CURATED_ICONS: readonly CuratedIconOption[] = CURATED_ICON_CATALOG.map((entry) => ({
+  ...entry,
+  icon: ICON_GLYPHS[entry.name] as CuratedIconData,
+}));
 
 /** O(1) lookup from persisted icon name to icon data. */
 export const CURATED_ICON_MAP: Record<string, CuratedIconData> = Object.fromEntries(
@@ -234,7 +137,7 @@ export const CURATED_ICON_MAP: Record<string, CuratedIconData> = Object.fromEntr
 );
 
 /** Fallback icon name used when an entity has no icon or an unknown one. */
-export const DEFAULT_CURATED_ICON_NAME = "TagsIcon";
+export const DEFAULT_CURATED_ICON_NAME = DEFAULT_ICON_NAME;
 
 /**
  * Resolves a persisted icon name to renderable icon data.

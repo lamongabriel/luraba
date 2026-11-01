@@ -11,6 +11,7 @@ import {
   bulkDeleteTransactions,
   bulkUpdateTransactions,
 } from "./bulk-transactions.js";
+import { listIcons } from "./icons.js";
 import {
   createCategory,
   createMerchant,
@@ -60,6 +61,7 @@ export const tools: AnyTool[] = [
   updateCreditCard,
   deleteCreditCard,
   listCategories,
+  listIcons,
   createCategory,
   updateCategory,
   listMerchants,

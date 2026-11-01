@@ -1,6 +1,8 @@
 import { categoriesEndpoints, merchantsEndpoints, tagsEndpoints } from "@luraba/contracts";
 import { z } from "zod";
 import { toMoney } from "../format/money.js";
+import { clarificationOutput, Problems } from "../resolve/problems.js";
+import { ICON_HINT, resolveIcon } from "./icons.js";
 import { defineTool, IDEMPOTENT_WRITE, READ_ONLY, WRITE } from "./types.js";
 
 const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/u);
@@ -124,7 +126,8 @@ export const listCreditCards = defineTool({
 export const listCategories = defineTool({
   name: "list_categories",
   title: "List categories",
-  description: "Expense and income categories (with parent categories).",
+  description:
+    "Expense and income categories (with parent categories, icon and color). A subcategory with no icon is shown with its parent's icon in the app.",
   input: z.object({ type: z.enum(["expense", "income"]).optional() }),
   annotations: READ_ONLY,
   async handler({ refs }, { type }) {
@@ -139,6 +142,8 @@ export const listCategories = defineTool({
             name: category.name,
             type: category.type,
             parent: category.parentId ? (byId.get(category.parentId) ?? null) : null,
+            icon: category.icon,
+            color: category.color,
           })),
       },
     };
@@ -148,16 +153,19 @@ export const listCategories = defineTool({
 export const createCategory = defineTool({
   name: "create_category",
   title: "Create a category",
-  description:
-    "Create an expense or income category, optionally under a parent category (name or id).",
+  description: `Create an expense or income category, optionally under a parent category (name or id) and with an icon. ${ICON_HINT}`,
   input: z.object({
     name: z.string().min(1).max(255),
     type: z.enum(["expense", "income"]),
     parent: z.string().optional(),
     color: hexColor.optional(),
+    icon: z.string().optional().describe("A supported icon name; see list_icons."),
   }),
   annotations: WRITE,
   async handler({ client, refs }, args) {
+    const problems = new Problems();
+    const icon = args.icon ? resolveIcon(problems, args.icon) : undefined;
+    if (problems.any) return clarificationOutput(problems);
     let parentId: string | undefined;
     if (args.parent) {
       const resolution = await refs.resolveCategory(args.parent);
@@ -175,6 +183,7 @@ export const createCategory = defineTool({
         type: args.type,
         ...(parentId ? { parentId } : {}),
         ...(args.color ? { color: args.color } : {}),
+        ...(icon ? { icon } : {}),
       },
     });
     refs.invalidate("categories");
@@ -188,16 +197,27 @@ export const createCategory = defineTool({
 export const updateCategory = defineTool({
   name: "update_category",
   title: "Update a category",
-  description: "Rename a category or change its color or parent.",
+  description: `Rename a category or change its color, icon or parent. ${ICON_HINT}`,
   input: z.object({
     category: z.string().describe("Name or id."),
     name: z.string().min(1).max(255).optional(),
     color: hexColor.optional(),
     parent: z.string().optional().describe("New parent category name or id."),
     clearParent: z.boolean().optional(),
+    icon: z.string().optional().describe("A supported icon name; see list_icons."),
+    clearIcon: z.boolean().optional().describe("Remove the icon (the parent's or default shows)."),
   }),
   annotations: IDEMPOTENT_WRITE,
   async handler({ client, refs }, args) {
+    const problems = new Problems();
+    const icon = args.icon ? resolveIcon(problems, args.icon) : undefined;
+    if (problems.any) return clarificationOutput(problems);
+    if (args.icon && args.clearIcon)
+      return {
+        isError: true,
+        summary: "Give either icon or clearIcon, not both.",
+        data: { status: "invalid_input" },
+      };
     const target = await refs.resolveCategory(args.category);
     if (target.status !== "resolved")
       return {
@@ -219,6 +239,8 @@ export const updateCategory = defineTool({
     const body = {
       ...(args.name ? { name: args.name } : {}),
       ...(args.color ? { color: args.color } : {}),
+      ...(icon ? { icon } : {}),
+      ...(args.clearIcon ? { icon: null } : {}),
       ...(parentId === undefined ? {} : { parentId }),
     };
     if (Object.keys(body).length === 0)

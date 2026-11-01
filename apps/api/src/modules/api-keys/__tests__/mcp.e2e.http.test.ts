@@ -60,6 +60,7 @@ describe("Luraba MCP server (end to end)", () => {
         "bulk_delete_transactions",
         "report_credit_cards",
         "report_balances",
+        "list_icons",
         "create_account",
         "update_account",
         "delete_account",
@@ -227,6 +228,33 @@ describe("Luraba MCP server (end to end)", () => {
     expect(gone.data.status).toBe("deleted");
     const left = await call("list_accounts");
     expect(JSON.stringify(left.data)).not.toContain("Chase Checking");
+  });
+
+  it("gives categories icons and clears them", async () => {
+    const parent = await call("create_category", {
+      name: "Shopping",
+      type: "expense",
+      icon: "ShoppingBag03Icon",
+    });
+    expect(parent.data.category.icon).toBe("ShoppingBag03Icon");
+    const child = await call("create_category", {
+      name: "Electronics",
+      type: "expense",
+      parent: "Shopping",
+    });
+    expect(child.data.category.icon).toBeNull();
+    const unknown = await call("update_category", { category: "Electronics", icon: "laptop" });
+    expect(unknown.data.status).toBe("needs_clarification");
+    const set = await call("update_category", { category: "Electronics", icon: "smartphone01" });
+    expect(set.data.category.icon).toBe("SmartPhone01Icon");
+    const cleared = await call("update_category", { category: "Electronics", clearIcon: true });
+    expect(cleared.data.category.icon).toBeNull();
+    const listed = await call("list_categories");
+    expect(listed.data.categories).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "Shopping", icon: "ShoppingBag03Icon" }),
+      ]),
+    );
   });
 
   it("asks for clarification instead of guessing an ambiguous account", async () => {

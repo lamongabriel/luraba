@@ -10,6 +10,7 @@ currencies, countries, languages, time zones, date formats, periods or themes.
 | Currencies | `currencies.ts` (`CURRENCY_CATALOG`, `CURRENCY_CODES`, `resolveCurrency`) | The database owns which currencies exist, their symbol and precision (`GET /currencies`); the catalog adds name, flag country, fallback symbol/decimals and the code enum. Add a row when you seed a currency. |
 | Countries | `countries.data.ts`, `locations.ts` (`COUNTRY_CODES`, `isCountryCode`) | ISO 3166-1 alpha-2; the API validates with it and serves it at `/reference-data/locations`. `flags.ts` (`flagEmoji`) derives a flag from any code. |
 | Time zones | `timezones.data.ts`, `locations.ts` (`TIMEZONE_VALUES`, `isTimezone`) | IANA names; same use. Browser-only formatting (GMT offsets) lives in `apps/web/lib/timezones.ts`. |
+| Icons | `icons.ts` (`CURATED_ICON_CATALOG`, `isCuratedIcon`, `searchCuratedIcons`) | The names a category or tag icon can have, with search keywords. The web maps each name to its glyph in `apps/web/lib/icons.ts` (a test keeps them in step); the MCP validates and suggests from it. Add a name here and a glyph there. |
 | Languages, date formats, default period, theme | `preferences.ts` | Values in `../preferences.ts`; labels here, typed as full `Record`s so a new value fails to compile until labeled. |
 
 ## Rules
