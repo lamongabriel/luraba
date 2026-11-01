@@ -9,6 +9,17 @@
 - **Transactions**: `search_transactions`, `get_transaction`, `create_transaction` (income, expense, transfer,
   credit card purchase with installments), `update_transaction`, `delete_transaction`, and
   `bulk_update_transactions`, `bulk_categorize_transactions`, `bulk_delete_transactions`.
+- **Accounts and credit cards**: `create_account`, `update_account`, `delete_account`, `create_credit_card`,
+  `update_credit_card`, `delete_credit_card`. An empty household can be set up from scratch: bank accounts
+  (`type: "cash"`, or just `"checking"` / `"savings"`), investment, crypto, loan, property, vehicle and other
+  assets or liabilities, each with an opening balance or value in major units, institution name and website (for
+  the logo), notes and type-specific details (vehicle make/model/year/mileage, property address and area, loan
+  terms). `update_account` also sets the current balance (`balance`, recorded as a balance adjustment, e.g. to
+  revalue a car). Deleting an account or card needs `confirm: true` and first reports how many transactions and
+  cards go with it. Not in the API, so not in the tools: a business-account flag, account color or icon, archiving
+  or closing an account, changing an account's currency or a card's paying account.
+- **Categories**: a category can be a path, `Shopping > Electronics`, in `create_transaction` and the
+  bulk tools; with `createMissing` the parent and child are created.
 - **Reference data**: `whoami`, `list_households`, `list_accounts`, `list_credit_cards`, and list/create/update for
   categories, merchants and tags.
 - **Reports**: `report_spending` (by category, merchant or tag), `report_income_expense`, `report_balances` (accounts
@@ -20,7 +31,7 @@ Safety: destructive tools need `confirm: true`; bulk tools take `dryRun: true` a
 ambiguous names return candidates (`needs_clarification`) instead of guessing; amounts are major units with a currency.
 
 Example prompts: "How much do I owe on my credit cards this month?", "How many credit cards do I have?",
-"How much money do I have in Chase?", "Create a $42.50 grocery expense at Whole Foods on my Chase checking",
+"How much money do I have in Chase?", "Create a checking account at Chase with $1,000, then log a $130 expense from it", "Create a $42.50 grocery expense at Whole Foods on my Chase checking",
 "Recategorize every Uber transaction this year as Transport (dry run first)".
 
 ## Connect an AI client

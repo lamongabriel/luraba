@@ -60,6 +60,12 @@ describe("Luraba MCP server (end to end)", () => {
         "bulk_delete_transactions",
         "report_credit_cards",
         "report_balances",
+        "create_account",
+        "update_account",
+        "delete_account",
+        "create_credit_card",
+        "update_credit_card",
+        "delete_credit_card",
       ]),
     );
     expect(tools.every((tool) => tool.inputSchema.type === "object")).toBe(true);
@@ -121,6 +127,106 @@ describe("Luraba MCP server (end to end)", () => {
     expect(refused.data.status ?? refused.text).toMatch(/confirm/i);
     const deleted = await call("delete_transaction", { id, confirm: true });
     expect(deleted.isError, deleted.text).toBe(false);
+  });
+
+  it("sets up a household from scratch and logs an expense end to end", async () => {
+    const make = async (args: Record<string, unknown>) => {
+      const result = await call("create_account", args);
+      expect(result.isError, result.text).toBe(false);
+      expect(result.data.status).toBe("created");
+      return result.data.account;
+    };
+    const checking = await make({
+      name: "Chase Checking",
+      type: "checking",
+      currency: "USD",
+      institution: "Chase",
+      institutionDomain: "chase.com",
+      openingBalance: 1000,
+    });
+    expect(checking.subtype).toBe("checking");
+    expect(checking.balance.amount).toBe(1000);
+    await make({ name: "Business Checking", type: "cash", subtype: "checking", currency: "USD" });
+    await make({ name: "Fidelity Brokerage", type: "investment", currency: "USD" });
+    const car = await make({
+      name: "Honda Civic",
+      type: "vehicle",
+      currency: "USD",
+      openingBalance: 40000,
+      notes: "93k mi",
+      details: { make: "Honda", model: "Civic", year: 2019, mileage: 93000, mileageUnit: "mi" },
+    });
+    expect(car.details.mileage).toBe(93000);
+
+    const duplicate = await call("create_account", { name: "chase checking", type: "cash" });
+    expect(duplicate.data.status).toBe("already_exists");
+    const badType = await call("create_account", { name: "X", type: "spaceship" });
+    expect(badType.data.status).toBe("invalid_input");
+
+    const revalued = await call("update_account", { account: "civic", balance: 38000 });
+    expect(revalued.isError, revalued.text).toBe(false);
+    expect(revalued.data.account.balance.amount).toBe(38000);
+    const renamed = await call("update_account", {
+      account: "Honda Civic",
+      notes: "93k mi, new tires",
+      details: { mileage: 94000 },
+    });
+    expect(renamed.data.account.details.mileage).toBe(94000);
+
+    const card = await call("create_credit_card", {
+      name: "Amex Gold",
+      ownerAccount: "chase",
+      brand: "American Express",
+      last4: "1234",
+      limit: 5000,
+      closingDay: 10,
+      dueDay: 20,
+    });
+    expect(card.isError, card.text).toBe(false);
+    expect(card.data.creditCard.limit.amount).toBe(5000);
+    const raised = await call("update_credit_card", { creditCard: "amex", limit: 8000 });
+    expect(raised.data.creditCard.limit.amount).toBe(8000);
+
+    const expense = await call("create_transaction", {
+      kind: "expense",
+      description: "Headphones",
+      amount: 130,
+      account: "Chase Checking",
+      category: "Shopping > Electronics",
+      createMissing: true,
+    });
+    expect(expense.isError, expense.text).toBe(false);
+    expect(expense.data.status).toBe("created");
+    const categories = (await call("list_categories")).data.categories as {
+      name: string;
+      parent: string | null;
+    }[];
+    expect(categories).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "Electronics", parent: "Shopping" }),
+      ]),
+    );
+    const again = await call("create_transaction", {
+      kind: "expense",
+      description: "Cable",
+      amount: 9,
+      account: "Chase Checking",
+      category: "shopping > electronics",
+    });
+    expect(again.data.status).toBe("created");
+
+    const refused = await call("delete_account", { account: "Chase Checking" });
+    expect(refused.data.status).toBe("confirmation_required");
+    expect(refused.data.dependents.transactions).toBeGreaterThan(0);
+    expect(refused.data.dependents.creditCards).toContain("Amex Gold");
+    const cardRefused = await call("delete_credit_card", { creditCard: "amex" });
+    expect(cardRefused.data.status).toBe("confirmation_required");
+    const cardGone = await call("delete_credit_card", { creditCard: "amex", confirm: true });
+    expect(cardGone.data.status).toBe("deleted");
+    const gone = await call("delete_account", { account: "Chase Checking", confirm: true });
+    expect(gone.data.status).toBe("deleted");
+    const left = await call("list_accounts");
+    expect(JSON.stringify(left.data)).not.toContain("Chase Checking");
   });
 
   it("asks for clarification instead of guessing an ambiguous account", async () => {

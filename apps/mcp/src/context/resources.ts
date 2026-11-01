@@ -16,6 +16,7 @@ household, with exactly that person's permissions.
 - "How much money do I have in <bank>?" -> report_balances with search
 - "Where did my money go?" -> report_spending (groupBy category | merchant | tag)
 - "Add this purchase" -> create_transaction (names are resolved; if ambiguous you get candidates back)
+- "Set up an account or card" / "revalue my car" -> create_account, update_account (balance), create_credit_card; an empty household needs an account before any transaction
 - "Recategorize / clean up many transactions" -> bulk_* tools with dryRun first
 
 ## Rules

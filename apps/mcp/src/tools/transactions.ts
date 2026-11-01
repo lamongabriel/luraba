@@ -12,6 +12,7 @@ import { z } from "zod";
 import { LurabaApiError } from "../client/errors.js";
 import { majorToMinor, toMoney } from "../format/money.js";
 import { loadNameMaps, summarizeRow, type TransactionSummary } from "../format/transactions.js";
+import { normalize } from "../resolve/match.js";
 import { clarificationOutput, Problems } from "../resolve/problems.js";
 import {
   buildTransactionQuery,
@@ -126,18 +127,69 @@ export async function resolveClassification(
   const out: { categoryId?: string; merchantId?: string; tagIds?: string[] } = {};
 
   if (input.category) {
-    const resolution = await refs.resolveCategory(input.category);
-    if (resolution.status === "not_found" && input.createMissing) {
-      created.push({ kind: "category", name: input.category });
-      if (!options.dryRun) {
-        const category = await context.client.request(categoriesEndpoints.create, {
-          body: { name: input.category, type: input.categoryType ?? "expense" },
-        });
-        refs.invalidate("categories");
-        out.categoryId = category.id;
+    const segments = input.category
+      .split(/\s*(?:>|\/)\s*/u)
+      .map((segment) => segment.trim())
+      .filter(Boolean);
+    if (segments.length > 1) {
+      // "Shopping > Electronics": walk the path, creating missing levels when allowed.
+      let parentId: string | undefined;
+      for (const [index, segment] of segments.entries()) {
+        const all = await refs.categories();
+        const siblings = all.filter(
+          (category) =>
+            (category.parentId ?? undefined) === parentId &&
+            normalize(category.name) === normalize(segment),
+        );
+        const last = index === segments.length - 1;
+        if (siblings.length === 1 && siblings[0]) {
+          parentId = siblings[0].id;
+          if (last) out.categoryId = parentId;
+        } else if (siblings.length > 1) {
+          problems.take("category", {
+            status: "ambiguous",
+            query: input.category,
+            candidates: siblings.map((item) => ({ id: item.id, name: item.name })),
+          });
+          break;
+        } else if (input.createMissing) {
+          created.push({ kind: "category", name: segments.slice(0, index + 1).join(" > ") });
+          if (options.dryRun) break;
+          const category = await context.client.request(categoriesEndpoints.create, {
+            body: {
+              name: segment,
+              type: input.categoryType ?? "expense",
+              ...(parentId ? { parentId } : {}),
+            },
+          });
+          refs.invalidate("categories");
+          parentId = category.id;
+          if (last) out.categoryId = category.id;
+        } else {
+          problems.take("category", {
+            status: "not_found",
+            query: input.category,
+            suggestions: all
+              .filter((category) => normalize(category.name) === normalize(segment))
+              .map((item) => ({ id: item.id, name: item.name })),
+          });
+          break;
+        }
       }
     } else {
-      out.categoryId = problems.take("category", resolution);
+      const resolution = await refs.resolveCategory(input.category);
+      if (resolution.status === "not_found" && input.createMissing) {
+        created.push({ kind: "category", name: input.category });
+        if (!options.dryRun) {
+          const category = await context.client.request(categoriesEndpoints.create, {
+            body: { name: input.category, type: input.categoryType ?? "expense" },
+          });
+          refs.invalidate("categories");
+          out.categoryId = category.id;
+        }
+      } else {
+        out.categoryId = problems.take("category", resolution);
+      }
     }
   }
   if (input.merchant) {
@@ -239,7 +291,7 @@ export const createTransaction = defineTool({
   name: "create_transaction",
   title: "Create a transaction",
   description:
-    'Create an expense, income, transfer or credit card purchase (with installments). Accounts, credit cards, categories, merchants, tags and payment methods can be given by name or id (details extracted from a screenshot or receipt work well). If a name is ambiguous or unknown nothing is created and the candidates come back as status "needs_clarification"; ask the user, or set createMissing=true to create the missing category/merchant/tags. amount is positive, in major units (12.50 = $12.50). date defaults to today in the household time zone. Use dryRun=true to preview the resolved transaction without creating it.',
+    'Create an expense, income, transfer or credit card purchase (with installments). Accounts, credit cards, categories (a path like "Shopping > Electronics" picks or, with createMissing, creates the child under its parent), merchants, tags and payment methods can be given by name or id (details extracted from a screenshot or receipt work well). If a name is ambiguous or unknown nothing is created and the candidates come back as status "needs_clarification"; ask the user, or set createMissing=true to create the missing category/merchant/tags. amount is positive, in major units (12.50 = $12.50). date defaults to today in the household time zone. Use dryRun=true to preview the resolved transaction without creating it.',
   input: createInput,
   annotations: WRITE,
   async handler(context, args) {
@@ -347,7 +399,16 @@ export const createTransaction = defineTool({
         data: {
           status: "dry_run",
           wouldCreate: { ...(body ?? {}), amountDisplay: toMoney(args.amount, currency ?? "USD") },
-          wouldAlsoCreate: await pendingCreations(context, args),
+          wouldAlsoCreate: args.createMissing
+            ? (
+                await resolveClassification(
+                  context,
+                  new Problems(),
+                  { ...args, categoryType },
+                  { dryRun: true },
+                )
+              ).created
+            : [],
         },
       };
     }
@@ -383,27 +444,6 @@ export const createTransaction = defineTool({
   },
 });
 
-async function pendingCreations(
-  context: ToolContext,
-  args: {
-    category?: string | undefined;
-    merchant?: string | undefined;
-    tags?: string[] | undefined;
-    createMissing: boolean;
-  },
-) {
-  if (!args.createMissing) return [];
-  const pending: { kind: string; name: string }[] = [];
-  if (args.category && (await context.refs.resolveCategory(args.category)).status === "not_found")
-    pending.push({ kind: "category", name: args.category });
-  if (args.merchant && (await context.refs.resolveMerchant(args.merchant)).status === "not_found")
-    pending.push({ kind: "merchant", name: args.merchant });
-  for (const tag of args.tags ?? [])
-    if ((await context.refs.resolveTag(tag)).status === "not_found")
-      pending.push({ kind: "tag", name: tag });
-  return pending;
-}
-
 async function createCardPurchase(
   context: ToolContext,
   args: CreateArgs,
@@ -431,7 +471,16 @@ async function createCardPurchase(
           ...purchase,
           amountDisplay: toMoney(args.amount, currency),
         },
-        wouldAlsoCreate: await pendingCreations(context, args),
+        wouldAlsoCreate: args.createMissing
+          ? (
+              await resolveClassification(
+                context,
+                new Problems(),
+                { ...args, categoryType: "expense" },
+                { dryRun: true },
+              )
+            ).created
+          : [],
       },
     };
   }

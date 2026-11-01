@@ -1,4 +1,12 @@
 import {
+  createAccount,
+  createCreditCard,
+  deleteAccount,
+  deleteCreditCard,
+  updateAccount,
+  updateCreditCard,
+} from "./accounts.js";
+import {
   bulkCategorizeTransactions,
   bulkDeleteTransactions,
   bulkUpdateTransactions,
@@ -44,7 +52,13 @@ export const tools: AnyTool[] = [
   whoami,
   listHouseholds,
   listAccounts,
+  createAccount,
+  updateAccount,
+  deleteAccount,
   listCreditCards,
+  createCreditCard,
+  updateCreditCard,
+  deleteCreditCard,
   listCategories,
   createCategory,
   updateCategory,
