@@ -23,7 +23,8 @@ Every numeric field uses a shared mask from `components/ui/masked-input.tsx`; ne
 | An amount of money | `MoneyInput` (digits push in from the right, grouped) | `inputType="money"` (`precision`, `allowNegative`) |
 | A whole number (days, counts) | `NumberInput decimals={0}` | `inputType="integer"` or `type="int"` |
 | A decimal that is not money (rate, area) | `NumberInput decimals={n}` | `inputType="decimal" decimals={n}` |
-| A calendar date | `DateInput` | `inputType="date"` |
+| A percentage (interest rate, share) | `NumberInput decimals={2} max={100} suffix="%"` | `inputType="decimal" decimals={2} max={100} suffix="%"` |
+| A calendar date | `DateInput` (a calendar popover, `DatePicker`; value stays a `YYYY-MM-DD` string) | `inputType="date"` |
 
 The inputs carry **canonical strings** (`"1234.56"`); `FormItem` turns them into `number | ""` for
 react-hook-form, so schemas keep working in major units and forms convert with `majorToMinorUnits`.

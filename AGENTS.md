@@ -58,14 +58,17 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | File uploads, attachments, storage backends | [docs/storage.md](docs/storage.md), [packages/storage/README.md](packages/storage/README.md), [apps/api/src/modules/uploads/README.md](apps/api/src/modules/uploads/README.md) |
 | Money, dates, recurrence | [packages/domain/README.md](packages/domain/README.md) |
 | Formatting numbers, money, dates; number and date inputs | [docs/formatting.md](docs/formatting.md) (**mandatory**) |
+| Laying out or restyling any web page (cards, spacing, columns, charts, in-place edits) | [docs/design-language.md](docs/design-language.md) (**mandatory**) |
 | Notifications, queues, the worker | [packages/notifications/README.md](packages/notifications/README.md), [packages/queue/README.md](packages/queue/README.md), [apps/worker/README.md](apps/worker/README.md) |
-| Budget page (monthly plan, card settings) | [apps/web/components/budgets/README.md](apps/web/components/budgets/README.md), [apps/api/src/modules/budgets/README.md](apps/api/src/modules/budgets/README.md) |
+| Budgets page (`/budgets`: gauge, category budgets, charts, card settings) | [apps/web/components/budgets/README.md](apps/web/components/budgets/README.md), [apps/api/src/modules/budgets/README.md](apps/api/src/modules/budgets/README.md) |
+| Accounts list, account sheet, account detail page | [apps/web/components/accounts/README.md](apps/web/components/accounts/README.md), [apps/api/src/modules/accounts/README.md](apps/api/src/modules/accounts/README.md) |
 | Credit cards UI (overview, card detail, invoices) | [apps/web/components/credit-cards/README.md](apps/web/components/credit-cards/README.md) |
 | The web app | [apps/web/README.md](apps/web/README.md) (data layer, components, forms, permissions) |
 | A new page (its title/SEO), the logo, favicons, OG image | [apps/web/components/brand/README.md](apps/web/components/brand/README.md) (**mandatory**) |
 | Choosing or showing a currency, country, language, time zone, date format, default period or theme | [packages/contracts/src/catalogs/README.md](packages/contracts/src/catalogs/README.md) and the selects in [display](apps/web/components/display/README.md) (**mandatory**) |
 | A page's loading, error or empty state; skeletons | [apps/web/components/states/README.md](apps/web/components/states/README.md) (**mandatory**) |
 | KPIs / headline numbers | [apps/web/components/kpi/README.md](apps/web/components/kpi/README.md) (**mandatory**) |
+| A chart (line, area, bar, donut) | [apps/web/components/charts/README.md](apps/web/components/charts/README.md) (**mandatory**) |
 | Showing an account, card, transaction type, merchant, product, amount, category or tag | [apps/web/components/display/README.md](apps/web/components/display/README.md) (**mandatory**) |
 | Products and transaction items (UI) | [apps/web/components/products/README.md](apps/web/components/products/README.md), [apps/api/src/modules/products/README.md](apps/api/src/modules/products/README.md) |
 | Reusable upload UI (galleries, cropper) | [apps/web/components/uploads/README.md](apps/web/components/uploads/README.md) |
@@ -124,9 +127,16 @@ add its README in the same change, and update the READMEs you rely on if the rul
     `AmountDisplay`, numeric inputs through `MoneyInput` / `NumberInput` / `DateInput` (never
     `type="number"`), dates through the UTC helpers in `@luraba/domain`. See
     [docs/formatting.md](docs/formatting.md).
+15. **Charts use the chart library.** New charts are `AreaChartCard`, `BarChartCard` or
+    `DonutChartCard` from `apps/web/components/charts` (loading, error with retry, empty, tooltips
+    and colors built in), never Recharts directly or a hand-built card; extend the library when a
+    chart type is missing. Enforced by `apps/web/test/conventions.test.ts`.
 14. **Every page has metadata.** `pageMetadata({ title })` from `@/lib/metadata` on every `page.tsx` (or its
     same-folder `layout.tsx` for client pages); brand pieces come from `components/brand`. See
     [apps/web/components/brand/README.md](apps/web/components/brand/README.md).
+16. **Pages follow the design language.** Pages are flows of sections on the page background, not piles
+    of cards: no card in a card, no table in a card, one period control, balanced columns, the spacing
+    scale, charts that are readable. See [docs/design-language.md](docs/design-language.md).
 
 ## Commands
 

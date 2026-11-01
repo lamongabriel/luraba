@@ -78,7 +78,7 @@ A month's budget (`budgets`) is a planned amount per income or expense category;
 read from transactions plus credit-card budget recognitions. How card purchases count (purchase month,
 bill due month or the month after; each installment or the full purchase) defaults on the household and
 can be overridden per month (`budget_month_settings`); purchases are stamped with the resolved setting.
-Details: `apps/api/src/modules/budgets/README.md`, `apps/web/components/budgets/README.md`.
+`GET /budgets/:month/insights` adds the six-month history and the most expensive categories. Details: `apps/api/src/modules/budgets/README.md`, `apps/web/components/budgets/README.md`.
 
 ### Goals
 
