@@ -32,9 +32,10 @@
 - **Resources**: `luraba://guide/overview` and `luraba://guide/transactions`.
 
 Where rows show up: the Transactions page lists rows dated today or earlier. A credit card purchase is listed on the
-day it was made, and installment n a month later each time (same day of the month, clamped to the month end);
-the invoice closing and due dates stay on the invoice, which always lists its own purchases, later installments
-included. Later installments show under **Upcoming** until their day. Rows created through the API or MCP appear
+day it was made (installment 1), and installments 2..n on the 1st of each following month, so on the 1st of a
+month everything a plan owes that month is already listed. A purchase on Jan 15 in 6 installments lands on Jan 15,
+Feb 1, Mar 1, Apr 1, May 1, Jun 1. The invoice closing and due dates stay on the invoice, which always lists its
+own purchases, later installments included. Later installments show under **Upcoming** until their day. Rows created through the API or MCP appear
 after a refresh (the page also refetches when you return to the tab).
 
 Safety: destructive tools need `confirm: true`; bulk tools take `dryRun: true` and are capped at 300 rows;

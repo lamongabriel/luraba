@@ -165,7 +165,7 @@ describe("transactions routes", () => {
           installmentNumber: 2,
           installmentCount: 3,
           amount: 40_000,
-          postedDate: "2026-05-20",
+          postedDate: "2026-05-01",
         }),
         expect.objectContaining({
           id: purchase.transactionId,
@@ -174,7 +174,7 @@ describe("transactions routes", () => {
           installmentNumber: 3,
           installmentCount: 3,
           amount: 40_000,
-          postedDate: "2026-06-20",
+          postedDate: "2026-06-01",
         }),
       ]),
     );

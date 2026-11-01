@@ -591,13 +591,13 @@ describe("transactions service", () => {
           rowId: purchase.installments[1].installmentId,
           rowKind: "credit_card_installment",
           installmentNumber: 2,
-          postedDate: "2026-05-20",
+          postedDate: "2026-05-01",
         }),
         expect.objectContaining({
           rowId: purchase.installments[2].installmentId,
           rowKind: "credit_card_installment",
           installmentNumber: 3,
-          postedDate: "2026-06-20",
+          postedDate: "2026-06-01",
         }),
       ]),
     );

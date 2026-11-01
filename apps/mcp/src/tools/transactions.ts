@@ -518,7 +518,7 @@ async function createCardPurchase(
         })),
       },
       alsoCreated: classification.created,
-      note: `Listed in Transactions on the purchase date (installment n a month later each time); the invoice closing and due dates are in installments[].`,
+      note: `Listed in Transactions on the purchase date; installments 2..n on the 1st of each following month. The invoice closing and due dates are in installments[].`,
     },
   };
 }

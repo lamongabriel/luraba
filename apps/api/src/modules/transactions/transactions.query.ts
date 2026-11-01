@@ -33,11 +33,12 @@ function sqlArray(values: string[], cast: "text" | "uuid"): SQL {
 }
 
 /**
- * When an installment lands in the feed: installment 1 on the purchase date, installment n a month
- * later each time (Postgres clamps to the month end, so Jan 31 + 1 month is Feb 28). The invoice's
- * closing and due dates stay on the invoice; they do not decide where the purchase is listed.
+ * When an installment lands in the feed: installment 1 on the purchase date (a one-time purchase
+ * always shows the day it was made), every later installment on the first day of its month
+ * (purchase month + n - 1), so on the 1st a month's whole plan total is already visible. The
+ * invoice's closing and due dates stay on the invoice; they do not decide where the purchase is listed.
  */
-export const installmentPostedDate = sql`(${transactionsTable.purchaseDate} + ((${creditCardInstallmentsTable.installmentNumber} - 1) * interval '1 month'))::date`;
+export const installmentPostedDate = sql`(case when ${creditCardInstallmentsTable.installmentNumber} = 1 then ${transactionsTable.purchaseDate} else date_trunc('month', ${transactionsTable.purchaseDate}) + ((${creditCardInstallmentsTable.installmentNumber} - 1) * interval '1 month') end)::date`;
 
 export function buildTransactionFeedWhere(query: TransactionFilterQuery): SQL | undefined {
   const postedDateConditions = combineConditions(

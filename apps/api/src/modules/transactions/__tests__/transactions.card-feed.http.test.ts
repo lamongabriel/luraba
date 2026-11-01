@@ -15,7 +15,7 @@ type Row = {
 };
 
 /**
- * Card purchases are listed on the day they were made (installment n a month later each time),
+ * Card purchases are listed on the day they were made (later installments on the 1st of each month),
  * and an invoice always lists its own purchases, whatever their dates.
  */
 describe("card purchases in the transactions feed", () => {
@@ -111,28 +111,64 @@ describe("card purchases in the transactions feed", () => {
     await mcp.close();
   });
 
-  it("puts installment n a month after the previous one, clamped to the month end", async () => {
+  it("lands installment 1 on the purchase date and later ones on the 1st of each month", async () => {
     const { mcp, card, list } = await setup();
-    const created = await mcp.call("create_transaction", {
-      kind: "credit_card_purchase",
-      description: "Laptop",
-      amount: 300,
-      creditCard: "XP",
-      installments: 3,
-      date: "2025-01-31",
-    });
-    expect(created.isError, created.text).toBe(false);
-    const rows = (await list(`?creditCardIds=${card.id}`)).filter(
-      (row) => row.description === "Laptop",
-    );
-    expect(rows.map((row) => [row.installmentNumber, row.postedDate])).toEqual([
-      [3, "2025-03-31"],
-      [2, "2025-02-28"],
-      [1, "2025-01-31"],
+    const buy = async (description: string, installments: number, date: string) => {
+      const created = await mcp.call("create_transaction", {
+        kind: "credit_card_purchase",
+        description,
+        amount: 600,
+        creditCard: "XP",
+        installments,
+        date,
+      });
+      expect(created.isError, created.text).toBe(false);
+    };
+    await buy("One-time", 1, "2025-01-15");
+    await buy("Mid-month plan", 6, "2025-01-15");
+    await buy("First-of-month plan", 6, "2025-01-01");
+    await buy("Month-end plan", 3, "2025-01-31");
+    const dates = async (description: string) =>
+      (await list(`?creditCardIds=${card.id}&search=${encodeURIComponent(description)}`))
+        .filter((row) => row.description === description)
+        .map((row) => row.postedDate)
+        .sort();
+
+    expect(await dates("One-time")).toEqual(["2025-01-15"]);
+    expect(await dates("Mid-month plan")).toEqual([
+      "2025-01-15",
+      "2025-02-01",
+      "2025-03-01",
+      "2025-04-01",
+      "2025-05-01",
+      "2025-06-01",
     ]);
-    expect(rows.every((row) => row.purchaseDate === "2025-01-31")).toBe(true);
-    const february = await list("?dateFrom=2025-02-01&dateTo=2025-02-28");
-    expect(february.map((row) => row.installmentNumber)).toEqual([2]);
+    expect(await dates("First-of-month plan")).toEqual([
+      "2025-01-01",
+      "2025-02-01",
+      "2025-03-01",
+      "2025-04-01",
+      "2025-05-01",
+      "2025-06-01",
+    ]);
+    expect(await dates("Month-end plan")).toEqual(["2025-01-31", "2025-02-01", "2025-03-01"]);
+
+    // On the 1st of a month the whole month's plan installments are already in range.
+    const february = await list("?dateFrom=2025-02-01&dateTo=2025-02-01");
+    expect(february.map((row) => row.description).sort()).toEqual([
+      "First-of-month plan",
+      "Mid-month plan",
+      "Month-end plan",
+    ]);
+    const midMonth = await list("?dateFrom=2025-01-02&dateTo=2025-01-31");
+    expect(midMonth.map((row) => row.description).sort()).toEqual([
+      "Mid-month plan",
+      "Month-end plan",
+      "One-time",
+    ]);
+    expect(
+      (await list("?dateFrom=2025-01-15&dateTo=2025-01-15")).map((row) => row.description).sort(),
+    ).toEqual(["Mid-month plan", "One-time"]);
     await mcp.close();
   });
 

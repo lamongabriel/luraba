@@ -25,8 +25,10 @@ purchases with the regular transactions table.
 ## What the list shows
 
 `GET /transactions` returns rows whose posted date is today (household time zone) or earlier. A credit card
-installment lands on the purchase date plus `installmentNumber - 1` months (`installmentPostedDate` in
-`transactions.query.ts`; Postgres clamps to the month end, so Jan 31 + 1 month is Feb 28). Its invoice's closing and
+installment lands on the purchase date (installment 1, so a one-time purchase shows the day it was made) or, for
+installments 2..n, on the 1st of the month `installmentNumber - 1` months after the purchase month
+(`installmentPostedDate` in `transactions.query.ts`): a Jan 15 purchase in 6 installments is Jan 15, Feb 1, Mar 1,
+Apr 1, May 1, Jun 1, so on the 1st a month's plan total is already visible. Its invoice's closing and
 due dates are not used for listing, sorting or `dateFrom`/`dateTo`; they live on the invoice
 (`/credit-cards/:id/cycles`). Later installments appear in `GET /transactions/upcoming` until their day.
 A query scoped with `billingCycleIds` (the invoice view) is not clamped to today, so an invoice lists all of its
