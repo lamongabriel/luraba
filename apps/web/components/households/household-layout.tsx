@@ -4,6 +4,7 @@ import {
   FileExportIcon,
   FileImportIcon,
   Layers01Icon,
+  PlugSocketIcon,
   Shield01Icon,
   Store01Icon,
   TagsIcon,
@@ -50,6 +51,12 @@ const links: readonly SectionNavItem[] = [
     icon: FileExportIcon,
     permission: PERMISSIONS.EXPORTS_READ,
   },
+  {
+    href: "/household/integrations",
+    label: "Integrations",
+    icon: PlugSocketIcon,
+    permission: PERMISSIONS.INTEGRATIONS_READ,
+  },
 ];
 
 /** The active household's area: its name on top, a left menu, the page beside it. */
@@ -59,7 +66,7 @@ export function HouseholdLayout({ children }: { children: ReactNode }) {
   return (
     <SectionLayout
       title={household?.name ?? "Household"}
-      subtitle="Members, categories, merchants, tags and your data."
+      subtitle="Members, categories, merchants, tags, integrations and your data."
       navLabel="Household"
       nav={links}
     >

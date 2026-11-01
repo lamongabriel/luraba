@@ -168,9 +168,9 @@ Register these OAuth callback URLs, replacing the example origin with yours:
 - Google: `https://finance.example.com/api/auth/callback/google`
 - GitHub: `https://finance.example.com/api/auth/callback/github`
 
-Brandfetch credentials are saved through Luraba's integration settings, not an
-environment variable. The generated integration encryption key protects those
-stored credentials; it is not a provider API key.
+Brandfetch credentials are entered in the app under **Household > Integrations** (owners and admins), not in an
+environment variable: paste the client ID and Luraba verifies it with Brandfetch before saving. The generated
+integration encryption key protects the stored value; it is not a provider API key.
 
 ## File storage
 
