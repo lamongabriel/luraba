@@ -164,7 +164,11 @@ export const TRANSACTION_TYPE_DISPLAY: Record<
   income: { label: "Income", icon: ArrowDown01Icon, tone: "text-emerald-500" },
   transfer: { label: "Transfer", icon: Exchange01Icon, tone: "text-sky-500" },
   adjustment: { label: "Adjustment", icon: SlidersHorizontalIcon, tone: "text-muted-foreground" },
-  credit_card_installment: { label: "Installment", icon: CreditCardIcon, tone: "text-orange-500" },
+  credit_card_installment: {
+    label: "Card purchase",
+    icon: CreditCardIcon,
+    tone: "text-orange-500",
+  },
   credit_card_payment: { label: "Card payment", icon: CreditCardIcon, tone: "text-sky-500" },
 };
 
