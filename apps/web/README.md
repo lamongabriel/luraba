@@ -71,6 +71,8 @@ that invalidates the key. Reusable file/attachment UI is documented in
 
 **Charts (mandatory).** Every chart is `AreaChartCard`, `BarChartCard` or `DonutChartCard` from [components/charts](components/charts/README.md). **Period filter.** Pages filtered by dates use `usePeriodFilter` + `PeriodFilter` (`components/filters/period-filter.tsx`): one button that opens a popover with the presets beside a day-range calendar. Accounts UI: [components/accounts/README.md](components/accounts/README.md).
 
+API keys UI (`/settings/api-keys`, `components/settings/api-keys/`): list, create sheet, one-time secret modal, inline rename, revoke switch and delete modal; usage in [docs/api-keys-mcp/api-keys.md](../../docs/api-keys-mcp/api-keys.md).
+
 Credit cards UI (month overview, card detail, invoices): [components/credit-cards/README.md](components/credit-cards/README.md).
 
 Budgets UI (`/budgets`: monthly gauge, category budgets, charts, card settings): [components/budgets/README.md](components/budgets/README.md).

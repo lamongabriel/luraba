@@ -1,8 +1,13 @@
+import { apiKey } from "@better-auth/api-key";
+import {
+  API_KEY_MAX_EXPIRY_DAYS,
+  API_KEY_NAME_MAX_LENGTH,
+  API_KEY_PREFIX,
+} from "@luraba/contracts";
 import * as schema from "@luraba/db/schema";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
-import type { Auth, BetterAuthOptions } from "better-auth/types";
 import { env } from "@/config/env";
 import { db } from "@/db";
 import { authRepository } from "@/modules/auth/auth.repository";
@@ -15,6 +20,10 @@ import {
   PREFERRED_PERIOD_VALUES,
   PREFERRED_THEME_VALUES,
 } from "@/shared/validation/preferences";
+
+// Per key: 600 requests a minute, enough for an agent that pages through data and applies bulk edits.
+const API_KEY_RATE_LIMIT_WINDOW_MS = 60_000;
+const API_KEY_RATE_LIMIT_MAX = 600;
 
 const authPayloadPaths = new Set(["/sign-up/email", "/sign-in/email"]);
 
@@ -93,7 +102,7 @@ async function enrichAuthPayload(returned: object, user: { id: string; email: st
   return { ...returned, user: record, household: session.household };
 }
 
-const authOptions: BetterAuthOptions = {
+const authOptions = {
   baseURL: env.baseUrl,
   secret: env.authSecret,
   trustedOrigins: allowedAuthOrigins,
@@ -101,7 +110,7 @@ const authOptions: BetterAuthOptions = {
   databaseHooks: {
     user: { create: { after: syncNewUserHousehold } },
   },
-  advanced: { database: { generateId: "uuid" } },
+  advanced: { database: { generateId: "uuid" as const } },
   emailAndPassword: { enabled: true },
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
@@ -115,9 +124,28 @@ const authOptions: BetterAuthOptions = {
   },
   ...(Object.keys(socialProviders).length > 0 ? { socialProviders } : {}),
   user: { modelName: "users", additionalFields: additionalUserFields },
+  plugins: [
+    apiKey({
+      defaultPrefix: API_KEY_PREFIX,
+      requireName: true,
+      maximumNameLength: API_KEY_NAME_MAX_LENGTH,
+      enableMetadata: true,
+      // Requests are authenticated by `authenticateRequest` (access middleware) through
+      // `auth.api.verifyApiKey`, not by turning the key into a Better Auth session.
+      enableSessionForAPIKeys: false,
+      startingCharactersConfig: { shouldStore: true, charactersLength: 10 },
+      keyExpiration: { maxExpiresIn: API_KEY_MAX_EXPIRY_DAYS, minExpiresIn: 1 },
+      rateLimit: {
+        enabled: true,
+        timeWindow: API_KEY_RATE_LIMIT_WINDOW_MS,
+        maxRequests: API_KEY_RATE_LIMIT_MAX,
+      },
+      schema: { apikey: { modelName: "apiKeys" } },
+    }),
+  ],
   session: { modelName: "authSessions" },
   account: { modelName: "authAccounts" },
   verification: { modelName: "authVerifications" },
 };
 
-export const auth: Auth<BetterAuthOptions> = betterAuth(authOptions);
+export const auth = betterAuth(authOptions);

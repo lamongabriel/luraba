@@ -1,5 +1,7 @@
 export * from "./schemas/account-profiles.schema.js";
 export * from "./schemas/accounts.schema.js";
+export * from "./schemas/api-keys.schema.js";
+export { apiKeysTable as apiKeys } from "./schemas/api-keys.schema.js";
 export * from "./schemas/auth-accounts.schema.js";
 export { authAccountsTable as authAccounts } from "./schemas/auth-accounts.schema.js";
 export * from "./schemas/auth-sessions.schema.js";

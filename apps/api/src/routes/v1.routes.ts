@@ -1,5 +1,6 @@
 import {
   accountsEndpoints,
+  apiKeysEndpoints,
   authEndpoints,
   billsEndpoints,
   budgetsEndpoints,
@@ -27,6 +28,7 @@ import {
 import { Router } from "express";
 
 import accountsRouter from "@/modules/accounts/accounts.routes";
+import apiKeysRouter from "@/modules/api-keys/api-keys.routes";
 import authRouter from "@/modules/auth/auth.routes";
 import billsRouter from "@/modules/bills/bills.routes";
 import budgetsRouter from "@/modules/budgets/budgets.routes";
@@ -53,6 +55,7 @@ import uploadsRouter, { attachmentsRouter } from "@/modules/uploads/uploads.rout
 const router = Router();
 
 router.use(getEndpointBasePath(authEndpoints.me), authRouter);
+router.use(getEndpointBasePath(apiKeysEndpoints.list), apiKeysRouter);
 router.use(getEndpointBasePath(currenciesEndpoints.list), currenciesRouter);
 router.use(getEndpointBasePath(householdsEndpoints.list), householdsRouter);
 router.use(getEndpointBasePath(integrationsEndpoints.list), integrationsRouter);

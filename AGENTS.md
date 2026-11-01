@@ -74,6 +74,7 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | Reusable upload UI (galleries, cropper) | [apps/web/components/uploads/README.md](apps/web/components/uploads/README.md) |
 | Settings / Household pages, cards, section menus | [apps/web/components/section/README.md](apps/web/components/section/README.md) |
 | Importing statements (OFX/CSV) or exporting data | [apps/api/src/modules/imports/README.md](apps/api/src/modules/imports/README.md), [apps/api/src/modules/exports/README.md](apps/api/src/modules/exports/README.md), [apps/web/components/imports/README.md](apps/web/components/imports/README.md) |
+| API keys (create/use/revoke, how a key authenticates) | [docs/api-keys-mcp/api-keys.md](docs/api-keys-mcp/api-keys.md), [apps/api/src/modules/api-keys/README.md](apps/api/src/modules/api-keys/README.md) |
 | Deployment (Compose, Coolify) | [docs/deployment.md](docs/deployment.md), [docs/coolify.md](docs/coolify.md) |
 
 ## Rules that always apply

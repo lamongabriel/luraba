@@ -17,6 +17,14 @@ The API owns persistence. The contracts package owns the public REST boundary.
 The web app must not redefine Luraba HTTP request, response, or resource types.
 Better Auth SDK routes remain outside the REST contract registry.
 
+## Authentication
+
+Requests authenticate with a Better Auth session cookie **or** a personal API key
+(`Authorization: Bearer lur_...` / `x-api-key`, Better Auth `@better-auth/api-key` plugin). A key
+resolves to its owner user and then follows the exact same household resolution and
+`requireAccess({ permission })` checks as a session, so it can never exceed the owner's role in a
+household. API keys cannot manage API keys. See [api-keys-mcp/api-keys.md](api-keys-mcp/api-keys.md).
+
 Date parsing, formatting, timezone ranges, and calendar helpers live in
 `packages/domain/src/date.ts`; applications import them from `@luraba/domain`.
 Generic schedules live in `packages/domain/src/recurrency.ts`, where a rule can

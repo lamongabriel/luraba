@@ -8,6 +8,7 @@ import { fromNodeHeaders } from "better-auth/node";
 import { and, eq } from "drizzle-orm";
 import type { NextFunction, Request, Response } from "express";
 import { db } from "@/db";
+import { authenticateApiKey, extractApiKey } from "@/modules/api-keys/api-keys.auth";
 import * as householdsService from "@/modules/households/households.service";
 import { ForbiddenError, UnauthorizedError } from "@/shared/errors";
 import { auth } from "@/shared/lib/auth";
@@ -21,10 +22,27 @@ type AccessOptions = {
   household?: boolean;
   permission?: HouseholdPermission;
   householdParam?: string;
+  /** Only a signed-in session may call this route; API keys are rejected (key management). */
+  sessionOnly?: boolean;
 };
 
-async function authenticateRequest(req: Request): Promise<AuthenticatedUser> {
+async function authenticateRequest(
+  req: Request,
+  options: AccessOptions = {},
+): Promise<AuthenticatedUser> {
+  const apiKey = extractApiKey(req);
+  if (apiKey && options.sessionOnly) {
+    throw new ForbiddenError("API keys cannot manage API keys; sign in with your account");
+  }
+
   if (req.user) {
+    return req.user;
+  }
+
+  // A key resolves to its owner and then takes the exact same path as a session user: the household
+  // comes from the same header/route/default and the role's permissions are checked as usual.
+  if (apiKey) {
+    req.user = await authenticateApiKey(apiKey);
     return req.user;
   }
 
@@ -120,7 +138,7 @@ async function resolveHousehold(
 export function requireAccess(options: AccessOptions = {}) {
   return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
-      await authenticateRequest(req);
+      await authenticateRequest(req, options);
 
       const needsHousehold = options.household || options.permission;
       if (needsHousehold) {

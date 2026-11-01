@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Key01Icon,
   Notification01Icon,
   Settings02Icon,
   Shield01Icon,
@@ -14,13 +15,14 @@ const links: readonly SectionNavItem[] = [
   { href: "/settings/preferences", label: "Preferences", icon: Settings02Icon },
   { href: "/settings/notifications", label: "Notifications", icon: Notification01Icon },
   { href: "/settings/security", label: "Security", icon: Shield01Icon },
+  { href: "/settings/api-keys", label: "API keys", icon: Key01Icon },
 ];
 
 export function SettingsLayout({ children }: { children: ReactNode }) {
   return (
     <SectionLayout
       title="Settings"
-      subtitle="Your profile, preferences, security and notifications."
+      subtitle="Your profile, preferences, security, notifications and API keys."
       navLabel="Settings"
       nav={links}
     >
