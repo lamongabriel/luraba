@@ -14,6 +14,7 @@ import { householdsEndpoints } from "./households/endpoints.js";
 import { importsEndpoints } from "./imports/endpoints.js";
 import { integrationsEndpoints } from "./integrations/endpoints.js";
 import { investmentsEndpoints } from "./investments/endpoints.js";
+import { mcpEndpoints } from "./mcp/endpoints.js";
 import { merchantsEndpoints } from "./merchants/endpoints.js";
 import { notificationsEndpoints } from "./notifications/endpoints.js";
 import { onboardingEndpoints } from "./onboarding/endpoints.js";
@@ -30,6 +31,7 @@ type EndpointGroup = Readonly<Record<string, EndpointContract>>;
 export const contractModules = {
   accounts: accountsEndpoints,
   apiKeys: apiKeysEndpoints,
+  mcp: mcpEndpoints,
   auth: authEndpoints,
   bills: billsEndpoints,
   budgets: budgetsEndpoints,

@@ -10,6 +10,7 @@ import type { NextFunction, Request, Response } from "express";
 import { db } from "@/db";
 import { authenticateApiKey, extractApiKey } from "@/modules/api-keys/api-keys.auth";
 import * as householdsService from "@/modules/households/households.service";
+import { authenticateOAuthToken, extractOAuthToken } from "@/modules/mcp/mcp.auth";
 import { ForbiddenError, UnauthorizedError } from "@/shared/errors";
 import { auth } from "@/shared/lib/auth";
 
@@ -31,8 +32,9 @@ async function authenticateRequest(
   options: AccessOptions = {},
 ): Promise<AuthenticatedUser> {
   const apiKey = extractApiKey(req);
-  if (apiKey && options.sessionOnly) {
-    throw new ForbiddenError("API keys cannot manage API keys; sign in with your account");
+  const oauthToken = apiKey ? undefined : extractOAuthToken(req);
+  if ((apiKey || oauthToken) && options.sessionOnly) {
+    throw new ForbiddenError("Agents and API keys cannot do this; sign in with your account");
   }
 
   if (req.user) {
@@ -43,6 +45,12 @@ async function authenticateRequest(
   // comes from the same header/route/default and the role's permissions are checked as usual.
   if (apiKey) {
     req.user = await authenticateApiKey(apiKey);
+    return req.user;
+  }
+
+  // An access token issued to an MCP client through OAuth resolves the same way.
+  if (oauthToken) {
+    req.user = await authenticateOAuthToken(oauthToken);
     return req.user;
   }
 

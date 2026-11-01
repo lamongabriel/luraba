@@ -17,6 +17,7 @@ export * from "./imports/index.js";
 export * from "./integrations/index.js";
 export * from "./investments/index.js";
 export * from "./list.js";
+export * from "./mcp/index.js";
 export * from "./merchants/index.js";
 export * from "./notifications/index.js";
 export * from "./onboarding/index.js";

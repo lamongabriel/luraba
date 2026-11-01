@@ -8,6 +8,7 @@ import * as schema from "@luraba/db/schema";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { createAuthMiddleware } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
+import { mcp } from "better-auth/plugins";
 import { env } from "@/config/env";
 import { db } from "@/db";
 import { authRepository } from "@/modules/auth/auth.repository";
@@ -141,6 +142,20 @@ const authOptions = {
         maxRequests: API_KEY_RATE_LIMIT_MAX,
       },
       schema: { apikey: { modelName: "apiKeys" } },
+    }),
+    // OAuth 2 for MCP clients (dynamic client registration, authorization code + PKCE). The
+    // authorize endpoint is wrapped in app.ts to require a Luraba sign-in and an explicit consent.
+    mcp({
+      loginPage: `${env.frontendOrigin}/login`,
+      resource: `${env.baseUrl.replace(/\/+$/u, "")}/mcp`,
+      oidcConfig: {
+        loginPage: `${env.frontendOrigin}/login`,
+        consentPage: `${env.frontendOrigin}/oauth/consent`,
+        requirePKCE: true,
+        allowDynamicClientRegistration: true,
+        accessTokenExpiresIn: 60 * 60 * 24 * 30,
+        refreshTokenExpiresIn: 60 * 60 * 24 * 90,
+      },
     }),
   ],
   session: { modelName: "authSessions" },

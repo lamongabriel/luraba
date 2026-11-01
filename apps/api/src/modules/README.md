@@ -72,6 +72,7 @@ A scoped `update`/`delete` returns `undefined` when nothing matched: turn that i
 | Module | Owns |
 | --- | --- |
 | [accounts](accounts/README.md) | Bank/cash/investment accounts and their typed profiles |
+| [mcp](mcp/README.md) | MCP for AI agents: OAuth (Better Auth `mcp` plugin) glue, `/mcp` proxy, connected agents (list/revoke), server status |
 | [api-keys](api-keys/README.md) | Personal API keys (Better Auth plugin): create, label, revoke, delete; authentication with `lur_` keys |
 | [auth](auth/README.md) | Current user and preferences (Better Auth routes live outside the REST contract) |
 | [bills](bills/README.md) | Recurring bills and their occurrences |

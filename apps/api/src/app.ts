@@ -4,6 +4,7 @@ import cors from "cors";
 import express from "express";
 import { errorMiddleware } from "@/middleware/error.middleware";
 import healthRouter from "@/modules/health/health.routes";
+import { mountMcpHttp } from "@/modules/mcp/mcp.http";
 import v1Router from "@/routes/v1.routes";
 import { auth } from "@/shared/lib/auth";
 import { allowedAuthOrigins } from "@/shared/lib/auth-origins";
@@ -18,6 +19,9 @@ export function createApp() {
       credentials: true,
     }),
   );
+
+  // MCP discovery, authorize wrapper and proxy: before Better Auth and the body parsers.
+  mountMcpHttp(app);
 
   // Better Auth should run before body parsers in Express v5.
   app.all("/api/auth/*splat", toNodeHandler(auth));

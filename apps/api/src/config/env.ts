@@ -41,12 +41,19 @@ const optionalEmailEnvSchema = z.preprocess(
   z.email().optional(),
 );
 
+const optionalUrlEnvSchema = z.preprocess(
+  (value) => (typeof value === "string" && value.trim().length === 0 ? undefined : value),
+  z.url().optional(),
+);
+
 const envSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     PORT: z.coerce.number().int().positive().default(3001),
     BASE_URL: urlEnvSchema,
     FRONTEND_ORIGIN: urlEnvSchema.default("http://localhost:3000"),
+    // Where the MCP server (apps/mcp, http transport) listens for the API. Unset disables /mcp.
+    MCP_INTERNAL_URL: optionalUrlEnvSchema,
     LOG_LEVEL: z.string().min(1).default("info"),
     DB_HOST: z.string().min(1).default("localhost"),
     DB_PORT: z.coerce.number().int().positive().default(5432),
@@ -176,6 +183,7 @@ export const env = {
   port: parsedEnv.data.PORT,
   baseUrl: parsedEnv.data.BASE_URL,
   frontendOrigin: parsedEnv.data.FRONTEND_ORIGIN,
+  mcpInternalUrl: parsedEnv.data.MCP_INTERNAL_URL,
   logLevel: parsedEnv.data.LOG_LEVEL,
   dbHost: parsedEnv.data.DB_HOST,
   dbPort: parsedEnv.data.DB_PORT,

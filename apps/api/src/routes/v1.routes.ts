@@ -14,6 +14,7 @@ import {
   importsEndpoints,
   integrationsEndpoints,
   investmentsEndpoints,
+  mcpEndpoints,
   merchantsEndpoints,
   notificationsEndpoints,
   onboardingEndpoints,
@@ -41,6 +42,7 @@ import householdsRouter from "@/modules/households/households.routes";
 import importsRouter from "@/modules/imports/imports.routes";
 import integrationsRouter from "@/modules/integrations/integrations.routes";
 import investmentsRouter from "@/modules/investments/investments.routes";
+import mcpRouter from "@/modules/mcp/mcp.routes";
 import merchantsRouter from "@/modules/merchants/merchants.routes";
 import notificationsRouter from "@/modules/notifications/notifications.routes";
 import onboardingRouter from "@/modules/onboarding/onboarding.routes";
@@ -56,6 +58,7 @@ const router = Router();
 
 router.use(getEndpointBasePath(authEndpoints.me), authRouter);
 router.use(getEndpointBasePath(apiKeysEndpoints.list), apiKeysRouter);
+router.use(getEndpointBasePath(mcpEndpoints.info), mcpRouter);
 router.use(getEndpointBasePath(currenciesEndpoints.list), currenciesRouter);
 router.use(getEndpointBasePath(householdsEndpoints.list), householdsRouter);
 router.use(getEndpointBasePath(integrationsEndpoints.list), integrationsRouter);

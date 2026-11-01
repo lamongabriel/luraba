@@ -35,6 +35,12 @@ export * from "./schemas/investments.schema.js";
 export * from "./schemas/ledger-accounts.schema.js";
 export * from "./schemas/merchants.schema.js";
 export * from "./schemas/notifications.schema.js";
+export * from "./schemas/oauth.schema.js";
+export {
+  oauthAccessTokenTable as oauthAccessToken,
+  oauthApplicationTable as oauthApplication,
+  oauthConsentTable as oauthConsent,
+} from "./schemas/oauth.schema.js";
 export * from "./schemas/payment-methods.schema.js";
 export * from "./schemas/products.schema.js";
 export * from "./schemas/splits.schema.js";
