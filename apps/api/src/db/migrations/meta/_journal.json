@@ -379,6 +379,13 @@
       "when": 1790227800000,
       "tag": "0053_refunds",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1790314200000,
+      "tag": "0054_goal_funds_monthly_plan",
+      "breakpoints": true
     }
   ]
 }

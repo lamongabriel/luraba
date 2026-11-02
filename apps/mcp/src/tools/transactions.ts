@@ -280,6 +280,13 @@ const createInput = z.object({
   merchant: z.string().optional(),
   tags: z.array(z.string().min(1)).max(50).optional(),
   includeInBudget: z.boolean().optional(),
+  competencyMonth: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
+    .optional()
+    .describe(
+      "Expense/income: the month (YYYY-MM) the money belongs to for the monthly plan, when it differs from the posted month. Salary in the Salary & Contracts category received on or after the 16th already counts for the next month without this.",
+    ),
   createMissing: z
     .boolean()
     .default(false)
@@ -298,7 +305,7 @@ export const createTransaction = defineTool({
   name: "create_transaction",
   title: "Create a transaction",
   description:
-    'Create an expense, income, transfer or credit card purchase (with installments). Accounts, credit cards, categories (a path like "Shopping > Electronics" picks or, with createMissing, creates the child under its parent), merchants, tags and payment methods can be given by name or id (details extracted from a screenshot or receipt work well). If a name is ambiguous or unknown nothing is created and the candidates come back as status "needs_clarification"; ask the user, or set createMissing=true to create the missing category/merchant/tags. amount is positive, in major units (12.50 = $12.50). date defaults to today in the household time zone. Use dryRun=true to preview the resolved transaction without creating it.',
+    'Create an expense, income, transfer or credit card purchase (with installments). Accounts, credit cards, categories (a path like "Shopping > Electronics" picks or, with createMissing, creates the child under its parent), merchants, tags and payment methods can be given by name or id (details extracted from a screenshot or receipt work well). If a name is ambiguous or unknown nothing is created and the candidates come back as status "needs_clarification"; ask the user, or set createMissing=true to create the missing category/merchant/tags. amount is positive, in major units (12.50 = $12.50). date defaults to today in the household time zone. For the monthly plan, income and expenses belong to a competency month (competencyMonth, YYYY-MM): salary received on or after the 16th counts for the next month by default; set it when a payment belongs to another month. To put money toward a goal use contribute_to_goal, not a plain transfer. Use dryRun=true to preview the resolved transaction without creating it.',
   input: createInput,
   annotations: WRITE,
   async handler(context, args) {
@@ -346,6 +353,7 @@ export const createTransaction = defineTool({
         accountId,
         paymentMethodCode,
         ...(args.includeInBudget === undefined ? {} : { includeInBudget: args.includeInBudget }),
+        ...(args.competencyMonth ? { competencyMonth: args.competencyMonth } : {}),
         ...(classification.categoryId ? { categoryId: classification.categoryId } : {}),
         ...(classification.merchantId ? { merchantId: classification.merchantId } : {}),
         ...(classification.tagIds ? { tagIds: classification.tagIds } : {}),
@@ -598,7 +606,7 @@ export const updateTransaction = defineTool({
   name: "update_transaction",
   title: "Update a transaction",
   description:
-    'Change fields of one transaction: description, dates, amount (major units), account, payment method, category, merchant, tags (replace with tags, or addTags/removeTags), includeInBudget. Use clearCategory/clearMerchant to remove them. Returns the fields that changed (before and after). Ambiguous names return candidates with status "needs_clarification".',
+    'Change fields of one transaction: description, dates, amount (major units), account, payment method, category, merchant, tags (replace with tags, or addTags/removeTags), includeInBudget, competencyMonth (the monthly-plan month). Use clearCategory/clearMerchant to remove them. Returns the fields that changed (before and after). Ambiguous names return candidates with status "needs_clarification".',
   input: z.object({
     id: z.uuid(),
     description: z.string().min(1).max(512).optional(),
@@ -615,6 +623,12 @@ export const updateTransaction = defineTool({
     addTags: z.array(z.string().min(1)).max(50).optional(),
     removeTags: z.array(z.string().min(1)).max(50).optional(),
     includeInBudget: z.boolean().optional(),
+    competencyMonth: z
+      .string()
+      .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
+      .nullable()
+      .optional()
+      .describe("Income/expense: the monthly-plan month (YYYY-MM); null goes back to the default."),
     createMissing: z.boolean().default(false),
   }),
   annotations: WRITE,
@@ -680,6 +694,7 @@ export const updateTransaction = defineTool({
       ...(classification.merchantId ? { merchantId: classification.merchantId } : {}),
       ...(tagIds ? { tagIds } : {}),
       ...(args.includeInBudget === undefined ? {} : { includeInBudget: args.includeInBudget }),
+      ...(args.competencyMonth === undefined ? {} : { competencyMonth: args.competencyMonth }),
     };
     if (Object.keys(body).length === 0)
       return {

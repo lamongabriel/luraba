@@ -63,3 +63,10 @@ Create one with `POST /transactions` (`type: "refund"`, exactly one of `accountI
   for them, so `billingCycleIds` shows them.
 - **Edits:** only metadata (description, merchant, tags, `includeInBudget`); amount, account, category and date are
   fixed (delete and record again). Deleting a card credit puts the amount back on the invoice.
+
+## Competency month
+
+An income or expense can carry a `competencyMonth` (`YYYY-MM`, `transactions.competency_month`, set on create and
+update): the month the money belongs to when that differs from the month it was posted. It is not shown in the
+feed; the monthly plan ([../monthly-plans/README.md](../monthly-plans/README.md)) reads it. When it is not set,
+the plan applies a rule to salary only (see there).

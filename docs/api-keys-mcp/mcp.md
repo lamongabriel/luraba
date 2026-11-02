@@ -22,6 +22,14 @@
   to a bill automatically when exactly one unpaid occurrence matches (same category or merchant, amount within
   25% of the estimate, due within 10 days; `linkBill=false` turns it off). Bills have no pay-from account and no
   "custom" frequency: choose the account when paying, and pick the closest frequency.
+- **Goals and the monthly plan**: `create_goal`, `update_goal`, `list_goals`, `delete_goal` (needs `confirm`),
+  `contribute_to_goal` (a transfer plus progress; other currencies store the FX rate used), `move_goal_funds`
+  (progress unchanged), `withdraw_from_goal` (pays an expense or returns money to an account), `set_monthly_plan`
+  (projected lines for a month or range) and `report_monthly_plan` (projected vs actual per line: ask "how am I
+  doing vs plan this month?"). Months are competency months: salary received on or after the 16th counts for the
+  next month, or set `competencyMonth` on a transaction. Goals are not tied to an account; `report_goals` shows
+  planned vs contributed this month, total progress, on-track and where each goal's money sits. To seed the
+  owner's plan see `apps/api/src/modules/monthly-plans/README.md`.
 - **Accounts and credit cards**: `create_account`, `update_account`, `delete_account`, `create_credit_card`,
   `update_credit_card`, `delete_credit_card`. An empty household can be set up from scratch: bank accounts
   (`type: "cash"`, or just `"checking"` / `"savings"`), investment, crypto, loan, property, vehicle and other

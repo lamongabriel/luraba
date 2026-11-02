@@ -16,6 +16,7 @@ import {
   investmentsEndpoints,
   mcpEndpoints,
   merchantsEndpoints,
+  monthlyPlansEndpoints,
   notificationsEndpoints,
   onboardingEndpoints,
   paymentMethodsEndpoints,
@@ -44,6 +45,7 @@ import integrationsRouter from "@/modules/integrations/integrations.routes";
 import investmentsRouter from "@/modules/investments/investments.routes";
 import mcpRouter from "@/modules/mcp/mcp.routes";
 import merchantsRouter from "@/modules/merchants/merchants.routes";
+import monthlyPlansRouter from "@/modules/monthly-plans/monthly-plans.routes";
 import notificationsRouter from "@/modules/notifications/notifications.routes";
 import onboardingRouter from "@/modules/onboarding/onboarding.routes";
 import paymentMethodsRouter from "@/modules/payment-methods/payment-methods.routes";
@@ -66,6 +68,7 @@ router.use(getEndpointBasePath(accountsEndpoints.list), accountsRouter);
 router.use(getEndpointBasePath(billsEndpoints.list), billsRouter);
 router.use(getEndpointBasePath(splitsEndpoints.list), splitsRouter);
 router.use(getEndpointBasePath(goalsEndpoints.list), goalsRouter);
+router.use(getEndpointBasePath(monthlyPlansEndpoints.report), monthlyPlansRouter);
 router.use(getEndpointBasePath(importsEndpoints.list), importsRouter);
 router.use(getEndpointBasePath(exportsEndpoints.list), exportsRouter);
 router.use(getEndpointBasePath(budgetsEndpoints.getMonth), budgetsRouter);

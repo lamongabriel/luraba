@@ -114,6 +114,7 @@ async function createBaseTransaction(
     postedDate: Date;
     includeInBudget: boolean;
     merchantId?: string;
+    competencyMonth?: string;
   },
 ): Promise<string> {
   const transaction = await txRepository.createTransaction(tx, {
@@ -124,6 +125,7 @@ async function createBaseTransaction(
     categoryId: values.categoryId ?? null,
     description: values.description,
     includeInBudget: values.includeInBudget,
+    competencyMonth: values.competencyMonth ? parseISODate(`${values.competencyMonth}-01`) : null,
     merchantId: values.merchantId,
     purchaseDate: values.purchaseDate,
     postedDate: values.postedDate,
@@ -190,6 +192,7 @@ async function createExpenseOrIncome(
       postedDate: dto.postedDate,
       merchantId: dto.merchantId,
       includeInBudget: dto.includeInBudget ?? true,
+      competencyMonth: dto.competencyMonth,
     });
 
     await createExpenseOrIncomeEntries(tx, {
@@ -630,6 +633,7 @@ export async function updateTransaction(
     purchaseDate: Date;
     postedDate: Date;
     includeInBudget: boolean;
+    competencyMonth: Date | null;
     categoryId: string | null;
     merchantId: string | null;
     paymentMethodId: string | null;
@@ -658,6 +662,11 @@ export async function updateTransaction(
   if (body.purchaseDate !== undefined) transactionUpdates.purchaseDate = body.purchaseDate;
   if (body.postedDate !== undefined) transactionUpdates.postedDate = body.postedDate;
   if (body.includeInBudget !== undefined) transactionUpdates.includeInBudget = body.includeInBudget;
+  if (body.competencyMonth !== undefined) {
+    transactionUpdates.competencyMonth = body.competencyMonth
+      ? parseISODate(`${body.competencyMonth}-01`)
+      : null;
+  }
 
   if (transaction.type === "expense" || transaction.type === "income") {
     if (body.fromAccountId !== undefined || body.toAccountId !== undefined) {
