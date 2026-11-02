@@ -70,6 +70,15 @@ class GoalsRepository extends HouseholdScopedRepository<GoalRecord, CreateGoalVa
     return { rows, totalCount: countRow[0]?.value ?? 0 };
   }
 
+  /** Every goal of the household, for reports that need all of them. */
+  async listAll(context: HouseholdContext): Promise<GoalRecord[]> {
+    return db
+      .select()
+      .from(goalsTable)
+      .where(eq(goalsTable.householdId, context.householdId))
+      .orderBy(asc(goalsTable.createdAt), asc(goalsTable.id));
+  }
+
   async listContributions(goalIds: readonly string[]): Promise<GoalContributionRecord[]> {
     if (goalIds.length === 0) return [];
     return db

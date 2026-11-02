@@ -13,6 +13,14 @@
   it against the category), `cancel_purchase` (credit a card purchase once, or drop the unbilled installments and
   credit the billed ones), `create_credit_card_payment` (pay a card bill from an account; neutral in reports), and
   `bulk_update_transactions`, `bulk_categorize_transactions`, `bulk_delete_transactions`.
+- **Goals and the monthly plan**: `create_goal`, `update_goal`, `list_goals`, `delete_goal` (needs `confirm`),
+  `contribute_to_goal` (a transfer plus progress; other currencies store the FX rate used), `move_goal_funds`
+  (progress unchanged), `withdraw_from_goal` (pays an expense or returns money to an account), `set_monthly_plan`
+  (projected lines for a month or range) and `report_monthly_plan` (projected vs actual per line: ask "how am I
+  doing vs plan this month?"). Months are competency months: salary received on or after the 16th counts for the
+  next month, or set `competencyMonth` on a transaction. Goals are not tied to an account; `report_goals` shows
+  planned vs contributed this month, total progress, on-track and where each goal's money sits. To seed the
+  owner's plan see `apps/api/src/modules/monthly-plans/README.md`.
 - **Accounts and credit cards**: `create_account`, `update_account`, `delete_account`, `create_credit_card`,
   `update_credit_card`, `delete_credit_card`. An empty household can be set up from scratch: bank accounts
   (`type: "cash"`, or just `"checking"` / `"savings"`), investment, crypto, loan, property, vehicle and other

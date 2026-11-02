@@ -306,29 +306,45 @@ export const reportGoals = defineTool({
   name: "report_goals",
   title: "Goals progress",
   description:
-    "Savings and investment goals with saved amount, percent, and whether each is on track.",
-  input: z.object({}),
+    "Savings and investment goals for a month (default: this month): planned vs contributed this month, total progress (saved, target, percent), whether each goal is on track, and where each goal's money currently sits by account. Contributed is contributions minus withdrawals dated in the month. Use set_monthly_plan / report_monthly_plan for the whole monthly plan.",
+  input: z.object({
+    month: z
+      .string()
+      .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
+      .optional()
+      .describe("YYYY-MM, default this month."),
+  }),
   annotations: READ_ONLY,
-  async handler(context) {
-    const goals = await fetchAllPages((page) =>
-      context.client.request(goalsEndpoints.list, { query: { page, perPage: PAGE_SIZE } }),
-    );
+  async handler(context, args) {
+    const report = await context.client.request(goalsEndpoints.report, {
+      query: args.month ? { month: args.month } : {},
+    });
+    const names = new Map((await context.refs.accounts()).map((a) => [a.id, a.name]));
     return {
-      summary: `${goals.length} goal(s).`,
+      summary: `${report.goals.length} goal(s) for ${report.month}.`,
       data: {
-        goals: goals.map((goal) => ({
-          name: goal.name,
-          state: goal.state,
-          target: toMoney(goal.targetAmount, goal.currencyCode),
-          saved: toMoney(goal.saved, goal.currencyCode),
-          percent: goal.estimate.percent,
-          targetDate: goal.targetDate,
-          requiredMonthly:
-            goal.estimate.requiredMonthly === null
-              ? null
-              : toMoney(goal.estimate.requiredMonthly, goal.currencyCode),
-          onTrack: goal.estimate.onTrack,
-        })),
+        month: report.month,
+        goals: report.goals.map((goal) => {
+          const c = goal.currencyCode;
+          return {
+            name: goal.name,
+            type: goal.kind,
+            state: goal.state,
+            plannedThisMonth: toMoney(goal.planned, c),
+            contributedThisMonth: toMoney(goal.contributed, c),
+            behindThisMonth: goal.contributed < goal.planned,
+            totalProgress: toMoney(goal.saved, c),
+            target: toMoney(goal.targetAmount, c),
+            percent: goal.percent,
+            onTrack: goal.onTrack,
+            whereTheMoneySits: goal.locations.map((location) => ({
+              account: location.accountId
+                ? (names.get(location.accountId) ?? "Unknown")
+                : "Not assigned",
+              amount: toMoney(location.amount, c),
+            })),
+          };
+        }),
       },
     };
   },

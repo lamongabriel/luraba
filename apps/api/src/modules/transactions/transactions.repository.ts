@@ -176,6 +176,7 @@ export async function updateTransaction(
       | "purchaseDate"
       | "postedDate"
       | "includeInBudget"
+      | "competencyMonth"
       | "paymentMethodId"
       | "categoryId"
       | "merchantId"

@@ -12,10 +12,20 @@ export const goalLinkedTransactionSchema = z.object({
   postedDate: wireDateSchema,
 });
 
+export const goalContributionKindSchema = z.enum(["contribution", "withdrawal", "move"]);
+
 export const goalContributionSchema = z.object({
   id: z.uuid(),
-  /** Negative for a withdrawal. */
+  kind: goalContributionKindSchema,
+  /** In the goal's currency. Negative for a withdrawal; a move is positive and not progress. */
   amount: z.number().int(),
+  fromAccountId: z.uuid().nullable(),
+  toAccountId: z.uuid().nullable(),
+  /** Set when the money was in another currency than the goal's. */
+  originalAmount: z.number().int().nullable(),
+  originalCurrency: z.string().nullable(),
+  /** Goal units per unit of `originalCurrency`, as used. */
+  fxRate: z.number().nullable(),
   contributedOn: wireDateSchema,
   note: z.string().nullable(),
   transaction: goalLinkedTransactionSchema.nullable(),
@@ -47,6 +57,12 @@ export const goalTimelinePointSchema = z.object({
   projected: z.number().int().nullable(),
 });
 
+/** Money of one goal currently held by an account (`accountId` null: not assigned to one). */
+export const goalLocationSchema = z.object({
+  accountId: z.uuid().nullable(),
+  amount: z.number().int(),
+});
+
 export const goalSchema = z.object({
   id: z.uuid(),
   name: z.string(),
@@ -62,6 +78,10 @@ export const goalSchema = z.object({
   monthlyContribution: z.number().int().nullable(),
   expectedReturnBps: z.number().int().nullable(),
   accountId: z.uuid().nullable(),
+  /** `YYYY-MM`: the last month of the monthly plan. */
+  endMonth: z.string().nullable(),
+  /** Where the goal's money sits now, by account; sums to `saved`. */
+  locations: z.array(goalLocationSchema),
   /** The sum of all contributions. */
   saved: z.number().int(),
   contributionCount: z.number().int(),
@@ -84,4 +104,29 @@ export type GoalContribution = z.output<typeof goalContributionSchema>;
 export type GoalEstimate = z.output<typeof goalEstimateSchema>;
 export type GoalTimelinePoint = z.output<typeof goalTimelinePointSchema>;
 export type Goal = z.output<typeof goalSchema>;
+export const goalReportRowSchema = z.object({
+  goalId: z.uuid(),
+  name: z.string(),
+  kind: goalKindSchema,
+  state: goalStateSchema,
+  currencyCode: z.string(),
+  /** The monthly plan for the month (0 outside the plan's months). */
+  planned: z.number().int(),
+  /** Contributions minus withdrawals dated in the month. */
+  contributed: z.number().int(),
+  saved: z.number().int(),
+  targetAmount: z.number().int(),
+  percent: z.number().int(),
+  onTrack: z.boolean().nullable(),
+  locations: z.array(goalLocationSchema),
+});
+
+export const goalsReportSchema = z.object({
+  month: z.string(),
+  goals: z.array(goalReportRowSchema),
+});
+
+export type GoalReportRow = z.output<typeof goalReportRowSchema>;
+export type GoalsReport = z.output<typeof goalsReportSchema>;
+export type GoalLocation = z.output<typeof goalLocationSchema>;
 export type GoalDetail = z.output<typeof goalDetailSchema>;

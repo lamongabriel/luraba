@@ -23,6 +23,8 @@ export const transactionsTable = pgTable(
     merchantId: uuid("merchant_id").references(() => merchantsTable.id, { onDelete: "set null" }),
     purchaseDate: date("purchase_date", { mode: "date" }).notNull(),
     postedDate: date("posted_date", { mode: "date" }).notNull(),
+    /** First day of the month the money belongs to when that differs from the posted month. */
+    competencyMonth: date("competency_month", { mode: "date" }),
     /** Who created the record. Null for rows that predate tracking or whose user was deleted. */
     createdByUserId: uuid("created_by_user_id").references(() => usersTable.id, {
       onDelete: "set null",

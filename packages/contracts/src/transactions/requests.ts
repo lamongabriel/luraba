@@ -34,10 +34,13 @@ const categorizedLinkFields = {
   categoryId: z.uuid().nullable().optional(),
   merchantId: z.uuid().optional(),
 };
+/** `YYYY-MM`: the month the money belongs to when that differs from the posted month. */
+const competencyMonthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 const expenseSchema = z.strictObject({
   type: z.literal("expense"),
   ...baseFields,
   ...categorizedLinkFields,
+  competencyMonth: competencyMonthSchema.optional(),
   amount: moneyAmountSchema,
   currencyCode: currencyCodeSchema,
   accountId: z.uuid(),
@@ -47,6 +50,8 @@ const incomeSchema = z.strictObject({
   type: z.literal("income"),
   ...baseFields,
   ...categorizedLinkFields,
+  /** When omitted, plan reports apply the rule: salary received late in the month counts for the next month. */
+  competencyMonth: competencyMonthSchema.optional(),
   amount: moneyAmountSchema,
   currencyCode: currencyCodeSchema,
   accountId: z.uuid(),
@@ -110,6 +115,7 @@ export const updateTransactionInputSchema = z
     purchaseDate: dateInputSchema.optional(),
     postedDate: dateInputSchema.optional(),
     includeInBudget: z.boolean().optional(),
+    competencyMonth: competencyMonthSchema.nullable().optional(),
     categoryId: z.uuid().nullable().optional(),
     merchantId: z.uuid().nullable().optional(),
     paymentMethodCode: paymentMethodCodeSchema.optional(),

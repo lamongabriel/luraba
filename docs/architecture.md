@@ -98,6 +98,11 @@ saved, achieved, on track or behind, and the estimate (the monthly amount needed
 finishes, and with an expected yearly return for investments, what it grows to) are computed on
 read by `@luraba/domain`. Goals send no notifications.
 
+Goals are not tied to an account: a contribution, withdrawal or move records which accounts the money left
+and reached (a transfer in the ledger, neutral in spending), so one account can hold several goals and the
+goal knows where its money sits. The monthly plan (`monthly_plan_lines`) projects salary, taxes and each goal's
+contribution per competency month and is reported against actuals (`apps/api/src/modules/monthly-plans`).
+
 ## Investments
 
 Investing (Brazil and US) is an append-only event ledger (`investment_events`) per investment account;

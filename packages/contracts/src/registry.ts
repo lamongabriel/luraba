@@ -16,6 +16,7 @@ import { integrationsEndpoints } from "./integrations/endpoints.js";
 import { investmentsEndpoints } from "./investments/endpoints.js";
 import { mcpEndpoints } from "./mcp/endpoints.js";
 import { merchantsEndpoints } from "./merchants/endpoints.js";
+import { monthlyPlansEndpoints } from "./monthly-plans/endpoints.js";
 import { notificationsEndpoints } from "./notifications/endpoints.js";
 import { onboardingEndpoints } from "./onboarding/endpoints.js";
 import { paymentMethodsEndpoints } from "./payment-methods/endpoints.js";
@@ -46,6 +47,7 @@ export const contractModules = {
   integrations: integrationsEndpoints,
   investments: investmentsEndpoints,
   merchants: merchantsEndpoints,
+  monthlyPlans: monthlyPlansEndpoints,
   products: productsEndpoints,
   notifications: notificationsEndpoints,
   onboarding: onboardingEndpoints,

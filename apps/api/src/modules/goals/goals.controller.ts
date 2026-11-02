@@ -63,3 +63,33 @@ export const removeContribution = createHouseholdHandler({
   handle: ({ household, params }) =>
     service.removeContribution(household, params.id, params.contributionId),
 });
+
+export const report = createHouseholdHandler({
+  query: e.report.query,
+  response: e.report.response,
+  handle: ({ household, query }) => service.getGoalsReport(household, query.month),
+});
+
+export const contribute = createHouseholdHandler({
+  params: e.contribute.params,
+  body: e.contribute.body,
+  response: e.contribute.response,
+  status: "created",
+  handle: ({ household, params, body }) => service.contributeToGoal(household, params.id, body),
+});
+
+export const moveFunds = createHouseholdHandler({
+  params: e.moveFunds.params,
+  body: e.moveFunds.body,
+  response: e.moveFunds.response,
+  status: "created",
+  handle: ({ household, params, body }) => service.moveGoalFunds(household, params.id, body),
+});
+
+export const withdraw = createHouseholdHandler({
+  params: e.withdraw.params,
+  body: e.withdraw.body,
+  response: e.withdraw.response,
+  status: "created",
+  handle: ({ household, params, body }) => service.withdrawFromGoal(household, params.id, body),
+});

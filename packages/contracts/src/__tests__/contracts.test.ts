@@ -25,7 +25,8 @@ const EXPECTED_MODULE_COUNTS = {
   categories: 4,
   creditCards: 20,
   exports: 1,
-  goals: 8,
+  goals: 12,
+  monthlyPlans: 2,
   currencies: 2,
   health: 1,
   households: 22,
@@ -112,11 +113,15 @@ const EXPECTED_ENDPOINTS = [
   "GET /credit-cards/:id/forecast",
   "GET /exports",
   "GET /goals",
+  "GET /goals/report",
   "GET /goals/:id",
   "POST /goals",
   "PATCH /goals/:id",
   "DELETE /goals/:id",
   "POST /goals/:id/contributions",
+  "POST /goals/:id/contribute",
+  "POST /goals/:id/move",
+  "POST /goals/:id/withdraw",
   "PATCH /goals/:id/contributions/:contributionId",
   "DELETE /goals/:id/contributions/:contributionId",
   "GET /health",
@@ -204,6 +209,8 @@ const EXPECTED_ENDPOINTS = [
   "POST /merchants",
   "PATCH /merchants/:id",
   "DELETE /merchants/:id",
+  "GET /monthly-plans",
+  "PUT /monthly-plans",
   "GET /products",
   "GET /products/:id",
   "POST /products",
@@ -268,7 +275,7 @@ const EXPECTED_ENDPOINTS = [
 ] as const;
 
 describe("HTTP contract inventory", () => {
-  it("contains the complete 220-route inventory by module", () => {
+  it("contains the complete 226-route inventory by module", () => {
     expect(
       Object.fromEntries(
         Object.entries(contractModules).map(([module, endpoints]) => [
@@ -277,7 +284,7 @@ describe("HTTP contract inventory", () => {
         ]),
       ),
     ).toEqual(EXPECTED_MODULE_COUNTS);
-    expect(allEndpoints).toHaveLength(220);
+    expect(allEndpoints).toHaveLength(226);
     expect(allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`)).toEqual(
       EXPECTED_ENDPOINTS,
     );
@@ -286,7 +293,7 @@ describe("HTTP contract inventory", () => {
   it("has unique method/path pairs and complete endpoint schemas", () => {
     const identities = allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`);
 
-    expect(new Set(identities).size).toBe(220);
+    expect(new Set(identities).size).toBe(226);
 
     for (const endpoint of allEndpoints) {
       expect(endpoint.path).toMatch(/^\/[a-z][a-z0-9/-]*(?::[A-Za-z][A-Za-z0-9_]*)?/);

@@ -11,6 +11,17 @@ import {
   bulkDeleteTransactions,
   bulkUpdateTransactions,
 } from "./bulk-transactions.js";
+import {
+  contributeToGoal,
+  createGoal,
+  deleteGoal,
+  listGoals,
+  moveGoalFunds,
+  reportMonthlyPlan,
+  setMonthlyPlan,
+  updateGoal,
+  withdrawFromGoal,
+} from "./goals.js";
 import { listIcons } from "./icons.js";
 import {
   createCategory,
@@ -89,4 +100,13 @@ export const tools: AnyTool[] = [
   reportBudget,
   reportGoals,
   reportTopExpenses,
+  createGoal,
+  updateGoal,
+  listGoals,
+  deleteGoal,
+  contributeToGoal,
+  moveGoalFunds,
+  withdrawFromGoal,
+  setMonthlyPlan,
+  reportMonthlyPlan,
 ];

@@ -4,6 +4,7 @@ import {
   date,
   index,
   integer,
+  numeric,
   pgTable,
   text,
   timestamp,
@@ -43,6 +44,8 @@ export const goalsTable = pgTable(
     /** Expected yearly return in basis points (700 = 7%), investment goals only. */
     expectedReturnBps: integer("expected_return_bps"),
     accountId: uuid("account_id").references(() => accountsTable.id, { onDelete: "set null" }),
+    /** First day of the last month of the monthly plan; null when the plan has no end. */
+    endMonth: date("end_month", { mode: "date" }),
     status: goalStatusEnum().notNull().default("active"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -64,7 +67,26 @@ export const goalContributionsTable = pgTable(
     createdByUserId: uuid("created_by_user_id")
       .notNull()
       .references(() => usersTable.id, { onDelete: "restrict" }),
+    /**
+     * What the row does: `contribution` (amount > 0), `withdrawal` (amount < 0) or `move`
+     * (amount > 0, between two accounts; it never counts toward progress).
+     */
+    kind: varchar({ length: 16 }).notNull().default("contribution"),
+    /** In the goal's currency. */
     amount: bigint({ mode: "number" }).notNull(),
+    /** Where the money came from (contributions, moves) or was taken from (withdrawals). */
+    fromAccountId: uuid("from_account_id").references(() => accountsTable.id, {
+      onDelete: "set null",
+    }),
+    /** Where the money sits after a contribution or a move, or went after a withdrawal. */
+    toAccountId: uuid("to_account_id").references(() => accountsTable.id, {
+      onDelete: "set null",
+    }),
+    /** The amount actually moved when it was in another currency than the goal's. */
+    originalAmount: bigint("original_amount", { mode: "number" }),
+    originalCurrency: varchar("original_currency", { length: 3 }),
+    /** Goal-currency units per unit of the original currency, at the time of the contribution. */
+    fxRate: numeric("fx_rate", { precision: 24, scale: 10 }),
     contributedOn: date("contributed_on", { mode: "date" }).notNull(),
     note: text(),
     /** The transaction that moved the money, when there is one. It can back one contribution. */
