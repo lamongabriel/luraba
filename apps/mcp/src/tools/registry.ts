@@ -7,6 +7,15 @@ import {
   updateCreditCard,
 } from "./accounts.js";
 import {
+  createRecurringBill,
+  deleteRecurringBill,
+  listRecurringBills,
+  markBillPaid,
+  reportBills,
+  setBudget,
+  updateRecurringBill,
+} from "./bills.js";
+import {
   bulkCategorizeTransactions,
   bulkDeleteTransactions,
   bulkUpdateTransactions,
@@ -89,4 +98,11 @@ export const tools: AnyTool[] = [
   reportBudget,
   reportGoals,
   reportTopExpenses,
+  createRecurringBill,
+  listRecurringBills,
+  updateRecurringBill,
+  deleteRecurringBill,
+  markBillPaid,
+  reportBills,
+  setBudget,
 ];

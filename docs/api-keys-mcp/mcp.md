@@ -13,6 +13,15 @@
   it against the category), `cancel_purchase` (credit a card purchase once, or drop the unbilled installments and
   credit the billed ones), `create_credit_card_payment` (pay a card bill from an account; neutral in reports), and
   `bulk_update_transactions`, `bulk_categorize_transactions`, `bulk_delete_transactions`.
+- **Recurring bills and budgets**: `create_recurring_bill`, `list_recurring_bills`, `update_recurring_bill`,
+  `delete_recurring_bill` (a bill is a schedule; each period is an occurrence that is not a transaction and does
+  not touch balances or spending until it is paid), `mark_bill_paid` (link an existing expense, create the
+  expense from the bill with the actual amount, or just mark it paid; returns estimated vs actual),
+  `report_bills` (per bill estimated, actual, due date and status, with totals) and `set_budget` (one month,
+  or every month through `through`, leaving other categories alone). `create_transaction` links a new expense
+  to a bill automatically when exactly one unpaid occurrence matches (same category or merchant, amount within
+  25% of the estimate, due within 10 days; `linkBill=false` turns it off). Bills have no pay-from account and no
+  "custom" frequency: choose the account when paying, and pick the closest frequency.
 - **Accounts and credit cards**: `create_account`, `update_account`, `delete_account`, `create_credit_card`,
   `update_credit_card`, `delete_credit_card`. An empty household can be set up from scratch: bank accounts
   (`type: "cash"`, or just `"checking"` / `"savings"`), investment, crypto, loan, property, vehicle and other

@@ -14,6 +14,7 @@ import { majorToMinor, majorToMoney, toMoney } from "../format/money.js";
 import { loadNameMaps, summarizeRow, type TransactionSummary } from "../format/transactions.js";
 import { normalize } from "../resolve/match.js";
 import { clarificationOutput, Problems } from "../resolve/problems.js";
+import { matchBill } from "./bill-matching.js";
 import {
   buildTransactionQuery,
   loadMatching,
@@ -283,6 +284,12 @@ const createInput = z.object({
     .boolean()
     .default(false)
     .describe("Create the category, merchant and tags that do not exist yet."),
+  linkBill: z
+    .boolean()
+    .default(true)
+    .describe(
+      "Expense or card purchase: when it matches exactly one unpaid recurring bill (same category or merchant, amount within 25% of the estimate, due within 10 days), link it as that bill's payment. Candidates are listed when several match.",
+    ),
   dryRun: z.boolean().default(false),
 });
 type CreateArgs = z.output<typeof createInput>;
@@ -436,12 +443,28 @@ export const createTransaction = defineTool({
       body: finalBody,
     });
     const names = await loadNameMaps(context.refs);
+    const bill =
+      args.kind === "expense"
+        ? await matchBill(
+            context,
+            {
+              transactionId: created.id,
+              amount: created.amount,
+              currencyCode: created.currencyCode,
+              date,
+              categoryId: classification.categoryId,
+              merchantId: classification.merchantId,
+            },
+            args.linkBill,
+          )
+        : null;
     return {
-      summary: `Created ${args.kind} "${created.description}" for ${majorToMoney(args.amount, created.currencyCode).formatted}.`,
+      summary: `Created ${args.kind} "${created.description}" for ${majorToMoney(args.amount, created.currencyCode).formatted}${bill?.linked ? `; linked to the bill "${bill.linked.bill}"` : ""}.`,
       data: {
         status: "created",
         transaction: summarizeRow(created, names),
         alsoCreated: classification.created,
+        ...billFields(bill),
       },
     };
   },
@@ -500,6 +523,18 @@ async function createCardPurchase(
       ...(classification.tagIds ? { tagIds: classification.tagIds } : {}),
     },
   });
+  const bill = await matchBill(
+    context,
+    {
+      transactionId: created.transactionId,
+      amount: created.amount,
+      currencyCode: currency,
+      date: purchase.purchaseDate,
+      categoryId: classification.categoryId,
+      merchantId: classification.merchantId,
+    },
+    args.linkBill && purchase.installmentCount === 1,
+  );
   return {
     summary: `Created credit card purchase "${created.description}" for ${toMoney(created.amount, currency).formatted} in ${created.installmentCount} installment(s).`,
     data: {
@@ -518,9 +553,21 @@ async function createCardPurchase(
         })),
       },
       alsoCreated: classification.created,
+      ...billFields(bill),
       note: `Listed in Transactions on the purchase date; installments 2..n on the 1st of each following month. The invoice closing and due dates are in installments[].`,
     },
   };
+}
+
+function billFields(bill: Awaited<ReturnType<typeof matchBill>> | null) {
+  if (!bill) return {};
+  if (bill.linked) return { linkedBill: bill.linked };
+  return bill.candidates.length > 0
+    ? {
+        possibleBills: bill.candidates,
+        note: "Several bills could match; use mark_bill_paid to link the right one.",
+      }
+    : {};
 }
 
 export type Change = { field: string; from: unknown; to: unknown };
