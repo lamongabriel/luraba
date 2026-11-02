@@ -27,6 +27,7 @@ import {
   updateTag,
   whoami,
 } from "./reference.js";
+import { cancelPurchase, createCreditCardPayment, createRefund } from "./refunds.js";
 import {
   reportBalances,
   reportBudget,
@@ -75,6 +76,9 @@ export const tools: AnyTool[] = [
   createTransaction,
   updateTransaction,
   deleteTransaction,
+  createRefund,
+  cancelPurchase,
+  createCreditCardPayment,
   bulkUpdateTransactions,
   bulkCategorizeTransactions,
   bulkDeleteTransactions,

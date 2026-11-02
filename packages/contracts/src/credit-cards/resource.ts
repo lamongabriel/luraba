@@ -85,9 +85,19 @@ export const creditCardCyclePaymentSchema = z.object({
   /** The part of the payment applied to this invoice, in minor units. */
   amount: z.number().int(),
 });
+/** A credit on the invoice (refund, cancellation, chargeback, cashback), listed apart from the purchases. */
+export const creditCardCycleCreditSchema = z.object({
+  transactionId: z.uuid(),
+  description: z.string(),
+  reason: z.enum(["refund", "cancellation", "chargeback", "cashback"]),
+  postedDate: z.iso.date(),
+  /** Minor units, positive: how much the invoice went down. */
+  amount: z.number().int(),
+});
 export const creditCardCycleDetailsSchema = z.object({
   cycle: creditCardCycleSchema,
   items: z.array(creditCardCycleItemSchema),
+  credits: z.array(creditCardCycleCreditSchema),
   payments: z.array(creditCardCyclePaymentSchema),
 });
 export const creditCardLimitBreakdownSchema = z.object({

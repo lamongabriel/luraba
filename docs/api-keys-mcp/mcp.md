@@ -8,6 +8,10 @@
 
 - **Transactions**: `search_transactions`, `get_transaction`, `create_transaction` (income, expense, transfer,
   credit card purchase with installments), `update_transaction`, `delete_transaction`, and
+  `create_refund` (refund, cancellation, chargeback or cashback: a credit with no source account, never income;
+  on a card it lowers the invoice and restores the limit, on an account it raises the balance, and reports net
+  it against the category), `cancel_purchase` (credit a card purchase once, or drop the unbilled installments and
+  credit the billed ones), `create_credit_card_payment` (pay a card bill from an account; neutral in reports), and
   `bulk_update_transactions`, `bulk_categorize_transactions`, `bulk_delete_transactions`.
 - **Accounts and credit cards**: `create_account`, `update_account`, `delete_account`, `create_credit_card`,
   `update_credit_card`, `delete_credit_card`. An empty household can be set up from scratch: bank accounts

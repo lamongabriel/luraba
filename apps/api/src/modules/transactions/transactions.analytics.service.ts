@@ -85,7 +85,10 @@ function metric(
 ) {
   const values = new Map<string, number>();
   for (const row of rows) {
-    const signed = row.originType === "income" ? row.amount : -row.amount;
+    // A refund is negative spending: it lowers money out and raises net, and is never money in.
+    const signed =
+      row.originType === "income" || row.originType === "refund" ? row.amount : -row.amount;
+    const spent = row.originType === "refund" ? -row.amount : row.amount;
     const value =
       kind === "moneyIn"
         ? row.originType === "income"
@@ -94,7 +97,7 @@ function metric(
         : kind === "moneyOut"
           ? row.originType === "income"
             ? 0
-            : row.amount
+            : spent
           : signed;
     if (value !== 0) {
       const key = bucketDate(row.date, bucket);
@@ -172,7 +175,7 @@ export async function getAnalytics(context: HouseholdContext, input: Transaction
       color: row.categoryColor,
       amount: 0,
     };
-    item.amount += row.amount;
+    item.amount += row.originType === "refund" ? -row.amount : row.amount;
     breakdown.set(key, item);
   }
   const sortedBreakdown = Array.from(breakdown.values()).sort((a, b) => b.amount - a.amount);

@@ -35,7 +35,7 @@ describe("transactions list query", () => {
       false,
     );
     expect(listTransactionsQuerySchema.safeParse({ includeInBudget: "yes" }).success).toBe(false);
-    expect(listTransactionsQuerySchema.safeParse({ originTypes: "refund" }).success).toBe(false);
+    expect(listTransactionsQuerySchema.safeParse({ originTypes: "gift" }).success).toBe(false);
     expect(listTransactionsQuerySchema.safeParse({ excludedFromSpending: "false" }).success).toBe(
       false,
     );

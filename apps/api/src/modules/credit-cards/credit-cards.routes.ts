@@ -70,6 +70,11 @@ router.patch(
   requireAccess({ permission: PERMISSIONS.TRANSACTIONS_UPDATE }),
   creditCardsController.updatePurchase,
 );
+router.post(
+  getEndpointRouterPath(creditCardsEndpoints.cancelPurchase),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_CREATE }),
+  creditCardsController.cancelPurchase,
+);
 router.delete(
   getEndpointRouterPath(creditCardsEndpoints.deletePurchase),
   requireAccess({ permission: PERMISSIONS.TRANSACTIONS_DELETE }),

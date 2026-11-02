@@ -11,7 +11,12 @@ import { monthKey, periodInput, periodRange } from "../format/period.js";
 import { loadNameMaps, summarizeRow } from "../format/transactions.js";
 import { defineTool, READ_ONLY, type ToolContext } from "./types.js";
 
-const SPENDING_TYPES = ["expense", "credit_card_installment"] as const;
+const SPENDING_TYPES = ["expense", "credit_card_installment", "refund"] as const;
+
+/** Spending is signed: a refund, cancellation, chargeback or cashback is negative spending. */
+function spent(row: { originType: string; amount: number }): number {
+  return row.originType === "refund" ? -Math.abs(row.amount) : Math.abs(row.amount);
+}
 const MAX_ROWS = 20_000;
 
 async function spendingRows(
@@ -39,7 +44,7 @@ export const reportSpending = defineTool({
   name: "report_spending",
   title: "Spending by category, merchant or tag",
   description:
-    "Total spending for a period grouped by category, merchant or tag, largest first, with each group's share. Counts expenses and credit card installments posted in the period (transfers and card bill payments are excluded). A transaction with several tags counts in each tag. Amounts are in one currency (default: the household currency); other currencies are listed separately.",
+    "Total spending for a period grouped by category, merchant or tag, largest first, with each group's share. Counts expenses and credit card installments posted in the period, net of refunds, cancellations, chargebacks and cashback (those are negative spending in their category); transfers and card bill payments are excluded. A transaction with several tags counts in each tag. Amounts are in one currency (default: the household currency); other currencies are listed separately.",
   input: z.object({
     groupBy: z.enum(["category", "merchant", "tag"]),
     ...periodInput,
@@ -66,7 +71,7 @@ export const reportSpending = defineTool({
       totals.set(key, entry);
     };
     for (const row of rows) {
-      const amount = Math.abs(row.amount);
+      const amount = spent(row);
       if (args.groupBy === "category")
         add(
           row.categoryId ?? "none",
@@ -82,7 +87,7 @@ export const reportSpending = defineTool({
       else if (row.tags.length === 0) add("none", "Untagged", amount);
       else for (const tag of row.tags) add(tag.id, tag.name, amount);
     }
-    const total = rows.reduce((sum, row) => sum + Math.abs(row.amount), 0);
+    const total = rows.reduce((sum, row) => sum + spent(row), 0);
     const groups = [...totals.values()].sort((a, b) => b.amount - a.amount);
     return {
       summary: `Spent ${toMoney(total, currency).formatted} from ${range.dateFrom} to ${range.dateTo}.`,
@@ -332,7 +337,8 @@ export const reportGoals = defineTool({
 export const reportTopExpenses = defineTool({
   name: "report_top_expenses",
   title: "Top expenses",
-  description: "The largest individual expenses (including credit card installments) in a period.",
+  description:
+    "The largest individual expenses (including credit card installments) in a period. Refunds and cashback are not listed here; they reduce the category totals in report_spending.",
   input: z.object({
     ...periodInput,
     limit: z.number().int().min(1).max(50).default(10),
@@ -344,7 +350,7 @@ export const reportTopExpenses = defineTool({
       query: {
         dateFrom: range.dateFrom,
         dateTo: range.dateTo,
-        originTypes: [...SPENDING_TYPES],
+        originTypes: ["expense", "credit_card_installment"],
         sort: "amount",
         sortDirection: "desc",
         page: 1,

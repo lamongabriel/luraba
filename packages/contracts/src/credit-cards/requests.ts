@@ -89,6 +89,18 @@ export const updateCreditCardPurchaseInputSchema = createCreditCardPurchaseInput
     (value) => Object.values(value).some((field) => field !== undefined),
     "At least one purchase field must be provided",
   );
+export const CANCEL_PURCHASE_MODES = ["single_credit", "cancel_future"] as const;
+/**
+ * Cancels a card purchase. `single_credit` credits the whole remaining amount at once, like most
+ * issuers. `cancel_future` also removes the installments that are not billed yet and credits
+ * only the billed ones.
+ */
+export const cancelCreditCardPurchaseInputSchema = z.object({
+  mode: z.enum(CANCEL_PURCHASE_MODES).default("single_credit"),
+  reason: z.enum(["cancellation", "chargeback", "refund"]).default("cancellation"),
+  date: dateInputSchema.optional(),
+  description: z.string().min(1).max(512).optional(),
+});
 export const createCreditCardPaymentInputSchema = z.object({
   description: z.string().min(1).max(512).optional(),
   amount: moneyAmountSchema,
@@ -195,6 +207,7 @@ export type CreditCardForecastQuery = z.input<typeof creditCardForecastQuerySche
 export type CreateCreditCardInput = z.input<typeof createCreditCardInputSchema>;
 export type UpdateCreditCardInput = z.input<typeof updateCreditCardInputSchema>;
 export type UpdateCreditCardCycleInput = z.input<typeof updateCreditCardCycleInputSchema>;
+export type CancelCreditCardPurchaseInput = z.input<typeof cancelCreditCardPurchaseInputSchema>;
 export type CreateCreditCardPurchaseInput = z.input<typeof createCreditCardPurchaseInputSchema>;
 export type UpdateCreditCardPurchaseInput = z.input<typeof updateCreditCardPurchaseInputSchema>;
 export type CreateCreditCardPaymentInput = z.input<typeof createCreditCardPaymentInputSchema>;

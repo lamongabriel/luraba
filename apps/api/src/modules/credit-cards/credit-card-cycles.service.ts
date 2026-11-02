@@ -91,7 +91,7 @@ export async function ensureCycleForClosingDate(
   });
 }
 
-async function ensureCycleForDate(tx: TxClient, card: CreditCardRow, date: Date) {
+export async function ensureCycleForDate(tx: TxClient, card: CreditCardRow, date: Date) {
   const existing = await cycleRepository.findCycleContainingDate(tx, card.id, date);
   if (existing) {
     return existing;
@@ -381,11 +381,13 @@ export async function syncCardCycles(
 ): Promise<Array<typeof creditCardBillingCyclesTable.$inferSelect>> {
   await ensureCurrentCycle(tx, card, timezone);
 
-  const [cycles, installmentSums, allocationSums] = await Promise.all([
+  const [cycles, installmentSums, allocationSums, creditSums] = await Promise.all([
     cycleRepository.listCyclesByCardId(tx, card.id),
     cycleRepository.listInstallmentTotals(tx, card.id),
     cycleRepository.listPaymentAllocationTotals(tx, card.id),
+    cycleRepository.listRefundCreditTotals(tx, card.id),
   ]);
+  const creditTotals = new Map(creditSums.map((row) => [row.billingCycleId ?? "", row.amount]));
 
   const today = getTodayInTimezone(timezone);
   const installmentTotals = new Map(installmentSums.map((row) => [row.billingCycleId, row.amount]));
@@ -396,7 +398,11 @@ export async function syncCardCycles(
   const updatedCycles: Array<typeof creditCardBillingCyclesTable.$inferSelect> = [];
 
   for (const cycle of cycles) {
-    const statementAmount = installmentTotals.get(cycle.id) ?? 0;
+    // Credits (refunds, cashback) reduce what the invoice asks for; they never push it below zero.
+    const statementAmount = Math.max(
+      (installmentTotals.get(cycle.id) ?? 0) - (creditTotals.get(cycle.id) ?? 0),
+      0,
+    );
     const paidAmount = paymentTotals.get(cycle.id) ?? 0;
     const remainingAmount = Math.max(statementAmount - paidAmount, 0);
 
@@ -602,10 +608,15 @@ export async function getBillingCycle(
   const [enrichedCycle] = enrichCycleSummaries([cycle], context.timezone);
 
   const payments = await cycleRepository.loadCyclePayments(creditCardId, cycleId);
+  const credits = await cycleRepository.loadCycleCredits(creditCardId, cycleId);
 
   return {
     cycle: enrichedCycle,
     items: mapCycleItems(items),
+    credits: credits.map((credit) => ({
+      ...credit,
+      postedDate: formatISODate(credit.postedDate),
+    })),
     payments: payments.map((payment) => ({
       ...payment,
       paymentDate: formatISODate(payment.paymentDate),

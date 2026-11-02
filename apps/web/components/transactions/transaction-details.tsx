@@ -6,6 +6,7 @@ import type { CreditCardPayment, CreditCardPurchase, TransactionFeedRow } from "
 import { formatShortDate } from "@luraba/domain";
 import * as React from "react";
 import { CategoryDisplay, MemberDisplay, TransactionTypeDisplay } from "@/components/display";
+import { REFUND_REASON_LABELS } from "@/components/display/constants";
 import { MoneyValue } from "@/components/finance/money-value";
 import { ComboboxControl } from "@/components/forms/form-combobox";
 import { TagSelectControl } from "@/components/forms/form-tag-select";
@@ -84,6 +85,11 @@ export function TransactionDetails({
         <SidePanelDetailRow label="Type">
           <TransactionTypeDisplay type={row.originType} />
         </SidePanelDetailRow>
+        {row.refund ? (
+          <SidePanelDetailRow label="Reason">
+            {REFUND_REASON_LABELS[row.refund.reason]}
+          </SidePanelDetailRow>
+        ) : null}
         <SidePanelDetailRow label="Created by">
           <MemberDisplay userId={row.createdByUserId} />
         </SidePanelDetailRow>
@@ -120,7 +126,7 @@ export function TransactionDetails({
                     categoryId: value === CLEAR_CATEGORY ? null : value,
                   })
                 }
-                disabled={isPending || !canUpdate}
+                disabled={isPending || !canUpdate || row.originType === "refund"}
                 placeholder="Uncategorized"
                 searchPlaceholder="Search categories..."
                 emptyMessage="No categories found."

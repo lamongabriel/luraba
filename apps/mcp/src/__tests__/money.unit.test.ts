@@ -58,6 +58,7 @@ describe("create_transaction summary", () => {
       paymentMethodScope: null,
       paymentMethodTranslationKey: null,
       tags: [],
+      refund: null,
       includeInBudget: true,
       purchaseDate: "2026-11-01",
       postedDate: "2026-11-01",

@@ -49,7 +49,11 @@ class BudgetRepository extends HouseholdScopedRepository<BudgetRecord, CreateBud
         categoryType: categoriesTable.type,
         currencyCode: entriesTable.currencyId,
         effectiveDate: transactionsTable.postedDate,
-        actualAmount: sql<number>`coalesce(sum(abs(${entriesTable.amount})), 0)`.mapWith(Number),
+        // A refund (type "refund") nets against the category it was spent in.
+        actualAmount:
+          sql<number>`coalesce(sum(case when ${transactionsTable.type} = 'refund' then -abs(${entriesTable.amount}) else abs(${entriesTable.amount}) end), 0)`.mapWith(
+            Number,
+          ),
       })
       .from(entriesTable)
       .innerJoin(transactionsTable, eq(transactionsTable.id, entriesTable.transactionId))

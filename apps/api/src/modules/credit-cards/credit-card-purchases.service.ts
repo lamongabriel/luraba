@@ -3,10 +3,11 @@ import { creditCardBudgetRecognitionsTable } from "@luraba/db/schemas/credit-car
 import { creditCardInstallmentsTable } from "@luraba/db/schemas/credit-card-installments.schema";
 import { creditCardPurchasesTable } from "@luraba/db/schemas/credit-card-purchases.schema";
 import { transactionsTable } from "@luraba/db/schemas/transactions.schema";
-import { formatISODate, startOfMonth } from "@luraba/domain";
-import { and, asc, eq } from "drizzle-orm";
+import { formatISODate, getTodayInTimezone, startOfMonth } from "@luraba/domain";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
+import type { TxClient } from "@/db/types";
 import { resolveCreditBudgetSettings } from "@/modules/budgets/budgets.settings";
 import { entriesRepository } from "@/modules/entries/entries.repository";
 import * as entriesService from "@/modules/entries/entries.service";
@@ -17,7 +18,12 @@ import {
   replaceTransactionTags,
   validateTagIds,
 } from "@/modules/tags/tags-associations.service";
-import { NotFoundError } from "@/shared/errors";
+import {
+  insertRefundInTransaction,
+  remainingRefundable,
+} from "@/modules/transactions/transactions.refunds.service";
+import { getTransaction } from "@/modules/transactions/transactions.service";
+import { NotFoundError, ValidationError } from "@/shared/errors";
 import type {
   CreditExpenseTiming,
   CreditInstallmentBudgetMode,
@@ -38,6 +44,7 @@ import {
   updateUnderlyingTransaction,
 } from "./credit-cards.shared";
 import type {
+  CancelCreditCardPurchaseDto,
   CreateCreditCardPurchaseDto,
   CreditCardPurchaseResponse,
   UpdateCreditCardPurchaseDto,
@@ -397,4 +404,128 @@ export async function deletePurchase(
     );
     await syncCardCycles(tx, card, context.timezone);
   });
+}
+
+const CANCEL_DESCRIPTIONS = {
+  cancellation: "Cancellation",
+  chargeback: "Chargeback",
+  refund: "Refund",
+} as const;
+
+/**
+ * Cancels a card purchase by crediting the card. `single_credit` credits everything that is left in
+ * one go. `cancel_future` first drops the installments that are not billed yet (the purchase shrinks
+ * to what was billed, and the card's used limit shrinks with it), then credits the billed part.
+ * Either way the credit lands on the invoice of the cancellation date.
+ */
+export async function cancelPurchase(
+  context: HouseholdContext,
+  creditCardId: string,
+  purchaseId: string,
+  dto: CancelCreditCardPurchaseDto,
+) {
+  const card = await creditCardsRepository.findByIdOrThrow(context.householdId, creditCardId);
+  const purchase = await loadPurchase(context.householdId, creditCardId, purchaseId);
+  const today = getTodayInTimezone(context.timezone);
+  const date = dto.date ?? today;
+  const installments = await loadPurchaseInstallments(purchaseId);
+
+  const left = await remainingRefundable(context, purchase.transactionId);
+  if (left <= 0) throw new ValidationError("This purchase has already been fully refunded");
+
+  const future =
+    dto.mode === "cancel_future"
+      ? installments.filter((installment) => installment.closingDate > today)
+      : [];
+  const futureAmount = future.reduce((total, installment) => total + installment.amount, 0);
+  const creditAmount = left - futureAmount;
+  if (creditAmount <= 0) {
+    throw new ValidationError(
+      "Nothing has been billed yet, so there is nothing to credit; delete the purchase instead",
+    );
+  }
+
+  const refundTransactionId = await db.transaction(async (tx) => {
+    if (future.length > 0) {
+      const nextAmount = purchase.amount - futureAmount;
+      await tx.delete(creditCardInstallmentsTable).where(
+        inArray(
+          creditCardInstallmentsTable.id,
+          future.map((installment) => installment.installmentId),
+        ),
+      );
+      await tx
+        .update(creditCardPurchasesTable)
+        .set({ purchaseAmount: nextAmount, installmentCount: installments.length - future.length })
+        .where(eq(creditCardPurchasesTable.id, purchaseId));
+      await rewritePurchaseEntries(tx, card, purchase, nextAmount);
+      await tx
+        .delete(creditCardBudgetRecognitionsTable)
+        .where(eq(creditCardBudgetRecognitionsTable.purchaseId, purchaseId));
+      if (purchase.includeInBudget && purchase.categoryId) {
+        await recreateBudgetRecognitionsForPurchase(
+          tx,
+          {
+            id: purchaseId,
+            purchaseAmount: nextAmount,
+            installmentCount: installments.length - future.length,
+            budgetExpenseTiming: purchase.budgetExpenseTiming,
+            budgetInstallmentMode: purchase.budgetInstallmentMode,
+          },
+          {
+            categoryId: purchase.categoryId,
+            currencyCode: card.currencyCode,
+            purchaseDate: purchase.postedDate,
+          },
+        );
+      }
+    }
+
+    return insertRefundInTransaction(tx, context, {
+      reason: dto.reason,
+      description: dto.description ?? `${CANCEL_DESCRIPTIONS[dto.reason]}: ${purchase.description}`,
+      amount: creditAmount,
+      purchaseDate: date,
+      postedDate: date,
+      categoryId: purchase.categoryId,
+      merchantId: purchase.merchantId,
+      includeInBudget: purchase.includeInBudget,
+      tagIds: [],
+      originalTransactionId: purchase.transactionId,
+      ledgerOwnerAccountId: card.ledgerAccountId,
+      currencyCode: card.currencyCode,
+      card,
+    });
+  });
+
+  return {
+    refund: await getTransaction(context, refundTransactionId),
+    purchase: await getPurchase(context, creditCardId, purchaseId),
+  };
+}
+
+async function rewritePurchaseEntries(
+  tx: TxClient,
+  card: Awaited<ReturnType<typeof creditCardsRepository.findByIdOrThrow>>,
+  purchase: PurchaseWithTransactionRow,
+  amount: number,
+): Promise<void> {
+  const accountLedger = await ledgerAccountsRepository.findByOwner("account", card.ledgerAccountId);
+  if (!accountLedger) throw new NotFoundError("Credit card ledger");
+  const expenseLedger = await ledgerAccountsRepository.findOrCreateSystem(
+    tx,
+    `system:expense:${card.currencyCode}`,
+    "liability",
+    card.currencyCode,
+  );
+  await entriesRepository.deleteByTransactionId(tx, purchase.transactionId);
+  await entriesService.createTransactionEntries(tx, purchase.transactionId, [
+    {
+      ledgerAccountId: accountLedger.id,
+      amount: -amount,
+      currencyCode: card.currencyCode,
+      categoryId: purchase.categoryId ?? undefined,
+    },
+    { ledgerAccountId: expenseLedger.id, amount, currencyCode: card.currencyCode },
+  ]);
 }

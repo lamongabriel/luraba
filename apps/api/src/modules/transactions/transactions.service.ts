@@ -6,6 +6,8 @@ import type { TxClient } from "@/db/types";
 import { accountsRepository } from "@/modules/accounts/accounts.repository";
 import type { AccountRecord } from "@/modules/accounts/accounts.types";
 import { categoriesRepository } from "@/modules/categories/categories.repository";
+import { syncCardCycles } from "@/modules/credit-cards/credit-card-cycles.service";
+import * as creditCardsRepository from "@/modules/credit-cards/credit-cards.repository";
 import { currenciesRepository } from "@/modules/currencies/currencies.repository";
 import { entriesRepository } from "@/modules/entries/entries.repository";
 import * as entriesService from "@/modules/entries/entries.service";
@@ -31,6 +33,11 @@ import {
   toRawLedgerBalance,
 } from "./transactions.helpers";
 import type { ListTransactionsQuery } from "./transactions.query";
+import {
+  attachRefundDetails,
+  createRefund,
+  listRefundDetails,
+} from "./transactions.refunds.service";
 import * as txRepository from "./transactions.repository";
 import type {
   CreateTransactionDto,
@@ -136,7 +143,7 @@ async function loadCreatedTransaction(
     throw new NotFoundError("Transaction");
   }
 
-  return transaction;
+  return (await attachRefundDetails([transaction]))[0];
 }
 
 // -----------------------------------------------------------------------------
@@ -490,6 +497,8 @@ async function createTransactionByType(
       return createTransfer(context, dto);
     case "adjustment":
       return createAdjustment(context, dto);
+    case "refund":
+      return loadCreatedTransaction(context, await createRefund(context, dto));
     default:
       throw new ValidationError("Invalid transaction type");
   }
@@ -523,7 +532,7 @@ async function hydrateTransactionFeedPage(
       Array.from(installmentIds),
     ),
   ]);
-  const standardTransactions = mapDetailedRows(standardRows);
+  const standardTransactions = await attachRefundDetails(mapDetailedRows(standardRows));
   const accountIds = new Set<string>();
 
   for (const transaction of standardTransactions) {
@@ -594,7 +603,7 @@ export async function getTransaction(
   transactionId: string,
 ): Promise<TransactionResponse> {
   const rows = await txRepository.listDetailedByTransactionIds(context, [transactionId]);
-  const [transaction] = mapDetailedRows(rows);
+  const [transaction] = await attachRefundDetails(mapDetailedRows(rows));
   if (!transaction) throw new NotFoundError("Transaction");
   return transaction;
 }
@@ -795,6 +804,11 @@ export async function updateTransaction(
       };
     }
   } else {
+    if (transaction.type === "refund" && body.postedDate !== undefined) {
+      throw new ValidationError(
+        "A refund keeps its date: delete it and record a new one to move it to another invoice",
+      );
+    }
     if (
       body.categoryId !== undefined ||
       body.paymentMethodCode !== undefined ||
@@ -862,8 +876,14 @@ export async function deleteTransaction(
   context: HouseholdContext,
   transactionId: string,
 ): Promise<void> {
+  const [refund] = await listRefundDetails([transactionId]);
   const deleted = await txRepository.deleteTransaction(context.householdId, transactionId);
   if (!deleted) {
     throw new NotFoundError("Transaction");
+  }
+  // Deleting a card credit puts its amount back on the invoice.
+  if (refund?.creditCardId) {
+    const card = await creditCardsRepository.findById(context.householdId, refund.creditCardId);
+    if (card) await db.transaction((tx) => syncCardCycles(tx, card, context.timezone));
   }
 }

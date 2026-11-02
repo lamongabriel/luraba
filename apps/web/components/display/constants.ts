@@ -170,7 +170,16 @@ export const TRANSACTION_TYPE_DISPLAY: Record<
     tone: "text-orange-500",
   },
   credit_card_payment: { label: "Card payment", icon: CreditCardIcon, tone: "text-sky-500" },
+  refund: { label: "Refund", icon: ArrowDown01Icon, tone: "text-emerald-500" },
 };
+
+/** Why money came back; shown next to a refund row. Labels stay capitalized and in one place. */
+export const REFUND_REASON_LABELS = {
+  refund: "Refund",
+  cancellation: "Cancellation",
+  chargeback: "Chargeback",
+  cashback: "Cashback",
+} as const;
 
 /* ----------------------------------------------------------------- amounts */
 
@@ -192,6 +201,7 @@ export function amountKindForTransactionType(
     case "credit_card_installment":
       return "expense";
     case "income":
+    case "refund":
       return "income";
     case "transfer":
     case "credit_card_payment":

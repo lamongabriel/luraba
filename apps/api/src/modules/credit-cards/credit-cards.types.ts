@@ -1,5 +1,6 @@
 import type {
   baseCycleSchema,
+  cancelCreditCardPurchaseInputSchema,
   createCreditCardInputSchema,
   createCreditCardPaymentInputSchema,
   createCreditCardPurchaseInputSchema,
@@ -44,3 +45,4 @@ export type CreditCardInsightsQuery = z.output<typeof creditCardInsightsQuerySch
 export type CreditCardInsightsResponse = z.input<typeof creditCardInsightsSchema>;
 export type CreditCardOverviewQuery = z.output<typeof creditCardOverviewQuerySchema>;
 export type CreditCardOverviewResponse = z.input<typeof creditCardOverviewSchema>;
+export type CancelCreditCardPurchaseDto = z.output<typeof cancelCreditCardPurchaseInputSchema>;

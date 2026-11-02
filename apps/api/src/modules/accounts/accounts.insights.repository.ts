@@ -3,7 +3,7 @@ import { db } from "@/db";
 
 export type InsightsRow = {
   date: string;
-  type: "expense" | "income" | "transfer" | "adjustment";
+  type: "expense" | "income" | "transfer" | "adjustment" | "refund";
   direction: 1 | -1;
   categoryId: string | null;
   categoryName: string | null;

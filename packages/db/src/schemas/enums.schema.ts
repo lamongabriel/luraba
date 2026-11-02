@@ -133,6 +133,13 @@ export const transactionTypeEnum = pgEnum("transaction_type", [
   "income",
   "transfer",
   "adjustment",
+  "refund",
+]);
+export const refundReasonEnum = pgEnum("refund_reason", [
+  "refund",
+  "cancellation",
+  "chargeback",
+  "cashback",
 ]);
 export const categoryTypeEnum = pgEnum("category_type", ["expense", "income"]);
 

@@ -46,6 +46,7 @@ export * from "./schemas/products.schema.js";
 export * from "./schemas/splits.schema.js";
 export * from "./schemas/tags.schema.js";
 export * from "./schemas/transaction-items.schema.js";
+export * from "./schemas/transaction-refunds.schema.js";
 export * from "./schemas/transaction-tags.schema.js";
 export * from "./schemas/transactions.schema.js";
 export * from "./schemas/uploads.schema.js";

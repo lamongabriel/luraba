@@ -3,7 +3,23 @@ import { accountClassificationSchema } from "../accounts/values.js";
 import { createdByUserIdSchema, currencyCodeSchema, wireDateTimeSchema } from "../common.js";
 import { tagSummarySchema } from "../tags/resource.js";
 
-export const transactionTypeSchema = z.enum(["expense", "income", "transfer", "adjustment"]);
+export const transactionTypeSchema = z.enum([
+  "expense",
+  "income",
+  "transfer",
+  "adjustment",
+  "refund",
+]);
+/** Why money came back: a refund, a cancelled order, a chargeback or cashback. */
+export const REFUND_REASONS = ["refund", "cancellation", "chargeback", "cashback"] as const;
+export const refundReasonSchema = z.enum(REFUND_REASONS);
+/** Set on `refund` transactions only. A card credit has `creditCardId` and the invoice it lands on. */
+export const transactionRefundSchema = z.object({
+  reason: refundReasonSchema,
+  originalTransactionId: z.uuid().nullable(),
+  creditCardId: z.uuid().nullable(),
+  billingCycleId: z.uuid().nullable(),
+});
 export const transactionTagSchema = tagSummarySchema;
 export const transactionSchema = z.object({
   id: z.uuid(),
@@ -27,6 +43,7 @@ export const transactionSchema = z.object({
   paymentMethodScope: z.enum(["system", "household"]).nullable(),
   paymentMethodTranslationKey: z.string().nullable(),
   tags: z.array(transactionTagSchema),
+  refund: transactionRefundSchema.nullable(),
   includeInBudget: z.boolean(),
   purchaseDate: z.string(),
   postedDate: z.string(),
@@ -115,6 +132,8 @@ export const upcomingTransactionSchema = z.object({
   isOverdue: z.boolean().default(false),
 });
 
+export type TransactionRefund = z.output<typeof transactionRefundSchema>;
+export type RefundReason = z.output<typeof refundReasonSchema>;
 export type Transaction = z.output<typeof transactionSchema>;
 export type TransactionFeedRow = z.output<typeof transactionFeedRowSchema>;
 export type TransactionListSummary = z.output<typeof transactionListSummarySchema>;

@@ -18,6 +18,7 @@ import type { ListCreditCardCyclesQuery, ListCreditCardsQuery } from "./credit-c
 import * as creditCardsRepository from "./credit-cards.repository";
 import { computeRemainingCreditAmount, mapCreditCard } from "./credit-cards.shared";
 import type {
+  CancelCreditCardPurchaseDto,
   CreateCreditCardDto,
   CreateCreditCardPaymentDto,
   CreateCreditCardPurchaseDto,
@@ -282,6 +283,15 @@ export async function updateBillingCycle(
   dto: UpdateCreditCardCycleDto,
 ): Promise<CreditCardCycleDetailResponse> {
   return cycleService.updateBillingCycle(context, creditCardId, cycleId, dto);
+}
+
+export async function cancelPurchase(
+  context: HouseholdContext,
+  creditCardId: string,
+  purchaseId: string,
+  dto: CancelCreditCardPurchaseDto,
+) {
+  return purchaseService.cancelPurchase(context, creditCardId, purchaseId, dto);
 }
 
 export async function createPurchase(

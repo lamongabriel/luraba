@@ -220,6 +220,7 @@ export function invoiceLineToFeedRow(
     paymentMethodScope: null,
     paymentMethodTranslationKey: null,
     tags: [],
+    refund: null,
     includeInBudget: true,
     purchaseDate: line.date,
     createdByUserId: null,

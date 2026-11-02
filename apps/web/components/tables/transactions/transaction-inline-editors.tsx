@@ -13,7 +13,11 @@ const INLINE_POPOVER_CLASS =
   "max-h-[min(28rem,var(--radix-popover-content-available-height))] rounded-md border border-border/70 p-0 shadow-none";
 
 function isInlineEditable(row: TransactionFeedRow) {
-  return row.rowKind !== "credit_card_payment" && row.originType !== "adjustment";
+  return (
+    row.rowKind !== "credit_card_payment" &&
+    row.originType !== "adjustment" &&
+    row.originType !== "refund"
+  );
 }
 
 export function InlineCategoryCell({

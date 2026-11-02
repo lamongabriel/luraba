@@ -123,6 +123,7 @@ export default function TransactionsPage() {
         paymentMethodScope: null,
         paymentMethodTranslationKey: null,
         tags: [],
+        refund: null,
         includeInBudget: true,
         purchaseDate: row.effectiveDate,
         postedDate: row.effectiveDate,

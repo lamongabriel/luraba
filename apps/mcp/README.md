@@ -19,7 +19,7 @@ Setup and usage for humans: [docs/api-keys-mcp/mcp.md](../../docs/api-keys-mcp/m
 | `src/client/` | `LurabaClient` (typed by the contract: validates requests and responses), `fetchAllPages`, error mapping. |
 | `src/mcp/` | `createMcpServer` (low-level `Server`, tools + resources) and the zod to JSON Schema helper. |
 | `src/http/app.ts` | Express + streamable HTTP. A session is bound to the bearer credential that opened it (API key or OAuth token, verified once against the API); missing or bad credentials get a 401 with `WWW-Authenticate: Bearer resource_metadata=...` so OAuth clients start the sign-in. Served publicly at `<base URL>/mcp` through the API proxy. |
-| `src/tools/` | One file per area (`accounts.ts` holds the account and credit card write tools); `registry.ts` is the list the server exposes. |
+| `src/tools/` | One file per area (`accounts.ts` holds the account and credit card write tools, `refunds.ts` the refund, purchase cancellation and card payment tools); `registry.ts` is the list the server exposes. |
 | `src/resolve/` | Forgiving name resolution (`id`, exact, partial) that returns candidates instead of guessing. |
 | `src/format/` | Money (major units + currency), periods, transaction summaries. |
 | `src/context/resources.ts` | `luraba://guide/...` resources an agent can read first. |

@@ -19,6 +19,10 @@ export type TransactionSummary = {
   tags: string[];
   paymentMethod: string | null;
   includeInBudget: boolean;
+  /** Card purchase rows: pass it to cancel_purchase. */
+  purchaseId: string | null;
+  /** Refund rows: why the money came back and the purchase it is linked to. */
+  refund: { reason: string; originalTransactionId: string | null } | null;
 };
 
 type NameMaps = {
@@ -60,13 +64,18 @@ type RowLike = Pick<
   Partial<
     Pick<
       TransactionFeedRow,
-      "creditCardId" | "installmentNumber" | "installmentCount" | "originType"
+      | "creditCardId"
+      | "installmentNumber"
+      | "installmentCount"
+      | "originType"
+      | "purchaseId"
+      | "refund"
     >
   >;
 
-/** Sign convention for agents: income positive, expenses and card payments negative. */
+/** Sign convention for agents: income and refunds positive, expenses and card payments negative. */
 function signedAmount(row: RowLike): number {
-  if (row.type === "income") return Math.abs(row.amount);
+  if (row.type === "income" || row.type === "refund") return Math.abs(row.amount);
   if (row.type === "expense") return -Math.abs(row.amount);
   return row.amount;
 }
@@ -91,5 +100,9 @@ export function summarizeRow(row: RowLike, names: NameMaps): TransactionSummary 
     tags: row.tags.map((tag) => tag.name),
     paymentMethod: row.paymentMethodName,
     includeInBudget: row.includeInBudget,
+    purchaseId: row.purchaseId ?? null,
+    refund: row.refund
+      ? { reason: row.refund.reason, originalTransactionId: row.refund.originalTransactionId }
+      : null,
   };
 }

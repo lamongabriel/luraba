@@ -44,7 +44,10 @@ function totalsOf(rows: repository.InsightsRow[], sign: 1 | -1): Totals {
     if (delta > 0) moneyIn += delta;
     else moneyOut += -delta;
     if (row.type === "expense" && delta < 0) totalSpent += -delta;
+    // A refund is money back, not earnings: it lowers what was spent.
+    if (row.type === "refund" && delta > 0) totalSpent -= delta;
   }
+  totalSpent = Math.max(totalSpent, 0);
   return { moneyIn, moneyOut, net: moneyIn - moneyOut, totalSpent };
 }
 
@@ -59,7 +62,8 @@ function buildCategories(rows: repository.InsightsRow[], sign: 1 | -1) {
   >();
   for (const row of rows) {
     const delta = row.amount * sign;
-    if (row.type !== "expense" || delta >= 0) continue;
+    const isRefund = row.type === "refund" && delta > 0;
+    if (!isRefund && (row.type !== "expense" || delta >= 0)) continue;
     const key = row.categoryId ?? "uncategorized";
     const item = byCategory.get(key) ?? {
       id: row.categoryId,
@@ -68,6 +72,7 @@ function buildCategories(rows: repository.InsightsRow[], sign: 1 | -1) {
       color: row.categoryColor,
       amount: 0,
     };
+    // Spending is negative delta; a refund is positive delta, so it subtracts.
     item.amount += -delta;
     byCategory.set(key, item);
   }

@@ -14,7 +14,7 @@ import {
   dateQuerySchema,
   validateRange,
 } from "../list.js";
-import { transactionFeedOriginTypeSchema } from "./resource.js";
+import { refundReasonSchema, transactionFeedOriginTypeSchema } from "./resource.js";
 
 const tagIdsSchema = z.array(z.uuid()).max(50).optional();
 const paymentMethodCodeSchema = z
@@ -66,9 +66,37 @@ const adjustmentSchema = z.strictObject({
   balance: moneyBalanceSchema,
   accountId: z.uuid(),
 });
+/**
+ * Money that comes back without a source account: set `accountId` (it raises the balance) or
+ * `creditCardId` (it lowers the open invoice). With `originalTransactionId` the category defaults to
+ * the original's. Reports net it against the category; it is never income.
+ */
+const refundSchema = z.strictObject({
+  type: z.literal("refund"),
+  ...baseFields,
+  ...categorizedLinkFields,
+  amount: moneyAmountSchema,
+  currencyCode: currencyCodeSchema.optional(),
+  reason: refundReasonSchema,
+  accountId: z.uuid().optional(),
+  creditCardId: z.uuid().optional(),
+  originalTransactionId: z.uuid().optional(),
+});
 export const createTransactionInputSchema = z
-  .discriminatedUnion("type", [expenseSchema, incomeSchema, transferSchema, adjustmentSchema])
+  .discriminatedUnion("type", [
+    expenseSchema,
+    incomeSchema,
+    transferSchema,
+    adjustmentSchema,
+    refundSchema,
+  ])
   .superRefine((value, ctx) => {
+    if (value.type === "refund" && Boolean(value.accountId) === Boolean(value.creditCardId))
+      ctx.addIssue({
+        code: "custom",
+        message: "Provide either accountId or creditCardId",
+        path: ["accountId"],
+      });
     if (value.type === "transfer" && value.fromAmount === undefined && value.toAmount === undefined)
       ctx.addIssue({
         code: "custom",

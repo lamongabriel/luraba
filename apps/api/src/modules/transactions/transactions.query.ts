@@ -15,6 +15,7 @@ import { ledgerAccountsTable } from "@luraba/db/schemas/ledger-accounts.schema";
 import { merchantsTable } from "@luraba/db/schemas/merchants.schema";
 import { paymentMethodsTable } from "@luraba/db/schemas/payment-methods.schema";
 import { tagsTable } from "@luraba/db/schemas/tags.schema";
+import { transactionRefundsTable } from "@luraba/db/schemas/transaction-refunds.schema";
 import { transactionTagsTable } from "@luraba/db/schemas/transaction-tags.schema";
 import { transactionsTable } from "@luraba/db/schemas/transactions.schema";
 import { type SQL, sql } from "drizzle-orm";
@@ -64,7 +65,7 @@ export function buildTransactionFeedWhere(query: TransactionFilterQuery): SQL | 
       ? sql`billing_cycle_id = any(${sqlArray(query.billingCycleIds, "uuid")})`
       : undefined,
     query.categoryIds.length > 0 || query.uncategorized === true
-      ? sql`origin_type in ('expense', 'income', 'credit_card_installment') and (
+      ? sql`origin_type in ('expense', 'income', 'credit_card_installment', 'refund') and (
           ${
             query.categoryIds.length > 0
               ? sql`category_id = any(${sqlArray(query.categoryIds, "uuid")})`
@@ -193,7 +194,7 @@ export function buildTransactionFeedCte(
         null::uuid as installment_id,
         null::integer as installment_number,
         null::integer as installment_count,
-        null::uuid as billing_cycle_id,
+        ${transactionRefundsTable.billingCycleId} as billing_cycle_id,
         case
           when ${creditCardPaymentsTable.id} is not null then 'credit_card_payment'
           else ${transactionsTable.type}::text
@@ -209,7 +210,10 @@ export function buildTransactionFeedCte(
         ${transactionsTable.merchantId} as merchant_id,
         ${transactionsTable.createdByUserId} as created_by_user_id,
         ${paymentMethodsTable.code} as payment_method_code,
-        ${creditCardPaymentsTable.creditCardId} as credit_card_id,
+        coalesce(
+          ${creditCardPaymentsTable.creditCardId},
+          ${transactionRefundsTable.creditCardId}
+        ) as credit_card_id,
         entry_rollup.account_ids,
         entry_rollup.currency_codes,
         coalesce(tag_rollup.tag_ids, array[]::uuid[]) as tag_ids,
@@ -231,6 +235,8 @@ export function buildTransactionFeedCte(
         on ${creditCardPurchasesTable.transactionId} = ${transactionsTable.id}
       left join ${creditCardPaymentsTable}
         on ${creditCardPaymentsTable.transactionId} = ${transactionsTable.id}
+      left join ${transactionRefundsTable}
+        on ${transactionRefundsTable.transactionId} = ${transactionsTable.id}
       left join ${paymentMethodsTable}
         on ${paymentMethodsTable.id} = ${transactionsTable.paymentMethodId}
       left join ${categoriesTable}

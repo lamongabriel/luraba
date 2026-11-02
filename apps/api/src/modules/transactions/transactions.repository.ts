@@ -122,6 +122,10 @@ export async function listTransactionFeedPageKeys(
       +
       coalesce(sum(amount) filter (
         where origin_type = 'credit_card_installment' and include_in_budget
+      ), 0)::integer
+      -
+      coalesce(sum(amount) filter (
+        where origin_type = 'refund' and include_in_budget
       ), 0)::integer as "expenseAmount",
       count(*) filter (where origin_type = 'transfer')::integer as "transferCount"
     from filtered

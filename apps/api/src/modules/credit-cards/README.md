@@ -35,3 +35,18 @@ needed, the web edit form asks for a limit when it opens such a card.
 exposes `billing_cycle_id` for it (null for standard rows).
 
 General module conventions: [../README.md](../README.md).
+
+## Cancelling a purchase and credits
+
+`POST /credit-cards/:id/purchases/:purchaseId/cancel` (`transactions.create`, body `mode`, `reason`, `date?`,
+`description?`) credits a purchase through `insertRefundInTransaction` (see the transactions README):
+
+- `single_credit` (default): one credit for everything not refunded yet, on the invoice of the cancellation date,
+  the way most issuers do it. The purchase and its installments stay as they were.
+- `cancel_future`: first drops the installments whose invoice has not closed, shrinks the purchase (amount, count,
+  its ledger entries and budget recognitions) to what was billed, then credits the billed part. The card's used
+  limit shrinks with it; the category nets to zero once the credit is in.
+
+Both refuse when nothing is left to refund. A partial refund of an installment purchase is a plain `refund`
+transaction (a single credit). Credits reduce the invoice statement; `GET .../cycles/:cycleId` lists them in
+`credits`.

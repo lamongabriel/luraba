@@ -4,7 +4,7 @@ import { buildTransactionFeedCte, type TransactionFilterQuery } from "./transact
 
 export type TransactionAnalyticsAggregateRow = {
   date: string;
-  originType: "income" | "expense" | "credit_card_installment";
+  originType: "income" | "expense" | "credit_card_installment" | "refund";
   amount: number;
   currencyCode: string;
   categoryId: string | null;
@@ -32,7 +32,7 @@ export async function aggregateTransactionFeed(
       sum(filtered.amount)::integer as amount
     from filtered
     left join categories on categories.id = filtered.category_id
-    where filtered.origin_type in ('income', 'expense', 'credit_card_installment')
+    where filtered.origin_type in ('income', 'expense', 'credit_card_installment', 'refund')
     group by
       filtered.posted_date,
       filtered.origin_type,

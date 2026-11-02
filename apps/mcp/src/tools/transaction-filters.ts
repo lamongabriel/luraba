@@ -16,6 +16,7 @@ const ORIGIN_TYPES = [
   "adjustment",
   "credit_card_installment",
   "credit_card_payment",
+  "refund",
 ] as const;
 
 const names = z.array(z.string().min(1)).max(50);
@@ -36,7 +37,7 @@ export const transactionFilterShape = {
     .array(z.enum(ORIGIN_TYPES))
     .optional()
     .describe(
-      "Transaction types. Credit card purchases appear as credit_card_installment rows; card bill payments as credit_card_payment.",
+      "Transaction types. Credit card purchases appear as credit_card_installment rows; card bill payments as credit_card_payment; refunds, cancellations, chargebacks and cashback as refund (money back, never income).",
     ),
   amountMin: z.number().min(0).optional().describe("Smallest absolute amount, in major units."),
   amountMax: z.number().min(0).optional().describe("Largest absolute amount, in major units."),

@@ -3,6 +3,8 @@ import { creditCardInstallmentsTable } from "@luraba/db/schemas/credit-card-inst
 import { creditCardPaymentAllocationsTable } from "@luraba/db/schemas/credit-card-payment-allocations.schema";
 import { creditCardPaymentsTable } from "@luraba/db/schemas/credit-card-payments.schema";
 import { creditCardPurchasesTable } from "@luraba/db/schemas/credit-card-purchases.schema";
+import { entriesTable } from "@luraba/db/schemas/entries.schema";
+import { transactionRefundsTable } from "@luraba/db/schemas/transaction-refunds.schema";
 import { transactionsTable } from "@luraba/db/schemas/transactions.schema";
 import { toDate } from "@luraba/domain";
 import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
@@ -223,6 +225,25 @@ export async function listInstallmentTotals(tx: TxClient, creditCardId: string) 
     .groupBy(creditCardInstallmentsTable.billingCycleId);
 }
 
+/** Credits (refunds, cancellations, cashback) per invoice, in minor units. */
+export async function listRefundCreditTotals(tx: TxClient, creditCardId: string) {
+  return tx
+    .select({
+      billingCycleId: transactionRefundsTable.billingCycleId,
+      amount: sql<number>`coalesce(sum(${entriesTable.amount}), 0)`.mapWith(Number),
+    })
+    .from(transactionRefundsTable)
+    .innerJoin(entriesTable, eq(entriesTable.transactionId, transactionRefundsTable.transactionId))
+    .where(
+      and(
+        eq(transactionRefundsTable.creditCardId, creditCardId),
+        sql`${entriesTable.amount} > 0`,
+        sql`${transactionRefundsTable.billingCycleId} is not null`,
+      ),
+    )
+    .groupBy(transactionRefundsTable.billingCycleId);
+}
+
 export async function listPaymentAllocationTotals(tx: TxClient, creditCardId: string) {
   return tx
     .select({
@@ -298,4 +319,33 @@ export async function loadCyclePayments(cardId: string, cycleId: string) {
       ),
     )
     .orderBy(asc(transactionsTable.purchaseDate), asc(creditCardPaymentAllocationsTable.createdAt));
+}
+
+/** Credits (refunds, cancellations, chargebacks, cashback) applied to one invoice. */
+export async function loadCycleCredits(cardId: string, cycleId: string) {
+  return db
+    .select({
+      transactionId: transactionRefundsTable.transactionId,
+      description: transactionsTable.description,
+      reason: transactionRefundsTable.reason,
+      postedDate: transactionsTable.postedDate,
+      amount: sql<number>`coalesce(sum(${entriesTable.amount}), 0)`.mapWith(Number),
+    })
+    .from(transactionRefundsTable)
+    .innerJoin(transactionsTable, eq(transactionsTable.id, transactionRefundsTable.transactionId))
+    .innerJoin(entriesTable, eq(entriesTable.transactionId, transactionsTable.id))
+    .where(
+      and(
+        eq(transactionRefundsTable.creditCardId, cardId),
+        eq(transactionRefundsTable.billingCycleId, cycleId),
+        sql`${entriesTable.amount} > 0`,
+      ),
+    )
+    .groupBy(
+      transactionRefundsTable.transactionId,
+      transactionsTable.description,
+      transactionRefundsTable.reason,
+      transactionsTable.postedDate,
+    )
+    .orderBy(asc(transactionsTable.postedDate));
 }

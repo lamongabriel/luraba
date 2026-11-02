@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { defineEndpoint } from "../api.js";
 import { listMetaSchema } from "../list.js";
+import { transactionSchema } from "../transactions/resource.js";
 import {
+  cancelCreditCardPurchaseInputSchema,
   createCreditCardInputSchema,
   createCreditCardPaymentInputSchema,
   createCreditCardPurchaseInputSchema,
@@ -126,6 +128,14 @@ export const creditCardsEndpoints = {
     params: creditCardPurchaseParamsSchema,
     body: updateCreditCardPurchaseInputSchema,
     response: creditCardPurchaseSchema,
+    status: 200,
+  }),
+  cancelPurchase: defineEndpoint({
+    method: "post",
+    path: "/credit-cards/:id/purchases/:purchaseId/cancel",
+    params: creditCardPurchaseParamsSchema,
+    body: cancelCreditCardPurchaseInputSchema,
+    response: z.object({ refund: transactionSchema, purchase: creditCardPurchaseSchema }),
     status: 200,
   }),
   deletePurchase: defineEndpoint({

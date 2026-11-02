@@ -62,4 +62,5 @@ export const TRANSACTION_ORIGIN_TYPE_OPTIONS: Array<{
   { value: "transfer", label: "Transfer" },
   { value: "credit_card_installment", label: "Card installment" },
   { value: "credit_card_payment", label: "Card payment" },
+  { value: "refund", label: "Refund" },
 ];
