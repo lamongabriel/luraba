@@ -1,5 +1,55 @@
 # Changelog
 
+## [1.4.0](https://github.com/lamongabriel/luraba/compare/v1.3.0...v1.4.0) (2026-11-02)
+
+
+### Features
+
+* **api:** add account and card insights and parent category budget caps ([5331643](https://github.com/lamongabriel/luraba/commit/5331643711fcd78aa1e8802af111f8457e7c038d))
+* **api:** add oauth for mcp clients, connected agents and the mcp proxy ([46f2478](https://github.com/lamongabriel/luraba/commit/46f2478f5ad1f42896e13e04c0ca7d3c70899c44))
+* **api:** personal API keys with Better Auth, settings UI and docs ([c7fe25b](https://github.com/lamongabriel/luraba/commit/c7fe25bc4c19aaf4e8a95c086446d7856f836923))
+* **goals:** track goal funds across accounts and add a monthly plan with projected vs actual ([14dde9a](https://github.com/lamongabriel/luraba/commit/14dde9a788a6af4a60e3df41b3ee2cfee9c49bca))
+* **households:** role-based permissions UI, owner-takeover fix, household section and import wizard ([3412778](https://github.com/lamongabriel/luraba/commit/3412778ba97671d0cc25eaa6f2cec0e6775a3b19))
+* **mcp:** add account and credit card write tools and category paths ([1d1e122](https://github.com/lamongabriel/luraba/commit/1d1e122fd919610460b8c3f32958bb119da9b781))
+* **mcp:** add category icons, a list_icons tool and a parent icon fallback ([3806c1b](https://github.com/lamongabriel/luraba/commit/3806c1b0276246594e61649a171577fb718ddc11))
+* **mcp:** add recurring bill and budget tools ([d4ea5d6](https://github.com/lamongabriel/luraba/commit/d4ea5d6100ccb673bfa69c7996c9cd7957089ae9))
+* **mcp:** add reports, HTTP transport, dev key script, tests and docs ([1c41d89](https://github.com/lamongabriel/luraba/commit/1c41d897ac0171aec0b928f7fe4b3df7b34f0b30))
+* **mcp:** add the Luraba MCP server with transaction, reference and report tools ([eacad59](https://github.com/lamongabriel/luraba/commit/eacad5976427ec36936e7a10f57d0d44aa28f057))
+* **transactions:** add notes and original statement description ([834e2f3](https://github.com/lamongabriel/luraba/commit/834e2f3656d3a1b712c0dea14b9a0b70fbe87c30))
+* **transactions:** land later card installments on the first day of their month ([5223eec](https://github.com/lamongabriel/luraba/commit/5223eec3756ca7c296b8cf0d113f6c19bc20cfcd))
+* **transactions:** record refunds, cancellations, chargebacks and cashback ([478ea09](https://github.com/lamongabriel/luraba/commit/478ea09b1ae09e39354c6ddff0b74a29f4e04f3d))
+* **web:** add brand module, favicon/OG assets and page metadata on every page ([e07677a](https://github.com/lamongabriel/luraba/commit/e07677a031550e8dc2f1376c50cfecd384a91ec5))
+* **web:** add the household integrations page for brandfetch ([8bcfb0e](https://github.com/lamongabriel/luraba/commit/8bcfb0e11dc81354c3f97c519b0f46bf09148550))
+* **web:** add the settings mcp tab, consent screen and mcp service deployment ([79d4be7](https://github.com/lamongabriel/luraba/commit/79d4be70413fc6fb9d29ddf6e05aacd11469a461))
+* **web:** redesign accounts, credit cards and budgets pages with a chart library ([e7ff5ba](https://github.com/lamongabriel/luraba/commit/e7ff5ba35e9e8f1ed60a12b11f0569d12c98a32e))
+* **web:** simpler household switcher with view, create and selection animation ([bb371b0](https://github.com/lamongabriel/luraba/commit/bb371b0929713022760a580c56c909db1711c5af))
+
+
+### Bug Fixes
+
+* **auth:** return the profile picture with the session and show it in the sidebar ([3bcf832](https://github.com/lamongabriel/luraba/commit/3bcf832823a191bc0977a087eba120122be77925))
+* **dev:** wait for services on start and make BCB macro sync resilient ([dc905b8](https://github.com/lamongabriel/luraba/commit/dc905b8222c0731530a08c978bc12d41d0c8f319))
+* **mcp:** degrade gracefully without the oauth tables and drop the tool list ([0c66cfb](https://github.com/lamongabriel/luraba/commit/0c66cfb1fe94157814faa2dc7c53cbdaa335dedb))
+* **mcp:** format created amounts correctly and keep the transactions list fresh ([8a2bac4](https://github.com/lamongabriel/luraba/commit/8a2bac40ce8cb82e0888327a6c3274407af88b3e))
+* **transactions:** list card installments on the purchase date and always inside their invoice ([60b927f](https://github.com/lamongabriel/luraba/commit/60b927fb58427d0d33d0b9d63c75aaf828ca4209))
+* **web:** label card purchase rows 'Card purchase' instead of 'Installment' ([7c24d7f](https://github.com/lamongabriel/luraba/commit/7c24d7f3062641d913f63a823d79e22a9eb63409))
+* **web:** stop the household switcher trigger from duplicating on select ([0522cc8](https://github.com/lamongabriel/luraba/commit/0522cc836c75e6f191e302a6cae81d9f2e7432c8))
+* **web:** wrap the login form in Suspense so the production build passes ([d14a672](https://github.com/lamongabriel/luraba/commit/d14a67205b7284a50e5094c9303d3ba2c7e4130c))
+
+
+### Performance
+
+* **web:** build with Turbopack too ([2482b7a](https://github.com/lamongabriel/luraba/commit/2482b7a43cf6b6d2d9c995e8530ef207b81f55d7))
+* **web:** per-icon hugeicons imports to shrink dev bundles ([087cf7c](https://github.com/lamongabriel/luraba/commit/087cf7cce6a3cb0cf3ec4576dd492bda9d617072))
+* **web:** run the dev server with Turbopack ([ff50e58](https://github.com/lamongabriel/luraba/commit/ff50e58413f8b01b138aa6e5a7477044dfafab7d))
+
+
+### Documentation
+
+* add the design language and update the agent guide ([8f15b80](https://github.com/lamongabriel/luraba/commit/8f15b80f64c59e01f30dc5080aab0fe2d9fc9787))
+* **coolify:** add a manual update checklist ([ec18bf7](https://github.com/lamongabriel/luraba/commit/ec18bf77c5aec3871a6aa1e1df01bdc12b13cdc3))
+* **mcp:** never stop dev servers by command-line pattern ([e0790a3](https://github.com/lamongabriel/luraba/commit/e0790a3c08913692af6934db42f3e333aa2228c5))
+
 ## [1.3.0](https://github.com/lamongabriel/luraba/compare/v1.2.1...v1.3.0) (2026-10-30)
 
 
