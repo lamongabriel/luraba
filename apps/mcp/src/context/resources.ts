@@ -23,6 +23,12 @@ household, with exactly that person's permissions.
 - Amounts you send are in major units (12.50 means 12 dollars 50 cents) with a currency; amounts you read come back as
   { amount, currency, formatted }.
 - Expenses are negative, income positive in summaries. Transfers move money between your own accounts.
+- Every transaction has three text fields. description is the short, clean title: write it in English, 40 characters
+  or less ("Zamix internet bill"). originalDescription is the raw statement text exactly as the bank shows it
+  ("Pagamento de Título ZAMIX MULTIPLAY TELECOMUNICACOES", "AMAZON MKTPL*1A2UA6CH3"): copy it verbatim, never
+  translate, clean or shorten it. notes is free-form (item lists, who it was for, a gift card used). The text filter of
+  search_transactions looks in all three, ignoring case and accents. For a card purchase they belong to the purchase,
+  so every installment shows the same values.
 - Destructive tools need confirm: true. Bulk tools support dryRun: true to preview.
 - When a tool returns status needs_clarification, ask the user which candidate they meant, then call again with the exact name or id.
 `,
@@ -36,6 +42,9 @@ household, with exactly that person's permissions.
 Kinds: income, expense, transfer (between two accounts) and credit card purchase (expense on a card, optionally in installments).
 Names for accounts, cards, categories, merchants and tags are matched by id, exact name, then partial name. Unknown merchants,
 categories and tags can be created on the fly with createMissing: true. Use dryRun: true to see what would be created before it is.
+description is a short English title (40 characters or less); put the bank's raw text in originalDescription and
+remarks in notes (update_transaction can set or clear both with null; bulk_update_transactions supports set.notes and
+set.appendNotes). Transfers share one value for both sides.
 The transaction feed lists credit card purchases as one row per installment and hides future-dated rows.
 `,
   },

@@ -14,6 +14,11 @@ import {
   validateRange,
 } from "../list.js";
 import {
+  notesSchema,
+  originalDescriptionSchema,
+  transactionTextFields,
+} from "../transactions/requests.js";
+import {
   creditCardCycleDisplayStatusSchema,
   creditCardCycleScopeSchema,
   creditCardCycleStatusSchema,
@@ -73,6 +78,7 @@ export const updateCreditCardCycleInputSchema = z
   });
 export const createCreditCardPurchaseInputSchema = z.object({
   description: z.string().min(1).max(512),
+  ...transactionTextFields,
   amount: moneyAmountSchema,
   categoryId: z.uuid().nullable().optional(),
   merchantId: z.uuid().optional(),
@@ -84,7 +90,13 @@ export const createCreditCardPurchaseInputSchema = z.object({
 });
 export const updateCreditCardPurchaseInputSchema = createCreditCardPurchaseInputSchema
   .partial()
-  .extend({ merchantId: z.uuid().nullable().optional() })
+  .extend({
+    merchantId: z.uuid().nullable().optional(),
+    /** `null` clears it. */
+    originalDescription: originalDescriptionSchema.nullable().optional(),
+    /** `null` clears it. */
+    notes: notesSchema.nullable().optional(),
+  })
   .refine(
     (value) => Object.values(value).some((field) => field !== undefined),
     "At least one purchase field must be provided",
@@ -100,9 +112,11 @@ export const cancelCreditCardPurchaseInputSchema = z.object({
   reason: z.enum(["cancellation", "chargeback", "refund"]).default("cancellation"),
   date: dateInputSchema.optional(),
   description: z.string().min(1).max(512).optional(),
+  ...transactionTextFields,
 });
 export const createCreditCardPaymentInputSchema = z.object({
   description: z.string().min(1).max(512).optional(),
+  ...transactionTextFields,
   amount: moneyAmountSchema,
   fromAccountId: z.uuid(),
   paymentDate: dateInputSchema,
@@ -110,6 +124,10 @@ export const createCreditCardPaymentInputSchema = z.object({
 });
 export const updateCreditCardPaymentInputSchema = createCreditCardPaymentInputSchema
   .partial()
+  .extend({
+    originalDescription: originalDescriptionSchema.nullable().optional(),
+    notes: notesSchema.nullable().optional(),
+  })
   .refine(
     (value) => Object.values(value).some((field) => field !== undefined),
     "At least one payment field must be provided",

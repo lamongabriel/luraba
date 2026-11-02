@@ -20,7 +20,7 @@ import { transactionTagsTable } from "@luraba/db/schemas/transaction-tags.schema
 import { transactionsTable } from "@luraba/db/schemas/transactions.schema";
 import { type SQL, sql } from "drizzle-orm";
 import type { z } from "zod";
-import { buildIlikeSearch, buildOrderBy, combineConditions, rangeConditions } from "@/shared/list";
+import { buildFoldedSearch, buildOrderBy, combineConditions, rangeConditions } from "@/shared/list";
 
 export type ListTransactionsQuery = z.output<typeof listTransactionsQuerySchema>;
 export type TransactionFilterQuery = z.output<typeof transactionAnalyticsQuerySchema>;
@@ -48,7 +48,7 @@ export function buildTransactionFeedWhere(query: TransactionFilterQuery): SQL | 
   );
 
   return combineConditions(
-    buildIlikeSearch(query.search, [sql`search_blob`]),
+    buildFoldedSearch(query.search, [sql`search_blob`]),
     postedDateConditions,
     query.purchaseDateFrom ? sql`purchase_date >= ${query.purchaseDateFrom}::date` : undefined,
     query.purchaseDateTo ? sql`purchase_date <= ${query.purchaseDateTo}::date` : undefined,
@@ -220,6 +220,8 @@ export function buildTransactionFeedCte(
         concat_ws(
           ' ',
           ${transactionsTable.description},
+          ${transactionsTable.originalDescription},
+          ${transactionsTable.notes},
           ${transactionsTable.type}::text,
           ${paymentMethodsTable.name},
           ${paymentMethodsTable.code},
@@ -278,6 +280,8 @@ export function buildTransactionFeedCte(
         concat_ws(
           ' ',
           ${transactionsTable.description},
+          ${transactionsTable.originalDescription},
+          ${transactionsTable.notes},
           'credit_card_installment',
           ${accountsTable.name},
           ${paymentMethodsTable.name},

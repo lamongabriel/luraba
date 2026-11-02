@@ -204,6 +204,7 @@ export async function processImportBatch(batchId: string): Promise<void> {
           amount: Math.abs(row.amount),
           date: row.postedDate.toISOString().slice(0, 10),
           description: row.descriptionOverride ?? row.description,
+          originalDescription: row.description,
         });
         if (created.status === "duplicate") {
           await importRowsRepository.setOutcome(row.id, "duplicate", created.message);

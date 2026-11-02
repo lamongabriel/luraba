@@ -36,6 +36,12 @@ exposes `billing_cycle_id` for it (null for standard rows).
 
 General module conventions: [../README.md](../README.md).
 
+## Notes and statement name
+
+Purchases, payments and cancellations accept `originalDescription` and `notes` (see the transactions README); the
+purchase and payment responses return them, and `PATCH` of a purchase or payment can clear them with `null`. They
+live on the purchase's transaction row, so all installments share them.
+
 ## Cancelling a purchase and credits
 
 `POST /credit-cards/:id/purchases/:purchaseId/cancel` (`transactions.create`, body `mode`, `reason`, `date?`,

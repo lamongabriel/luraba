@@ -18,6 +18,7 @@ import {
 } from "@/components/side-panel/side-panel-section";
 import { TransactionItemsList } from "@/components/transactions/transaction-items-list";
 import { TransactionParties } from "@/components/transactions/transaction-parties";
+import { TransactionTextFields } from "@/components/transactions/transaction-text-fields";
 import { useTransactionInlineUpdates } from "@/components/transactions/use-transaction-inline-updates";
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
@@ -212,6 +213,20 @@ export function TransactionDetails({
           ))}
         </SidePanelSection>
       ) : null}
+
+      <TransactionTextFields
+        rowKey={row.rowId}
+        disabled={isPending || !canUpdate}
+        notes={purchase ? purchase.notes : payment ? payment.notes : row.notes}
+        originalDescription={
+          purchase
+            ? purchase.originalDescription
+            : payment
+              ? payment.originalDescription
+              : row.originalDescription
+        }
+        onSave={(field, value, options) => update({ [field]: value }, options)}
+      />
 
       {row.rowKind !== "credit_card_payment" && row.originType !== "transfer" ? (
         <TransactionItemsList

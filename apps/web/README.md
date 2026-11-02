@@ -62,6 +62,12 @@ that invalidates the key. Reusable file/attachment UI is documented in
 - **Switch modes inside one sheet.** View, edit and create share one `SidePanel` (see `components/transactions/transaction-sheet.tsx`)
   and only swap the header and body, so the backdrop never flickers. Do not return a different `<Sheet>` per mode.
   After a save, go back to the view instead of closing.
+- **Notes and statement name.** The transactions table shows the title with the statement name as a small muted
+  second line (truncated, full text in a tooltip) and a note icon when there are notes
+  (`components/tables/transactions/transactions-table.config.tsx`). The details drawer edits them with
+  `components/transactions/transaction-text-fields.tsx` (notes save on blur; the statement name is read-only until
+  the pencil is pressed) through `useTransactionInlineUpdates`, which routes to the purchase or payment endpoint for
+  card rows. The search box needs nothing extra: the API search covers both fields.
 - **Sticky submit.** The button row of a form in a sheet is `FormActions` (`components/forms/form-actions.tsx`): it
   sticks to the bottom of the sheet so the submit button is always visible. `FormSheet` already lets the body grow.
 - **Dates** in forms use the calendar `DatePicker` (`FormItem inputType="date"` / `DateInput`), never the native date input.

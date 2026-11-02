@@ -35,6 +35,8 @@ const transactionDetailSelect = {
   transactionId: transactionsTable.id,
   type: transactionsTable.type,
   description: transactionsTable.description,
+  originalDescription: transactionsTable.originalDescription,
+  notes: transactionsTable.notes,
   includeInBudget: transactionsTable.includeInBudget,
   merchantId: transactionsTable.merchantId,
   purchaseDate: transactionsTable.purchaseDate,
@@ -71,6 +73,8 @@ const creditCardInstallmentFeedSelect = {
   installmentNumber: creditCardInstallmentsTable.installmentNumber,
   installmentCount: creditCardPurchasesTable.installmentCount,
   description: transactionsTable.description,
+  originalDescription: transactionsTable.originalDescription,
+  notes: transactionsTable.notes,
   includeInBudget: creditCardPurchasesTable.includeInBudget,
   merchantId: transactionsTable.merchantId,
   purchaseDate: transactionsTable.purchaseDate,
@@ -173,6 +177,8 @@ export async function updateTransaction(
     Pick<
       typeof transactionsTable.$inferInsert,
       | "description"
+      | "originalDescription"
+      | "notes"
       | "purchaseDate"
       | "postedDate"
       | "includeInBudget"

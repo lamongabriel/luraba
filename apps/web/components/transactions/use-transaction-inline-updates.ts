@@ -8,7 +8,10 @@ import {
 import * as React from "react";
 import { useCan } from "@/components/permissions/use-can";
 import { queryClient } from "@/lib/query-client";
-import { useUpdateCreditCardPurchaseMutation } from "@/mutations/credit-cards/use-credit-card-transaction-mutations";
+import {
+  useUpdateCreditCardPaymentMutation,
+  useUpdateCreditCardPurchaseMutation,
+} from "@/mutations/credit-cards/use-credit-card-transaction-mutations";
 import { useUpdateTransactionMutation } from "@/mutations/transactions/use-transaction-mutations";
 import { accountQueryKeys } from "@/queries/accounts/use-accounts-query";
 import { creditCardQueryKeys } from "@/queries/credit-cards/use-credit-cards-query";
@@ -17,7 +20,7 @@ import { transactionQueryKeys } from "@/queries/transactions/use-transactions-qu
 
 export type InlineTransactionUpdate = Pick<
   UpdateTransactionInput,
-  "categoryId" | "merchantId" | "tagIds" | "includeInBudget"
+  "categoryId" | "merchantId" | "tagIds" | "includeInBudget" | "notes" | "originalDescription"
 >;
 
 export interface InlineTransactionUpdateOptions {
@@ -47,6 +50,11 @@ export function useTransactionInlineUpdates(row: TransactionFeedRow) {
     errorToast: { title: "Couldn't update installment purchase" },
   });
 
+  const paymentMutation = useUpdateCreditCardPaymentMutation({
+    onSuccess: invalidate,
+    errorToast: { title: "Couldn't update card payment" },
+  });
+
   const update = React.useCallback(
     (body: InlineTransactionUpdate, options?: InlineTransactionUpdateOptions) => {
       if (row.rowKind === "credit_card_installment" && row.purchaseId && row.creditCardId) {
@@ -61,17 +69,35 @@ export function useTransactionInlineUpdates(row: TransactionFeedRow) {
         return;
       }
 
+      if (row.rowKind === "credit_card_payment" && row.paymentId && row.creditCardId) {
+        paymentMutation.mutate(
+          {
+            creditCardId: row.creditCardId,
+            paymentId: row.paymentId,
+            body: {
+              ...(body.notes === undefined ? {} : { notes: body.notes }),
+              ...(body.originalDescription === undefined
+                ? {}
+                : { originalDescription: body.originalDescription }),
+            },
+          },
+          options,
+        );
+        return;
+      }
+
       if (row.rowKind === "transaction") {
         transactionMutation.mutate({ id: row.id, body }, options);
       }
     },
-    [purchaseMutation, row, transactionMutation],
+    [paymentMutation, purchaseMutation, row, transactionMutation],
   );
 
   return {
     canUpdate,
-    error: transactionMutation.error ?? purchaseMutation.error,
-    isPending: transactionMutation.isPending || purchaseMutation.isPending,
+    error: transactionMutation.error ?? purchaseMutation.error ?? paymentMutation.error,
+    isPending:
+      transactionMutation.isPending || purchaseMutation.isPending || paymentMutation.isPending,
     update,
   };
 }

@@ -35,7 +35,7 @@ export const searchTransactions = defineTool({
   name: "search_transactions",
   title: "Search transactions",
   description:
-    "List transactions with filters (date range, accounts, credit cards, categories, merchants, tags, types, amount range, text). Names are resolved for you; if a name is ambiguous the candidates are returned instead of guessing. Amounts are in major units (12.5 = $12.50): negative for money out, positive for money in. Credit card purchases show as credit_card_installment rows. Returns one page plus totals for everything that matched.",
+    "List transactions with filters (date range, accounts, credit cards, categories, merchants, tags, types, amount range, text). Names are resolved for you; if a name is ambiguous the candidates are returned instead of guessing. Amounts are in major units (12.5 = $12.50): negative for money out, positive for money in. Credit card purchases show as credit_card_installment rows. Each row carries description (the short title), originalDescription (the raw statement text) and notes. The text filter also searches originalDescription and notes, ignoring case and accents. Returns one page plus totals for everything that matched.",
   input: transactionFilterSchema.extend({
     sortBy: z
       .enum(["purchaseDate", "postedDate", "amount", "description", "createdAt"])
@@ -83,7 +83,8 @@ export const searchTransactions = defineTool({
 export const getTransaction = defineTool({
   name: "get_transaction",
   title: "Get a transaction",
-  description: "Read one transaction by id, with its items (what was bought) when it has any.",
+  description:
+    "Read one transaction by id: description (short title), originalDescription (raw statement text), notes, and its items (what was bought) when it has any.",
   input: z.object({ id: z.uuid() }),
   annotations: READ_ONLY,
   async handler(context, { id }) {
@@ -258,9 +259,37 @@ async function resolvePaymentMethodCode(
   return undefined;
 }
 
+export const descriptionField = z
+  .string()
+  .min(1)
+  .max(512)
+  .describe(
+    'A short, clean title in English, 40 characters or less (for example "Zamix internet bill"). Put the bank\'s raw text in originalDescription, not here.',
+  );
+export const originalDescriptionField = z
+  .string()
+  .trim()
+  .min(1)
+  .max(512)
+  .optional()
+  .describe(
+    'The raw merchant/statement text exactly as the bank shows it (for example "AMAZON MKTPL*1A2UA6CH3"). Never translate, clean or shorten it. Optional.',
+  );
+export const notesField = z
+  .string()
+  .trim()
+  .min(1)
+  .max(4000)
+  .optional()
+  .describe(
+    "Free-form notes (up to 4000 characters): the item list, who it was for, installment details, a gift card used. Optional.",
+  );
+
 const createInput = z.object({
   kind: z.enum(["expense", "income", "transfer", "credit_card_purchase"]),
-  description: z.string().min(1).max(512),
+  description: descriptionField,
+  originalDescription: originalDescriptionField,
+  notes: notesField,
   amount: z.number().positive().describe("Positive amount in major units."),
   currency: z.string().length(3).optional().describe("Defaults to the account/card currency."),
   date: z.iso.date().optional().describe("Purchase date, YYYY-MM-DD. Defaults to today."),
@@ -305,7 +334,7 @@ export const createTransaction = defineTool({
   name: "create_transaction",
   title: "Create a transaction",
   description:
-    'Create an expense, income, transfer or credit card purchase (with installments). Accounts, credit cards, categories (a path like "Shopping > Electronics" picks or, with createMissing, creates the child under its parent), merchants, tags and payment methods can be given by name or id (details extracted from a screenshot or receipt work well). If a name is ambiguous or unknown nothing is created and the candidates come back as status "needs_clarification"; ask the user, or set createMissing=true to create the missing category/merchant/tags. amount is positive, in major units (12.50 = $12.50). date defaults to today in the household time zone. For the monthly plan, income and expenses belong to a competency month (competencyMonth, YYYY-MM): salary received on or after the 16th counts for the next month by default; set it when a payment belongs to another month. To put money toward a goal use contribute_to_goal, not a plain transfer. Use dryRun=true to preview the resolved transaction without creating it.',
+    'Create an expense, income, transfer or credit card purchase (with installments). Accounts, credit cards, categories (a path like "Shopping > Electronics" picks or, with createMissing, creates the child under its parent), merchants, tags and payment methods can be given by name or id (details extracted from a screenshot or receipt work well). If a name is ambiguous or unknown nothing is created and the candidates come back as status "needs_clarification"; ask the user, or set createMissing=true to create the missing category/merchant/tags. amount is positive, in major units (12.50 = $12.50). date defaults to today in the household time zone. For the monthly plan, income and expenses belong to a competency month (competencyMonth, YYYY-MM): salary received on or after the 16th counts for the next month by default; set it when a payment belongs to another month. To put money toward a goal use contribute_to_goal, not a plain transfer. Use dryRun=true to preview the resolved transaction without creating it. description is a short English title (40 characters or less); the bank\'s raw text goes in originalDescription (never translated or cleaned) and anything else worth remembering in notes.',
   input: createInput,
   annotations: WRITE,
   async handler(context, args) {
@@ -346,6 +375,7 @@ export const createTransaction = defineTool({
       body = {
         type: args.kind,
         description: args.description,
+        ...textFields(args),
         purchaseDate: date,
         postedDate,
         amount: majorToMinor(args.amount, currency),
@@ -372,6 +402,7 @@ export const createTransaction = defineTool({
       body = {
         type: "transfer",
         description: args.description,
+        ...textFields(args),
         purchaseDate: date,
         postedDate,
         fromAccountId: fromId,
@@ -396,6 +427,7 @@ export const createTransaction = defineTool({
       if (!cardId || !currency) return missing("creditCard");
       const purchase = {
         description: args.description,
+        ...textFields(args),
         amount: majorToMinor(args.amount, currency),
         purchaseDate: date,
         postedDate,
@@ -485,6 +517,8 @@ async function createCardPurchase(
   currency: string,
   purchase: {
     description: string;
+    originalDescription?: string;
+    notes?: string;
     amount: number;
     purchaseDate: string;
     postedDate: string;
@@ -551,6 +585,8 @@ async function createCardPurchase(
         purchaseId: created.purchaseId,
         transactionId: created.transactionId,
         description: created.description,
+        originalDescription: created.originalDescription,
+        notes: created.notes,
         total: toMoney(created.amount, currency),
         purchaseDate: created.purchaseDate,
         installments: created.installments.map((installment) => ({
@@ -578,11 +614,24 @@ function billFields(bill: Awaited<ReturnType<typeof matchBill>> | null) {
     : {};
 }
 
+/** Only the text fields the caller actually gave, ready to spread into a request body. */
+function textFields(args: {
+  originalDescription?: string | undefined;
+  notes?: string | undefined;
+}) {
+  return {
+    ...(args.originalDescription ? { originalDescription: args.originalDescription } : {}),
+    ...(args.notes ? { notes: args.notes } : {}),
+  };
+}
+
 export type Change = { field: string; from: unknown; to: unknown };
 
 export function diffSummaries(before: TransactionSummary, after: TransactionSummary): Change[] {
   const fields = [
     "description",
+    "originalDescription",
+    "notes",
     "date",
     "postedDate",
     "category",
@@ -606,10 +655,20 @@ export const updateTransaction = defineTool({
   name: "update_transaction",
   title: "Update a transaction",
   description:
-    'Change fields of one transaction: description, dates, amount (major units), account, payment method, category, merchant, tags (replace with tags, or addTags/removeTags), includeInBudget, competencyMonth (the monthly-plan month). Use clearCategory/clearMerchant to remove them. Returns the fields that changed (before and after). Ambiguous names return candidates with status "needs_clarification".',
+    'Change fields of one transaction: description (short English title, 40 characters or less), originalDescription (raw statement text; null clears it), notes (replaces the notes; null clears them), dates, amount (major units), account, payment method, category, merchant, tags (replace with tags, or addTags/removeTags), includeInBudget, competencyMonth (the monthly-plan month). Use clearCategory/clearMerchant to remove them. Returns the fields that changed (before and after). Ambiguous names return candidates with status "needs_clarification".',
   input: z.object({
     id: z.uuid(),
-    description: z.string().min(1).max(512).optional(),
+    description: descriptionField.optional(),
+    originalDescription: originalDescriptionField
+      .nullable()
+      .describe(
+        "The raw statement text exactly as the bank shows it. null clears it. For a card purchase it is stored on the purchase, so every installment shows it.",
+      ),
+    notes: notesField
+      .nullable()
+      .describe(
+        "Free-form notes; replaces the existing notes. null clears them. For a card purchase they are stored on the purchase, so every installment shows them.",
+      ),
     date: z.iso.date().optional().describe("New purchase date."),
     postedDate: z.iso.date().optional(),
     amount: z.number().positive().optional().describe("New amount in major units, positive."),
@@ -678,6 +737,10 @@ export const updateTransaction = defineTool({
 
     const body: UpdateTransactionInput = {
       ...(args.description === undefined ? {} : { description: args.description }),
+      ...(args.originalDescription === undefined
+        ? {}
+        : { originalDescription: args.originalDescription }),
+      ...(args.notes === undefined ? {} : { notes: args.notes }),
       ...(args.date === undefined ? {} : { purchaseDate: args.date }),
       ...(args.postedDate === undefined ? {} : { postedDate: args.postedDate }),
       ...(args.amount === undefined

@@ -40,6 +40,8 @@ describe("create_transaction summary", () => {
       id: id(2),
       type: "expense",
       description: "Casio watch",
+      originalDescription: null,
+      notes: null,
       amount: 13000,
       currencyCode: "BRL",
       toAmount: null,

@@ -15,7 +15,10 @@ export type ImportRowInput = {
   amount: number;
   /** `YYYY-MM-DD` of the movement. */
   date: string;
+  /** The title: the user's rename, or the statement text until they rename it. */
   description: string;
+  /** The raw statement text exactly as the file has it. */
+  originalDescription: string;
 };
 
 export type ImportRowResult =

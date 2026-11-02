@@ -1,4 +1,4 @@
-import { boolean, date, index, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, date, index, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { categoriesTable } from "./categories.schema.js";
 import { transactionTypeEnum } from "./enums.schema.js";
 import { householdsTable } from "./households.schema.js";
@@ -19,6 +19,10 @@ export const transactionsTable = pgTable(
     }),
     categoryId: uuid("category_id").references(() => categoriesTable.id, { onDelete: "set null" }),
     description: varchar({ length: 512 }).notNull(),
+    /** The raw statement text exactly as the bank shows it. Never cleaned or translated. */
+    originalDescription: varchar("original_description", { length: 512 }),
+    /** Free-form user notes. */
+    notes: text("notes"),
     includeInBudget: boolean("include_in_budget").notNull().default(true),
     merchantId: uuid("merchant_id").references(() => merchantsTable.id, { onDelete: "set null" }),
     purchaseDate: date("purchase_date", { mode: "date" }).notNull(),

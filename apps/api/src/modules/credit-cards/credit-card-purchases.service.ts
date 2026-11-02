@@ -55,6 +55,8 @@ type PurchaseWithTransactionRow = {
   creditCardId: string;
   transactionId: string;
   description: string;
+  originalDescription: string | null;
+  notes: string | null;
   categoryId: string | null;
   merchantId: string | null;
   purchaseDate: Date;
@@ -78,6 +80,8 @@ async function loadPurchase(
       creditCardId: creditCardPurchasesTable.creditCardId,
       transactionId: creditCardPurchasesTable.transactionId,
       description: transactionsTable.description,
+      originalDescription: transactionsTable.originalDescription,
+      notes: transactionsTable.notes,
       categoryId: transactionsTable.categoryId,
       merchantId: transactionsTable.merchantId,
       purchaseDate: transactionsTable.purchaseDate,
@@ -138,6 +142,8 @@ async function mapPurchaseResponse(
     creditCardId: purchase.creditCardId,
     transactionId: purchase.transactionId,
     description: purchase.description,
+    originalDescription: purchase.originalDescription,
+    notes: purchase.notes,
     categoryId: purchase.categoryId,
     merchantId: purchase.merchantId,
     purchaseDate: formatISODate(purchase.purchaseDate),
@@ -184,6 +190,8 @@ export async function createPurchase(
       card,
       paymentMethodId: paymentMethod.id,
       description: dto.description,
+      originalDescription: dto.originalDescription,
+      notes: dto.notes,
       amount: dto.amount,
       categoryId: dto.categoryId ?? null,
       merchantId: dto.merchantId,
@@ -249,6 +257,8 @@ export async function createPurchase(
     creditCardId,
     transactionId: result.transaction.id,
     description: dto.description,
+    originalDescription: dto.originalDescription ?? null,
+    notes: dto.notes ?? null,
     categoryId: dto.categoryId ?? null,
     merchantId: dto.merchantId ?? null,
     purchaseDate: formatISODate(dto.purchaseDate),
@@ -290,6 +300,11 @@ export async function updatePurchase(
   const categoryId = dto.categoryId !== undefined ? dto.categoryId : existingPurchase.categoryId;
   const merchantId = dto.merchantId === undefined ? existingPurchase.merchantId : dto.merchantId;
   const description = dto.description ?? existingPurchase.description;
+  const originalDescription =
+    dto.originalDescription === undefined
+      ? existingPurchase.originalDescription
+      : dto.originalDescription;
+  const notes = dto.notes === undefined ? existingPurchase.notes : dto.notes;
   const purchaseDate = dto.purchaseDate ?? existingPurchase.purchaseDate;
   const postedDate = dto.postedDate ?? existingPurchase.postedDate;
   const amount = dto.amount ?? existingPurchase.amount;
@@ -306,6 +321,8 @@ export async function updatePurchase(
   await db.transaction(async (tx) => {
     await updateUnderlyingTransaction(tx, context.householdId, existingPurchase.transactionId, {
       description,
+      originalDescription,
+      notes,
       categoryId,
       merchantId,
       purchaseDate,
@@ -484,6 +501,8 @@ export async function cancelPurchase(
     return insertRefundInTransaction(tx, context, {
       reason: dto.reason,
       description: dto.description ?? `${CANCEL_DESCRIPTIONS[dto.reason]}: ${purchase.description}`,
+      originalDescription: dto.originalDescription,
+      notes: dto.notes,
       amount: creditAmount,
       purchaseDate: date,
       postedDate: date,

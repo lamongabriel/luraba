@@ -13,6 +13,14 @@
   it against the category), `cancel_purchase` (credit a card purchase once, or drop the unbilled installments and
   credit the billed ones), `create_credit_card_payment` (pay a card bill from an account; neutral in reports), and
   `bulk_update_transactions`, `bulk_categorize_transactions`, `bulk_delete_transactions`.
+- **Transaction text**: every transaction has a short English `description` title (40 characters or less), an
+  `originalDescription` (the bank's raw statement text, copied verbatim, never translated or cleaned) and free-form
+  `notes`. `create_transaction`, `create_refund`, `cancel_purchase`, `create_credit_card_payment` and
+  `update_transaction` accept the last two (`update_transaction` clears either with `null` and lists them in
+  `changes`); every transaction the tools return includes all three. `search_transactions` `text` looks in all
+  three, ignoring case and accents. `bulk_update_transactions` has `set.notes` (replace) and `set.appendNotes` (add
+  a line; skipped when already present); `originalDescription` is not bulk-editable. A card purchase's text is
+  shared by all its installments.
 - **Recurring bills and budgets**: `create_recurring_bill`, `list_recurring_bills`, `update_recurring_bill`,
   `delete_recurring_bill` (a bill is a schedule; each period is an occurrence that is not a transaction and does
   not touch balances or spending until it is paid), `mark_bill_paid` (link an existing expense, create the

@@ -386,6 +386,13 @@
       "when": 1790314200000,
       "tag": "0054_goal_funds_monthly_plan",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1790400600000,
+      "tag": "0055_transaction_notes",
+      "breakpoints": true
     }
   ]
 }

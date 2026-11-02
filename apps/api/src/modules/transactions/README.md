@@ -64,6 +64,25 @@ Create one with `POST /transactions` (`type: "refund"`, exactly one of `accountI
 - **Edits:** only metadata (description, merchant, tags, `includeInBudget`); amount, account, category and date are
   fixed (delete and record again). Deleting a card credit puts the amount back on the invoice.
 
+## Notes and statement name
+
+Every transaction has three text fields: `description` (the short, clean title, an English title of 40
+characters or less by convention), `originalDescription` (`transactions.original_description`, max 512: the raw
+statement text exactly as the bank shows it, never cleaned or translated) and `notes` (`transactions.notes`, text,
+max 4000: free-form). Both new columns are nullable with no default; existing rows are untouched. They are
+accepted on every create kind (expense, income, transfer, adjustment, refund, card purchase, card payment, card
+cancellation) and on `PATCH /transactions/:id`, where `null` clears them. A patch that only touches these two fields
+skips the account/amount/category checks, so it also works on card purchases and card payments.
+
+- **One value per record.** A card purchase keeps them on its `transactions` row, so every installment row of the
+  feed returns the purchase's values and editing them through any installment updates the purchase. A transfer is
+  one row shared by both sides.
+- **Search.** The list `search` (the search box, the MCP `text` filter) matches the title, `originalDescription`
+  and `notes` besides the existing fields, ignoring case and accents (`buildFoldedSearch` in `shared/list.ts`
+  folds both sides with `translate()`, so no `unaccent` extension is needed).
+- **Imports.** The raw statement text of an imported row becomes `originalDescription`; the title defaults to it
+  until the row is renamed in the review step.
+
 ## Competency month
 
 An income or expense can carry a `competencyMonth` (`YYYY-MM`, `transactions.competency_month`, set on create and

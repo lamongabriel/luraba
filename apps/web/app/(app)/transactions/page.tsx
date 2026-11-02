@@ -105,6 +105,8 @@ export default function TransactionsPage() {
         id: row.parentId,
         type: "expense",
         description: row.description,
+        originalDescription: null,
+        notes: null,
         amount: row.amount,
         currencyCode: row.currencyCode,
         toAmount: null,

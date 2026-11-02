@@ -23,8 +23,17 @@ const paymentMethodCodeSchema = z
   .min(1)
   .max(32)
   .transform((value) => value.toLowerCase());
+/** The raw statement text exactly as the bank shows it (never cleaned or translated). */
+export const originalDescriptionSchema = z.string().trim().min(1).max(512);
+/** Free-form notes. */
+export const notesSchema = z.string().trim().min(1).max(4000);
+export const transactionTextFields = {
+  originalDescription: originalDescriptionSchema.optional(),
+  notes: notesSchema.optional(),
+} as const;
 const baseFields = {
   description: z.string().min(1).max(512),
+  ...transactionTextFields,
   purchaseDate: dateInputSchema,
   postedDate: dateInputSchema,
   includeInBudget: z.boolean().optional(),
@@ -112,6 +121,10 @@ export const createTransactionInputSchema = z
 export const updateTransactionInputSchema = z
   .object({
     description: z.string().min(1).max(512).optional(),
+    /** `null` clears it. */
+    originalDescription: originalDescriptionSchema.nullable().optional(),
+    /** `null` clears it. */
+    notes: notesSchema.nullable().optional(),
     purchaseDate: dateInputSchema.optional(),
     postedDate: dateInputSchema.optional(),
     includeInBudget: z.boolean().optional(),

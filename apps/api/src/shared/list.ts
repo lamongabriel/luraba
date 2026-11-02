@@ -82,6 +82,33 @@ export function buildIlikeSearch(search: string | undefined, expressions: SQL[])
   );
 }
 
+const ACCENTED = "ÁÀÂÃÄÅÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑÝáàâãäåéèêëíìîïóòôõöúùûüçñýÿ";
+const UNACCENTED = "AAAAAAEEEEIIIIOOOOOUUUUCNYaaaaaaeeeeiiiiooooouuuucnyy";
+
+/** Lower-cases and strips accents in SQL without needing the `unaccent` extension. */
+function foldSql(expression: SQL): SQL {
+  return sql`lower(translate(${expression}::text, ${ACCENTED}, ${UNACCENTED}))`;
+}
+
+/** The same folding in JS, so the search term compares like the column does. */
+export function foldSearchText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
+/** Case- and accent-insensitive substring search ("titulo" finds "Título"). */
+export function buildFoldedSearch(search: string | undefined, expressions: SQL[]): SQL | undefined {
+  if (!search || expressions.length === 0) return undefined;
+
+  const pattern = `%${escapeLikePattern(foldSearchText(search))}%`;
+
+  return or(
+    ...expressions.map((expression) => sql`${foldSql(expression)} like ${pattern} escape '\\'`),
+  );
+}
+
 export function combineConditions(...conditions: Array<SQL | undefined>): SQL | undefined {
   const defined = conditions.filter((condition): condition is SQL => condition !== undefined);
   return defined.length > 0 ? and(...defined) : undefined;

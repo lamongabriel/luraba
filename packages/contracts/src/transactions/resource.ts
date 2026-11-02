@@ -25,6 +25,8 @@ export const transactionSchema = z.object({
   id: z.uuid(),
   type: transactionTypeSchema,
   description: z.string(),
+  originalDescription: z.string().nullable(),
+  notes: z.string().nullable(),
   amount: z.number().int(),
   currencyCode: z.string(),
   toAmount: z.number().int().nullable(),

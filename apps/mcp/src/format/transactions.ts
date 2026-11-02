@@ -7,7 +7,12 @@ export type TransactionSummary = {
   date: string;
   postedDate: string;
   type: string;
+  /** The short, clean title. */
   description: string;
+  /** The raw statement text exactly as the bank shows it, when it was saved. */
+  originalDescription: string | null;
+  /** Free-form notes, when there are any. */
+  notes: string | null;
   /** Positive for money in, negative for money out, in the transaction's currency. */
   amount: Money;
   account: string | null;
@@ -49,6 +54,8 @@ type RowLike = Pick<
   | "id"
   | "type"
   | "description"
+  | "originalDescription"
+  | "notes"
   | "amount"
   | "currencyCode"
   | "accountName"
@@ -87,6 +94,8 @@ export function summarizeRow(row: RowLike, names: NameMaps): TransactionSummary 
     postedDate: row.postedDate,
     type: row.originType && row.originType !== row.type ? row.originType : row.type,
     description: row.description,
+    originalDescription: row.originalDescription,
+    notes: row.notes,
     amount: toMoney(signedAmount(row), row.currencyCode),
     account: row.accountName,
     toAccount: row.toAccountName,

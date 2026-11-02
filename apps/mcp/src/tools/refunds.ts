@@ -8,7 +8,7 @@ import { z } from "zod";
 import { majorToMinor, majorToMoney, toMoney } from "../format/money.js";
 import { loadNameMaps, summarizeRow } from "../format/transactions.js";
 import { clarificationOutput, Problems } from "../resolve/problems.js";
-import { resolveClassification } from "./transactions.js";
+import { notesField, originalDescriptionField, resolveClassification } from "./transactions.js";
 import { defineTool, type ToolContext, type ToolOutput, WRITE } from "./types.js";
 
 /** The invoice a credit landed on and what the card has left, for the agent to relay. */
@@ -49,11 +49,13 @@ export const createRefund = defineTool({
   name: "create_refund",
   title: "Record a refund, cancellation, chargeback or cashback",
   description:
-    'Record money that comes back with no source account. It is a CREDIT, never income: on a credit card it lowers the invoice it lands on and restores the available limit; on a bank account it raises the balance. In spending, budget and category reports it counts as negative spending in the category of the original purchase (or the category you give; use an expense category like "Cashback & Rewards" for general cashback). Pass originalTransactionId (the id from search_transactions) to link it: the card/account and category default from the original, and the amount cannot exceed what is left to refund (partial refunds are fine). Without a link give creditCard or account. Do NOT use this to pay a card bill: use create_credit_card_payment. For an installment purchase use cancel_purchase to cancel it. Amount is positive, in major units. If a name is ambiguous nothing is created and the candidates come back as status "needs_clarification". Use dryRun=true to preview.',
+    'Record money that comes back with no source account. It is a CREDIT, never income: on a credit card it lowers the invoice it lands on and restores the available limit; on a bank account it raises the balance. In spending, budget and category reports it counts as negative spending in the category of the original purchase (or the category you give; use an expense category like "Cashback & Rewards" for general cashback). Pass originalTransactionId (the id from search_transactions) to link it: the card/account and category default from the original, and the amount cannot exceed what is left to refund (partial refunds are fine). Without a link give creditCard or account. Do NOT use this to pay a card bill: use create_credit_card_payment. For an installment purchase use cancel_purchase to cancel it. Amount is positive, in major units. description is a short English title; the raw statement text goes in originalDescription and free-form remarks in notes. If a name is ambiguous nothing is created and the candidates come back as status "needs_clarification". Use dryRun=true to preview.',
   input: z.object({
     reason: z.enum(REFUND_REASONS),
     amount: z.number().positive().describe("Positive amount in major units."),
     description: z.string().min(1).max(512).optional(),
+    originalDescription: originalDescriptionField,
+    notes: notesField,
     date: z.iso.date().optional().describe("Date the money came back. Defaults to today."),
     creditCard: z.string().optional().describe("The card name, last 4 or id that gets the credit."),
     account: z.string().optional().describe("The bank account that gets the money."),
@@ -128,6 +130,8 @@ export const createRefund = defineTool({
         (original
           ? `${DEFAULT_DESCRIPTIONS[args.reason]}: ${original.description}`
           : DEFAULT_DESCRIPTIONS[args.reason]),
+      ...(args.originalDescription ? { originalDescription: args.originalDescription } : {}),
+      ...(args.notes ? { notes: args.notes } : {}),
       amount: majorToMinor(args.amount, currency),
       purchaseDate: date,
       postedDate: date,
@@ -179,13 +183,15 @@ export const cancelPurchase = defineTool({
   name: "cancel_purchase",
   title: "Cancel a credit card purchase",
   description:
-    'Cancel a credit card purchase by crediting the card. mode "single_credit" (default) credits everything that is left in one credit, like most issuers do. mode "cancel_future" removes the installments that are not billed yet (so the card limit is restored too) and credits only the ones already billed. Use the purchaseId and creditCard of a credit_card_installment row from search_transactions. The credit is dated today unless you pass date. Use dryRun=true to see what would be credited. Returns the credit and the invoice it landed on.',
+    'Cancel a credit card purchase by crediting the card. mode "single_credit" (default) credits everything that is left in one credit, like most issuers do. mode "cancel_future" removes the installments that are not billed yet (so the card limit is restored too) and credits only the ones already billed. Use the purchaseId and creditCard of a credit_card_installment row from search_transactions. The credit is dated today unless you pass date. Use dryRun=true to see what would be credited. Returns the credit and the invoice it landed on. originalDescription and notes go on the credit.',
   input: z.object({
     purchaseId: z.uuid(),
     creditCard: z.string().describe("The card name, last 4 or id."),
     mode: z.enum(["single_credit", "cancel_future"]).default("single_credit"),
     reason: z.enum(["cancellation", "chargeback", "refund"]).default("cancellation"),
     date: z.iso.date().optional(),
+    originalDescription: originalDescriptionField,
+    notes: notesField,
     dryRun: z.boolean().default(false),
   }),
   annotations: WRITE,
@@ -229,6 +235,8 @@ export const cancelPurchase = defineTool({
         mode: args.mode,
         reason: args.reason,
         ...(args.date ? { date: args.date } : {}),
+        ...(args.originalDescription ? { originalDescription: args.originalDescription } : {}),
+        ...(args.notes ? { notes: args.notes } : {}),
       },
     });
     context.refs.invalidate();
@@ -250,13 +258,15 @@ export const createCreditCardPayment = defineTool({
   name: "create_credit_card_payment",
   title: "Pay a credit card bill",
   description:
-    "Pay (part of) a credit card bill from a bank account. It moves money from the account to the card: the card's owed balance and the account balance both go down, and it is neutral in spending and income reports. fromAccount defaults to the card's own account (the one it was created under). The payment is applied to the oldest unpaid invoices first. NOT for refunds: use create_refund. Amount is positive, in major units. Use dryRun=true to preview.",
+    "Pay (part of) a credit card bill from a bank account. It moves money from the account to the card: the card's owed balance and the account balance both go down, and it is neutral in spending and income reports. fromAccount defaults to the card's own account (the one it was created under). The payment is applied to the oldest unpaid invoices first. NOT for refunds: use create_refund. Amount is positive, in major units. originalDescription (the bank's raw text) and notes are optional. Use dryRun=true to preview.",
   input: z.object({
     creditCard: z.string().describe("The card name, last 4 or id."),
     amount: z.number().positive(),
     fromAccount: z.string().optional().describe("Defaults to the card's owner account."),
     date: z.iso.date().optional().describe("Defaults to today."),
     description: z.string().min(1).max(512).optional(),
+    originalDescription: originalDescriptionField,
+    notes: notesField,
     dryRun: z.boolean().default(false),
   }),
   annotations: WRITE,
@@ -279,6 +289,8 @@ export const createCreditCardPayment = defineTool({
       paymentDate: date,
       postedDate: date,
       ...(args.description ? { description: args.description } : {}),
+      ...(args.originalDescription ? { originalDescription: args.originalDescription } : {}),
+      ...(args.notes ? { notes: args.notes } : {}),
     };
     if (args.dryRun) {
       return {

@@ -178,6 +178,8 @@ async function planUpdates(
     removeTags?: string[] | undefined;
     clearCategory?: boolean | undefined;
     includeInBudget?: boolean | undefined;
+    notes?: string | undefined;
+    appendNotes?: string | undefined;
     createMissing: boolean;
   },
   dryRun: boolean,
@@ -215,6 +217,13 @@ async function planUpdates(
       body.merchantId = classification.merchantId;
     if (set.includeInBudget !== undefined && row.includeInBudget !== set.includeInBudget)
       body.includeInBudget = set.includeInBudget;
+    if (set.notes !== undefined && (row.notes ?? "") !== set.notes) body.notes = set.notes;
+    if (set.appendNotes !== undefined) {
+      const current = body.notes === undefined ? row.notes : body.notes;
+      // Appending the same text twice is a no-op, so a retried call does not duplicate it.
+      if (!current?.split("\n").includes(set.appendNotes))
+        body.notes = current ? `${current}\n${set.appendNotes}` : set.appendNotes;
+    }
     if (classification.tagIds || removeIds.size > 0) {
       const current = row.tags.map((tag) => tag.id);
       const next = [...new Set([...current, ...(classification.tagIds ?? [])])].filter(
@@ -252,7 +261,7 @@ async function bulkUpdate(
 export const bulkUpdateTransactions = defineTool({
   name: "bulk_update_transactions",
   title: "Bulk update transactions",
-  description: `Change category, merchant, tags (add/remove) or includeInBudget on many transactions at once, chosen by ids or by the same filter as search_transactions (at most ${BULK_LIMIT} per call). Use dryRun=true to preview; applying requires confirm=true, otherwise only the preview is returned. Each result reports updated, failed and already-matching counts.`,
+  description: `Change category, merchant, tags (add/remove), notes (replace with set.notes, or add a new line with set.appendNotes) or includeInBudget on many transactions at once, chosen by ids or by the same filter as search_transactions (at most ${BULK_LIMIT} per call). Use dryRun=true to preview; applying requires confirm=true, otherwise only the preview is returned. Each result reports updated, failed and already-matching counts.`,
   input: z.object({
     selection: selectionSchema,
     set: z.object({
@@ -262,6 +271,20 @@ export const bulkUpdateTransactions = defineTool({
       addTags: z.array(z.string().min(1)).max(50).optional(),
       removeTags: z.array(z.string().min(1)).max(50).optional(),
       includeInBudget: z.boolean().optional(),
+      notes: z
+        .string()
+        .trim()
+        .min(1)
+        .max(4000)
+        .optional()
+        .describe("Replaces the notes of every selected transaction."),
+      appendNotes: z
+        .string()
+        .trim()
+        .min(1)
+        .max(4000)
+        .optional()
+        .describe("Added on a new line after the existing notes (skipped when already there)."),
     }),
     ...mutationControls,
   }),

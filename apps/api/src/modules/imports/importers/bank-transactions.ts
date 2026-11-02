@@ -7,9 +7,20 @@ import type { RowImporter } from "./types";
 export const bankTransactionsImporter: RowImporter = {
   id: "bank-transactions",
   kinds: ["expense", "income", "transfer"],
-  async importRow({ context, target, row, kind, mapping, amount, date, description }) {
+  async importRow({
+    context,
+    target,
+    row,
+    kind,
+    mapping,
+    amount,
+    date,
+    description,
+    originalDescription,
+  }) {
     const common = {
       description,
+      originalDescription,
       purchaseDate: new Date(`${date}T00:00:00Z`),
       postedDate: new Date(`${date}T00:00:00Z`),
     };

@@ -204,6 +204,8 @@ export function invoiceLineToFeedRow(
 ): TransactionFeedRow {
   const base = {
     description: line.description,
+    originalDescription: null,
+    notes: null,
     amount: line.amount,
     currencyCode: card.currencyCode,
     toAmount: null,

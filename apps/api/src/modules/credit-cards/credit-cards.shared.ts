@@ -104,6 +104,8 @@ export async function createUnderlyingExpenseTransaction(
     card: CreditCardRow;
     paymentMethodId: string;
     description: string;
+    originalDescription?: string | null;
+    notes?: string | null;
     amount: number;
     categoryId: string | null;
     merchantId?: string;
@@ -131,6 +133,8 @@ export async function createUnderlyingExpenseTransaction(
     paymentMethodId: params.paymentMethodId,
     categoryId: params.categoryId ?? undefined,
     description: params.description,
+    originalDescription: params.originalDescription ?? null,
+    notes: params.notes ?? null,
     includeInBudget: false,
     merchantId: params.merchantId,
     purchaseDate: params.purchaseDate,
@@ -162,6 +166,8 @@ export async function createUnderlyingPaymentTransaction(
     card: CreditCardRow;
     fromAccountId: string;
     description: string;
+    originalDescription?: string | null;
+    notes?: string | null;
     amount: number;
     paymentDate: Date;
     postedDate: Date;
@@ -181,6 +187,8 @@ export async function createUnderlyingPaymentTransaction(
     paymentMethodId: null,
     categoryId: null,
     description: params.description,
+    originalDescription: params.originalDescription ?? null,
+    notes: params.notes ?? null,
     includeInBudget: false,
     merchantId: null,
     purchaseDate: params.paymentDate,

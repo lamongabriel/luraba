@@ -19,7 +19,16 @@ function addMonths(date: string, months: number): string {
 export const cardPurchasesImporter: RowImporter = {
   id: "card-purchases",
   kinds: ["card_purchase"],
-  async importRow({ context, target, row, mapping, amount, date, description }) {
+  async importRow({
+    context,
+    target,
+    row,
+    mapping,
+    amount,
+    date,
+    description,
+    originalDescription,
+  }) {
     const number = row.installmentNumber ?? 1;
     const total = row.installmentTotal ?? 1;
     const isInstallment = total > 1;
@@ -29,6 +38,7 @@ export const cardPurchasesImporter: RowImporter = {
 
     const purchase = await createPurchase(context, target.id, {
       description,
+      originalDescription,
       amount: isInstallment ? amount * total : amount,
       purchaseDate,
       postedDate: purchaseDate,

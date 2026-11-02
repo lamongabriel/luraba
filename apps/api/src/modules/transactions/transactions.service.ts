@@ -110,6 +110,8 @@ async function createBaseTransaction(
     paymentMethodId?: string | null;
     categoryId?: string | null;
     description: string;
+    originalDescription?: string;
+    notes?: string;
     purchaseDate: Date;
     postedDate: Date;
     includeInBudget: boolean;
@@ -124,6 +126,8 @@ async function createBaseTransaction(
     paymentMethodId: values.paymentMethodId ?? null,
     categoryId: values.categoryId ?? null,
     description: values.description,
+    originalDescription: values.originalDescription ?? null,
+    notes: values.notes ?? null,
     includeInBudget: values.includeInBudget,
     competencyMonth: values.competencyMonth ? parseISODate(`${values.competencyMonth}-01`) : null,
     merchantId: values.merchantId,
@@ -188,6 +192,8 @@ async function createExpenseOrIncome(
       paymentMethodId: paymentMethod.id,
       categoryId: dto.categoryId,
       description: dto.description,
+      originalDescription: dto.originalDescription,
+      notes: dto.notes,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
       merchantId: dto.merchantId,
@@ -254,6 +260,8 @@ async function createTransfer(
     const createdTransactionId = await createBaseTransaction(tx, context, {
       type: dto.type,
       description: dto.description,
+      originalDescription: dto.originalDescription,
+      notes: dto.notes,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
       includeInBudget: dto.includeInBudget ?? true,
@@ -287,6 +295,8 @@ export async function createBalanceAdjustmentInTransaction(
     accountLedgerId: string;
     balance: number;
     description: string;
+    originalDescription?: string;
+    notes?: string;
     purchaseDate: Date;
     postedDate: Date;
     includeInBudget?: boolean;
@@ -319,6 +329,8 @@ export async function createBalanceAdjustmentInTransaction(
   const createdTransactionId = await createBaseTransaction(tx, context, {
     type: "adjustment",
     description: input.description,
+    originalDescription: input.originalDescription,
+    notes: input.notes,
     purchaseDate: input.purchaseDate,
     postedDate: input.postedDate,
     includeInBudget: input.includeInBudget ?? true,
@@ -358,6 +370,8 @@ async function createAdjustment(
       accountLedgerId: accountLedger.id,
       balance: dto.balance,
       description: dto.description,
+      originalDescription: dto.originalDescription,
+      notes: dto.notes,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
       includeInBudget: dto.includeInBudget ?? true,
@@ -630,6 +644,8 @@ export async function updateTransaction(
 
   const transactionUpdates: Partial<{
     description: string;
+    originalDescription: string | null;
+    notes: string | null;
     purchaseDate: Date;
     postedDate: Date;
     includeInBudget: boolean;
@@ -659,6 +675,9 @@ export async function updateTransaction(
     | null = null;
 
   if (body.description !== undefined) transactionUpdates.description = body.description;
+  if (body.originalDescription !== undefined)
+    transactionUpdates.originalDescription = body.originalDescription;
+  if (body.notes !== undefined) transactionUpdates.notes = body.notes;
   if (body.purchaseDate !== undefined) transactionUpdates.purchaseDate = body.purchaseDate;
   if (body.postedDate !== undefined) transactionUpdates.postedDate = body.postedDate;
   if (body.includeInBudget !== undefined) transactionUpdates.includeInBudget = body.includeInBudget;
@@ -668,7 +687,15 @@ export async function updateTransaction(
       : null;
   }
 
-  if (transaction.type === "expense" || transaction.type === "income") {
+  // Notes and the statement name need no account, amount or category checks, so they can be set on
+  // any transaction, including credit card purchases and payments (which have their own edit flows).
+  const textFieldsOnly = Object.keys(body).every(
+    (key) => key === "notes" || key === "originalDescription",
+  );
+
+  if (textFieldsOnly) {
+    // Nothing else to validate or rebuild.
+  } else if (transaction.type === "expense" || transaction.type === "income") {
     if (body.fromAccountId !== undefined || body.toAccountId !== undefined) {
       throw new ValidationError(
         `Transfer account updates are not supported for ${transaction.type} transactions`,

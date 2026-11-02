@@ -46,7 +46,12 @@ export const transactionFilterShape = {
     .length(3)
     .optional()
     .describe("Currency of amountMin/amountMax and currencies to match, e.g. USD."),
-  text: z.string().optional().describe("Text to look for in the description."),
+  text: z
+    .string()
+    .optional()
+    .describe(
+      'Text to look for in the description, the original (statement) description and the notes. Case- and accent-insensitive: "titulo" finds "Título".',
+    ),
   includeInBudget: z
     .boolean()
     .optional()

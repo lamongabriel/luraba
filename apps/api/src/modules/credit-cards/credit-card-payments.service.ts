@@ -34,6 +34,8 @@ type PaymentRow = {
   creditCardId: string;
   transactionId: string;
   description: string;
+  originalDescription: string | null;
+  notes: string | null;
   paymentDate: Date;
   postedDate: Date;
   amount: number;
@@ -52,6 +54,8 @@ async function loadPayment(
       creditCardId: creditCardPaymentsTable.creditCardId,
       transactionId: creditCardPaymentsTable.transactionId,
       description: transactionsTable.description,
+      originalDescription: transactionsTable.originalDescription,
+      notes: transactionsTable.notes,
       paymentDate: transactionsTable.purchaseDate,
       postedDate: transactionsTable.postedDate,
       amount: creditCardPaymentsTable.amount,
@@ -106,6 +110,8 @@ async function mapPaymentResponse(
     creditCardId: payment.creditCardId,
     transactionId: payment.transactionId,
     description: payment.description,
+    originalDescription: payment.originalDescription,
+    notes: payment.notes,
     paymentDate: formatISODate(payment.paymentDate),
     postedDate: formatISODate(payment.postedDate),
     amount: payment.amount,
@@ -232,6 +238,8 @@ export async function createPayment(
       card,
       fromAccountId: dto.fromAccountId,
       description: dto.description ?? `Payment to ${card.name}`,
+      originalDescription: dto.originalDescription,
+      notes: dto.notes,
       amount: dto.amount,
       paymentDate: dto.paymentDate,
       postedDate,
@@ -277,6 +285,11 @@ export async function updatePayment(
   const paymentDate = dto.paymentDate ?? existingPayment.paymentDate;
   const postedDate = dto.postedDate ?? existingPayment.postedDate;
   const description = dto.description ?? existingPayment.description;
+  const originalDescription =
+    dto.originalDescription === undefined
+      ? existingPayment.originalDescription
+      : dto.originalDescription;
+  const notes = dto.notes === undefined ? existingPayment.notes : dto.notes;
 
   await ensureSourceAccountForPayment(context, card, fromAccountId);
   await ensurePaymentAmountWithinUsedLimit(card, amount, existingPayment.amount);
@@ -284,6 +297,8 @@ export async function updatePayment(
   await db.transaction(async (tx) => {
     await updateUnderlyingTransaction(tx, context.householdId, existingPayment.transactionId, {
       description,
+      originalDescription,
+      notes,
       purchaseDate: paymentDate,
       postedDate,
     });

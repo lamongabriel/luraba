@@ -1,5 +1,7 @@
 "use client";
 
+import { Note01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { TransactionFeedRow } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -16,6 +18,7 @@ import {
   TransactionAccountDisplay,
   TransactionMerchantDisplay,
 } from "@/components/tables/transactions/transaction-resource-display";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
 
 function DetailsCell({ row }: { row: TransactionFeedRow }) {
@@ -24,7 +27,35 @@ function DetailsCell({ row }: { row: TransactionFeedRow }) {
       ? `${row.accountName ?? "No account"}${row.toAccountName ? ` → ${row.toAccountName}` : ""}`
       : row.description;
 
-  return <span className="block min-w-48 truncate text-xs font-medium">{details}</span>;
+  return (
+    <div className="min-w-48 max-w-96">
+      <div className="flex items-center gap-1.5">
+        <span className="block truncate text-xs/4 font-medium">{details}</span>
+        {row.notes ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="shrink-0 text-muted-foreground" role="img" aria-label="Has notes">
+                <HugeiconsIcon icon={Note01Icon} strokeWidth={2} className="size-3.5" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-80 whitespace-pre-wrap">{row.notes}</TooltipContent>
+          </Tooltip>
+        ) : null}
+      </div>
+      {row.originalDescription ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="block truncate text-[11px]/4 text-muted-foreground">
+              {row.originalDescription}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-80 break-words">
+            {row.originalDescription}
+          </TooltipContent>
+        </Tooltip>
+      ) : null}
+    </div>
+  );
 }
 
 function AmountCell({

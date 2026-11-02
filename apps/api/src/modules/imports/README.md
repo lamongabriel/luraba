@@ -66,6 +66,9 @@ staged rows -> evaluate (kind + issues) -> importers -> Luraba records
 `import_records` keeps one row per created transaction with the file's `original_name` (description exactly as
 written) and its installment, so a transaction can be traced back to what the file said.
 
+The same raw text is saved on the created transaction as `originalDescription`; its title is the row's
+`descriptionOverride` (set in the review step) or, until renamed, the statement text itself.
+
 ## Values (step 3)
 
 Mappings are stored per household by a normalized key and remembered, so the next file arrives mapped.

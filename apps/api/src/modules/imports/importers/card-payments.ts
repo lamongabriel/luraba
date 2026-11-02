@@ -6,7 +6,16 @@ import type { RowImporter } from "./types";
 export const cardPaymentsImporter: RowImporter = {
   id: "card-payments",
   kinds: ["card_payment"],
-  async importRow({ context, batch, target, mapping, amount, date, description }) {
+  async importRow({
+    context,
+    batch,
+    target,
+    mapping,
+    amount,
+    date,
+    description,
+    originalDescription,
+  }) {
     const fromBank = batch.sourceKind === "bank_account";
     const cardId = fromBank ? mapping.creditCardId : target.id;
     const fromAccountId = fromBank ? target.id : mapping.accountId;
@@ -18,6 +27,7 @@ export const cardPaymentsImporter: RowImporter = {
       fromAccountId,
       paymentDate: new Date(`${date}T00:00:00Z`),
       description,
+      originalDescription,
     });
     return { status: "created", transactionId: payment.transactionId ?? null };
   },

@@ -28,6 +28,8 @@ type RefundDto = Extract<CreateTransactionDto, { type: "refund" }>;
 export type RefundInput = {
   reason: RefundDto["reason"];
   description: string;
+  originalDescription?: string | null;
+  notes?: string | null;
   amount: number;
   purchaseDate: Date;
   postedDate: Date;
@@ -134,6 +136,8 @@ export async function insertRefundInTransaction(
     paymentMethodId: null,
     categoryId: input.categoryId,
     description: input.description,
+    originalDescription: input.originalDescription ?? null,
+    notes: input.notes ?? null,
     includeInBudget: input.includeInBudget,
     merchantId: input.merchantId,
     purchaseDate: input.purchaseDate,
@@ -229,6 +233,8 @@ export async function createRefund(context: HouseholdContext, dto: RefundDto): P
     insertRefundInTransaction(tx, context, {
       reason: dto.reason,
       description: dto.description,
+      originalDescription: dto.originalDescription,
+      notes: dto.notes,
       amount: dto.amount,
       purchaseDate: dto.purchaseDate,
       postedDate: dto.postedDate,
