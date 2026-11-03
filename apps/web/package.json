@@ -30,7 +30,7 @@
     "@luraba/domain": "workspace:*",
     "@radix-ui/react-use-controllable-state": "^1.2.6",
     "@tanstack/react-query": "^5.91.3",
-    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-table": "^9.3.1",
     "axios": "^1.12.2",
     "better-auth": "^1.6.33",
     "class-variance-authority": "^0.7.1",
