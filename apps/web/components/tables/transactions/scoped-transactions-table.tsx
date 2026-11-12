@@ -15,7 +15,10 @@ import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { PageSection } from "@/components/finance/page-section";
 import { LoadingRegion } from "@/components/states";
-import { getTransactionsTableColumns } from "@/components/tables/transactions/transactions-table.config";
+import {
+  getTransactionsMobileRow,
+  getTransactionsTableColumns,
+} from "@/components/tables/transactions/transactions-table.config";
 import { useDataTable } from "@/hooks/use-data-table";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
 import { useTransactionsQuery } from "@/queries/transactions/use-transactions-query";
@@ -84,6 +87,10 @@ export function ScopedTransactionsTable({
     () => getTransactionsTableColumns({ language, lookups }),
     [language, lookups],
   );
+  const mobile = React.useMemo(
+    () => getTransactionsMobileRow({ language, lookups }),
+    [language, lookups],
+  );
   const { table } = useDataTable({
     data: rows,
     columns,
@@ -137,6 +144,7 @@ export function ScopedTransactionsTable({
     body = (
       <DataTable
         table={table}
+        mobile={mobile}
         onRowClick={(row) => onView(row.original)}
         totalCount={pagination?.totalCount}
         pageSizeOptions={[10, 20, 50]}
@@ -158,6 +166,7 @@ function ScopedTransactionsTableBody() {
         columnCount={COLUMN_WIDTHS.length}
         rowCount={SCOPED_TRANSACTIONS_PAGE_SIZE}
         withToolbar={false}
+        mobileList={{ grouped: true }}
         cellWidths={COLUMN_WIDTHS}
       />
     </LoadingRegion>

@@ -174,3 +174,56 @@ describe("chart conventions (components/charts/README.md)", () => {
     expect(direct).toEqual([]);
   });
 });
+
+describe("no tables on mobile (components/lists/README.md)", () => {
+  /**
+   * Dense comparison data that stays a table on a phone (it scrolls inside its own container, never
+   * the page). Every entry is documented in components/lists/README.md; do not add to it for data
+   * that reads as a list.
+   */
+  const TABLE_EXCEPTIONS = new Set([
+    "app/(app)/investments/allocation/page.tsx",
+    "app/(app)/investments/income/page.tsx",
+    "app/(app)/investments/taxes/page.tsx",
+    "components/data-table/data-table-skeleton.tsx",
+    "components/data-table/data-table.tsx",
+    "components/imports/import-columns-step.tsx",
+    "components/imports/import-raw-table.tsx",
+    "components/imports/import-rows-table.tsx",
+    "components/imports/import-values-step.tsx",
+    "components/investments/allocation-targets-editor.tsx",
+    "components/investments/events-table.tsx",
+    "components/investments/import-wizard.tsx",
+    "components/investments/lots-table.tsx",
+    "components/investments/positions-table.tsx",
+    "components/investments/tax-tables.tsx",
+  ]);
+
+  /** An alerts x channels checkbox matrix: a grid by nature, three narrow columns that fit a phone. */
+  const MATRIX_TABLE = "components/settings/notification-settings.tsx";
+
+  it("draws a table only through DataTable (with a mobile list) or a documented exception", () => {
+    const raw = offenders(/from "@\/components\/ui\/table"/u).filter(
+      (path) => !TABLE_EXCEPTIONS.has(path),
+    );
+    expect(raw).toEqual([]);
+    expect(
+      offenders(/<table\b/u).filter(
+        (path) => !path.startsWith("components/ui/") && path !== MATRIX_TABLE,
+      ),
+    ).toEqual([]);
+  });
+
+  it("gives every DataTable a mobile config (a row renderer, or 'table' with a reason)", () => {
+    const missing = ["app", "components"]
+      .flatMap((dir) => sourceFiles(join(ROOT, dir)))
+      .map((path) => relative(ROOT, path))
+      .filter((path) => !path.startsWith("components/data-table/"))
+      .filter((path) => {
+        const source = readFileSync(join(ROOT, path), "utf8");
+        const usages = source.match(/<DataTable\b[\s\S]*?\/>/gu) ?? [];
+        return usages.some((usage) => !/\bmobile=/u.test(usage));
+      });
+    expect(missing).toEqual([]);
+  });
+});

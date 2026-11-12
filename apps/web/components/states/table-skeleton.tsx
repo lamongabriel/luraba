@@ -8,11 +8,14 @@ export function TableSkeleton({
   rows = 8,
   withPagination = false,
   label = "Loading",
+  mobileList,
 }: {
   columns: number;
   rows?: number;
   withPagination?: boolean;
   label?: string;
+  /** The loaded table is a list below `md`: draw list rows there (see `DataTable mobile`). */
+  mobileList?: { grouped?: boolean };
 }) {
   return (
     <LoadingRegion label={label}>
@@ -21,6 +24,7 @@ export function TableSkeleton({
         rowCount={rows}
         withToolbar={false}
         withPagination={withPagination}
+        mobileList={mobileList}
       />
     </LoadingRegion>
   );

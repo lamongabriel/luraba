@@ -56,3 +56,33 @@ export function TransactionTypeDisplay({
     </Badge>
   );
 }
+
+/**
+ * The type's glyph in a tile, the way `MerchantMark` and `AccountMark` are tiles. The leading mark
+ * of a list row whose transaction has no merchant (a transfer, a card payment).
+ */
+export function TransactionTypeMark({
+  type,
+  size = "sm",
+  className,
+}: {
+  type: TransactionFeedOriginType;
+  size?: DisplaySize;
+  className?: string;
+}) {
+  const config = TRANSACTION_TYPE_DISPLAY[type];
+  const dims = DISPLAY_SIZES[size];
+  return (
+    <span
+      role="img"
+      aria-label={config.label}
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center rounded-md border border-border/70 bg-muted",
+        dims.mark,
+        className,
+      )}
+    >
+      <HugeiconsIcon icon={config.icon} strokeWidth={2} className={cn(dims.glyph, config.tone)} />
+    </span>
+  );
+}

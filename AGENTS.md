@@ -44,6 +44,15 @@ add its README in the same change, and update the READMEs you rely on if the rul
 > [`apps/web/components/brand/`](apps/web/components/brand/README.md) (`Logo`, `BrandMark`); never hand-roll a
 > logo. A page without a title fails `apps/web/test/conventions.test.ts`.
 
+> ## STOP: no tables on mobile (web app)
+>
+> **Below `md` a table of records is a plain list of compact rows** (mark, title, muted line, amount, date;
+> Nubank style), never a table and never a horizontal scroll. `DataTable` requires a `mobile` config
+> (row renderer) so converting is configuration; its skeleton takes `mobileList`. Dense comparison data
+> (investment positions, import mapping) may stay a table: document it in
+> [components/lists](apps/web/components/lists/README.md) and the exception list in
+> `apps/web/test/conventions.test.ts`.
+
 ## Where to read
 
 | You are touching | Read first |
@@ -66,6 +75,7 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | The web app | [apps/web/README.md](apps/web/README.md) (data layer, components, forms, permissions) |
 | A new page (its title/SEO), the logo, favicons, OG image | [apps/web/components/brand/README.md](apps/web/components/brand/README.md) (**mandatory**) |
 | Choosing or showing a currency, country, language, time zone, date format, default period or theme | [packages/contracts/src/catalogs/README.md](packages/contracts/src/catalogs/README.md) and the selects in [display](apps/web/components/display/README.md) (**mandatory**) |
+| A table, a list of records, anything that shows rows on a phone | [apps/web/components/lists/README.md](apps/web/components/lists/README.md) (**mandatory**) |
 | A page's loading, error or empty state; skeletons | [apps/web/components/states/README.md](apps/web/components/states/README.md) (**mandatory**) |
 | KPIs / headline numbers | [apps/web/components/kpi/README.md](apps/web/components/kpi/README.md) (**mandatory**) |
 | A chart (line, area, bar, donut) | [apps/web/components/charts/README.md](apps/web/components/charts/README.md) (**mandatory**) |

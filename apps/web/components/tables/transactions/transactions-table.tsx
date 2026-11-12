@@ -10,7 +10,10 @@ import { TransactionsEmpty } from "@/app/(app)/transactions/_empty";
 import { TransactionsError } from "@/app/(app)/transactions/_error";
 import { TransactionsLoading } from "@/app/(app)/transactions/_loading";
 import { DataTable } from "@/components/data-table/data-table";
-import { getTransactionsTableColumns } from "@/components/tables/transactions/transactions-table.config";
+import {
+  getTransactionsMobileRow,
+  getTransactionsTableColumns,
+} from "@/components/tables/transactions/transactions-table.config";
 import type {
   TransactionTableFilters,
   TransactionTableFilterUpdates,
@@ -52,6 +55,10 @@ export function TransactionsTable({
         language,
         lookups,
       }),
+    [language, lookups],
+  );
+  const mobile = React.useMemo(
+    () => getTransactionsMobileRow({ language, lookups }),
     [language, lookups],
   );
   const { table } = useDataTable({
@@ -113,6 +120,7 @@ export function TransactionsTable({
         <DataTable
           table={table}
           onRowClick={(row) => onView(row.original)}
+          mobile={mobile}
           fill
           totalCount={pagination?.totalCount}
           pageSizeOptions={[10, 20, 50, 100]}

@@ -10,3 +10,7 @@ Tables that show a resource the same way everywhere.
 Row rendering lives in `transactions/transactions-table.config.tsx`; change a column there and every table follows. Where a
 page needs "the transactions of X", use `ScopedTransactionsTable` (or `credit-cards/card-purchases-table.tsx`, which loads
 the lookups first); never draw a list of transactions by hand.
+
+Each table also has a **mobile list** (below `md`): `getTransactionsMobileRow` in the same config file, passed as
+`DataTable mobile`. Change the row there and every transactions list follows. See
+[components/lists](../lists/README.md).

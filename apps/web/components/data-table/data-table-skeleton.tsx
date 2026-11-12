@@ -1,3 +1,4 @@
+import { ListSkeleton } from "@/components/lists/list-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -21,6 +22,11 @@ interface DataTableSkeletonProps extends React.ComponentProps<"div"> {
   shrinkZero?: boolean;
   /** Same as `DataTable fill`: stretch to the parent's height. */
   fill?: boolean;
+  /**
+   * The table renders as a list below `md` (its `DataTable mobile` config): draw list rows there
+   * instead, `grouped` when the list shows group headers. Omit for a `mobile="table"` table.
+   */
+  mobileList?: { grouped?: boolean };
 }
 
 export function DataTableSkeleton({
@@ -33,6 +39,7 @@ export function DataTableSkeleton({
   withPagination = true,
   shrinkZero = false,
   fill = false,
+  mobileList,
   className,
   ...props
 }: DataTableSkeletonProps) {
@@ -62,7 +69,14 @@ export function DataTableSkeleton({
           {withViewOptions ? <Skeleton className="ml-auto hidden h-7 w-18 lg:flex" /> : null}
         </div>
       ) : null}
-      <div className={cn("rounded-md border", fill && "flex-1")}>
+      {mobileList ? (
+        <ListSkeleton
+          rows={rowCount}
+          grouped={mobileList.grouped}
+          className={cn("md:hidden", fill && "flex-1")}
+        />
+      ) : null}
+      <div className={cn("rounded-md border", fill && "flex-1", mobileList && "hidden md:block")}>
         <Table>
           <TableHeader>
             {Array.from({ length: 1 }).map((_, i) => (

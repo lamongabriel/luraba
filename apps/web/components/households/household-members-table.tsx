@@ -14,12 +14,14 @@ import type { ColumnDef } from "@tanstack/react-table";
 import * as React from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { MemberMark } from "@/components/display";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { FilterFaceted } from "@/components/filters/filter-faceted";
 import { HouseholdTableToolbar } from "@/components/households/household-table-toolbar";
 import { RemoveMemberDialog } from "@/components/households/remove-member-dialog";
 import { MemberRoleControl } from "@/components/households/roles/member-role-control";
+import type { MobileRowConfig } from "@/components/lists/mobile-list";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { householdMemberToUserDisplay, UserDisplay } from "@/components/users/user-display";
@@ -165,6 +167,36 @@ export function HouseholdMembersTable({
     getRowId: (row) => row.id,
   });
 
+  const mobile = React.useMemo<MobileRowConfig<HouseholdMember>>(
+    () => ({
+      row: (member) => ({
+        leading: <MemberMark member={member} size="md" />,
+        title: member.name,
+        subtitle: member.email,
+        actions: (
+          <>
+            <MemberRoleControl
+              householdId={householdId}
+              actorRole={householdRole}
+              member={member}
+            />
+            {member.userId !== currentUserId && canManageMember(householdRole, member.role) ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`Remove ${member.name}`}
+                onClick={() => setRemoving(member)}
+              >
+                <HugeiconsIcon icon={Delete02Icon} className="text-destructive" strokeWidth={2} />
+              </Button>
+            ) : null}
+          </>
+        ),
+      }),
+    }),
+    [currentUserId, householdId, householdRole],
+  );
+
   return (
     <div className="space-y-3">
       <HouseholdTableToolbar
@@ -216,6 +248,7 @@ export function HouseholdMembersTable({
       ) : (
         <DataTable
           table={table}
+          mobile={mobile}
           totalCount={query.data?.meta.pagination.totalCount}
           itemLabel="member"
           pageSizeOptions={[10, 20, 50, 100]}

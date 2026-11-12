@@ -10,7 +10,10 @@ import { DataTable } from "@/components/data-table/data-table";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { TableSkeleton } from "@/components/states";
-import { getTransactionsTableColumns } from "@/components/tables/transactions/transactions-table.config";
+import {
+  getTransactionsMobileRow,
+  getTransactionsTableColumns,
+} from "@/components/tables/transactions/transactions-table.config";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
 import { useDataTable } from "@/hooks/use-data-table";
@@ -70,6 +73,15 @@ export function AccountRecentTransactions({
     () => accountColumns(language, lookupsQuery.data ?? NO_LOOKUPS),
     [language, lookupsQuery.data],
   );
+  const mobile = React.useMemo(
+    () =>
+      getTransactionsMobileRow({
+        language,
+        lookups: lookupsQuery.data ?? NO_LOOKUPS,
+        showAccount: false,
+      }),
+    [language, lookupsQuery.data],
+  );
   const { table } = useDataTable<TransactionFeedRow>({
     data: rows,
     columns,
@@ -111,6 +123,7 @@ export function AccountRecentTransactions({
           columns={ACCOUNT_TRANSACTION_COLUMN_COUNT}
           rows={ACCOUNT_RECENT_TRANSACTIONS}
           label="Loading recent transactions"
+          mobileList={{ grouped: true }}
         />
       ) : query.isError || lookupsQuery.isError ? (
         <ErrorState
@@ -128,7 +141,7 @@ export function AccountRecentTransactions({
           description="Pick a longer period or record a transaction on this account."
         />
       ) : (
-        <DataTable table={table} showPagination={false} />
+        <DataTable table={table} mobile={mobile} showPagination={false} />
       )}
     </section>
   );

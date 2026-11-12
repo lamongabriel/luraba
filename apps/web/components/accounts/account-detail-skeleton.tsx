@@ -58,6 +58,7 @@ export function AccountDetailSkeleton() {
             columns={ACCOUNT_TRANSACTION_COLUMN_COUNT}
             rows={ACCOUNT_RECENT_TRANSACTIONS}
             label="Loading recent transactions"
+            mobileList={{ grouped: true }}
           />
         </section>
       </div>

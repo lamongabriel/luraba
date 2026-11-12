@@ -10,10 +10,12 @@ import * as React from "react";
 import { toast } from "sonner";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
+import { MemberMark } from "@/components/display";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { FilterFaceted } from "@/components/filters/filter-faceted";
 import { HouseholdTableToolbar } from "@/components/households/household-table-toolbar";
+import type { MobileRowConfig } from "@/components/lists/mobile-list";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -249,6 +251,42 @@ export function HouseholdInvitationsTable({
     getRowId: (row) => row.id,
   });
 
+  const mobile = React.useMemo<MobileRowConfig<HouseholdInvite>>(
+    () => ({
+      row: (invite) => {
+        const actionable =
+          canManage && (invite.computedStatus === "pending" || invite.computedStatus === "expired");
+        return {
+          leading: <MemberMark member={{ name: invite.email, image: null }} size="md" />,
+          title: invite.email,
+          subtitle: `${getHouseholdRoleLabel(invite.role, roles)} · ${getHouseholdInviteStatusLabel(invite.computedStatus, statuses)} · Expires ${formatDate(invite.expiresAt)}`,
+          actions: actionable ? (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={createLink.isPending}
+                aria-label="Copy invitation link"
+                onClick={() => createLink.mutate({ householdId, inviteId: invite.id })}
+              >
+                <HugeiconsIcon icon={Copy01Icon} strokeWidth={2} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Cancel invitation"
+                onClick={() => setPendingAction({ type: "cancel", invite })}
+              >
+                <HugeiconsIcon icon={Delete02Icon} className="text-destructive" strokeWidth={2} />
+              </Button>
+            </>
+          ) : null,
+        };
+      },
+    }),
+    [canManage, createLink, householdId, roles, statuses],
+  );
+
   return (
     <div className="space-y-3">
       <HouseholdTableToolbar
@@ -288,6 +326,7 @@ export function HouseholdInvitationsTable({
       ) : (
         <DataTable
           table={table}
+          mobile={mobile}
           totalCount={query.data?.meta.pagination.totalCount}
           itemLabel="invitation"
           pageSizeOptions={[10, 20, 50, 100]}
