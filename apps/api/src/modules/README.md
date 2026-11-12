@@ -83,7 +83,7 @@ A scoped `update`/`delete` returns `undefined` when nothing matched: turn that i
 | [entries](entries/README.md) | Double-entry ledger entries |
 | [fx](fx/README.md) | Exchange-rate providers and sync |
 | [goals](goals/README.md) | Savings and investment goals, contributions, moves, withdrawals and completion estimates |
-| [monthly-plans](monthly-plans/README.md) | The monthly plan by competency month and its projected-vs-actual report |
+| [monthly-plans](monthly-plans/README.md) | The monthly plan by competency month, its projected-vs-actual report and the left-to-spend calculation |
 | [imports](imports/README.md) | Import wizard (CSV, Excel, OFX): column mapping, value mapping, templates, background worker, reconciliation |
 | [exports](exports/README.md) | CSV/JSON export through a registry of exporters |
 | [health](health/README.md) | Health check |

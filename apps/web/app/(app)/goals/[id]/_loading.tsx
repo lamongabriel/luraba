@@ -7,7 +7,7 @@ export function GoalDetailLoading() {
     <InternalPageLayout
       title="Goal"
       subtitle="Progress, monthly plan and contributions."
-      back={{ href: "/goals", label: "Goals" }}
+      back={{ href: "/plan", label: "Budgets & goals" }}
     >
       <div className="space-y-5">
         <Skeleton className="h-40 rounded-xl" />

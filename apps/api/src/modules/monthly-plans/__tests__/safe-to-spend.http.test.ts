@@ -221,7 +221,9 @@ describe("GET /monthly-plans/safe-to-spend", () => {
   it("keeps goal money out of the spendable balance and highlights overspent budgets", async () => {
     const t = await setup();
     const checking = await t.account("Checking", "USD");
-    const piggy = await t.account("Piggy bank", "USD", "savings");
+    const piggy = await t.account("Goal checking", "USD");
+    const savings = await t.account("Piggy bank", "USD", "savings");
+    await t.deposit(savings.id, 77_000);
     await t.deposit(checking.id, 140_000);
     const goalId = await t.goal("Honeymoon", 10_000);
     const contributed = await request(app)
@@ -253,7 +255,7 @@ describe("GET /monthly-plans/safe-to-spend", () => {
 
     const data = await t.get();
     const group = usd(data.currencies);
-    // 1,000 + 400 - 150 groceries = 1,250; 400 is piggy-bank money; Honeymoon is already met this month.
+    // 1,000 + 400 - 150 groceries = 1,250 in the two checking accounts; 400 is goal money; the savings account (770) is not spendable at all.
     expect(group.thisMonth).toMatchObject({
       accountsBalance: 125_000,
       goalFundsHeld: 40_000,

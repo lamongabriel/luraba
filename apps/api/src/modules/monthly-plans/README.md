@@ -56,6 +56,59 @@ Tests build exactly this (`__tests__/monthly-plan.http.test.ts`). In production,
 `create_goal` calls (`monthlyContribution`, `startMonth: "2026-11"`, `endMonth: "2027-11"`), then three
 `set_monthly_plan` calls, one per row of the table (`lines` with `salary`, `taxes` and one `goal` line per goal).
 
+## Left to spend (`GET /monthly-plans/safe-to-spend?month=YYYY-MM`)
+
+`safe-to-spend.service.ts` answers "how much can I still spend?" for the **Budgets & goals** page and the MCP tool
+`report_safe_to_spend`. It reuses the other modules' services (`getGoalsReport`, `getMonthlyPlanReport`,
+`listCyclesThroughMonth`, `billsRepository.listUpcomingOccurrences`, `listAccounts`, `getMonthlyBudget`); it has no
+SQL and no parallel maths. Permission `goals.read`. The response is one block per **currency**, never converted or
+mixed: a currency exists when an account, bill, goal or invoice is in it.
+
+**This month, in cash** (`thisMonth`):
+
+```
+leftToSpend = spendableBalance - billsRemaining - goalsOwed - invoicesDue
+spendableBalance = sum(spendable account balances) - goal money held in them
+```
+
+**Next month, on the card** (`nextMonth`): card spending is billed next month, so it is checked against next month.
+
+```
+leftForCard = projectedIncome - (bills + goals + cardCharged)
+```
+
+Assumptions (also documented here so nobody re-derives them):
+
+- **Spendable accounts**: `cash` accounts with subtype `checking`, `cash`, `prepaid` or `other`, in their own currency.
+  Savings (piggy banks, "caixinhas"), money market and CDs are where money is set aside, so they are excluded;
+  investment, crypto and other asset types never count. Goal money located in a spendable account
+  (`goals[].locations`, same currency, capped at that account's balance) is subtracted, because it is not free to spend.
+- **Balance, not "carried + income"**: the balance already contains the income received and the cash spent so far, so
+  it is used as is. Adding "income received" on top would count it twice. `incomeReceived` / `incomeProjected` (salary
+  minus taxes, **plan currency only**, competency month) are returned as memo figures for the UI.
+- **Competency month**: income comes from the monthly plan report, so a salary received on or after day 16
+  (`SALARY_NEXT_MONTH_FROM_DAY`) belongs to the next month; a transaction's own `competency_month` wins. A salary
+  already received for next month is in the balance and is not added again to `leftToSpend`.
+- **Bills**: unpaid, unskipped occurrences of active bills. Everything due up to the end of the month, **including
+  overdue ones**, is owed this month; occurrences due next month go to `nextMonth.bills`.
+- **Goals**: per goal, `owed = max(0, planned - contributed)` for the month (`getGoalsReport`: the monthly plan inside the
+  goal's months, contributions minus withdrawals dated in the month, moves ignored), in the goal's currency. Next
+  month adds the goals' planned amount for the next month. Paused or canceled goals plan 0.
+- **Card invoices**: per card (in the card's currency), every cycle with `remainingAmount > 0` due up to the end of the
+  month is cash owed (`invoicesDue`, overdue included); cycles due next month are `cardCharged` (what is already
+  billed next month: the open invoice plus installments landing there). Invoices due later are ignored. A card
+  purchase made now lands on whichever invoice is open; the what-if assumes the invoice due next month.
+- **Income plan**: the monthly plan has **one currency**. `projectedIncome` is `salary - taxes` of next month's plan in
+  that currency; other currencies get `projectedIncome: null` and `leftForCard: null` ("No plan") instead of a made-up
+  number. Taxes and `to_spend` lines are not otherwise subtracted from this month's cash.
+- **Budgets do not enter the maths.** `budgets.overspent` lists expense categories whose actual is above their
+  budget (in the budget currency) as guidance only.
+- The `month` parameter moves the whole calculation (past months use the balance as of now: it is a "today" tool).
+
+Tests: `__tests__/safe-to-spend.http.test.ts` (bills and goals owed, goals all met, unpaid invoice due this month and
+next month's card charges, plan income net of taxes, goal money and savings accounts excluded plus an overspent
+budget, mixed currencies, household isolation).
+
 Tests: `__tests__/monthly-plan.http.test.ts`; the goal funds are in `../goals/__tests__/goals-funds.http.test.ts`.
 
 General module conventions: [../README.md](../README.md).

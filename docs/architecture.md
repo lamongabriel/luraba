@@ -102,6 +102,10 @@ Goals are not tied to an account: a contribution, withdrawal or move records whi
 and reached (a transfer in the ledger, neutral in spending), so one account can hold several goals and the
 goal knows where its money sits. The monthly plan (`monthly_plan_lines`) projects salary, taxes and each goal's
 contribution per competency month and is reported against actuals (`apps/api/src/modules/monthly-plans`).
+`GET /monthly-plans/safe-to-spend` combines the plan, goals, bills, card invoices and account balances into "how
+much can I still spend": per currency, this month in cash and next month on the card (budgets stay guidance). It is
+the headline of the **Budgets & goals** page (`/plan`, which replaces the separate Budgets and Goals pages) and of the
+MCP tool `report_safe_to_spend`.
 
 ## Investments
 

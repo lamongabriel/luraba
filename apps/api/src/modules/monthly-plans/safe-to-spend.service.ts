@@ -23,10 +23,11 @@ import { getGoalsReport } from "@/modules/goals/goals.service";
 import { getMonthlyPlanReport } from "./monthly-plans.service";
 
 /**
- * Cash account subtypes that count as spendable. Money market and CDs are savings vehicles, so they
- * are left out; a "savings" account counts, but the goal money (piggy banks) held in it does not.
+ * Cash account subtypes that count as spendable. Savings accounts (piggy banks, "caixinhas"),
+ * money market and CDs are where money is set aside, so they are left out. Goal money that sits in
+ * a spendable account is subtracted from it.
  */
-export const SPENDABLE_ACCOUNT_SUBTYPES = ["checking", "savings", "cash", "prepaid", "other"];
+export const SPENDABLE_ACCOUNT_SUBTYPES = ["checking", "cash", "prepaid", "other"];
 
 const lastDayOf = (key: string) => {
   const start = parseMonthKey(key);
@@ -200,7 +201,7 @@ export async function getSafeToSpend(
   const net = (item: typeof planThis, pick: "projected" | "actual") => {
     const salary = item?.lines.find((line) => line.kind === "salary")?.[pick] ?? 0;
     const taxes = item?.lines.find((line) => line.kind === "taxes")?.[pick] ?? 0;
-    return salary - (pick === "projected" ? taxes : 0);
+    return salary - taxes;
   };
   if (planNext?.hasPlan)
     group(plan.currencyCode).nextMonth.projectedIncome = net(planNext, "projected");

@@ -1,9 +1,10 @@
 # components/goals
 
-UI for the goals module (`/goals`, `/goals/[id]`).
+UI for the goals module: the goals section of the **Budgets & goals** page (`/plan`, rows in `components/plan/plan-goals.tsx`; `/goals` redirects there) and the goal detail page `/goals/[id]`.
 
 | Component | Role |
 | --- | --- |
+| `goals-empty.tsx`, `goals-error.tsx` | Empty and error states of the plan page's goals section. |
 | `goal-sheet.tsx` | Create/edit form (`FormSheet`). Money is typed in major units and converted with `majorToMinorUnits`; the expected return is typed as a percentage and sent as basis points. |
 | `contribution-modal.tsx` | Add, withdraw or edit a manual contribution. |
 | `link-transaction-modal.tsx` | Count an existing expense or transfer (all of it, or part) toward the goal. Only same-currency transactions are offered. |

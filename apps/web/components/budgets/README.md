@@ -1,6 +1,6 @@
 # Budgets UI
 
-The `/budgets` page (`/budget` redirects to it): a month-based, category-oriented view of the spending
+The budgets section of the **Budgets & goals** page (`/plan`; `/budgets` and `/budget` redirect to it): a month-based, category-oriented view of the spending
 plan. Pick a month, give expense categories a monthly limit, then watch spending against it.
 
 ## Page structure
@@ -31,12 +31,13 @@ body  mobile  the same list first, the rail (trend, split) below it
 - "Most expensive" lives here: sort "Most spent" (default), the marker and the change; there is no separate card.
 - **Rail** (`budget-aside.tsx`): a budget-vs-spent trend (last six months: spent as bars, the budget as a dashed `lineSeries`, 14rem tall) and the segmented split of the limits, both flat
   (`BarChartCard` / `SegmentedBarCard` with `flat`). Sticky on large screens.
-- `budgets-content.tsx` composes them; `app/(app)/budgets/_loading.tsx` mirrors it with the `*Skeleton` twins and `budget-layout.ts` sizes
+- `budgets-content.tsx` composes them; `budgets-loading.tsx` mirrors it with the `*Skeleton` twins and `budget-layout.ts` sizes
   (every band cell and row has a fixed height, so nothing shifts when data arrives).
 
 | File | Role |
 | --- | --- |
-| `app/(app)/budgets/page.tsx` | Month state, queries (`useMonthlyBudgetQuery`, `useBudgetInsightsQuery`, categories), header actions (month, "Add budget", menu), the sheets and dialog. |
+| `budgets-section.tsx` | The section the plan page renders (`<BudgetsSection month />`): queries (`useMonthlyBudgetQuery`, `useBudgetInsightsQuery`, categories), the "Add budget" and menu actions in its `PageSection` header, the sheets and dialogs. The month comes from the page's single month selector. |
+| `budgets-loading.tsx`, `budgets-error.tsx`, `budgets-empty.tsx` | The three states of the section. |
 | `budget-category-sheet.tsx` | Add a budget for a category that has none (`FormSheet`). |
 | `budget-settings-sheet.tsx` | Per-month credit card counting settings, opened from the header menu so they take no room on the page. |
 | `copy-last-month-dialog.tsx` | Replaces the month's budgets with last month's (`ConfirmDialog`). |

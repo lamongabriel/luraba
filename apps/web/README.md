@@ -85,7 +85,7 @@ API keys UI (`/settings/api-keys`, `components/settings/api-keys/`): list, creat
 
 Credit cards UI (month overview, card detail, invoices): [components/credit-cards/README.md](components/credit-cards/README.md).
 
-Budgets UI (`/budgets`: monthly gauge, category budgets, charts, card settings): [components/budgets/README.md](components/budgets/README.md).
+Budgets & goals page (`/plan`: left to spend, goals, budgets, fixed bills; `/budgets` and `/goals` redirect to it): [components/plan/README.md](components/plan/README.md). Budgets UI (monthly gauge, category budgets, charts, card settings): [components/budgets/README.md](components/budgets/README.md).
 
 **Page metadata (mandatory).** Every `page.tsx` exports `metadata = pageMetadata({ title, description })` (`lib/metadata.ts`; client pages do it in their same-folder `layout.tsx`). The root layout supplies the `| Luraba` suffix, Open Graph, Twitter and icons; the logo and brand assets live in [components/brand](components/brand/README.md). Enforced by `test/conventions.test.ts`.
 

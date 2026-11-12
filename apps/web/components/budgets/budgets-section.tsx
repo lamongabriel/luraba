@@ -18,8 +18,7 @@ import {
 import { BudgetSettingsSheet } from "@/components/budgets/budget-settings-sheet";
 import { BudgetsContent } from "@/components/budgets/budgets-content";
 import { CopyLastMonthDialog } from "@/components/budgets/copy-last-month-dialog";
-import { InternalPageLayout } from "@/components/finance/internal-page-layout";
-import { MonthSelector } from "@/components/finance/month-selector";
+import { PageSection } from "@/components/finance/page-section";
 import { PERMISSIONS, PermissionButton, useCan } from "@/components/permissions";
 import { DataBoundary } from "@/components/states";
 import { Button } from "@/components/ui/button";
@@ -32,7 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCurrencyPrecision } from "@/hooks/use-currency-precision";
 import { budgetPace, replaceBodyWithExpense } from "@/lib/budgets";
-import { currentMonthKey, formatMonthKeyLabel } from "@/lib/credit-card-invoices";
+import { formatMonthKeyLabel } from "@/lib/credit-card-invoices";
 import { useSetCategoryBudgetMutation } from "@/mutations/budgets/use-budget-mutations";
 import {
   useBudgetInsightsQuery,
@@ -40,16 +39,19 @@ import {
 } from "@/queries/budgets/use-budgets-queries";
 import { useCategoriesQuery } from "@/queries/categories/use-categories-query";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
-import { BudgetsEmpty } from "./_empty";
-import { BudgetsError } from "./_error";
-import { BudgetsLoading } from "./_loading";
+import { BudgetsEmpty } from "./budgets-empty";
+import { BudgetsError } from "./budgets-error";
+import { BudgetsLoading } from "./budgets-loading";
 
-export default function BudgetsPage() {
+/**
+ * Budgets on the Budgets & goals page: a titled section with the month's budgets, the add and
+ * more-actions controls, and the sheets and dialogs they open. The month comes from the page.
+ */
+export function BudgetsSection({ month }: { month: string }) {
   const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
   const timezone = useAuthSessionStore((state) => state.user?.preferences.timezone ?? "UTC");
   const precisionOf = useCurrencyPrecision();
   const can = useCan();
-  const [month, setMonth] = React.useState(() => currentMonthKey(timezone));
   const [categorySheet, setCategorySheet] = React.useState<{
     open: boolean;
     target: BudgetCategoryTarget | null;
@@ -92,12 +94,11 @@ export default function BudgetsPage() {
   const removeRow = budget?.categories.expense.find((row) => row.categoryId === removeId);
 
   return (
-    <InternalPageLayout
+    <PageSection
       title="Budgets"
-      subtitle="Set a monthly limit for each category and keep an eye on how the month is going."
+      description="A monthly limit for each category. Guidance only: budgets do not change what is left to spend."
       actions={
-        <>
-          <MonthSelector value={month} onChange={setMonth} language={language} />
+        <div className="flex items-center gap-2">
           <PermissionButton
             permission={PERMISSIONS.BUDGETS_UPDATE}
             disabled={!budget}
@@ -123,7 +124,7 @@ export default function BudgetsPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </>
+        </div>
       }
     >
       <DataBoundary
@@ -204,6 +205,6 @@ export default function BudgetsPage() {
         monthLabel={monthLabel}
         previousMonthLabel={formatMonthKeyLabel(previousMonth, language)}
       />
-    </InternalPageLayout>
+    </PageSection>
   );
 }

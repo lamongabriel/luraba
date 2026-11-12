@@ -5,7 +5,6 @@ import {
   Coins01Icon,
   CreditCardIcon,
   DashboardSquare01Icon,
-  GoalIcon,
   Settings02Icon,
   UserGroupIcon,
   UserMultiple02Icon,
@@ -46,10 +45,10 @@ export const mainNav: NavigationItem[] = [
     permission: PERMISSIONS.CREDIT_CARDS_READ,
   },
   {
-    title: "Budgets",
-    href: "/budgets",
+    title: "Budgets & goals",
+    href: "/plan",
     icon: Coins01Icon,
-    permission: PERMISSIONS.BUDGETS_READ,
+    permission: PERMISSIONS.GOALS_READ,
   },
   {
     title: "Investments",
@@ -68,12 +67,6 @@ export const mainNav: NavigationItem[] = [
     href: "/splits",
     icon: UserMultiple02Icon,
     permission: PERMISSIONS.SPLITS_READ,
-  },
-  {
-    title: "Goals",
-    href: "/goals",
-    icon: GoalIcon,
-    permission: PERMISSIONS.GOALS_READ,
   },
 ];
 
@@ -95,5 +88,10 @@ export function getFirstAccessibleRoute(permissions: readonly string[]): string 
  */
 export function isNavItemActive(pathname: string | null | undefined, href: string): boolean {
   if (!pathname) return false;
-  return pathname === href || pathname.startsWith(`${href}/`);
+  return [href, ...(NAV_ALIASES[href] ?? [])].some(
+    (base) => pathname === base || pathname.startsWith(`${base}/`),
+  );
 }
+
+/** Routes that live under another item: a goal's detail page keeps "Budgets & goals" highlighted. */
+const NAV_ALIASES: Record<string, string[]> = { "/plan": ["/goals"] };

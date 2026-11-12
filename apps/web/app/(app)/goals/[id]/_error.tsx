@@ -8,7 +8,7 @@ export function GoalDetailError({ message, onRetry }: { message?: string; onRetr
     <InternalPageLayout
       title="Goal"
       subtitle="Progress, monthly plan and contributions."
-      back={{ href: "/goals", label: "Goals" }}
+      back={{ href: "/plan", label: "Budgets & goals" }}
     >
       <ErrorState title="Goal" description={message} onRetry={onRetry} />
     </InternalPageLayout>
