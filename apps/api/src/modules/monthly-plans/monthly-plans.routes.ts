@@ -11,6 +11,11 @@ router.get(
   requireAccess({ permission: PERMISSIONS.GOALS_READ }),
   controller.report,
 );
+router.get(
+  path(monthlyPlansEndpoints.safeToSpend),
+  requireAccess({ permission: PERMISSIONS.GOALS_READ }),
+  controller.safeToSpend,
+);
 router.put(
   path(monthlyPlansEndpoints.set),
   requireAccess({ permission: PERMISSIONS.GOALS_UPDATE }),

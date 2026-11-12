@@ -57,6 +57,7 @@ import {
   reportSpending,
   reportTopExpenses,
 } from "./reports.js";
+import { reportSafeToSpend } from "./safe-to-spend.js";
 import {
   createTransaction,
   deleteTransaction,
@@ -125,4 +126,5 @@ export const tools: AnyTool[] = [
   withdrawFromGoal,
   setMonthlyPlan,
   reportMonthlyPlan,
+  reportSafeToSpend,
 ];
