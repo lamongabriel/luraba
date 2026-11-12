@@ -49,7 +49,7 @@ export function DataTablePagination<TData>({
           : `${totalCount ?? table.getRowModel().rows.length} ${itemLabel}${(totalCount ?? table.getRowModel().rows.length) === 1 ? "" : "s"}`}
       </div>
       <div className="flex flex-col-reverse items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
-        <div className="flex items-center space-x-2">
+        <div className="hidden items-center space-x-2 sm:flex">
           <p className="whitespace-nowrap font-medium text-sm">Rows per page</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
@@ -89,7 +89,7 @@ export function DataTablePagination<TData>({
             aria-label="Go to previous page"
             variant="outline"
             size="icon"
-            className="size-8"
+            className="size-10 sm:size-8"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
@@ -99,7 +99,7 @@ export function DataTablePagination<TData>({
             aria-label="Go to next page"
             variant="outline"
             size="icon"
-            className="size-8"
+            className="size-10 sm:size-8"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >

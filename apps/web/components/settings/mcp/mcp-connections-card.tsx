@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { DataTable } from "@/components/data-table/data-table";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
+import type { MobileRowConfig } from "@/components/lists/mobile-list";
 import { SectionCard } from "@/components/section/section-card";
 import { DataBoundary, TableSkeleton } from "@/components/states";
 import { Button } from "@/components/ui/button";
@@ -85,7 +86,26 @@ function ConnectionsTable({
     onSortChange: () => undefined,
     getRowId: (row) => row.clientId,
   });
-  return <DataTable table={table} showPagination={false} itemLabel="agent" />;
+  const mobile = React.useMemo<MobileRowConfig<McpConnection>>(
+    () => ({
+      row: (connection) => ({
+        title: connection.name,
+        subtitle: `Allowed ${formatDate(connection.grantedAt)} · Used ${connection.lastUsedAt ? formatDate(connection.lastUsedAt) : NEVER.toLowerCase()}`,
+        actions: (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Revoke ${connection.name}`}
+            onClick={() => onRevoke(connection)}
+          >
+            <HugeiconsIcon icon={Delete02Icon} className="text-destructive" strokeWidth={2} />
+          </Button>
+        ),
+      }),
+    }),
+    [onRevoke],
+  );
+  return <DataTable table={table} mobile={mobile} showPagination={false} itemLabel="agent" />;
 }
 
 /** The agents you allowed through OAuth, with a Revoke button. */

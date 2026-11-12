@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import * as React from "react";
 import { DataTable } from "@/components/data-table/data-table";
+import type { MobileRowConfig } from "@/components/lists/mobile-list";
 import { ApiKeyNameCell } from "@/components/settings/api-keys/api-key-name-cell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -131,5 +132,40 @@ export function ApiKeysTable({
     getRowId: (row) => row.id,
   });
 
-  return <DataTable table={table} showPagination={false} itemLabel="key" />;
+  const mobile = React.useMemo<MobileRowConfig<ApiKey>>(
+    () => ({
+      row: (apiKey) => ({
+        title: (
+          <ApiKeyNameCell
+            name={apiKey.name}
+            onRename={(name) => update.mutate({ id: apiKey.id, body: { name } })}
+          />
+        ),
+        subtitle: `${apiKey.prefix}... · ${API_KEY_STATUS_LABELS[apiKey.status]} · Used ${apiKey.lastUsedAt ? formatDate(apiKey.lastUsedAt) : NEVER.toLowerCase()}`,
+        actions: (
+          <>
+            {apiKey.status !== "expired" ? (
+              <Switch
+                aria-label={apiKey.enabled ? "Revoke key" : "Enable key"}
+                checked={apiKey.enabled}
+                disabled={update.isPending}
+                onCheckedChange={(enabled) => update.mutate({ id: apiKey.id, body: { enabled } })}
+              />
+            ) : null}
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={`Delete ${apiKey.name}`}
+              onClick={() => onDelete(apiKey)}
+            >
+              <HugeiconsIcon icon={Delete02Icon} className="text-destructive" strokeWidth={2} />
+            </Button>
+          </>
+        ),
+      }),
+    }),
+    [onDelete, update],
+  );
+
+  return <DataTable table={table} mobile={mobile} showPagination={false} itemLabel="key" />;
 }

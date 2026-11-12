@@ -2,6 +2,7 @@ import { flexRender, type Row, type Table as TanstackTable } from "@tanstack/rea
 import type * as React from "react";
 
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
+import { MobileList, type MobileRowConfig } from "@/components/lists/mobile-list";
 import {
   Table,
   TableBody,
@@ -26,6 +27,12 @@ interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   showPagination?: boolean;
   totalCount?: number;
   itemLabel?: string;
+  /**
+   * What the table becomes below `md` (no tables on mobile, see `components/lists/README.md`):
+   * a row renderer config that draws the rows as a plain list, or `"table"` for the few tables that
+   * are dense comparison data (document why where you pass it). Required so none is forgotten.
+   */
+  mobile: MobileRowConfig<TData> | "table";
   /** Stretch to the height of the parent (a flex column or grid cell) so the table fills it. */
   fill?: boolean;
 }
@@ -42,6 +49,7 @@ export function DataTable<TData>({
   totalCount,
   itemLabel,
   fill = false,
+  mobile,
   ...props
 }: DataTableProps<TData>) {
   return (
@@ -54,10 +62,22 @@ export function DataTable<TData>({
       {...props}
     >
       {children}
+      {mobile !== "table" ? (
+        <div className={cn("md:hidden", fill && "flex-1")}>
+          {table.getRowModel().rows.length ? (
+            <MobileList table={table} config={mobile} onRowClick={onRowClick} />
+          ) : (
+            <div className="flex h-24 items-center justify-center text-center text-xs">
+              {emptyState ?? "No results."}
+            </div>
+          )}
+        </div>
+      ) : null}
       <div
         className={cn(
           "min-w-0 max-w-full overflow-x-auto overflow-y-hidden rounded-md border",
           fill && "flex-1",
+          mobile !== "table" && "hidden md:block",
         )}
       >
         <Table className="min-w-[72rem]">

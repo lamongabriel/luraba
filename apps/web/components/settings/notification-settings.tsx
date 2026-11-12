@@ -219,12 +219,8 @@ function AlertsCard({
   const update = useUpdateNotificationPreferencesMutation();
 
   return (
-    <SectionCard
-      title="Alerts"
-      description="Choose, for each alert, which channels it uses."
-      contentClassName="overflow-x-auto"
-    >
-      <table className="w-full min-w-[28rem] text-left text-xs">
+    <SectionCard title="Alerts" description="Choose, for each alert, which channels it uses.">
+      <table className="w-full text-left text-xs">
         <thead>
           <tr className="text-muted-foreground">
             <th className="pb-2 font-medium">Alert</th>

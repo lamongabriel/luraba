@@ -21,6 +21,7 @@ export function TransactionsLoading() {
         rowCount={SKELETON_ROWS}
         withToolbar={false}
         fill
+        mobileList={{ grouped: true }}
         cellWidths={["20rem", "8rem", "12rem", "8rem", "10rem", "3rem"]}
       />
     </LoadingRegion>

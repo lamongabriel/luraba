@@ -13,6 +13,7 @@ import { AccountDisplay, AmountDisplay, CategoryDisplay, MerchantDisplay, TagDis
 | `AccountDisplay` / `AccountMark` | Any account object (`Account`, `AccountSummary`, `AccountDetails`, `CreditCard`): picture or icon + name | `account` (null renders "No account"), `size`, `detail="none" \| "type" \| "full"` (`full` = `Institution · Type · CUR`) |
 | `CreditCardDisplay` | A credit card led by its institution: bank logo (else bank icon) + institution name, then `Card name ••1234` with the brand mark. Use it where several cards sit together and the bank matters | `card` (a `CreditCard` or overview card), `size` |
 | `MemberDisplay` / `MemberMark` | Who created a record: a household member's picture or initials + name | `userId` (a record's `createdByUserId`; unknown or null renders "Unknown"), `size` |
+| `TransactionTypeMark` | The type glyph in a tile (leading mark of a list row with no merchant) | `type`, `size` |
 | `TransactionTypeDisplay` | Expense, income, transfer, adjustment, card purchase, card payment, refund (shown as money back, green with a plus; `REFUND_REASON_LABELS` names the reason) | `type`, `variant="badge" \| "inline" \| "icon"`, `size` |
 | `MerchantDisplay` / `MerchantMark` | Logo, else a shop icon, + name | `merchant`, `size`, `detail="domain"` |
 | `HouseholdDisplay` / `HouseholdMark` | Uploaded picture, else initials, + name | `household`, `size` |

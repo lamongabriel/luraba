@@ -35,6 +35,9 @@ to the leftover height and the pager stays at the bottom. No pixel heights. Side
 so they always match the table's height; their loading twin is `PanelCardSkeleton`, and an empty panel
 uses `<EmptyState variant="embedded" />` (no border or card, because it already sits in a card).
 
+A table that is a list on mobile (`DataTable mobile`) passes `mobileList` to `DataTableSkeleton` /
+`TableSkeleton` so the skeleton is list rows there ([lists](../lists/README.md)).
+
 ## Loading skeletons match the page one to one
 
 If the layout moves by a single pixel when data arrives, the page is wrong. Rules:

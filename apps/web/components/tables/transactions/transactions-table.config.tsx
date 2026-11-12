@@ -7,12 +7,17 @@ import { formatShortDate } from "@luraba/domain";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import {
+  AccountDisplay,
   AmountDisplay,
   amountKindForTransactionType,
   MemberDisplay,
+  MerchantMark,
   TransactionTypeDisplay,
+  TransactionTypeMark,
 } from "@/components/display";
 import { MoneyValue } from "@/components/finance/money-value";
+import { dayGroup } from "@/components/lists/day-group";
+import type { MobileRowConfig } from "@/components/lists/mobile-list";
 import { InlineCategoryCell } from "@/components/tables/transactions/transaction-inline-editors";
 import {
   TransactionAccountDisplay,
@@ -173,4 +178,71 @@ export function getTransactionsTableColumns({
       meta: { label: "Amount" },
     },
   ];
+}
+
+/**
+ * The same transactions as a mobile list (below `md`): merchant mark, title, a small account chip,
+ * amount and date, in that order and nothing else (no original statement text, no category, no
+ * tags: the detail drawer has them). A note shows as a small icon. Pass as `DataTable mobile`.
+ * `showAccount: false` drops the chip on a page that is already about one account.
+ */
+export function getTransactionsMobileRow({
+  language,
+  lookups,
+  showAccount = true,
+}: {
+  language: string;
+  lookups: TransactionLookups;
+  showAccount?: boolean;
+}): MobileRowConfig<TransactionFeedRow> {
+  return {
+    row: (row, { grouped }) => {
+      const precision =
+        lookups.currencies.find((currency) => currency.code === row.currencyCode)?.precision ?? 2;
+      const merchant = row.merchantId
+        ? lookups.merchants.find((item) => item.id === row.merchantId)
+        : undefined;
+      const account = row.creditCardId
+        ? lookups.creditCards.find((item) => item.id === row.creditCardId)
+        : row.accountId
+          ? lookups.accounts.find((item) => item.id === row.accountId)
+          : undefined;
+      const title =
+        row.originType === "transfer"
+          ? `${row.accountName ?? "No account"}${row.toAccountName ? ` → ${row.toAccountName}` : ""}`
+          : row.description;
+      return {
+        leading: merchant ? (
+          <MerchantMark merchant={merchant} size="md" />
+        ) : (
+          <TransactionTypeMark type={row.originType} size="md" />
+        ),
+        title,
+        indicators: row.notes ? (
+          <span role="img" aria-label="Has notes">
+            <HugeiconsIcon icon={Note01Icon} strokeWidth={2} className="size-3.5" />
+          </span>
+        ) : null,
+        subtitle:
+          showAccount && account ? (
+            <AccountDisplay account={account} size="xs" />
+          ) : showAccount ? (
+            (row.accountName ?? "No account")
+          ) : null,
+        amount: (
+          <AmountDisplay
+            amount={row.amount}
+            currencyCode={row.currencyCode}
+            kind={amountKindForTransactionType(row.originType)}
+            language={language}
+            precision={precision}
+          />
+        ),
+        meta: grouped ? null : formatShortDate(row.postedDate, language),
+      };
+    },
+    group: (row) => dayGroup(row.postedDate, language),
+    groupSortIds: ["postedDate"],
+    ariaLabel: (row) => `View ${row.description}`,
+  };
 }
