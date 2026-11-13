@@ -50,6 +50,8 @@ import {
   DialogPortal,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { MobileSheetContent } from "@/components/ui/mobile-sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 export type ModalVariant = "default" | "destructive" | "warning" | "success";
@@ -88,7 +90,7 @@ function ModalIcon({ children, variant = "default", className }: ModalIconProps)
     <div
       data-slot="modal-icon"
       className={cn(
-        "flex size-9 items-center justify-center rounded-lg [&>svg]:size-4.5",
+        "flex size-9 max-md:hidden items-center justify-center rounded-lg [&>svg]:size-4.5",
         ICON_VARIANT_CLASSES[variant],
         className,
       )}
@@ -105,7 +107,7 @@ function ModalHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="modal-header"
       className={cn(
-        "flex flex-col gap-1.5 border-b border-dashed border-border px-6 py-5 pr-12",
+        "flex flex-col gap-1.5 border-b border-dashed border-border px-6 py-5 pr-12 max-md:px-0 max-md:pt-1 max-md:pb-3",
         className,
       )}
       {...props}
@@ -132,7 +134,10 @@ function ModalBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="modal-body"
-      className={cn("flex flex-col gap-4 px-6 py-5 text-xs/relaxed empty:hidden", className)}
+      className={cn(
+        "flex flex-col gap-4 px-6 py-5 text-xs/relaxed empty:hidden max-md:px-0 max-md:py-3",
+        className,
+      )}
       {...props}
     />
   );
@@ -173,7 +178,7 @@ function ModalFooter({
     <div
       data-slot="modal-footer"
       className={cn(
-        "flex flex-col-reverse gap-2 border-t border-border/70 px-6 py-4 sm:flex-row sm:justify-end",
+        "flex flex-col-reverse gap-2 border-t border-border/70 px-6 py-4 sm:flex-row sm:justify-end max-md:sticky max-md:bottom-0 max-md:-mx-4 max-md:bg-background max-md:px-4 max-md:pt-3 max-md:pb-7 max-md:[&>button]:w-full",
         className,
       )}
       {...props}
@@ -240,6 +245,35 @@ function ModalContent({
   children,
   ...props
 }: ModalContentProps) {
+  const isMobile = useIsMobile();
+  const header =
+    icon || title || description ? (
+      <ModalHeader>
+        {icon ? <ModalIcon variant={variant}>{icon}</ModalIcon> : null}
+        {title ? <ModalTitle>{title}</ModalTitle> : null}
+        {description ? <ModalDescription>{description}</ModalDescription> : null}
+      </ModalHeader>
+    ) : null;
+
+  // Below 768px every modal is a bottom drawer: the header, a scrolling body and a sticky footer (the `max-md:`
+  // classes of the parts above), no header icon.
+  if (isMobile) {
+    return (
+      <MobileSheetContent
+        data-slot="modal-content"
+        bare
+        showCloseButton={showCloseButton}
+        isLoading={isLoading}
+        {...props}
+      >
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4">
+          {header}
+          {children}
+        </div>
+      </MobileSheetContent>
+    );
+  }
+
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -269,13 +303,7 @@ function ModalContent({
         ) : null}
 
         <div className="flex flex-col">
-          {icon || title || description ? (
-            <ModalHeader>
-              {icon ? <ModalIcon variant={variant}>{icon}</ModalIcon> : null}
-              {title ? <ModalTitle>{title}</ModalTitle> : null}
-              {description ? <ModalDescription>{description}</ModalDescription> : null}
-            </ModalHeader>
-          ) : null}
+          {header}
           {children}
         </div>
       </DialogPrimitive.Content>

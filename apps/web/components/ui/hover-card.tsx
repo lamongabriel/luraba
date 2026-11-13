@@ -3,10 +3,13 @@
 import { HoverCard as HoverCardPrimitive } from "radix-ui";
 import type * as React from "react";
 
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
+/** A hover card never opens on a phone: there is no hover. */
 function HoverCard(props: React.ComponentProps<typeof HoverCardPrimitive.Root>) {
-  return <HoverCardPrimitive.Root {...props} />;
+  const isMobile = useIsMobile();
+  return <HoverCardPrimitive.Root {...props} {...(isMobile ? { open: false } : {})} />;
 }
 
 function HoverCardTrigger(props: React.ComponentProps<typeof HoverCardPrimitive.Trigger>) {

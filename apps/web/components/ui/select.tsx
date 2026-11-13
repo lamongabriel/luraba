@@ -7,15 +7,103 @@ import {
   UnfoldMoreIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Select as SelectPrimitive } from "radix-ui";
-import type * as React from "react";
+import { Dialog as DialogPrimitive, Select as SelectPrimitive } from "radix-ui";
+import * as React from "react";
+import { BottomSheetBody, BottomSheetContent } from "@/components/ui/bottom-sheet";
+import { usePortalContainer } from "@/components/ui/portal-container";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
-function Select({ ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) {
-  return <SelectPrimitive.Root data-slot="select" {...props} />;
+/**
+ * Below 768px a select opens a bottom sheet with a scrollable list of full-width rows (copied from Nexus, see
+ * components/ui/README.md). The Radix select stays mounted but never opens, so `SelectValue` keeps showing the
+ * selected label; a tap on the trigger opens the sheet, and picking a row sets the value through the same
+ * `value` / `onValueChange`. `SelectContent` renders its children twice on a phone: once into the closed Radix content,
+ * once into the sheet, where `SelectItem` and friends render as plain rows. Opt out with `<Select desktopOnly>`.
+ */
+type MobileSelect = {
+  mobile: boolean;
+  value: string | undefined;
+  select: (value: string) => void;
+};
+
+const MobileSelectContext = React.createContext<MobileSelect | null>(null);
+const InSheetContext = React.createContext(false);
+
+const MOBILE_OPTION_CLASSES =
+  "relative flex min-h-11 w-full cursor-default items-center gap-2 rounded-md py-2 pr-9 pl-3 text-left text-sm outline-hidden select-none active:bg-accent focus-visible:bg-accent data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0";
+
+function Select({
+  desktopOnly = false,
+  value,
+  defaultValue,
+  onValueChange,
+  open,
+  onOpenChange,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Root> & {
+  /** Keep the anchored select on phones too (opt-out, use sparingly and say why in a comment). */
+  desktopOnly?: boolean;
+}) {
+  const isMobile = useIsMobile() && !desktopOnly;
+  const [innerValue, setInnerValue] = React.useState(defaultValue);
+  const [sheetOpen, setSheetOpen] = React.useState(false);
+  const current = value ?? innerValue;
+
+  const handleValueChange = React.useCallback(
+    (next: string) => {
+      setInnerValue(next);
+      onValueChange?.(next);
+    },
+    [onValueChange],
+  );
+  const state = React.useMemo<MobileSelect>(
+    () => ({
+      mobile: isMobile,
+      value: current,
+      select: (next) => {
+        handleValueChange(next);
+        setSheetOpen(false);
+      },
+    }),
+    [isMobile, current, handleValueChange],
+  );
+
+  return (
+    <MobileSelectContext.Provider value={state}>
+      <DialogPrimitive.Root open={isMobile && sheetOpen} onOpenChange={setSheetOpen}>
+        <SelectPrimitive.Root
+          data-slot="select"
+          onValueChange={handleValueChange}
+          {...(isMobile
+            ? {
+                value: current ?? "",
+                open: false,
+                onOpenChange: (next: boolean) => {
+                  if (next) setSheetOpen(true);
+                },
+              }
+            : { value, defaultValue, open, onOpenChange })}
+          {...props}
+        />
+      </DialogPrimitive.Root>
+    </MobileSelectContext.Provider>
+  );
 }
 
 function SelectGroup({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Group>) {
+  const inSheet = React.useContext(InSheetContext);
+  if (inSheet) {
+    const { asChild: _asChild, ...rest } = props;
+    return (
+      <div
+        role="group"
+        data-slot="select-group"
+        className={cn("flex flex-col gap-0.5", className)}
+        {...rest}
+      />
+    );
+  }
   return (
     <SelectPrimitive.Group
       data-slot="select-group"
@@ -66,8 +154,26 @@ function SelectContent({
   align = "center",
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
-  return (
-    <SelectPrimitive.Portal>
+  const portalContainer = usePortalContainer();
+  const mobile = React.useContext(MobileSelectContext);
+  const sheet = mobile?.mobile ? (
+    <InSheetContext.Provider value>
+      <BottomSheetContent
+        data-slot="select-sheet"
+        title={props["aria-label"] ?? "Select an option"}
+        description={false}
+        container={portalContainer ?? null}
+      >
+        <BottomSheetBody className="pt-1 pb-2">
+          <div role="listbox" className="flex flex-col gap-0.5">
+            {children}
+          </div>
+        </BottomSheetBody>
+      </BottomSheetContent>
+    </InSheetContext.Provider>
+  ) : null;
+  const desktop = (
+    <SelectPrimitive.Portal container={portalContainer}>
       <SelectPrimitive.Content
         data-slot="select-content"
         data-align-trigger={position === "item-aligned"}
@@ -95,9 +201,26 @@ function SelectContent({
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   );
+  return (
+    <>
+      {desktop}
+      {sheet}
+    </>
+  );
 }
 
 function SelectLabel({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Label>) {
+  const inSheet = React.useContext(InSheetContext);
+  if (inSheet) {
+    const { asChild: _asChild, ...rest } = props;
+    return (
+      <div
+        data-slot="select-label"
+        className={cn("px-3 py-2 text-xs text-muted-foreground", className)}
+        {...rest}
+      />
+    );
+  }
   return (
     <SelectPrimitive.Label
       data-slot="select-label"
@@ -112,6 +235,35 @@ function SelectItem({
   children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Item>) {
+  const inSheet = React.useContext(InSheetContext);
+  const mobile = React.useContext(MobileSelectContext);
+  if (inSheet && mobile) {
+    const { value, disabled, textValue: _textValue, asChild: _asChild, ...rest } = props;
+    const selected = mobile.value === value;
+    return (
+      <button
+        type="button"
+        role="option"
+        aria-selected={selected}
+        disabled={disabled}
+        data-slot="select-item"
+        data-state={selected ? "checked" : "unchecked"}
+        data-disabled={disabled ? "" : undefined}
+        className={cn(MOBILE_OPTION_CLASSES, className)}
+        onClick={() => mobile.select(value)}
+        {...(rest as React.ComponentProps<"button">)}
+      >
+        <span className="flex min-w-0 flex-1 items-center gap-2">{children}</span>
+        {selected ? (
+          <HugeiconsIcon
+            icon={Tick02Icon}
+            strokeWidth={2}
+            className="pointer-events-none absolute right-3"
+          />
+        ) : null}
+      </button>
+    );
+  }
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
@@ -135,6 +287,15 @@ function SelectSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Separator>) {
+  const inSheet = React.useContext(InSheetContext);
+  if (inSheet) {
+    return (
+      <hr
+        data-slot="select-separator"
+        className={cn("my-1 h-px bg-border/50", "border-0", className)}
+      />
+    );
+  }
   return (
     <SelectPrimitive.Separator
       data-slot="select-separator"

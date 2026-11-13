@@ -5,6 +5,8 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import type * as React from "react";
 import { Button } from "@/components/ui/button";
+import { MobileSheetContent } from "@/components/ui/mobile-sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
@@ -47,6 +49,15 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
 }) {
+  const isMobile = useIsMobile();
+  if (isMobile) {
+    // The call site's `className` sizes the desktop dialog; a bottom drawer has its own sizing.
+    return (
+      <MobileSheetContent data-slot="dialog-content" showCloseButton={showCloseButton} {...props}>
+        {children}
+      </MobileSheetContent>
+    );
+  }
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -89,7 +100,10 @@ function DialogFooter({
   return (
     <div
       data-slot="dialog-footer"
-      className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
+      className={cn(
+        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end max-md:sticky max-md:bottom-0 max-md:-mx-4 max-md:border-t max-md:border-border max-md:bg-background max-md:px-4 max-md:pt-3 max-md:pb-7 max-md:[&>button]:w-full",
+        className,
+      )}
       {...props}
     >
       {children}

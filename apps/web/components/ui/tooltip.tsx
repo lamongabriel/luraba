@@ -3,6 +3,7 @@
 import { Tooltip as TooltipPrimitive } from "radix-ui";
 import type * as React from "react";
 
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 function TooltipProvider({
@@ -18,8 +19,12 @@ function TooltipProvider({
   );
 }
 
+/** A tooltip never opens on a phone: there is no hover, and a tap opens the control. */
 function Tooltip({ ...props }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />;
+  const isMobile = useIsMobile();
+  return (
+    <TooltipPrimitive.Root data-slot="tooltip" {...props} {...(isMobile ? { open: false } : {})} />
+  );
 }
 
 function TooltipTrigger({ ...props }: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {

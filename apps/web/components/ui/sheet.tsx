@@ -5,6 +5,8 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import type * as React from "react";
 import { Button } from "@/components/ui/button";
+import { MobileSheetContent } from "@/components/ui/mobile-sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
@@ -44,11 +46,30 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
+  mobileClassName,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left";
   showCloseButton?: boolean;
+  /** Classes of the drawer when the sheet is a bottom drawer (below 768px). */
+  mobileClassName?: string;
 }) {
+  const isMobile = useIsMobile();
+  if (isMobile) {
+    // Every side sheet is a bottom drawer on a phone. The call site's `className` styles the desktop panel;
+    // `mobileClassName` styles the drawer itself.
+    return (
+      <MobileSheetContent
+        data-slot="sheet-content"
+        showCloseButton={showCloseButton}
+        className={mobileClassName}
+        bodyClassName="gap-0 p-0"
+        {...(props as object)}
+      >
+        {children}
+      </MobileSheetContent>
+    );
+  }
   return (
     <SheetPortal>
       <SheetOverlay />

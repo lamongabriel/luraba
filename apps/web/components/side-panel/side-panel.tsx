@@ -56,7 +56,12 @@ export function SidePanelHeader({
   className?: string;
 }) {
   return (
-    <SheetHeader className={cn("border-b border-border/70 pb-5 pl-6 pr-14 pt-6", className)}>
+    <SheetHeader
+      className={cn(
+        "border-b border-border/70 pb-5 pl-6 pr-14 pt-6 max-md:px-4 max-md:pt-2 max-md:pb-3",
+        className,
+      )}
+    >
       {children}
     </SheetHeader>
   );
@@ -89,7 +94,11 @@ export function SidePanelBody({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("space-y-7 px-6 py-6", className)}>{children}</div>;
+  return (
+    <div className={cn("space-y-7 px-6 py-6 max-md:space-y-5 max-md:px-4 max-md:py-4", className)}>
+      {children}
+    </div>
+  );
 }
 
 export function SidePanelFooter({
@@ -100,7 +109,12 @@ export function SidePanelFooter({
   className?: string;
 }) {
   return (
-    <SheetFooter className={cn("border-t border-border/70 px-6 py-5", className)}>
+    <SheetFooter
+      className={cn(
+        "border-t border-border/70 px-6 py-5 max-md:sticky max-md:bottom-0 max-md:bg-background max-md:px-4 max-md:pt-3 max-md:pb-7",
+        className,
+      )}
+    >
       {children}
     </SheetFooter>
   );
