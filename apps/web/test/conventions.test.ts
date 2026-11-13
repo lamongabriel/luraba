@@ -287,6 +287,18 @@ describe("overlays are bottom drawers on mobile (components/ui/README.md)", () =
     ).toEqual([]);
   });
 
+  it("keeps a side sheet on mobile only for the app sidebar", () => {
+    expect(
+      offenders(/keepSideOnMobile/u).filter(
+        (path) => path !== "components/ui/sidebar.tsx" && path !== "components/ui/sheet.tsx",
+      ),
+    ).toEqual([]);
+  });
+
+  it("paints no backdrop by hand; overlays use the shared scrim", () => {
+    expect(featureOffenders(/fixed inset-0[^"]*bg-black/u)).toEqual([]);
+  });
+
   it("imports the raw Dialog only from the documented files", () => {
     const found = featureOffenders(/from "@\/components\/ui\/dialog"/u);
     expect(found.filter((path) => !RAW_DIALOG.has(path))).toEqual([]);

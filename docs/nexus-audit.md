@@ -1,0 +1,41 @@
+# Nexus audit: filters and overlays
+
+Compared against Nexus (`staging`, read only): `ui/bottom-sheet.tsx`, `ui/responsive-drawer.tsx`,
+`ui/portal-container.tsx`, the Popover/DropdownMenu/Select wrappers, `overlay-guard.test.ts`,
+`docs/ui-theme.md` ("Drawers and menus on mobile") and `components/query-filters`.
+
+## What Nexus does well
+
+- One breakpoint and one hook (`useIsMobile`, 768px) decide every overlay, inside the primitives; features never
+  check the width.
+- A single mobile shell (`BottomSheetContent`) that every overlay renders through: drag handle, 90dvh, safe area.
+- Wrappers swap Popover, DropdownMenu and Select to that shell, with a `desktopOnly` opt-out.
+- A portal container so popups opened inside a drawer still work under the modal's `pointer-events: none`.
+- A `scrim` colour token for backdrops.
+- A guard test with a shrink-only allowlist of raw overlay imports.
+- Filters: the date range is the first, permanent row, separate from the removable filter tree; mobile is a
+  screen-by-screen drawer.
+- Documentation of the whole pattern in one place, with an explicit "not a drawer on purpose" list.
+
+## Adopted in Luraba
+
+- `use-mobile`, `bottom-sheet`, `portal-container`, the Popover/DropdownMenu/Select swap, `desktopOnly`,
+  tooltip/hover-card never open on mobile (`components/ui`, see its README).
+- `MobileSheetContent` shared by Dialog, Sheet and Modal (Luraba's own wrapper; it replaces Nexus's
+  `ResponsiveDrawer`, because Luraba's Dialog/Sheet/Modal already carry the desktop look).
+- Filters: `components/filters` with the fixed, non-removable date filter and the mobile drawer.
+- `bg-scrim` token for every backdrop.
+- Conventions test: no raw Radix/vaul overlays, raw Sheet/Dialog allowlists that only shrink, no hand-painted
+  backdrops, `keepSideOnMobile` only for the sidebar.
+- The app sidebar stays a slide-in sidebar on mobile; the user menu inside it is a bottom drawer.
+
+## Left
+
+- `ResponsiveDrawer` Header/Title/Footer parts and `useDrawerPresentation()`: Luraba uses `max-md:` classes on
+  `ModalHeader`/`ModalFooter` and `DialogFooter` instead. Extract the same parts if a third overlay shape appears.
+- Six feature files still import the raw `Dialog` (mobile-aware, listed in `conventions.test.ts`); migrate them
+  to `Modal` over time.
+- Confirmations are bottom drawers here (Nexus keeps a centred dialog); revisit if the owner prefers Nexus.
+- Base UI popups (ReUI cascader) are desktop only; mobile filters use the custom drawer.
+- Nexus's `QUERY_CONTROL_CLASS` (one class for toolbar controls) and its theme token guard tests have no
+  Luraba equivalent yet. Luraba has a single dark theme, so there is no light mode to audit.
