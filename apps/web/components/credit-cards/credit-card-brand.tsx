@@ -1,46 +1,29 @@
 "use client";
 
-import { PaymentIcon } from "react-svg-credit-card-payment-icons";
-
+import { CardBrandMark } from "@/components/display/card-brand";
 import type { FormComboboxOption } from "@/components/forms/form-combobox";
-import { getCreditCardBrand } from "@/lib/credit-cards";
 import { cn } from "@/lib/utils";
 
+/** A brand mark with an optional label (selects, forms). The mark is the shared transparent `CardBrandMark`. */
 export function CreditCardBrand({
   brand,
   label,
   className,
-  chip = false,
 }: {
   brand: string;
   label?: string;
   className?: string;
-  /** Put the logo on a white chip so it stays readable on any card color. */
-  chip?: boolean;
 }) {
-  const option = getCreditCardBrand(brand);
-
   return (
     <span className={cn("flex min-w-0 items-center gap-2.5", className)}>
-      <span className="flex h-7 w-10 shrink-0 items-center justify-center">
-        <PaymentIcon type={option.paymentType} format={chip ? "logoBorder" : "logo"} />
-      </span>
+      <CardBrandMark brand={brand} />
       {label === undefined ? null : <span className="truncate">{label}</span>}
     </span>
   );
 }
 
 export function CreditCardBrandMark({ brand, className }: { brand: string; className?: string }) {
-  const option = getCreditCardBrand(brand);
-
-  return (
-    <PaymentIcon
-      type={option.paymentType}
-      format="logo"
-      aria-hidden="true"
-      className={cn("size-4 shrink-0", className)}
-    />
-  );
+  return <CardBrandMark brand={brand} className={cn("h-4 w-6 text-[0.5rem]", className)} />;
 }
 
 export function renderCreditCardBrandOption(option: FormComboboxOption) {

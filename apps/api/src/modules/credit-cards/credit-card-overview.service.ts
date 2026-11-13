@@ -140,6 +140,10 @@ export async function getOverview(
         fx,
         byCurrency((total) => total.limit.available),
       ),
+      limitUsed: combineAmounts(
+        fx,
+        byCurrency((total) => total.limit.used),
+      ),
     },
   };
 }

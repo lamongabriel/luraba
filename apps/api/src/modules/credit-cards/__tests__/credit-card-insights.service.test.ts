@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { InsightInstallmentRow } from "../credit-card-insights.repository";
-import { buildInsightsGroup } from "../credit-card-insights.service";
+import { buildInsightsGroup, combineCategories } from "../credit-card-insights.service";
 
 function row(overrides: Partial<InsightInstallmentRow>): InsightInstallmentRow {
   return {
@@ -47,6 +47,63 @@ describe("buildInsightsGroup", () => {
     expect(group.byCategory).toEqual([
       { categoryId: "c1", name: "Food", color: "#ff0000", amount: 6000 },
       { categoryId: null, name: "Uncategorized", color: null, amount: 500 },
+    ]);
+  });
+});
+
+describe("combineCategories", () => {
+  it("adds the same category across currencies in the base currency, largest first", () => {
+    const usd = buildInsightsGroup(
+      "USD",
+      [
+        row({
+          amount: 1000,
+          categoryId: "11111111-1111-4111-8111-111111111111",
+          categoryName: "Food",
+        }),
+        row({
+          amount: 5000,
+          categoryId: "22222222-2222-4222-8222-222222222222",
+          categoryName: "Travel",
+        }),
+      ],
+      "2026-05",
+    );
+    const eur = buildInsightsGroup(
+      "EUR",
+      [
+        row({
+          currencyCode: "EUR",
+          amount: 1000,
+          categoryId: "11111111-1111-4111-8111-111111111111",
+          categoryName: "Food",
+        }),
+      ],
+      "2026-05",
+    );
+    const fx = {
+      baseCurrencyCode: "USD",
+      basePrecision: 2,
+      asOf: "2026-05-01",
+      rates: [
+        {
+          currencyCode: "EUR",
+          precision: 2,
+          rate: 2,
+          rateNumerator: 2,
+          rateDenominator: 1,
+          rateDate: "2026-05-01",
+          source: "manual",
+        },
+      ],
+      missingCurrencies: [],
+    } as Parameters<typeof combineCategories>[0];
+
+    const result = combineCategories(fx, [usd, eur]);
+
+    expect(result.map((item) => [item.name, item.amount.total])).toEqual([
+      ["Travel", 5000],
+      ["Food", 3000],
     ]);
   });
 });
