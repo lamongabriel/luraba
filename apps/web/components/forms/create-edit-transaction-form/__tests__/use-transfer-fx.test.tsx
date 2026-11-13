@@ -52,6 +52,7 @@ function account(id: string, name: string, currencyCode: string) {
     institutionDomain: null,
     institutionLogoUrl: null,
     imageUploadId: null,
+    archivedAt: null,
     notes: null,
     createdByUserId: null,
     createdAt: "2026-01-01T00:00:00.000Z",

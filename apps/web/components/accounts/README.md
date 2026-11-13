@@ -16,6 +16,15 @@ The form dates use the shared calendar picker (`FormItem inputType="date"`), the
 and by the form schema. Pairs must come together: payment amount with frequency, area with unit,
 mileage with unit.
 
+## Archiving
+
+The sheet's **Manage** section has an *Archive* / *Unarchive* row (`accounts.update`). The API only archives a zero
+balance (a `409` message is shown in the row), keeps the history and refuses new transactions on an archived
+account. `/accounts` hides archived accounts; the header's *Show archived* button adds an **Archived** group
+(dimmed rows). Pickers (`useTransactionLookupsQuery`, loan, import and cash movement forms) call the list without
+`includeArchived`, so they never offer an archived account. The detail page of an archived account still works and
+its subtitle ends with "Archived".
+
 ## Detail page
 
 Designed as one screen, on a 3-column grid (`account-detail-layout.ts`). Nothing is a card inside a

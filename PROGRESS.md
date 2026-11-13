@@ -48,3 +48,12 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 ## Check at 2026-11-13 (second orchestration check)
 - No session is running and every worker branch is already merged into `redesign` (`git branch --no-merged redesign` is empty), so there was nothing to nudge or merge. `redesign` stays at the 05:00 state; checks were green then and no code changed since.
 - Still waiting on the owner: test `redesign` and send feedback. Optional next step: a browser-verification session (375/768/1100/1440px, light and dark).
+
+## Archive for accounts and credit cards (branch claude/nice-liskov-b11c35)
+- Migration `0057_account_archive` adds nullable `archived_at` to `accounts` and `credit_cards`. `archivedAt` is on the account and card wire shapes.
+- API: `POST /accounts/:id/archive|unarchive` and `POST /credit-cards/:id/archive|unarchive` (reuse `accounts.update` / `credit_cards.update`). Decision: archiving needs a zero balance (409 with a clear message, no force flag); an account that owns active cards cannot be archived. Lists and the card overview hide archived rows unless `includeArchived=true`; exports include them.
+- New activity on an archived account or card (expense, income, transfer, adjustment, refund, card purchase or payment, moving a transaction onto it) is rejected with 409 via `assertNotArchived`. History, other balances and reports are untouched.
+- MCP: `archive_account`, `unarchive_account`, `archive_credit_card`, `unarchive_credit_card`, `includeArchived` on `list_accounts` and `list_credit_cards`; name resolution skips archived ones.
+- Web: Archive/Unarchive row in the account and card edit sheets, "Show archived" header button on /accounts and /credit-cards, dimmed archived rows and tiles; pickers never offer archived accounts.
+- Note: parallel sessions share the `luraba_db_test` database and wipe it mid-run; this work used `DB_NAME=luraba_db_test_archive`.
+- Known gap: editing an existing transaction that sits on an archived account shows an empty account picker (the picker omits archived accounts).

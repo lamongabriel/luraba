@@ -50,7 +50,9 @@ export async function getOverview(
   const todayDate = getTodayInTimezone(context.timezone);
   const today = formatISODate(todayDate);
   const currentMonth = startOfMonth(todayDate);
-  const cards = await creditCardsRepository.listByHouseholdId(context.householdId);
+  const cards = await creditCardsRepository.listByHouseholdId(context.householdId, {
+    includeArchived: query.includeArchived,
+  });
 
   // Without a month, open on the invoice that still needs attention, not the calendar month.
   let monthStart = query.month ? parseMonthKey(query.month) : currentMonth;
@@ -71,6 +73,7 @@ export async function getOverview(
       return {
         creditCardId: card.id,
         name: card.name,
+        archived: card.archivedAt !== null,
         institutionName: card.institutionName,
         institutionLogoUrl: card.institutionLogoUrl,
         brand: card.brand,

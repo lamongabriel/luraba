@@ -1,6 +1,11 @@
 "use client";
 
-import { Delete02Icon, Wallet01Icon } from "@hugeicons/core-free-icons";
+import {
+  Archive02Icon,
+  ArchiveRestoreIcon,
+  Delete02Icon,
+  Wallet01Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AccountDetails } from "@luraba/contracts";
 import * as React from "react";
@@ -11,7 +16,10 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Typography } from "@/components/ui/typography";
 import { accountBalanceKind } from "@/lib/accounts";
 import { queryClient } from "@/lib/query-client";
-import { useDeleteAccountMutation } from "@/mutations/accounts/use-account-mutations";
+import {
+  useDeleteAccountMutation,
+  useSetAccountArchivedMutation,
+} from "@/mutations/accounts/use-account-mutations";
 import { accountQueryKeys } from "@/queries/accounts/use-accounts-query";
 import { transactionQueryKeys } from "@/queries/transactions/use-transactions-query";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
@@ -42,6 +50,19 @@ export function AccountManageSection({
     },
   });
 
+  const archiveMutation = useSetAccountArchivedMutation({
+    successToast: {
+      title: ({ variables }) => (variables.archived ? "Account archived" : "Account restored"),
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: accountQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: transactionQueryKeys.all }),
+      ]);
+    },
+  });
+  const isArchived = account.archivedAt !== null;
+
   return (
     // Rendered inside the account form. Portaled sheets and dialogs still bubble React events up to
     // it, so a submit from the adjust sheet must stop here instead of saving the account form.
@@ -68,6 +89,38 @@ export function AccountManageSection({
         >
           <HugeiconsIcon icon={Wallet01Icon} strokeWidth={2} />
           Adjust balance
+        </PermissionButton>
+      </div>
+      <div className="flex items-center justify-between gap-3 rounded-xl bg-[var(--color-container-inset)] px-3.5 py-3">
+        <div className="min-w-0">
+          <Typography variant="small-strong">
+            {isArchived ? "Archived account" : "Archive account"}
+          </Typography>
+          <Typography variant="small-muted">
+            {isArchived
+              ? "Hidden from lists and closed to new transactions. Its history is kept."
+              : "Hides it from lists and closes it to new transactions; the history is kept. Needs a zero balance."}
+          </Typography>
+          {archiveMutation.errorMessage ? (
+            <Typography variant="small-muted" className="text-destructive" role="alert">
+              {archiveMutation.errorMessage}
+            </Typography>
+          ) : null}
+        </div>
+        <PermissionButton
+          type="button"
+          permission={PERMISSIONS.ACCOUNTS_UPDATE}
+          deniedMessage="Your household role cannot archive accounts."
+          variant="outline"
+          size="sm"
+          disabled={archiveMutation.isPending}
+          onClick={() => {
+            archiveMutation.reset();
+            archiveMutation.mutate({ id: account.id, archived: !isArchived });
+          }}
+        >
+          <HugeiconsIcon icon={isArchived ? ArchiveRestoreIcon : Archive02Icon} strokeWidth={2} />
+          {isArchived ? "Unarchive" : "Archive"}
         </PermissionButton>
       </div>
       <div className="flex items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-3.5 py-3">

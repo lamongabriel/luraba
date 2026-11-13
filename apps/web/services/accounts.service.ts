@@ -53,6 +53,13 @@ export function updateAccount(id: string, input: UpdateAccountInput): Promise<Up
   });
 }
 
+/** Archives (hides, closes to new activity) or restores an account. */
+export function setAccountArchived(id: string, archived: boolean): Promise<UpdateAccountResult> {
+  return requestContract(archived ? accountsEndpoints.archive : accountsEndpoints.unarchive, {
+    params: { id },
+  });
+}
+
 export function deleteAccount(id: string): Promise<DeleteAccountResult> {
   return requestContract(accountsEndpoints.delete, { params: { id } });
 }

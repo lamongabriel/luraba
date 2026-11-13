@@ -99,7 +99,7 @@ export default function AccountDetailsPage() {
         <InternalPageLayout
           title={account.name}
           leading={<AccountMark account={account} size="lg" />}
-          subtitle={getAccountFullDetail(account)}
+          subtitle={`${getAccountFullDetail(account)}${account.archivedAt ? " · Archived" : ""}`}
           back={{ href: "/accounts", label: "Accounts" }}
           actions={
             <>

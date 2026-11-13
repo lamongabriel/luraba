@@ -47,7 +47,11 @@ export async function findById(
   return row ? toCreditCardRow(row) : undefined;
 }
 
-export async function listByHouseholdId(householdId: string): Promise<CreditCardRow[]> {
+/** Active cards by default; pass `includeArchived` for exports and the "show archived" views. */
+export async function listByHouseholdId(
+  householdId: string,
+  options: { includeArchived?: boolean } = {},
+): Promise<CreditCardRow[]> {
   const rows = await db
     .select(creditCardSelect)
     .from(creditCardsTable)
@@ -59,7 +63,12 @@ export async function listByHouseholdId(householdId: string): Promise<CreditCard
       creditCardOwnerAccountsTable,
       eq(creditCardOwnerAccountsTable.id, creditCardsTable.ownerAccountId),
     )
-    .where(eq(creditCardsTable.householdId, householdId))
+    .where(
+      and(
+        eq(creditCardsTable.householdId, householdId),
+        options.includeArchived ? undefined : isNull(creditCardsTable.archivedAt),
+      ),
+    )
     .orderBy(asc(creditCardsTable.name));
 
   return rows.map((row) => toCreditCardRow(row as CreditCardSelectRow));

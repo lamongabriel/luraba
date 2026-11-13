@@ -187,7 +187,7 @@ export default function CreditCardDetailPage() {
   return (
     <InternalPageLayout
       title={card.name}
-      subtitle={`${card.institutionName ? `${card.institutionName} · ` : ""}${card.brand} •••• ${card.last4}`}
+      subtitle={`${card.institutionName ? `${card.institutionName} · ` : ""}${card.brand} •••• ${card.last4}${card.archivedAt ? " · Archived" : ""}`}
       back={{ href: "/credit-cards", label: "Credit cards" }}
       controls={
         selectedCycle ? (

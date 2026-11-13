@@ -124,6 +124,8 @@ export const creditCardOverviewInvoiceSchema = z.object({
 export const creditCardOverviewCardSchema = z.object({
   creditCardId: z.uuid(),
   name: z.string(),
+  /** Archived cards only appear when the overview is asked for them (`includeArchived`). */
+  archived: z.boolean(),
   institutionName: z.string().nullable(),
   institutionLogoUrl: z.string().nullable(),
   brand: z.string(),
