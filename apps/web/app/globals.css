@@ -157,6 +157,14 @@
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
   }
+  /* iOS Safari zooms into any focused field under 16px; keep fields at 16px on touch screens. */
+  @media (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
 }
 
 /* Credit card invoice statuses: paid, closed (waiting), overdue, open, upcoming. */

@@ -24,7 +24,14 @@ const fontMono = JetBrains_Mono({
 
 export const metadata: Metadata = rootMetadata();
 
-export const viewport: Viewport = { themeColor: BRAND.themeColor };
+/** No page zoom: iOS zooms into a focused field and leaves the page zoomed. The app should feel native. */
+export const viewport: Viewport = {
+  themeColor: BRAND.themeColor,
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export default function RootLayout({
   children,
