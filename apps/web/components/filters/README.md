@@ -12,8 +12,8 @@ outside this folder: `test/conventions.test.ts` enforces that).
 | `defineFilterFields` / `FilterFieldDef` | Declares what can be filtered: `multiselect`, `boolean`, `money` (uses `MoneyInput`, never `type="number"`) or `date`. One filter per field. |
 | `useFilters({ fieldIds, keyPrefix?, defaultRules? })` | URL-backed state (nuqs). One `filter` param holding JSON `[[fieldId, operator, value], ...]`. Changing a filter resets `page`. `keyPrefix` lets two tables share a page (`membersFilter`). |
 | `useDateFilter({ keyPrefix?, defaultPeriod?, billingCycles? })` | The date filter. Starts from `defaultPeriod`, else the user's default period setting; URL keys `period` or `dateFrom`/`dateTo`. |
-| `DateFilterChip` | The date filter as one trigger: calendar icon, the preset name, the actual range (from `sm` up) and a chevron; popover with presets and a range calendar (a bottom drawer on a phone). |
-| `FilterActionsMenu` | The desktop "Actions" menu: "Add filter" (field list) and "Columns". `FilterBar table={table}` renders it instead of the separate Filters and Columns buttons. |
+| `DateFilterChip` | The date filter as ONE short label (preset name or compact range) with the calendar icon, `max-w-44`; the full range is its tooltip. Desktop popover: vertical presets plus a range calendar. Phone: bottom drawer with a vertical preset list, calendar and a fixed Apply footer. |
+| `FilterActionsMenu` | The desktop "Actions" menu: only the non-filter actions (today "Columns"). Filters have their own "Filter" button beside the search (Nexus layout). `FilterBar table={table}` renders it on the right. |
 | `MonthSelect` + `useMonthFilter` | Moved to `components/finance` (see [its README](../finance/README.md)): the one month control of every month-based page. |
 | `tree.ts` | Pure helpers (`encodeTree`, `decodeTree`, `readValues`, `setFieldRule`, ...). Unit tested. |
 
@@ -62,3 +62,11 @@ them; a card list that fails or is forbidden counts as "no cycles", so the page 
 
 `FilterBar` takes `mobileOpen` / `onMobileOpenChange` / `mobileTrigger={false}` when the Filters button lives in the
 page header (transactions: a circular icon button). There is no Actions menu or column menu on a phone.
+
+## Operators (Nexus catalogs)
+
+`defineFilterFields` gives every kind its operators: pick lists is any of / is none of / is / is not; flags is / is not;
+amounts equals, greater than, at least, less than, at most, between; dates is, before, after, on or before, on or after,
+between. `readValues` turns them into API params: `list` (positive), `excluded` (negative, sent as the feed's
+`exclude*` params), `money` (with `minExclusive`/`maxExclusive`), `dates` (before/after shifted a day). Pick lists with
+no options are dropped. The mobile drawer is Nexus's screen flow (list, field, condition, value) with a fixed footer.
