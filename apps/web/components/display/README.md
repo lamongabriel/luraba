@@ -18,6 +18,7 @@ import { AccountDisplay, AmountDisplay, CategoryDisplay, MerchantDisplay, TagDis
 | `MerchantDisplay` / `MerchantMark` | Logo, else a shop icon, + name | `merchant`, `size`, `detail="domain"` |
 | `HouseholdDisplay` / `HouseholdMark` | Uploaded picture, else initials, + name | `household`, `size` |
 | `ProductDisplay` / `ProductMark` | Product (or a transaction item): picture, else a package icon, + name on one compact line, optional muted `detail` (price) after the name | `product`, `size`, `detail` |
+| `BillStateDisplay` | Chip for a bill payment's state (upcoming, overdue, paid, skipped) or a bill's status (paused, canceled); labels and tones in `BILL_STATE_DISPLAY` | `state` |
 | `AmountDisplay` | Money with the right sign and color | `amount` (minor units), `currencyCode`, `kind`, `size` |
 | `CombinedAmountDisplay` + `CombinedHint` | **One headline number across currencies**: the total in the household base currency (API `CombinedAmount` + `CombinedFx`), with the per-currency amounts and rates in a popover; a missing rate shows each currency on its own. `CombinedHint` is the muted "≈ converted at <date>" / "Rate unavailable for EUR" line. Use these for every KPI/total that can span currencies; per-card and per-account rows keep `AmountDisplay` in their own currency | `combined`, `fx`, `size`, `kind`; hint: `fallback` |
 | `CurrencyDisplay` | A currency: country flag + 3-letter code + symbol (`🇧🇷 BRL R$`), optional name | `currencyCode`, `showName`, `size` |

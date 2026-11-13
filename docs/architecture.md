@@ -104,8 +104,8 @@ goal knows where its money sits. The monthly plan (`monthly_plan_lines`) project
 contribution per competency month and is reported against actuals (`apps/api/src/modules/monthly-plans`).
 `GET /monthly-plans/safe-to-spend` combines the plan, goals, bills, card invoices and account balances into "how
 much can I still spend": one combined number in the household base currency plus a block per currency, this month in cash and next month on the card (budgets stay guidance). It is
-the headline of the **Budgets & goals** page (`/plan`, which replaces the separate Budgets and Goals pages) and of the
-MCP tool `report_safe_to_spend`.
+exposed to agents by the MCP tool `report_safe_to_spend`; the web page that showed it (`/plan`) was removed, so Budgets (`/budgets`)
+and Goals (`/goals`) are separate pages again and the endpoint waits for a new home in the UI.
 
 ## Combined totals across currencies
 

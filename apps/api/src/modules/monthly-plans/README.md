@@ -58,7 +58,7 @@ Tests build exactly this (`__tests__/monthly-plan.http.test.ts`). In production,
 
 ## Left to spend (`GET /monthly-plans/safe-to-spend?month=YYYY-MM`)
 
-`safe-to-spend.service.ts` answers "how much can I still spend?" for the **Budgets & goals** page and the MCP tool
+`safe-to-spend.service.ts` answers "how much can I still spend?" for the MCP tool
 `report_safe_to_spend`. It reuses the other modules' services (`getGoalsReport`, `getMonthlyPlanReport`,
 `listCyclesThroughMonth`, `billsRepository.listUpcomingOccurrences`, `listAccounts`, `getMonthlyBudget`); it has no
 SQL and no parallel maths. Permission `goals.read`. `currencies[]` is one block per **currency**, each in its own

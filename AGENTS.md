@@ -69,8 +69,10 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | Formatting numbers, money, dates; number and date inputs | [docs/formatting.md](docs/formatting.md) (**mandatory**) |
 | Laying out or restyling any web page (cards, spacing, columns, charts, in-place edits) | [docs/design-language.md](docs/design-language.md) (**mandatory**) |
 | Notifications, queues, the worker | [packages/notifications/README.md](packages/notifications/README.md), [packages/queue/README.md](packages/queue/README.md), [apps/worker/README.md](apps/worker/README.md) |
-| Budgets & goals page (`/plan`: left to spend, goals, budgets, bills) | [apps/web/components/plan/README.md](apps/web/components/plan/README.md), [apps/api/src/modules/monthly-plans/README.md](apps/api/src/modules/monthly-plans/README.md) |
-| Budgets UI (gauge, category budgets, charts, card settings) | [apps/web/components/budgets/README.md](apps/web/components/budgets/README.md), [apps/api/src/modules/budgets/README.md](apps/api/src/modules/budgets/README.md) |
+| Goals page (`/goals`: cards, pace, detail drawer) | [apps/web/components/goals/README.md](apps/web/components/goals/README.md), [apps/api/src/modules/goals/README.md](apps/api/src/modules/goals/README.md) |
+| Bills page (`/bills`: month summary, grouped rows) | [apps/web/components/bills/README.md](apps/web/components/bills/README.md) |
+| Monthly plan and left-to-spend (API only, no page for now) | [apps/api/src/modules/monthly-plans/README.md](apps/api/src/modules/monthly-plans/README.md) |
+| Budgets page (`/budgets`: allocation donut, budget cards, editor drawer, card settings) | [apps/web/components/budgets/README.md](apps/web/components/budgets/README.md), [apps/api/src/modules/budgets/README.md](apps/api/src/modules/budgets/README.md) |
 | Accounts list, account sheet, account detail page | [apps/web/components/accounts/README.md](apps/web/components/accounts/README.md), [apps/api/src/modules/accounts/README.md](apps/api/src/modules/accounts/README.md) |
 | Credit cards UI (overview, card detail, invoices) | [apps/web/components/credit-cards/README.md](apps/web/components/credit-cards/README.md) |
 | The web app | [apps/web/README.md](apps/web/README.md) (data layer, components, forms, permissions) |

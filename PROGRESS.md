@@ -11,7 +11,7 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 ## In progress (worker sessions, not merged yet)
 - Transactions page redesign (session transactions-redesign, branch `claude/exciting-bun-163647`): KPI restyle, layout, dark theme, mobile header.
 - Credit cards page redesign (session cards-page-redesign, branch `claude/friendly-wiles-647540`): card carousel, recent transactions, utilization.
-- Budgets, Goals and Bills pages (session budgets-goals-bills-redesign): split `/plan` back into separate Budgets and Goals pages, redesign Bills.
+- Budgets, Goals and Bills pages (session budgets-goals-bills-redesign, branch `claude/zealous-swirles-5c8a10`): done, waiting to be merged. `/plan` removed, Budgets (allocation donut + budget cards), Goals (cards, pace, drawer) and Bills (summary bar + grouped rows) rebuilt, shared `MonthPresetButton`/`useMonthFilter`, `PageAddButton`, `BillStateDisplay`. The app only has a dark theme on this branch, so verification was dark at 375px and desktop. Skipped: a web form for moving goal funds between accounts (API only).
 
 ## Next
 - Merge each finished branch into `redesign` (check conflicts around the shared KPI cards, navigation and filters), run typecheck, check, tests.

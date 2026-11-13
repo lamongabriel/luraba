@@ -43,7 +43,7 @@ const combined = combineAmounts(fx, { USD: 10_001, BRL: 20_000 }); // { total | 
 | Surface | Source |
 | --- | --- |
 | Credit cards overview KPIs | `combined` on `GET /credit-cards/overview` (invoices, paid, still to pay, limit, available) and `GET /credit-cards/insights` (month vs last month) |
-| Budgets & goals "left to spend" | `combined` on `GET /monthly-plans/safe-to-spend` |
+| "Left to spend" (API and MCP only, no page) | `combined` on `GET /monthly-plans/safe-to-spend` |
 | Bills "due in the next 30 days" | `useCombinedAmount` (web) over `GET /fx/rates` |
 | MCP `report_credit_cards`, `report_safe_to_spend`, `report_balances` | the same `combined` fields / `GET /fx/rates` |
 
