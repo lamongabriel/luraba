@@ -28,6 +28,12 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 - Session tx-filters-fix (`claude/jolly-chandrasekhar-361bfc`) is still running; its API typecheck error (`accounts.service.ts:319`) remains until it finishes. Re-merge when it reports.
 - Not yet verified by a human: every page in the browser (light and dark, 375px to 1440px).
 
+## Status at 05:00
+- Merged `claude/jolly-chandrasekhar-361bfc` (tx-filters-fix) into `redesign` (`c0e2b1e`); conflict in `filters/README.md` resolved. `claude/inspiring-hermann-992151` (shared-ui-cards-pages) was already in.
+- On `redesign`: typecheck clean, biome 0 errors (12 warnings), 224 web unit tests and 470 API integration tests pass. The 8 date-dependent API tests that failed after UTC midnight pass now (it is past 03:00 UTC again), which supports the clock theory: they fail between 21:00 and 24:00 Brazil time. A real bug for late-evening use is still possible and uninvestigated.
+- Reported as not done: tx-filters-fix says one uploads integration test failed in its own run (passed here); shared-ui-cards-pages did not check 768px or light mode and only checked the Add budget copy option and Goals header KPIs in code.
+- Still to do by a human: browser review of every redesigned page (light and dark, 375px to 1440px).
+
 ## Next
 - Unify the two month pickers: `filters/month-preset-button.tsx` (Budgets, Bills) and `finance/month-picker.tsx` (Credit cards) should be one shared component.
 - Browser check of every redesigned page in light mode, and the user menu bottom drawer on mobile.
