@@ -13,7 +13,7 @@ import { useAuthSessionStore } from "@/stores/auth-session-store";
 /** Rows the section asks for; its loading twin shows the same number. */
 export const UPCOMING_ROWS = 5;
 /** Height of one row, shared with the skeleton. */
-const ROW_HEIGHT = "h-16";
+const ROW_HEIGHT = "h-14";
 
 function dueLabel(days: number, overdue: boolean) {
   if (overdue || days < 0) {
@@ -32,14 +32,12 @@ function DateTile({ iso, overdue, language }: { iso: string; overdue: boolean; l
     <span
       aria-hidden="true"
       className={cn(
-        "flex size-11 shrink-0 flex-col items-center justify-center rounded-lg leading-none",
+        "flex size-9 shrink-0 flex-col items-center justify-center rounded-lg leading-none",
         overdue ? "bg-destructive/10 text-destructive" : "bg-muted text-foreground",
       )}
     >
-      <span className="text-base font-semibold tabular-nums">{date.getUTCDate()}</span>
-      <span className="mt-0.5 text-[0.6rem] font-medium uppercase tracking-wide opacity-70">
-        {month}
-      </span>
+      <span className="text-sm font-semibold tabular-nums">{date.getUTCDate()}</span>
+      <span className="text-[0.55rem] font-medium uppercase tracking-wide opacity-70">{month}</span>
     </span>
   );
 }
@@ -68,9 +66,7 @@ export function UpcomingTransactionsPanel({
       <header className="flex items-end justify-between gap-3 pb-2">
         <div>
           <h2 className="text-base font-semibold tracking-tight">Upcoming</h2>
-          <p className="text-xs text-muted-foreground">
-            Bills and card installments due next, whatever the filters.
-          </p>
+          <p className="text-xs text-muted-foreground">Bills and installments due next</p>
         </div>
       </header>
       {rows.length === 0 ? (
@@ -93,13 +89,15 @@ export function UpcomingTransactionsPanel({
                   type="button"
                   onClick={() => onSelect?.(row)}
                   className={cn(
-                    "-mx-2 flex w-[calc(100%+1rem)] items-center gap-3 rounded-lg px-2 text-left transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none",
+                    "-mx-2 flex w-[calc(100%+1rem)] items-center gap-2.5 rounded-lg px-2 text-left transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none",
                     ROW_HEIGHT,
                   )}
                 >
                   <DateTile iso={row.effectiveDate} overdue={overdue} language={language} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{row.description}</span>
+                    <span className="block truncate text-[0.8125rem] font-medium">
+                      {row.description}
+                    </span>
                     <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                       {isBill
                         ? "Bill"
@@ -114,7 +112,7 @@ export function UpcomingTransactionsPanel({
                       amount={row.amount}
                       currencyCode={row.currencyCode}
                       kind="expense"
-                      size="md"
+                      size="sm"
                       language={language}
                       precision={precision}
                       className="font-semibold"
@@ -149,15 +147,13 @@ export function UpcomingTransactionsSkeleton() {
     >
       <header className="pb-2">
         <h2 className="text-base font-semibold tracking-tight">Upcoming</h2>
-        <p className="text-xs text-muted-foreground">
-          Bills and card installments due next, whatever the filters.
-        </p>
+        <p className="text-xs text-muted-foreground">Bills and installments due next</p>
       </header>
       <ul className="divide-y divide-border/60 border-y border-border/60">
         {Array.from({ length: UPCOMING_ROWS }, (_, index) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: static placeholders
           <li key={index} className={cn("flex items-center gap-3", ROW_HEIGHT)}>
-            <Skeleton className="size-11 rounded-lg" />
+            <Skeleton className="size-9 rounded-lg" />
             <div className="min-w-0 flex-1 space-y-1.5">
               <Skeleton className="h-4 w-48 max-w-full" />
               <Skeleton className="h-3.5 w-32" />

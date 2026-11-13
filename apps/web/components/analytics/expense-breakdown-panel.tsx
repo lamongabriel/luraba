@@ -48,7 +48,7 @@ export function ExpenseBreakdownPanel({
             config={{
               amount: { label: "Amount", color: "var(--color-primary)" },
             }}
-            className="mx-auto h-32 w-full max-w-44"
+            className="mx-auto aspect-square w-full max-w-52"
           >
             <PieChart accessibilityLayer>
               <ChartTooltip content={<ChartTooltipContent />} />
@@ -56,13 +56,13 @@ export function ExpenseBreakdownPanel({
                 data={chartItems}
                 dataKey="amount"
                 nameKey="name"
-                innerRadius={34}
-                outerRadius={52}
+                innerRadius="62%"
+                outerRadius="88%"
                 strokeWidth={2}
                 stroke="var(--color-card)"
                 shape={({ index, outerRadius = 0, ...props }: PieSectorShapeProps) =>
                   index === activeIndex ? (
-                    <Sector {...props} outerRadius={outerRadius + 6} />
+                    <Sector {...props} outerRadius={outerRadius + 5} />
                   ) : (
                     <Sector {...props} outerRadius={outerRadius} />
                   )
@@ -115,7 +115,7 @@ export function ExpenseBreakdownSkeleton() {
         aria-label="Loading expense breakdown"
         className="space-y-4"
       >
-        <Skeleton className="mx-auto size-32 rounded-full" />
+        <Skeleton className="mx-auto aspect-square w-full max-w-52 rounded-full" />
         <ul className="space-y-2">
           {Array.from({ length: 5 }, (_, index) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: static placeholders

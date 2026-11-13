@@ -1,6 +1,6 @@
 "use client";
 
-import { FilterIcon } from "@hugeicons/core-free-icons";
+import { FilterAddIcon, FilterIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { Table } from "@tanstack/react-table";
 import * as React from "react";
@@ -20,14 +20,16 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 /**
- * The filter row of a page, built on ReUI Filters. Desktop: the fixed date chip, then one chip per filter and an
- * "Add filter" button. Phone: the date chip and one "Filters (N)" button that opens a bottom drawer. `search` and
- * `trailing` (view options, export) sit in the same row. Pages build `defs` and read `filters.values`; they never
- * touch the chips or the URL.
+ * The filter row of a page, built on ReUI Filters and laid out like Nexus's list toolbar.
  *
- * With `table`, the desktop row has one "Actions" menu (add a filter, show or hide columns) instead of the separate
- * Filters button and column control. On a phone the Filters button can live elsewhere (a header icon): pass
- * `mobileOpen` / `onMobileOpenChange` to own the drawer's state and `mobileTrigger={false}` to hide the inline button.
+ * Desktop: ONE row. Left: the search and the "Filter" button (the add-filter popover); right: the fixed date filter,
+ * then `trailing` (a "Clear" for the chips, the Actions menu...). The active chips wrap on their own line under it.
+ * Phone: the date filter and one "Filters (N)" button that opens a bottom drawer (`MobileFiltersDrawer`). Pages build
+ * `defs` and read `filters.values`; they never touch the chips or the URL.
+ *
+ * With `table`, the right group ends with an "Actions" menu (show or hide columns). On a phone the Filters button can
+ * live elsewhere (a header icon): pass `mobileOpen` / `onMobileOpenChange` to own the drawer's state and
+ * `mobileTrigger={false}` to hide the inline button.
  */
 export function FilterBar({
   defs,
@@ -48,7 +50,7 @@ export function FilterBar({
   date?: DateFilterState;
   search?: React.ReactNode;
   trailing?: React.ReactNode;
-  /** The table whose columns the desktop "Actions" menu can toggle; also switches to the Actions menu. */
+  /** The table whose columns the desktop "Actions" menu can toggle. */
   // biome-ignore lint/suspicious/noExplicitAny: only column ids, labels and visibility are read
   table?: Table<any>;
   /** Controlled state of the phone drawer (so a header button can open it). */
@@ -85,54 +87,86 @@ export function FilterBar({
     [],
   );
 
+  if (isMobile) {
+    return (
+      <div data-slot="filter-bar" className={cn("flex flex-wrap items-center gap-2", className)}>
+        {search}
+        {date ? <DateFilterChip date={date} disabled={disabled} /> : null}
+        {mobileTrigger ? (
+          <Button
+            variant="outline"
+            className="font-normal"
+            disabled={disabled}
+            onClick={() => setDrawerOpen(true)}
+          >
+            <HugeiconsIcon icon={FilterIcon} strokeWidth={2} />
+            Filters
+            {filters.activeCount > 0 ? (
+              <Badge variant="secondary">{filters.activeCount}</Badge>
+            ) : null}
+          </Button>
+        ) : null}
+        <MobileFiltersDrawer
+          open={drawerOpen}
+          onOpenChange={setDrawerOpen}
+          defs={defs}
+          filters={filters}
+        />
+        {trailing ? <div className="ml-auto flex items-center gap-2">{trailing}</div> : null}
+      </div>
+    );
+  }
+
   return (
-    <div data-slot="filter-bar" className={cn("flex flex-wrap items-center gap-2", className)}>
-      {search}
-      {date ? <DateFilterChip date={date} disabled={disabled} /> : null}
-      {isMobile ? (
-        <>
-          {mobileTrigger ? (
+    <Filters
+      fields={fields}
+      query={filters.tree}
+      onQueryChange={filters.onQueryChange}
+      onBeforeQueryChange={beforeChange as never}
+      disabled={disabled}
+      size="default"
+      labels={{ addFilter: "Filter" }}
+    >
+      <div data-slot="filter-bar" className={cn("flex flex-wrap items-center gap-2", className)}>
+        {search ? <div className="order-1 min-w-48 max-w-xs flex-1">{search}</div> : null}
+        {/* The chip row's own add-filter popover, wearing our button: it sits right after the search. The chips are
+            pushed onto the next line (`order-4`, full width, hidden while there are none). */}
+        <FiltersRow
+          className="contents [&>[role=toolbar]]:order-4 [&>[role=toolbar]]:basis-full [&>[role=toolbar]]:empty:hidden"
+          trigger={
             <Button
               variant="outline"
-              className="font-normal"
               disabled={disabled}
-              onClick={() => setDrawerOpen(true)}
+              className="order-2 gap-2 border-border bg-card font-normal shadow-xs hover:bg-muted dark:bg-input/30 dark:hover:bg-input/50"
             >
-              <HugeiconsIcon icon={FilterIcon} strokeWidth={2} />
-              Filters
+              <HugeiconsIcon
+                icon={FilterAddIcon}
+                strokeWidth={2}
+                className="text-muted-foreground"
+              />
+              Filter
               {filters.activeCount > 0 ? (
                 <Badge variant="secondary">{filters.activeCount}</Badge>
               ) : null}
             </Button>
+          }
+        />
+        <div className="order-3 ml-auto flex flex-wrap items-center justify-end gap-2">
+          {filters.activeCount > 0 ? (
+            <Button
+              variant="ghost"
+              disabled={disabled}
+              className="font-normal text-muted-foreground"
+              onClick={filters.clear}
+            >
+              Clear
+            </Button>
           ) : null}
-          <MobileFiltersDrawer
-            open={drawerOpen}
-            onOpenChange={setDrawerOpen}
-            defs={defs}
-            filters={filters}
-          />
-        </>
-      ) : (
-        <Filters
-          fields={fields}
-          query={filters.tree}
-          onQueryChange={filters.onQueryChange}
-          onBeforeQueryChange={beforeChange as never}
-          disabled={disabled}
-          showClear
-          size="default"
-          labels={{ addFilter: "Filters" }}
-        >
-          {table ? (
-            <>
-              <FilterActionsMenu defs={defs} table={table} disabled={disabled} />
-              {/* The chips' own Add filter popover is replaced by the Actions menu. */}
-              <FiltersRow showClear trigger={<span aria-hidden="true" className="sr-only" />} />
-            </>
-          ) : undefined}
-        </Filters>
-      )}
-      {trailing ? <div className="ml-auto flex items-center gap-2">{trailing}</div> : null}
-    </div>
+          {date ? <DateFilterChip date={date} disabled={disabled} /> : null}
+          {table ? <FilterActionsMenu table={table} disabled={disabled} /> : null}
+          {trailing}
+        </div>
+      </div>
+    </Filters>
   );
 }

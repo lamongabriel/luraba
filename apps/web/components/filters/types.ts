@@ -37,10 +37,17 @@ export type FilterFieldDef =
 export interface FilterValues {
   /** The ids picked for a `multiselect` field, `[]` when unset. */
   list: (id: string) => string[];
+  /** The ids of an "is not" / "is none of" rule, `[]` when unset. */
+  excluded: (id: string) => string[];
   /** `true` / `false` for a `boolean` field, `null` when unset. */
   flag: (id: string) => boolean | null;
-  /** Minimum and maximum of a `money` field in major units. */
-  money: (id: string) => { min: number | null; max: number | null };
+  /** Minimum and maximum of a `money` field in major units; the flags mark "greater than" / "less than". */
+  money: (id: string) => {
+    min: number | null;
+    max: number | null;
+    minExclusive?: boolean;
+    maxExclusive?: boolean;
+  };
   /** `from` / `to` days of a `date` field. */
   dates: (id: string) => { from: string | null; to: string | null };
   /** Whether the field has a complete rule. */

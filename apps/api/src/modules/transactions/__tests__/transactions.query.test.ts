@@ -30,6 +30,23 @@ describe("transactions list query", () => {
     expect(query.uncategorized).toBe(true);
   });
 
+  it('parses the negative filters behind the "is not" chips', () => {
+    const id = "1456d4ee-2f8d-4cec-92be-a780d54312c2";
+    const query = listTransactionsQuerySchema.parse({
+      excludeOriginTypes: "refund,transfer",
+      excludeAccountIds: id,
+      excludeMerchantIds: `${id},${id}`,
+      excludeUncategorized: "true",
+    });
+    expect(query.excludeOriginTypes).toEqual(["refund", "transfer"]);
+    expect(query.excludeMerchantIds).toHaveLength(2);
+    expect(query.excludeCategoryIds).toEqual([]);
+    expect(query.excludeUncategorized).toBe(true);
+    expect(listTransactionsQuerySchema.safeParse({ excludeOriginTypes: "gift" }).success).toBe(
+      false,
+    );
+  });
+
   it("rejects invalid ranges, booleans, enums, and unknown fields", () => {
     expect(listTransactionsQuerySchema.safeParse({ amountMin: 2, amountMax: 1 }).success).toBe(
       false,

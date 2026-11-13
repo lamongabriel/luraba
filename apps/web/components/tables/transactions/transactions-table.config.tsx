@@ -33,9 +33,9 @@ function DetailsCell({ row }: { row: TransactionFeedRow }) {
       : row.description;
 
   return (
-    <div className="min-w-48 max-w-96">
-      <div className="flex items-center gap-1.5">
-        <span className="block truncate text-xs/4 font-medium">{details}</span>
+    <div className="w-40 max-w-full min-[1400px]:w-48 2xl:w-72">
+      <div className="flex min-w-0 items-center gap-1.5">
+        <span className="block min-w-0 truncate text-xs/4 font-medium">{details}</span>
         {row.notes ? (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -78,7 +78,7 @@ function AmountCell({
     lookups.currencies.find((currency) => currency.code === row.toCurrencyCode)?.precision ?? 2;
   if (row.originType === "transfer" && row.toAmount !== null && row.toCurrencyCode) {
     return (
-      <div className="flex min-w-44 items-center justify-end gap-1.5 whitespace-nowrap">
+      <div className="flex min-w-24 flex-wrap items-center justify-end gap-x-1.5 text-right">
         <MoneyValue
           amount={row.amount}
           currencyCode={row.currencyCode}
@@ -97,7 +97,7 @@ function AmountCell({
   }
 
   return (
-    <div className="min-w-28 text-right">
+    <div className="min-w-24 text-right">
       <AmountDisplay
         amount={row.amount}
         currencyCode={row.currencyCode}
@@ -134,7 +134,8 @@ export function getTransactionsTableColumns({
       accessorKey: "originType",
       header: ({ column }) => <DataTableColumnHeader column={column} label="Type" />,
       cell: ({ row }) => <TransactionTypeDisplay type={row.original.originType} />,
-      meta: { label: "Type" },
+      // The amount's color and the category already say it; the column only appears when there is room.
+      meta: { label: "Type", className: "max-2xl:hidden" },
     },
     {
       id: "category",

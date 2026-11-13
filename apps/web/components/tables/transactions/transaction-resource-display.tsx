@@ -120,12 +120,12 @@ export function TransactionAccountDisplay({
   const visual = card ?? account;
 
   return (
-    <div className="min-w-44">
+    <div className="w-32 max-w-full min-[1400px]:w-36 2xl:w-44">
       <HoverCard openDelay={300} closeDelay={120} open={open} onOpenChange={setOpen}>
         <HoverCardTrigger asChild>
           <button
             type="button"
-            className="flex min-w-0 items-center gap-2 text-left"
+            className="flex min-w-0 max-w-full items-center gap-2 text-left"
             aria-label={`View details for ${label}`}
           >
             {visual ? <AccountMark account={visual} /> : null}

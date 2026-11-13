@@ -35,6 +35,8 @@ interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   mobile: MobileRowConfig<TData> | "table";
   /** Stretch to the height of the parent (a flex column or grid cell) so the table fills it. */
   fill?: boolean;
+  /** Classes of the `<table>` itself, e.g. a smaller `min-w-*` than the default 72rem for a table with few columns. */
+  tableClassName?: string;
 }
 
 export function DataTable<TData>({
@@ -50,6 +52,7 @@ export function DataTable<TData>({
   itemLabel,
   fill = false,
   mobile,
+  tableClassName,
   ...props
 }: DataTableProps<TData>) {
   return (
@@ -80,7 +83,7 @@ export function DataTable<TData>({
           mobile !== "table" && "hidden md:block",
         )}
       >
-        <Table className="min-w-[72rem]">
+        <Table className={cn("min-w-[72rem]", tableClassName)}>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} data-hover-disabled="true">
@@ -88,6 +91,7 @@ export function DataTable<TData>({
                   <TableHead
                     key={header.id}
                     colSpan={header.colSpan}
+                    className={header.column.columnDef.meta?.className}
                     style={{
                       ...getColumnPinningStyle({ column: header.column }),
                     }}
@@ -118,6 +122,7 @@ export function DataTable<TData>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
+                      className={cell.column.columnDef.meta?.className}
                       style={{
                         ...getColumnPinningStyle({ column: cell.column }),
                       }}

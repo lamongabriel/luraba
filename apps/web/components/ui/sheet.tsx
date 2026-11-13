@@ -66,10 +66,11 @@ function SheetContent({
         data-slot="sheet-content"
         showCloseButton={showCloseButton}
         className={mobileClassName}
-        bodyClassName="gap-0 p-0"
+        bare
         {...(props as object)}
       >
-        {children}
+        {/* Header, body and footer are siblings: the caller decides what scrolls (see `SidePanel`). */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
       </MobileSheetContent>
     );
   }

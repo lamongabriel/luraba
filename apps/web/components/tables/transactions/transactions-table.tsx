@@ -74,6 +74,8 @@ export function TransactionsTable({
     onSortChange: (field, direction) =>
       params.setSorting(field as TransactionSortField | undefined, direction),
     getRowId: (row) => row.rowId,
+    // Merchant and Created by are in the Actions > Columns menu; the default six columns fit beside the right column.
+    initialState: { columnVisibility: { merchant: false, createdBy: false } },
   });
   const clearFilters = params.clearFilters;
 
@@ -93,6 +95,7 @@ export function TransactionsTable({
       table={table}
       onRowClick={(row) => onView(row.original)}
       mobile={mobile}
+      tableClassName="min-w-[38rem]"
       totalCount={pagination?.totalCount}
       pageSizeOptions={[10, 20, 50, 100]}
     />

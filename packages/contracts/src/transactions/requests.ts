@@ -167,6 +167,21 @@ const allFilterShape = {
   creditCardIds: commaSeparatedArraySchema(z.uuid()),
   /** Only credit card installments on these invoices (billing cycles). */
   billingCycleIds: commaSeparatedArraySchema(z.uuid()).optional(),
+  /**
+   * The negative of the lists above ("is not" / "is none of" chips on the web). A row is kept when it is none of
+   * the listed values; a row with no value for the field (no merchant, no card) is kept too.
+   */
+  excludeOriginTypes: commaSeparatedArraySchema(transactionFeedOriginTypeSchema),
+  excludeAccountIds: commaSeparatedArraySchema(z.uuid()),
+  excludeCreditCardIds: commaSeparatedArraySchema(z.uuid()),
+  excludeCategoryIds: commaSeparatedArraySchema(z.uuid()),
+  /** Hides the uncategorized expenses, incomes, installments and refunds. */
+  excludeUncategorized: booleanQuerySchema.optional(),
+  excludeMerchantIds: commaSeparatedArraySchema(z.uuid()),
+  excludeCreatedByUserIds: commaSeparatedArraySchema(z.uuid()),
+  excludeTagIds: commaSeparatedArraySchema(z.uuid()),
+  excludePaymentMethodCodes: commaSeparatedArraySchema(paymentMethodCodeSchema),
+  excludeCurrencyCodes: commaSeparatedArraySchema(currencyCodeSchema),
 } as const;
 const sortFields = [
   "amount",

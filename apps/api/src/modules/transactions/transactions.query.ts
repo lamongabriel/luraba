@@ -41,6 +41,40 @@ function sqlArray(values: string[], cast: "text" | "uuid"): SQL {
  */
 export const installmentPostedDate = sql`(case when ${creditCardInstallmentsTable.installmentNumber} = 1 then ${transactionsTable.purchaseDate} else date_trunc('month', ${transactionsTable.purchaseDate}) + ((${creditCardInstallmentsTable.installmentNumber} - 1) * interval '1 month') end)::date`;
 
+/** "None of these" filters. A row with no value for the field is kept (a purchase with no merchant is not "Amazon"). */
+function buildExclusionConditions(query: TransactionFilterQuery): Array<SQL | undefined> {
+  const exclude = (
+    values: string[] | undefined,
+    column: string,
+    cast: "text" | "uuid",
+    nullable: boolean,
+  ) => {
+    if (!values?.length) return undefined;
+    const list = sqlArray(values, cast);
+    const col = sql.raw(column);
+    return nullable ? sql`(${col} is null or ${col} <> all(${list}))` : sql`${col} <> all(${list})`;
+  };
+  const excludeOverlap = (values: string[] | undefined, column: string, cast: "text" | "uuid") => {
+    if (!values?.length) return undefined;
+    const col = sql.raw(column);
+    return sql`not (coalesce(${col}, array[]::${sql.raw(cast)}[]) && ${sqlArray(values, cast)})`;
+  };
+  return [
+    exclude(query.excludeOriginTypes, "origin_type", "text", false),
+    excludeOverlap(query.excludeAccountIds, "account_ids", "uuid"),
+    exclude(query.excludeCreditCardIds, "credit_card_id", "uuid", true),
+    exclude(query.excludeCategoryIds, "category_id", "uuid", true),
+    query.excludeUncategorized === true
+      ? sql`(category_id is not null or origin_type not in ('expense', 'income', 'credit_card_installment', 'refund'))`
+      : undefined,
+    exclude(query.excludeMerchantIds, "merchant_id", "uuid", true),
+    exclude(query.excludeCreatedByUserIds, "created_by_user_id", "uuid", true),
+    excludeOverlap(query.excludeTagIds, "tag_ids", "uuid"),
+    exclude(query.excludePaymentMethodCodes, "payment_method_code", "text", true),
+    excludeOverlap(query.excludeCurrencyCodes, "currency_codes", "text"),
+  ];
+}
+
 export function buildTransactionFeedWhere(query: TransactionFilterQuery): SQL | undefined {
   const postedDateConditions = combineConditions(
     query.dateFrom ? sql`posted_date >= ${query.dateFrom}::date` : undefined,
@@ -88,6 +122,7 @@ export function buildTransactionFeedWhere(query: TransactionFilterQuery): SQL | 
       ? sql`currency_codes && ${sqlArray(query.currencyCodes, "text")}`
       : undefined,
     ...rangeConditions(sql`amount`, query.amountMin, query.amountMax),
+    ...buildExclusionConditions(query),
     query.includeInBudget === undefined
       ? undefined
       : sql`include_in_budget = ${query.includeInBudget}`,
