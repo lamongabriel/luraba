@@ -8,24 +8,24 @@ import { getCreditCardBrand } from "@/lib/credit-cards";
 import { cn } from "@/lib/utils";
 
 /**
- * The real network logos (Visa, Mastercard, American Express, Elo, Discover) from the icon set's `logo` format,
+ * The real network logos (Visa, Mastercard, Maestro, American Express, Elo, Discover, JCB, UnionPay) from the icon set's `logo` format,
  * cropped to the logo's own bounds so the mark is not a small drawing floating in a padded 780x500 box. The crop
  * is the `viewBox`; the set draws the logo on a transparent background (no card, no chip).
  */
 const LOGO_VIEWBOX: Partial<Record<PaymentType, string>> = {
-  Visa: "58 140 664 220",
-  Mastercard: "108 75 564 350",
-  AmericanExpress: "0 120 780 260",
-  Elo: "70 120 640 260",
-  Discover: "0 150 780 200",
+  Visa: "60 143 660 214",
+  Mastercard: "109 76 561 347",
+  Maestro: "110 77 561 346",
+  AmericanExpress: "0 113 780 274",
+  Elo: "72 133 637 233",
+  Discover: "62 197 657 105",
+  JCB: "148 63 484 373",
+  UnionPay: "105 70 571 360",
 };
 
-/** Brands shown as a bold wordmark: their logos do not survive being cropped and recolored. */
+/** Brands shown as a bold wordmark: their logo is not a clean standalone mark. */
 const WORDMARKS: Record<string, string> = {
   Hipercard: "Hipercard",
-  JCB: "JCB",
-  UnionPay: "UnionPay",
-  Maestro: "maestro",
 };
 
 /**

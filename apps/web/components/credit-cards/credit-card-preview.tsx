@@ -89,7 +89,7 @@ export function CreditCardPreview({
           <CardBrandMark
             brand={brand}
             tone={isLight ? "color" : "onDark"}
-            className={cn("shrink-0", large ? "h-7 w-12" : small ? "h-4 w-7" : "h-6 w-10")}
+            className={cn("shrink-0", large ? "h-8 w-14" : small ? "h-4 w-7" : "h-6 w-10")}
           />
         ) : null}
       </div>
