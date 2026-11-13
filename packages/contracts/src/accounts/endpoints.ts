@@ -60,6 +60,20 @@ export const accountsEndpoints = {
     response: accountDetailsSchema,
     status: 200,
   }),
+  archive: defineEndpoint({
+    method: "post",
+    path: "/accounts/:id/archive",
+    params: accountIdParamsSchema,
+    response: accountDetailsSchema,
+    status: 200,
+  }),
+  unarchive: defineEndpoint({
+    method: "post",
+    path: "/accounts/:id/unarchive",
+    params: accountIdParamsSchema,
+    response: accountDetailsSchema,
+    status: 200,
+  }),
   delete: defineEndpoint({
     method: "delete",
     path: "/accounts/:id",

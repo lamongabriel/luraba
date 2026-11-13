@@ -36,6 +36,7 @@ export type CreditCardRow = {
   closingDay: number;
   dueDay: number;
   creditLimitAmount: number;
+  archivedAt: Date | null;
   createdByUserId: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -66,6 +67,7 @@ export type CreditCardSelectRow = {
   closingDay: number;
   dueDay: number;
   creditLimitAmount: number;
+  archivedAt: Date | null;
   createdByUserId: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -120,6 +122,7 @@ export const creditCardSelect = {
   closingDay: creditCardsTable.closingDay,
   dueDay: creditCardsTable.dueDay,
   creditLimitAmount: creditCardsTable.creditLimitAmount,
+  archivedAt: creditCardsTable.archivedAt,
   createdByUserId: creditCardsTable.createdByUserId,
   createdAt: creditCardsTable.createdAt,
   updatedAt: creditCardsTable.updatedAt,
@@ -156,6 +159,7 @@ export function toCreditCardRow(row: CreditCardSelectRow): CreditCardRow {
     closingDay: row.closingDay,
     dueDay: row.dueDay,
     creditLimitAmount: row.creditLimitAmount,
+    archivedAt: row.archivedAt ?? null,
     createdByUserId: row.createdByUserId ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

@@ -35,6 +35,16 @@ router.patch(
   requireAccess({ permission: PERMISSIONS.ACCOUNTS_UPDATE }),
   accountsController.update,
 );
+router.post(
+  getEndpointRouterPath(accountsEndpoints.archive),
+  requireAccess({ permission: PERMISSIONS.ACCOUNTS_UPDATE }),
+  accountsController.archive,
+);
+router.post(
+  getEndpointRouterPath(accountsEndpoints.unarchive),
+  requireAccess({ permission: PERMISSIONS.ACCOUNTS_UPDATE }),
+  accountsController.unarchive,
+);
 router.delete(
   getEndpointRouterPath(accountsEndpoints.delete),
   requireAccess({ permission: PERMISSIONS.ACCOUNTS_DELETE }),

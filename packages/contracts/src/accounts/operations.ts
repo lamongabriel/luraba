@@ -11,6 +11,10 @@ export type {
 export type GetAccountParams = EndpointParams<typeof accountsEndpoints.get>;
 export type ListAccountTransactionsParams = EndpointParams<typeof accountsEndpoints.transactions>;
 export type UpdateAccountParams = EndpointParams<typeof accountsEndpoints.update>;
+export type ArchiveAccountParams = EndpointParams<typeof accountsEndpoints.archive>;
+export type ArchiveAccountResult = EndpointResult<typeof accountsEndpoints.archive>;
+export type UnarchiveAccountParams = EndpointParams<typeof accountsEndpoints.unarchive>;
+export type UnarchiveAccountResult = EndpointResult<typeof accountsEndpoints.unarchive>;
 export type DeleteAccountParams = EndpointParams<typeof accountsEndpoints.delete>;
 export type ListAccountsResult = EndpointResult<typeof accountsEndpoints.list>;
 export type ListAccountTransactionsResult = EndpointResult<typeof accountsEndpoints.transactions>;

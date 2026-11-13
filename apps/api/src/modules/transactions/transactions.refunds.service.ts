@@ -5,6 +5,7 @@ import type { HouseholdContext } from "@/config/permissions";
 import { SYSTEM_LEDGER_CLASSIFICATIONS } from "@/config/transactions";
 import { db } from "@/db";
 import type { TxClient } from "@/db/types";
+import { assertNotArchived } from "@/modules/accounts/accounts.guards";
 import { accountsRepository } from "@/modules/accounts/accounts.repository";
 import { categoriesRepository } from "@/modules/categories/categories.repository";
 import {
@@ -183,11 +184,13 @@ export async function createRefund(context: HouseholdContext, dto: RefundDto): P
   let currencyCode: string;
   if (dto.creditCardId) {
     card = await creditCardsRepository.findByIdOrThrow(context.householdId, dto.creditCardId);
+    assertNotArchived(card, "Credit card");
     ledgerOwnerAccountId = card.ledgerAccountId;
     currencyCode = card.currencyCode;
   } else {
     const account = await accountsRepository.get(dto.accountId as string, context);
     if (!account) throw new NotFoundError("Account");
+    assertNotArchived(account);
     if (account.type === "credit_card") {
       throw new ValidationError("Refunds to a credit card must use creditCardId");
     }

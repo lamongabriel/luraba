@@ -185,7 +185,7 @@ export const updateAccount = defineTool({
   name: "update_account",
   title: "Update an account",
   description:
-    "Change an account (name or id): rename it, change institution, notes, subtype or type-specific details (e.g. new mileage), or set its current balance/value with balance (major units; this records a balance adjustment dated today or balanceDate, e.g. to revalue a car). Pass null to clear institution, institutionDomain or notes. The currency, type and opening balance cannot be changed, and the API has no archive or close for accounts: use delete_account. Use dryRun=true to preview.",
+    "Change an account (name or id): rename it, change institution, notes, subtype or type-specific details (e.g. new mileage), or set its current balance/value with balance (major units; this records a balance adjustment dated today or balanceDate, e.g. to revalue a car). Pass null to clear institution, institutionDomain or notes. The currency, type and opening balance cannot be changed, and to retire an account without deleting its history use archive_account (delete_account removes its transactions too). Use dryRun=true to preview.",
   input: z.object({
     account: z.string().describe("Name or id."),
     name: z.string().trim().min(1).max(255).optional(),
@@ -316,6 +316,125 @@ export const deleteAccount = defineTool({
     return {
       summary: `Deleted account "${account.name}" and ${dependents.transactions} transaction(s).`,
       data: { status: "deleted", deleted: { id, name: account.name }, dependents },
+    };
+  },
+});
+
+export const archiveAccount = defineTool({
+  name: "archive_account",
+  title: "Archive an account",
+  description:
+    "Retire an account (name or id) without deleting anything: its transactions and transfers stay, other accounts' balances are unchanged, and reports still count its past activity. It disappears from list_accounts and pickers and cannot receive new transactions. Only an account with a zero balance can be archived (a paid-off loan, an emptied account), and one that still owns active credit cards must wait until those are archived. Reversible with unarchive_account. Prefer this over delete_account. Use dryRun=true to preview.",
+  input: z.object({
+    account: z.string().describe("Name or id."),
+    dryRun: z.boolean().default(false),
+  }),
+  annotations: IDEMPOTENT_WRITE,
+  async handler({ client, refs }, { account: query, dryRun }) {
+    const problems = new Problems();
+    const id = problems.take("account", await refs.resolveAccount(query, true));
+    if (problems.any || !id) return clarificationOutput(problems);
+    const account = await client.request(accountsEndpoints.get, { params: { id } });
+    if (account.archivedAt)
+      return {
+        summary: `"${account.name}" is already archived.`,
+        data: { status: "already_archived", account: summarizeAccount(account) },
+      };
+    if (account.balance !== 0)
+      return {
+        isError: true,
+        summary: `"${account.name}" still has a balance of ${toMoney(account.balance, account.currencyCode).formatted}; only a zero balance can be archived. Bring it to zero first (for example with a transfer).`,
+        data: { status: "balance_not_zero", account: summarizeAccount(account) },
+      };
+    if (dryRun)
+      return {
+        summary: `Dry run: "${account.name}" would be archived.`,
+        data: { status: "dry_run", account: { id, name: account.name } },
+      };
+    const archived = await client.request(accountsEndpoints.archive, { params: { id } });
+    refs.invalidate("accounts");
+    return {
+      summary: `Archived account "${archived.name}". Its history is kept; unarchive_account restores it.`,
+      data: { status: "archived", account: summarizeAccount(archived) },
+    };
+  },
+});
+
+export const unarchiveAccount = defineTool({
+  name: "unarchive_account",
+  title: "Unarchive an account",
+  description:
+    "Restore an archived account (name or id) exactly as it was: it shows in lists again and can receive transactions.",
+  input: z.object({ account: z.string().describe("Name or id of an archived account.") }),
+  annotations: IDEMPOTENT_WRITE,
+  async handler({ client, refs }, { account: query }) {
+    const problems = new Problems();
+    const id = problems.take("account", await refs.resolveAccount(query, true));
+    if (problems.any || !id) return clarificationOutput(problems);
+    const account = await client.request(accountsEndpoints.unarchive, { params: { id } });
+    refs.invalidate("accounts");
+    return {
+      summary: `Unarchived account "${account.name}".`,
+      data: { status: "unarchived", account: summarizeAccount(account) },
+    };
+  },
+});
+
+export const archiveCreditCard = defineTool({
+  name: "archive_credit_card",
+  title: "Archive a credit card",
+  description:
+    "Retire a credit card (name, last 4 or id) without deleting its purchases, invoices or payments. It disappears from list_credit_cards and pickers and cannot take new purchases or payments. Only a card that owes nothing (zero balance) can be archived. Reversible with unarchive_credit_card. Prefer this over delete_credit_card. Use dryRun=true to preview.",
+  input: z.object({
+    creditCard: z.string().describe("Name, last 4 or id."),
+    dryRun: z.boolean().default(false),
+  }),
+  annotations: IDEMPOTENT_WRITE,
+  async handler({ client, refs }, { creditCard, dryRun }) {
+    const problems = new Problems();
+    const id = problems.take("creditCard", await refs.resolveCreditCard(creditCard, true));
+    if (problems.any || !id) return clarificationOutput(problems);
+    const card = await client.request(creditCardsEndpoints.get, { params: { id } });
+    if (card.archivedAt)
+      return {
+        summary: `"${card.name}" is already archived.`,
+        data: { status: "already_archived", creditCard: summarizeCard(card) },
+      };
+    if (card.balance !== 0)
+      return {
+        isError: true,
+        summary: `"${card.name}" still owes ${toMoney(Math.abs(card.balance), card.currencyCode).formatted}; only a card with nothing owed can be archived. Pay it off first.`,
+        data: { status: "balance_not_zero", creditCard: summarizeCard(card) },
+      };
+    if (dryRun)
+      return {
+        summary: `Dry run: "${card.name}" would be archived.`,
+        data: { status: "dry_run", creditCard: { id, name: card.name } },
+      };
+    const archived = await client.request(creditCardsEndpoints.archive, { params: { id } });
+    refs.invalidate("creditCards");
+    return {
+      summary: `Archived credit card "${archived.name}". Its history is kept; unarchive_credit_card restores it.`,
+      data: { status: "archived", creditCard: summarizeCard(archived) },
+    };
+  },
+});
+
+export const unarchiveCreditCard = defineTool({
+  name: "unarchive_credit_card",
+  title: "Unarchive a credit card",
+  description: "Restore an archived credit card (name, last 4 or id) exactly as it was.",
+  input: z.object({ creditCard: z.string().describe("Name, last 4 or id of an archived card.") }),
+  annotations: IDEMPOTENT_WRITE,
+  async handler({ client, refs }, { creditCard }) {
+    const problems = new Problems();
+    const id = problems.take("creditCard", await refs.resolveCreditCard(creditCard, true));
+    if (problems.any || !id) return clarificationOutput(problems);
+    const card = await client.request(creditCardsEndpoints.unarchive, { params: { id } });
+    refs.invalidate("creditCards");
+    return {
+      summary: `Unarchived credit card "${card.name}".`,
+      data: { status: "unarchived", creditCard: summarizeCard(card) },
     };
   },
 });

@@ -1,5 +1,6 @@
 import { creditCardsTable } from "@luraba/db/schemas/credit-cards.schema";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { now } from "@luraba/domain";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { buildAccountBalanceSubquery } from "@/modules/ledger-accounts/ledger-accounts.repository";
 import { NotFoundError } from "@/shared/errors";
@@ -133,6 +134,37 @@ export async function findLedgerAccountIdsByOwnerAccountId(
     );
 
   return rows.map((row) => row.ledgerAccountId);
+}
+
+export async function countActiveByOwnerAccountId(
+  householdId: string,
+  ownerAccountId: string,
+): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::integer` })
+    .from(creditCardsTable)
+    .where(
+      and(
+        eq(creditCardsTable.householdId, householdId),
+        eq(creditCardsTable.ownerAccountId, ownerAccountId),
+        isNull(creditCardsTable.archivedAt),
+      ),
+    );
+  return row?.count ?? 0;
+}
+
+/** Sets or clears `archived_at` (household-filtered). */
+export async function setArchivedAt(
+  householdId: string,
+  creditCardId: string,
+  archivedAt: Date | null,
+): Promise<void> {
+  await db
+    .update(creditCardsTable)
+    .set({ archivedAt, updatedAt: now() })
+    .where(
+      and(eq(creditCardsTable.id, creditCardId), eq(creditCardsTable.householdId, householdId)),
+    );
 }
 
 export async function findByHouseholdAndName(

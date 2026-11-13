@@ -2,6 +2,7 @@ import type { CreateAccountProfile, UpdateAccountProfile } from "@luraba/contrac
 import {
   formatISODateTime,
   getTodayInTimezone,
+  now,
   parseISODate,
   toDisplayedBalance,
 } from "@luraba/domain";
@@ -57,6 +58,7 @@ function mapAccountRecord(account: AccountRecord): Account {
     institutionLogoUrl: account.institutionLogoUrl ?? null,
     imageUploadId: account.imageUploadId ?? null,
     notes: account.notes ?? null,
+    archivedAt: account.archivedAt ? formatISODateTime(account.archivedAt) : null,
     classification: account.classification,
     type: account.type,
     currencyCode: account.currencyId,
@@ -395,6 +397,50 @@ export async function updateAccount(
   }
 
   return getAccountDetails(context, updated.id);
+}
+
+/**
+ * Archives an account: hidden from lists and pickers, closed to new transactions, history kept.
+ * Only a zero balance can be archived (a clear error otherwise, no force flag), and an account
+ * that still owns active credit cards must wait until those are archived.
+ */
+export async function archiveAccount(
+  context: HouseholdContext,
+  accountId: string,
+): Promise<AccountDetails> {
+  const account = await accountsRepository.get(accountId, context);
+  if (!account || account.type === "credit_card") throw new NotFoundError("Account");
+  if (account.archivedAt) return getAccountDetails(context, account.id);
+
+  const details = await getAccountDetails(context, account.id);
+  if (details.balance !== 0) {
+    throw new ConflictError(
+      `Account "${account.name}" still has a balance. Bring it to zero (for example with a transfer) before archiving it.`,
+    );
+  }
+  const activeCards = await creditCardsRepository.countActiveByOwnerAccountId(
+    context.householdId,
+    account.id,
+  );
+  if (activeCards > 0) {
+    throw new ConflictError(
+      `Account "${account.name}" still has active credit cards. Archive or delete them first.`,
+    );
+  }
+
+  await accountsRepository.setArchivedAt(context, account.id, now());
+  return getAccountDetails(context, account.id);
+}
+
+/** Restores an archived account exactly as it was. */
+export async function unarchiveAccount(
+  context: HouseholdContext,
+  accountId: string,
+): Promise<AccountDetails> {
+  const account = await accountsRepository.get(accountId, context);
+  if (!account || account.type === "credit_card") throw new NotFoundError("Account");
+  if (account.archivedAt) await accountsRepository.setArchivedAt(context, account.id, null);
+  return getAccountDetails(context, account.id);
 }
 
 export async function deleteAccount(context: HouseholdContext, accountId: string): Promise<void> {

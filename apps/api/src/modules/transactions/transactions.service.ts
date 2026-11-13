@@ -3,6 +3,7 @@ import type { HouseholdContext } from "@/config/permissions";
 import { SYSTEM_LEDGER_CLASSIFICATIONS } from "@/config/transactions";
 import { db } from "@/db";
 import type { TxClient } from "@/db/types";
+import { assertNotArchived } from "@/modules/accounts/accounts.guards";
 import { accountsRepository } from "@/modules/accounts/accounts.repository";
 import type { AccountRecord } from "@/modules/accounts/accounts.types";
 import { categoriesRepository } from "@/modules/categories/categories.repository";
@@ -175,6 +176,7 @@ async function createExpenseOrIncome(
 
   const account = await accountsRepository.get(dto.accountId, context);
   if (!account) throw new NotFoundError("Account");
+  assertNotArchived(account);
   if (account.type === "credit_card") {
     throw new ValidationError(
       dto.type === "expense"
@@ -231,6 +233,7 @@ async function createTransfer(
 
   const fromAccount = await accountsRepository.get(dto.fromAccountId, context);
   if (!fromAccount) throw new NotFoundError("Source account");
+  assertNotArchived(fromAccount);
   if (fromAccount.type === "credit_card") {
     throw new ValidationError(
       "Direct transfers from credit card accounts must use the credit card payment endpoint",
@@ -239,6 +242,7 @@ async function createTransfer(
 
   const toAccount = await accountsRepository.get(dto.toAccountId, context);
   if (!toAccount) throw new NotFoundError("Destination account");
+  assertNotArchived(toAccount);
   if (toAccount.type === "credit_card") {
     throw new ValidationError(
       "Direct transfers to credit card accounts must use the credit card payment endpoint",
@@ -359,6 +363,7 @@ async function createAdjustment(
 ): Promise<TransactionResponse> {
   const account = await accountsRepository.get(dto.accountId, context);
   if (!account) throw new NotFoundError("Account");
+  assertNotArchived(account);
 
   const accountLedger = await ledgerAccountsRepository.findByOwner("account", account.id);
   if (!accountLedger) throw new NotFoundError("Account ledger");
@@ -714,6 +719,7 @@ export async function updateTransaction(
 
     const account = await accountsRepository.get(nextAccountId, context);
     if (!account) throw new NotFoundError("Account");
+    if (nextAccountId !== transaction.accountId) assertNotArchived(account);
     if (account.type === "credit_card") {
       throw new ValidationError(
         `Direct ${transaction.type} updates for credit card accounts must use the credit card APIs`,
@@ -797,6 +803,7 @@ export async function updateTransaction(
 
     const fromAccount = await accountsRepository.get(fromAccountId, context);
     if (!fromAccount) throw new NotFoundError("Source account");
+    if (fromAccountId !== transaction.accountId) assertNotArchived(fromAccount);
     if (fromAccount.type === "credit_card") {
       throw new ValidationError(
         "Direct transfers from credit card accounts must use the credit card payment endpoint",
@@ -805,6 +812,7 @@ export async function updateTransaction(
 
     const toAccount = await accountsRepository.get(toAccountId, context);
     if (!toAccount) throw new NotFoundError("Destination account");
+    if (toAccountId !== transaction.toAccountId) assertNotArchived(toAccount);
     if (toAccount.type === "credit_card") {
       throw new ValidationError(
         "Direct transfers to credit card accounts must use the credit card payment endpoint",

@@ -54,6 +54,18 @@ export const update = createHouseholdHandler({
     accountsService.updateAccount(household, params.id, body),
 });
 
+export const archive = createHouseholdHandler({
+  params: accountsEndpoints.archive.params,
+  response: accountsEndpoints.archive.response,
+  handle: ({ household, params }) => accountsService.archiveAccount(household, params.id),
+});
+
+export const unarchive = createHouseholdHandler({
+  params: accountsEndpoints.unarchive.params,
+  response: accountsEndpoints.unarchive.response,
+  handle: ({ household, params }) => accountsService.unarchiveAccount(household, params.id),
+});
+
 export const deleteAccount = createHouseholdHandler({
   params: accountsEndpoints.delete.params,
   status: "no-content",

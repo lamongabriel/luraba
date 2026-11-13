@@ -141,6 +141,7 @@ export async function createCreditCard(
       closingDay: createdCard.closingDay,
       dueDay: createdCard.dueDay,
       creditLimitAmount: createdCard.creditLimitAmount,
+      archivedAt: createdCard.archivedAt,
       createdByUserId: createdCard.createdByUserId,
       createdAt: createdCard.createdAt,
       updatedAt: createdCard.updatedAt,
@@ -251,6 +252,38 @@ export async function updateCreditCard(
   });
 
   return mapCreditCard(updated);
+}
+
+/**
+ * Archives a card: hidden from lists and pickers, closed to new purchases and payments, history
+ * kept. Only a card with nothing owed (zero balance) can be archived.
+ */
+export async function archiveCreditCard(
+  context: HouseholdContext,
+  creditCardId: string,
+): Promise<CreditCardResponse> {
+  const card = await creditCardsRepository.findByIdOrThrow(context.householdId, creditCardId);
+  if (!card.archivedAt) {
+    const mapped = await mapCreditCard(card);
+    if (mapped.balance !== 0) {
+      throw new ConflictError(
+        `Credit card "${card.name}" still has a balance. Pay it off before archiving it.`,
+      );
+    }
+    await creditCardsRepository.setArchivedAt(context.householdId, card.id, now());
+  }
+  return getCreditCard(context, creditCardId);
+}
+
+/** Restores an archived card exactly as it was. */
+export async function unarchiveCreditCard(
+  context: HouseholdContext,
+  creditCardId: string,
+): Promise<CreditCardResponse> {
+  const card = await creditCardsRepository.findByIdOrThrow(context.householdId, creditCardId);
+  if (card.archivedAt)
+    await creditCardsRepository.setArchivedAt(context.householdId, card.id, null);
+  return getCreditCard(context, creditCardId);
 }
 
 export async function deleteCreditCard(

@@ -41,6 +41,7 @@ const card = {
   creditLimitAmount: 1_000_000,
   remainingCreditAmount: 900_000,
   balance: 100_000,
+  archivedAt: null,
   createdByUserId: null,
   createdAt: now,
   updatedAt: now,

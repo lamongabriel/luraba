@@ -35,6 +35,7 @@ const account = (over: Record<string, unknown>) => ({
   classification: "asset",
   type: "cash",
   currencyCode: "USD",
+  archivedAt: null,
   createdByUserId: null,
   createdAt: now,
   updatedAt: now,

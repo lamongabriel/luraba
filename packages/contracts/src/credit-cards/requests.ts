@@ -203,6 +203,8 @@ export const listCreditCardsQuerySchema = createListQuerySchema(
     creditLimitMin: z.coerce.number().int().min(0).optional(),
     creditLimitMax: z.coerce.number().int().min(0).optional(),
     hasCreditLimit: booleanQuerySchema.optional(),
+    /** Archived cards are hidden unless this is true. */
+    includeArchived: booleanQuerySchema.optional(),
     createdAtFrom: temporalQuerySchema.optional(),
     createdAtTo: temporalQuerySchema.optional(),
     updatedAtFrom: temporalQuerySchema.optional(),
