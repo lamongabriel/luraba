@@ -1,9 +1,13 @@
+"use client";
+
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Link from "next/link";
 import type * as React from "react";
+import { KpiInline, type KpiInlineItem, KpiInlineSkeleton } from "@/components/kpi/kpi-inline";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 export type PageBackLink = {
@@ -13,26 +17,41 @@ export type PageBackLink = {
 };
 
 /**
- * The title block every page of the app uses: optional back link, a title, a mandatory subtitle,
- * and a right-hand slot (aligned with the title) for actions.
+ * The title block every page of the app uses (ported from Nexus's `PageHeader` + `HeaderTools`): optional back link,
+ * a title, a mandatory subtitle, and the header tools on the SAME row at every width, aligned with the title and
+ * right-aligned: optional inline counters (`kpis`), then one action group (`controls`, then `actions`).
+ *
+ * - `controls`: what picks the data shown (`MonthSelect`). First in the group.
+ * - `actions`: `HeaderAddButton` (primary, last) and `HeaderButton`s. Same height as the controls; on a phone every
+ *   one of them is a small circle with an icon.
+ * - `kpis`: one or two `KpiInlineItem`s to the left of the group on desktop (a divider between), in their own row
+ *   under the title on a phone. Never tiles below the title.
  */
 export function PageHeader({
   title,
   subtitle,
+  controls,
   actions,
+  kpis,
+  kpisLoading = false,
+  kpiLabels,
   mobileActions,
   back,
   compact = false,
   leading,
-  inlineActions = false,
   className,
 }: {
   title: string;
   subtitle: React.ReactNode;
+  controls?: React.ReactNode;
   actions?: React.ReactNode;
+  kpis?: KpiInlineItem[];
+  /** Skeleton counters in place while their numbers load (pass the labels in `kpiLabels`). */
+  kpisLoading?: boolean;
+  kpiLabels?: string[];
   /**
-   * Phone-only actions: small circular icon buttons (`PageHeaderIconButton`) at the right of the title row, in place
-   * of `actions` (which are then hidden below `md`). Without it, `actions` show on every width as before.
+   * Legacy (Transactions): phone-only circular actions in place of `actions`, which are then hidden below `md`.
+   * New pages do not use it: `HeaderAddButton` and `HeaderButton` already collapse to circles on a phone.
    */
   mobileActions?: React.ReactNode;
   back?: PageBackLink;
@@ -40,10 +59,17 @@ export function PageHeader({
   compact?: boolean;
   /** A picture or icon before the title (the household picture). */
   leading?: React.ReactNode;
-  /** Keep the actions on the title's row on a phone (one small icon button), instead of below it. */
-  inlineActions?: boolean;
   className?: string;
 }) {
+  const isMobile = useIsMobile();
+  const hasKpis = Boolean(kpis?.length) || (kpisLoading && Boolean(kpiLabels?.length));
+  const counters = kpis?.length ? (
+    <KpiInline items={kpis} size={isMobile ? "sm" : "md"} />
+  ) : kpiLabels ? (
+    <KpiInlineSkeleton labels={kpiLabels} size={isMobile ? "sm" : "md"} />
+  ) : null;
+  const hasGroup = Boolean(controls || actions);
+
   return (
     <header className={cn("space-y-2", className)}>
       {back ? (
@@ -54,17 +80,8 @@ export function PageHeader({
           </Link>
         </Button>
       ) : null}
-      <div
-        className={cn(
-          "flex gap-4 md:flex-row md:items-center md:justify-between",
-          mobileActions
-            ? "flex-row items-start"
-            : inlineActions
-              ? "items-center justify-between"
-              : "flex-col",
-        )}
-      >
-        <div className="flex min-w-0 items-center gap-3">
+      <div data-slot="page-header-row" className="flex items-center justify-between gap-3 md:gap-4">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           {leading}
           <div className="min-w-0">
             <Typography
@@ -79,28 +96,38 @@ export function PageHeader({
             </Typography>
           </div>
         </div>
-        {actions ? (
+        {hasKpis || hasGroup || mobileActions ? (
           <div
-            className={cn(
-              "flex flex-wrap items-center gap-2",
-              mobileActions && "max-md:hidden",
-              inlineActions && "shrink-0",
-            )}
+            data-slot="header-tools"
+            className="flex shrink-0 items-center justify-end gap-3 md:gap-5"
           >
-            {actions}
+            {hasKpis && !isMobile ? counters : null}
+            {hasGroup ? (
+              <div
+                data-slot="header-actions"
+                className={cn(
+                  "flex items-center justify-end gap-2",
+                  mobileActions && "max-md:hidden",
+                )}
+              >
+                {controls}
+                {actions}
+              </div>
+            ) : null}
+            {mobileActions ? (
+              <div className="flex shrink-0 items-center gap-2 md:hidden">{mobileActions}</div>
+            ) : null}
           </div>
         ) : null}
-        {mobileActions ? (
-          <div className="flex shrink-0 items-center gap-2 md:hidden">{mobileActions}</div>
-        ) : null}
       </div>
+      {hasKpis && isMobile ? <div data-slot="header-kpis-mobile">{counters}</div> : null}
     </header>
   );
 }
 
 /**
- * A small circular icon button for a phone header (`PageHeader mobileActions`): add, filter. `primary` is the
- * filled main action; `badge` is a count dot (active filters). The label is the accessible name.
+ * A small circular icon button for a phone header (`PageHeader mobileActions`, legacy): add, filter. `primary` is
+ * the filled main action; `badge` is a count dot (active filters). The label is the accessible name.
  */
 export function PageHeaderIconButton({
   label,

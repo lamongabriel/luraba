@@ -2,16 +2,14 @@
 
 import type { CreditCardOverviewCard } from "@luraba/contracts";
 import * as React from "react";
-import {
-  CARD_TILE_HEIGHT_CLASS,
-  CARD_TILE_WIDTH_CLASS,
-  CreditCardTile,
-} from "@/components/credit-cards/credit-card-tile";
+import { CARD_TILE_WIDTH_CLASS, CreditCardTile } from "@/components/credit-cards/credit-card-tile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 const TRACK_CLASS =
   "flex gap-4 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+/** One card per screen on a phone: each item is the full track width and the browser always settles on one. */
+const ITEM_CLASS = "shrink-0 snap-center [scroll-snap-stop:always] max-md:min-w-full md:snap-start";
 /** The dots row below the track (phone only); reserved even with one card so the skeleton matches. */
 const DOTS_ROW_CLASS = "flex h-4 items-center justify-center gap-1.5 md:hidden";
 
@@ -94,7 +92,7 @@ export function CreditCardsCarousel({
         )}
       >
         {cards.map((card) => (
-          <li key={card.creditCardId} className="shrink-0 snap-start max-md:w-full">
+          <li key={card.creditCardId} className={ITEM_CLASS}>
             <CreditCardTile
               card={card}
               language={language}
@@ -135,10 +133,8 @@ export function CreditCardsCarouselSkeleton() {
     >
       <div className={TRACK_CLASS}>
         {[0, 1, 2].map((key) => (
-          <div key={key} className={cn("shrink-0 max-md:w-full", key > 0 && "max-md:hidden")}>
-            <Skeleton
-              className={cn("rounded-2xl", CARD_TILE_HEIGHT_CLASS, CARD_TILE_WIDTH_CLASS)}
-            />
+          <div key={key} className={cn("shrink-0 max-md:min-w-full", key > 0 && "max-md:hidden")}>
+            <Skeleton className={cn("aspect-[1.586/1] rounded-2xl", CARD_TILE_WIDTH_CLASS)} />
           </div>
         ))}
       </div>

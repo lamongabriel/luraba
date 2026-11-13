@@ -1,7 +1,6 @@
 "use client";
 
-import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { Calendar03Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import type { ListTransactionsQuery, TransactionFeedRow } from "@luraba/contracts";
 import { buildLimitBreakdown, todayISODate } from "@luraba/domain";
 import { useParams, useRouter } from "next/navigation";
@@ -20,11 +19,11 @@ import { InvoiceHistoryChart } from "@/components/credit-cards/invoice-history-c
 import { InvoiceList, InvoiceListSkeleton } from "@/components/credit-cards/invoice-list";
 import { LimitBreakdown, LimitBreakdownSkeleton } from "@/components/credit-cards/limit-breakdown";
 import { PayInvoiceModal } from "@/components/credit-cards/pay-invoice-modal";
+import { HeaderButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
-import { MonthSelector } from "@/components/finance/month-selector";
+import { MonthSelect } from "@/components/finance/month-select";
 import { PageSection } from "@/components/finance/page-section";
-import { PERMISSIONS, PermissionButton } from "@/components/permissions";
-import { Button } from "@/components/ui/button";
+import { PERMISSIONS } from "@/components/permissions";
 import { useCurrencyPrecision } from "@/hooks/use-currency-precision";
 import { useDisclosure } from "@/hooks/use-disclosure";
 import { currentMonthKey, invoiceMonthKey, shiftMonthKey } from "@/lib/credit-card-invoices";
@@ -190,39 +189,38 @@ export default function CreditCardDetailPage() {
       title={card.name}
       subtitle={`${card.institutionName ? `${card.institutionName} · ` : ""}${card.brand} •••• ${card.last4}`}
       back={{ href: "/credit-cards", label: "Credit cards" }}
+      controls={
+        selectedCycle ? (
+          <MonthSelect
+            value={invoiceMonthKey(selectedCycle)}
+            onChange={(monthKey) => {
+              const match = cycles.find((cycle) => invoiceMonthKey(cycle) === monthKey);
+              if (match) setChosenCycleId(match.id);
+            }}
+            timezone={timezone}
+            minMonth={invoiceMonthKey(cycles[0] ?? selectedCycle)}
+            maxMonth={invoiceMonthKey(cycles[cycles.length - 1] ?? selectedCycle)}
+            language={language}
+          />
+        ) : null
+      }
       actions={
-        <div className="flex flex-wrap items-center gap-2">
-          {selectedCycle ? (
-            <MonthSelector
-              value={invoiceMonthKey(selectedCycle)}
-              onChange={(monthKey) => {
-                const match = cycles.find((cycle) => invoiceMonthKey(cycle) === monthKey);
-                if (match) setChosenCycleId(match.id);
-              }}
-              minMonth={invoiceMonthKey(cycles[0] ?? selectedCycle)}
-              maxMonth={invoiceMonthKey(cycles[cycles.length - 1] ?? selectedCycle)}
-              language={language}
+        <>
+          {currentCycle && selectedCycle && selectedCycle.id !== currentCycle.id ? (
+            <HeaderButton
+              label="Current invoice"
+              icon={Calendar03Icon}
+              onClick={() => setChosenCycleId(currentCycle.id)}
             />
           ) : null}
-          {currentCycle && selectedCycle && selectedCycle.id !== currentCycle.id ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setChosenCycleId(currentCycle.id)}
-            >
-              Current invoice
-            </Button>
-          ) : null}
-          <PermissionButton
+          <HeaderButton
+            label="Edit"
+            icon={PencilEdit02Icon}
             permission={PERMISSIONS.CREDIT_CARDS_UPDATE}
             deniedMessage="Your household role cannot edit credit cards."
-            variant="outline"
             onClick={editSheet.onOpen}
-          >
-            <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} />
-            Edit
-          </PermissionButton>
-        </div>
+          />
+        </>
       }
     >
       <div className="grid min-w-0 items-stretch gap-8 lg:grid-cols-[minmax(16rem,20rem)_minmax(0,1fr)]">

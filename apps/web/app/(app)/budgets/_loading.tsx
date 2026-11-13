@@ -4,7 +4,7 @@ import {
   BUDGET_GRID,
   BUDGET_SKELETON_COUNT,
 } from "@/components/budgets/budget-layout";
-import { DonutChartCard } from "@/components/charts";
+import { SegmentedBarCard } from "@/components/charts";
 import { CardSkeleton, LoadingRegion } from "@/components/states";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -17,15 +17,13 @@ const SKELETON_KEYS = Array.from(
 /** Mirrors `BudgetsContent`: the split chart, then the grid of budget cards. */
 export function BudgetsLoading() {
   return (
-    <div className="space-y-8">
-      <DonutChartCard
-        flat
+    <div className="space-y-6">
+      <SegmentedBarCard
         title="Budget split"
         status="loading"
         data={[]}
         currencyCode="USD"
         heightClassName={BUDGET_ALLOCATION_HEIGHT}
-        className="mx-auto max-w-2xl"
       />
       <LoadingRegion label="Loading budgets" className={BUDGET_GRID}>
         {SKELETON_KEYS.map((key) => (

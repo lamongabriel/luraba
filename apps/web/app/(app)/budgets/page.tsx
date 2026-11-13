@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy01Icon, MoreHorizontalIcon, Settings02Icon } from "@hugeicons/core-free-icons";
+import { Settings02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { MAX_PER_PAGE } from "@luraba/contracts";
 import { shiftMonthKey } from "@luraba/domain";
@@ -12,20 +12,14 @@ import {
 } from "@/components/budgets/budget-category-sheet";
 import { BudgetSettingsSheet } from "@/components/budgets/budget-settings-sheet";
 import { BudgetsContent } from "@/components/budgets/budgets-content";
-import { CopyLastMonthDialog } from "@/components/budgets/copy-last-month-dialog";
-import { MonthPresetButton, useMonthFilter } from "@/components/filters";
+import { HeaderAddButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
-import { PageAddButton } from "@/components/finance/page-add-button";
+import { MonthSelect } from "@/components/finance/month-select";
+import { useMonthFilter } from "@/components/finance/use-month-filter";
 import { PERMISSIONS, useCan } from "@/components/permissions";
 import { DataBoundary } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useCurrencyPrecision } from "@/hooks/use-currency-precision";
 import { replaceBodyWithExpense } from "@/lib/budgets";
 import { formatMonthKeyLabel } from "@/lib/credit-card-invoices";
@@ -46,7 +40,6 @@ export default function BudgetsPage() {
     target: null,
   });
   const [settingsOpen, setSettingsOpen] = React.useState(false);
-  const [copyOpen, setCopyOpen] = React.useState(false);
   const [removeId, setRemoveId] = React.useState<string | null>(null);
   const setBudget = useSetCategoryBudgetMutation();
 
@@ -64,45 +57,17 @@ export default function BudgetsPage() {
   return (
     <InternalPageLayout
       title="Budgets"
-      subtitle="Monthly limits by category."
+      subtitle={`Monthly limits by category \u00b7 ${monthLabel}`}
+      controls={
+        <MonthSelect value={month} onChange={setMonth} timezone={timezone} language={language} />
+      }
       actions={
-        <>
-          <MonthPresetButton
-            value={month}
-            onChange={setMonth}
-            timezone={timezone}
-            language={language}
-          />
-          <PageAddButton
-            label="Add budget"
-            permission={PERMISSIONS.BUDGETS_UPDATE}
-            disabled={!budget}
-            onClick={() => openSheet(null)}
-          />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="size-9 md:size-7"
-                aria-label="More budget actions"
-              >
-                <HugeiconsIcon icon={MoreHorizontalIcon} strokeWidth={2} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem disabled={!canEdit || !budget} onSelect={() => setCopyOpen(true)}>
-                <HugeiconsIcon icon={Copy01Icon} strokeWidth={2} />
-                Copy last month's budgets
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={!budget} onSelect={() => setSettingsOpen(true)}>
-                <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} />
-                Budget settings
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </>
+        <HeaderAddButton
+          label="Add budget"
+          permission={PERMISSIONS.BUDGETS_UPDATE}
+          disabled={!budget}
+          onClick={() => openSheet(null)}
+        />
       }
     >
       <DataBoundary
@@ -135,6 +100,15 @@ export default function BudgetsPage() {
       </DataBoundary>
 
       {budget && categories ? (
+        <div className="flex justify-center">
+          <Button type="button" variant="ghost" size="lg" onClick={() => setSettingsOpen(true)}>
+            <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} />
+            Budget settings
+          </Button>
+        </div>
+      ) : null}
+
+      {budget && categories ? (
         <>
           <BudgetCategorySheet
             open={sheet.open}
@@ -142,6 +116,8 @@ export default function BudgetsPage() {
             target={sheet.target}
             month={month}
             monthLabel={monthLabel}
+            previousMonth={previousMonth}
+            previousMonthLabel={formatMonthKeyLabel(previousMonth, language)}
             budget={budget}
             categories={categories}
             precision={precision}
@@ -174,14 +150,6 @@ export default function BudgetsPage() {
           }
           setRemoveId(null);
         }}
-      />
-      <CopyLastMonthDialog
-        open={copyOpen}
-        onOpenChange={setCopyOpen}
-        month={month}
-        previousMonth={previousMonth}
-        monthLabel={monthLabel}
-        previousMonthLabel={formatMonthKeyLabel(previousMonth, language)}
       />
     </InternalPageLayout>
   );
