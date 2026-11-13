@@ -47,15 +47,18 @@ function SheetContent({
   side = "right",
   showCloseButton = true,
   mobileClassName,
+  slideInOnMobile = false,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
+  /** Keep the side panel on a phone instead of a bottom drawer. Only the app sidebar does (it stays a slide-in sidebar). */
+  slideInOnMobile?: boolean;
   side?: "top" | "right" | "bottom" | "left";
   showCloseButton?: boolean;
   /** Classes of the drawer when the sheet is a bottom drawer (below 768px). */
   mobileClassName?: string;
 }) {
   const isMobile = useIsMobile();
-  if (isMobile) {
+  if (isMobile && !slideInOnMobile) {
     // Every side sheet is a bottom drawer on a phone. The call site's `className` styles the desktop panel;
     // `mobileClassName` styles the drawer itself.
     return (
