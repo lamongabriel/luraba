@@ -7,6 +7,8 @@ declare module "@tanstack/react-table" {
 
   interface ColumnMeta<TData extends RowData, TValue> {
     label?: string;
+    /** Classes of the column's header and cells (e.g. `max-2xl:hidden` to drop it on narrower screens). */
+    className?: string;
     placeholder?: string;
     variant?: FilterVariant;
     options?: Option[];

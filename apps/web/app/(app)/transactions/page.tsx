@@ -220,26 +220,25 @@ export default function TransactionsPage() {
         </>
       }
     >
-      {/* Desktop: KPIs, table and upcoming on the left; the expense breakdown on the right from the KPI row down.
-          Below xl everything stacks in that order. A phone shows the compact summary and the list only. */}
-      <div className="grid min-w-0 gap-x-4 gap-y-5 xl:grid-cols-[minmax(0,1fr)_18rem]">
-        <div className="min-w-0 xl:col-start-1">
+      {/* Two columns from 1400px: KPIs and the table on the left; the expense breakdown with the upcoming bills and
+          installments right under it on the right. Below 1400px everything is one column in that order (the breakdown and
+          the upcoming list share a row from md). A phone shows the compact summary and the list only. */}
+      <div className="grid min-w-0 items-start gap-x-5 gap-y-6 min-[1400px]:grid-cols-[minmax(0,1fr)_20rem] 2xl:grid-cols-[minmax(0,1fr)_23rem]">
+        <div className="flex min-w-0 flex-col gap-5">
           <TransactionAnalyticsSummary
             query={analyticsQuery}
             language={language}
             precision={precision}
             mobileAction={dateChip}
           />
+          {tableContent}
         </div>
-        <div className="min-w-0 xl:col-start-2 xl:row-span-3 xl:row-start-1 xl:self-start">
+        <div className="grid min-w-0 gap-6 max-md:hidden md:grid-cols-2 min-[1400px]:grid-cols-1">
           <TransactionAnalyticsRail
             analyticsQuery={analyticsQuery}
             language={language}
             precision={precision}
           />
-        </div>
-        <div className="min-w-0 xl:col-start-1">{tableContent}</div>
-        <div className="min-w-0 xl:col-start-1">
           <TransactionUpcomingSection
             query={upcomingQuery}
             language={language}

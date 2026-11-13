@@ -39,3 +39,17 @@ Compared against Nexus (`staging`, read only): `ui/bottom-sheet.tsx`, `ui/respon
 - Base UI popups (ReUI cascader) are desktop only; mobile filters use the custom drawer.
 - Nexus's `QUERY_CONTROL_CLASS` (one class for toolbar controls) and its theme token guard tests have no
   Luraba equivalent yet. Luraba has a single dark theme, so there is no light mode to audit.
+
+## Transactions page and filters port (second pass)
+
+Ported from Nexus `components/query-filters` (read, not copied verbatim; Luraba keeps its data layer):
+
+- `filter-bar.tsx`: one toolbar row like `QueryToolbar`: search and the "Filter" button (ReUI add-filter popover) on the left, date filter, Clear and the "Actions" menu on the right; chips wrap on their own line.
+- `fields.tsx`: Nexus operator catalogs per kind (is any of / is none of / is / is not; equals, greater/less than, at least/most, between; date is / before / after / on or before / on or after / between), an icon on every field, fields with no options dropped. API: new `exclude*` params on the transactions feed so negations are exact.
+- `actions-menu.tsx`: Actions holds only Columns (no filters in it).
+- `date-filter.tsx`: one short label, capped width; phone = bottom drawer with a vertical preset list, range calendar and a fixed Apply footer.
+- `mobile-filters.tsx`: Nexus's screen-by-screen drawer (list, field, condition, value), fixed header and footer.
+- `side-panel.tsx` / `ui/sheet.tsx` / `forms/form-actions.tsx`: fixed header, scrolling body, fixed footer in every drawer; 44px full-width submit on phones.
+- Transactions layout: two columns from 1400px (breakdown, then upcoming below it), single column below; Type column only from 2xl; Merchant/Created by hidden by default.
+
+Not done: conventions test/READMEs update, unit tests for the new operators, 900/1100px and 375/390px full sweeps, light-mode check.
