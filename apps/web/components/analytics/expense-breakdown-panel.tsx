@@ -12,6 +12,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/finance";
 import { CURATED_COLOR_PRESETS } from "@/lib/icons";
+import { cn } from "@/lib/utils";
 
 export function ExpenseBreakdownPanel({
   analytics,
@@ -22,7 +23,8 @@ export function ExpenseBreakdownPanel({
   language?: string;
   precision?: number;
 }) {
-  const items = analytics.expenseBreakdown.items;
+  const [kind, setKind] = React.useState<"expense" | "income">("expense");
+  const items = (kind === "expense" ? analytics.expenseBreakdown : analytics.incomeBreakdown).items;
   const [activeIndex, setActiveIndex] = React.useState(0);
   const chartItems = items.map((item, index) => ({
     ...item,
@@ -31,7 +33,30 @@ export function ExpenseBreakdownPanel({
 
   return (
     <PanelCard
-      title="Expense breakdown"
+      title={kind === "expense" ? "Expense breakdown" : "Income breakdown"}
+      actions={
+        <div className="flex rounded-full bg-muted p-0.5 text-xs">
+          {(["expense", "income"] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={kind === value}
+              onClick={() => {
+                setKind(value);
+                setActiveIndex(0);
+              }}
+              className={cn(
+                "rounded-full px-2.5 py-1 font-medium capitalize transition-colors",
+                kind === value
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground",
+              )}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
+      }
       icon={<HugeiconsIcon icon={PieChartIcon} strokeWidth={2} />}
       contentClassName="space-y-4"
     >
@@ -39,8 +64,12 @@ export function ExpenseBreakdownPanel({
         <EmptyState
           variant="embedded"
           icon={<HugeiconsIcon icon={PieChartIcon} strokeWidth={1.8} className="size-5" />}
-          title="No expenses in this period"
-          description="Expenses you add or import show up here by category."
+          title={kind === "expense" ? "No expenses in this period" : "No income in this period"}
+          description={
+            kind === "expense"
+              ? "Expenses you add or import show up here by category."
+              : "Income you add or import shows up here by category."
+          }
         />
       ) : (
         <>
@@ -73,7 +102,10 @@ export function ExpenseBreakdownPanel({
               />
             </PieChart>
           </ChartContainer>
-          <ul className="space-y-2" aria-label="Expense categories">
+          <ul
+            className="space-y-2"
+            aria-label={kind === "expense" ? "Expense categories" : "Income categories"}
+          >
             {chartItems.map((item) => (
               <li key={item.id ?? "uncategorized"} className="flex items-center gap-2">
                 <span

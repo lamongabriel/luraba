@@ -86,6 +86,18 @@ const analyticsMetricSchema = z.object({
   changePercent: z.number().nullable(),
   trend: z.array(z.object({ date: z.string(), value: z.number().int() })),
 });
+const categoryBreakdownSchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.uuid().nullable(),
+      name: z.string(),
+      icon: z.string().nullable(),
+      color: z.string().nullable(),
+      amount: z.number().int(),
+      percentage: z.number(),
+    }),
+  ),
+});
 export const transactionAnalyticsSchema = z.object({
   currencyCode: currencyCodeSchema,
   dateFrom: z.string().nullable(),
@@ -95,18 +107,8 @@ export const transactionAnalyticsSchema = z.object({
     moneyOut: analyticsMetricSchema,
     net: analyticsMetricSchema,
   }),
-  expenseBreakdown: z.object({
-    items: z.array(
-      z.object({
-        id: z.uuid().nullable(),
-        name: z.string(),
-        icon: z.string().nullable(),
-        color: z.string().nullable(),
-        amount: z.number().int(),
-        percentage: z.number(),
-      }),
-    ),
-  }),
+  expenseBreakdown: categoryBreakdownSchema,
+  incomeBreakdown: categoryBreakdownSchema,
 });
 export const upcomingTransactionSourceSchema = z.enum([
   "credit_card_installment",

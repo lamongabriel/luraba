@@ -221,8 +221,8 @@ export default function TransactionsPage() {
       }
     >
       {/* Two columns from 1400px: KPIs and the table on the left; the expense breakdown with the upcoming bills and
-          installments right under it on the right. Below 1400px everything is one column in that order (the breakdown and
-          the upcoming list share a row from md). A phone shows the compact summary and the list only. */}
+          installments right under it on the right. Below 1400px everything is one column in that order. The breakdown and the upcoming list are always stacked
+          at the same width, never side by side. A phone shows the compact summary and the list only. */}
       <div className="grid min-w-0 items-start gap-x-5 gap-y-6 min-[1400px]:grid-cols-[minmax(0,1fr)_20rem] 2xl:grid-cols-[minmax(0,1fr)_23rem]">
         <div className="flex min-w-0 flex-col gap-5">
           <TransactionAnalyticsSummary
@@ -233,7 +233,7 @@ export default function TransactionsPage() {
           />
           {tableContent}
         </div>
-        <div className="grid min-w-0 gap-6 max-md:hidden md:grid-cols-2 min-[1400px]:grid-cols-1">
+        <div className="flex min-w-0 flex-col gap-6 max-md:hidden">
           <TransactionAnalyticsRail
             analyticsQuery={analyticsQuery}
             language={language}

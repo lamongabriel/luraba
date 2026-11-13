@@ -91,6 +91,7 @@ describe("transaction analytics routes", () => {
           }),
         ],
       },
+      incomeBreakdown: { items: [] },
     });
   });
 

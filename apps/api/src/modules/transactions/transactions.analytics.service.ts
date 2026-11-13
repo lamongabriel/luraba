@@ -128,6 +128,44 @@ function createMetric(
   };
 }
 
+function buildBreakdown(rows: ConvertedRow[], kind: "expense" | "income") {
+  const breakdown = new Map<
+    string,
+    { id: string | null; name: string; icon: string | null; color: string | null; amount: number }
+  >();
+  for (const row of rows) {
+    if ((row.originType === "income") !== (kind === "income")) continue;
+    const key = row.categoryId ?? "uncategorized";
+    const item = breakdown.get(key) ?? {
+      id: row.categoryId,
+      name: row.categoryName ?? "Uncategorized",
+      icon: row.categoryIcon,
+      color: row.categoryColor,
+      amount: 0,
+    };
+    item.amount += row.originType === "refund" ? -row.amount : row.amount;
+    breakdown.set(key, item);
+  }
+  const sorted = Array.from(breakdown.values()).sort((a, b) => b.amount - a.amount);
+  const top = sorted.slice(0, 10);
+  if (sorted.length > 10) {
+    top.push({
+      id: null,
+      name: "Other",
+      icon: null,
+      color: null,
+      amount: sorted.slice(10).reduce((total, item) => total + item.amount, 0),
+    });
+  }
+  const total = top.reduce((sum, item) => sum + item.amount, 0);
+  return {
+    items: top.map((item) => ({
+      ...item,
+      percentage: total === 0 ? 0 : Number(((item.amount / total) * 100).toFixed(2)),
+    })),
+  };
+}
+
 export async function getAnalytics(context: HouseholdContext, input: TransactionFilterQuery) {
   const parsed = transactionAnalyticsQuerySchema.parse(input);
   const today = formatISODate(getTodayInTimezone(context.timezone));
@@ -155,41 +193,8 @@ export async function getAnalytics(context: HouseholdContext, input: Transaction
     convertRows(previousRows, currencyCode),
   ]);
   const bucket = chooseBucket(query.dateFrom ?? null, query.dateTo ?? null);
-  const breakdown = new Map<
-    string,
-    {
-      id: string | null;
-      name: string;
-      icon: string | null;
-      color: string | null;
-      amount: number;
-    }
-  >();
-  for (const row of current) {
-    if (row.originType === "income") continue;
-    const key = row.categoryId ?? "uncategorized";
-    const item = breakdown.get(key) ?? {
-      id: row.categoryId,
-      name: row.categoryName ?? "Uncategorized",
-      icon: row.categoryIcon,
-      color: row.categoryColor,
-      amount: 0,
-    };
-    item.amount += row.originType === "refund" ? -row.amount : row.amount;
-    breakdown.set(key, item);
-  }
-  const sortedBreakdown = Array.from(breakdown.values()).sort((a, b) => b.amount - a.amount);
-  const top = sortedBreakdown.slice(0, 10);
-  if (sortedBreakdown.length > 10) {
-    top.push({
-      id: null,
-      name: "Other",
-      icon: null,
-      color: null,
-      amount: sortedBreakdown.slice(10).reduce((total, item) => total + item.amount, 0),
-    });
-  }
-  const totalExpense = top.reduce((total, item) => total + item.amount, 0);
+  const expenseBreakdown = buildBreakdown(current, "expense");
+  const incomeBreakdown = buildBreakdown(current, "income");
 
   return transactionAnalyticsSchema.parse({
     currencyCode,
@@ -200,12 +205,7 @@ export async function getAnalytics(context: HouseholdContext, input: Transaction
       moneyOut: createMetric(current, previous, "moneyOut", bucket),
       net: createMetric(current, previous, "net", bucket),
     },
-    expenseBreakdown: {
-      items: top.map((item) => ({
-        ...item,
-        percentage:
-          totalExpense === 0 ? 0 : Number(((item.amount / totalExpense) * 100).toFixed(2)),
-      })),
-    },
+    expenseBreakdown,
+    incomeBreakdown,
   });
 }
