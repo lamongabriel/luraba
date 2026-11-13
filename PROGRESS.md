@@ -9,9 +9,11 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 - `scripts/dev.sh` runner, Drizzle Studio and prod dump restore (`9cb8239`). Local `luraba_db` holds the production data; the old one is `luraba_db_pre_restore`.
 
 ## In progress (worker sessions, not merged yet)
-- Transactions page redesign (session transactions-redesign, branch `claude/exciting-bun-163647`): KPI restyle, layout, dark theme, mobile header.
+- Transactions page redesign (session transactions-redesign, branch `claude/exciting-bun-163647`): KPI restyle, layout, dark theme, mobile header. Told that the sidebar stays a sidebar (no bottom drawer).
 - Credit cards page redesign (session cards-page-redesign, branch `claude/friendly-wiles-647540`): card carousel, recent transactions, utilization.
 - Budgets, Goals and Bills pages (session budgets-goals-bills-redesign): split `/plan` back into separate Budgets and Goals pages, redesign Bills.
+
+- Overlay audit and Nexus design audit (session reui-filters-drawers, follow-up on its branch `claude/awesome-visvesvaraya-3a6d6a`): the sidebar stays a sidebar on mobile; every other popover, modal, sheet, menu (including the user menu) becomes a bottom drawer; adopt Nexus's shared filter/drawer/sidebar patterns; write docs/nexus-audit.md.
 
 ## Next
 - Merge each finished branch into `redesign` (check conflicts around the shared KPI cards, navigation and filters), run typecheck, check, tests.
