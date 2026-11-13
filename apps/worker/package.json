@@ -23,7 +23,7 @@
     "@luraba/notifications": "workspace:*",
     "@luraba/queue": "workspace:*",
     "bullmq": "^6.5.1",
-    "dotenv": "^16.6.1",
+    "dotenv": "^18.0.9",
     "drizzle-orm": "^0.45.1",
     "ioredis": "^6.0.0",
     "nodemailer": "^9.0.3",
