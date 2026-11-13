@@ -67,3 +67,10 @@ Tests: `__tests__/charts.test.tsx`.
 
 `ChartCard` (and so every `*ChartCard`) takes `flat`: no card, no header, only the plot with the same
 loading, error and empty bodies. Use it for a hero chart that sits on the page under a headline number.
+
+## Palette and dark theme
+
+The app is dark only. The categorical ramp (`--chart-1..5`, the lightest green first, borrowed from the Nexus dark theme)
+and the semantic money colors (`--chart-positive`, `--chart-negative`) are defined once in `app/globals.css`;
+`chart-theme.ts` only references them. Change the palette there and every chart, gauge and KPI sparkline follows. Keep each
+value at 3:1 or better against `--card`.

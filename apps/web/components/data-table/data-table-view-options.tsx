@@ -21,7 +21,7 @@ interface DataTableViewOptionsProps<TData> extends React.ComponentProps<typeof P
   disabled?: boolean;
 }
 
-function getColumnLabel<TData>(column: Column<TData, unknown>) {
+export function getColumnLabel<TData>(column: Column<TData, unknown>) {
   if (column.columnDef.meta?.label) return column.columnDef.meta.label;
   if (typeof column.columnDef.header === "string") {
     return column.columnDef.header;

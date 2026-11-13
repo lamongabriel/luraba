@@ -13,8 +13,8 @@ export const CHART_PALETTE = [
 ] as const;
 
 export const CHART_SEMANTIC = {
-  positive: "oklch(0.72 0.15 160)",
-  negative: "oklch(0.66 0.2 25)",
+  positive: "var(--color-chart-positive)",
+  negative: "var(--color-chart-negative)",
   neutral: "var(--color-chart-1)",
   /** Close to a limit: a budget at 80-100%. */
   warning: "oklch(0.8 0.16 80)",

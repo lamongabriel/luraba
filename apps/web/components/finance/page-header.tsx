@@ -20,6 +20,7 @@ export function PageHeader({
   title,
   subtitle,
   actions,
+  mobileActions,
   back,
   compact = false,
   leading,
@@ -28,6 +29,11 @@ export function PageHeader({
   title: string;
   subtitle: React.ReactNode;
   actions?: React.ReactNode;
+  /**
+   * Phone-only actions: small circular icon buttons (`PageHeaderIconButton`) at the right of the title row, in place
+   * of `actions` (which are then hidden below `md`). Without it, `actions` show on every width as before.
+   */
+  mobileActions?: React.ReactNode;
   back?: PageBackLink;
   /** A smaller title and subtitle, for pages that sit inside another page's menu. */
   compact?: boolean;
@@ -45,7 +51,12 @@ export function PageHeader({
           </Link>
         </Button>
       ) : null}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div
+        className={cn(
+          "flex gap-4 md:flex-row md:items-center md:justify-between",
+          mobileActions ? "flex-row items-start" : "flex-col",
+        )}
+      >
         <div className="flex min-w-0 items-center gap-3">
           {leading}
           <div className="min-w-0">
@@ -61,8 +72,56 @@ export function PageHeader({
             </Typography>
           </div>
         </div>
-        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+        {actions ? (
+          <div
+            className={cn("flex flex-wrap items-center gap-2", mobileActions && "max-md:hidden")}
+          >
+            {actions}
+          </div>
+        ) : null}
+        {mobileActions ? (
+          <div className="flex shrink-0 items-center gap-2 md:hidden">{mobileActions}</div>
+        ) : null}
       </div>
     </header>
+  );
+}
+
+/**
+ * A small circular icon button for a phone header (`PageHeader mobileActions`): add, filter. `primary` is the
+ * filled main action; `badge` is a count dot (active filters). The label is the accessible name.
+ */
+export function PageHeaderIconButton({
+  label,
+  icon,
+  onClick,
+  primary = false,
+  badge,
+  disabled,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  primary?: boolean;
+  badge?: number;
+  disabled?: boolean;
+}) {
+  return (
+    <Button
+      type="button"
+      size="icon"
+      variant={primary ? "default" : "outline"}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn("relative size-9 rounded-full", !primary && "bg-card dark:bg-input/30")}
+    >
+      {icon}
+      {badge ? (
+        <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-[0.6rem] font-semibold text-primary-foreground ring-2 ring-background">
+          {badge}
+        </span>
+      ) : null}
+    </Button>
   );
 }

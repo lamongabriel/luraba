@@ -73,3 +73,18 @@ export function getPreferredDateRange(
       return { dateFrom: undefined, dateTo: undefined };
   }
 }
+
+/**
+ * The "This month" range of a page whose rows can belong to an open credit card billing cycle: from the earliest
+ * of the 1st of the month and the given open-cycle start dates (a cycle opened on the 27th of last month reaches
+ * back into it), through the last day of the month. A cycle that starts later than the 1st changes nothing.
+ */
+export function getMonthRangeWithOpenCycles(
+  timezone: string,
+  openCycleStarts: readonly string[] = [],
+): DateRange {
+  const today = getTodayInTimezone(timezone);
+  const monthStart = formatISODate(startOfMonth(today));
+  const earliest = openCycleStarts.reduce((min, start) => (start < min ? start : min), monthStart);
+  return { dateFrom: earliest, dateTo: formatISODate(endOfMonth(today)) };
+}

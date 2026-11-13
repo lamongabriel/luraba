@@ -18,7 +18,9 @@
   --secondary: oklch(0.252 0 0);
   --secondary-foreground: oklch(0.852 0.0205 100.6306);
   --muted: oklch(0.285 0 0);
-  --muted-foreground: oklch(0.6348 0.0113 81.7875);
+  --muted-foreground: oklch(
+    0.7 0.0113 81.7875
+  ); /* Nexus dark uses 0.74; 0.70 keeps >=5:1 on --card */
   --accent: oklch(0.3329 0 0);
   --accent-foreground: oklch(0.852 0.0205 100.6306);
   --destructive: oklch(0.6368 0.2078 25.3313);
@@ -26,11 +28,17 @@
   --border: oklch(0.2931 0 0);
   --input: oklch(0.2931 0 0);
   --ring: oklch(0.852 0.0205 100.6306);
-  --chart-1: oklch(0.6863 0.1743 34.2614);
-  --chart-2: oklch(0.859 0.0209 74.6369);
-  --chart-3: oklch(0.6348 0.0113 81.7875);
-  --chart-4: oklch(0.4681 0.0069 84.5829);
-  --chart-5: oklch(0.3523 0 0);
+  /* Chart ramp borrowed from the Nexus dark theme: lightest green first, since the lightest values carry the most
+     weight on a dark surface. All five stay above 3:1 against --card (graphics contrast). This is the one place the
+     palette lives; charts read var(--chart-N) / var(--color-chart-N). */
+  --chart-1: #a2e6ca;
+  --chart-2: #7dc0a5;
+  --chart-3: #599b82;
+  --chart-4: #3f8a6e;
+  --chart-5: #2f7a60;
+  /* Semantic money colors (income / expense) for charts and tiles; see components/kpi. */
+  --chart-positive: oklch(0.78 0.15 160);
+  --chart-negative: oklch(0.72 0.17 22);
   --sidebar: oklch(0.173 0 0);
   --sidebar-foreground: oklch(0.9173 0.0133 82.4015);
   --sidebar-primary: oklch(0.852 0.0205 100.6306);
@@ -92,6 +100,8 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-positive: var(--chart-positive);
+  --color-chart-negative: var(--chart-negative);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);

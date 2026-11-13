@@ -1,6 +1,6 @@
 "use client";
 
-import { Add01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, FilterIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type {
   TransactionAnalyticsQuery,
@@ -11,9 +11,15 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { TransactionsError } from "@/app/(app)/transactions/_error";
 import { TransactionsLoading } from "@/app/(app)/transactions/_loading";
-import { TransactionAnalyticsRail } from "@/components/analytics/transaction-analytics-rail";
+import {
+  TransactionAnalyticsRail,
+  TransactionUpcomingSection,
+} from "@/components/analytics/transaction-analytics-rail";
 import { TransactionAnalyticsSummary } from "@/components/analytics/transaction-analytics-summary";
+import { UPCOMING_ROWS } from "@/components/analytics/upcoming-transactions-panel";
+import { DateFilterChip } from "@/components/filters";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
+import { PageHeaderIconButton } from "@/components/finance/page-header";
 import { PERMISSIONS, PermissionButton } from "@/components/permissions";
 import { TransactionsTable } from "@/components/tables/transactions/transactions-table";
 import { DeleteTransactionModal } from "@/components/transactions/delete-transaction-modal";
@@ -21,6 +27,7 @@ import {
   TransactionSheet,
   type TransactionSheetMode,
 } from "@/components/transactions/transaction-sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useTransactionParams } from "@/hooks/use-transaction-params";
 import {
   useTransactionAnalyticsQuery,
@@ -55,7 +62,7 @@ export default function TransactionsPage() {
     return {
       ...filters,
       page: 1,
-      perPage: 5,
+      perPage: UPCOMING_ROWS,
       sort: "effectiveDate" as const,
       sortDirection: "asc" as const,
     };
@@ -63,9 +70,12 @@ export default function TransactionsPage() {
   const analyticsQuery = useTransactionAnalyticsQuery(analyticsFilters, {
     enabled: params.ready,
   });
+  const isMobile = useIsMobile();
+  // The upcoming section is not shown on a phone, so it is not fetched there either.
   const upcomingQuery = useUpcomingTransactionsQuery(upcomingFilters, {
-    enabled: params.ready,
+    enabled: params.ready && !isMobile,
   });
+  const [mobileFiltersOpen, setMobileFiltersOpen] = React.useState(false);
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const [sheetMode, setSheetMode] = React.useState<TransactionSheetMode>("create");
   const [selectedRow, setSelectedRow] = React.useState<TransactionFeedRow | null>(null);
@@ -152,8 +162,9 @@ export default function TransactionsPage() {
       (currency) => currency.code === analyticsQuery.data?.currencyCode,
     )?.precision ?? 2;
 
+  const dateChip = <DateFilterChip date={params.date} />;
   const tableContent = lookupsQuery.isPending ? (
-    <TransactionsLoading />
+    <TransactionsLoading dateFilter={dateChip} />
   ) : lookupsQuery.isError ? (
     <TransactionsError
       message={lookupsQuery.error.message}
@@ -166,13 +177,14 @@ export default function TransactionsPage() {
       onCreate={openCreate}
       onRows={syncSelectedRow}
       onView={(row) => openRow(row, "view")}
+      mobileFiltersOpen={mobileFiltersOpen}
+      onMobileFiltersOpenChange={setMobileFiltersOpen}
       params={params}
     />
   );
 
   return (
     <InternalPageLayout
-      className="flex flex-1 flex-col"
       title="Transactions"
       subtitle="Every purchase, payment and transfer across your accounts and cards."
       actions={
@@ -185,21 +197,54 @@ export default function TransactionsPage() {
           Add transaction
         </PermissionButton>
       }
+      mobileActions={
+        <>
+          <PageHeaderIconButton
+            label="Filters"
+            icon={<HugeiconsIcon icon={FilterIcon} strokeWidth={2} />}
+            badge={params.filters.activeCount}
+            disabled={lookupsQuery.isPending}
+            onClick={() => setMobileFiltersOpen(true)}
+          />
+          <PermissionButton
+            permission={PERMISSIONS.TRANSACTIONS_CREATE}
+            deniedMessage="Your household role cannot create transactions."
+            whenDenied="hidden"
+            size="icon"
+            aria-label="Add transaction"
+            className="size-9 rounded-full"
+            onClick={openCreate}
+          >
+            <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
+          </PermissionButton>
+        </>
+      }
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-5">
-        <TransactionAnalyticsSummary
-          query={analyticsQuery}
-          language={language}
-          precision={precision}
-        />
-        <div className="grid min-h-0 min-w-0 flex-1 gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
-          <div className="flex min-h-0 min-w-0 flex-col">{tableContent}</div>
-          <TransactionAnalyticsRail
-            analyticsQuery={analyticsQuery}
-            upcomingQuery={upcomingQuery}
+      {/* Desktop: KPIs, table and upcoming on the left; the expense breakdown on the right from the KPI row down.
+          Below xl everything stacks in that order. A phone shows the compact summary and the list only. */}
+      <div className="grid min-w-0 gap-x-4 gap-y-5 xl:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="min-w-0 xl:col-start-1">
+          <TransactionAnalyticsSummary
+            query={analyticsQuery}
             language={language}
             precision={precision}
-            onSelectUpcoming={openUpcoming}
+            mobileAction={dateChip}
+          />
+        </div>
+        <div className="min-w-0 xl:col-start-2 xl:row-span-3 xl:row-start-1 xl:self-start">
+          <TransactionAnalyticsRail
+            analyticsQuery={analyticsQuery}
+            language={language}
+            precision={precision}
+          />
+        </div>
+        <div className="min-w-0 xl:col-start-1">{tableContent}</div>
+        <div className="min-w-0 xl:col-start-1">
+          <TransactionUpcomingSection
+            query={upcomingQuery}
+            language={language}
+            precision={precision}
+            onSelect={openUpcoming}
           />
         </div>
       </div>

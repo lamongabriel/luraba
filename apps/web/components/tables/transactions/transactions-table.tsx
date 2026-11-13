@@ -8,7 +8,7 @@ import type {
 import * as React from "react";
 import { TransactionsEmpty } from "@/app/(app)/transactions/_empty";
 import { TransactionsError } from "@/app/(app)/transactions/_error";
-import { TransactionsLoading } from "@/app/(app)/transactions/_loading";
+import { TransactionsTableLoading } from "@/app/(app)/transactions/_loading";
 import { DataTable } from "@/components/data-table/data-table";
 import {
   getTransactionsMobileRow,
@@ -26,6 +26,8 @@ export function TransactionsTable({
   onCreate,
   onRows,
   onView,
+  mobileFiltersOpen,
+  onMobileFiltersOpenChange,
   params,
 }: {
   language: string;
@@ -34,6 +36,9 @@ export function TransactionsTable({
   /** Called with the rows on screen whenever they change, so an open sheet can show fresh data. */
   onRows?: (rows: TransactionFeedRow[]) => void;
   onView: (row: TransactionFeedRow) => void;
+  /** The phone Filters drawer, opened from the page header. */
+  mobileFiltersOpen: boolean;
+  onMobileFiltersOpenChange: (open: boolean) => void;
   params: ReturnType<typeof useTransactionParams>;
 }) {
   const queryParams = params.apiParams as ListTransactionsQuery;
@@ -72,13 +77,29 @@ export function TransactionsTable({
   });
   const clearFilters = params.clearFilters;
 
-  if (query.isPending) return <TransactionsLoading />;
-  if (query.isError) {
-    return <TransactionsError message={query.error.message} onRetry={() => void query.refetch()} />;
-  }
+  // The toolbar (and so the fixed date filter) renders in every state; only the body below it changes.
+  const body = query.isPending ? (
+    <TransactionsTableLoading />
+  ) : query.isError ? (
+    <TransactionsError message={query.error.message} onRetry={() => void query.refetch()} />
+  ) : rows.length === 0 ? (
+    <TransactionsEmpty
+      hasFilters={hasTransactionFilters}
+      onClearFilters={clearFilters}
+      onCreate={onCreate}
+    />
+  ) : (
+    <DataTable
+      table={table}
+      onRowClick={(row) => onView(row.original)}
+      mobile={mobile}
+      totalCount={pagination?.totalCount}
+      pageSizeOptions={[10, 20, 50, 100]}
+    />
+  );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2.5">
+    <div className="flex min-w-0 flex-col gap-2.5">
       <TransactionsTableToolbar
         table={table}
         lookups={lookups}
@@ -86,24 +107,10 @@ export function TransactionsTable({
         setSearch={params.setSearch}
         filters={params.filters}
         date={params.date}
+        mobileFiltersOpen={mobileFiltersOpen}
+        onMobileFiltersOpenChange={onMobileFiltersOpenChange}
       />
-
-      {rows.length === 0 ? (
-        <TransactionsEmpty
-          hasFilters={hasTransactionFilters}
-          onClearFilters={clearFilters}
-          onCreate={onCreate}
-        />
-      ) : (
-        <DataTable
-          table={table}
-          onRowClick={(row) => onView(row.original)}
-          mobile={mobile}
-          fill
-          totalCount={pagination?.totalCount}
-          pageSizeOptions={[10, 20, 50, 100]}
-        />
-      )}
+      {body}
     </div>
   );
 }
