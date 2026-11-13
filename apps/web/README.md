@@ -75,7 +75,7 @@ that invalidates the key. Reusable file/attachment UI is documented in
   (a file that appears in the list, an edit that returns to the updated details).
 - Panels beside a table are `PanelCard` (`components/finance/panel-card.tsx`) so headers match; account pickers are `AccountSelect`.
 
-**Charts (mandatory).** Every chart is `AreaChartCard`, `BarChartCard` or `DonutChartCard` from [components/charts](components/charts/README.md). **Period filter.** Pages filtered by dates use `usePeriodFilter` + `PeriodFilter` (`components/filters/period-filter.tsx`): one button that opens a popover with the presets beside a day-range calendar. Accounts UI: [components/accounts/README.md](components/accounts/README.md).
+**Charts (mandatory).** Every chart is `AreaChartCard`, `BarChartCard` or `DonutChartCard` from [components/charts](components/charts/README.md). **Filters.** Every filter row is a `FilterBar` with `useFilters` and the fixed, required date filter (`useDateFilter`) from [components/filters](components/filters/README.md); overlays become bottom drawers on mobile ([components/ui](components/ui/README.md)). Accounts UI: [components/accounts/README.md](components/accounts/README.md).
 
 Integrations UI (`/household/integrations`, `components/integrations/`): provider sections with status, connect/replace form and remove confirmation; the stored secret is never shown. See [integrations module](../api/src/modules/integrations/README.md).
 

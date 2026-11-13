@@ -40,7 +40,7 @@ Supporting        charts and breakdowns, compact, beside or under the main body
 Reference         details (labeled definition grid), shown once, lowest priority
 ```
 
-- The **period control** is a single control. Never two ways to pick the same date. If a filter can
+- The **period control** is the fixed date filter chip (`useDateFilter`, see `components/filters`): always applied, editable, never removable. Never two ways to pick the same date. If a filter can
   be changed, provide a one-click reset (a "Today" or "This month" button).
 - The **hero** is plain type with a delta chip, not a card. A chart sits directly under it.
 - The **stat strip** is exactly as it is today: slim, hairline dividers, no tinted background (the

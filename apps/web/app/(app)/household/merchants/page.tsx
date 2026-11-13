@@ -90,7 +90,8 @@ export default function MerchantsPage() {
   const canUpdate = can(PERMISSIONS.MERCHANTS_UPDATE);
   const canDelete = can(PERMISSIONS.MERCHANTS_DELETE);
 
-  const { search, setSearch, normalizedSearch, hasFilters } = useApiParams();
+  const { search, setSearch, normalizedSearch } = useApiParams();
+  const hasFilters = normalizedSearch.length > 0;
   const createEdit = useEntityDisclosure<Merchant>();
   const deleteDisclosure = useEntityDisclosure<Merchant>();
 

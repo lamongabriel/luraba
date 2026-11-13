@@ -21,11 +21,15 @@ function sourceFiles(dir: string): string[] {
 }
 
 function offenders(pattern: RegExp): string[] {
-  return ["app", "components", "lib"]
-    .flatMap((dir) => sourceFiles(join(ROOT, dir)))
-    .map((path) => relative(ROOT, path))
-    .filter((path) => !ALLOWED.has(path))
-    .filter((path) => pattern.test(readFileSync(join(ROOT, path), "utf8")));
+  return (
+    ["app", "components", "lib"]
+      .flatMap((dir) => sourceFiles(join(ROOT, dir)))
+      .map((path) => relative(ROOT, path))
+      .filter((path) => !ALLOWED.has(path))
+      // Vendored ReUI (components/reui, installed with the ReUI CLI). Luraba's own editors replace its number inputs.
+      .filter((path) => !path.startsWith("components/reui/"))
+      .filter((path) => pattern.test(readFileSync(join(ROOT, path), "utf8")))
+  );
 }
 
 describe("shared formatting conventions (docs/formatting.md)", () => {
@@ -225,5 +229,67 @@ describe("no tables on mobile (components/lists/README.md)", () => {
         return usages.some((usage) => !/\bmobile=/u.test(usage));
       });
     expect(missing).toEqual([]);
+  });
+});
+
+describe("filters (components/filters/README.md)", () => {
+  it("draws filters only through FilterBar, never ReUI Filters directly", () => {
+    const direct = offenders(/from "@\/components\/reui\/filters\//u).filter(
+      (path) => !path.startsWith("components/filters/"),
+    );
+    expect(direct).toEqual([]);
+  });
+
+  it("keeps no page-local filter state or URL parsing for filters", () => {
+    // The filter chips and the date filter live in components/filters; pages read `filters.values` / `date`.
+    expect(
+      offenders(/ApiParamFilterConfig|createApiFilterParser|FilterFaceted|PeriodFilter/u),
+    ).toEqual([]);
+  });
+
+  it("gives every page that lists dated data the required date filter, not a second period control", () => {
+    expect(offenders(/usePeriodFilter|<PeriodFilter\b/u)).toEqual([]);
+  });
+});
+
+describe("overlays are bottom drawers on mobile (components/ui/README.md)", () => {
+  /**
+   * Feature files that still import the raw `Dialog` wrappers. `DialogContent` is itself a bottom drawer below
+   * 768px, so they work on a phone; new features use `Modal` (forms, confirmations) or `SidePanel` (detail and edit
+   * panels). The list can only shrink.
+   */
+  const RAW_DIALOG = new Set([
+    "components/households/household-delete-dialog.tsx",
+    "components/households/household-invitations-table.tsx",
+    "components/households/remove-member-dialog.tsx",
+    "components/households/roles/change-role-dialog.tsx",
+    "components/imports/import-row-dialog.tsx",
+    "components/uploads/image-cropper-dialog.tsx",
+  ]);
+  const featureOffenders = (pattern: RegExp) =>
+    offenders(pattern).filter(
+      (path) => !path.startsWith("components/ui/") && !path.startsWith("components/filters/"),
+    );
+
+  it("never builds an overlay straight on Radix or vaul; it goes through components/ui", () => {
+    expect(
+      featureOffenders(
+        /from "vaul"|import \{[^}]*\b(?:Dialog|Popover|DropdownMenu|Select|AlertDialog)\b[^}]*\} from "radix-ui"/u,
+      ),
+    ).toEqual([]);
+  });
+
+  it("imports the raw Sheet nowhere outside the side-panel shell", () => {
+    expect(
+      featureOffenders(/from "@\/components\/ui\/sheet"/u).filter(
+        (path) => path !== "components/side-panel/side-panel.tsx",
+      ),
+    ).toEqual([]);
+  });
+
+  it("imports the raw Dialog only from the documented files", () => {
+    const found = featureOffenders(/from "@\/components\/ui\/dialog"/u);
+    expect(found.filter((path) => !RAW_DIALOG.has(path))).toEqual([]);
+    expect([...RAW_DIALOG].filter((path) => !found.includes(path))).toEqual([]);
   });
 });

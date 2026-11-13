@@ -35,7 +35,7 @@ The grid uses `items-stretch` and the side column is a flex column whose last pa
 leftover height, so both columns end together. Spacing follows `docs/design-language.md`
 (`gap-8`/`gap-10`, `space-y-10`).
 
-One period control (`usePeriodFilter` + `PeriodFilter`: a single popover, presets beside a calendar)
+One period control (`useDateFilter` + `DateFilterChip`: a fixed chip with presets beside a calendar)
 drives the page. There is no "created by" line.
 
 | Section | Component | Source |

@@ -17,7 +17,8 @@ import { DataTableColumnHeader } from "@/components/data-table/data-table-column
 import { MemberMark } from "@/components/display";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
-import { FilterFaceted } from "@/components/filters/filter-faceted";
+import type { FilterFieldDef } from "@/components/filters";
+import { useFilters } from "@/components/filters/use-filters";
 import { HouseholdTableToolbar } from "@/components/households/household-table-toolbar";
 import { RemoveMemberDialog } from "@/components/households/remove-member-dialog";
 import { MemberRoleControl } from "@/components/households/roles/member-role-control";
@@ -34,6 +35,8 @@ import {
   useHouseholdRolesQuery,
 } from "@/queries/households/use-households-query";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
+
+const MEMBER_FILTER_IDS = ["roles", "emailVerified"] as const;
 
 export function HouseholdMembersTable({
   householdId,
@@ -52,17 +55,40 @@ export function HouseholdMembersTable({
       fields: ["name", "email", "role", "createdAt", "lastActiveAt"] as const,
       defaultField: "name",
     },
-    filters: {
-      roles: { type: "stringArray" },
-      emailVerified: { type: "boolean" },
-    },
   });
-  const query = useHouseholdMembersQuery(
-    householdId,
-    params.apiParams as ListHouseholdMembersQuery,
+  const filters = useFilters({ fieldIds: MEMBER_FILTER_IDS, keyPrefix: "members" });
+  const apiParams = React.useMemo(
+    () => ({
+      ...params.apiParams,
+      ...(filters.values.list("roles").length > 0 ? { roles: filters.values.list("roles") } : {}),
+      ...(filters.values.flag("emailVerified") !== null
+        ? { emailVerified: filters.values.flag("emailVerified") as boolean }
+        : {}),
+    }),
+    [params.apiParams, filters.values],
   );
+  const query = useHouseholdMembersQuery(householdId, apiParams as ListHouseholdMembersQuery);
+  const hasFilters = filters.hasFilters || params.search.trim().length > 0;
   const rolesQuery = useHouseholdRolesQuery();
   const roles = rolesQuery.data ?? [];
+  const filterDefs = React.useMemo<FilterFieldDef[]>(
+    () => [
+      {
+        id: "roles",
+        label: "Role",
+        kind: "multiselect",
+        options: roles.map((role) => ({ value: role.value, label: role.label })),
+      },
+      {
+        id: "emailVerified",
+        label: "Email",
+        kind: "boolean",
+        trueLabel: "Verified",
+        falseLabel: "Not verified",
+      },
+    ],
+    [roles],
+  );
   const remove = useRemoveHouseholdMemberMutation({
     onSuccess: async () => {
       setRemoving(null);
@@ -203,34 +229,10 @@ export function HouseholdMembersTable({
         table={table}
         search={params.search}
         onSearchChange={params.setSearch}
-        role={params.filters.roles?.[0]}
-        onRoleChange={(value) => params.setFilter("roles", value ? [value] : null)}
-        roleOptions={roles}
-        onClear={params.clearFilters}
-        hasFilters={params.hasFilters}
+        defs={filterDefs}
+        filters={filters}
         placeholder="Search members..."
-      >
-        <FilterFaceted
-          title="Email"
-          value={
-            params.filters.emailVerified === null
-              ? undefined
-              : params.filters.emailVerified
-                ? "verified"
-                : "unverified"
-          }
-          options={[
-            { value: "verified", label: "Verified" },
-            { value: "unverified", label: "Not verified" },
-          ]}
-          onValueChange={(value) =>
-            params.setFilter(
-              "emailVerified",
-              value === "verified" ? true : value === "unverified" ? false : null,
-            )
-          }
-        />
-      </HouseholdTableToolbar>
+      />
       {query.isPending ? (
         <div className="h-48 animate-pulse rounded-lg bg-muted" />
       ) : query.isError ? (
@@ -241,7 +243,7 @@ export function HouseholdMembersTable({
         />
       ) : rows.length === 0 ? (
         <EmptyState
-          title={params.hasFilters ? "No matching members" : "No members yet"}
+          title={hasFilters ? "No matching members" : "No members yet"}
           description="Members with access to this household appear here."
           icon={<HugeiconsIcon icon={UserGroupIcon} strokeWidth={1.8} />}
         />

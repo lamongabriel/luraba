@@ -13,7 +13,8 @@ import { DataTableColumnHeader } from "@/components/data-table/data-table-column
 import { MemberMark } from "@/components/display";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
-import { FilterFaceted } from "@/components/filters/filter-faceted";
+import type { FilterFieldDef } from "@/components/filters";
+import { useFilters } from "@/components/filters/use-filters";
 import { HouseholdTableToolbar } from "@/components/households/household-table-toolbar";
 import type { MobileRowConfig } from "@/components/lists/mobile-list";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +51,8 @@ import {
   useHouseholdRolesQuery,
 } from "@/queries/households/use-households-query";
 
+const INVITE_FILTER_IDS = ["roles", "statuses"] as const;
+
 export function HouseholdInvitationsTable({
   householdId,
   householdRole,
@@ -67,21 +70,45 @@ export function HouseholdInvitationsTable({
       defaultField: "createdAt",
       defaultDirection: "desc",
     },
-    filters: {
-      roles: { type: "stringArray" },
-      statuses: { type: "stringArray", defaultValue: ["pending"] },
-    },
-    suppressDefaultFiltersOnClear: true,
   });
-  const query = useHouseholdInvitesQuery(
-    householdId,
-    params.apiParams as ListHouseholdInvitesQuery,
+  const filters = useFilters({
+    fieldIds: INVITE_FILTER_IDS,
+    keyPrefix: "invitations",
+    defaultRules: [["statuses", "is_any_of", ["pending"]]],
+  });
+  const apiParams = React.useMemo(
+    () => ({
+      ...params.apiParams,
+      ...(filters.values.list("roles").length > 0 ? { roles: filters.values.list("roles") } : {}),
+      ...(filters.values.list("statuses").length > 0
+        ? { statuses: filters.values.list("statuses") }
+        : {}),
+    }),
+    [params.apiParams, filters.values],
   );
+  const query = useHouseholdInvitesQuery(householdId, apiParams as ListHouseholdInvitesQuery);
   const rolesQuery = useHouseholdRolesQuery();
   const statusesQuery = useHouseholdInviteStatusesQuery();
   const roles = rolesQuery.data ?? [];
   const statuses = statusesQuery.data ?? [];
-  const roleOptions = roles.filter((role) => role.canBeInvited);
+  const roleOptions = React.useMemo(() => roles.filter((role) => role.canBeInvited), [roles]);
+  const filterDefs = React.useMemo<FilterFieldDef[]>(
+    () => [
+      {
+        id: "roles",
+        label: "Role",
+        kind: "multiselect",
+        options: roleOptions.map((role) => ({ value: role.value, label: role.label })),
+      },
+      {
+        id: "statuses",
+        label: "Status",
+        kind: "multiselect",
+        options: statuses.map((status) => ({ value: status.value, label: status.label })),
+      },
+    ],
+    [roleOptions, statuses],
+  );
   const [pendingAction, setPendingAction] = React.useState<{
     type: "cancel" | "resend";
     invite: HouseholdInvite;
@@ -293,22 +320,10 @@ export function HouseholdInvitationsTable({
         table={table}
         search={params.search}
         onSearchChange={params.setSearch}
-        role={params.filters.roles?.[0]}
-        onRoleChange={(value) => params.setFilter("roles", value ? [value] : null)}
-        roleOptions={roleOptions}
-        onClear={params.clearFilters}
-        hasFilters={params.hasFilters}
+        defs={filterDefs}
+        filters={filters}
         placeholder="Search invitations..."
-      >
-        <FilterFaceted
-          title="Status"
-          value={params.filters.statuses?.[0]}
-          options={statuses}
-          onValueChange={(value) =>
-            params.setFilter("statuses", typeof value === "string" ? [value] : null)
-          }
-        />
-      </HouseholdTableToolbar>
+      />
       {query.isPending ? (
         <div className="h-48 animate-pulse rounded-lg bg-muted" />
       ) : query.isError ? (

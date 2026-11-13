@@ -92,7 +92,8 @@ export default function TagsPage() {
   const canUpdate = can(PERMISSIONS.TAGS_UPDATE);
   const canDelete = can(PERMISSIONS.TAGS_DELETE);
 
-  const { search, setSearch, normalizedSearch, hasFilters } = useApiParams();
+  const { search, setSearch, normalizedSearch } = useApiParams();
+  const hasFilters = normalizedSearch.length > 0;
   const createEdit = useEntityDisclosure<Tag>();
   const deleteDisclosure = useEntityDisclosure<Tag>();
 

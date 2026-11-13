@@ -1,26 +1,23 @@
 "use client";
 
 import type { TransactionSortField } from "@luraba/contracts";
-import { getPreferredDateRange } from "@luraba/domain";
-import { useSearchParams } from "next/navigation";
 import * as React from "react";
+import { useDateFilter } from "@/components/filters";
+import { useFilters } from "@/components/filters/use-filters";
 import {
-  TRANSACTION_FILTERS,
+  TRANSACTION_FILTER_IDS,
   TRANSACTION_SORT_FIELDS,
-  type TransactionTableFilters,
-  type TransactionTableFilterUpdates,
+  toTransactionApiParams,
 } from "@/components/tables/transactions/transactions-table-filters";
 import { useApiParams } from "@/hooks/use-api-params";
-import { useAuthSessionStore } from "@/stores/auth-session-store";
+import type { ApiParamValue } from "@/lib/api-params";
 
+/**
+ * Everything the transactions page reads from the URL: search, page, sort, the filter chips and the required date
+ * filter (the household's default period until the user edits it). `apiParams` is the list query.
+ */
 export function useTransactionParams() {
-  const bootstrapStatus = useAuthSessionStore((state) => state.bootstrapStatus);
-  const preferences = useAuthSessionStore((state) => state.user?.preferences);
-  const searchParams = useSearchParams();
-  const clearedDefaultPeriod = React.useRef(false);
-  const initializedDefaultPeriod = React.useRef(false);
   const params = useApiParams({
-    filters: TRANSACTION_FILTERS,
     pagination: true,
     defaultPerPage: 20,
     sorting: {
@@ -29,109 +26,35 @@ export function useTransactionParams() {
       defaultDirection: "desc",
     },
   });
+  const filters = useFilters({ fieldIds: TRANSACTION_FILTER_IDS });
+  const date = useDateFilter();
 
-  const urlDateFrom = searchParams.get("dateFrom") ?? "";
-  const urlDateTo = searchParams.get("dateTo") ?? "";
-  const hasExplicitDateFilters = Boolean(urlDateFrom || urlDateTo);
-  const preferredPeriod = preferences?.preferredPeriod;
-  const preferredTimezone = preferences?.timezone;
-  const preferencesReady = bootstrapStatus === "authenticated" && Boolean(preferences);
-  const preferredRange = React.useMemo(() => {
-    if (!preferredPeriod || !preferredTimezone) return undefined;
-
-    return getPreferredDateRange(preferredPeriod, preferredTimezone);
-  }, [preferredPeriod, preferredTimezone]);
-
-  const isUsingDefaultPeriod =
-    !hasExplicitDateFilters &&
-    !clearedDefaultPeriod.current &&
-    preferencesReady &&
-    Boolean(preferredRange?.dateFrom || preferredRange?.dateTo);
-  const currentFilters = params.filters as TransactionTableFilters;
-  const filters = React.useMemo(() => {
-    if (hasExplicitDateFilters) {
-      return {
-        ...currentFilters,
-        dateFrom: urlDateFrom || currentFilters.dateFrom,
-        dateTo: urlDateTo || currentFilters.dateTo,
-      };
-    }
-
-    if (!isUsingDefaultPeriod || !preferredRange) return currentFilters;
-
-    return {
-      ...currentFilters,
-      dateFrom: preferredRange.dateFrom ?? "",
-      dateTo: preferredRange.dateTo ?? "",
-    };
-  }, [
-    currentFilters,
-    hasExplicitDateFilters,
-    isUsingDefaultPeriod,
-    preferredRange,
-    urlDateFrom,
-    urlDateTo,
-  ]);
-
-  const apiParams = React.useMemo(() => {
-    if (hasExplicitDateFilters) {
-      return {
-        ...params.apiParams,
-        ...(urlDateFrom ? { dateFrom: urlDateFrom } : {}),
-        ...(urlDateTo ? { dateTo: urlDateTo } : {}),
-      };
-    }
-
-    if (!isUsingDefaultPeriod || !preferredRange) return params.apiParams;
-
-    return {
+  const apiParams = React.useMemo<Record<string, ApiParamValue>>(
+    () => ({
       ...params.apiParams,
-      ...(preferredRange.dateFrom ? { dateFrom: preferredRange.dateFrom } : {}),
-      ...(preferredRange.dateTo ? { dateTo: preferredRange.dateTo } : {}),
-    };
-  }, [
-    hasExplicitDateFilters,
-    isUsingDefaultPeriod,
-    params.apiParams,
-    preferredRange,
-    urlDateFrom,
-    urlDateTo,
-  ]);
-
-  React.useEffect(() => {
-    if (initializedDefaultPeriod.current || clearedDefaultPeriod.current) return;
-    if (hasExplicitDateFilters) {
-      initializedDefaultPeriod.current = true;
-      return;
-    }
-    if (!preferencesReady || !preferredRange) return;
-
-    initializedDefaultPeriod.current = true;
-    if (preferredRange.dateFrom || preferredRange.dateTo) {
-      params.setFilters(preferredRange);
-    }
-  }, [hasExplicitDateFilters, params.setFilters, preferredRange, preferencesReady]);
-
-  const setFilters = React.useCallback(
-    (updates: TransactionTableFilterUpdates) => {
-      params.setFilters(updates);
-    },
-    [params.setFilters],
+      ...toTransactionApiParams(filters.values),
+      ...(date.dateFrom ? { dateFrom: date.dateFrom } : {}),
+      ...(date.dateTo ? { dateTo: date.dateTo } : {}),
+    }),
+    [params.apiParams, filters.values, date.dateFrom, date.dateTo],
   );
 
-  const clearFilters = React.useCallback(() => {
-    clearedDefaultPeriod.current = true;
-    params.clearFilters();
-  }, [params.clearFilters]);
+  const clearSearch = params.clearSearch;
+  const clearFilters = filters.clear;
+  const clearAll = React.useCallback(() => {
+    clearFilters();
+    clearSearch();
+  }, [clearFilters, clearSearch]);
 
   return {
     ...params,
     filters,
+    date,
     apiParams,
-    hasFilters: params.hasFilters || isUsingDefaultPeriod,
-    ready: preferencesReady,
-    setFilters,
-    clearFilters,
+    /** Chips or a search are applied (the date filter always is, so it does not count). */
+    hasFilters: filters.hasFilters || params.search.trim().length > 0,
+    ready: date.ready,
+    clearFilters: clearAll,
     sort: params.sort as TransactionSortField | undefined,
   };
 }

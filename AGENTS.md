@@ -82,6 +82,7 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | A chart (line, area, bar, donut) | [apps/web/components/charts/README.md](apps/web/components/charts/README.md) (**mandatory**) |
 | Showing an account, card, transaction type, merchant, product, amount, category or tag | [apps/web/components/display/README.md](apps/web/components/display/README.md) (**mandatory**) |
 | Products and transaction items (UI) | [apps/web/components/products/README.md](apps/web/components/products/README.md), [apps/api/src/modules/products/README.md](apps/api/src/modules/products/README.md) |
+| A filter row, the date/period control, or any overlay (dialog, sheet, popover, menu, select) | [apps/web/components/filters/README.md](apps/web/components/filters/README.md), [apps/web/components/ui/README.md](apps/web/components/ui/README.md) (**mandatory**) |
 | Reusable upload UI (galleries, cropper) | [apps/web/components/uploads/README.md](apps/web/components/uploads/README.md) |
 | Settings / Household pages, cards, section menus | [apps/web/components/section/README.md](apps/web/components/section/README.md) |
 | Importing statements (OFX/CSV) or exporting data | [apps/api/src/modules/imports/README.md](apps/api/src/modules/imports/README.md), [apps/api/src/modules/exports/README.md](apps/api/src/modules/exports/README.md), [apps/web/components/imports/README.md](apps/web/components/imports/README.md) |
@@ -150,6 +151,9 @@ add its README in the same change, and update the READMEs you rely on if the rul
 16. **Pages follow the design language.** Pages are flows of sections on the page background, not piles
     of cards: no card in a card, no table in a card, one period control, balanced columns, the spacing
     scale, charts that are readable. See [docs/design-language.md](docs/design-language.md).
+17. **Filters and overlays are shared.** Filter rows use `FilterBar` + `useFilters` + the fixed `useDateFilter`
+    (never a hand-built filter or a second period control); overlays use the shared `ui` wrappers, which are
+    bottom drawers below 768px. Enforced by `apps/web/test/conventions.test.ts`.
 16. **New public endpoints should consider an MCP tool.** If an agent would reasonably want it, add a tool in
     `apps/mcp/src/tools` (contract endpoint only, major-unit amounts, `confirm`/`dryRun` for risky writes) and
     a test. See [apps/mcp/README.md](apps/mcp/README.md).

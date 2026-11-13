@@ -14,10 +14,6 @@ import {
   getTransactionsMobileRow,
   getTransactionsTableColumns,
 } from "@/components/tables/transactions/transactions-table.config";
-import type {
-  TransactionTableFilters,
-  TransactionTableFilterUpdates,
-} from "@/components/tables/transactions/transactions-table-filters";
 import { TransactionsTableToolbar } from "@/components/tables/transactions/transactions-table-toolbar";
 import { useDataTable } from "@/hooks/use-data-table";
 import type { useTransactionParams } from "@/hooks/use-transaction-params";
@@ -41,7 +37,6 @@ export function TransactionsTable({
   params: ReturnType<typeof useTransactionParams>;
 }) {
   const queryParams = params.apiParams as ListTransactionsQuery;
-  const transactionFilters = params.filters as TransactionTableFilters;
   const hasTransactionFilters = params.hasFilters;
   const query = useTransactionsQuery(queryParams, { enabled: params.ready });
   const rows = React.useMemo(() => query.data?.data ?? [], [query.data]);
@@ -75,21 +70,7 @@ export function TransactionsTable({
       params.setSorting(field as TransactionSortField | undefined, direction),
     getRowId: (row) => row.rowId,
   });
-  const setFilter = React.useCallback(
-    (key: keyof TransactionTableFilters, value: unknown) => {
-      params.setFilter(key, value as never);
-    },
-    [params],
-  );
-  const setFilters = React.useCallback(
-    (updates: TransactionTableFilterUpdates) => {
-      params.setFilters(updates);
-    },
-    [params],
-  );
-  const clearFilters = React.useCallback(() => {
-    params.clearFilters();
-  }, [params.clearFilters]);
+  const clearFilters = params.clearFilters;
 
   if (query.isPending) return <TransactionsLoading />;
   if (query.isError) {
@@ -103,11 +84,8 @@ export function TransactionsTable({
         lookups={lookups}
         search={params.search}
         setSearch={params.setSearch}
-        filters={transactionFilters as TransactionTableFilters}
-        setFilter={setFilter}
-        setFilters={setFilters}
-        clearFilters={clearFilters}
-        hasFilters={hasTransactionFilters}
+        filters={params.filters}
+        date={params.date}
       />
 
       {rows.length === 0 ? (

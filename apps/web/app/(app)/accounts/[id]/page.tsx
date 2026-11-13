@@ -25,7 +25,7 @@ import { AccountStats } from "@/components/accounts/account-stats";
 import { AccountTopMerchants } from "@/components/accounts/account-top-merchants";
 import { AccountUpcoming } from "@/components/accounts/account-upcoming";
 import { AccountMark, getAccountFullDetail } from "@/components/display";
-import { PeriodFilter, usePeriodFilter } from "@/components/filters/period-filter";
+import { DateFilterChip, useDateFilter } from "@/components/filters";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { KpiStripSkeleton } from "@/components/kpi";
 import { PERMISSIONS, PermissionButton, ResourceAccessBoundary } from "@/components/permissions";
@@ -47,9 +47,14 @@ export default function AccountDetailsPage() {
   const account = accountQuery.data;
   const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
   const precisionFor = useCurrencyPrecision();
-  const { selection, selectPeriod, selectRange } = usePeriodFilter();
-  const range = { dateFrom: selection.dateFrom, dateTo: selection.dateTo };
-  const insightsQuery = useAccountInsightsQuery(id, range, { enabled: Boolean(account) });
+  const date = useDateFilter();
+  const range = React.useMemo(
+    () => ({ dateFrom: date.dateFrom, dateTo: date.dateTo }),
+    [date.dateFrom, date.dateTo],
+  );
+  const insightsQuery = useAccountInsightsQuery(id, range, {
+    enabled: Boolean(account) && date.ready,
+  });
   const upcomingQuery = useUpcomingTransactionsQuery(
     { accountIds: [id], perPage: 100 },
     { enabled: Boolean(account) },
@@ -106,12 +111,7 @@ export default function AccountDetailsPage() {
                   </Link>
                 </Button>
               ) : null}
-              <PeriodFilter
-                selection={selection}
-                language={language}
-                onPeriodChange={selectPeriod}
-                onRangeChange={selectRange}
-              />
+              <DateFilterChip date={date} />
               <PermissionButton
                 permission={PERMISSIONS.ACCOUNTS_UPDATE}
                 variant="outline"
@@ -159,8 +159,8 @@ export default function AccountDetailsPage() {
 
               <AccountRecentTransactions
                 accountId={account.id}
-                dateFrom={selection.dateFrom}
-                dateTo={selection.dateTo}
+                dateFrom={date.dateFrom}
+                dateTo={date.dateTo}
                 language={language}
               />
             </div>

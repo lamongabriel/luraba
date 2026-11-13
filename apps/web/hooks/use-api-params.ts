@@ -4,17 +4,7 @@ import type { SortDirection } from "@luraba/contracts";
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import * as React from "react";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
-import {
-  type ApiParamFilterConfigs,
-  type ApiParamFilterUpdates,
-  type ApiParamFilterValues,
-  type ApiParamValue,
-  arraysEqual,
-  createApiFilterParser,
-  getEmptyFilterValue,
-  isActiveFilterValue,
-  normalizeFilterUpdateValue,
-} from "@/lib/api-params";
+import type { ApiParamValue } from "@/lib/api-params";
 
 const DEFAULT_SEARCH_KEY = "search";
 const DEFAULT_PAGE_KEY = "page";
@@ -22,18 +12,13 @@ const DEFAULT_PER_PAGE_KEY = "perPage";
 const DEFAULT_SORT_KEY = "sort";
 const DEFAULT_SORT_DIRECTION_KEY = "sortDirection";
 const DEFAULT_DEBOUNCE_MS = 300;
-export interface UseApiParamsOptions<
-  TFilters extends ApiParamFilterConfigs = Record<string, never>,
-  TSort extends string = string,
-> {
+export interface UseApiParamsOptions<TSort extends string = string> {
   /** Prefixes URL keys so independent tables can share one page safely. */
   keyPrefix?: string;
   /** URL query key for the search value. Defaults to `"search"`. */
   searchKey?: string;
   /** Debounce delay (ms) before the search value is written to the URL. */
   debounceMs?: number;
-  /** URL-backed structured filters, keyed by their API/query-string name. */
-  filters?: TFilters;
   /** Enables page/perPage URL state. Defaults to `false` (most simple list
    * pages fetch everything and filter client-side, no pagination needed). */
   pagination?: boolean;
@@ -54,14 +39,9 @@ export interface UseApiParamsOptions<
   history?: "push" | "replace";
   shallow?: boolean;
   clearOnDefault?: boolean;
-  /** Lets a default filter stay cleared for the current hook instance. */
-  suppressDefaultFiltersOnClear?: boolean;
 }
 
-export interface UseApiParamsReturn<
-  TFilters extends ApiParamFilterConfigs = Record<string, never>,
-  TSort extends string = string,
-> {
+export interface UseApiParamsReturn<TSort extends string = string> {
   /** Immediate (not debounced) search value - bind this to the search input. */
   search: string;
   /** Lowercase trimmed search value for local matching. */
@@ -70,19 +50,6 @@ export interface UseApiParamsReturn<
   setSearch: (value: string) => void;
   /** Clears the search value immediately. */
   clearSearch: () => void;
-  /** URL-backed structured filter values. */
-  filters: ApiParamFilterValues<TFilters>;
-  /** Updates one structured filter and clears pagination back to page 1. */
-  setFilter: <Key extends keyof TFilters>(
-    key: Key,
-    value: ApiParamFilterValues<TFilters>[Key] | null,
-  ) => void;
-  /** Updates multiple structured filters and clears pagination back to page 1. */
-  setFilters: (updates: ApiParamFilterUpdates<TFilters>) => void;
-  /** Clears search and every structured filter. */
-  clearFilters: () => void;
-  /** True when any param differs from its default (useful for empty states). */
-  hasFilters: boolean;
   /** Active API params with empty/default filters omitted. */
   apiParams: Record<string, ApiParamValue>;
   /** Current page (1-based). Only meaningful when `pagination` is enabled. */
@@ -101,26 +68,21 @@ export interface UseApiParamsReturn<
 }
 
 /**
- * URL-synced list params for simple list pages (search, and optionally
- * page/perPage and flat filters) - the lighter-weight sibling of `useDataTable`
- * for pages that don't need a full TanStack Table (e.g. categories, tags).
+ * URL-synced list params for list pages: search, and optionally page/perPage and sort - the lighter-weight sibling
+ * of `useDataTable` for pages that don't need a full TanStack Table (e.g. categories, tags). Filters are not here:
+ * the chips and the date filter live in `components/filters` (`useFilters`, `useDateFilter`).
  *
- *   const { search, setSearch, hasFilters } = useApiParams()
- *   const { filters, setFilter } = useApiParams({
- *     filters: { type: { type: "stringArray" } },
- *   })
+ *   const { search, setSearch } = useApiParams()
  *
  *   <Input value={search} onChange={(e) => setSearch(e.target.value)} />
  */
-export function useApiParams<
-  TFilters extends ApiParamFilterConfigs = Record<string, never>,
-  TSort extends string = string,
->(options: UseApiParamsOptions<TFilters, TSort> = {}): UseApiParamsReturn<TFilters, TSort> {
+export function useApiParams<TSort extends string = string>(
+  options: UseApiParamsOptions<TSort> = {},
+): UseApiParamsReturn<TSort> {
   const {
     keyPrefix,
     searchKey = DEFAULT_SEARCH_KEY,
     debounceMs = DEFAULT_DEBOUNCE_MS,
-    filters: filterConfigs,
     pagination = false,
     pageKey = DEFAULT_PAGE_KEY,
     perPageKey = DEFAULT_PER_PAGE_KEY,
@@ -129,7 +91,6 @@ export function useApiParams<
     history = "replace",
     shallow = true,
     clearOnDefault = true,
-    suppressDefaultFiltersOnClear = false,
   } = options;
   const scopeKey = React.useCallback(
     (key: string) =>
@@ -144,23 +105,12 @@ export function useApiParams<
   const sortKey = scopeKey(sorting?.sortKey ?? DEFAULT_SORT_KEY);
   const sortDirectionKey = scopeKey(sorting?.sortDirectionKey ?? DEFAULT_SORT_DIRECTION_KEY);
   const defaultSortDirection = sorting?.defaultDirection ?? "asc";
-  const [defaultsSuppressed, setDefaultsSuppressed] = React.useState(false);
 
   const queryStateOptions = { history, shallow, clearOnDefault };
-
-  const filterParsers = React.useMemo(() => {
-    return Object.fromEntries(
-      Object.entries(filterConfigs ?? {}).map(([key, config]) => [
-        scopeKey(key),
-        createApiFilterParser(config),
-      ]),
-    );
-  }, [filterConfigs, scopeKey]);
 
   const [urlState, setQueryStates] = useQueryStates(
     {
       [searchUrlKey]: parseAsString.withDefault(""),
-      ...filterParsers,
       ...(pagination
         ? {
             [pageUrlKey]: parseAsInteger.withDefault(1),
@@ -188,22 +138,6 @@ export function useApiParams<
   const sortDirection = sorting
     ? (urlState[sortDirectionKey] as SortDirection)
     : defaultSortDirection;
-  const filters = React.useMemo(() => {
-    return Object.fromEntries(
-      Object.keys(filterConfigs ?? {}).map((key) => {
-        const value = urlState[scopeKey(key)];
-        const defaultValue = filterConfigs?.[key]?.defaultValue;
-        const isSuppressed =
-          defaultsSuppressed &&
-          suppressDefaultFiltersOnClear &&
-          defaultValue !== undefined &&
-          (Array.isArray(value) ? arraysEqual(value, defaultValue) : value === defaultValue);
-
-        return [key, isSuppressed ? getEmptyFilterValue(value) : value];
-      }),
-    ) as ApiParamFilterValues<TFilters>;
-  }, [defaultsSuppressed, filterConfigs, scopeKey, suppressDefaultFiltersOnClear, urlState]);
-
   // Keep the search input responsive while debouncing the URL write.
   const [search, setSearchState] = React.useState(urlSearch);
   const normalizedSearch = React.useMemo(() => search.trim().toLowerCase(), [search]);
@@ -236,80 +170,6 @@ export function useApiParams<
       ...(pagination ? { [pageUrlKey]: null } : {}),
     });
   }, [debouncedSetSearch, pageUrlKey, pagination, searchUrlKey, setQueryStates]);
-
-  const setFilter = React.useCallback(
-    <Key extends keyof TFilters>(key: Key, value: ApiParamFilterValues<TFilters>[Key] | null) => {
-      if (
-        suppressDefaultFiltersOnClear &&
-        value !== null &&
-        filterConfigs?.[key as string]?.defaultValue !== undefined
-      ) {
-        setDefaultsSuppressed(false);
-      }
-      void setQueryStates({
-        [scopeKey(key as string)]: normalizeFilterUpdateValue(value),
-        ...(pagination ? { [pageUrlKey]: null } : {}),
-      });
-    },
-    [
-      filterConfigs,
-      pageUrlKey,
-      pagination,
-      scopeKey,
-      setQueryStates,
-      suppressDefaultFiltersOnClear,
-    ],
-  );
-
-  const setFilters = React.useCallback(
-    (updates: ApiParamFilterUpdates<TFilters>) => {
-      if (
-        suppressDefaultFiltersOnClear &&
-        Object.entries(updates).some(
-          ([key, value]) => value !== null && filterConfigs?.[key]?.defaultValue !== undefined,
-        )
-      ) {
-        setDefaultsSuppressed(false);
-      }
-      void setQueryStates({
-        ...Object.fromEntries(
-          Object.entries(updates).map(([key, value]) => [
-            scopeKey(key),
-            normalizeFilterUpdateValue(value),
-          ]),
-        ),
-        ...(pagination ? { [pageUrlKey]: null } : {}),
-      });
-    },
-    [
-      filterConfigs,
-      pageUrlKey,
-      pagination,
-      scopeKey,
-      setQueryStates,
-      suppressDefaultFiltersOnClear,
-    ],
-  );
-
-  const clearFilters = React.useCallback(() => {
-    debouncedSetSearch.cancel();
-    setSearchState("");
-    if (suppressDefaultFiltersOnClear) setDefaultsSuppressed(true);
-    void setQueryStates({
-      [searchUrlKey]: null,
-      ...Object.fromEntries(Object.keys(filterConfigs ?? {}).map((key) => [scopeKey(key), null])),
-      ...(pagination ? { [pageUrlKey]: null } : {}),
-    });
-  }, [
-    debouncedSetSearch,
-    filterConfigs,
-    pageUrlKey,
-    pagination,
-    scopeKey,
-    setQueryStates,
-    searchUrlKey,
-    suppressDefaultFiltersOnClear,
-  ]);
 
   const setPage = React.useCallback(
     (nextPage: number) => {
@@ -349,24 +209,12 @@ export function useApiParams<
     ],
   );
 
-  const activeFilterEntries = React.useMemo(() => {
-    return Object.entries(filters).filter(([key, value]) =>
-      isActiveFilterValue(value, filterConfigs?.[key]?.defaultValue ?? getEmptyFilterValue(value)),
-    );
-  }, [filterConfigs, filters]);
-
-  const hasFilters = normalizedSearch.length > 0 || activeFilterEntries.length > 0;
-
   const apiParams = React.useMemo(() => {
     const nextParams: Record<string, ApiParamValue> = {};
     const apiSearch = urlSearch.trim();
 
     if (apiSearch) {
       nextParams[searchKey] = apiSearch;
-    }
-
-    for (const [key, value] of activeFilterEntries) {
-      nextParams[key] = value as ApiParamValue;
     }
 
     if (pagination) {
@@ -381,7 +229,6 @@ export function useApiParams<
 
     return nextParams;
   }, [
-    activeFilterEntries,
     page,
     pageKey,
     pagination,
@@ -400,11 +247,6 @@ export function useApiParams<
     normalizedSearch,
     setSearch,
     clearSearch,
-    filters,
-    setFilter,
-    setFilters,
-    clearFilters,
-    hasFilters,
     apiParams,
     page,
     setPage,

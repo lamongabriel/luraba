@@ -13,7 +13,8 @@ import * as React from "react";
 import { CategorySheet } from "@/components/categories/category-sheet";
 import { DeleteCategoryModal } from "@/components/categories/delete-category-modal";
 import { DataTableSearchInput } from "@/components/data-table/data-table-search-input";
-import { FilterFaceted } from "@/components/filters/filter-faceted";
+import { FilterBar, type FilterFieldDef } from "@/components/filters";
+import { useFilters } from "@/components/filters/use-filters";
 import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
 import { PERMISSIONS, PermissionButton, useCan } from "@/components/permissions";
 import { SectionCard } from "@/components/section/section-card";
@@ -37,9 +38,15 @@ import { CategoriesError } from "./_error";
 import { CategoriesLoading } from "./_loading";
 
 const TYPE_KEY = "type";
-const CATEGORY_API_FILTERS = {
-  [TYPE_KEY]: { type: "stringArray" },
-} as const;
+const CATEGORY_FILTER_IDS = [TYPE_KEY] as const;
+const CATEGORY_FILTER_DEFS: FilterFieldDef[] = [
+  {
+    id: TYPE_KEY,
+    label: "Type",
+    kind: "multiselect",
+    options: CATEGORY_TYPE_OPTIONS.map((option) => ({ label: option.label, value: option.value })),
+  },
+];
 
 type CategoryNode = {
   category: Category;
@@ -225,21 +232,10 @@ export default function CategoriesPage() {
   const canUpdate = can(PERMISSIONS.CATEGORIES_UPDATE);
   const canDelete = can(PERMISSIONS.CATEGORIES_DELETE);
 
-  const {
-    filters: { [TYPE_KEY]: typeFilter },
-    hasFilters,
-    normalizedSearch,
-    search,
-    setFilter,
-    setSearch,
-  } = useApiParams({ filters: CATEGORY_API_FILTERS });
-
-  const setTypeFilter = React.useCallback(
-    (value: string[]) => {
-      setFilter(TYPE_KEY, value);
-    },
-    [setFilter],
-  );
+  const { normalizedSearch, search, setSearch } = useApiParams();
+  const filters = useFilters({ fieldIds: CATEGORY_FILTER_IDS });
+  const typeFilter = filters.values.list(TYPE_KEY);
+  const hasFilters = filters.hasFilters || normalizedSearch.length > 0;
 
   const createEdit = useEntityDisclosure<Category>();
   const deleteDisclosure = useEntityDisclosure<Category>();
@@ -330,23 +326,18 @@ export default function CategoriesPage() {
         </PermissionButton>
       }
     >
-      <ItemReveal className="flex flex-wrap items-center gap-2">
-        <DataTableSearchInput
-          value={search}
-          placeholder="Search categories..."
-          className="max-w-xs"
-          onChange={(event) => setSearch(event.target.value)}
-        />
-        <FilterFaceted
-          title="Type"
-          multiple
-          value={typeFilter}
-          options={CATEGORY_TYPE_OPTIONS.map((option) => ({
-            label: option.label,
-            value: option.value,
-          }))}
-          onValueChange={(value) =>
-            setTypeFilter(Array.isArray(value) ? value : value ? [value] : [])
+      <ItemReveal>
+        <FilterBar
+          defs={CATEGORY_FILTER_DEFS}
+          filters={filters}
+          search={
+            <DataTableSearchInput
+              value={search}
+              placeholder="Search categories..."
+              aria-label="Search categories"
+              className="min-w-0 flex-1 sm:max-w-xs sm:flex-none"
+              onChange={(event) => setSearch(event.target.value)}
+            />
           }
         />
       </ItemReveal>
