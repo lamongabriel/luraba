@@ -35,7 +35,7 @@ interface DataTableProps<TData> extends React.ComponentProps<"div"> {
   mobile: MobileRowConfig<TData> | "table";
   /** Stretch to the height of the parent (a flex column or grid cell) so the table fills it. */
   fill?: boolean;
-  /** Classes of the `<table>` itself, e.g. a smaller `min-w-*` than the default 72rem for a table with few columns. */
+  /** Classes of the table element itself, e.g. a smaller `min-w-*` than the default 72rem for a table with few columns. */
   tableClassName?: string;
 }
 
