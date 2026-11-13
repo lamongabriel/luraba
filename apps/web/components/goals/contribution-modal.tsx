@@ -21,11 +21,14 @@ export function ContributionModal({
   onOpenChange,
   goalId,
   contribution,
+  initialWithdrawal = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   goalId: string;
   contribution?: GoalContribution;
+  /** Open on "Withdraw" (a new contribution only). */
+  initialWithdrawal?: boolean;
 }) {
   const [withdrawal, setWithdrawal] = React.useState(false);
   const [amount, setAmount] = React.useState("");
@@ -34,11 +37,11 @@ export function ContributionModal({
 
   React.useEffect(() => {
     if (!open) return;
-    setWithdrawal(Boolean(contribution && contribution.amount < 0));
+    setWithdrawal(contribution ? contribution.amount < 0 : initialWithdrawal);
     setAmount(contribution ? String(minorToMajorUnits(Math.abs(contribution.amount), 2)) : "");
     setContributedOn(contribution?.contributedOn ?? todayISODate());
     setNote(contribution?.note ?? "");
-  }, [open, contribution]);
+  }, [open, contribution, initialWithdrawal]);
 
   const close = () => onOpenChange(false);
   const add = useAddContributionMutation({ onSuccess: close, successToast: { title: "Saved" } });

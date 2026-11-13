@@ -1,96 +1,88 @@
 "use client";
 
-import type { BudgetInsights, Category, MonthlyBudget } from "@luraba/contracts";
+import type { Category, MonthlyBudget } from "@luraba/contracts";
 import * as React from "react";
 
-import { type BudgetPace, buildBudgetItems, spendingChange } from "@/lib/budgets";
-import { BudgetAside } from "./budget-aside";
-import { BUDGETS_BODY_GRID } from "./budget-layout";
-import { BudgetSummaryBand } from "./budget-summary-band";
-import { CategoryBudgetsList } from "./category-budgets-list";
+import { DonutChartCard } from "@/components/charts";
+import { buildBudgetItems, filterAndSortBudgetItems } from "@/lib/budgets";
+import { BudgetCard } from "./budget-card";
+import { BUDGET_ALLOCATION_HEIGHT, BUDGET_GRID } from "./budget-layout";
 
-/** The Budgets page body: summary band, then the categories with the supporting rail. `BudgetsLoading` mirrors it. */
+/**
+ * The Budgets page body: how the month's budget is split across categories (one flat donut), then a grid
+ * of compact budget cards. `BudgetsLoading` (`_loading.tsx`) mirrors it.
+ */
 export function BudgetsContent({
   budget,
-  insights,
   categories,
-  pace,
   precision,
   language,
-  onSave,
+  canEdit,
+  onEdit,
   onRemove,
-  onAdd,
 }: {
   budget: MonthlyBudget;
-  insights: {
-    data: BudgetInsights | undefined;
-    isPending: boolean;
-    isError: boolean;
-    refetch: () => void;
-  };
   categories: Category[];
-  pace: BudgetPace;
   precision: number;
   language: string;
-  onSave: (categoryId: string, amount: number) => void;
+  canEdit: boolean;
+  onEdit: (categoryId: string) => void;
   onRemove: (categoryId: string) => void;
-  onAdd: () => void;
 }) {
   const categoriesById = React.useMemo(
     () => new Map(categories.map((category) => [category.id, category])),
     [categories],
   );
-  const previous = React.useMemo(
+  const items = React.useMemo(
     () =>
-      insights.data
-        ? new Map(insights.data.mostExpenses.map((item) => [item.categoryId, item.previousAmount]))
-        : undefined,
-    [insights.data],
+      filterAndSortBudgetItems(
+        buildBudgetItems(budget.categories.expense, categories),
+        "all",
+        "used",
+      ),
+    [budget, categories],
   );
   const currencyCode = budget.budgetCurrencyCode;
   const money = { currencyCode, precision, language };
-  const { totals } = budget;
   // Top-level limits only: a parent's limit already contains its subcategories'.
-  const allocation = buildBudgetItems(budget.categories.expense, categories)
+  const allocation = items
     .filter((item) => item.row.budgetedAmount > 0)
+    .sort((a, b) => b.row.budgetedAmount - a.row.budgetedAmount)
     .map((item) => ({
       id: item.row.categoryId,
       name: item.row.categoryName,
       value: item.row.budgetedAmount,
-      color: categoriesById.get(item.row.categoryId)?.color,
+      color: categoriesById.get(item.row.categoryId)?.color ?? undefined,
     }));
 
   return (
-    <div>
-      <BudgetSummaryBand
-        budgeted={totals.expenseBudgeted}
-        spent={totals.expenseActual}
-        earned={totals.incomeActual}
-        pace={pace}
-        change={spendingChange(insights.data?.history)}
-        money={money}
+    <div className="space-y-8">
+      <DonutChartCard
+        flat
+        title="Budget split"
+        status="ready"
+        data={allocation}
+        centerLabel="Budgeted"
+        emptyTitle="No limits yet"
+        emptyDescription="Add a budget to see how the month is split."
+        heightClassName={BUDGET_ALLOCATION_HEIGHT}
+        className="mx-auto max-w-2xl"
+        {...money}
       />
-      <div className={BUDGETS_BODY_GRID}>
-        <CategoryBudgetsList
-          rows={budget.categories.expense}
-          categories={categories}
-          previous={previous}
-          currencyCode={currencyCode}
-          precision={precision}
-          language={language}
-          onSave={onSave}
-          onRemove={onRemove}
-          onAdd={onAdd}
-        />
-        <BudgetAside
-          insights={insights.data}
-          isPending={insights.isPending}
-          isError={insights.isError}
-          onRetry={insights.refetch}
-          allocation={allocation}
-          money={money}
-        />
-      </div>
+      <ul className={BUDGET_GRID}>
+        {items.map((item) => (
+          <BudgetCard
+            key={item.row.categoryId}
+            item={item}
+            category={categoriesById.get(item.row.categoryId) ?? null}
+            categoriesById={categoriesById}
+            money={money}
+            canEdit={canEdit}
+            onEdit={onEdit}
+            onRemove={onRemove}
+          />
+        ))}
+      </ul>
     </div>
   );
 }

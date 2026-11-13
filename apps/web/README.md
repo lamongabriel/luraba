@@ -85,7 +85,7 @@ API keys UI (`/settings/api-keys`, `components/settings/api-keys/`): list, creat
 
 Credit cards UI (month overview, card detail, invoices): [components/credit-cards/README.md](components/credit-cards/README.md).
 
-Budgets & goals page (`/plan`: left to spend, goals, budgets, fixed bills; `/budgets` and `/goals` redirect to it): [components/plan/README.md](components/plan/README.md). Budgets UI (monthly gauge, category budgets, charts, card settings): [components/budgets/README.md](components/budgets/README.md).
+Budgets (`/budgets`), Goals (`/goals`) and Bills (`/bills`) are three separate pages (the short-lived `/plan` page is gone; `/plan` and `/budget` redirect to `/budgets`): [components/budgets/README.md](components/budgets/README.md), [components/goals/README.md](components/goals/README.md), [components/bills/README.md](components/bills/README.md). They share the `MonthPresetButton` month control ([components/filters](components/filters/README.md)) and `PageAddButton` (`components/finance/page-add-button.tsx`: a circular icon button below `md`, the labeled button above), and `InternalPageLayout inlineActions` keeps a header's actions on the title's row on a phone.
 
 **Page metadata (mandatory).** Every `page.tsx` exports `metadata = pageMetadata({ title, description })` (`lib/metadata.ts`; client pages do it in their same-folder `layout.tsx`). The root layout supplies the `| Luraba` suffix, Open Graph, Twitter and icons; the logo and brand assets live in [components/brand](components/brand/README.md). Enforced by `test/conventions.test.ts`.
 

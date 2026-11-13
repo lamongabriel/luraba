@@ -24,6 +24,7 @@ export function PageHeader({
   back,
   compact = false,
   leading,
+  inlineActions = false,
   className,
 }: {
   title: string;
@@ -39,6 +40,8 @@ export function PageHeader({
   compact?: boolean;
   /** A picture or icon before the title (the household picture). */
   leading?: React.ReactNode;
+  /** Keep the actions on the title's row on a phone (one small icon button), instead of below it. */
+  inlineActions?: boolean;
   className?: string;
 }) {
   return (
@@ -54,7 +57,11 @@ export function PageHeader({
       <div
         className={cn(
           "flex gap-4 md:flex-row md:items-center md:justify-between",
-          mobileActions ? "flex-row items-start" : "flex-col",
+          mobileActions
+            ? "flex-row items-start"
+            : inlineActions
+              ? "items-center justify-between"
+              : "flex-col",
         )}
       >
         <div className="flex min-w-0 items-center gap-3">
@@ -74,7 +81,11 @@ export function PageHeader({
         </div>
         {actions ? (
           <div
-            className={cn("flex flex-wrap items-center gap-2", mobileActions && "max-md:hidden")}
+            className={cn(
+              "flex flex-wrap items-center gap-2",
+              mobileActions && "max-md:hidden",
+              inlineActions && "shrink-0",
+            )}
           >
             {actions}
           </div>

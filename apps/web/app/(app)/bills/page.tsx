@@ -1,182 +1,160 @@
 "use client";
 
-import type { Bill } from "@luraba/contracts";
-import { MAX_PER_PAGE } from "@luraba/contracts";
-import { addDays, formatISODate, formatShortDate, now } from "@luraba/domain";
-import Link from "next/link";
+import { type Bill, MAX_PER_PAGE } from "@luraba/contracts";
 import * as React from "react";
+import { BILL_GROUP_HEADER_HEIGHT } from "@/components/bills/bill-layout";
+import { BillRow } from "@/components/bills/bill-row";
 import { BillSheet } from "@/components/bills/bill-sheet";
-import { CombinedAmountDisplay, combinedNote } from "@/components/display";
+import { BillsMonthSummary } from "@/components/bills/bills-month-summary";
+import { MonthPresetButton, useMonthFilter } from "@/components/filters";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
-import { MoneyValue } from "@/components/finance/money-value";
-import { KpiCard, KpiGrid, KpiGridSkeleton } from "@/components/kpi";
-import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
-import { PERMISSIONS, PermissionButton } from "@/components/permissions";
+import { PageAddButton } from "@/components/finance/page-add-button";
+import { PERMISSIONS, useCan } from "@/components/permissions";
 import { DataBoundary } from "@/components/states";
-import { Badge } from "@/components/ui/badge";
-import { Typography } from "@/components/ui/typography";
-import { useCombinedAmount } from "@/hooks/use-combined-amount";
 import { useEntityDisclosure } from "@/hooks/use-disclosure";
 import { describeBillSchedule } from "@/lib/bills";
+import { formatMonthKeyLabel } from "@/lib/credit-card-invoices";
+import { cn } from "@/lib/utils";
+import { useMarkOccurrencePaidMutation } from "@/mutations/bills/use-bill-mutations";
 import { useBillForecastQuery, useBillsQuery } from "@/queries/bills/use-bills-queries";
-import { useAuthSessionStore } from "@/stores/auth-session-store";
-import { BillsEmpty } from "./_empty";
+import { BillsEmpty, BillsMonthEmpty } from "./_empty";
 import { BillsError } from "./_error";
 import { BillsLoading } from "./_loading";
 
-const FORECAST_DAYS = 30;
-
-function BillCard({ bill, language }: { bill: Bill; language: string }) {
-  const { summary } = bill;
-  const total = bill.installmentCount;
-  const progress = total ? Math.min(100, Math.round((summary.paidCount / total) * 100)) : null;
-
+function GroupHeader({ title, count }: { title: string; count: number }) {
   return (
-    <Link
-      href={`/bills/${bill.id}`}
-      className="block rounded-xl border border-border/60 p-4 transition-colors hover:bg-muted/40"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <Typography variant="small-strong" className="truncate">
-            {bill.name}
-          </Typography>
-          <Typography variant="small-muted">{describeBillSchedule(bill)}</Typography>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {summary.overdueCount > 0 ? (
-            <Badge variant="destructive">{summary.overdueCount} overdue</Badge>
-          ) : null}
-          {bill.status !== "active" ? (
-            <Badge variant="outline" className="capitalize">
-              {bill.status}
-            </Badge>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="mt-3 flex items-end justify-between gap-3">
-        <div>
-          <Typography variant="small-muted">
-            {summary.nextDueDate
-              ? `Next: ${formatShortDate(summary.nextDueDate, language)}`
-              : "No upcoming payments"}
-          </Typography>
-        </div>
-        <MoneyValue
-          amount={summary.nextExpectedAmount ?? bill.expectedAmount}
-          currencyCode={bill.currencyCode}
-          language={language}
-          className="text-sm"
-        />
-      </div>
-
-      {progress !== null && total ? (
-        <div className="mt-3 space-y-1.5">
-          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-primary" style={{ width: `${progress}%` }} />
-          </div>
-          <Typography variant="small-muted">
-            {summary.paidCount} of {total} paid
-            {summary.remainingCount !== null ? ` · ${summary.remainingCount} left` : ""}
-          </Typography>
-        </div>
-      ) : null}
-    </Link>
+    <div className={cn("flex items-center gap-2", BILL_GROUP_HEADER_HEIGHT)}>
+      <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</h2>
+      <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
+    </div>
   );
 }
 
-function ForecastStrip({ language }: { language: string }) {
-  const range = React.useMemo(() => {
-    const today = now();
-    return {
-      from: formatISODate(today),
-      to: formatISODate(addDays(today, FORECAST_DAYS)),
-    };
-  }, []);
-  const forecast = useBillForecastQuery(range);
-  const upcoming = React.useMemo(
-    () => (forecast.data?.items ?? []).filter((item) => item.state !== "paid"),
-    [forecast.data],
-  );
-  const byCurrency = React.useMemo(() => {
-    const totals: Record<string, number> = {};
-    for (const item of upcoming) {
-      totals[item.currencyCode] = (totals[item.currencyCode] ?? 0) + item.expectedAmount;
-    }
-    return totals;
-  }, [upcoming]);
-  const { combined, fx, isPending: ratesPending } = useCombinedAmount(byCurrency);
-
-  if (forecast.isPending || ratesPending) {
-    return <KpiGridSkeleton columns={3} label="Loading forecast" />;
-  }
-  if (forecast.isError) return null;
-
-  const overdue = upcoming.filter((item) => item.state === "overdue").length;
-
-  return (
-    <ItemReveal>
-      <KpiGrid columns={3}>
-        <KpiCard
-          title={`Due in the next ${FORECAST_DAYS} days`}
-          value={
-            upcoming.length === 0 ? (
-              "Nothing due"
-            ) : (
-              <CombinedAmountDisplay combined={combined} fx={fx} language={language} size="lg" />
-            )
-          }
-          secondary={upcoming.length === 0 ? undefined : combinedNote(combined, fx, language)}
-        />
-        <KpiCard title="Payments coming up" value={upcoming.length} />
-        <KpiCard title="Overdue" value={overdue} />
-      </KpiGrid>
-    </ItemReveal>
-  );
+function monthRange(month: string) {
+  const [year, monthNumber] = month.split("-").map(Number) as [number, number];
+  const last = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
+  return { from: `${month}-01`, to: `${month}-${String(last).padStart(2, "0")}` };
 }
 
 export default function BillsPage() {
+  const { month, setMonth, timezone, language } = useMonthFilter();
+  const can = useCan();
   const sheet = useEntityDisclosure<Bill>();
-  const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
-  const query = useBillsQuery({ perPage: MAX_PER_PAGE });
-  const bills = query.data?.data ?? [];
+  const range = React.useMemo(() => monthRange(month), [month]);
+  const billsQuery = useBillsQuery({ perPage: MAX_PER_PAGE });
+  const forecast = useBillForecastQuery(range);
+  const markPaid = useMarkOccurrencePaidMutation({ successToast: { title: "Marked as paid" } });
+  const bills = billsQuery.data?.data ?? [];
+  const billsById = React.useMemo(() => new Map(bills.map((bill) => [bill.id, bill])), [bills]);
+  const items = forecast.data?.items ?? [];
+  const canMarkPaid = can(PERMISSIONS.BILLS_UPDATE);
+  const monthLabel = formatMonthKeyLabel(month, language);
 
-  const content = (
-    <DataBoundary
-      isPending={query.isPending}
-      isError={query.isError}
-      isEmpty={bills.length === 0}
-      loading={<BillsLoading />}
-      errorState={
-        <BillsError message={query.error?.message} onRetry={() => void query.refetch()} />
-      }
-      empty={<BillsEmpty onCreate={sheet.onCreate} />}
-    >
-      <SectionReveal className="grid gap-3 md:grid-cols-2">
-        {bills.map((bill) => (
-          <BillCard key={bill.id} bill={bill} language={language} />
-        ))}
-      </SectionReveal>
-    </DataBoundary>
-  );
+  const byDate = (a: { dueDate: string }, b: { dueDate: string }) =>
+    a.dueDate.localeCompare(b.dueDate);
+  const overdue = items.filter((item) => item.state === "overdue").sort(byDate);
+  const upcoming = items.filter((item) => item.state === "scheduled").sort(byDate);
+  const paid = items.filter((item) => item.state === "paid").sort(byDate);
+  const skipped = items.filter((item) => item.state === "skipped").sort(byDate);
+  const groups = [
+    { title: "Overdue", items: overdue },
+    { title: "Upcoming", items: upcoming },
+    { title: "Paid", items: paid },
+    { title: "Skipped", items: skipped },
+  ].filter((group) => group.items.length > 0);
 
   return (
     <InternalPageLayout
       title="Bills"
-      subtitle="Recurring bills and when each one is due."
+      subtitle="What is due, and what is paid."
+      inlineActions
       actions={
-        <PermissionButton
-          permission={PERMISSIONS.BILLS_CREATE}
-          deniedMessage="Your household role cannot create bills."
-          onClick={sheet.onCreate}
-        >
-          Add bill
-        </PermissionButton>
+        <>
+          <MonthPresetButton
+            value={month}
+            onChange={setMonth}
+            timezone={timezone}
+            language={language}
+          />
+          <PageAddButton
+            label="Add bill"
+            permission={PERMISSIONS.BILLS_CREATE}
+            deniedMessage="Your household role cannot create bills."
+            onClick={sheet.onCreate}
+          />
+        </>
       }
     >
-      <ForecastStrip language={language} />
-      {content}
+      <DataBoundary
+        isPending={billsQuery.isPending || forecast.isPending}
+        isError={billsQuery.isError || forecast.isError}
+        isEmpty={bills.length === 0}
+        loading={<BillsLoading />}
+        errorState={
+          <BillsError
+            message={(billsQuery.error ?? forecast.error)?.message}
+            onRetry={() => {
+              void billsQuery.refetch();
+              void forecast.refetch();
+            }}
+          />
+        }
+        empty={<BillsEmpty onCreate={sheet.onCreate} />}
+      >
+        <div className="space-y-4">
+          {items.length > 0 ? (
+            <BillsMonthSummary items={items} language={language} />
+          ) : (
+            <BillsMonthEmpty monthLabel={monthLabel} />
+          )}
+
+          {groups.map((group) => (
+            <section key={group.title}>
+              <GroupHeader title={group.title} count={group.items.length} />
+              <ul>
+                {group.items.map((item) => {
+                  const bill = billsById.get(item.billId);
+                  return (
+                    <BillRow
+                      key={item.occurrenceId}
+                      billId={item.billId}
+                      name={item.billName}
+                      detail={bill ? describeBillSchedule(bill) : undefined}
+                      dueDate={item.dueDate}
+                      amount={item.expectedAmount}
+                      currencyCode={item.currencyCode}
+                      state={item.state}
+                      language={language}
+                      canMarkPaid={canMarkPaid}
+                      onMarkPaid={() =>
+                        markPaid.mutate({ id: item.billId, occurrenceId: item.occurrenceId })
+                      }
+                    />
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+
+          <section>
+            <GroupHeader title="All bills" count={bills.length} />
+            <ul>
+              {bills.map((bill) => (
+                <BillRow
+                  key={bill.id}
+                  billId={bill.id}
+                  name={bill.name}
+                  detail={describeBillSchedule(bill)}
+                  amount={bill.summary.nextExpectedAmount ?? bill.expectedAmount}
+                  currencyCode={bill.currencyCode}
+                  state={bill.status === "active" ? null : bill.status}
+                  language={language}
+                />
+              ))}
+            </ul>
+          </section>
+        </div>
+      </DataBoundary>
       <BillSheet open={sheet.isOpen} onOpenChange={sheet.setIsOpen} bill={sheet.entity} />
     </InternalPageLayout>
   );

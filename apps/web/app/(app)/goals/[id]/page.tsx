@@ -132,7 +132,7 @@ export default function GoalDetailsPage() {
 
   const query = useGoalQuery(id);
   const removeGoal = useDeleteGoalMutation({
-    onSuccess: () => router.push("/plan"),
+    onSuccess: () => router.push("/goals"),
     successToast: { title: "Goal deleted" },
   });
   const removeContribution = useRemoveContributionMutation();
@@ -155,7 +155,7 @@ export default function GoalDetailsPage() {
       title={goal.name}
       createdBy={goal.createdByUserId}
       subtitle="Progress, monthly plan and contributions."
-      back={{ href: "/plan", label: "Budgets & goals" }}
+      back={{ href: "/goals", label: "Goals" }}
       actions={
         canUpdate || canDelete ? (
           <div className="flex items-center gap-2">

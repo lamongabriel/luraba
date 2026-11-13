@@ -24,3 +24,14 @@ export function BillsEmpty({ onCreate }: { onCreate: () => void }) {
     />
   );
 }
+
+/** Bills exist, but none falls in the chosen month. */
+export function BillsMonthEmpty({ monthLabel }: { monthLabel: string }) {
+  return (
+    <EmptyState
+      icon={<HugeiconsIcon icon={Invoice01Icon} strokeWidth={1.8} className="size-5" />}
+      title={`Nothing due in ${monthLabel}`}
+      description="Pick another month, or see every bill below."
+    />
+  );
+}

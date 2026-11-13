@@ -14,6 +14,7 @@ outside this folder: `test/conventions.test.ts` enforces that).
 | `useDateFilter({ keyPrefix?, defaultPeriod?, billingCycles? })` | The date filter. Starts from `defaultPeriod`, else the user's default period setting; URL keys `period` or `dateFrom`/`dateTo`. |
 | `DateFilterChip` | The date filter as one trigger: calendar icon, the preset name, the actual range (from `sm` up) and a chevron; popover with presets and a range calendar (a bottom drawer on a phone). |
 | `FilterActionsMenu` | The desktop "Actions" menu: "Add filter" (field list) and "Columns". `FilterBar table={table}` renders it instead of the separate Filters and Columns buttons. |
+| `MonthPresetButton` + `useMonthFilter` | The month control of month-based pages (Budgets, Bills): one button ("November 2026") that opens a dropdown on desktop and a bottom drawer on mobile (the shared `DropdownMenu` wrapper), with quick picks (this, last, next month) and every month from a few ahead to 18 back. `useMonthFilter()` returns `{ month, setMonth, timezone, language }` with `?month=YYYY-MM` in the URL (current month by default). The Credit cards page can adopt it for its month preset. |
 | `tree.ts` | Pure helpers (`encodeTree`, `decodeTree`, `readValues`, `setFieldRule`, ...). Unit tested. |
 
 ## The date filter is required

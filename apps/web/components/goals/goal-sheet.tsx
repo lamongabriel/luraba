@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { GoalDetail } from "@luraba/contracts";
+import type { Goal } from "@luraba/contracts";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -47,7 +47,7 @@ function GoalForm({
   onCancel,
   onSuccess,
 }: {
-  goal?: GoalDetail;
+  goal?: Goal;
   onCancel: () => void;
   onSuccess: () => void;
 }) {
@@ -262,7 +262,7 @@ export function GoalSheet({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  goal?: GoalDetail;
+  goal?: Goal;
 }) {
   const close = React.useCallback(() => onOpenChange(false), [onOpenChange]);
 

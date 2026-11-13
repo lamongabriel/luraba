@@ -15,6 +15,7 @@ export function InternalPageLayout({
   mobileActions,
   compact,
   leading,
+  inlineActions,
   createdBy,
   children,
   className,
@@ -28,6 +29,8 @@ export function InternalPageLayout({
   /** Smaller title block, for pages inside a section menu (Household). */
   compact?: boolean;
   leading?: React.ReactNode;
+  /** See `PageHeader`: actions stay on the title's row on a phone. */
+  inlineActions?: boolean;
   /** A record's `createdByUserId`; when given (even null) the page shows who created it. */
   createdBy?: string | null;
   children: React.ReactNode;
@@ -43,6 +46,7 @@ export function InternalPageLayout({
         mobileActions={mobileActions}
         compact={compact}
         leading={leading}
+        inlineActions={inlineActions}
       />
       {createdBy !== undefined ? (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">

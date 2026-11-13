@@ -17,7 +17,14 @@ describe("isNavItemActive", () => {
   });
 
   it("highlights exactly one main item on a detail route", () => {
-    for (const path of ["/accounts/1", "/goals/2", "/bills/3", "/splits/4", "/credit-cards/5"]) {
+    for (const path of [
+      "/accounts/1",
+      "/budgets/1",
+      "/goals/2",
+      "/bills/3",
+      "/splits/4",
+      "/credit-cards/5",
+    ]) {
       expect(mainNav.filter((item) => isNavItemActive(path, item.href))).toHaveLength(1);
     }
   });
