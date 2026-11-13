@@ -20,6 +20,9 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
   - Session shared-ui-cards-pages: one shared PageHeader with right-aligned action standard and inline KPI slot, one shared month select, credit cards using the real card faces with working snap carousel, budgets (new allocation visual, copy-last-month inside Add budget), goals (inline KPIs), bills consistency.
 - Budgets, Goals and Bills pages (session budgets-goals-bills, running): split `/plan` back into separate Budgets and Goals pages, redesign Bills.
 
+## Fix round 1 status
+- Both fix sessions hit a usage limit and were partly done; their commits are merged into `redesign` (`d365906`). On that state `pnpm typecheck` fails in apps/api (`accounts.service.ts:319`, new `exclude*` fields in transactions list requests) and one web conventions test (no tables on mobile) fails. Both sessions were told to merge `redesign`, fix these and finish their lists. Re-merge their branches (`claude/jolly-chandrasekhar-361bfc`, `claude/inspiring-hermann-992151`) when they report.
+
 ## Next
 - Unify the two month pickers: `filters/month-preset-button.tsx` (Budgets, Bills) and `finance/month-picker.tsx` (Credit cards) should be one shared component.
 - Browser check of every redesigned page in light mode, and the user menu bottom drawer on mobile.
