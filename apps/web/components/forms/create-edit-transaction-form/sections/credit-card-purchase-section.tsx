@@ -2,7 +2,13 @@ import { CreditCardIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { CreditCard, Merchant } from "@luraba/contracts";
 import * as React from "react";
-import { type Control, Controller, useFormContext, useWatch } from "react-hook-form";
+import {
+  type Control,
+  Controller,
+  type UseFormGetValues,
+  type UseFormSetValue,
+  useWatch,
+} from "react-hook-form";
 import { AccountSelect } from "@/components/display";
 import { FormItem } from "@/components/forms/form-item";
 import { Switch } from "@/components/ui/switch";
@@ -20,6 +26,8 @@ import { TransactionFormSection } from "./transaction-form-section";
 export function CreditCardPurchaseSection({
   cards,
   control,
+  getValues,
+  setValue,
   currencyCode,
   isEdit,
   language,
@@ -28,13 +36,14 @@ export function CreditCardPurchaseSection({
 }: {
   cards: CreditCard[];
   control: Control<CreateEditTransactionFormValues>;
+  getValues: UseFormGetValues<CreateEditTransactionFormValues>;
+  setValue: UseFormSetValue<CreateEditTransactionFormValues>;
   currencyCode?: string;
   isEdit: boolean;
   language: string;
   merchants: Merchant[];
   precision: number;
 }) {
-  const { setValue, getValues } = useFormContext<CreateEditTransactionFormValues>();
   const amount = useWatch({ control, name: "amount" });
   const installmentCount = useWatch({ control, name: "installmentCount" });
   const custom = useWatch({ control, name: "customInstallments" });
