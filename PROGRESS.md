@@ -23,6 +23,11 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 ## Fix round 1 status
 - Both fix sessions hit a usage limit and were partly done; their commits are merged into `redesign` (`d365906`). On that state `pnpm typecheck` fails in apps/api (`accounts.service.ts:319`, new `exclude*` fields in transactions list requests) and one web conventions test (no tables on mobile) fails. Both sessions were told to merge `redesign`, fix these and finish their lists. Re-merge their branches (`claude/jolly-chandrasekhar-361bfc`, `claude/inspiring-hermann-992151`) when they report.
 
+## Status at 04:50 (after limit reset)
+- Merged `claude/inspiring-hermann-992151` (shared-ui-cards-pages, commits `1b8c557`, `78ee099`: header actions migrated, conventions test, finance README) into `redesign`. Web unit tests: 223 pass; biome warnings rose to 12 (was 4-5), not yet looked at.
+- Session tx-filters-fix (`claude/jolly-chandrasekhar-361bfc`) is still running; its API typecheck error (`accounts.service.ts:319`) remains until it finishes. Re-merge when it reports.
+- Not yet verified by a human: every page in the browser (light and dark, 375px to 1440px).
+
 ## Next
 - Unify the two month pickers: `filters/month-preset-button.tsx` (Budgets, Bills) and `finance/month-picker.tsx` (Credit cards) should be one shared component.
 - Browser check of every redesigned page in light mode, and the user menu bottom drawer on mobile.
