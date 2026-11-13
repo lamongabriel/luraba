@@ -10,6 +10,7 @@ No I/O, no framework imports.
   requested range, mapped into a module-specific result. Bills use it.
 - `bills.ts`, `classification.ts`, `periods.ts` domain rules built on the above.
 - `credit-cards.ts` credit limit breakdown (closed / open / future invoices, available) from billing cycles; dates are ISO strings.
+- `installments.ts` card installment splitting: `splitInstallmentAmounts` (modes `remainder_last`, `remainder_first`, `round_up_all`) and `resolveInstallmentPlan`, which turns `amount` / `installmentAmounts` / `installmentAmount` / `roundingMode` into the final list and total (the list wins; a disagreeing `amount` is an error). The API and the web form share it.
 - `loans.ts` loan maths: scheduled installment, due dates (month ends clamp), payment-by-payment schedule and the outlook for a day (next payment, interest paid, payoff date). The account detail page uses it.
 - `goals.ts` savings/investment goal maths: required monthly amount, completion projection with optional compounding, on-track pace, and the progress timeline.
 
