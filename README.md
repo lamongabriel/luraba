@@ -28,6 +28,22 @@ and shared-package watchers.
 
 Use `pnpm seed:mock` only when you want optional demo data.
 
+### Dev commands
+
+`pnpm dev` runs `scripts/dev.sh` (details and port safety in [docs/dev-runner.md](docs/dev-runner.md)):
+
+| Command | What it does |
+| --- | --- |
+| `pnpm dev` / `pnpm dev:light` | Postgres, Redis, MinIO, migrate, then API, web, worker, MCP (`--light`: API + web only). Ctrl+C stops what it started. |
+| `pnpm dev:stop` / `pnpm dev:doctor` | Stop a run (also after a crash) / show Docker, ports, containers. |
+| `pnpm db` / `pnpm db:migrate` / `pnpm db:reset` | Start the database services / migrate / recreate `luraba_db`. |
+| `pnpm db:studio` | Drizzle Studio on the local database. |
+| `pnpm db:restore <file>` / `pnpm db:dump` | Load a `pg_dump -Fc` file into `luraba_db` (old one kept) / write one. |
+
+Restoring a production dump brings real password hashes, tokens and email addresses onto your machine;
+dev runs blank SMTP and web-push credentials by default so nothing is sent. See
+[docs/dev-runner.md](docs/dev-runner.md#loading-production-data) for the safe flow and how to refresh the dump.
+
 Use `pnpm down` to wipe the local Docker stack and start fresh. It removes the containers,
 networks, locally built images and **all volumes** (Postgres, Redis and MinIO data), so every
 record and uploaded file is lost. Run `pnpm dev` afterwards to recreate everything.

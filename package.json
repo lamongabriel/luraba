@@ -18,7 +18,17 @@
     "pnpm": ">=10.28.2"
   },
   "scripts": {
-    "dev": "docker compose up -d --wait db redis minio && pnpm --filter @luraba/api db:migrate && turbo run dev",
+    "dev": "./scripts/dev.sh up",
+    "dev:light": "./scripts/dev.sh up --light",
+    "dev:stop": "./scripts/dev.sh stop",
+    "dev:doctor": "./scripts/dev.sh doctor",
+    "db": "./scripts/dev.sh db",
+    "db:migrate": "./scripts/dev.sh migrate",
+    "db:reset": "./scripts/dev.sh db-reset",
+    "db:studio": "./scripts/dev.sh studio",
+    "db:dump": "./scripts/dev.sh db:dump",
+    "db:restore": "./scripts/dev.sh db:restore",
+    "test:dev-sh": "bash scripts/tests/dev-sh.test.sh",
     "build": "turbo run build",
     "check": "biome check .",
     "fix": "biome check --write .",
