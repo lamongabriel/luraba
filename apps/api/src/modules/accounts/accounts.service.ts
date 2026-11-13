@@ -320,6 +320,15 @@ export async function listAccountTransactions(
     ...query,
     accountIds: [account.id],
     creditCardIds: [],
+    excludeOriginTypes: [],
+    excludeAccountIds: [],
+    excludeCreditCardIds: [],
+    excludeCategoryIds: [],
+    excludeMerchantIds: [],
+    excludeCreatedByUserIds: [],
+    excludeTagIds: [],
+    excludePaymentMethodCodes: [],
+    excludeCurrencyCodes: [],
   };
 
   return listTransactionFeed(context, transactionsQuery, { includeAdjustments: true });

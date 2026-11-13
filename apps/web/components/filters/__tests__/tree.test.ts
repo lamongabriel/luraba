@@ -69,3 +69,27 @@ describe("toTransactionApiParams", () => {
     });
   });
 });
+
+describe("operators", () => {
+  it("reads negations, amount and date operators", () => {
+    let tree = setFieldRule(createEmptyTree(), "originTypes", {
+      operator: "is_none_of",
+      value: ["refund"],
+    });
+    tree = setFieldRule(tree, "amount", { operator: "gt", value: 10 });
+    tree = setFieldRule(tree, "purchaseDate", { operator: "is_before", value: "2026-11-01" });
+    tree = setFieldRule(tree, "includeInBudget", { operator: "is_not", value: "true" });
+    const values = readValues(tree);
+    expect(values.list("originTypes")).toEqual([]);
+    expect(values.excluded("originTypes")).toEqual(["refund"]);
+    expect(values.money("amount")).toEqual({ min: 10, max: null, minExclusive: true });
+    expect(values.dates("purchaseDate")).toEqual({ from: null, to: "2026-10-31" });
+    expect(values.flag("includeInBudget")).toBe(false);
+    expect(toTransactionApiParams(values)).toMatchObject({
+      excludeOriginTypes: ["refund"],
+      amountMin: 1001,
+      purchaseDateTo: "2026-10-31",
+      includeInBudget: false,
+    });
+  });
+});
