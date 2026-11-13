@@ -33,7 +33,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/80 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 z-50 bg-scrim duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className,
       )}
       {...props}
@@ -47,15 +47,18 @@ function SheetContent({
   side = "right",
   showCloseButton = true,
   mobileClassName,
+  keepSideOnMobile = false,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left";
   showCloseButton?: boolean;
   /** Classes of the drawer when the sheet is a bottom drawer (below 768px). */
   mobileClassName?: string;
+  /** Keep sliding in from `side` on a phone. Only the app sidebar uses this; everything else is a bottom drawer. */
+  keepSideOnMobile?: boolean;
 }) {
   const isMobile = useIsMobile();
-  if (isMobile) {
+  if (isMobile && !keepSideOnMobile) {
     // Every side sheet is a bottom drawer on a phone. The call site's `className` styles the desktop panel;
     // `mobileClassName` styles the drawer itself.
     return (

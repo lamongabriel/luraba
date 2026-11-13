@@ -88,7 +88,7 @@ export function BottomSheetContent({
     <DialogPrimitive.Portal container={container ?? undefined}>
       <DialogPrimitive.Overlay
         data-slot="bottom-sheet-overlay"
-        className="fixed inset-0 z-50 bg-black/80 duration-150 data-closed:animate-out data-closed:fade-out-0 data-open:animate-in data-open:fade-in-0"
+        className="fixed inset-0 z-50 bg-scrim duration-150 data-closed:animate-out data-closed:fade-out-0 data-open:animate-in data-open:fade-in-0"
       />
       <DialogPrimitive.Content
         data-slot="bottom-sheet"

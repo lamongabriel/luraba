@@ -9,7 +9,7 @@ Below 768px (`useIsMobile`, `hooks/use-mobile.ts`) every overlay is a bottom dra
 happens in the shared wrappers, so features just use them:
 
 `Dialog`, `Modal`/`ConfirmDialog`, `Sheet` (every `side`), `Popover`, `DropdownMenu`, `Select`,
-`SidePanel`, and the sidebar's mobile menu. `Tooltip` and `HoverCard` never open on mobile.
+and `SidePanel`. The app **sidebar stays a slide-in sidebar** on mobile (`SheetContent keepSideOnMobile`, only used by `ui/sidebar.tsx`); the menus inside it (user/account menu) are bottom drawers. `Tooltip` and `HoverCard` never open on mobile.
 
 - `MobileSheetContent` (`mobile-sheet.tsx`) is the drawer body shared by Dialog/Sheet/Modal: close
   button, locked while `isLoading`, scrolling body, sticky footer.
@@ -19,6 +19,10 @@ happens in the shared wrappers, so features just use them:
 - Do not import Radix or vaul overlays in features, and import raw `ui/sheet` only from
   `side-panel`; `test/conventions.test.ts` enforces it. Raw `ui/dialog` imports are an allowlist that
   can only shrink; new confirmations use `ConfirmDialog`.
-- Unlike the Nexus reference, confirmations and the nav menu are bottom drawers here too.
+- Unlike the Nexus reference, confirmations are bottom drawers here too.
 
 Tests: `test/viewport.ts` (`setMobileViewport`) stubs `matchMedia` for mobile assertions.
+
+## Scrim
+
+Every overlay backdrop uses the `bg-scrim` token (`--scrim` in `app/globals.css`); never `bg-black/..`.
