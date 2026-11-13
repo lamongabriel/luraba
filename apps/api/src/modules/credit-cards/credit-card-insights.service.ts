@@ -65,6 +65,44 @@ export function buildInsightsGroup(
   };
 }
 
+/** Each category's amounts across currencies, converted once per category, largest first. */
+export function combineCategories(
+  fx: Awaited<ReturnType<typeof buildCombinedFx>>,
+  groups: Group[],
+): CreditCardInsightsResponse["combined"]["byCategory"] {
+  const byKey = new Map<
+    string,
+    {
+      categoryId: string | null;
+      name: string;
+      color: string | null;
+      amounts: Record<string, number>;
+    }
+  >();
+  for (const group of groups) {
+    for (const category of group.byCategory) {
+      const key = category.categoryId ?? "none";
+      const entry = byKey.get(key) ?? {
+        categoryId: category.categoryId,
+        name: category.name,
+        color: category.color,
+        amounts: {},
+      };
+      entry.amounts[group.currencyCode] =
+        (entry.amounts[group.currencyCode] ?? 0) + category.amount;
+      byKey.set(key, entry);
+    }
+  }
+  const rows = [...byKey.values()].map((entry) => ({
+    categoryId: entry.categoryId,
+    name: entry.name,
+    color: entry.color,
+    amount: combineAmounts(fx, entry.amounts),
+  }));
+  // Unconvertible rows (missing rate) sort last.
+  return rows.sort((left, right) => (right.amount.total ?? -1) - (left.amount.total ?? -1));
+}
+
 /**
  * Spending insights for the invoices due in a month, one group per currency in its own
  * currency, plus `combined` totals in the household base currency. Looks six months back and ahead for trends and commitments.
@@ -100,6 +138,7 @@ export async function getInsights(
         fx,
         Object.fromEntries(groups.map((group) => [group.currencyCode, group.previousTotal])),
       ),
+      byCategory: combineCategories(fx, groups),
     },
   };
 }

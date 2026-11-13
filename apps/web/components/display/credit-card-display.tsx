@@ -47,7 +47,7 @@ export function CreditCardDisplay({
           {card.institutionName?.trim() || "No institution"}
         </span>
         <span className={cn("flex min-w-0 items-center gap-1 text-muted-foreground", dims.subtext)}>
-          <CreditCardBrandMark brand={card.brand} className="size-3.5" />
+          <CreditCardBrandMark brand={card.brand} className="h-3.5 w-5" />
           <span className="truncate">
             {card.name} ••{card.last4}
           </span>

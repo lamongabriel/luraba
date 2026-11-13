@@ -94,7 +94,10 @@ export function AccountMark({
 }) {
   const visual = getAccountVisual(account);
   const brandMark = visual.cardBrand ? (
-    <CreditCardBrandMark brand={visual.cardBrand} className="size-full p-0.5" />
+    <CreditCardBrandMark
+      brand={visual.cardBrand}
+      className="size-full p-0.5 text-[0.4rem] leading-none"
+    />
   ) : undefined;
 
   return (

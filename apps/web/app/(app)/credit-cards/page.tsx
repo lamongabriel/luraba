@@ -5,20 +5,18 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { TransactionFeedRow } from "@luraba/contracts";
 import * as React from "react";
 import { CardTransactionSheet } from "@/components/credit-cards/card-transaction-sheet";
-import { CreditCardGrid } from "@/components/credit-cards/credit-card-grid";
-import { CreditCardEditSheet, CreditCardSheet } from "@/components/credit-cards/credit-card-sheet";
-import { OverviewInsights } from "@/components/credit-cards/overview-insights";
-import { OverviewInvoices } from "@/components/credit-cards/overview-invoices";
-import { OverviewKpis } from "@/components/credit-cards/overview-kpis";
-import { RecentPurchases } from "@/components/credit-cards/recent-purchases";
+import { CreditCardSheet } from "@/components/credit-cards/credit-card-sheet";
+import { CreditCardsCarousel } from "@/components/credit-cards/credit-cards-carousel";
+import { CreditUtilization } from "@/components/credit-cards/credit-utilization";
+import { RecentCardTransactions } from "@/components/credit-cards/recent-card-transactions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
-import { MonthSelector } from "@/components/finance/month-selector";
+import { MonthPicker } from "@/components/finance/month-picker";
 import { SectionReveal } from "@/components/motion/reveal";
 import { PERMISSIONS, PermissionButton } from "@/components/permissions";
 import { DataBoundary } from "@/components/states";
 import { useCurrencyPrecision } from "@/hooks/use-currency-precision";
 import { useDisclosure } from "@/hooks/use-disclosure";
-import { currentMonthKey, formatMonthKeyLabel, shiftMonthKey } from "@/lib/credit-card-invoices";
+import { currentMonthKey, shiftMonthKey } from "@/lib/credit-card-invoices";
 import {
   useCreditCardInsightsQuery,
   useCreditCardOverviewQuery,
@@ -26,11 +24,10 @@ import {
 import { useAuthSessionStore } from "@/stores/auth-session-store";
 import { CreditCardsEmpty } from "./_empty";
 import { CreditCardsError } from "./_error";
+import { CREDIT_CARDS_COLUMNS_CLASS } from "./_layout-classes";
 import { CreditCardsLoading } from "./_loading";
 
 /** How far the month picker goes back and ahead (the API reaches up to 24 months ahead). */
-/** The two-zone grid (8 + 4) every row of the page uses, so the zones line up. */
-const ZONES_CLASS = "grid min-w-0 gap-x-8 gap-y-10 lg:grid-cols-12 xl:gap-x-10";
 const MONTHS_BACK = 36;
 const MONTHS_AHEAD = 12;
 
@@ -39,9 +36,8 @@ export default function CreditCardsPage() {
   const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
   const timezone = useAuthSessionStore((state) => state.user?.preferences.timezone ?? "UTC");
   const precisionOf = useCurrencyPrecision();
-  // Until a month is picked the API opens on the invoice that still needs attention.
+  // Until a month is picked the API opens on the statement that still needs attention.
   const [chosenMonth, setChosenMonth] = React.useState<string | undefined>();
-  const [editingId, setEditingId] = React.useState<string | null>(null);
   const [selectedRow, setSelectedRow] = React.useState<TransactionFeedRow | null>(null);
 
   const query = useCreditCardOverviewQuery(chosenMonth ? { month: chosenMonth } : {});
@@ -57,9 +53,7 @@ export default function CreditCardsPage() {
     () => (overview?.cards ?? []).flatMap((card) => (card.invoice ? [card.invoice.cycleId] : [])),
     [overview],
   );
-
   const insightsStatus = insightsQuery.isError ? "error" : insightsQuery.data ? "ready" : "loading";
-  const monthLabel = formatMonthKeyLabel(month ?? thisMonth, language);
 
   const content = (
     <DataBoundary
@@ -73,50 +67,27 @@ export default function CreditCardsPage() {
       empty={<CreditCardsEmpty onCreate={addSheet.onOpen} />}
     >
       {overview ? (
-        <SectionReveal className="flex flex-col gap-10">
-          <OverviewKpis overview={overview} insights={insightsQuery.data} language={language} />
-          <div className={ZONES_CLASS}>
+        <SectionReveal className="flex flex-col gap-8">
+          <CreditCardsCarousel
+            cards={overview.cards}
+            language={language}
+            precisionOf={precisionOf}
+          />
+          <div className={CREDIT_CARDS_COLUMNS_CLASS}>
             <div className="min-w-0 lg:col-span-8">
-              <CreditCardGrid
-                cards={overview.cards}
-                language={language}
-                precisionOf={precisionOf}
-                onEdit={setEditingId}
-              />
-            </div>
-            <div className="min-w-0 lg:col-span-4">
-              <OverviewInvoices
-                cards={overview.cards}
-                language={language}
-                precisionOf={precisionOf}
-                monthLabel={monthLabel}
-              />
-            </div>
-          </div>
-          <div className={`${ZONES_CLASS} items-stretch`}>
-            <div className="flex min-w-0 flex-col gap-10 lg:col-span-8">
-              {overview.totals.map((total) => (
-                <OverviewInsights
-                  key={total.currencyCode}
-                  group={insightsQuery.data?.groups.find(
-                    (item) => item.currencyCode === total.currencyCode,
-                  )}
-                  currencyCode={total.currencyCode}
-                  month={overview.month}
-                  status={insightsStatus}
-                  errorMessage={insightsQuery.error?.message}
-                  onRetry={() => void insightsQuery.refetch()}
-                  language={language}
-                  precision={precisionOf(total.currencyCode)}
-                />
-              ))}
-            </div>
-            <div className="min-w-0 lg:col-span-4">
-              <RecentPurchases
+              <RecentCardTransactions
                 cycleIds={cycleIds}
-                cards={overview.cards}
                 language={language}
                 onView={setSelectedRow}
+              />
+            </div>
+            <div className="min-w-0 lg:col-span-4">
+              <CreditUtilization
+                overview={overview}
+                insights={insightsQuery.data}
+                insightsStatus={insightsStatus}
+                onRetryInsights={() => void insightsQuery.refetch()}
+                language={language}
               />
             </div>
           </div>
@@ -128,12 +99,13 @@ export default function CreditCardsPage() {
   return (
     <InternalPageLayout
       title="Credit cards"
-      subtitle="Your cards, their invoices and spending, month by month."
+      subtitle="Track your spending and upcoming statements."
       actions={
-        <div className="flex flex-wrap items-center gap-2">
-          <MonthSelector
+        <div className="flex items-center gap-2">
+          <MonthPicker
             value={month ?? thisMonth}
             onChange={setChosenMonth}
+            currentMonth={thisMonth}
             minMonth={shiftMonthKey(thisMonth, -MONTHS_BACK)}
             maxMonth={shiftMonthKey(thisMonth, MONTHS_AHEAD)}
             language={language}
@@ -142,21 +114,17 @@ export default function CreditCardsPage() {
             permission={PERMISSIONS.CREDIT_CARDS_CREATE}
             deniedMessage="Your household role cannot add credit cards."
             onClick={addSheet.onOpen}
+            aria-label="Add credit card"
+            className="max-md:size-9 max-md:rounded-full max-md:px-0"
           >
             <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
-            Add credit card
+            <span className="max-md:sr-only">Add credit card</span>
           </PermissionButton>
         </div>
       }
     >
       {content}
       <CreditCardSheet open={addSheet.isOpen} onOpenChange={addSheet.setIsOpen} />
-      <CreditCardEditSheet
-        creditCardId={editingId}
-        onOpenChange={(open) => {
-          if (!open) setEditingId(null);
-        }}
-      />
       <CardTransactionSheet row={selectedRow} onClose={() => setSelectedRow(null)} />
     </InternalPageLayout>
   );

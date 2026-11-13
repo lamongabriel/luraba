@@ -2,7 +2,7 @@
 
 import Color from "color";
 
-import { CreditCardBrand } from "@/components/credit-cards/credit-card-brand";
+import { CardBrandMark } from "@/components/display/card-brand";
 import { cn } from "@/lib/utils";
 
 const fallbackColor = "#d4d4d8";
@@ -58,9 +58,8 @@ export function CreditCardPreview({
           {institutionName?.trim() || " "}
         </span>
         {brand ? (
-          <CreditCardBrand
+          <CardBrandMark
             brand={brand}
-            chip
             className={cn("shrink-0", small && "origin-top-right scale-75")}
           />
         ) : null}

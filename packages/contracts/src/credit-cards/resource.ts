@@ -150,6 +150,8 @@ export const creditCardOverviewCombinedSchema = z.object({
   /** Only cards with a limit count; `byCurrency` is empty when no card has one. */
   limitTotal: combinedAmountSchema,
   limitAvailable: combinedAmountSchema,
+  /** Limit consumed (closed + open invoices + future installments), across every card. */
+  limitUsed: combinedAmountSchema,
 });
 export const creditCardOverviewSchema = z.object({
   month: z.string().regex(/^\d{4}-\d{2}$/),
@@ -190,6 +192,15 @@ export const creditCardInsightsSchema = z.object({
     fx: combinedFxSchema,
     total: combinedAmountSchema,
     previousTotal: combinedAmountSchema,
+    /** Spending by category in the base currency, largest first (same rows as the groups, converted once each). */
+    byCategory: z.array(
+      z.object({
+        categoryId: z.uuid().nullable(),
+        name: z.string(),
+        color: z.string().nullable(),
+        amount: combinedAmountSchema,
+      }),
+    ),
   }),
 });
 export const creditCardPurchaseSchema = z.object({
