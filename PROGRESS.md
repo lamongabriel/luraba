@@ -11,10 +11,16 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 - Credit cards page redesign (`cf4b06a`, branch `claude/friendly-wiles-647540`): card carousel, recent transactions, utilization, month picker; checked in dark only at desktop and 375px.
 - Merge of all of the above into `redesign` (`4986b95`): typecheck, check and 216 web unit tests pass. Conflicts in `ui/sidebar.tsx`, `ui/sheet.tsx`, `ui/README.md` were resolved by keeping the version from the filters branch (both sessions made the same sidebar fix).
 
+## Done, continued
+- Budgets, Goals and Bills redesigned as separate pages, `/plan` removed (branch `claude/zealous-swirles-5c8a10`, merged as `593390c`). Checked by the session in dark mode only. Conflict in `finance/page-header.tsx` resolved by keeping both `mobileActions` (transactions) and `inlineActions` (budgets/bills).
+
 ## In progress (worker sessions, not merged yet)
+- none running.
 - Budgets, Goals and Bills pages (session budgets-goals-bills, running): split `/plan` back into separate Budgets and Goals pages, redesign Bills.
 
 ## Next
+- Unify the two month pickers: `filters/month-preset-button.tsx` (Budgets, Bills) and `finance/month-picker.tsx` (Credit cards) should be one shared component.
+- Browser check of every redesigned page in light mode, and the user menu bottom drawer on mobile.
 - Merge each finished branch into `redesign` (check conflicts around the shared KPI cards, navigation and filters), run typecheck, check, tests.
 - Resume after the usage limit reset (about 04:40): check sessions, merge, update this file.
 - Deploy `redesign` to production only after the owner has tested it.
