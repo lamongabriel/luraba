@@ -11,7 +11,12 @@ import {
   type UseAppMutationOptions,
   useAppMutation,
 } from "@/mutations/app-mutation";
-import { createAccount, deleteAccount, updateAccount } from "@/services/accounts.service";
+import {
+  createAccount,
+  deleteAccount,
+  setAccountArchived,
+  updateAccount,
+} from "@/services/accounts.service";
 
 export const createAccountMutationDefinition = createAppMutationDefinition<
   CreateAccountResult,
@@ -56,4 +61,21 @@ export function useDeleteAccountMutation<TContext = unknown>(
   options?: UseAppMutationOptions<void, string, TContext>,
 ) {
   return useAppMutation(deleteAccountMutationDefinition, options);
+}
+
+type SetAccountArchivedVariables = { id: string; archived: boolean };
+
+export const setAccountArchivedMutationDefinition = createAppMutationDefinition<
+  UpdateAccountResult,
+  SetAccountArchivedVariables
+>({
+  defaultErrorMessage: "We couldn't change this account. Please try again.",
+  mutationFn: ({ id, archived }) => setAccountArchived(id, archived),
+  mutationKey: ["accounts", "archive"],
+});
+
+export function useSetAccountArchivedMutation<TContext = unknown>(
+  options?: UseAppMutationOptions<UpdateAccountResult, SetAccountArchivedVariables, TContext>,
+) {
+  return useAppMutation(setAccountArchivedMutationDefinition, options);
 }

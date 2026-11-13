@@ -3,7 +3,7 @@ import type {
   listCreditCardsQuerySchema,
 } from "@luraba/contracts/credit-cards";
 import { creditCardsTable } from "@luraba/db/schemas/credit-cards.schema";
-import { eq, type SQL, sql } from "drizzle-orm";
+import { eq, isNull, type SQL, sql } from "drizzle-orm";
 import type { z } from "zod";
 import {
   buildIlikeSearch,
@@ -23,6 +23,7 @@ export function buildCreditCardsListWhere(
 ): SQL {
   return combineConditions(
     eq(creditCardsTable.householdId, householdId),
+    query.includeArchived ? undefined : isNull(creditCardsTable.archivedAt),
     buildIlikeSearch(query.search, [
       sql`${creditCardsTable.name}`,
       sql`${creditCardsTable.institutionName}`,

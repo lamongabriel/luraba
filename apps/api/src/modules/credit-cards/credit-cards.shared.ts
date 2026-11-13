@@ -1,5 +1,6 @@
 import type { HouseholdContext } from "@/config/permissions";
 import type { TxClient } from "@/db/types";
+import { assertNotArchived } from "@/modules/accounts/accounts.guards";
 import { accountsRepository } from "@/modules/accounts/accounts.repository";
 import { categoriesRepository } from "@/modules/categories/categories.repository";
 import * as entriesService from "@/modules/entries/entries.service";
@@ -251,6 +252,7 @@ export async function ensureSourceAccountForPayment(
   const sourceAccount = await accountsRepository.get(fromAccountId, context);
 
   if (!sourceAccount) throw new NotFoundError("Payment source account");
+  assertNotArchived(sourceAccount);
   if (sourceAccount.classification !== "asset") {
     throw new ValidationError("Credit card payments must come from an asset account");
   }

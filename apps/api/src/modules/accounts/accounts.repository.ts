@@ -163,6 +163,7 @@ class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
           institutionLogoUrl: accountsTable.institutionLogoUrl,
           imageUploadId: accountsTable.imageUploadId,
           notes: accountsTable.notes,
+          archivedAt: accountsTable.archivedAt,
           classification: accountsTable.classification,
           type: accountsTable.type,
           currencyId: accountsTable.currencyId,
@@ -204,6 +205,22 @@ class AccountRepository extends HouseholdScopedRepository<AccountRecord> {
       })
       .returning();
 
+    return rows[0];
+  }
+
+  /** Sets or clears `archived_at` (household-filtered). */
+  async setArchivedAt(
+    context: HouseholdContext,
+    accountId: string,
+    archivedAt: Date | null,
+  ): Promise<AccountRecord | undefined> {
+    const rows = await db
+      .update(accountsTable)
+      .set({ archivedAt, updatedAt: now() })
+      .where(
+        and(eq(accountsTable.id, accountId), eq(accountsTable.householdId, context.householdId)),
+      )
+      .returning();
     return rows[0];
   }
 

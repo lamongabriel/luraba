@@ -58,3 +58,12 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 ## Fix: report_budget rolls up subcategories (2026-11-13)
 - Root cause: the budgets API returns flat per-category rows; only the web page added subcategory spending to the parent. `report_budget` used the raw rows.
 - Moved the rollup (`buildBudgetItems`) into `@luraba/domain`; web re-exports it, MCP uses it. `report_budget` now returns parent `actual`/`remaining`/`overBudget` rolled up, plus `ownActual`, `allocated`, `unallocated`, nested `subcategories` each with `parent`. Totals unchanged (already no double count). Unit test in `apps/mcp/src/__tests__/report-budget.unit.test.ts`.
+
+## Archive for accounts and credit cards (branch claude/nice-liskov-b11c35)
+- Migration `0057_account_archive` adds nullable `archived_at` to `accounts` and `credit_cards`. `archivedAt` is on the account and card wire shapes.
+- API: `POST /accounts/:id/archive|unarchive` and `POST /credit-cards/:id/archive|unarchive` (reuse `accounts.update` / `credit_cards.update`). Decision: archiving needs a zero balance (409 with a clear message, no force flag); an account that owns active cards cannot be archived. Lists and the card overview hide archived rows unless `includeArchived=true`; exports include them.
+- New activity on an archived account or card (expense, income, transfer, adjustment, refund, card purchase or payment, moving a transaction onto it) is rejected with 409 via `assertNotArchived`. History, other balances and reports are untouched.
+- MCP: `archive_account`, `unarchive_account`, `archive_credit_card`, `unarchive_credit_card`, `includeArchived` on `list_accounts` and `list_credit_cards`; name resolution skips archived ones.
+- Web: Archive/Unarchive row in the account and card edit sheets, "Show archived" header button on /accounts and /credit-cards, dimmed archived rows and tiles; pickers never offer archived accounts.
+- Note: parallel sessions share the `luraba_db_test` database and wipe it mid-run; this work used `DB_NAME=luraba_db_test_archive`.
+- Known gap: editing an existing transaction that sits on an archived account shows an empty account picker (the picker omits archived accounts).

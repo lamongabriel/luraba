@@ -185,12 +185,16 @@ export const creditCardForecastQuerySchema = z.object({
   months: z.coerce.number().int().min(1).max(24).default(12),
 });
 export const creditCardOverviewQuerySchema = z.object({
+  /** Archived cards are left out unless this is true. */
+  includeArchived: booleanQuerySchema.optional(),
   month: z
     .string()
     .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "month must use YYYY-MM format")
     .optional(),
 });
-export const creditCardInsightsQuerySchema = creditCardOverviewQuerySchema.required();
+export const creditCardInsightsQuerySchema = creditCardOverviewQuerySchema.required({
+  month: true,
+});
 export const listCreditCardsQuerySchema = createListQuerySchema(
   {
     brands: commaSeparatedArraySchema(z.string().trim().min(1).max(64)),
@@ -203,6 +207,8 @@ export const listCreditCardsQuerySchema = createListQuerySchema(
     creditLimitMin: z.coerce.number().int().min(0).optional(),
     creditLimitMax: z.coerce.number().int().min(0).optional(),
     hasCreditLimit: booleanQuerySchema.optional(),
+    /** Archived cards are hidden unless this is true. */
+    includeArchived: booleanQuerySchema.optional(),
     createdAtFrom: temporalQuerySchema.optional(),
     createdAtTo: temporalQuerySchema.optional(),
     updatedAtFrom: temporalQuerySchema.optional(),

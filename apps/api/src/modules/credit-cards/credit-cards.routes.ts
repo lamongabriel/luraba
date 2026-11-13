@@ -35,6 +35,16 @@ router.patch(
   requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_UPDATE }),
   creditCardsController.update,
 );
+router.post(
+  getEndpointRouterPath(creditCardsEndpoints.archive),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_UPDATE }),
+  creditCardsController.archive,
+);
+router.post(
+  getEndpointRouterPath(creditCardsEndpoints.unarchive),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_UPDATE }),
+  creditCardsController.unarchive,
+);
 router.delete(
   getEndpointRouterPath(creditCardsEndpoints.delete),
   requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_DELETE }),

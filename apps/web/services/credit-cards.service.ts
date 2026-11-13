@@ -70,6 +70,16 @@ export function updateCreditCard(
   });
 }
 
+/** Archives (hides, closes to new activity) or restores a credit card. */
+export function setCreditCardArchived(
+  id: string,
+  archived: boolean,
+): Promise<UpdateCreditCardResult> {
+  return requestContract(archived ? creditCardsEndpoints.archive : creditCardsEndpoints.unarchive, {
+    params: { id },
+  });
+}
+
 export function deleteCreditCard(id: string): Promise<DeleteCreditCardResult> {
   return requestContract(creditCardsEndpoints.delete, { params: { id } });
 }

@@ -15,6 +15,7 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
 import type { TxClient } from "@/db/types";
+import { assertNotArchived } from "@/modules/accounts/accounts.guards";
 import { resolveCreditBudgetSettings } from "@/modules/budgets/budgets.settings";
 import { entriesRepository } from "@/modules/entries/entries.repository";
 import * as entriesService from "@/modules/entries/entries.service";
@@ -185,6 +186,7 @@ export async function createPurchase(
   dto: CreateCreditCardPurchaseDto,
 ): Promise<CreditCardPurchaseResponse> {
   const card = await creditCardsRepository.findByIdOrThrow(context.householdId, creditCardId);
+  assertNotArchived(card, "Credit card");
   await ensureExpenseCategory(context, dto.categoryId);
   await ensureMerchant(context, dto.merchantId);
   const plan = requirePlan(

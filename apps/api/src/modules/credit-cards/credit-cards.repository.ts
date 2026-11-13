@@ -1,5 +1,6 @@
 import { creditCardsTable } from "@luraba/db/schemas/credit-cards.schema";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { now } from "@luraba/domain";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { buildAccountBalanceSubquery } from "@/modules/ledger-accounts/ledger-accounts.repository";
 import { NotFoundError } from "@/shared/errors";
@@ -46,7 +47,11 @@ export async function findById(
   return row ? toCreditCardRow(row) : undefined;
 }
 
-export async function listByHouseholdId(householdId: string): Promise<CreditCardRow[]> {
+/** Active cards by default; pass `includeArchived` for exports and the "show archived" views. */
+export async function listByHouseholdId(
+  householdId: string,
+  options: { includeArchived?: boolean } = {},
+): Promise<CreditCardRow[]> {
   const rows = await db
     .select(creditCardSelect)
     .from(creditCardsTable)
@@ -58,7 +63,12 @@ export async function listByHouseholdId(householdId: string): Promise<CreditCard
       creditCardOwnerAccountsTable,
       eq(creditCardOwnerAccountsTable.id, creditCardsTable.ownerAccountId),
     )
-    .where(eq(creditCardsTable.householdId, householdId))
+    .where(
+      and(
+        eq(creditCardsTable.householdId, householdId),
+        options.includeArchived ? undefined : isNull(creditCardsTable.archivedAt),
+      ),
+    )
     .orderBy(asc(creditCardsTable.name));
 
   return rows.map((row) => toCreditCardRow(row as CreditCardSelectRow));
@@ -133,6 +143,37 @@ export async function findLedgerAccountIdsByOwnerAccountId(
     );
 
   return rows.map((row) => row.ledgerAccountId);
+}
+
+export async function countActiveByOwnerAccountId(
+  householdId: string,
+  ownerAccountId: string,
+): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::integer` })
+    .from(creditCardsTable)
+    .where(
+      and(
+        eq(creditCardsTable.householdId, householdId),
+        eq(creditCardsTable.ownerAccountId, ownerAccountId),
+        isNull(creditCardsTable.archivedAt),
+      ),
+    );
+  return row?.count ?? 0;
+}
+
+/** Sets or clears `archived_at` (household-filtered). */
+export async function setArchivedAt(
+  householdId: string,
+  creditCardId: string,
+  archivedAt: Date | null,
+): Promise<void> {
+  await db
+    .update(creditCardsTable)
+    .set({ archivedAt, updatedAt: now() })
+    .where(
+      and(eq(creditCardsTable.id, creditCardId), eq(creditCardsTable.householdId, householdId)),
+    );
 }
 
 export async function findByHouseholdAndName(

@@ -53,8 +53,13 @@
   the logo), notes and type-specific details (vehicle make/model/year/mileage, property address and area, loan
   terms). `update_account` also sets the current balance (`balance`, recorded as a balance adjustment, e.g. to
   revalue a car). Deleting an account or card needs `confirm: true` and first reports how many transactions and
-  cards go with it. Not in the API, so not in the tools: a business-account flag, account color or icon, archiving
-  or closing an account, changing an account's currency or a card's paying account.
+  cards go with it. To retire an account or card without losing its history use `archive_account` /
+  `archive_credit_card` (reversible with `unarchive_account` / `unarchive_credit_card`; `dryRun` previews): only
+  a zero balance can be archived, transactions and transfers stay, reports still count the past activity, and
+  an archived account or card is hidden from `list_accounts` / `list_credit_cards` (pass `includeArchived: true`
+  to see them), from name resolution in other tools, and cannot take new transactions. Not in the API, so not in
+  the tools: a business-account flag, account color or icon, changing an account's currency or a card's paying
+  account.
 - **Icons**: `list_icons` (optional `search`) lists the icon names a category can have; `create_category` and
   `update_category` take `icon` (an unknown name returns `needs_clarification` with close matches) and
   `update_category` takes `clearIcon`. `list_categories` returns each category's `icon` and `color`. In the app a

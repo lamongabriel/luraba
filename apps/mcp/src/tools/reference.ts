@@ -59,15 +59,19 @@ export const listAccounts = defineTool({
   name: "list_accounts",
   title: "List accounts with balances",
   description:
-    "Accounts (bank, cash, investment, loan, property...) with balance and currency. Liabilities have negative or owed balances as stored. Filter by text (matches name or institution) or type.",
+    "Accounts (bank, cash, investment, loan, property...) with balance and currency. Liabilities have negative or owed balances as stored. Filter by text (matches name or institution) or type. Archived accounts are hidden unless includeArchived=true.",
   input: z.object({
     search: z.string().optional().describe("Part of the account or bank name."),
     type: z.string().optional().describe("Account type, e.g. cash, investment, loan."),
+    includeArchived: z
+      .boolean()
+      .default(false)
+      .describe("Also list archived accounts (hidden by default)."),
   }),
   annotations: READ_ONLY,
-  async handler({ refs }, { search, type }) {
+  async handler({ refs }, { search, type, includeArchived }) {
     const needle = search?.trim().toLowerCase();
-    const accounts = (await refs.accounts()).filter(
+    const accounts = (await refs.accounts(includeArchived)).filter(
       (account) =>
         (!type || account.type === type) &&
         (!needle ||
@@ -85,6 +89,7 @@ export const listAccounts = defineTool({
           subtype: account.subtype,
           classification: account.classification,
           balance: toMoney(account.balance, account.currencyCode),
+          ...(includeArchived ? { archived: account.archivedAt !== null } : {}),
         })),
       },
     };
@@ -95,11 +100,13 @@ export const listCreditCards = defineTool({
   name: "list_credit_cards",
   title: "List credit cards",
   description:
-    "Credit cards with limit, remaining credit, closing and due days. For invoice amounts and due dates use report_credit_cards.",
-  input: z.object({}),
+    "Credit cards with limit, remaining credit, closing and due days. For invoice amounts and due dates use report_credit_cards. Archived cards are hidden unless includeArchived=true.",
+  input: z.object({
+    includeArchived: z.boolean().default(false).describe("Also list archived cards."),
+  }),
   annotations: READ_ONLY,
-  async handler({ refs }) {
-    const cards = await refs.creditCards();
+  async handler({ refs }, { includeArchived }) {
+    const cards = await refs.creditCards(includeArchived);
     return {
       summary: `${cards.length} credit card(s).`,
       data: {
@@ -117,6 +124,7 @@ export const listCreditCards = defineTool({
               : toMoney(card.remainingCreditAmount, card.currencyCode),
           closingDay: card.closingDay,
           dueDay: card.dueDay,
+          ...(includeArchived ? { archived: card.archivedAt !== null } : {}),
         })),
       },
     };

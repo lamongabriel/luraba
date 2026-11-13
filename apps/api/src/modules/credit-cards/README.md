@@ -24,6 +24,15 @@ months of invoice history and the installments committed to the next six invoice
 **due** in it, like the overview. (Top merchants, largest charges, per-card totals and subscription detection were removed
 because no page used them.)
 
+## Archiving
+
+`POST /credit-cards/:id/archive` and `/unarchive` (permission `credit_cards.update`) set or clear
+`credit_cards.archived_at` (the internal ledger account is untouched). Only a card with a zero balance can be
+archived (`409` otherwise); the history (purchases, invoices, payments) stays and reports still count it.
+`GET /credit-cards` hides archived cards unless `includeArchived=true`. New purchases, payments and refunds to
+an archived card are refused with `409` (`assertNotArchived`, see the accounts README); editing or deleting
+existing records stays allowed. A bank account that owns an active card cannot be archived.
+
 ## Credit limit
 
 `creditLimitAmount` is required (minor units, at least 1) on create and, when sent, on update. The column keeps its `-1`

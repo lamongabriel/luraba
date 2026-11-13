@@ -79,6 +79,20 @@ export const creditCardsEndpoints = {
     response: creditCardSchema,
     status: 200,
   }),
+  archive: defineEndpoint({
+    method: "post",
+    path: "/credit-cards/:id/archive",
+    params: creditCardIdParamsSchema,
+    response: creditCardSchema,
+    status: 200,
+  }),
+  unarchive: defineEndpoint({
+    method: "post",
+    path: "/credit-cards/:id/unarchive",
+    params: creditCardIdParamsSchema,
+    response: creditCardSchema,
+    status: 200,
+  }),
   delete: defineEndpoint({
     method: "delete",
     path: "/credit-cards/:id",

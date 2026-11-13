@@ -16,6 +16,7 @@ import {
 import {
   createCreditCard,
   deleteCreditCard,
+  setCreditCardArchived,
   updateCreditCard,
   updateCreditCardCycle,
 } from "@/services/credit-cards.service";
@@ -52,6 +53,23 @@ export function useUpdateCreditCardMutation<TContext = unknown>(
   options?: UseAppMutationOptions<UpdateCreditCardResult, UpdateCreditCardVariables, TContext>,
 ) {
   return useAppMutation(updateCreditCardMutationDefinition, options);
+}
+
+type SetCreditCardArchivedVariables = { id: string; archived: boolean };
+
+export const setCreditCardArchivedMutationDefinition = createAppMutationDefinition<
+  UpdateCreditCardResult,
+  SetCreditCardArchivedVariables
+>({
+  defaultErrorMessage: "We couldn't change this credit card. Please try again.",
+  mutationFn: ({ id, archived }) => setCreditCardArchived(id, archived),
+  mutationKey: ["credit-cards", "archive"],
+});
+
+export function useSetCreditCardArchivedMutation<TContext = unknown>(
+  options?: UseAppMutationOptions<UpdateCreditCardResult, SetCreditCardArchivedVariables, TContext>,
+) {
+  return useAppMutation(setCreditCardArchivedMutationDefinition, options);
 }
 
 export const deleteCreditCardMutationDefinition = createAppMutationDefinition<void, string>({

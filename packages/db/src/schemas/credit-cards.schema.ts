@@ -33,6 +33,8 @@ export const creditCardsTable = pgTable(
     createdByUserId: uuid("created_by_user_id").references(() => usersTable.id, {
       onDelete: "set null",
     }),
+    /** Set when the card is archived: hidden from lists and pickers, closed to new purchases and payments. */
+    archivedAt: timestamp("archived_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

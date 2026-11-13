@@ -2,6 +2,12 @@
 
 UI for credit cards: the overview (`/credit-cards`) and the card detail page (`/credit-cards/[id]`).
 
+**Archiving.** The card sheet's **Manage** section has an *Archive* / *Unarchive* row (`credit_cards.update`); the API
+only archives a card that owes nothing and refuses new purchases and payments on an archived one. The overview hides
+archived cards; the header's *Show archived* button sends `includeArchived` and the tile of an archived card is dimmed
+and says "Archived" (`CreditCardOverviewCard.archived`) in the line where "Paid in full" would go, so the layout does
+not shift. The card detail page still works for an archived card.
+
 **The overview is deliberately small**: title, one month button, a carousel of cards, then two columns (recent
 transactions, credit utilization). No KPI row, no invoices or commitments sections, no charts, nothing split per
 currency. It will grow later; add to it in the same shape (a section in one of the two columns).

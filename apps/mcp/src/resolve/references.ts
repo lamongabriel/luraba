@@ -39,30 +39,43 @@ export class References {
 
   /** Forget cached lists after a mutation created or renamed something. */
   invalidate(...keys: string[]) {
-    for (const key of keys.length > 0 ? keys : [...this.#cache.keys()]) this.#cache.delete(key);
+    for (const key of keys.length > 0 ? keys : [...this.#cache.keys()]) {
+      this.#cache.delete(key);
+      this.#cache.delete(`${key}:withArchived`);
+    }
   }
 
   session() {
     return this.#memo("session", () => this.#client.request(authEndpoints.me, this.#scope()));
   }
 
-  accounts() {
-    return this.#memo("accounts", () =>
+  /** Active accounts; archived ones are hidden unless `includeArchived` (used to find them to unarchive). */
+  accounts(includeArchived = false) {
+    return this.#memo(includeArchived ? "accounts:withArchived" : "accounts", () =>
       fetchAllPages((page) =>
         this.#client.request(accountsEndpoints.list, {
           ...this.#scope(),
-          query: { page, perPage: PAGE_SIZE },
+          query: {
+            page,
+            perPage: PAGE_SIZE,
+            ...(includeArchived ? { includeArchived: true } : {}),
+          },
         }),
       ),
     );
   }
 
-  creditCards() {
-    return this.#memo("creditCards", () =>
+  /** Active credit cards; archived ones are hidden unless `includeArchived`. */
+  creditCards(includeArchived = false) {
+    return this.#memo(includeArchived ? "creditCards:withArchived" : "creditCards", () =>
       fetchAllPages((page) =>
         this.#client.request(creditCardsEndpoints.list, {
           ...this.#scope(),
-          query: { page, perPage: PAGE_SIZE },
+          query: {
+            page,
+            perPage: PAGE_SIZE,
+            ...(includeArchived ? { includeArchived: true } : {}),
+          },
         }),
       ),
     );
@@ -131,16 +144,16 @@ export class References {
     return session.household?.settings.defaultCurrencyId ?? session.user.preferences.currency;
   }
 
-  async resolveAccount(query: string): Promise<Resolution> {
-    return resolveByName(query, await this.accounts(), (account) =>
+  async resolveAccount(query: string, includeArchived = false): Promise<Resolution> {
+    return resolveByName(query, await this.accounts(includeArchived), (account) =>
       account.institutionName
         ? [account.institutionName, `${account.institutionName} ${account.name}`]
         : [],
     );
   }
 
-  async resolveCreditCard(query: string): Promise<Resolution> {
-    return resolveByName(query, await this.creditCards(), (card) => [
+  async resolveCreditCard(query: string, includeArchived = false): Promise<Resolution> {
+    return resolveByName(query, await this.creditCards(includeArchived), (card) => [
       ...(card.institutionName
         ? [card.institutionName, `${card.institutionName} ${card.name}`]
         : []),

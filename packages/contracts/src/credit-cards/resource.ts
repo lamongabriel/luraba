@@ -74,6 +74,8 @@ export const creditCardSchema = z.object({
   creditLimitAmount: z.number().int(),
   remainingCreditAmount: z.number().int().nullable(),
   balance: z.number().int(),
+  /** When the card was archived; null for an active card. Archived cards are read-only history. */
+  archivedAt: wireDateTimeSchema.nullable(),
   createdByUserId: createdByUserIdSchema,
   createdAt: wireDateTimeSchema,
   updatedAt: wireDateTimeSchema,
@@ -122,6 +124,8 @@ export const creditCardOverviewInvoiceSchema = z.object({
 export const creditCardOverviewCardSchema = z.object({
   creditCardId: z.uuid(),
   name: z.string(),
+  /** Archived cards only appear when the overview is asked for them (`includeArchived`). */
+  archived: z.boolean(),
   institutionName: z.string().nullable(),
   institutionLogoUrl: z.string().nullable(),
   brand: z.string(),

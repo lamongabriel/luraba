@@ -25,6 +25,8 @@ export const listAccountsQuerySchema = createListQuerySchema(
     balanceMin: z.coerce.number().int().optional(),
     balanceMax: z.coerce.number().int().optional(),
     hasInstitution: booleanQuerySchema.optional(),
+    /** Archived accounts are hidden unless this is true. */
+    includeArchived: booleanQuerySchema.optional(),
     createdAtFrom: temporalQuerySchema.optional(),
     createdAtTo: temporalQuerySchema.optional(),
     updatedAtFrom: temporalQuerySchema.optional(),

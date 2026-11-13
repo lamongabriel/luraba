@@ -29,6 +29,8 @@ export const accountSchema = z.object({
   classification: accountClassificationSchema,
   type: accountTypeSchema,
   currencyCode: currencyCodeSchema,
+  /** When the account was archived; null for an active account. Archived accounts are read-only history. */
+  archivedAt: wireDateTimeSchema.nullable(),
   createdByUserId: createdByUserIdSchema,
   createdAt: wireDateTimeSchema,
   updatedAt: wireDateTimeSchema,

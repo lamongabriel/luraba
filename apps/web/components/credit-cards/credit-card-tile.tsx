@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
+import { Archive02Icon, CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { CreditCardOverviewCard } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
@@ -50,11 +50,12 @@ export function CreditCardTile({
   return (
     <Link
       href={`/credit-cards/${card.creditCardId}`}
-      aria-label={`Open ${card.name}`}
+      aria-label={`Open ${card.name}${card.archived ? " (archived)" : ""}`}
       draggable={false}
       className={cn(
         "block rounded-2xl transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         CARD_TILE_WIDTH_CLASS,
+        card.archived && "opacity-60",
       )}
     >
       <CreditCardPreview
@@ -68,7 +69,12 @@ export function CreditCardTile({
         <p className={LABEL_CLASS}>Statement due</p>
         {money(due, "block text-3xl/9 font-semibold tracking-tight")}
         <p className="mt-0.5 flex h-4 items-center gap-1 text-xs font-medium opacity-90">
-          {paidInFull ? (
+          {card.archived ? (
+            <>
+              <HugeiconsIcon icon={Archive02Icon} strokeWidth={2} className="size-3.5" />
+              Archived
+            </>
+          ) : paidInFull ? (
             <>
               <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-3.5" />
               Paid in full

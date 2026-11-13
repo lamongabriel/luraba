@@ -47,7 +47,9 @@ export const creditCardsExporter: Exporter = {
   formats: ["csv", "json"],
   supportsDateRange: false,
   async load(context) {
-    const cards = await creditCardsRepository.listByHouseholdId(context.householdId);
+    const cards = await creditCardsRepository.listByHouseholdId(context.householdId, {
+      includeArchived: true,
+    });
     return {
       credit_cards: table(
         ["id", "name", "brand", "last4", "currency", "closing_day", "due_day", "credit_limit"],

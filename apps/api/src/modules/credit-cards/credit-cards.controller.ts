@@ -39,6 +39,16 @@ export const update = createHouseholdHandler({
   response: creditCardsEndpoints.update.response,
   handle: ({ household, params, body }) => service.updateCreditCard(household, params.id, body),
 });
+export const archive = createHouseholdHandler({
+  params: creditCardsEndpoints.archive.params,
+  response: creditCardsEndpoints.archive.response,
+  handle: ({ household, params }) => service.archiveCreditCard(household, params.id),
+});
+export const unarchive = createHouseholdHandler({
+  params: creditCardsEndpoints.unarchive.params,
+  response: creditCardsEndpoints.unarchive.response,
+  handle: ({ household, params }) => service.unarchiveCreditCard(household, params.id),
+});
 export const deleteCreditCard = createHouseholdHandler({
   params: creditCardsEndpoints.delete.params,
   status: "no-content",

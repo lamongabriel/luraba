@@ -1,6 +1,6 @@
 import type { listAccountsQuerySchema } from "@luraba/contracts/accounts";
 import { accountsTable } from "@luraba/db/schemas/accounts.schema";
-import { eq, ne, type SQL, sql } from "drizzle-orm";
+import { eq, isNull, ne, type SQL, sql } from "drizzle-orm";
 import type { z } from "zod";
 import {
   buildIlikeSearch,
@@ -23,6 +23,7 @@ export function buildAccountsListWhere(
   return combineConditions(
     eq(accountsTable.householdId, householdId),
     ne(accountsTable.type, "credit_card"),
+    query.includeArchived ? undefined : isNull(accountsTable.archivedAt),
     buildIlikeSearch(query.search, [
       sql`${accountsTable.name}`,
       sql`${accountsTable.institutionName}`,

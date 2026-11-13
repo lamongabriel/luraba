@@ -19,6 +19,7 @@ function account(over: Record<string, unknown> = {}) {
     classification: "asset",
     type: "cash",
     currencyCode: "USD",
+    archivedAt: null,
     createdByUserId: null,
     createdAt: now,
     updatedAt: now,
@@ -207,6 +208,125 @@ describe("account tools over a mocked API", () => {
       dryRun: true,
     });
     expect(preview.data.wouldCreate.creditLimitAmount).toBe(500000);
+    await close();
+  });
+  it("archives a zero-balance account and refuses one with a balance", async () => {
+    const loan = account({ id: ids(4), name: "Loan to Mom", balance: 0 });
+    const { call, calls, close } = await setup((url, init) => {
+      if (init.method === "POST" && url.pathname.endsWith("/archive"))
+        return {
+          success: true,
+          data: account({ id: ids(4), name: "Loan to Mom", balance: 0, archivedAt: now }),
+        };
+      if (url.pathname === "/api/v1/accounts") return page([account(), loan]);
+      if (url.pathname === `/api/v1/accounts/${ids(4)}`) return { success: true, data: loan };
+      if (url.pathname === `/api/v1/accounts/${OWNER}`) return { success: true, data: account() };
+      return page([]);
+    });
+    const refused = await call("archive_account", { account: "chase checking" });
+    expect(refused.isError).toBe(true);
+    expect(refused.data.status).toBe("balance_not_zero");
+    expect(calls.some((c) => c.method === "POST")).toBe(false);
+
+    const preview = await call("archive_account", { account: "loan to mom", dryRun: true });
+    expect(preview.data.status).toBe("dry_run");
+    expect(calls.some((c) => c.method === "POST")).toBe(false);
+
+    const done = await call("archive_account", { account: "loan to mom" });
+    expect(done.data.status).toBe("archived");
+    expect(calls.some((c) => c.method === "POST" && c.path === `/accounts/${ids(4)}/archive`)).toBe(
+      true,
+    );
+    await close();
+  });
+
+  it("asks the API for archived accounts when unarchiving and when includeArchived is set", async () => {
+    const archived = account({ id: ids(5), name: "Old Savings", balance: 0, archivedAt: now });
+    const { call, calls, close } = await setup((url, init) => {
+      if (init.method === "POST" && url.pathname.endsWith("/unarchive"))
+        return { success: true, data: { ...archived, archivedAt: null } };
+      if (url.pathname === "/api/v1/accounts")
+        return page(
+          url.searchParams.get("includeArchived") === "true" ? [account(), archived] : [account()],
+        );
+      return page([]);
+    });
+    const listed = await call("list_accounts", { includeArchived: true });
+    expect(listed.data.accounts.map((a: { archived: boolean }) => a.archived)).toEqual([
+      false,
+      true,
+    ]);
+    const hidden = await call("list_accounts");
+    expect(hidden.data.accounts).toHaveLength(1);
+
+    const restored = await call("unarchive_account", { account: "old savings" });
+    expect(restored.data.status).toBe("unarchived");
+    expect(
+      calls.some((c) => c.method === "POST" && c.path === `/accounts/${ids(5)}/unarchive`),
+    ).toBe(true);
+    await close();
+  });
+
+  it("archives and unarchives credit cards and filters list_credit_cards", async () => {
+    const card = {
+      id: ids(6),
+      ownerAccountId: OWNER,
+      ledgerAccountId: ids(7),
+      name: "Old Visa",
+      institutionName: null,
+      institutionDomain: null,
+      institutionLogoUrl: null,
+      notes: null,
+      ownerAccount: {
+        id: OWNER,
+        name: "Chase Checking",
+        institutionName: "Chase",
+        institutionLogoUrl: null,
+        type: "cash",
+        classification: "asset",
+        currencyCode: "USD",
+      },
+      classification: "liability",
+      type: "credit_card",
+      currencyCode: "USD",
+      brand: "Visa",
+      productType: "credit",
+      last4: "4242",
+      color: null,
+      closingDay: 10,
+      dueDay: 20,
+      creditLimitAmount: 100000,
+      remainingCreditAmount: 100000,
+      balance: 0,
+      archivedAt: null,
+      createdByUserId: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const { call, calls, close } = await setup((url, init) => {
+      if (init.method === "POST" && url.pathname.endsWith("/archive"))
+        return { success: true, data: { ...card, archivedAt: now } };
+      if (init.method === "POST" && url.pathname.endsWith("/unarchive"))
+        return { success: true, data: card };
+      if (url.pathname === "/api/v1/credit-cards")
+        return page(
+          url.searchParams.get("includeArchived") === "true"
+            ? [{ ...card, archivedAt: now }]
+            : [card],
+        );
+      if (url.pathname === `/api/v1/credit-cards/${card.id}`) return { success: true, data: card };
+      return page([]);
+    });
+    const done = await call("archive_credit_card", { creditCard: "old visa" });
+    expect(done.data.status).toBe("archived");
+    const restored = await call("unarchive_credit_card", { creditCard: "4242" });
+    expect(restored.data.status).toBe("unarchived");
+    expect(calls.filter((c) => c.method === "POST").map((c) => c.path)).toEqual([
+      `/credit-cards/${card.id}/archive`,
+      `/credit-cards/${card.id}/unarchive`,
+    ]);
+    const listed = await call("list_credit_cards", { includeArchived: true });
+    expect(listed.data.creditCards[0].archived).toBe(true);
     await close();
   });
 });

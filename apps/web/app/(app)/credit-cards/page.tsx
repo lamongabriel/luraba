@@ -1,5 +1,6 @@
 "use client";
 
+import { Archive02Icon } from "@hugeicons/core-free-icons";
 import type { TransactionFeedRow } from "@luraba/contracts";
 import * as React from "react";
 import { CardTransactionSheet } from "@/components/credit-cards/card-transaction-sheet";
@@ -7,7 +8,7 @@ import { CreditCardSheet } from "@/components/credit-cards/credit-card-sheet";
 import { CreditCardsCarousel } from "@/components/credit-cards/credit-cards-carousel";
 import { CreditUtilization } from "@/components/credit-cards/credit-utilization";
 import { RecentCardTransactions } from "@/components/credit-cards/recent-card-transactions";
-import { HeaderAddButton } from "@/components/finance/header-actions";
+import { HeaderAddButton, HeaderButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MonthSelect } from "@/components/finance/month-select";
 import { SectionReveal } from "@/components/motion/reveal";
@@ -39,7 +40,11 @@ export default function CreditCardsPage() {
   const [chosenMonth, setChosenMonth] = React.useState<string | undefined>();
   const [selectedRow, setSelectedRow] = React.useState<TransactionFeedRow | null>(null);
 
-  const query = useCreditCardOverviewQuery(chosenMonth ? { month: chosenMonth } : {});
+  const [showArchived, setShowArchived] = React.useState(false);
+  const query = useCreditCardOverviewQuery({
+    ...(chosenMonth ? { month: chosenMonth } : {}),
+    ...(showArchived ? { includeArchived: true } : {}),
+  });
   const overview = query.data;
   const month = overview?.month;
   const insightsQuery = useCreditCardInsightsQuery(
@@ -110,12 +115,19 @@ export default function CreditCardsPage() {
         />
       }
       actions={
-        <HeaderAddButton
-          label="Add credit card"
-          permission={PERMISSIONS.CREDIT_CARDS_CREATE}
-          deniedMessage="Your household role cannot add credit cards."
-          onClick={addSheet.onOpen}
-        />
+        <>
+          <HeaderButton
+            label={showArchived ? "Hide archived" : "Show archived"}
+            icon={Archive02Icon}
+            onClick={() => setShowArchived((value) => !value)}
+          />
+          <HeaderAddButton
+            label="Add credit card"
+            permission={PERMISSIONS.CREDIT_CARDS_CREATE}
+            deniedMessage="Your household role cannot add credit cards."
+            onClick={addSheet.onOpen}
+          />
+        </>
       }
     >
       {content}

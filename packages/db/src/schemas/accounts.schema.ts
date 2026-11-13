@@ -31,6 +31,8 @@ export const accountsTable = pgTable(
     createdByUserId: uuid("created_by_user_id").references(() => usersTable.id, {
       onDelete: "set null",
     }),
+    /** Set when the account is archived: hidden from lists and pickers, closed to new transactions. */
+    archivedAt: timestamp("archived_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

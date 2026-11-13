@@ -1,18 +1,19 @@
 "use client";
 
-import { ArrowRight01Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { Archive02Icon, ArrowRight01Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { AccountSummary } from "@luraba/contracts";
 import Link from "next/link";
 import * as React from "react";
 import { AccountSheet } from "@/components/accounts/account-sheet";
 import { AccountDisplay, AmountDisplay } from "@/components/display";
-import { HeaderAddButton } from "@/components/finance/header-actions";
+import { HeaderAddButton, HeaderButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
 import { PERMISSIONS, PermissionButton } from "@/components/permissions";
 import { Typography } from "@/components/ui/typography";
 import { ACCOUNT_ROW_CLASS, accountBalanceKind } from "@/lib/accounts";
+import { cn } from "@/lib/utils";
 import { useAccountQuery, useAccountsQuery } from "@/queries/accounts/use-accounts-query";
 import { useAuthSessionStore, useDefaultCurrencyCode } from "@/stores/auth-session-store";
 
@@ -33,7 +34,7 @@ function AccountRow({
 }) {
   return (
     <ItemReveal delay={0.04 * index}>
-      <div className={ACCOUNT_ROW_CLASS}>
+      <div className={cn(ACCOUNT_ROW_CLASS, account.archivedAt && "opacity-60")}>
         <Link
           href={`/accounts/${account.id}`}
           aria-label={`Open ${account.name}`}
@@ -115,14 +116,17 @@ function AccountGroup({
 export default function AccountsPage() {
   const [isCreateSheetOpen, setIsCreateSheetOpen] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
-  const query = useAccountsQuery();
+  const [showArchived, setShowArchived] = React.useState(false);
+  const query = useAccountsQuery(showArchived ? { includeArchived: true } : {});
   const editingQuery = useAccountQuery(editingId ?? "", { enabled: editingId !== null });
   const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
   const defaultCurrencyCode = useDefaultCurrencyCode();
 
   const accounts = query.data?.data ?? [];
-  const assets = accounts.filter((account) => account.classification === "asset");
-  const liabilities = accounts.filter((account) => account.classification === "liability");
+  const active = accounts.filter((account) => account.archivedAt === null);
+  const assets = active.filter((account) => account.classification === "asset");
+  const liabilities = active.filter((account) => account.classification === "liability");
+  const archived = accounts.filter((account) => account.archivedAt !== null);
 
   const edit = (account: AccountSummary) => setEditingId(account.id);
 
@@ -139,6 +143,7 @@ export default function AccountsPage() {
     <>
       <AccountGroup title="Assets" accounts={assets} language={language} onEdit={edit} />
       <AccountGroup title="Liabilities" accounts={liabilities} language={language} onEdit={edit} />
+      <AccountGroup title="Archived" accounts={archived} language={language} onEdit={edit} />
     </>
   );
 
@@ -147,12 +152,19 @@ export default function AccountsPage() {
       title="Accounts"
       subtitle="Everything you hold and owe, with balances in one place."
       actions={
-        <HeaderAddButton
-          label="Add account"
-          permission={PERMISSIONS.ACCOUNTS_CREATE}
-          deniedMessage="Your household role cannot create accounts."
-          onClick={() => setIsCreateSheetOpen(true)}
-        />
+        <>
+          <HeaderButton
+            label={showArchived ? "Hide archived" : "Show archived"}
+            icon={Archive02Icon}
+            onClick={() => setShowArchived((value) => !value)}
+          />
+          <HeaderAddButton
+            label="Add account"
+            permission={PERMISSIONS.ACCOUNTS_CREATE}
+            deniedMessage="Your household role cannot create accounts."
+            onClick={() => setIsCreateSheetOpen(true)}
+          />
+        </>
       }
     >
       <AccountSheet

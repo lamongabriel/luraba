@@ -15,5 +15,7 @@ Drizzle schema and database client shared by the API and the worker. Migrations 
 - Enum-like columns use zod enums from `@luraba/contracts` so the DB, API and web share one list
   (see `schemas/enums.schema.ts`).
 - Money columns are `bigint` minor units; timestamps are `timestamp` without time zone in UTC.
+- `accounts.archived_at` and `credit_cards.archived_at` (nullable) retire a row without deleting its history;
+  list queries hide archived rows by default (see the accounts module README).
 - Rebuild after changes (`pnpm --filter @luraba/db build`); then write the matching SQL migration
   by hand (see `apps/api/README.md`).
