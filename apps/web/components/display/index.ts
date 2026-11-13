@@ -9,6 +9,7 @@ export {
 export { AccountSelect, AccountSelectControl } from "./account-select";
 export { AmountDisplay } from "./amount-display";
 export { AssetDisplay, type AssetDisplayInput, AssetMark } from "./asset-display";
+export { BILL_STATE_DISPLAY, BillStateDisplay } from "./bill-state-display";
 export {
   CountrySelect,
   CountrySelectControl,
