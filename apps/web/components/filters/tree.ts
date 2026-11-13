@@ -2,10 +2,29 @@ import { createFilterQuery, type FilterRule } from "@/components/reui/filters/fi
 import type { FilterFieldDef, FilterTree, FilterValue, FilterValues } from "./types";
 
 export const OP_ANY_OF = "is_any_of";
+export const OP_NONE_OF = "is_none_of";
 export const OP_IS = "is";
+export const OP_IS_NOT = "is_not";
 export const OP_BETWEEN = "between";
+export const OP_EQ = "eq";
+export const OP_GT = "gt";
 export const OP_GTE = "gte";
+export const OP_LT = "lt";
 export const OP_LTE = "lte";
+export const OP_BEFORE = "is_before";
+export const OP_AFTER = "is_after";
+export const OP_ON_OR_BEFORE = "is_on_or_before";
+export const OP_ON_OR_AFTER = "is_on_or_after";
+
+/** Operators that mean "none of these" / "not this". */
+const NEGATIVE = new Set([OP_NONE_OF, OP_IS_NOT]);
+
+/** `YYYY-MM-DD` shifted by whole days, with no time zone in the way. */
+export function shiftIsoDay(iso: string, days: number): string {
+  const [year, month, day] = iso.split("-").map(Number);
+  const date = new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, (day ?? 1) + days));
+  return date.toISOString().slice(0, 10);
+}
 
 type Rule = FilterRule<FilterValue>;
 
@@ -73,6 +92,11 @@ function toNumber(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function itemsOf(rule: Rule): string[] {
+  const items = Array.isArray(rule.value) ? rule.value : [rule.value];
+  return items.filter((item) => item !== undefined).map(String);
+}
+
 function ruleFor(tree: FilterTree, id: string): Rule | undefined {
   return rulesOf(tree).find((rule) => rule.path[0] === id && isRuleComplete(rule));
 }
@@ -83,14 +107,19 @@ export function readValues(tree: FilterTree): FilterValues {
     has: (id) => ruleFor(tree, id) !== undefined,
     list: (id) => {
       const rule = ruleFor(tree, id);
-      if (!rule) return [];
-      const items = Array.isArray(rule.value) ? rule.value : [rule.value];
-      return items.filter((item) => item !== undefined).map(String);
+      if (!rule || NEGATIVE.has(rule.operator)) return [];
+      return itemsOf(rule);
+    },
+    excluded: (id) => {
+      const rule = ruleFor(tree, id);
+      if (!rule || !NEGATIVE.has(rule.operator)) return [];
+      return itemsOf(rule);
     },
     flag: (id) => {
       const rule = ruleFor(tree, id);
       if (!rule) return null;
-      return rule.value === "true";
+      const on = rule.value === "true";
+      return rule.operator === OP_IS_NOT ? !on : on;
     },
     money: (id) => {
       const rule = ruleFor(tree, id);
@@ -99,14 +128,40 @@ export function readValues(tree: FilterTree): FilterValues {
         return { min: toNumber(rule.value[0]), max: toNumber(rule.value[1]) };
       }
       const single = toNumber(rule.value);
-      if (rule.operator === OP_LTE) return { min: null, max: single };
-      return { min: single, max: null };
+      switch (rule.operator) {
+        case OP_EQ:
+          return { min: single, max: single };
+        case OP_GT:
+          return { min: single, max: null, minExclusive: true };
+        case OP_LT:
+          return { min: null, max: single, maxExclusive: true };
+        case OP_LTE:
+          return { min: null, max: single };
+        default:
+          return { min: single, max: null };
+      }
     },
     dates: (id) => {
       const rule = ruleFor(tree, id);
-      if (!rule || !Array.isArray(rule.value)) return { from: null, to: null };
-      const [from, to] = rule.value;
-      return { from: from ? String(from) : null, to: to ? String(to) : null };
+      if (!rule) return { from: null, to: null };
+      if (Array.isArray(rule.value)) {
+        const [from, to] = rule.value;
+        return { from: from ? String(from) : null, to: to ? String(to) : null };
+      }
+      const day = rule.value ? String(rule.value) : null;
+      if (!day) return { from: null, to: null };
+      switch (rule.operator) {
+        case OP_BEFORE:
+          return { from: null, to: shiftIsoDay(day, -1) };
+        case OP_ON_OR_BEFORE:
+          return { from: null, to: day };
+        case OP_AFTER:
+          return { from: shiftIsoDay(day, 1), to: null };
+        case OP_ON_OR_AFTER:
+          return { from: day, to: null };
+        default:
+          return { from: day, to: day };
+      }
     },
   };
 }

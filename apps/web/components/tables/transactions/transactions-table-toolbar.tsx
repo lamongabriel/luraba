@@ -58,7 +58,7 @@ export function TransactionsTableToolbar({
           value={search}
           placeholder="Search transactions..."
           aria-label="Search transactions"
-          className="min-w-56 flex-1 sm:max-w-xs max-md:min-w-0"
+          className="w-full max-md:min-w-0"
           onChange={(event) => setSearch(event.target.value)}
         />
       }

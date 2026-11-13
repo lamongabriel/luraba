@@ -1,8 +1,12 @@
 import {
   Calendar01Icon,
+  CoinsDollarIcon,
   CreditCardIcon,
+  CreditCardPosIcon,
+  DollarCircleIcon,
   Folder01Icon,
   Money03Icon,
+  PiggyBankIcon,
   Store01Icon,
   Tag01Icon,
   UserIcon,
@@ -123,21 +127,28 @@ export function buildTransactionFilterDefs(
       id: "paymentMethodCodes",
       label: "Payment method",
       kind: "multiselect",
+      icon: icon(CreditCardPosIcon),
       options: lookups.paymentMethods.map((method) => ({ value: method.code, label: method.name })),
     },
     {
       id: "currencyCodes",
       label: "Currency",
       kind: "multiselect",
+      icon: icon(DollarCircleIcon),
       options: lookups.currencies.map((currency) => ({
         value: currency.code,
         label: currency.code,
       })),
     },
     // Amounts are matched in each transaction's own currency.
-    { id: "amount", label: "Amount", kind: "money" },
+    { id: "amount", label: "Amount", kind: "money", icon: icon(CoinsDollarIcon) },
     { id: "purchaseDate", label: "Purchase date", kind: "date", icon: icon(Calendar01Icon) },
-    { id: "includeInBudget", label: "Included in budget", kind: "boolean" },
+    {
+      id: "includeInBudget",
+      label: "Included in budget",
+      kind: "boolean",
+      icon: icon(PiggyBankIcon),
+    },
   ];
 }
 
@@ -149,6 +160,8 @@ export function toTransactionApiParams(values: FilterValues) {
   const list = (id: string, key = id) => {
     const picked = values.list(id);
     if (picked.length > 0) params[key] = picked;
+    const none = values.excluded(id);
+    if (none.length > 0) params[`exclude${key.charAt(0).toUpperCase()}${key.slice(1)}`] = none;
   };
   list("originTypes");
   list("accountIds");
@@ -163,10 +176,16 @@ export function toTransactionApiParams(values: FilterValues) {
   const categoryIds = categories.filter((id) => id !== UNCATEGORIZED);
   if (categoryIds.length > 0) params.categoryIds = categoryIds;
   if (categories.includes(UNCATEGORIZED)) params.uncategorized = true;
+  // "Is none of" categories: the rows with a category outside the list, plus the uncategorized ones unless excluded.
+  const noCategories = values.excluded("categoryIds");
+  const excludedCategoryIds = noCategories.filter((id) => id !== UNCATEGORIZED);
+  if (excludedCategoryIds.length > 0) params.excludeCategoryIds = excludedCategoryIds;
+  if (noCategories.includes(UNCATEGORIZED)) params.excludeUncategorized = true;
 
-  const { min, max } = values.money("amount");
-  if (min !== null) params.amountMin = toMinor(min);
-  if (max !== null) params.amountMax = toMinor(max);
+  const { min, max, minExclusive, maxExclusive } = values.money("amount");
+  // Amounts are whole minor units, so "greater than" is one unit above and "less than" one below.
+  if (min !== null) params.amountMin = toMinor(min) + (minExclusive ? 1 : 0);
+  if (max !== null) params.amountMax = Math.max(0, toMinor(max) - (maxExclusive ? 1 : 0));
 
   const purchase = values.dates("purchaseDate");
   if (purchase.from) params.purchaseDateFrom = purchase.from;
