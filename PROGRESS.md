@@ -44,3 +44,7 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 ## Notes
 - If every API integration test fails with "missing required system payment methods", drop the throwaway `luraba_db_test` (0 connections) and rerun.
 - 8 API integration tests (refunds, card feed, goals, splits) fail after UTC midnight; they also failed before the combined-totals merge. Not yet investigated.
+
+## Check at 2026-11-13 (second orchestration check)
+- No session is running and every worker branch is already merged into `redesign` (`git branch --no-merged redesign` is empty), so there was nothing to nudge or merge. `redesign` stays at the 05:00 state; checks were green then and no code changed since.
+- Still waiting on the owner: test `redesign` and send feedback. Optional next step: a browser-verification session (375/768/1100/1440px, light and dark).
