@@ -5,6 +5,7 @@ import {
   goalsEndpoints,
   transactionsEndpoints,
 } from "@luraba/contracts";
+import { buildBudgetItems } from "@luraba/domain";
 import { z } from "zod";
 import { fetchAllPages, PAGE_SIZE } from "../client/fetch-all.js";
 import { combineWith, presentCombined, presentFx } from "../format/combined.js";
@@ -280,7 +281,7 @@ export const reportBudget = defineTool({
   name: "report_budget",
   title: "Budget status",
   description:
-    "Budgeted vs actual income and expenses for a month (default current), per category.",
+    "Budgeted vs actual income and expenses for a month (default current), per category. A parent category's actual includes its subcategories (same as the Budgets page) and lists them under subcategories, with ownActual, allocated (sum of subcategory budgets) and unallocated; each subcategory carries its parent. Totals count every transaction once.",
   input: z.object({
     month: z
       .string()
@@ -295,19 +296,39 @@ export const reportBudget = defineTool({
       query: {},
     });
     const c = budget.budgetCurrencyCode;
-    const names = new Map(
-      [...budget.categories.expense, ...budget.categories.income].map((x) => [
-        x.categoryId,
-        x.categoryName,
-      ]),
+    const expense = budget.categories.expense;
+    // The same rollup the Budgets page uses: a parent's actual includes its subcategories.
+    const items = buildBudgetItems(
+      expense,
+      expense.map((x) => ({
+        id: x.categoryId,
+        name: x.categoryName,
+        parentId: x.parentId,
+        type: "expense",
+      })),
     );
-    const lines = budget.categories.expense.map((line) => ({
-      category: names.get(line.categoryId),
-      budgeted: toMoney(line.budgetedAmount, c),
-      actual: toMoney(line.actualAmount, c),
-      remaining: toMoney(line.budgetedAmount - line.actualAmount, c),
-      overBudget: line.actualAmount > line.budgetedAmount && line.budgetedAmount > 0,
-    }));
+    const names = new Map(expense.map((x) => [x.categoryId, x.categoryName]));
+    const line = (row: (typeof expense)[number]) => ({
+      categoryId: row.categoryId,
+      category: row.categoryName,
+      parent: row.parentId
+        ? { categoryId: row.parentId, name: names.get(row.parentId) ?? null }
+        : null,
+      budgeted: toMoney(row.budgetedAmount, c),
+      actual: toMoney(row.actualAmount, c),
+      remaining: toMoney(row.budgetedAmount - row.actualAmount, c),
+      overBudget: row.actualAmount > row.budgetedAmount && row.budgetedAmount > 0,
+    });
+    const lines = items.map((item) => {
+      if (!item.group) return line(item.row);
+      return {
+        ...line(item.row),
+        ownActual: toMoney(item.group.directAmount, c),
+        allocated: toMoney(item.group.allocated, c),
+        unallocated: toMoney(item.row.budgetedAmount - item.group.allocated, c),
+        subcategories: item.group.children.map(line),
+      };
+    });
     return {
       data: {
         month: key,
@@ -317,7 +338,7 @@ export const reportBudget = defineTool({
           expenseBudgeted: toMoney(budget.totals.expenseBudgeted, c),
           expenseActual: toMoney(budget.totals.expenseActual, c),
         },
-        expenseCategories: lines.filter((l) => l.budgeted.amount > 0 || l.actual.amount > 0),
+        expenseCategories: lines,
       },
     };
   },

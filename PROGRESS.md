@@ -48,3 +48,7 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 ## Check at 2026-11-13 (second orchestration check)
 - No session is running and every worker branch is already merged into `redesign` (`git branch --no-merged redesign` is empty), so there was nothing to nudge or merge. `redesign` stays at the 05:00 state; checks were green then and no code changed since.
 - Still waiting on the owner: test `redesign` and send feedback. Optional next step: a browser-verification session (375/768/1100/1440px, light and dark).
+
+## Fix: report_budget rolls up subcategories (2026-11-13)
+- Root cause: the budgets API returns flat per-category rows; only the web page added subcategory spending to the parent. `report_budget` used the raw rows.
+- Moved the rollup (`buildBudgetItems`) into `@luraba/domain`; web re-exports it, MCP uses it. `report_budget` now returns parent `actual`/`remaining`/`overBudget` rolled up, plus `ownActual`, `allocated`, `unallocated`, nested `subcategories` each with `parent`. Totals unchanged (already no double count). Unit test in `apps/mcp/src/__tests__/report-budget.unit.test.ts`.

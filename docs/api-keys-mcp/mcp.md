@@ -57,7 +57,7 @@
 - **Reference data**: `whoami`, `list_households`, `list_accounts`, `list_credit_cards`, and list/create/update for
   categories, merchants and tags.
 - **Reports**: `report_spending` (by category, merchant or tag), `report_income_expense`, `report_balances` (accounts
-  and net worth: `combinedNetWorth` in the household base currency plus per currency), `report_credit_cards` (card count, what is owed this month, due dates; `combined` in the base currency plus `totals` per currency), `report_budget`,
+  and net worth: `combinedNetWorth` in the household base currency plus per currency), `report_credit_cards` (card count, what is owed this month, due dates; `combined` in the base currency plus `totals` per currency), `report_budget` (a parent category's `actual`, `remaining` and `overBudget` include its subcategories, as on the Budgets page; the parent also has `ownActual`, `allocated`, `unallocated` and `subcategories`, each with its `parent`),
   `report_goals`, `report_top_expenses`.
 - **Resources**: `luraba://guide/overview` and `luraba://guide/transactions`.
 
