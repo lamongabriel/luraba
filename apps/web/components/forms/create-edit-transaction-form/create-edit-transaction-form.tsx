@@ -123,6 +123,8 @@ export function CreateEditTransactionForm({
         <CreditCardPurchaseSection
           cards={lookups.creditCards}
           control={form.control}
+          getValues={form.getValues}
+          setValue={form.setValue}
           currencyCode={selectedCard?.currencyCode}
           isEdit={isEdit}
           language={language}

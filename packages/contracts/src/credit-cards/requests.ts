@@ -76,19 +76,49 @@ export const updateCreditCardCycleInputSchema = z
         message: "dueDate must be on or after closingDate",
       });
   });
-export const createCreditCardPurchaseInputSchema = z.object({
+/** How the leftover cents of an even split are placed. See `splitInstallmentAmounts` in `@luraba/domain`. */
+export const INSTALLMENT_ROUNDING_MODES = [
+  "remainder_last",
+  "remainder_first",
+  "round_up_all",
+] as const;
+const installmentRoundingModeSchema = z.enum(INSTALLMENT_ROUNDING_MODES);
+/**
+ * Card issuers round installments differently, so the invoice amounts can be sent exactly. When `installmentAmounts`
+ * (or `installmentAmount` with the count) is given, those amounts are the source of truth: the purchase total is
+ * their sum, and a `amount` that disagrees is rejected. Without them the total is split by `roundingMode`.
+ */
+const installmentPlanFields = {
+  amount: moneyAmountSchema.optional(),
+  /** Every installment's exact amount; its length is the installment count (1 to 60). */
+  installmentAmounts: z.array(moneyAmountSchema).min(1).max(60).optional(),
+  /** Every installment costs this much; the count comes from `installmentCount`. */
+  installmentAmount: moneyAmountSchema.optional(),
+  roundingMode: installmentRoundingModeSchema.optional(),
+};
+const createCreditCardPurchaseObject = z.object({
   description: z.string().min(1).max(512),
   ...transactionTextFields,
-  amount: moneyAmountSchema,
+  ...installmentPlanFields,
   categoryId: z.uuid().nullable().optional(),
   merchantId: z.uuid().optional(),
   purchaseDate: dateInputSchema,
   postedDate: dateInputSchema.optional(),
-  installmentCount: installmentCountSchema.default(1),
+  installmentCount: installmentCountSchema.optional(),
   tagIds: z.array(z.uuid()).max(50).optional(),
   includeInBudget: z.boolean().default(true),
 });
-export const updateCreditCardPurchaseInputSchema = createCreditCardPurchaseInputSchema
+export const createCreditCardPurchaseInputSchema = createCreditCardPurchaseObject.refine(
+  (value) =>
+    value.amount !== undefined ||
+    value.installmentAmounts !== undefined ||
+    value.installmentAmount !== undefined,
+  {
+    message: "Send the purchase amount, installmentAmounts or installmentAmount",
+    path: ["amount"],
+  },
+);
+export const updateCreditCardPurchaseInputSchema = createCreditCardPurchaseObject
   .partial()
   .extend({
     merchantId: z.uuid().nullable().optional(),
@@ -100,6 +130,21 @@ export const updateCreditCardPurchaseInputSchema = createCreditCardPurchaseInput
   .refine(
     (value) => Object.values(value).some((field) => field !== undefined),
     "At least one purchase field must be provided",
+  );
+export const creditCardInstallmentParamsSchema = z.object({
+  id: z.uuid(),
+  purchaseId: z.uuid(),
+  installmentId: z.uuid(),
+});
+/** Edits one installment: its amount (the purchase total follows) and/or the invoice it lands on. */
+export const updateCreditCardInstallmentInputSchema = z
+  .object({
+    amount: moneyAmountSchema.optional(),
+    billingCycleId: z.uuid().optional(),
+  })
+  .refine(
+    (value) => value.amount !== undefined || value.billingCycleId !== undefined,
+    "Send the new amount or the new invoice",
   );
 export const CANCEL_PURCHASE_MODES = ["single_credit", "cancel_future"] as const;
 /**
@@ -227,6 +272,9 @@ export type UpdateCreditCardInput = z.input<typeof updateCreditCardInputSchema>;
 export type UpdateCreditCardCycleInput = z.input<typeof updateCreditCardCycleInputSchema>;
 export type CancelCreditCardPurchaseInput = z.input<typeof cancelCreditCardPurchaseInputSchema>;
 export type CreateCreditCardPurchaseInput = z.input<typeof createCreditCardPurchaseInputSchema>;
+export type UpdateCreditCardInstallmentInput = z.input<
+  typeof updateCreditCardInstallmentInputSchema
+>;
 export type UpdateCreditCardPurchaseInput = z.input<typeof updateCreditCardPurchaseInputSchema>;
 export type CreateCreditCardPaymentInput = z.input<typeof createCreditCardPaymentInputSchema>;
 export type UpdateCreditCardPaymentInput = z.input<typeof updateCreditCardPaymentInputSchema>;

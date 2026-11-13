@@ -3,7 +3,14 @@ import { creditCardBudgetRecognitionsTable } from "@luraba/db/schemas/credit-car
 import { creditCardInstallmentsTable } from "@luraba/db/schemas/credit-card-installments.schema";
 import { creditCardPurchasesTable } from "@luraba/db/schemas/credit-card-purchases.schema";
 import { transactionsTable } from "@luraba/db/schemas/transactions.schema";
-import { formatISODate, getTodayInTimezone, startOfMonth } from "@luraba/domain";
+import {
+  formatISODate,
+  getTodayInTimezone,
+  type InstallmentPlan,
+  resolveInstallmentPlan,
+  splitInstallmentAmounts,
+  startOfMonth,
+} from "@luraba/domain";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
@@ -47,6 +54,7 @@ import type {
   CancelCreditCardPurchaseDto,
   CreateCreditCardPurchaseDto,
   CreditCardPurchaseResponse,
+  UpdateCreditCardInstallmentDto,
   UpdateCreditCardPurchaseDto,
 } from "./credit-cards.types";
 
@@ -166,6 +174,11 @@ async function mapPurchaseResponse(
   };
 }
 
+function requirePlan(plan: InstallmentPlan) {
+  if (!plan.ok) throw new ValidationError(plan.error);
+  return plan;
+}
+
 export async function createPurchase(
   context: HouseholdContext,
   creditCardId: string,
@@ -174,7 +187,18 @@ export async function createPurchase(
   const card = await creditCardsRepository.findByIdOrThrow(context.householdId, creditCardId);
   await ensureExpenseCategory(context, dto.categoryId);
   await ensureMerchant(context, dto.merchantId);
-  await ensureCardHasAvailableCredit(card, dto.amount);
+  const plan = requirePlan(
+    resolveInstallmentPlan({
+      amount: dto.amount,
+      installmentCount: dto.installmentCount,
+      installmentAmounts: dto.installmentAmounts,
+      installmentAmount: dto.installmentAmount,
+      roundingMode: dto.roundingMode,
+    }),
+  );
+  const amount = plan.total;
+  const installmentCount = plan.amounts.length;
+  await ensureCardHasAvailableCredit(card, amount);
   const tagIds = await validateTagIds(context, dto.tagIds);
 
   const paymentMethod = await resolveCreditCardPaymentMethod(context, card.currencyCode);
@@ -192,7 +216,7 @@ export async function createPurchase(
       description: dto.description,
       originalDescription: dto.originalDescription,
       notes: dto.notes,
-      amount: dto.amount,
+      amount,
       categoryId: dto.categoryId ?? null,
       merchantId: dto.merchantId,
       purchaseDate: dto.purchaseDate,
@@ -204,8 +228,8 @@ export async function createPurchase(
       .values({
         creditCardId: card.id,
         transactionId: transaction.id,
-        purchaseAmount: dto.amount,
-        installmentCount: dto.installmentCount,
+        purchaseAmount: amount,
+        installmentCount,
         includeInBudget: dto.includeInBudget,
         budgetExpenseTiming: budgetSettings.timing,
         budgetInstallmentMode: budgetSettings.mode,
@@ -217,8 +241,10 @@ export async function createPurchase(
       card,
       purchase.id,
       postedDate,
-      dto.amount,
-      dto.installmentCount,
+      amount,
+      installmentCount,
+      1,
+      plan.amounts,
     );
 
     await addTransactionTags(tx, transaction.id, tagIds);
@@ -263,8 +289,8 @@ export async function createPurchase(
     merchantId: dto.merchantId ?? null,
     purchaseDate: formatISODate(dto.purchaseDate),
     postedDate: formatISODate(postedDate),
-    amount: dto.amount,
-    installmentCount: dto.installmentCount,
+    amount,
+    installmentCount,
     tags: await listTransactionTags(result.transaction.id),
     includeInBudget: dto.includeInBudget,
     budgetExpenseTiming: result.purchase.budgetExpenseTiming,
@@ -296,6 +322,7 @@ export async function updatePurchase(
 ): Promise<CreditCardPurchaseResponse> {
   const card = await creditCardsRepository.findByIdOrThrow(context.householdId, creditCardId);
   const existingPurchase = await loadPurchase(context.householdId, creditCardId, purchaseId);
+  const existingInstallments = await loadPurchaseInstallments(purchaseId);
 
   const categoryId = dto.categoryId !== undefined ? dto.categoryId : existingPurchase.categoryId;
   const merchantId = dto.merchantId === undefined ? existingPurchase.merchantId : dto.merchantId;
@@ -307,10 +334,22 @@ export async function updatePurchase(
   const notes = dto.notes === undefined ? existingPurchase.notes : dto.notes;
   const purchaseDate = dto.purchaseDate ?? existingPurchase.purchaseDate;
   const postedDate = dto.postedDate ?? existingPurchase.postedDate;
-  const amount = dto.amount ?? existingPurchase.amount;
-  const installmentCount = dto.installmentCount ?? existingPurchase.installmentCount;
   const includeInBudget = dto.includeInBudget ?? existingPurchase.includeInBudget;
   const tagIds = dto.tagIds === undefined ? undefined : await validateTagIds(context, dto.tagIds);
+  const postedDateChanged = postedDate.getTime() !== existingPurchase.postedDate.getTime();
+
+  // Installments on an invoice that already closed stay as they are, unless the amounts are sent explicitly
+  // or the posted date moves (then every installment is laid out again).
+  const today = getTodayInTimezone(context.timezone);
+  const billedCount = existingInstallments.filter(
+    (installment) => installment.closingDate <= today,
+  ).length;
+  const finalAmounts = resolveUpdatedAmounts(dto, existingPurchase, existingInstallments, {
+    billedCount: postedDateChanged ? 0 : billedCount,
+  });
+  const amount = finalAmounts.reduce((total, value) => total + value, 0);
+  const installmentCount = finalAmounts.length;
+  const keepThrough = postedDateChanged ? 0 : Math.min(billedCount, installmentCount);
 
   await ensureExpenseCategory(context, categoryId);
   await ensureMerchant(context, merchantId ?? undefined);
@@ -338,44 +377,40 @@ export async function updatePurchase(
       })
       .where(eq(creditCardPurchasesTable.id, purchaseId));
 
-    await entriesRepository.deleteByTransactionId(tx, existingPurchase.transactionId);
+    await rewritePurchaseEntries(tx, card, { ...existingPurchase, categoryId }, amount);
 
-    const accountLedger = await ledgerAccountsRepository.findByOwner(
-      "account",
-      card.ledgerAccountId,
-    );
-    if (!accountLedger) throw new NotFoundError("Credit card ledger");
-
-    const expenseLedger = await ledgerAccountsRepository.findOrCreateSystem(
-      tx,
-      `system:expense:${card.currencyCode}`,
-      "liability",
-      card.currencyCode,
-    );
-
-    await entriesService.createTransactionEntries(tx, existingPurchase.transactionId, [
-      {
-        ledgerAccountId: accountLedger.id,
-        amount: -amount,
-        currencyCode: card.currencyCode,
-        categoryId: categoryId ?? undefined,
-      },
-      {
-        ledgerAccountId: expenseLedger.id,
-        amount,
-        currencyCode: card.currencyCode,
-      },
-    ]);
-
-    await tx
-      .delete(creditCardInstallmentsTable)
-      .where(eq(creditCardInstallmentsTable.purchaseId, purchaseId));
+    for (const installment of existingInstallments) {
+      if (installment.installmentNumber > keepThrough) {
+        await tx
+          .delete(creditCardInstallmentsTable)
+          .where(eq(creditCardInstallmentsTable.id, installment.installmentId));
+      } else {
+        const nextAmount = finalAmounts[installment.installmentNumber - 1];
+        if (nextAmount !== undefined && nextAmount !== installment.amount) {
+          await tx
+            .update(creditCardInstallmentsTable)
+            .set({ amount: nextAmount })
+            .where(eq(creditCardInstallmentsTable.id, installment.installmentId));
+        }
+      }
+    }
 
     await tx
       .delete(creditCardBudgetRecognitionsTable)
       .where(eq(creditCardBudgetRecognitionsTable.purchaseId, purchaseId));
 
-    await createInstallmentsForPurchase(tx, card, purchaseId, postedDate, amount, installmentCount);
+    if (keepThrough < installmentCount) {
+      await createInstallmentsForPurchase(
+        tx,
+        card,
+        purchaseId,
+        postedDate,
+        amount,
+        installmentCount,
+        keepThrough + 1,
+        finalAmounts,
+      );
+    }
 
     if (includeInBudget && categoryId) {
       await recreateBudgetRecognitionsForPurchase(
@@ -397,6 +432,141 @@ export async function updatePurchase(
 
     if (tagIds !== undefined) {
       await replaceTransactionTags(tx, existingPurchase.transactionId, tagIds);
+    }
+
+    await syncCardCycles(tx, card, context.timezone);
+  });
+
+  return getPurchase(context, creditCardId, purchaseId);
+}
+
+/**
+ * The final list of installment amounts after an update. Nothing about the amounts sent: the current ones stay.
+ * An exact list (`installmentAmounts` / `installmentAmount`) replaces all of them. Otherwise the total (sent or
+ * current) is split by `roundingMode`, but the installments already billed keep their amounts and only the rest
+ * is split.
+ */
+function resolveUpdatedAmounts(
+  dto: UpdateCreditCardPurchaseDto,
+  purchase: PurchaseWithTransactionRow,
+  installments: Awaited<ReturnType<typeof loadPurchaseInstallments>>,
+  { billedCount }: { billedCount: number },
+): number[] {
+  const current = installments.map((installment) => installment.amount);
+  const hasExact = dto.installmentAmounts !== undefined || dto.installmentAmount !== undefined;
+  const touchesPlan =
+    hasExact ||
+    dto.amount !== undefined ||
+    dto.installmentCount !== undefined ||
+    dto.roundingMode !== undefined;
+  if (!touchesPlan) return current.length > 0 ? current : [purchase.amount];
+
+  const plan = requirePlan(
+    resolveInstallmentPlan(
+      {
+        amount: hasExact ? dto.amount : (dto.amount ?? purchase.amount),
+        installmentCount: dto.installmentCount,
+        installmentAmounts: dto.installmentAmounts,
+        installmentAmount: dto.installmentAmount,
+        roundingMode: dto.roundingMode,
+      },
+      purchase.installmentCount,
+    ),
+  );
+  if (hasExact || billedCount === 0) return plan.amounts;
+
+  if (plan.amounts.length <= billedCount) {
+    throw new ValidationError(
+      `${billedCount} installments are already on closed invoices; the purchase needs more than that many installments`,
+    );
+  }
+  const billed = current.slice(0, billedCount);
+  const remaining = plan.total - billed.reduce((total, value) => total + value, 0);
+  if (remaining <= 0) {
+    throw new ValidationError("The amount is not enough to cover the installments already billed");
+  }
+  return [
+    ...billed,
+    ...splitInstallmentAmounts(
+      remaining,
+      plan.amounts.length - billedCount,
+      dto.roundingMode ?? "remainder_last",
+    ),
+  ];
+}
+
+/**
+ * Edits one installment: its amount (the purchase total, the card's used limit, the invoice and the reports follow)
+ * and/or the invoice it lands on.
+ */
+export async function updateInstallment(
+  context: HouseholdContext,
+  creditCardId: string,
+  purchaseId: string,
+  installmentId: string,
+  dto: UpdateCreditCardInstallmentDto,
+): Promise<CreditCardPurchaseResponse> {
+  const card = await creditCardsRepository.findByIdOrThrow(context.householdId, creditCardId);
+  const purchase = await loadPurchase(context.householdId, creditCardId, purchaseId);
+  const installments = await loadPurchaseInstallments(purchaseId);
+  const installment = installments.find((item) => item.installmentId === installmentId);
+  if (!installment) throw new NotFoundError("Installment");
+
+  const nextAmount = dto.amount ?? installment.amount;
+  const nextTotal = purchase.amount - installment.amount + nextAmount;
+  if (nextTotal > purchase.amount) {
+    await ensureCardHasAvailableCredit(card, nextTotal - purchase.amount);
+  }
+  if (dto.billingCycleId) {
+    const cycle = await db
+      .select({ id: creditCardBillingCyclesTable.id })
+      .from(creditCardBillingCyclesTable)
+      .where(
+        and(
+          eq(creditCardBillingCyclesTable.id, dto.billingCycleId),
+          eq(creditCardBillingCyclesTable.creditCardId, card.id),
+        ),
+      )
+      .limit(1);
+    if (!cycle[0]) throw new NotFoundError("Billing cycle");
+  }
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(creditCardInstallmentsTable)
+      .set({
+        amount: nextAmount,
+        billingCycleId: dto.billingCycleId ?? installment.billingCycleId,
+      })
+      .where(eq(creditCardInstallmentsTable.id, installmentId));
+
+    if (nextTotal !== purchase.amount) {
+      await tx
+        .update(creditCardPurchasesTable)
+        .set({ purchaseAmount: nextTotal })
+        .where(eq(creditCardPurchasesTable.id, purchaseId));
+      await rewritePurchaseEntries(tx, card, purchase, nextTotal);
+    }
+
+    await tx
+      .delete(creditCardBudgetRecognitionsTable)
+      .where(eq(creditCardBudgetRecognitionsTable.purchaseId, purchaseId));
+    if (purchase.includeInBudget && purchase.categoryId) {
+      await recreateBudgetRecognitionsForPurchase(
+        tx,
+        {
+          id: purchaseId,
+          purchaseAmount: nextTotal,
+          installmentCount: purchase.installmentCount,
+          budgetExpenseTiming: purchase.budgetExpenseTiming,
+          budgetInstallmentMode: purchase.budgetInstallmentMode,
+        },
+        {
+          categoryId: purchase.categoryId,
+          currencyCode: card.currencyCode,
+          purchaseDate: purchase.postedDate,
+        },
+      );
     }
 
     await syncCardCycles(tx, card, context.timezone);

@@ -13,6 +13,13 @@
   it against the category), `cancel_purchase` (credit a card purchase once, or drop the unbilled installments and
   credit the billed ones), `create_credit_card_payment` (pay a card bill from an account; neutral in reports), and
   `bulk_update_transactions`, `bulk_categorize_transactions`, `bulk_delete_transactions`.
+- **Card installments**: `create_transaction` for a `credit_card_purchase` takes `installmentAmounts` (exact amount of
+  each installment, as the invoice shows them; the count is its length and the total its sum), or `installmentAmount` +
+  `installments`, or `roundingMode` (`remainder_last` default, `remainder_first`, `round_up_all`) for an even split;
+  `amount` becomes optional and an `amount` that disagrees with the installments is rejected. `update_card_purchase`
+  edits a card purchase (text, category, merchant, tags, dates, total, count or the full installment list) and
+  `update_installment` fixes one installment's amount or invoice by number; installments on closed invoices keep their
+  amounts unless the full list is sent. Both support `dryRun`.
 - **Transaction text**: every transaction has a short English `description` title (40 characters or less), an
   `originalDescription` (the bank's raw statement text, copied verbatim, never translated or cleaned) and free-form
   `notes`. `create_transaction`, `create_refund`, `cancel_purchase`, `create_credit_card_payment` and
@@ -57,7 +64,7 @@
 - **Reference data**: `whoami`, `list_households`, `list_accounts`, `list_credit_cards`, and list/create/update for
   categories, merchants and tags.
 - **Reports**: `report_spending` (by category, merchant or tag), `report_income_expense`, `report_balances` (accounts
-  and net worth: `combinedNetWorth` in the household base currency plus per currency), `report_credit_cards` (card count, what is owed this month, due dates; `combined` in the base currency plus `totals` per currency), `report_budget`,
+  and net worth: `combinedNetWorth` in the household base currency plus per currency), `report_credit_cards` (card count, what is owed this month, due dates; `combined` in the base currency plus `totals` per currency), `report_budget` (a parent category's `actual`, `remaining` and `overBudget` include its subcategories, as on the Budgets page; the parent also has `ownActual`, `allocated`, `unallocated` and `subcategories`, each with its `parent`),
   `report_goals`, `report_top_expenses`.
 - **Resources**: `luraba://guide/overview` and `luraba://guide/transactions`.
 

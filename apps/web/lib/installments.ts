@@ -1,7 +1,8 @@
+import { type InstallmentRoundingMode, splitInstallmentAmounts } from "@luraba/domain";
 import { formatCurrency } from "@/lib/finance";
 
 /** Most installments the API accepts (`installmentCountSchema` in `@luraba/contracts`). */
-export const MAX_INSTALLMENTS = 48;
+export const MAX_INSTALLMENTS = 60;
 
 /** Options for the installments select: `1` to `MAX_INSTALLMENTS`. */
 export const INSTALLMENT_COUNT_OPTIONS = Array.from({ length: MAX_INSTALLMENTS }, (_, index) => ({
@@ -10,16 +11,22 @@ export const INSTALLMENT_COUNT_OPTIONS = Array.from({ length: MAX_INSTALLMENTS }
 }));
 
 /**
- * Splits a purchase into installments exactly like the API (`splitInstallmentAmounts`): every
- * installment is `floor(total / count)` and the last one takes the remainder.
+ * Splits a purchase into installments exactly like the API (`splitInstallmentAmounts` in `@luraba/domain`): by default
+ * every installment is `floor(total / count)` and the last one takes the remainder.
  */
-export function splitInstallments(totalMinor: number, count: number): number[] {
-  if (!Number.isInteger(count) || count < 1) return [];
-  const base = Math.floor(totalMinor / count);
-  const remainder = totalMinor - base * count;
-  return Array.from({ length: count }, (_, index) =>
-    index === count - 1 ? base + remainder : base,
-  );
+export function splitInstallments(
+  totalMinor: number,
+  count: number,
+  mode: InstallmentRoundingMode = "remainder_last",
+): number[] {
+  return splitInstallmentAmounts(totalMinor, count, mode);
+}
+
+/** True when the amounts are what the default even split would produce, so nothing was set by hand. */
+export function isStandardSplit(amounts: number[]): boolean {
+  const total = amounts.reduce((sum, value) => sum + value, 0);
+  const standard = splitInstallments(total, amounts.length);
+  return standard.length === amounts.length && standard.every((value, i) => value === amounts[i]);
 }
 
 /**

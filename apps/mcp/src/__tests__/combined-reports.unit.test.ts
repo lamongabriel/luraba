@@ -145,6 +145,7 @@ describe("report_credit_cards", () => {
           ]),
           limitTotal: amount(0, []),
           limitAvailable: amount(0, []),
+          limitUsed: amount(0, []),
         },
       },
       "/households": [],

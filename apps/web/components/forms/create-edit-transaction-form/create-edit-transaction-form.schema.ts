@@ -58,6 +58,9 @@ export const createEditTransactionFormSchema = z
       .int("Installments must be a whole number.")
       .min(1, "Use at least one installment.")
       .max(60, "Use no more than 60 installments."),
+    /** Card purchase: the installment amounts are typed by hand (as the invoice shows them) instead of an even split. */
+    customInstallments: z.boolean(),
+    installmentAmounts: z.array(amountSchema).max(60, "Use no more than 60 installments."),
     includeInBudget: z.boolean(),
     tagIds: z.array(z.uuid()).max(50, "Choose no more than 50 tags."),
     items: z.array(transactionItemFormSchema).max(200, "Use no more than 200 items."),
@@ -128,6 +131,17 @@ export const createEditTransactionFormSchema = z
 
     if (values.kind === "credit_card_purchase") {
       requireId("creditCardId", "Choose a credit card.");
+      if (values.customInstallments) {
+        values.installmentAmounts.forEach((value, index) => {
+          if (value === "") {
+            context.addIssue({
+              code: "custom",
+              path: ["installmentAmounts", index],
+              message: "Enter the installment amount.",
+            });
+          }
+        });
+      }
     }
 
     if (values.kind === "credit_card_payment") {

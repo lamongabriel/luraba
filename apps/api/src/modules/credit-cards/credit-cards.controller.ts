@@ -85,6 +85,13 @@ export const updatePurchase = createHouseholdHandler({
   handle: ({ household, params, body }) =>
     service.updatePurchase(household, params.id, params.purchaseId, body),
 });
+export const updateInstallment = createHouseholdHandler({
+  params: creditCardsEndpoints.updateInstallment.params,
+  body: creditCardsEndpoints.updateInstallment.body,
+  response: creditCardsEndpoints.updateInstallment.response,
+  handle: ({ household, params, body }) =>
+    service.updateInstallment(household, params.id, params.purchaseId, params.installmentId, body),
+});
 export const cancelPurchase = createHouseholdHandler({
   params: creditCardsEndpoints.cancelPurchase.params,
   body: creditCardsEndpoints.cancelPurchase.body,

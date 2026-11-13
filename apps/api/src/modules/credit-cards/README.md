@@ -43,6 +43,27 @@ Purchases, payments and cancellations accept `originalDescription` and `notes` (
 purchase and payment responses return them, and `PATCH` of a purchase or payment can clear them with `null`. They
 live on the purchase's transaction row, so all installments share them.
 
+## Exact installment amounts
+
+Card issuers round installments differently, so a purchase can be created with the amounts the invoice shows
+(`createPurchase` in `credit-card-purchases.service.ts`; the rules live in `resolveInstallmentPlan`, `@luraba/domain`):
+
+- `installmentAmounts: [..]` (1 to 60, every one above zero): each value is used as is, its length is the count and
+  its sum is the purchase total. `installmentAmount` + `installmentCount` makes them all equal.
+- **The installments are the source of truth.** If `amount` is sent too and differs from their sum the request is
+  rejected (422), as is a `installmentCount` that differs from the list length. Nothing stores the difference.
+- Without them, `amount` is split by `roundingMode`: `remainder_last` (default, the old behavior: the last
+  installment takes the leftover cents), `remainder_first`, or `round_up_all` (every installment is rounded up, so the
+  total becomes their sum). `installmentCount` defaults to 1.
+
+`PATCH .../purchases/:purchaseId` takes the same fields. Installments on an invoice that already closed
+(`closingDate <= today`) keep their amounts when only the total, the count or the rounding mode changes (the rest is
+laid out again; a count below the closed ones is rejected); sending `installmentAmounts` replaces every amount, closed
+ones included, and moving `postedDate` lays out all of them again. Text-only edits keep the amounts as they are.
+`PATCH .../purchases/:purchaseId/installments/:installmentId` (`amount?`, `billingCycleId?`) edits one installment: the
+purchase total, ledger entries, budget recognitions, invoice and available limit follow. Schedule rebuilds after a cycle
+date edit (`rebuildSchedulesFromClosingDate`) keep the stored amounts.
+
 ## Cancelling a purchase and credits
 
 `POST /credit-cards/:id/purchases/:purchaseId/cancel` (`transactions.create`, body `mode`, `reason`, `date?`,

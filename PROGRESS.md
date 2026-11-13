@@ -48,3 +48,13 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 ## Check at 2026-11-13 (second orchestration check)
 - No session is running and every worker branch is already merged into `redesign` (`git branch --no-merged redesign` is empty), so there was nothing to nudge or merge. `redesign` stays at the 05:00 state; checks were green then and no code changed since.
 - Still waiting on the owner: test `redesign` and send feedback. Optional next step: a browser-verification session (375/768/1100/1440px, light and dark).
+
+## Custom and editable card installment amounts (91417f3, a9add06, 12f7cbe)
+- Shipped: exact `installmentAmounts` / `installmentAmount` / `roundingMode` on card purchase create and update (installments are the source of truth; a disagreeing `amount` is rejected), `PATCH /credit-cards/:id/purchases/:purchaseId/installments/:installmentId`, closed-invoice installments kept on count/total changes, custom amounts kept through cycle rebuilds, MCP `create_transaction` fields plus `update_card_purchase` and `update_installment` (both with `dryRun`), "Set each installment" switch and rows in the transaction form, docs. Limit is 60.
+- Verified: typecheck, biome (0 errors), web 227, MCP 44, domain 106, contracts 22; API integration 473 of 479 on the full run, and the 6 that failed (bills, one households test) pass when rerun alone (39 of 39), so likely interference from other work running at the same time. In the browser (desktop and 375px): create flow with 5 rows and the derived total saved 3405 x4 + 3406 through the real API (test purchase deleted again); edit mode opens. Fixed a crash found there (`useFormContext` without a provider).
+- Not verified: saving an edit of an existing purchase through the form in the browser; editing one installment from the UI (no UI for it yet, only API/MCP); production data.
+- Also fixed a stale MCP test fixture (`limitUsed` missing in the overview mock).
+
+## Fix: report_budget rolls up subcategories (2026-11-13)
+- Root cause: the budgets API returns flat per-category rows; only the web page added subcategory spending to the parent. `report_budget` used the raw rows.
+- Moved the rollup (`buildBudgetItems`) into `@luraba/domain`; web re-exports it, MCP uses it. `report_budget` now returns parent `actual`/`remaining`/`overBudget` rolled up, plus `ownActual`, `allocated`, `unallocated`, nested `subcategories` each with `parent`. Totals unchanged (already no double count). Unit test in `apps/mcp/src/__tests__/report-budget.unit.test.ts`.
