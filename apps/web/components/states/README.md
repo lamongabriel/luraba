@@ -28,7 +28,7 @@ Detail pages (`[id]`) need `_loading.tsx` and `_error.tsx`; their loading file r
 
 ## Pages that fill the viewport
 
-A list page (transactions) can fill the screen: the page body is a flex column (`flex flex-1 flex-col`),
+A list page whose table is the whole page can fill the screen (the transactions page no longer does: upcoming items sit below its table): the page body is a flex column (`flex flex-1 flex-col`),
 the table block `flex-1`, and `DataTable`/`DataTableSkeleton` take `fill` so the bordered table grows
 to the leftover height and the pager stays at the bottom. No pixel heights. Side panels next to it are
 `PanelCard fill` (`components/finance/panel-card.tsx`, one header: title, icon, description, actions),

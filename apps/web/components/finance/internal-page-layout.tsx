@@ -12,6 +12,7 @@ export function InternalPageLayout({
   subtitle,
   back,
   actions,
+  mobileActions,
   compact,
   leading,
   createdBy,
@@ -22,6 +23,8 @@ export function InternalPageLayout({
   subtitle: React.ReactNode;
   back?: PageBackLink;
   actions?: React.ReactNode;
+  /** Phone-only circular icon actions; see `PageHeader`. */
+  mobileActions?: React.ReactNode;
   /** Smaller title block, for pages inside a section menu (Household). */
   compact?: boolean;
   leading?: React.ReactNode;
@@ -37,6 +40,7 @@ export function InternalPageLayout({
         subtitle={subtitle}
         back={back}
         actions={actions}
+        mobileActions={mobileActions}
         compact={compact}
         leading={leading}
       />

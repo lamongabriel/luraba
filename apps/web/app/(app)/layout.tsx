@@ -25,7 +25,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <Button asChild variant="outline" size="sm" className="rounded-xl border-border/80">
                   <Link href="/dashboard">
                     <HugeiconsIcon icon={Home01Icon} strokeWidth={2} className="size-4" />
-                    Home
+                    <span className="max-sm:sr-only">Home</span>
                   </Link>
                 </Button>
               </div>

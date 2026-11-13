@@ -11,8 +11,9 @@ outside this folder: `test/conventions.test.ts` enforces that).
 | `FilterBar` | The whole row: optional search, the fixed date chip, the filter chips and a trailing slot. Desktop renders ReUI chips; below `md` it renders a "Filters (N)" button that opens `MobileFiltersDrawer` (a bottom drawer). |
 | `defineFilterFields` / `FilterFieldDef` | Declares what can be filtered: `multiselect`, `boolean`, `money` (uses `MoneyInput`, never `type="number"`) or `date`. One filter per field. |
 | `useFilters({ fieldIds, keyPrefix?, defaultRules? })` | URL-backed state (nuqs). One `filter` param holding JSON `[[fieldId, operator, value], ...]`. Changing a filter resets `page`. `keyPrefix` lets two tables share a page (`membersFilter`). |
-| `useDateFilter({ keyPrefix? })` | The date filter. Starts from the user's default period setting; URL keys `period` or `dateFrom`/`dateTo`. |
-| `DateFilterChip` | The date filter as a fixed chip. |
+| `useDateFilter({ keyPrefix?, defaultPeriod?, billingCycles? })` | The date filter. Starts from `defaultPeriod`, else the user's default period setting; URL keys `period` or `dateFrom`/`dateTo`. |
+| `DateFilterChip` | The date filter as one trigger: calendar icon, the preset name, the actual range (from `sm` up) and a chevron; popover with presets and a range calendar (a bottom drawer on a phone). |
+| `FilterActionsMenu` | The desktop "Actions" menu: "Add filter" (field list) and "Columns". `FilterBar table={table}` renders it instead of the separate Filters and Columns buttons. |
 | `tree.ts` | Pure helpers (`encodeTree`, `decodeTree`, `readValues`, `setFieldRule`, ...). Unit tested. |
 
 ## The date filter is required
@@ -35,3 +36,28 @@ calendar). A page that needs a period uses `useDateFilter` + `FilterBar date={..
 `MobileFiltersDrawer` is a screen-by-screen flow in a bottom drawer: a row per field with its
 summary, then one screen per field (search + checkboxes, Yes/No, min/max, calendar), "Clear all" and
 "Done" in the footer.
+
+## Never without a range
+
+- The default is computed synchronously from the preferences, so the first render of a page already has its range
+  (hard reload and URL params included). `date.ready` only gates the list request.
+- A malformed `period` or `dateFrom`/`dateTo` in the URL falls back to the default.
+- The filter row (with the date chip) must render in **every** state of the page, loading and error included: the
+  transactions toolbar lives outside the table's states for that reason. A skeleton that stands in for the toolbar
+  renders the real chip, never a placeholder.
+
+## Billing cycles ("This month" on the transactions page)
+
+`useDateFilter({ defaultPeriod: "current_month", billingCycles: true })`. The "This month" preset then runs from the
+**earliest open billing-cycle start across the household's cards, or the 1st of the month, whichever is earlier,
+through the last day of the month** (`getMonthRangeWithOpenCycles` in `@luraba/domain`). A card whose cycle opened on
+the 27th of last month therefore pulls the range back to the 27th, so purchases in the open cycle show up. The trigger
+shows the real range ("Oct 27 - Nov 30"). The cycle starts come from the existing endpoints (`GET /credit-cards`, then
+`GET /credit-cards/:id/cycles?displayStatuses=current`, see `useOpenCycleStarts`); no API change. `ready` waits for
+them; a card list that fails or is forbidden counts as "no cycles", so the page is never blocked. Other presets
+(Last month, Last 30 days...) are unchanged.
+
+## Mobile
+
+`FilterBar` takes `mobileOpen` / `onMobileOpenChange` / `mobileTrigger={false}` when the Filters button lives in the
+page header (transactions: a circular icon button). There is no Actions menu or column menu on a phone.

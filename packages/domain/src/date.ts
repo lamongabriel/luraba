@@ -2,7 +2,6 @@ import {
   addDays as dfnsAddDays,
   addMilliseconds as dfnsAddMilliseconds,
   differenceInCalendarDays as dfnsDifferenceInCalendarDays,
-  endOfMonth as dfnsEndOfMonth,
   format as dfnsFormat,
   isAfter as dfnsIsAfter,
   isBefore as dfnsIsBefore,
@@ -234,8 +233,9 @@ export function differenceInCalendarDays(dateLeft: Date, dateRight: Date): numbe
   return dfnsDifferenceInCalendarDays(dateLeft, dateRight);
 }
 
+/** The last instant of the month in UTC (a local-time end of month would roll into the next UTC day east of UTC). */
 export function endOfMonth(date: Date): Date {
-  return dfnsEndOfMonth(date);
+  return new Date(Date.UTC(getUTCFullYear(date), getUTCMonth(date) + 1, 0, 23, 59, 59, 999));
 }
 
 export function startOfWeek(

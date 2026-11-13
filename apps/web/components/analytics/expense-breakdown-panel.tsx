@@ -9,6 +9,7 @@ import type { PieSectorShapeProps } from "recharts/types/polar/Pie";
 import { EmptyState } from "@/components/empty-state";
 import { PanelCard } from "@/components/finance/panel-card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/finance";
 import { CURATED_COLOR_PRESETS } from "@/lib/icons";
 
@@ -30,7 +31,6 @@ export function ExpenseBreakdownPanel({
 
   return (
     <PanelCard
-      fill
       title="Expense breakdown"
       icon={<HugeiconsIcon icon={PieChartIcon} strokeWidth={2} />}
       contentClassName="space-y-4"
@@ -48,7 +48,7 @@ export function ExpenseBreakdownPanel({
             config={{
               amount: { label: "Amount", color: "var(--color-primary)" },
             }}
-            className="mx-auto h-36 w-full max-w-48"
+            className="mx-auto h-32 w-full max-w-44"
           >
             <PieChart accessibilityLayer>
               <ChartTooltip content={<ChartTooltipContent />} />
@@ -56,8 +56,8 @@ export function ExpenseBreakdownPanel({
                 data={chartItems}
                 dataKey="amount"
                 nameKey="name"
-                innerRadius={38}
-                outerRadius={58}
+                innerRadius={34}
+                outerRadius={52}
                 strokeWidth={2}
                 stroke="var(--color-card)"
                 shape={({ index, outerRadius = 0, ...props }: PieSectorShapeProps) =>
@@ -96,6 +96,37 @@ export function ExpenseBreakdownPanel({
           </ul>
         </>
       )}
+    </PanelCard>
+  );
+}
+
+/** Loading twin of `ExpenseBreakdownPanel`: the same card, header, donut and a handful of category rows. */
+export function ExpenseBreakdownSkeleton() {
+  return (
+    <PanelCard
+      title={<Skeleton className="h-5 w-36" />}
+      icon={<Skeleton className="size-6 rounded-md" />}
+      iconFrame={false}
+      contentClassName="space-y-4"
+    >
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label="Loading expense breakdown"
+        className="space-y-4"
+      >
+        <Skeleton className="mx-auto size-32 rounded-full" />
+        <ul className="space-y-2">
+          {Array.from({ length: 5 }, (_, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: static placeholders
+            <li key={index} className="flex items-center gap-2">
+              <Skeleton className="size-2 rounded-full" />
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="h-4 w-14" />
+            </li>
+          ))}
+        </ul>
+      </div>
     </PanelCard>
   );
 }

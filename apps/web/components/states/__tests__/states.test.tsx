@@ -1,7 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { KpiCard, KpiCardSkeleton, KpiGrid, KpiGridSkeleton } from "@/components/kpi";
+import {
+  KPI_CARD_MIN_HEIGHT,
+  KpiCard,
+  KpiCardSkeleton,
+  KpiGrid,
+  KpiGridSkeleton,
+} from "@/components/kpi";
 
 import { DataBoundary } from "../data-boundary";
 
@@ -57,7 +63,7 @@ describe("KPI components", () => {
     );
     const cards = container.querySelectorAll("[data-slot='card']");
     expect(cards).toHaveLength(2);
-    for (const card of cards) expect(card.className).toContain("min-h-32");
+    for (const card of cards) expect(card.className).toContain(KPI_CARD_MIN_HEIGHT);
   });
 
   it("renders as many skeletons as columns and accepts children as the value", () => {

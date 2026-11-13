@@ -26,3 +26,17 @@ numbers that support a hero value (account detail). Use `KpiGrid` when each numb
 
 `KpiStrip` also takes a `lead` cell (3 or 4 items): a wider first cell for the headline figure with a small ring
 (the Budgets page's "Remaining of the limit"); `KpiStripSkeleton` takes the same prop for its loading twin.
+
+## Card style (every page)
+
+`KpiCard` is deliberately small: a muted title and an optional icon tile on one row, a bold tabular value, then one
+muted line (comparison, `secondary` or `description`). Pass `icon` and `tone` (`positive` green, `negative` red,
+`primary`, default `neutral`) when the figure has a meaning: money in is green, money out is red. The tone colors the
+tile and the sparkline; dark mode values live in `KPI_TONE_CLASSES`. The card and its skeleton share
+`KPI_CARD_MIN_HEIGHT` and the same header row, so changing one means changing both.
+
+## KpiMobileSummary
+
+Below `md` a row of cards is too big for three numbers. `KpiMobileSummary` (+ `KpiMobileSummarySkeleton`) is the phone
+version: a title row (with an `action` such as the date filter), a hairline, then one short text row per figure. It
+renders only below `md`; wrap the `KpiGrid` of the same page in `max-md:hidden`. The transactions page is the example.

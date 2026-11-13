@@ -14,7 +14,7 @@ import type { ApiParamValue } from "@/lib/api-params";
 
 /**
  * Everything the transactions page reads from the URL: search, page, sort, the filter chips and the required date
- * filter (the household's default period until the user edits it). `apiParams` is the list query.
+ * filter ("This month", widened to the open billing cycles, until the user edits it). `apiParams` is the list query.
  */
 export function useTransactionParams() {
   const params = useApiParams({
@@ -27,7 +27,8 @@ export function useTransactionParams() {
     },
   });
   const filters = useFilters({ fieldIds: TRANSACTION_FILTER_IDS });
-  const date = useDateFilter();
+  // "This month" always opens the page, and reaches back to the earliest open credit card cycle (see filters README).
+  const date = useDateFilter({ defaultPeriod: "current_month", billingCycles: true });
 
   const apiParams = React.useMemo<Record<string, ApiParamValue>>(
     () => ({

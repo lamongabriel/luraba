@@ -92,3 +92,14 @@ Budgets & goals page (`/plan`: left to spend, goals, budgets, fixed bills; `/bud
 **Page titles.** Every page in `(app)` renders `InternalPageLayout` (which wraps `components/finance/page-header.tsx`):
 `title`, a mandatory `subtitle`, an optional `back={{ href, label }}` ("Back to {label}", use it on every detail page) and an
 `actions` slot aligned with the title. Do not build one-off headers.
+
+## Transactions page layout
+
+Desktop (`xl`): KPI cards (3, in/out/net with icon and semantic tone) then the table in the left column, upcoming
+bills and installments below the table, and the expense breakdown in a narrow right column that starts on the KPI row.
+The filter row has search, the fixed date chip and one "Actions" menu (add filter, columns). Below `xl` everything stacks.
+Phone (`< md`): the header has the title and subtitle on the left and circular icon buttons (Filters, Add) on the right
+(`PageHeader mobileActions` + `PageHeaderIconButton`); a compact summary block (`KpiMobileSummary`) with the date chip
+on its title row; the search directly above the list; no column menu, no breakdown, no upcoming (and upcoming is not
+fetched). The toolbar renders in every state so the date filter never disappears while data loads. The default range is
+"This month" widened to the open credit card cycles: see [components/filters](components/filters/README.md).

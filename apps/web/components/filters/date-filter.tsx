@@ -9,7 +9,6 @@ import type { DateRange } from "react-day-picker";
 
 import type { DateFilterState } from "@/components/filters/use-date-filter";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { calendarDateToIso, isoToCalendarDate } from "@/lib/calendar-date";
@@ -36,20 +35,26 @@ export function DateFilterChip({
       : undefined;
 
   return (
-    <ButtonGroup data-slot="date-filter" aria-label={`Date: ${date.label}`} className={className}>
-      <ButtonGroupText className="cursor-default gap-1.5 bg-background dark:bg-input/30">
-        <HugeiconsIcon icon={Calendar01Icon} strokeWidth={2} />
-        Date
-      </ButtonGroupText>
+    <div data-slot="date-filter" className={className}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             disabled={disabled}
-            className="bg-background font-normal dark:bg-input/30"
-            aria-label={`Edit date: ${date.label}`}
+            className="max-w-full gap-2 border-border bg-card font-normal shadow-xs hover:bg-muted dark:bg-input/30 dark:hover:bg-input/50"
+            aria-label={`Date: ${date.label}${date.rangeText && date.period !== "custom" ? ` (${date.rangeText})` : ""}. Edit`}
           >
-            <span>{date.label}</span>
+            <HugeiconsIcon
+              icon={Calendar01Icon}
+              strokeWidth={2}
+              className="text-primary dark:text-primary"
+            />
+            <span className="truncate font-medium">{date.label}</span>
+            {date.period !== "custom" && date.rangeText ? (
+              <span className="hidden truncate text-muted-foreground tabular-nums sm:inline">
+                {date.rangeText}
+              </span>
+            ) : null}
             <HugeiconsIcon
               icon={ArrowDown01Icon}
               strokeWidth={2}
@@ -93,6 +98,6 @@ export function DateFilterChip({
           />
         </PopoverContent>
       </Popover>
-    </ButtonGroup>
+    </div>
   );
 }

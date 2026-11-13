@@ -2,32 +2,36 @@
 
 import type { ListResponse, TransactionAnalytics, UpcomingTransaction } from "@luraba/contracts";
 import type { UseQueryResult } from "@tanstack/react-query";
-import { ExpenseBreakdownPanel } from "@/components/analytics/expense-breakdown-panel";
-import { UpcomingTransactionsPanel } from "@/components/analytics/upcoming-transactions-panel";
+import {
+  ExpenseBreakdownPanel,
+  ExpenseBreakdownSkeleton,
+} from "@/components/analytics/expense-breakdown-panel";
+import {
+  UpcomingTransactionsPanel,
+  UpcomingTransactionsSkeleton,
+} from "@/components/analytics/upcoming-transactions-panel";
 import { ErrorState } from "@/components/error-state";
-import { PanelCardSkeleton } from "@/components/states";
 import type { AppClientError } from "@/services/error-client";
 
 type AnalyticsQuery = UseQueryResult<TransactionAnalytics, AppClientError>;
-type UpcomingQuery = UseQueryResult<ListResponse<UpcomingTransaction>, AppClientError>;
 
+/**
+ * The right-hand column of the transactions page: the expense breakdown, starting on the KPI row. It is hidden on a
+ * phone (the page's summary block already tells the story and the donut is too much for a small screen).
+ */
 export function TransactionAnalyticsRail({
   analyticsQuery,
-  upcomingQuery,
   language = "en",
   precision = 2,
-  onSelectUpcoming,
 }: {
   analyticsQuery: AnalyticsQuery;
-  upcomingQuery: UpcomingQuery;
   language?: string;
   precision?: number;
-  onSelectUpcoming?: (row: UpcomingTransaction) => void;
 }) {
   return (
-    <aside className="flex min-w-0 flex-col gap-3" aria-label="Transaction insights">
+    <aside className="flex min-w-0 flex-col max-md:hidden" aria-label="Transaction insights">
       {analyticsQuery.isPending ? (
-        <PanelCardSkeleton label="Loading expense breakdown" lines={5} />
+        <ExpenseBreakdownSkeleton />
       ) : analyticsQuery.isError || !analyticsQuery.data ? (
         <ErrorState
           title="Couldn&apos;t load expense breakdown"
@@ -41,23 +45,42 @@ export function TransactionAnalyticsRail({
           precision={precision}
         />
       )}
+    </aside>
+  );
+}
 
-      {upcomingQuery.isPending ? (
-        <PanelCardSkeleton label="Loading upcoming transactions" lines={4} />
-      ) : upcomingQuery.isError ? (
+type UpcomingQuery = UseQueryResult<ListResponse<UpcomingTransaction>, AppClientError>;
+
+/** Upcoming bills and installments below the table, with its three states. Hidden on a phone. */
+export function TransactionUpcomingSection({
+  query,
+  language = "en",
+  precision = 2,
+  onSelect,
+}: {
+  query: UpcomingQuery;
+  language?: string;
+  precision?: number;
+  onSelect?: (row: UpcomingTransaction) => void;
+}) {
+  return (
+    <div className="max-md:hidden">
+      {query.isPending ? (
+        <UpcomingTransactionsSkeleton />
+      ) : query.isError ? (
         <ErrorState
           title="Couldn&apos;t load upcoming transactions"
-          description={upcomingQuery.error?.message ?? "Try again to load this panel."}
-          onRetry={() => void upcomingQuery.refetch()}
+          description={query.error?.message ?? "Try again to load this section."}
+          onRetry={() => void query.refetch()}
         />
       ) : (
         <UpcomingTransactionsPanel
-          rows={upcomingQuery.data?.data ?? []}
+          rows={query.data?.data ?? []}
           language={language}
           precision={precision}
-          onSelect={onSelectUpcoming}
+          onSelect={onSelect}
         />
       )}
-    </aside>
+    </div>
   );
 }
