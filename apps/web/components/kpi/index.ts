@@ -8,6 +8,12 @@ export {
 } from "./kpi-card";
 export { KpiGrid, type KpiGridColumns, KpiGridSkeleton } from "./kpi-grid";
 export {
+  KPI_INLINE_HEIGHT_CLASS,
+  KpiInline,
+  type KpiInlineItem,
+  KpiInlineSkeleton,
+} from "./kpi-inline";
+export {
   KpiMobileSummary,
   type KpiMobileSummaryItem,
   KpiMobileSummarySkeleton,

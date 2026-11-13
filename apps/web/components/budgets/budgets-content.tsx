@@ -3,13 +3,13 @@
 import type { Category, MonthlyBudget } from "@luraba/contracts";
 import * as React from "react";
 
-import { DonutChartCard } from "@/components/charts";
+import { SegmentedBarCard } from "@/components/charts";
 import { buildBudgetItems, filterAndSortBudgetItems } from "@/lib/budgets";
 import { BudgetCard } from "./budget-card";
 import { BUDGET_ALLOCATION_HEIGHT, BUDGET_GRID } from "./budget-layout";
 
 /**
- * The Budgets page body: how the month's budget is split across categories (one flat donut), then a grid
+ * The Budgets page body: how the month's budget is split across categories (one slim segmented bar), then a grid
  * of compact budget cards. `BudgetsLoading` (`_loading.tsx`) mirrors it.
  */
 export function BudgetsContent({
@@ -56,17 +56,15 @@ export function BudgetsContent({
     }));
 
   return (
-    <div className="space-y-8">
-      <DonutChartCard
-        flat
+    <div className="space-y-6">
+      <SegmentedBarCard
         title="Budget split"
         status="ready"
         data={allocation}
-        centerLabel="Budgeted"
+        maxSlices={5}
         emptyTitle="No limits yet"
         emptyDescription="Add a budget to see how the month is split."
         heightClassName={BUDGET_ALLOCATION_HEIGHT}
-        className="mx-auto max-w-2xl"
         {...money}
       />
       <ul className={BUDGET_GRID}>

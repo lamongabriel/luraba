@@ -6,9 +6,10 @@ import { BILL_GROUP_HEADER_HEIGHT } from "@/components/bills/bill-layout";
 import { BillRow } from "@/components/bills/bill-row";
 import { BillSheet } from "@/components/bills/bill-sheet";
 import { BillsMonthSummary } from "@/components/bills/bills-month-summary";
-import { MonthPresetButton, useMonthFilter } from "@/components/filters";
+import { HeaderAddButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
-import { PageAddButton } from "@/components/finance/page-add-button";
+import { MonthSelect } from "@/components/finance/month-select";
+import { useMonthFilter } from "@/components/finance/use-month-filter";
 import { PERMISSIONS, useCan } from "@/components/permissions";
 import { DataBoundary } from "@/components/states";
 import { useEntityDisclosure } from "@/hooks/use-disclosure";
@@ -66,23 +67,17 @@ export default function BillsPage() {
   return (
     <InternalPageLayout
       title="Bills"
-      subtitle="What is due, and what is paid."
-      inlineActions
+      subtitle={`What is due, and what is paid \u00b7 ${monthLabel}`}
+      controls={
+        <MonthSelect value={month} onChange={setMonth} timezone={timezone} language={language} />
+      }
       actions={
-        <>
-          <MonthPresetButton
-            value={month}
-            onChange={setMonth}
-            timezone={timezone}
-            language={language}
-          />
-          <PageAddButton
-            label="Add bill"
-            permission={PERMISSIONS.BILLS_CREATE}
-            deniedMessage="Your household role cannot create bills."
-            onClick={sheet.onCreate}
-          />
-        </>
+        <HeaderAddButton
+          label="Add bill"
+          permission={PERMISSIONS.BILLS_CREATE}
+          deniedMessage="Your household role cannot create bills."
+          onClick={sheet.onCreate}
+        />
       }
     >
       <DataBoundary

@@ -1,8 +1,11 @@
 "use client";
 
+import { Copy01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { Category, MonthlyBudget } from "@luraba/contracts";
 import * as React from "react";
 
+import { CopyLastMonthDialog } from "@/components/budgets/copy-last-month-dialog";
 import { CategoryDisplay } from "@/components/display";
 import { FormActions } from "@/components/forms/form-actions";
 import { FormSheet } from "@/components/forms/form-sheet";
@@ -35,6 +38,8 @@ export function BudgetCategorySheet({
   target,
   month,
   monthLabel,
+  previousMonth,
+  previousMonthLabel,
   budget,
   categories,
   precision,
@@ -45,6 +50,9 @@ export function BudgetCategorySheet({
   target: BudgetCategoryTarget | null;
   month: string;
   monthLabel: string;
+  /** Last month's key and label: the add flow offers to copy that month's budgets. */
+  previousMonth: string;
+  previousMonthLabel: string;
   budget: MonthlyBudget;
   categories: Category[];
   precision: number;
@@ -53,6 +61,7 @@ export function BudgetCategorySheet({
   const mutation = useReplaceMonthlyBudgetMutation();
   const [categoryId, setCategoryId] = React.useState("");
   const [amount, setAmount] = React.useState("");
+  const [copyOpen, setCopyOpen] = React.useState(false);
 
   const row = budget.categories.expense.find((item) => item.categoryId === target?.categoryId);
   const isNew = !target?.categoryId;
@@ -100,6 +109,27 @@ export function BudgetCategorySheet({
           save(minor);
         }}
       >
+        {isNew ? (
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => setCopyOpen(true)}
+              className="flex w-full items-center gap-3 rounded-xl border border-dashed p-3 text-left transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
+                <HugeiconsIcon icon={Copy01Icon} strokeWidth={2} className="size-4" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">Copy last month's budgets</span>
+                <span className="block text-xs text-muted-foreground">
+                  Start {monthLabel} with the limits from {previousMonthLabel}.
+                </span>
+              </span>
+            </button>
+            <p className="text-center text-xs text-muted-foreground">or set one budget</p>
+          </div>
+        ) : null}
+
         <div className="space-y-1.5">
           <Label htmlFor="budget-category">Category</Label>
           {isNew ? (
@@ -176,6 +206,15 @@ export function BudgetCategorySheet({
           </PermissionButton>
         </FormActions>
       </form>
+      <CopyLastMonthDialog
+        open={copyOpen}
+        onOpenChange={setCopyOpen}
+        month={month}
+        previousMonth={previousMonth}
+        monthLabel={monthLabel}
+        previousMonthLabel={previousMonthLabel}
+        onCopied={() => onOpenChange(false)}
+      />
     </FormSheet>
   );
 }

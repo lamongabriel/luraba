@@ -2,58 +2,86 @@
 
 import { CreditCardIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { PaymentIcon } from "react-svg-credit-card-payment-icons";
+import { PaymentIcon, type PaymentType } from "react-svg-credit-card-payment-icons";
 
 import { getCreditCardBrand } from "@/lib/credit-cards";
 import { cn } from "@/lib/utils";
 
-/** Brands drawn from the icon set's logo, flattened to the text color (no background, no brand colors). */
-const LOGO_BRANDS = new Set(["Visa", "Discover", "Hipercard"]);
-/** Brands shown as a bold wordmark: their logos are multi-color and unreadable when flattened. */
+/**
+ * The real network logos (Visa, Mastercard, American Express, Elo, Discover) from the icon set's `logo` format,
+ * cropped to the logo's own bounds so the mark is not a small drawing floating in a padded 780x500 box. The crop
+ * is the `viewBox`; the set draws the logo on a transparent background (no card, no chip).
+ */
+const LOGO_VIEWBOX: Partial<Record<PaymentType, string>> = {
+  Visa: "58 140 664 220",
+  Mastercard: "108 75 564 350",
+  AmericanExpress: "0 120 780 260",
+  Elo: "70 120 640 260",
+  Discover: "0 150 780 200",
+};
+
+/** Brands shown as a bold wordmark: their logos do not survive being cropped and recolored. */
 const WORDMARKS: Record<string, string> = {
-  AmericanExpress: "AMEX",
-  Elo: "elo",
+  Hipercard: "Hipercard",
   JCB: "JCB",
   UnionPay: "UnionPay",
+  Maestro: "maestro",
 };
 
 /**
- * A card network (Visa, Mastercard, American Express...) as a small transparent mark painted in the current text
- * color, so it works on dark and light cards, lists and selects alike. Never a box: no white or colored background.
- * Size it with `className` (it fills a `h-5 w-8` box by default).
+ * A card network (Visa, Mastercard, American Express...) as its real logo on a transparent background, in a
+ * `h-5 w-8` box by default (size it with `className`; the logo is contained and centered, never stretched).
+ * `tone="onDark"` is for marks over a dark card: single-color parts (Visa's wordmark, Elo's lettering) turn to
+ * the current text color so they stay readable, while colored parts (Mastercard's circles) keep their colors.
  */
-export function CardBrandMark({ brand, className }: { brand: string; className?: string }) {
-  const { paymentType } = getCreditCardBrand(brand);
+export function CardBrandMark({
+  brand,
+  tone = "color",
+  className,
+}: {
+  brand: string;
+  tone?: "color" | "onDark";
+  className?: string;
+}) {
+  const { paymentType, label } = getCreditCardBrand(brand);
   const box = cn(
     "inline-flex h-5 w-8 shrink-0 items-center justify-center text-current",
     className,
   );
+  const viewBox = LOGO_VIEWBOX[paymentType];
 
-  if (paymentType === "Mastercard" || paymentType === "Maestro") {
+  if (viewBox) {
+    const recolor =
+      tone === "onDark"
+        ? paymentType === "Visa"
+          ? "[&_path]:fill-current"
+          : paymentType === "Elo"
+            ? "[&_path:not([fill])]:fill-current"
+            : undefined
+        : undefined;
     return (
-      <span className={box} role="img" aria-label={getCreditCardBrand(brand).label}>
-        <svg viewBox="0 0 32 20" className="size-full" aria-hidden="true">
-          <circle cx="12" cy="10" r="9" fill="currentColor" opacity={0.85} />
-          <circle cx="20" cy="10" r="9" fill="currentColor" opacity={0.5} />
-        </svg>
-      </span>
-    );
-  }
-  if (LOGO_BRANDS.has(paymentType)) {
-    return (
-      <span className={box} role="img" aria-label={getCreditCardBrand(brand).label}>
+      <span className={box} role="img" aria-label={label}>
         <PaymentIcon
           type={paymentType}
           format="logo"
+          viewBox={viewBox}
           aria-hidden="true"
-          className="size-full [&_*]:fill-current"
+          className={cn("size-full", recolor)}
         />
       </span>
     );
   }
   const wordmark = WORDMARKS[paymentType];
   if (wordmark) {
-    return <span className={cn(box, "text-[0.7rem] font-bold tracking-tight")}>{wordmark}</span>;
+    return (
+      <span
+        className={cn(box, "w-auto text-[0.7rem] font-bold tracking-tight")}
+        role="img"
+        aria-label={label}
+      >
+        {wordmark}
+      </span>
+    );
   }
   return (
     <span className={box} role="img" aria-label="Card">

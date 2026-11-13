@@ -1,7 +1,5 @@
 "use client";
 
-import { Add01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { TransactionFeedRow } from "@luraba/contracts";
 import * as React from "react";
 import { CardTransactionSheet } from "@/components/credit-cards/card-transaction-sheet";
@@ -9,10 +7,11 @@ import { CreditCardSheet } from "@/components/credit-cards/credit-card-sheet";
 import { CreditCardsCarousel } from "@/components/credit-cards/credit-cards-carousel";
 import { CreditUtilization } from "@/components/credit-cards/credit-utilization";
 import { RecentCardTransactions } from "@/components/credit-cards/recent-card-transactions";
+import { HeaderAddButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
-import { MonthPicker } from "@/components/finance/month-picker";
+import { MonthSelect } from "@/components/finance/month-select";
 import { SectionReveal } from "@/components/motion/reveal";
-import { PERMISSIONS, PermissionButton } from "@/components/permissions";
+import { PERMISSIONS } from "@/components/permissions";
 import { DataBoundary } from "@/components/states";
 import { useCurrencyPrecision } from "@/hooks/use-currency-precision";
 import { useDisclosure } from "@/hooks/use-disclosure";
@@ -100,27 +99,23 @@ export default function CreditCardsPage() {
     <InternalPageLayout
       title="Credit cards"
       subtitle="Track your spending and upcoming statements."
+      controls={
+        <MonthSelect
+          value={month ?? thisMonth}
+          onChange={setChosenMonth}
+          timezone={timezone}
+          minMonth={shiftMonthKey(thisMonth, -MONTHS_BACK)}
+          maxMonth={shiftMonthKey(thisMonth, MONTHS_AHEAD)}
+          language={language}
+        />
+      }
       actions={
-        <div className="flex items-center gap-2">
-          <MonthPicker
-            value={month ?? thisMonth}
-            onChange={setChosenMonth}
-            currentMonth={thisMonth}
-            minMonth={shiftMonthKey(thisMonth, -MONTHS_BACK)}
-            maxMonth={shiftMonthKey(thisMonth, MONTHS_AHEAD)}
-            language={language}
-          />
-          <PermissionButton
-            permission={PERMISSIONS.CREDIT_CARDS_CREATE}
-            deniedMessage="Your household role cannot add credit cards."
-            onClick={addSheet.onOpen}
-            aria-label="Add credit card"
-            className="max-md:size-9 max-md:rounded-full max-md:px-0"
-          >
-            <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
-            <span className="max-md:sr-only">Add credit card</span>
-          </PermissionButton>
-        </div>
+        <HeaderAddButton
+          label="Add credit card"
+          permission={PERMISSIONS.CREDIT_CARDS_CREATE}
+          deniedMessage="Your household role cannot add credit cards."
+          onClick={addSheet.onOpen}
+        />
       }
     >
       {content}

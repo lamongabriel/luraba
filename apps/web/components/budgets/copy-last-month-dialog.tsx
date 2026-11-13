@@ -9,7 +9,7 @@ import { useReplaceMonthlyBudgetMutation } from "@/mutations/budgets/use-budget-
 import { budgetQueryKeys } from "@/queries/budgets/use-budgets-queries";
 import { getMonthlyBudget } from "@/services/budgets.service";
 
-/** Replaces this month's budgets with last month's, after a confirmation. */
+/** Replaces this month's budgets with last month's, after a confirmation. Opened from the add-budget drawer. */
 export function CopyLastMonthDialog({
   open,
   onOpenChange,
@@ -17,6 +17,7 @@ export function CopyLastMonthDialog({
   previousMonth,
   monthLabel,
   previousMonthLabel,
+  onCopied,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -24,6 +25,8 @@ export function CopyLastMonthDialog({
   previousMonth: string;
   monthLabel: string;
   previousMonthLabel: string;
+  /** Called after the budgets were copied (the add-budget drawer closes itself). */
+  onCopied?: () => void;
 }) {
   const queryClient = useQueryClient();
   const mutation = useReplaceMonthlyBudgetMutation();
@@ -51,7 +54,15 @@ export function CopyLastMonthDialog({
         setError(`${previousMonthLabel} has no budgets to copy.`);
         return;
       }
-      mutation.mutate({ month, body }, { onSuccess: () => onOpenChange(false) });
+      mutation.mutate(
+        { month, body },
+        {
+          onSuccess: () => {
+            onOpenChange(false);
+            onCopied?.();
+          },
+        },
+      );
     } catch {
       setError(`We couldn't load the ${previousMonthLabel} budgets. Please try again.`);
     } finally {
