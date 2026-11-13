@@ -53,3 +53,22 @@ Ported from Nexus `components/query-filters` (read, not copied verbatim; Luraba 
 - Transactions layout: two columns from 1400px (breakdown, then upcoming below it), single column below; Type column only from 2xl; Merchant/Created by hidden by default.
 
 Not done: conventions test/READMEs update, unit tests for the new operators, 900/1100px and 375/390px full sweeps, light-mode check.
+
+## Page header, month select and card faces (header redesign)
+
+Compared against Nexus `components/page-header/*`, `navigation/page-header.tsx`, `analytics/kpi-inline.tsx`,
+`ui/date-range-picker.tsx` and `query-filters/control.ts`.
+
+Ported, file by file:
+
+- `page-header/header-tools.tsx` + `navigation/page-header.tsx` -> `components/finance/page-header.tsx` (title left; kpis,
+  controls and actions on one right-aligned row; kpis drop under the title on a phone) and `finance/header-actions.tsx`
+  (`HeaderAddButton`, `HeaderButton`: one shared control size, icon-only circles on a phone, permission aware).
+- `analytics/kpi-inline.tsx` -> `components/kpi/kpi-inline.tsx` (`KpiInline`, `KpiInlineSkeleton`); the Goals page uses it
+  for "Total saved" and "Active goals".
+- `ui/date-range-picker.tsx` (presets beside the picker, one control height, icon-only on a phone) -> `finance/month-select.tsx`,
+  replacing `MonthPicker`, `MonthSelector` and `MonthPresetButton`.
+- `query-filters/control.ts` (one class for toolbar controls) -> `HEADER_CONTROL_CLASS`.
+
+Left: Nexus's "More" overflow menu for more than three actions and `HeaderMobilePortal`; the conventions test guards the
+actions instead. Pages still hand-building actions: Account detail, Bill detail, Transactions (listed in the test).

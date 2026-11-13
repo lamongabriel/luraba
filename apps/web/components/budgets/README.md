@@ -16,12 +16,12 @@ No KPI row, no stat tiles. The numbers live on the cards; the only summary is th
 
 | File | Role |
 | --- | --- |
-| `app/(app)/budgets/page.tsx` | Queries (`useMonthlyBudgetQuery`, categories), the header (month button, "Add budget", the "..." menu), the editor sheet, the remove confirmation and the copy dialog. The month is `useMonthFilter` (`?month=`). |
+| `app/(app)/budgets/page.tsx` | Queries (`useMonthlyBudgetQuery`, categories), the header (`MonthSelect`, "Add budget"), the editor sheet (which hosts the copy-last-month dialog) and the remove confirmation. The month is `useMonthFilter` (`?month=`). |
 | `budgets-content.tsx` | The donut (`DonutChartCard flat`, top-level limits only, a parent's limit already holds its subcategories') and the grid. |
 | `budget-card.tsx` | One compact card. The whole card opens the editor; its menu has "Edit budget", "Remove budget" and the budgeted/spent subcategories (each opens its own limit). A category with spending but no limit shows "No limit" and "Set a limit". |
 | `budget-layout.ts` | Chart height, the grid and the card height, shared by the page and `_loading.tsx` so the skeleton matches 1:1. |
 | `budget-category-sheet.tsx` | The editor: add, set or remove a limit (`FormSheet`: a side panel on desktop, a bottom drawer on mobile). |
-| `budget-settings-sheet.tsx` | Per-month credit card counting settings, from the header menu. |
+| `budget-settings-sheet.tsx` | Per-month credit card counting settings, from the "Budget settings" button under the cards. "Copy last month's budgets" lives in the Add budget drawer (`budget-category-sheet.tsx`). The split is a slim `SegmentedBarCard`. |
 | `copy-last-month-dialog.tsx` | Replaces the month's budgets with last month's, from the header menu. |
 | `_loading.tsx`, `_error.tsx`, `_empty.tsx` (next to the page) | The three states. Empty means there is no expense category yet. |
 

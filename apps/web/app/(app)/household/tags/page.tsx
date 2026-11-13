@@ -6,6 +6,7 @@ import type { Tag } from "@luraba/contracts";
 import { MAX_PER_PAGE } from "@luraba/contracts";
 import * as React from "react";
 import { DataTableSearchInput } from "@/components/data-table/data-table-search-input";
+import { HeaderAddButton } from "@/components/finance/header-actions";
 import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
 import { PERMISSIONS, PermissionButton, useCan } from "@/components/permissions";
 import { SectionCard } from "@/components/section/section-card";
@@ -146,13 +147,12 @@ export default function TagsPage() {
       title="Tags"
       description="Label transactions across categories to find them later."
       actions={
-        <PermissionButton
+        <HeaderAddButton
+          label="Add tag"
           permission={PERMISSIONS.TAGS_CREATE}
           deniedMessage="Your household role cannot create tags."
           onClick={createEdit.onCreate}
-        >
-          Add tag
-        </PermissionButton>
+        />
       }
     >
       <ItemReveal className="flex flex-wrap items-center gap-2">

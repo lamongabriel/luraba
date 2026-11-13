@@ -6,6 +6,7 @@ import type { SplitInstallment, SplitParticipant } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
+import { HeaderAddButton, HeaderButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
 import { PERMISSIONS, useCan } from "@/components/permissions";
@@ -270,27 +271,25 @@ export default function SplitDetailsPage() {
       subtitle="Who owes what, installments and payments."
       back={{ href: "/splits", label: "Splits" }}
       actions={
-        canUpdate || canDelete ? (
-          <div className="flex items-center gap-2">
-            {canUpdate ? (
-              <>
-                <Button variant="outline" onClick={() => setPersonOpen(true)}>
-                  Add person
-                </Button>
-                <Button variant="outline" onClick={() => setEditOpen(true)}>
-                  <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} />
-                  Edit
-                </Button>
-              </>
-            ) : null}
-            {canDelete ? (
-              <Button variant="outline" size="icon" onClick={() => setDeleteOpen(true)}>
-                <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
-                <span className="sr-only">Delete split</span>
-              </Button>
-            ) : null}
-          </div>
-        ) : null
+        <>
+          <HeaderButton
+            label="Edit"
+            icon={PencilEdit02Icon}
+            permission={PERMISSIONS.SPLITS_UPDATE}
+            onClick={() => setEditOpen(true)}
+          />
+          <HeaderButton
+            label="Delete split"
+            icon={Delete02Icon}
+            permission={PERMISSIONS.SPLITS_DELETE}
+            onClick={() => setDeleteOpen(true)}
+          />
+          <HeaderAddButton
+            label="Add person"
+            permission={PERMISSIONS.SPLITS_UPDATE}
+            onClick={() => setPersonOpen(true)}
+          />
+        </>
       }
     >
       {split.description ? <Typography variant="body-muted">{split.description}</Typography> : null}

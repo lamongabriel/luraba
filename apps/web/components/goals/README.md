@@ -13,7 +13,7 @@ card     (ring+glyph) Name                       [...]
          $4,400 to go                      Behind pace
 ```
 
-No KPI tiles; the only summary is the "Total saved" line (combined with `useCombinedAmount`, canceled goals left out).
+No KPI tiles; the summary is two inline counters in the page header ("Total saved", "Active goals"; `PageHeader` `kpis`) (combined with `useCombinedAmount`, canceled goals left out).
 
 | File | Role |
 | --- | --- |

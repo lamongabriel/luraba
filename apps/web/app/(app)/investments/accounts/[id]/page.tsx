@@ -1,8 +1,9 @@
 "use client";
 
+import { Settings02Icon, Wallet01Icon } from "@hugeicons/core-free-icons";
 import { useParams } from "next/navigation";
-
 import { AccountDisplay, AmountDisplay } from "@/components/display";
+import { HeaderAddButton, HeaderButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { COST_BASIS_LABELS, TAX_PROFILE_LABELS } from "@/components/investments/constants";
 import { CorporateActionSuggestions } from "@/components/investments/corporate-action-suggestions";
@@ -79,25 +80,25 @@ export default function InvestmentAccountPage() {
       back={{ href: "/investments/accounts", label: "Accounts" }}
       createdBy={data.createdByUserId}
       actions={
-        <div className="flex items-center gap-2">
-          <PermissionButton
+        <>
+          <HeaderButton
+            label="Settings"
+            icon={Settings02Icon}
             permission={PERMISSIONS.INVESTMENTS_WRITE}
-            variant="outline"
             onClick={settingsSheet.onOpen}
-          >
-            Settings
-          </PermissionButton>
-          <PermissionButton
+          />
+          <HeaderButton
+            label="Cash movement"
+            icon={Wallet01Icon}
             permission={PERMISSIONS.INVESTMENTS_WRITE}
-            variant="outline"
             onClick={cashSheet.onOpen}
-          >
-            Cash movement
-          </PermissionButton>
-          <PermissionButton permission={PERMISSIONS.INVESTMENTS_WRITE} onClick={eventSheet.onOpen}>
-            New transaction
-          </PermissionButton>
-        </div>
+          />
+          <HeaderAddButton
+            label="New transaction"
+            permission={PERMISSIONS.INVESTMENTS_WRITE}
+            onClick={eventSheet.onOpen}
+          />
+        </>
       }
     >
       <KpiGrid columns={3}>

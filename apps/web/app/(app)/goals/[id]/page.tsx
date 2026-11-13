@@ -1,11 +1,17 @@
 "use client";
 
-import { Delete02Icon, MoreHorizontalIcon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import {
+  Delete02Icon,
+  Link01Icon,
+  MoreHorizontalIcon,
+  PencilEdit02Icon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { GoalContribution, GoalDetail } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
+import { HeaderAddButton, HeaderButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
 import { ContributionModal } from "@/components/goals/contribution-modal";
@@ -157,35 +163,34 @@ export default function GoalDetailsPage() {
       subtitle="Progress, monthly plan and contributions."
       back={{ href: "/goals", label: "Goals" }}
       actions={
-        canUpdate || canDelete ? (
-          <div className="flex items-center gap-2">
-            {canUpdate ? (
-              <>
-                <Button
-                  onClick={() => {
-                    setEditing(undefined);
-                    setAddOpen(true);
-                  }}
-                >
-                  Add money
-                </Button>
-                <Button variant="outline" onClick={() => setLinkOpen(true)}>
-                  Link transaction
-                </Button>
-                <Button variant="outline" onClick={() => setEditOpen(true)}>
-                  <HugeiconsIcon icon={PencilEdit02Icon} strokeWidth={2} />
-                  Edit
-                </Button>
-              </>
-            ) : null}
-            {canDelete ? (
-              <Button variant="outline" size="icon" onClick={() => setDeleteOpen(true)}>
-                <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />
-                <span className="sr-only">Delete goal</span>
-              </Button>
-            ) : null}
-          </div>
-        ) : null
+        <>
+          <HeaderButton
+            label="Edit"
+            icon={PencilEdit02Icon}
+            permission={PERMISSIONS.GOALS_UPDATE}
+            onClick={() => setEditOpen(true)}
+          />
+          <HeaderButton
+            label="Link transaction"
+            icon={Link01Icon}
+            permission={PERMISSIONS.GOALS_UPDATE}
+            onClick={() => setLinkOpen(true)}
+          />
+          <HeaderButton
+            label="Delete goal"
+            icon={Delete02Icon}
+            permission={PERMISSIONS.GOALS_DELETE}
+            onClick={() => setDeleteOpen(true)}
+          />
+          <HeaderAddButton
+            label="Add money"
+            permission={PERMISSIONS.GOALS_UPDATE}
+            onClick={() => {
+              setEditing(undefined);
+              setAddOpen(true);
+            }}
+          />
+        </>
       }
     >
       <div className="flex flex-wrap items-center gap-2">

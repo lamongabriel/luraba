@@ -7,6 +7,7 @@ import { MAX_PER_PAGE } from "@luraba/contracts";
 import * as React from "react";
 import { DataTableSearchInput } from "@/components/data-table/data-table-search-input";
 import { MerchantDisplay } from "@/components/display";
+import { HeaderAddButton } from "@/components/finance/header-actions";
 import { DeleteMerchantModal } from "@/components/merchants/delete-merchant-modal";
 import { MerchantSheet } from "@/components/merchants/merchant-sheet";
 import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
@@ -144,13 +145,12 @@ export default function MerchantsPage() {
       title="Merchants"
       description="The shops and services you pay, with their logos."
       actions={
-        <PermissionButton
+        <HeaderAddButton
+          label="Add merchant"
           permission={PERMISSIONS.MERCHANTS_CREATE}
           deniedMessage="Your household role cannot create merchants."
           onClick={createEdit.onCreate}
-        >
-          Add merchant
-        </PermissionButton>
+        />
       }
     >
       <ItemReveal className="flex flex-wrap items-center gap-2">

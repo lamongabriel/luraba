@@ -3,10 +3,11 @@
 import { MAX_PER_PAGE, type Split } from "@luraba/contracts";
 import Link from "next/link";
 import { MemberDisplay } from "@/components/display";
+import { HeaderAddButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
 import { SectionReveal } from "@/components/motion/reveal";
-import { PERMISSIONS, PermissionButton } from "@/components/permissions";
+import { PERMISSIONS } from "@/components/permissions";
 import { SplitSheet } from "@/components/splits/split-sheet";
 import { DataBoundary } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
@@ -99,13 +100,12 @@ export default function SplitsPage() {
       title="Splits"
       subtitle="Shared expenses and who still owes whom."
       actions={
-        <PermissionButton
+        <HeaderAddButton
+          label="New split"
           permission={PERMISSIONS.SPLITS_CREATE}
           deniedMessage="Your household role cannot create splits."
           onClick={sheet.onOpen}
-        >
-          New split
-        </PermissionButton>
+        />
       }
     >
       {content}

@@ -305,3 +305,33 @@ describe("overlays are bottom drawers on mobile (components/ui/README.md)", () =
     expect([...RAW_DIALOG].filter((path) => !found.includes(path))).toEqual([]);
   });
 });
+
+describe("page header standard (components/finance/README.md)", () => {
+  const pages = () =>
+    sourceFiles(join(ROOT, "app/(app)"))
+      .map((path) => relative(ROOT, path))
+      .filter((path) => path.endsWith("page.tsx"));
+
+  /** Pages whose header actions are not buttons yet (a period toggle, a menu). Only shrinks. */
+  const HAND_BUILT_ACTIONS = new Set([
+    "app/(app)/accounts/[id]/page.tsx",
+    "app/(app)/bills/[id]/page.tsx",
+    "app/(app)/transactions/page.tsx",
+  ]);
+
+  it("header actions are HeaderAddButton / HeaderButton, never a hand-built Button", () => {
+    const bad = pages().filter((path) => {
+      if (HAND_BUILT_ACTIONS.has(path)) return false;
+      const source = readFileSync(join(ROOT, path), "utf8");
+      const start = source.indexOf("actions={");
+      if (start === -1) return false;
+      const block = source.slice(start, start + 1500).split(/\n {4}>\n/u)[0] ?? "";
+      return /<(Permission)?Button\b/u.test(block);
+    });
+    expect(bad).toEqual([]);
+  });
+
+  it("the old month pickers are gone", () => {
+    expect(offenders(/MonthPresetButton|MonthPicker\b|MonthSelector\b|PageAddButton/u)).toEqual([]);
+  });
+});

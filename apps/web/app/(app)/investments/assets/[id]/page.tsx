@@ -1,10 +1,11 @@
 "use client";
 
+import { PencilEdit02Icon, Tag01Icon } from "@hugeicons/core-free-icons";
 import { useParams } from "next/navigation";
 import * as React from "react";
-
 import { VerticalBarChart } from "@/components/charts";
 import { AmountDisplay, AssetDisplay } from "@/components/display";
+import { HeaderAddButton, HeaderButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { AssetPriceChart } from "@/components/investments/asset-price-chart";
 import { EventsTable } from "@/components/investments/events-table";
@@ -94,25 +95,25 @@ export default function AssetDetailPage() {
       }
       back={{ href: "/investments/holdings", label: "Holdings" }}
       actions={
-        <div className="flex items-center gap-2">
-          <PermissionButton
+        <>
+          <HeaderButton
+            label="Set price"
+            icon={Tag01Icon}
             permission={PERMISSIONS.INVESTMENTS_WRITE}
-            variant="outline"
             onClick={priceSheet.onOpen}
-          >
-            Set price
-          </PermissionButton>
-          <PermissionButton
+          />
+          <HeaderButton
+            label="Edit"
+            icon={PencilEdit02Icon}
             permission={PERMISSIONS.INVESTMENTS_WRITE}
-            variant="outline"
             onClick={editSheet.onOpen}
-          >
-            Edit
-          </PermissionButton>
-          <PermissionButton permission={PERMISSIONS.INVESTMENTS_WRITE} onClick={eventSheet.onOpen}>
-            New transaction
-          </PermissionButton>
-        </div>
+          />
+          <HeaderAddButton
+            label="New transaction"
+            permission={PERMISSIONS.INVESTMENTS_WRITE}
+            onClick={eventSheet.onOpen}
+          />
+        </>
       }
     >
       {position ? (

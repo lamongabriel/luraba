@@ -1,10 +1,10 @@
 "use client";
 
-import { Add01Icon, Delete02Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { Delete02Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { Portfolio } from "@luraba/contracts";
 import type * as React from "react";
-
+import { HeaderAddButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { AccountCard } from "@/components/investments/account-card";
 import { ConfirmDeleteModal } from "@/components/investments/confirm-delete-modal";
@@ -60,13 +60,11 @@ export default function InvestmentAccountsPage() {
       title="Investment accounts"
       subtitle="Brokerages and banks that hold your investments, with cash in each currency."
       actions={
-        <PermissionButton
+        <HeaderAddButton
+          label="New account"
           permission={PERMISSIONS.INVESTMENTS_WRITE}
           onClick={() => accountSheet.onCreate()}
-        >
-          <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
-          New account
-        </PermissionButton>
+        />
       }
     >
       {content}

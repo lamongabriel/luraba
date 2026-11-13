@@ -1,7 +1,6 @@
 "use client";
 
-import { Add01Icon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { Wallet01Icon } from "@hugeicons/core-free-icons";
 import type { InvestmentEvent, InvestmentEventType } from "@luraba/contracts";
 import { INVESTMENT_EVENT_TYPES } from "@luraba/contracts";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -9,13 +8,14 @@ import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import type * as React from "react";
 
 import { getInvestmentEventTypeLabel } from "@/components/display";
+import { HeaderAddButton, HeaderButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { ConfirmDeleteModal } from "@/components/investments/confirm-delete-modal";
 import { EventsTable } from "@/components/investments/events-table";
 import { CashMovementSheet } from "@/components/investments/forms/cash-movement-sheet";
 import { EventSheet } from "@/components/investments/forms/event-sheet";
 import { PaginationBar } from "@/components/investments/pagination-bar";
-import { PERMISSIONS, PermissionButton } from "@/components/permissions";
+import { PERMISSIONS } from "@/components/permissions";
 import {
   Select,
   SelectContent,
@@ -99,22 +99,19 @@ export default function InvestmentTransactionsPage() {
       title="Transactions"
       subtitle="Every buy, sale, income payment and corporate action in your ledger."
       actions={
-        <div className="flex items-center gap-2">
-          <PermissionButton
+        <>
+          <HeaderButton
+            label="Cash movement"
+            icon={Wallet01Icon}
             permission={PERMISSIONS.INVESTMENTS_WRITE}
-            variant="outline"
             onClick={() => cashSheet.onOpen()}
-          >
-            Cash movement
-          </PermissionButton>
-          <PermissionButton
+          />
+          <HeaderAddButton
+            label="New transaction"
             permission={PERMISSIONS.INVESTMENTS_WRITE}
             onClick={() => sheet.onCreate()}
-          >
-            <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
-            New transaction
-          </PermissionButton>
-        </div>
+          />
+        </>
       }
     >
       <div className="flex flex-wrap items-center gap-3">

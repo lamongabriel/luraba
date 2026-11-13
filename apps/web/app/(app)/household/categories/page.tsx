@@ -15,6 +15,7 @@ import { DeleteCategoryModal } from "@/components/categories/delete-category-mod
 import { DataTableSearchInput } from "@/components/data-table/data-table-search-input";
 import { FilterBar, type FilterFieldDef } from "@/components/filters";
 import { useFilters } from "@/components/filters/use-filters";
+import { HeaderAddButton } from "@/components/finance/header-actions";
 import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
 import { PERMISSIONS, PermissionButton, useCan } from "@/components/permissions";
 import { SectionCard } from "@/components/section/section-card";
@@ -317,13 +318,12 @@ export default function CategoriesPage() {
       title="Categories"
       description="Group your spending and income to see where money goes."
       actions={
-        <PermissionButton
+        <HeaderAddButton
+          label="Add category"
           permission={PERMISSIONS.CATEGORIES_CREATE}
           deniedMessage="Your household role cannot create categories."
           onClick={createEdit.onCreate}
-        >
-          Add category
-        </PermissionButton>
+        />
       }
     >
       <ItemReveal>

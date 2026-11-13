@@ -7,6 +7,7 @@ import Link from "next/link";
 import * as React from "react";
 import { AccountSheet } from "@/components/accounts/account-sheet";
 import { AccountDisplay, AmountDisplay } from "@/components/display";
+import { HeaderAddButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { ItemReveal, SectionReveal } from "@/components/motion/reveal";
 import { PERMISSIONS, PermissionButton } from "@/components/permissions";
@@ -146,13 +147,12 @@ export default function AccountsPage() {
       title="Accounts"
       subtitle="Everything you hold and owe, with balances in one place."
       actions={
-        <PermissionButton
+        <HeaderAddButton
+          label="Add account"
           permission={PERMISSIONS.ACCOUNTS_CREATE}
           deniedMessage="Your household role cannot create accounts."
           onClick={() => setIsCreateSheetOpen(true)}
-        >
-          Add account
-        </PermissionButton>
+        />
       }
     >
       <AccountSheet
