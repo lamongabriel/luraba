@@ -15,7 +15,9 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 - Budgets, Goals and Bills redesigned as separate pages, `/plan` removed (branch `claude/zealous-swirles-5c8a10`, merged as `593390c`). Checked by the session in dark mode only. Conflict in `finance/page-header.tsx` resolved by keeping both `mobileActions` (transactions) and `inlineActions` (budgets/bills).
 
 ## In progress (worker sessions, not merged yet)
-- none running.
+- Fix round 1 (owner tested `redesign` and rejected the look; earlier sessions did not port Nexus):
+  - Session tx-filters-fix: Transactions page, ReUI filters (icons, operators, Filter button separate from Actions), short date chip, breakpoints, mobile filter/date drawers with fixed footer, create-transaction drawer (fixed header/footer, no horizontal scroll), shared drawer wrapper.
+  - Session shared-ui-cards-pages: one shared PageHeader with right-aligned action standard and inline KPI slot, one shared month select, credit cards using the real card faces with working snap carousel, budgets (new allocation visual, copy-last-month inside Add budget), goals (inline KPIs), bills consistency.
 - Budgets, Goals and Bills pages (session budgets-goals-bills, running): split `/plan` back into separate Budgets and Goals pages, redesign Bills.
 
 ## Next
