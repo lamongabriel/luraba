@@ -12,3 +12,7 @@
 .claude/
 .cyboflow/worktrees/
 worktrees/
+
+# Database dumps (may hold production data)
+*.dump
+*.sql.gz

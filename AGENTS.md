@@ -87,6 +87,7 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | Importing statements (OFX/CSV) or exporting data | [apps/api/src/modules/imports/README.md](apps/api/src/modules/imports/README.md), [apps/api/src/modules/exports/README.md](apps/api/src/modules/exports/README.md), [apps/web/components/imports/README.md](apps/web/components/imports/README.md) |
 | API keys (create/use/revoke, how a key authenticates) | [docs/api-keys-mcp/api-keys.md](docs/api-keys-mcp/api-keys.md), [apps/api/src/modules/api-keys/README.md](apps/api/src/modules/api-keys/README.md) |
 | The MCP server for AI agents (tools, setup, OAuth, Settings > MCP, adding a tool) | [apps/mcp/README.md](apps/mcp/README.md), [docs/api-keys-mcp/mcp.md](docs/api-keys-mcp/mcp.md), [apps/api/src/modules/mcp/README.md](apps/api/src/modules/mcp/README.md) |
+| Local dev runner, database studio, loading a production dump | [docs/dev-runner.md](docs/dev-runner.md) |
 | Deployment (Compose, Coolify) | [docs/deployment.md](docs/deployment.md), [docs/coolify.md](docs/coolify.md) |
 
 ## Rules that always apply
@@ -156,11 +157,17 @@ add its README in the same change, and update the READMEs you rely on if the rul
 
 ## Commands
 
-```sh
-pnpm dev                     # db + redis + minio, migrations, then api/web/worker watchers
-pnpm typecheck               # whole workspace
-pnpm check                   # biome (lint + format)
-pnpm fix                     # biome --write
-pnpm test                    # unit + API integration tests
-pnpm --filter @luraba/api test:integration src/modules/<module>
-```
+Local dev goes through `scripts/dev.sh` ([docs/dev-runner.md](docs/dev-runner.md)); never restart the
+database containers by hand.
+
+| Command | Use |
+| --- | --- |
+| `pnpm dev` / `pnpm dev:light` | db + redis + minio, migrations, then api/web/worker/mcp watchers (`--light`: api + web). Email and web push are blanked in dev. |
+| `pnpm dev:stop` / `pnpm dev:doctor` | stop a run or clean up after a crash / diagnose Docker, ports, containers |
+| `pnpm db:migrate` / `pnpm db:reset` / `pnpm db:studio` | migrate / recreate `luraba_db` (never the `luraba_db_test*` ones) / Drizzle Studio |
+| `pnpm db:restore <file>` | load a prod dump into `luraba_db` (old one kept as `luraba_db_pre_restore`); real data, see the doc |
+| `./scripts/dev.sh generate <name>` | scaffold the next hand-written migration + `_journal.json` entry |
+| `pnpm typecheck` / `pnpm check` / `pnpm fix` | whole-workspace typecheck / biome / biome --write |
+| `pnpm test` | unit + API integration tests |
+| `pnpm --filter @luraba/api test:integration src/modules/<module>` | one API module |
+| `pnpm test:dev-sh` | tests for the dev runner helpers |
