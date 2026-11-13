@@ -1,11 +1,13 @@
 import {
   budgetsEndpoints,
   creditCardsEndpoints,
+  fxEndpoints,
   goalsEndpoints,
   transactionsEndpoints,
 } from "@luraba/contracts";
 import { z } from "zod";
 import { fetchAllPages, PAGE_SIZE } from "../client/fetch-all.js";
+import { combineWith, presentCombined, presentFx } from "../format/combined.js";
 import { toMoney } from "../format/money.js";
 import { monthKey, periodInput, periodRange } from "../format/period.js";
 import { loadNameMaps, summarizeRow } from "../format/transactions.js";
@@ -153,7 +155,7 @@ export const reportBalances = defineTool({
   name: "report_balances",
   title: "Account balances and net worth",
   description:
-    "Balances of all accounts grouped by account type, and net worth per currency (assets minus liabilities; currencies are never mixed). Use search to answer 'how much do I have in <bank>'.",
+    "Balances of all accounts grouped by account type, and net worth (assets minus liabilities): `combinedNetWorth` is ONE number in the household base currency (other currencies converted at the latest rate, see `fx`; null when a rate is missing) and `netWorth` keeps the per-currency amounts. Use search to answer 'how much do I have in <bank>'.",
   input: z.object({
     search: z.string().optional().describe("Only accounts whose name or bank contains this."),
   }),
@@ -176,9 +178,17 @@ export const reportBalances = defineTool({
         account.classification === "asset" ? account.balance : -Math.abs(account.balance);
       net.set(account.currencyCode, (net.get(account.currencyCode) ?? 0) + signed);
     }
+    const fx = await context.client.request(fxEndpoints.rates, {
+      query: { currencies: [...net.keys()] },
+    });
+    const combinedNet = combineWith(fx, Object.fromEntries(net));
     return {
-      summary: `${accounts.length} account(s) counted.`,
+      summary: `${accounts.length} account(s) counted.${
+        combinedNet.total ? ` Net worth about ${combinedNet.total.formatted}.` : ""
+      }`,
       data: {
+        combinedNetWorth: combinedNet,
+        fx: presentFx(fx),
         accounts: accounts.map((a) => ({
           name: a.name,
           institution: a.institutionName,
@@ -188,9 +198,10 @@ export const reportBalances = defineTool({
         byType: [...byType.entries()].map(([type, amounts]) => ({
           type,
           totals: [...amounts.entries()].map(([code, value]) => toMoney(value, code)),
+          combined: combineWith(fx, Object.fromEntries(amounts)),
         })),
         netWorth: [...net.entries()].map(([code, value]) => toMoney(value, code)),
-        note: "Net worth = asset balances minus liability balances, per currency.",
+        note: "Net worth = asset balances minus liability balances. `combinedNetWorth` converts every currency to the base currency; `netWorth` is per currency.",
       },
     };
   },
@@ -200,7 +211,7 @@ export const reportCreditCards = defineTool({
   name: "report_credit_cards",
   title: "Credit card status",
   description:
-    "How many credit cards there are, and for a month (default current) each card's invoice due that month: amount, paid, still owed, due date and status, plus totals per currency and the next due dates. Answers 'how much do I owe on my cards this month'.",
+    "How many credit cards there are, and for a month (default current) each card's invoice due that month: amount, paid, still owed, due date and status, plus totals (`combined` is ONE number per figure in the household base currency at the latest rate, see `fx`; `totals` keeps each currency) and the next due dates. Answers 'how much do I owe on my cards this month'.",
   input: z.object({
     month: z
       .string()
@@ -210,9 +221,8 @@ export const reportCreditCards = defineTool({
   }),
   annotations: READ_ONLY,
   async handler(context, { month }) {
-    const today = await context.refs.today();
     const overview = await context.client.request(creditCardsEndpoints.overview, {
-      query: { month: month ?? monthKey(today) },
+      query: { month: month ?? monthKey(await context.refs.today()) },
     });
     const cards = overview.cards.map((card) => ({
       name: card.name,
@@ -243,6 +253,17 @@ export const reportCreditCards = defineTool({
         month: overview.month,
         cardCount: cards.length,
         cards,
+        combined: {
+          invoices: presentCombined(overview.combined.invoiceAmount, overview.combined.fx),
+          paid: presentCombined(overview.combined.invoicePaidAmount, overview.combined.fx),
+          owedThisMonth: presentCombined(
+            overview.combined.invoiceRemainingAmount,
+            overview.combined.fx,
+          ),
+          creditLimit: presentCombined(overview.combined.limitTotal, overview.combined.fx),
+          availableCredit: presentCombined(overview.combined.limitAvailable, overview.combined.fx),
+        },
+        fx: presentFx(overview.combined.fx),
         totals: overview.totals.map((t) => ({
           currency: t.currencyCode,
           invoices: toMoney(t.invoiceAmount, t.currencyCode),

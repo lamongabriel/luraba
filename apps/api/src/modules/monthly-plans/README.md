@@ -61,8 +61,10 @@ Tests build exactly this (`__tests__/monthly-plan.http.test.ts`). In production,
 `safe-to-spend.service.ts` answers "how much can I still spend?" for the **Budgets & goals** page and the MCP tool
 `report_safe_to_spend`. It reuses the other modules' services (`getGoalsReport`, `getMonthlyPlanReport`,
 `listCyclesThroughMonth`, `billsRepository.listUpcomingOccurrences`, `listAccounts`, `getMonthlyBudget`); it has no
-SQL and no parallel maths. Permission `goals.read`. The response is one block per **currency**, never converted or
-mixed: a currency exists when an account, bill, goal or invoice is in it.
+SQL and no parallel maths. Permission `goals.read`. `currencies[]` is one block per **currency**, each in its own
+currency and never mixed: a currency exists when an account, bill, goal or invoice is in it. `combined` adds the two
+headline figures (`leftToSpend`, and `leftForCard` for the currencies that have a plan, `null` when none does) converted
+into the household base currency by the [fx module](../fx/README.md), with the rates used and the per-currency amounts.
 
 **This month, in cash** (`thisMonth`):
 

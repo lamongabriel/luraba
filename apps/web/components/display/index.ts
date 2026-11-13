@@ -23,6 +23,12 @@ export {
   TimeZoneSelect,
   TimeZoneSelectControl,
 } from "./catalog-selects";
+export {
+  CombinedAmountDisplay,
+  CombinedHint,
+  combinedNote,
+  isMixedCombined,
+} from "./combined-amount";
 export * from "./constants";
 export { CreditCardDisplay, type CreditCardDisplayInput } from "./credit-card-display";
 export { CurrencyDisplay, CurrencyLabel, StaticCurrencyDisplay } from "./currency-display";

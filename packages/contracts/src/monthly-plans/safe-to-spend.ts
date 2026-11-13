@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { currencyCodeSchema } from "../common.js";
+import { combinedAmountSchema, combinedFxSchema } from "../fx/resource.js";
 import { monthKeySchema } from "../goals/requests.js";
 
 export const safeToSpendQuerySchema = z.object({
@@ -95,8 +96,15 @@ export const safeToSpendSchema = z.object({
   month: z.string(),
   nextMonth: z.string(),
   today: z.iso.date(),
-  /** One block per currency; amounts are never converted across them. */
+  /** One block per currency, in its own currency. */
   currencies: z.array(safeToSpendCurrencySchema),
+  /** The headline figures converted into the household base currency, with the rates used. */
+  combined: z.object({
+    fx: combinedFxSchema,
+    leftToSpend: combinedAmountSchema,
+    /** `null` when no currency has a monthly plan for next month. */
+    leftForCard: combinedAmountSchema.nullable(),
+  }),
   /** Guidance only: budgets do not enter the left-to-spend maths. Amounts are in `budgetCurrencyCode`. */
   budgets: z.object({
     currencyCode: z.string(),

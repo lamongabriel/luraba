@@ -9,6 +9,7 @@ import {
   sumLimitBreakdowns,
 } from "@luraba/domain";
 import type { HouseholdContext } from "@/config/permissions";
+import { buildCombinedFx, combineAmounts } from "@/modules/fx/fx-combine.service";
 import { listCyclesThroughMonth } from "./credit-card-cycles.service";
 import * as creditCardsRepository from "./credit-cards.repository";
 import type {
@@ -39,7 +40,8 @@ function pickInvoiceForMonth(cycles: CreditCardCycleSummary[], monthKey: string)
 
 /**
  * Month view across every card of the household: the invoice due in the month and the limit each
- * card has used (closed invoice, open invoice, future installments). Totals are per currency.
+ * card has used (closed invoice, open invoice, future installments). `totals` are per currency in the
+ * cards' own currency; `combined` converts them to the household base currency.
  */
 export async function getOverview(
   context: HouseholdContext,
@@ -99,5 +101,45 @@ export async function getOverview(
     };
   });
 
-  return { month: monthKey, cards: overviewCards, totals };
+  // The same figures in the household base currency (one conversion, rounded once).
+  const fx = await buildCombinedFx(
+    context,
+    totals.map((total) => total.currencyCode),
+  );
+  const byCurrency = (pick: (total: (typeof totals)[number]) => number | null) =>
+    Object.fromEntries(
+      totals.flatMap((total) => {
+        const value = pick(total);
+        return value === null ? [] : [[total.currencyCode, value]];
+      }),
+    );
+
+  return {
+    month: monthKey,
+    cards: overviewCards,
+    totals,
+    combined: {
+      fx,
+      invoiceAmount: combineAmounts(
+        fx,
+        byCurrency((total) => total.invoiceAmount),
+      ),
+      invoicePaidAmount: combineAmounts(
+        fx,
+        byCurrency((total) => total.invoicePaidAmount),
+      ),
+      invoiceRemainingAmount: combineAmounts(
+        fx,
+        byCurrency((total) => total.invoiceRemainingAmount),
+      ),
+      limitTotal: combineAmounts(
+        fx,
+        byCurrency((total) => total.limit.limit),
+      ),
+      limitAvailable: combineAmounts(
+        fx,
+        byCurrency((total) => total.limit.available),
+      ),
+    },
+  };
 }

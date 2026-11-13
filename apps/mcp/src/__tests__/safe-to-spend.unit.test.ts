@@ -39,6 +39,36 @@ async function setup() {
           nextMonth: "2026-12",
           today: "2026-11-12",
           currencies: [group("BRL", 300_000, null), group("USD", 100_000, 50_000)],
+          combined: {
+            fx: {
+              baseCurrencyCode: "USD",
+              basePrecision: 2,
+              asOf: "2026-11-12",
+              rates: [
+                {
+                  currencyCode: "BRL",
+                  rateNumerator: 1,
+                  rateDenominator: 5,
+                  precision: 2,
+                  rate: 0.2,
+                  rateDate: "2026-11-12",
+                  source: "frankfurter",
+                },
+              ],
+              missingCurrencies: [],
+            },
+            leftToSpend: {
+              total: 160_000,
+              byCurrency: [
+                { currencyCode: "BRL", amount: 300_000 },
+                { currencyCode: "USD", amount: 100_000 },
+              ],
+            },
+            leftForCard: {
+              total: 50_000,
+              byCurrency: [{ currencyCode: "USD", amount: 50_000 }],
+            },
+          },
           budgets: { currencyCode: "USD", overspent: [] },
         }
       : [];
@@ -86,6 +116,24 @@ describe("report_safe_to_spend", () => {
     expect(brl.nextMonthCard.leftForCardSpending).toBeNull();
     expect(brl.whatIf.leftToSpendAfter.amount).toBe(2950);
     expect(brl.whatIf.compromises).toBe(false);
+    await close();
+  });
+
+  it("adds one combined number in the base currency with the rate used", async () => {
+    const { call, close } = await setup();
+    const result = await call("report_safe_to_spend", {});
+    expect(result.data.combined.leftToSpend.total.amount).toBe(1600);
+    expect(result.data.combined.leftToSpend.total.currency).toBe("USD");
+    expect(result.data.combined.leftToSpend.byCurrency).toHaveLength(2);
+    expect(result.data.combined.leftForCard.total.amount).toBe(500);
+    expect(result.data.combined.fx.baseCurrency).toBe("USD");
+    expect(result.data.combined.fx.ratesUsed[0]).toMatchObject({
+      from: "BRL",
+      to: "USD",
+      rate: 0.2,
+      source: "frankfurter",
+    });
+    expect(result.text).toContain("combined");
     await close();
   });
 });

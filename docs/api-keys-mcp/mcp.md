@@ -34,7 +34,7 @@
   `contribute_to_goal` (a transfer plus progress; other currencies store the FX rate used), `move_goal_funds`
   (progress unchanged), `withdraw_from_goal` (pays an expense or returns money to an account), `set_monthly_plan`
   (projected lines for a month or range), `report_safe_to_spend` (how much can I still spend this month in cash and
-  next month on the card, per currency; optional what-if `purchaseAmount` with `via` cash or card) and `report_monthly_plan` (projected vs actual per line: ask "how am I
+  next month on the card, one combined number in the base currency plus per currency; optional what-if `purchaseAmount` with `via` cash or card) and `report_monthly_plan` (projected vs actual per line: ask "how am I
   doing vs plan this month?"). Months are competency months: salary received on or after the 16th counts for the
   next month, or set `competencyMonth` on a transaction. Goals are not tied to an account; `report_goals` shows
   planned vs contributed this month, total progress, on-track and where each goal's money sits. To seed the
@@ -57,7 +57,7 @@
 - **Reference data**: `whoami`, `list_households`, `list_accounts`, `list_credit_cards`, and list/create/update for
   categories, merchants and tags.
 - **Reports**: `report_spending` (by category, merchant or tag), `report_income_expense`, `report_balances` (accounts
-  and net worth per currency), `report_credit_cards` (card count, what is owed this month, due dates), `report_budget`,
+  and net worth: `combinedNetWorth` in the household base currency plus per currency), `report_credit_cards` (card count, what is owed this month, due dates; `combined` in the base currency plus `totals` per currency), `report_budget`,
   `report_goals`, `report_top_expenses`.
 - **Resources**: `luraba://guide/overview` and `luraba://guide/transactions`.
 

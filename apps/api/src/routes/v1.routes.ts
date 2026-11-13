@@ -8,6 +8,7 @@ import {
   creditCardsEndpoints,
   currenciesEndpoints,
   exportsEndpoints,
+  fxEndpoints,
   getEndpointBasePath,
   goalsEndpoints,
   householdsEndpoints,
@@ -38,6 +39,7 @@ import categoriesRouter from "@/modules/categories/categories.routes";
 import creditCardsRouter from "@/modules/credit-cards/credit-cards.routes";
 import currenciesRouter from "@/modules/currencies/currencies.routes";
 import exportsRouter from "@/modules/exports/exports.routes";
+import fxRouter from "@/modules/fx/fx.routes";
 import goalsRouter from "@/modules/goals/goals.routes";
 import householdsRouter from "@/modules/households/households.routes";
 import importsRouter from "@/modules/imports/imports.routes";
@@ -62,6 +64,7 @@ router.use(getEndpointBasePath(authEndpoints.me), authRouter);
 router.use(getEndpointBasePath(apiKeysEndpoints.list), apiKeysRouter);
 router.use(getEndpointBasePath(mcpEndpoints.info), mcpRouter);
 router.use(getEndpointBasePath(currenciesEndpoints.list), currenciesRouter);
+router.use(getEndpointBasePath(fxEndpoints.rates), fxRouter);
 router.use(getEndpointBasePath(householdsEndpoints.list), householdsRouter);
 router.use(getEndpointBasePath(integrationsEndpoints.list), integrationsRouter);
 router.use(getEndpointBasePath(accountsEndpoints.list), accountsRouter);

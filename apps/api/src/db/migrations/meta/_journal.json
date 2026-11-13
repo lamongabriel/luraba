@@ -393,6 +393,13 @@
       "when": 1790400600000,
       "tag": "0055_transaction_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1790487000000,
+      "tag": "0056_fx_overrides",
+      "breakpoints": true
     }
   ]
 }

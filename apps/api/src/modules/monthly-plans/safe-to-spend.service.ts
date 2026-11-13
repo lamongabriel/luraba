@@ -19,6 +19,7 @@ import { billsRepository } from "@/modules/bills/bills.repository";
 import { getMonthlyBudget } from "@/modules/budgets/budgets.service";
 import { listCyclesThroughMonth } from "@/modules/credit-cards/credit-card-cycles.service";
 import * as creditCardsRepository from "@/modules/credit-cards/credit-cards.repository";
+import { buildCombinedFx, combineAmounts } from "@/modules/fx/fx-combine.service";
 import { getGoalsReport } from "@/modules/goals/goals.service";
 import { getMonthlyPlanReport } from "./monthly-plans.service";
 
@@ -64,7 +65,8 @@ const emptyGroup = (currencyCode: string): Group => ({
 });
 
 /**
- * How much can still be spent, per currency, never mixed. See the module README for the formulas:
+ * How much can still be spent, per currency in each currency's own units, plus `combined` totals in the
+ * household base currency. See the module README for the formulas:
  * - this month, cash: spendable balance - unpaid bills - goal contributions still owed - unpaid card
  *   invoices due;
  * - next month, card: projected income (salary - taxes of the monthly plan) - bills - goal
@@ -221,11 +223,37 @@ export async function getSafeToSpend(
   }
 
   const budget = await getMonthlyBudget(context, parseMonthKey(month));
+  const currencies = [...groups.values()].sort((a, b) =>
+    a.currencyCode.localeCompare(b.currencyCode),
+  );
+  const fx = await buildCombinedFx(
+    context,
+    currencies.map((item) => item.currencyCode),
+  );
+  const withCard = currencies.filter((item) => item.nextMonth.leftForCard !== null);
   return {
     month,
     nextMonth,
     today,
-    currencies: [...groups.values()].sort((a, b) => a.currencyCode.localeCompare(b.currencyCode)),
+    currencies,
+    combined: {
+      fx,
+      leftToSpend: combineAmounts(
+        fx,
+        Object.fromEntries(
+          currencies.map((item) => [item.currencyCode, item.thisMonth.leftToSpend]),
+        ),
+      ),
+      leftForCard:
+        withCard.length === 0
+          ? null
+          : combineAmounts(
+              fx,
+              Object.fromEntries(
+                withCard.map((item) => [item.currencyCode, item.nextMonth.leftForCard ?? 0]),
+              ),
+            ),
+    },
     budgets: {
       currencyCode: budget.displayCurrencyCode,
       overspent: budget.categories.expense

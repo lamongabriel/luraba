@@ -2,6 +2,7 @@ export * from "./bills.js";
 export * from "./classification.js";
 export * from "./credit-cards.js";
 export * from "./date.js";
+export * from "./fx.js";
 export * from "./goals.js";
 export * from "./investments/index.js";
 export * from "./loans.js";

@@ -7,6 +7,7 @@ import type { CreatePaymentMethodInput } from "@luraba/contracts/payment-methods
 import type { CreateTagInput } from "@luraba/contracts/tags";
 import { accountsTable } from "@luraba/db/schemas/accounts.schema";
 import { entriesTable } from "@luraba/db/schemas/entries.schema";
+import { exchangeRatesTable } from "@luraba/db/schemas/exchange-rates.schema";
 import { householdMembersTable, householdsTable } from "@luraba/db/schemas/households.schema";
 import { ledgerAccountsTable } from "@luraba/db/schemas/ledger-accounts.schema";
 import { transactionsTable } from "@luraba/db/schemas/transactions.schema";
@@ -285,4 +286,25 @@ export async function findAccountRecord(accountId: string) {
     .where(eq(accountsTable.id, accountId))
     .limit(1);
   return rows[0];
+}
+
+/** Stores a market rate (1 `from` = `rate` `to`, as a fraction) for a day, so no provider is called. */
+export async function seedExchangeRate(
+  from: string,
+  to: string,
+  rateNumerator: number,
+  rateDenominator: number,
+  rateDate: string,
+): Promise<void> {
+  await db
+    .insert(exchangeRatesTable)
+    .values({
+      provider: "frankfurter",
+      fromCurrencyId: from,
+      toCurrencyId: to,
+      rateNumerator,
+      rateDenominator,
+      rateDate,
+    })
+    .onConflictDoNothing();
 }

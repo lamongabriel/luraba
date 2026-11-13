@@ -12,6 +12,7 @@ import { HouseholdMark, MemberDisplay } from "@/components/display";
 import { ErrorState } from "@/components/error-state";
 import { InfoItem } from "@/components/finance/info-item";
 import { HouseholdDeleteDialog } from "@/components/households/household-delete-dialog";
+import { HouseholdFxRates } from "@/components/households/household-fx-rates";
 import { HouseholdSettingsSheet } from "@/components/households/household-settings-sheet";
 import { useCan } from "@/components/permissions/use-can";
 import { SectionCard, SectionFields } from "@/components/section/section-card";
@@ -163,10 +164,10 @@ export function HouseholdProfile() {
       </SectionCard>
       <SectionCard
         title="Preferences"
-        description="Currency, location and how budgets count credit card spending."
+        description="Currency (also the base for totals that mix currencies), location and how budgets count credit card spending."
       >
         <SectionFields>
-          <InfoItem label="Default currency" value={household.defaultCurrencyId} />
+          <InfoItem label="Default and base currency" value={household.defaultCurrencyId} />
           <InfoItem label="Country" value={countryName} />
           <InfoItem label="Time zone" value={formatTimezoneLabel(household.timezone)} />
           <InfoItem label="Budget month starts on" value={`Day ${household.budgetMonthStartsOn}`} />
@@ -174,6 +175,7 @@ export function HouseholdProfile() {
           <InfoItem label="Installments count as" value={installmentLabel} />
         </SectionFields>
       </SectionCard>
+      <HouseholdFxRates baseCurrencyCode={household.defaultCurrencyId} />
       <SectionCard title="About" description="When this household was created and by whom.">
         <SectionFields>
           <InfoItem label="Created" value={formatDate(household.createdAt)} />

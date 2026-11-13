@@ -1,5 +1,6 @@
 import { monthlyPlansEndpoints, type SafeToSpendCurrency } from "@luraba/contracts";
 import { z } from "zod";
+import { presentCombined, presentFx } from "../format/combined.js";
 import { majorToMinor, toMoney } from "../format/money.js";
 import { defineTool, READ_ONLY, type ToolOutput } from "./types.js";
 
@@ -73,7 +74,7 @@ export const reportSafeToSpend = defineTool({
   name: "report_safe_to_spend",
   title: "How much can I still spend?",
   description:
-    'Answers "how much can I still spend this month, and can I afford this purchase?". Per currency (never mixed): (1) THIS MONTH IN CASH = balance of spendable cash accounts (goal money set aside in piggy banks excluded) minus unpaid bills (including overdue) minus goal contributions still owed (planned minus contributed) minus unpaid card invoices due this month. (2) NEXT MONTH ON THE CARD = projected income from the monthly plan (salary minus taxes) minus bills due next month minus next month\'s goal contributions minus what is already charged on the invoices due next month; null when that currency has no monthly plan. Card purchases are paid next month, so a card purchase counts against (2), a cash/debit purchase against (1). Budgets do not enter the maths; overspent budgets are listed as guidance. Pass `purchaseAmount` (major units) with `via` to see the effect of a purchase. Defaults to the current month.',
+    'Answers "how much can I still spend this month, and can I afford this purchase?". Reported per currency, and as ONE combined number in the household base currency (`combined`, converted at the latest rate, see `fx`; null when a rate is missing): (1) THIS MONTH IN CASH = balance of spendable cash accounts (goal money set aside in piggy banks excluded) minus unpaid bills (including overdue) minus goal contributions still owed (planned minus contributed) minus unpaid card invoices due this month. (2) NEXT MONTH ON THE CARD = projected income from the monthly plan (salary minus taxes) minus bills due next month minus next month\'s goal contributions minus what is already charged on the invoices due next month; null when that currency has no monthly plan. Card purchases are paid next month, so a card purchase counts against (2), a cash/debit purchase against (1). Budgets do not enter the maths; overspent budgets are listed as guidance. Pass `purchaseAmount` (major units) with `via` to see the effect of a purchase. Defaults to the current month.',
   input: z.object({
     month: monthSchema.optional(),
     purchaseAmount: z
@@ -95,7 +96,10 @@ export const reportSafeToSpend = defineTool({
     });
     const wanted = args.currency?.toUpperCase();
     const groups = report.currencies.filter((group) => !wanted || group.currencyCode === wanted);
-    const purchaseCurrency = wanted ?? (await context.refs.defaultCurrency());
+    const purchaseCurrency =
+      args.purchaseAmount === undefined
+        ? undefined
+        : (wanted ?? (await context.refs.defaultCurrency()));
     const budgetCurrency = report.budgets.currencyCode;
     const presented = groups.map((group) =>
       present(
@@ -109,11 +113,22 @@ export const reportSafeToSpend = defineTool({
     const lead = presented[0];
     return {
       summary: lead
-        ? `Left to spend in ${report.month}: ${presented.map((p) => `${p.thisMonthCash.leftToSpend.formatted} cash`).join(", ")}.`
+        ? `Left to spend in ${report.month}: ${
+            report.combined.leftToSpend.total === null
+              ? ""
+              : `${toMoney(report.combined.leftToSpend.total, report.combined.fx.baseCurrencyCode).formatted} combined (`
+          }${presented.map((p) => `${p.thisMonthCash.leftToSpend.formatted} cash`).join(", ")}${report.combined.leftToSpend.total === null ? "" : ")"}.`
         : `Nothing to report for ${report.month}.`,
       data: {
         month: report.month,
         nextMonth: report.nextMonth,
+        combined: {
+          leftToSpend: presentCombined(report.combined.leftToSpend, report.combined.fx),
+          leftForCard:
+            report.combined.leftForCard &&
+            presentCombined(report.combined.leftForCard, report.combined.fx),
+          fx: presentFx(report.combined.fx),
+        },
         currencies: presented,
         overspentBudgets: report.budgets.overspent.map((row) => ({
           category: row.categoryName,

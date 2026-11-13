@@ -2,7 +2,12 @@
 
 import type { SafeToSpend, SafeToSpendCurrency } from "@luraba/contracts";
 
-import { AmountDisplay, CurrencyDisplay } from "@/components/display";
+import {
+  AmountDisplay,
+  CombinedAmountDisplay,
+  CurrencyDisplay,
+  combinedNote,
+} from "@/components/display";
 import { KpiCard, KpiGrid, KpiGridSkeleton } from "@/components/kpi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Typography } from "@/components/ui/typography";
@@ -72,44 +77,6 @@ function CurrencyBlock({
   return (
     <div className="space-y-5">
       <CurrencyDisplay currencyCode={c} showName />
-      <KpiGrid columns={2}>
-        <KpiCard
-          title="Left to spend this month"
-          className={sign(t.leftToSpend)}
-          value={
-            <AmountDisplay
-              {...money}
-              amount={t.leftToSpend}
-              kind={t.leftToSpend < 0 ? "expense" : "neutral"}
-              showSign={t.leftToSpend < 0}
-              size="lg"
-            />
-          }
-          secondary="In cash, after bills, goals and card invoices due"
-        />
-        <KpiCard
-          title="Left for the card next month"
-          className={sign(n.leftForCard)}
-          value={
-            n.leftForCard === null ? (
-              <span className="text-muted-foreground">No plan</span>
-            ) : (
-              <AmountDisplay
-                {...money}
-                amount={n.leftForCard}
-                kind={n.leftForCard < 0 ? "expense" : "neutral"}
-                showSign={n.leftForCard < 0}
-                size="lg"
-              />
-            )
-          }
-          secondary={
-            n.leftForCard === null
-              ? `Set a monthly plan in ${c} to project next month`
-              : "Projected income minus what is already committed"
-          }
-        />
-      </KpiGrid>
       <div className={PLAN_BREAKDOWN_GRID}>
         <dl className="divide-y divide-border/60 border-y border-border/60">
           <BreakdownRow
@@ -131,6 +98,12 @@ function CurrencyBlock({
             amount={-t.invoicesDue}
             kind="expense"
           />
+          <BreakdownRow
+            {...money}
+            label="Left to spend"
+            amount={t.leftToSpend}
+            kind={t.leftToSpend < 0 ? "expense" : "neutral"}
+          />
         </dl>
         <dl className="divide-y divide-border/60 border-y border-border/60">
           <BreakdownRow
@@ -147,6 +120,12 @@ function CurrencyBlock({
             amount={-n.cardCharged}
             kind="expense"
           />
+          <BreakdownRow
+            {...money}
+            label="Left for the card"
+            amount={n.leftForCard}
+            kind={n.leftForCard !== null && n.leftForCard < 0 ? "expense" : "neutral"}
+          />
         </dl>
       </div>
       <WhatIf group={group} precision={precision} language={language} />
@@ -154,11 +133,58 @@ function CurrencyBlock({
   );
 }
 
-/** The headline of the page: what is left, per currency, for cash this month and the card next month. */
+function Headline({ data, language }: { data: SafeToSpend; language: string }) {
+  const { combined } = data;
+  const withNote = (amount: Parameters<typeof combinedNote>[0], text: string) => {
+    const note = combinedNote(amount, combined.fx, language);
+    return note ? `${note} · ${text}` : text;
+  };
+  const value = (amount: NonNullable<SafeToSpend["combined"]["leftForCard"]>) => (
+    <CombinedAmountDisplay
+      combined={amount}
+      fx={combined.fx}
+      language={language}
+      size="lg"
+      kind={amount.total !== null && amount.total < 0 ? "expense" : "neutral"}
+      showSign={amount.total !== null && amount.total < 0}
+    />
+  );
+  const card = combined.leftForCard;
+
+  return (
+    <KpiGrid columns={2}>
+      <KpiCard
+        title="Left to spend this month"
+        className={sign(combined.leftToSpend.total)}
+        value={value(combined.leftToSpend)}
+        secondary={withNote(
+          combined.leftToSpend,
+          "In cash, after bills, goals and card invoices due",
+        )}
+      />
+      <KpiCard
+        title="Left for the card next month"
+        className={sign(card?.total ?? null)}
+        value={card ? value(card) : <span className="text-muted-foreground">No plan</span>}
+        secondary={
+          card
+            ? withNote(card, "Projected income minus what is already committed")
+            : "Set a monthly plan to project next month"
+        }
+      />
+    </KpiGrid>
+  );
+}
+
+/**
+ * The headline of the page: ONE number in the household base currency for what is left in cash this
+ * month and for the card next month, then each currency's breakdown in its own currency.
+ */
 export function LeftToSpend({ data, language }: { data: SafeToSpend; language: string }) {
   const precisionOf = useCurrencyPrecision();
   return (
     <div className="space-y-10">
+      <Headline data={data} language={language} />
       {data.currencies.map((group) => (
         <CurrencyBlock
           key={group.currencyCode}
@@ -173,7 +199,7 @@ export function LeftToSpend({ data, language }: { data: SafeToSpend; language: s
 
 /** Loading twin of one `CurrencyBlock`: same heading, cards, breakdown rows and what-if line. */
 export function LeftToSpendSkeleton() {
-  const rows = Array.from({ length: 4 }, (_, index) => index);
+  const rows = Array.from({ length: 5 }, (_, index) => index);
   const list = (
     <div aria-hidden="true" className="divide-y divide-border/60 border-y border-border/60">
       {rows.map((row) => (
@@ -189,22 +215,24 @@ export function LeftToSpendSkeleton() {
   );
   return (
     <div
-      className="space-y-5"
+      className="space-y-10"
       role="status"
       aria-busy="true"
       aria-label="Loading what is left to spend"
     >
-      <Skeleton className="h-5 w-32" />
       <KpiGridSkeleton columns={2} withDescription label="Loading headline figures" />
-      <div className={PLAN_BREAKDOWN_GRID}>
-        {list}
-        {list}
-      </div>
-      <div className={PLAN_WHAT_IF_HEIGHT}>
-        <Skeleton className="h-9 w-80" />
-        <Typography variant="small-muted" className="sr-only">
-          Loading
-        </Typography>
+      <div className="space-y-5">
+        <Skeleton className="h-5 w-32" />
+        <div className={PLAN_BREAKDOWN_GRID}>
+          {list}
+          {list}
+        </div>
+        <div className={PLAN_WHAT_IF_HEIGHT}>
+          <Skeleton className="h-9 w-80" />
+          <Typography variant="small-muted" className="sr-only">
+            Loading
+          </Typography>
+        </div>
       </div>
     </div>
   );

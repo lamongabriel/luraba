@@ -103,9 +103,19 @@ and reached (a transfer in the ledger, neutral in spending), so one account can 
 goal knows where its money sits. The monthly plan (`monthly_plan_lines`) projects salary, taxes and each goal's
 contribution per competency month and is reported against actuals (`apps/api/src/modules/monthly-plans`).
 `GET /monthly-plans/safe-to-spend` combines the plan, goals, bills, card invoices and account balances into "how
-much can I still spend": per currency, this month in cash and next month on the card (budgets stay guidance). It is
+much can I still spend": one combined number in the household base currency plus a block per currency, this month in cash and next month on the card (budgets stay guidance). It is
 the headline of the **Budgets & goals** page (`/plan`, which replaces the separate Budgets and Goals pages) and of the
 MCP tool `report_safe_to_spend`.
+
+## Combined totals across currencies
+
+Amounts of different currencies are only ever added for **display totals**, through `buildCombinedFx` /
+`combineAmounts` in `apps/api/src/modules/fx` (and `combineMinorUnits` in `@luraba/domain` for lists a client totals itself):
+each currency is converted into the household base currency (`households.default_currency_id`) with the household's
+manual override (`household_fx_overrides`) or the latest stored/fetched market rate (`exchange_rates`, Frankfurter then
+Yahoo), summed exactly and rounded once. The response always keeps the per-currency amounts and the rates used; a
+missing rate yields a null total, never a guess. Stored data, per-card/per-account rows and ledgers stay in their own
+currency. See [the fx module README](../apps/api/src/modules/fx/README.md).
 
 ## Investments
 

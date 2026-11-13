@@ -1,5 +1,6 @@
 import { endOfMonth, parseMonthKey, shiftMonthKey } from "@luraba/domain";
 import type { HouseholdContext } from "@/config/permissions";
+import { buildCombinedFx, combineAmounts } from "@/modules/fx/fx-combine.service";
 import {
   type InsightInstallmentRow,
   listInstallmentsDueBetween,
@@ -65,8 +66,8 @@ export function buildInsightsGroup(
 }
 
 /**
- * Spending insights for the invoices due in a month, one group per currency (amounts in different
- * currencies are never added). Looks six months back and ahead for trends and commitments.
+ * Spending insights for the invoices due in a month, one group per currency in its own
+ * currency, plus `combined` totals in the household base currency. Looks six months back and ahead for trends and commitments.
  */
 export async function getInsights(
   context: HouseholdContext,
@@ -77,14 +78,28 @@ export async function getInsights(
   const rows = await listInstallmentsDueBetween(context.householdId, from, to);
   const currencies = [...new Set(rows.map((row) => row.currencyCode))].sort();
 
+  const groups = currencies.map((currencyCode) =>
+    buildInsightsGroup(
+      currencyCode,
+      rows.filter((row) => row.currencyCode === currencyCode),
+      query.month,
+    ),
+  );
+  const fx = await buildCombinedFx(context, currencies);
+
   return {
     month: query.month,
-    groups: currencies.map((currencyCode) =>
-      buildInsightsGroup(
-        currencyCode,
-        rows.filter((row) => row.currencyCode === currencyCode),
-        query.month,
+    groups,
+    combined: {
+      fx,
+      total: combineAmounts(
+        fx,
+        Object.fromEntries(groups.map((group) => [group.currencyCode, group.total])),
       ),
-    ),
+      previousTotal: combineAmounts(
+        fx,
+        Object.fromEntries(groups.map((group) => [group.currencyCode, group.previousTotal])),
+      ),
+    },
   };
 }

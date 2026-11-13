@@ -11,7 +11,8 @@ Split by aggregate: cycles, purchases and payments each have a service. Purchase
 `GET /credit-cards/overview?month=YYYY-MM` (`credit-card-overview.service.ts`) feeds the web overview. For each card it
 syncs cycles, extends them until one is due in the month (at most 24 months ahead), and returns the invoice **due in that
 month** plus the limit breakdown from `buildLimitBreakdown` (`@luraba/domain`): closed invoice, open invoice, future
-installments, available. Totals are grouped per currency. `GET .../cycles/:cycleId` also returns the `payments` applied to
+installments, available. `totals` are grouped per currency (cards' own currency) and `combined` converts them to the household base currency
+(see [fx](../fx/README.md)). `GET .../cycles/:cycleId` also returns the `payments` applied to
 that invoice.
 
 ## Insights
@@ -19,7 +20,7 @@ that invoice.
 `GET /credit-cards/insights?month=YYYY-MM` (`credit-card-insights.service.ts`, SQL in `credit-card-insights.repository.ts`)
 reads every installment on invoices due between six months before and six months after the month, then computes in
 `buildInsightsGroup` (pure, unit tested) one group per currency: total and previous-month total, spending by category, six
-months of invoice history and the installments committed to the next six invoices. "Month" always means the invoices
+months of invoice history and the installments committed to the next six invoices. `combined` holds the month's and last month's totals in the base currency. "Month" always means the invoices
 **due** in it, like the overview. (Top merchants, largest charges, per-card totals and subscription detection were removed
 because no page used them.)
 

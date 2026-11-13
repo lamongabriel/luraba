@@ -58,7 +58,6 @@ export default function CreditCardsPage() {
     [overview],
   );
 
-  const currencies = (overview?.totals ?? []).map((total) => total.currencyCode);
   const insightsStatus = insightsQuery.isError ? "error" : insightsQuery.data ? "ready" : "loading";
   const monthLabel = formatMonthKeyLabel(month ?? thisMonth, language);
 
@@ -75,19 +74,7 @@ export default function CreditCardsPage() {
     >
       {overview ? (
         <SectionReveal className="flex flex-col gap-10">
-          {overview.totals.map((total) => (
-            <OverviewKpis
-              key={total.currencyCode}
-              overview={overview}
-              currencyCode={total.currencyCode}
-              insights={insightsQuery.data?.groups.find(
-                (item) => item.currencyCode === total.currencyCode,
-              )}
-              language={language}
-              precision={precisionOf(total.currencyCode)}
-              showCurrency={currencies.length > 1}
-            />
-          ))}
+          <OverviewKpis overview={overview} insights={insightsQuery.data} language={language} />
           <div className={ZONES_CLASS}>
             <div className="min-w-0 lg:col-span-8">
               <CreditCardGrid

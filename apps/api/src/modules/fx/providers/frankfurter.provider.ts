@@ -3,6 +3,9 @@ import { FRANKFURTER_API_URL } from "@/config/fx";
 import { ValidationError } from "@/shared/errors";
 import type { FxProvider, FxProviderRate } from "../fx.types";
 
+/** A slow provider must never hang a page that only wants an approximate total. */
+const FETCH_TIMEOUT_MS = 5000;
+
 type FrankfurterRateRow = {
   date: string;
   base: string;
@@ -11,7 +14,7 @@ type FrankfurterRateRow = {
 };
 
 async function fetchRates(url: URL): Promise<FrankfurterRateRow[]> {
-  const response = await fetch(url);
+  const response = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   if (!response.ok) {
     throw new ValidationError(
       `Frankfurter returned ${response.status} while fetching exchange rates`,

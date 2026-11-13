@@ -4,6 +4,7 @@ import app from "@/app";
 import * as accountsService from "@/modules/accounts/accounts.service";
 import * as categoriesService from "@/modules/categories/categories.service";
 import * as creditCardsService from "@/modules/credit-cards/credit-cards.service";
+import { clearFxCombineCache } from "@/modules/fx/fx-combine.service";
 import * as transactionsService from "@/modules/transactions/transactions.service";
 import { createAuthenticatedContext, createAuthHeaders } from "@/test/auth";
 import {
@@ -11,12 +12,16 @@ import {
   buildCategoryInput,
   buildCreditCardInput,
   createCreditCardOwner,
+  seedExchangeRate,
 } from "@/test/factories";
 
 /** "Today" is Nov 12, 2026: this month is 2026-11, next month 2026-12. */
-beforeEach(() => {
+beforeEach(async () => {
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-11-12T15:00:00.000Z"));
+  clearFxCombineCache();
+  // The household base currency is BRL: 1 USD = 5 BRL today, stored so no provider is called.
+  await seedExchangeRate("USD", "BRL", 5, 1, "2026-11-12");
 });
 afterEach(() => vi.useRealTimers());
 
@@ -299,6 +304,28 @@ describe("GET /monthly-plans/safe-to-spend", () => {
       goalsOwed: 20_000,
       leftToSpend: 80_000,
     });
+  });
+
+  it("returns one combined left-to-spend in the base currency next to the per-currency blocks", async () => {
+    const t = await setup();
+    const usdAccount = await t.account("US checking", "USD");
+    const brlAccount = await t.account("BR checking", "BRL");
+    await t.deposit(usdAccount.id, 100_000, "USD");
+    await t.deposit(brlAccount.id, 500_000, "BRL");
+    await t.goal("Investments USA", 20_000, "USD");
+    await t.bill("Light", 30_000, 18, "BRL");
+
+    const data = await t.get();
+
+    // BRL: 500,000 - 30,000 = 470,000; USD: 100,000 - 20,000 = 80,000 = 400,000 BRL at 5.
+    expect(data.combined.leftToSpend.total).toBe(870_000);
+    expect(data.combined.leftToSpend.byCurrency).toEqual([
+      { currencyCode: "BRL", amount: 470_000 },
+      { currencyCode: "USD", amount: 80_000 },
+    ]);
+    expect(data.combined.fx).toMatchObject({ baseCurrencyCode: "BRL", asOf: "2026-11-12" });
+    expect(data.combined.leftForCard).toBeNull(); // no monthly plan
+    expect(usd(data.currencies, "USD").thisMonth.leftToSpend).toBe(80_000);
   });
 
   it("rejects another household's data by scoping everything to the caller", async () => {

@@ -6,6 +6,7 @@ import { addDays, formatISODate, formatShortDate, now } from "@luraba/domain";
 import Link from "next/link";
 import * as React from "react";
 import { BillSheet } from "@/components/bills/bill-sheet";
+import { CombinedAmountDisplay, combinedNote } from "@/components/display";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
 import { KpiCard, KpiGrid, KpiGridSkeleton } from "@/components/kpi";
@@ -14,6 +15,7 @@ import { PERMISSIONS, PermissionButton } from "@/components/permissions";
 import { DataBoundary } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
 import { Typography } from "@/components/ui/typography";
+import { useCombinedAmount } from "@/hooks/use-combined-amount";
 import { useEntityDisclosure } from "@/hooks/use-disclosure";
 import { describeBillSchedule } from "@/lib/bills";
 import { useBillForecastQuery, useBillsQuery } from "@/queries/bills/use-bills-queries";
@@ -93,33 +95,40 @@ function ForecastStrip({ language }: { language: string }) {
     };
   }, []);
   const forecast = useBillForecastQuery(range);
+  const upcoming = React.useMemo(
+    () => (forecast.data?.items ?? []).filter((item) => item.state !== "paid"),
+    [forecast.data],
+  );
+  const byCurrency = React.useMemo(() => {
+    const totals: Record<string, number> = {};
+    for (const item of upcoming) {
+      totals[item.currencyCode] = (totals[item.currencyCode] ?? 0) + item.expectedAmount;
+    }
+    return totals;
+  }, [upcoming]);
+  const { combined, fx, isPending: ratesPending } = useCombinedAmount(byCurrency);
 
-  if (forecast.isPending) return <KpiGridSkeleton columns={3} label="Loading forecast" />;
+  if (forecast.isPending || ratesPending) {
+    return <KpiGridSkeleton columns={3} label="Loading forecast" />;
+  }
   if (forecast.isError) return null;
 
-  const upcoming = forecast.data.items.filter((item) => item.state !== "paid");
-  const totals = new Map<string, number>();
-  for (const item of upcoming) {
-    totals.set(item.currencyCode, (totals.get(item.currencyCode) ?? 0) + item.expectedAmount);
-  }
   const overdue = upcoming.filter((item) => item.state === "overdue").length;
 
   return (
     <ItemReveal>
       <KpiGrid columns={3}>
-        <KpiCard title={`Due in the next ${FORECAST_DAYS} days`}>
-          {totals.size === 0
-            ? "Nothing due"
-            : [...totals].map(([currencyCode, amount]) => (
-                <MoneyValue
-                  key={currencyCode}
-                  amount={amount}
-                  currencyCode={currencyCode}
-                  language={language}
-                  className="block"
-                />
-              ))}
-        </KpiCard>
+        <KpiCard
+          title={`Due in the next ${FORECAST_DAYS} days`}
+          value={
+            upcoming.length === 0 ? (
+              "Nothing due"
+            ) : (
+              <CombinedAmountDisplay combined={combined} fx={fx} language={language} size="lg" />
+            )
+          }
+          secondary={upcoming.length === 0 ? undefined : combinedNote(combined, fx, language)}
+        />
         <KpiCard title="Payments coming up" value={upcoming.length} />
         <KpiCard title="Overdue" value={overdue} />
       </KpiGrid>

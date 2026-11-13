@@ -83,6 +83,10 @@
       "types": "./dist/credit-cards/index.d.ts",
       "import": "./dist/credit-cards/index.js"
     },
+    "./fx": {
+      "types": "./dist/fx/index.d.ts",
+      "import": "./dist/fx/index.js"
+    },
     "./currencies": {
       "types": "./dist/currencies/index.d.ts",
       "import": "./dist/currencies/index.js"

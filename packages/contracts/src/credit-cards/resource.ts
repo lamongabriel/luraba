@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createdByUserIdSchema, currencyCodeSchema, wireDateTimeSchema } from "../common.js";
+import { combinedAmountSchema, combinedFxSchema } from "../fx/resource.js";
 import { creditExpenseTimingSchema, creditInstallmentBudgetModeSchema } from "../preferences.js";
 import { tagSummarySchema } from "../tags/resource.js";
 
@@ -140,11 +141,23 @@ export const creditCardOverviewTotalsSchema = z.object({
   invoiceRemainingAmount: z.number().int(),
   limit: creditCardLimitBreakdownSchema,
 });
+/** The headline figures of the overview in the household base currency (see `combinedFxSchema`). */
+export const creditCardOverviewCombinedSchema = z.object({
+  fx: combinedFxSchema,
+  invoiceAmount: combinedAmountSchema,
+  invoicePaidAmount: combinedAmountSchema,
+  invoiceRemainingAmount: combinedAmountSchema,
+  /** Only cards with a limit count; `byCurrency` is empty when no card has one. */
+  limitTotal: combinedAmountSchema,
+  limitAvailable: combinedAmountSchema,
+});
 export const creditCardOverviewSchema = z.object({
   month: z.string().regex(/^\d{4}-\d{2}$/),
   cards: z.array(creditCardOverviewCardSchema),
-  /** One entry per currency; amounts in different currencies are never added together. */
+  /** One entry per currency, in the card's own currency. */
   totals: z.array(creditCardOverviewTotalsSchema),
+  /** The same totals converted into the household base currency, with the rates used. */
+  combined: creditCardOverviewCombinedSchema,
 });
 const insightAmountSchema = z.number().int();
 export const creditCardInsightsGroupSchema = z.object({
@@ -172,6 +185,12 @@ export const creditCardInsightsGroupSchema = z.object({
 export const creditCardInsightsSchema = z.object({
   month: z.string().regex(/^\d{4}-\d{2}$/),
   groups: z.array(creditCardInsightsGroupSchema),
+  /** The month's invoice total and last month's, in the household base currency. */
+  combined: z.object({
+    fx: combinedFxSchema,
+    total: combinedAmountSchema,
+    previousTotal: combinedAmountSchema,
+  }),
 });
 export const creditCardPurchaseSchema = z.object({
   purchaseId: z.uuid(),

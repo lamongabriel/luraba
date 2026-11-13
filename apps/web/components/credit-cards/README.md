@@ -40,8 +40,12 @@ and the purchases that make an invoice up.
 - **Payments settle the oldest unpaid invoice first** (API rule), so Pay suggests everything unpaid up to
   the selected invoice and says when that includes older ones. There is no "pay in installments"
   (invoice financing) in the API, so the UI has none.
-- **Amounts in different currencies are never added**: the overview returns one totals entry per currency, and
-  insights one group per currency; the overview page renders a KPI row and insights block per currency.
+- **The headline KPIs are ONE number in the household base currency.** The overview returns `totals` per currency and
+  `combined` (converted with the latest rate or the household override, rounded once; see
+  [fx](../../../api/src/modules/fx/README.md)); `OverviewKpis` renders the single strip with `CombinedAmountDisplay`
+  (per-currency amounts and rates in a popover, "≈ converted at <date>" under the figure, "Rate unavailable for X" and
+  per-currency amounts when a rate is missing). Per-card tiles, invoices and the insights charts stay in each card's own
+  currency (one insights block per currency); never add them by hand.
 - **The month is the invoice due month.** The overview, the insights, the KPIs and the recent purchases all follow the
   `MonthSelector` (`components/finance/month-selector.tsx`, shared); "March" means the invoices due in March.
 - **Tables are the shared transactions table.** Purchases are listed with `ScopedTransactionsTable`
