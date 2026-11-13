@@ -8,6 +8,7 @@ import {
   transactionsEndpoints,
   type UpdateTransactionInput,
 } from "@luraba/contracts";
+import { resolveInstallmentPlan } from "@luraba/domain";
 import { z } from "zod";
 import { LurabaApiError } from "../client/errors.js";
 import { majorToMinor, majorToMoney, toMoney } from "../format/money.js";
@@ -290,7 +291,13 @@ const createInput = z.object({
   description: descriptionField,
   originalDescription: originalDescriptionField,
   notes: notesField,
-  amount: z.number().positive().describe("Positive amount in major units."),
+  amount: z
+    .number()
+    .positive()
+    .optional()
+    .describe(
+      "Positive amount in major units. Required except for a credit card purchase that gives installmentAmounts or installmentAmount.",
+    ),
   currency: z.string().length(3).optional().describe("Defaults to the account/card currency."),
   date: z.iso.date().optional().describe("Purchase date, YYYY-MM-DD. Defaults to today."),
   postedDate: z.iso.date().optional().describe("Posted date. Defaults to the date."),
@@ -303,7 +310,34 @@ const createInput = z.object({
     .optional()
     .describe("Transfer between currencies: the amount received, in the destination currency."),
   creditCard: z.string().optional().describe("Credit card purchase: the card name, last 4 or id."),
-  installments: z.number().int().min(1).max(60).default(1).describe("Credit card purchase only."),
+  installments: z
+    .number()
+    .int()
+    .min(1)
+    .max(60)
+    .optional()
+    .describe("Credit card purchase only: the installment count (default 1)."),
+  installmentAmounts: z
+    .array(z.number().positive())
+    .min(1)
+    .max(60)
+    .optional()
+    .describe(
+      "Credit card purchase only: the exact amount of each installment in major units, as the invoice shows them (their count is the installment count, their sum the purchase total). Use this when the store or issuer rounds differently from an even split; the installments are the source of truth, so an amount that disagrees is rejected.",
+    ),
+  installmentAmount: z
+    .number()
+    .positive()
+    .optional()
+    .describe(
+      "Credit card purchase only: every installment costs exactly this much (with installments); the total is this times the count.",
+    ),
+  roundingMode: z
+    .enum(["remainder_last", "remainder_first", "round_up_all"])
+    .optional()
+    .describe(
+      "Credit card purchase only: how an even split places the leftover cents. remainder_last (default): the last installment takes them; remainder_first: the first; round_up_all: every installment is rounded up and the total becomes their sum.",
+    ),
   paymentMethod: z.string().optional().describe("Payment method code or name (expense/income)."),
   category: z.string().optional(),
   merchant: z.string().optional(),
@@ -349,6 +383,9 @@ export const createTransaction = defineTool({
       data: { status: "invalid_input", missing: field },
     });
 
+    if (args.kind !== "credit_card_purchase" && args.amount === undefined) return missing("amount");
+    const amount = args.amount ?? 0;
+
     let body: CreateTransactionInput | undefined;
     let cardId: string | undefined;
     let currency = args.currency?.toUpperCase();
@@ -378,7 +415,7 @@ export const createTransaction = defineTool({
         ...textFields(args),
         purchaseDate: date,
         postedDate,
-        amount: majorToMinor(args.amount, currency),
+        amount: majorToMinor(amount, currency),
         currencyCode: currency,
         accountId,
         paymentMethodCode,
@@ -407,7 +444,7 @@ export const createTransaction = defineTool({
         postedDate,
         fromAccountId: fromId,
         toAccountId: toId,
-        fromAmount: majorToMinor(args.amount, fromCurrency),
+        fromAmount: majorToMinor(amount, fromCurrency),
         ...(args.toAmount === undefined
           ? {}
           : { toAmount: majorToMinor(args.toAmount, toCurrency) }),
@@ -425,13 +462,25 @@ export const createTransaction = defineTool({
       );
       if (problems.any) return clarificationOutput(problems);
       if (!cardId || !currency) return missing("creditCard");
+      const cardCurrency = currency;
       const purchase = {
         description: args.description,
         ...textFields(args),
-        amount: majorToMinor(args.amount, currency),
+        ...(args.amount === undefined ? {} : { amount: majorToMinor(args.amount, cardCurrency) }),
+        ...(args.installmentAmounts
+          ? {
+              installmentAmounts: args.installmentAmounts.map((value) =>
+                majorToMinor(value, cardCurrency),
+              ),
+            }
+          : {}),
+        ...(args.installmentAmount === undefined
+          ? {}
+          : { installmentAmount: majorToMinor(args.installmentAmount, cardCurrency) }),
+        ...(args.roundingMode ? { roundingMode: args.roundingMode } : {}),
+        ...(args.installments === undefined ? {} : { installmentCount: args.installments }),
         purchaseDate: date,
         postedDate,
-        installmentCount: args.installments,
         includeInBudget: args.includeInBudget ?? true,
         ...(classification.categoryId ? { categoryId: classification.categoryId } : {}),
         ...(classification.merchantId ? { merchantId: classification.merchantId } : {}),
@@ -447,7 +496,7 @@ export const createTransaction = defineTool({
           status: "dry_run",
           wouldCreate: {
             ...(body ?? {}),
-            amountDisplay: majorToMoney(args.amount, currency ?? "USD"),
+            amountDisplay: majorToMoney(amount, currency ?? "USD"),
           },
           wouldAlsoCreate: args.createMissing
             ? (
@@ -499,7 +548,7 @@ export const createTransaction = defineTool({
           )
         : null;
     return {
-      summary: `Created ${args.kind} "${created.description}" for ${majorToMoney(args.amount, created.currencyCode).formatted}${bill?.linked ? `; linked to the bill "${bill.linked.bill}"` : ""}.`,
+      summary: `Created ${args.kind} "${created.description}" for ${majorToMoney(amount, created.currencyCode).formatted}${bill?.linked ? `; linked to the bill "${bill.linked.bill}"` : ""}.`,
       data: {
         status: "created",
         transaction: summarizeRow(created, names),
@@ -519,16 +568,33 @@ async function createCardPurchase(
     description: string;
     originalDescription?: string;
     notes?: string;
-    amount: number;
+    amount?: number;
+    installmentAmounts?: number[];
+    installmentAmount?: number;
+    roundingMode?: "remainder_last" | "remainder_first" | "round_up_all";
     purchaseDate: string;
     postedDate: string;
-    installmentCount: number;
+    installmentCount?: number;
     includeInBudget: boolean;
     categoryId?: string;
     merchantId?: string;
     tagIds?: string[];
   },
 ): Promise<ToolOutput> {
+  const plan = resolveInstallmentPlan({
+    amount: purchase.amount,
+    installmentCount: purchase.installmentCount,
+    installmentAmounts: purchase.installmentAmounts,
+    installmentAmount: purchase.installmentAmount,
+    roundingMode: purchase.roundingMode,
+  });
+  if (!plan.ok) {
+    return {
+      isError: true,
+      summary: plan.error,
+      data: { status: "invalid_input", error: plan.error },
+    };
+  }
   if (args.dryRun) {
     return {
       summary: "Dry run: nothing was created.",
@@ -537,7 +603,11 @@ async function createCardPurchase(
         wouldCreate: {
           creditCardId: cardId,
           ...purchase,
-          amountDisplay: majorToMoney(args.amount, currency),
+          total: toMoney(plan.total, currency),
+          installments: plan.amounts.map((value, index) => ({
+            number: index + 1,
+            amount: toMoney(value, currency),
+          })),
         },
         wouldAlsoCreate: args.createMissing
           ? (
@@ -575,7 +645,7 @@ async function createCardPurchase(
       categoryId: classification.categoryId,
       merchantId: classification.merchantId,
     },
-    args.linkBill && purchase.installmentCount === 1,
+    args.linkBill && plan.amounts.length === 1,
   );
   return {
     summary: `Created credit card purchase "${created.description}" for ${toMoney(created.amount, currency).formatted} in ${created.installmentCount} installment(s).`,

@@ -18,6 +18,7 @@ import type {
   creditCardSchema,
   updateCreditCardCycleInputSchema,
   updateCreditCardInputSchema,
+  updateCreditCardInstallmentInputSchema,
   updateCreditCardPaymentInputSchema,
   updateCreditCardPurchaseInputSchema,
 } from "@luraba/contracts/credit-cards";
@@ -38,6 +39,9 @@ export type UpdateCreditCardDto = z.output<typeof updateCreditCardInputSchema>;
 export type UpdateCreditCardCycleDto = z.output<typeof updateCreditCardCycleInputSchema>;
 export type CreateCreditCardPurchaseDto = z.output<typeof createCreditCardPurchaseInputSchema>;
 export type UpdateCreditCardPurchaseDto = z.output<typeof updateCreditCardPurchaseInputSchema>;
+export type UpdateCreditCardInstallmentDto = z.output<
+  typeof updateCreditCardInstallmentInputSchema
+>;
 export type CreateCreditCardPaymentDto = z.output<typeof createCreditCardPaymentInputSchema>;
 export type UpdateCreditCardPaymentDto = z.output<typeof updateCreditCardPaymentInputSchema>;
 export type CreditCardForecastQuery = z.output<typeof creditCardForecastQuerySchema>;

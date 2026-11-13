@@ -182,8 +182,10 @@ export async function createInstallmentsForPurchase(
   totalAmount: number,
   installmentCount: number,
   startInstallmentNumber = 1,
+  /** Exact amount of each installment (index 0 is installment 1). Defaults to an even split of `totalAmount`. */
+  customAmounts?: number[],
 ): Promise<Array<typeof creditCardInstallmentsTable.$inferSelect>> {
-  const amounts = splitInstallmentAmounts(totalAmount, installmentCount);
+  const amounts = customAmounts ?? splitInstallmentAmounts(totalAmount, installmentCount);
   const createdRows: Array<typeof creditCardInstallmentsTable.$inferSelect> = [];
 
   let cycle = await ensureCycleForDate(tx, card, purchaseDate);
@@ -428,6 +430,12 @@ export async function syncCardCycles(
   return updatedCycles;
 }
 
+/** The remembered amounts when there is one for every installment, otherwise undefined (even split). */
+function storedAmounts(amounts: number[] | undefined, count: number): number[] | undefined {
+  if (!amounts || amounts.length !== count) return undefined;
+  return amounts.every((value) => typeof value === "number") ? amounts : undefined;
+}
+
 async function rebuildSchedulesFromClosingDate(
   tx: TxClient,
   card: CreditCardRow,
@@ -479,6 +487,23 @@ async function rebuildSchedulesFromClosingDate(
     );
 
   const affectedCycleIds = affectedCycles.map((cycle) => cycle.id);
+  // Remember each installment's amount: purchases created with the invoice's exact amounts must keep them.
+  const amountsByPurchase = new Map<string, number[]>();
+  if (purchaseIds.length > 0) {
+    const stored = await tx
+      .select({
+        purchaseId: creditCardInstallmentsTable.purchaseId,
+        installmentNumber: creditCardInstallmentsTable.installmentNumber,
+        amount: creditCardInstallmentsTable.amount,
+      })
+      .from(creditCardInstallmentsTable)
+      .where(inArray(creditCardInstallmentsTable.purchaseId, purchaseIds));
+    for (const row of stored) {
+      const list = amountsByPurchase.get(row.purchaseId) ?? [];
+      list[row.installmentNumber - 1] = row.amount;
+      amountsByPurchase.set(row.purchaseId, list);
+    }
+  }
   await cycleRepository.deleteInstallmentsByCycleIds(tx, affectedCycleIds);
 
   for (const purchase of purchaseRows) {
@@ -511,6 +536,7 @@ async function rebuildSchedulesFromClosingDate(
         purchase.purchaseAmount,
         purchase.installmentCount,
         nextInstallmentNumber,
+        storedAmounts(amountsByPurchase.get(purchase.purchaseId), purchase.installmentCount),
       );
     }
 

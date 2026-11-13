@@ -125,13 +125,7 @@ export const creditCardSelect = {
   updatedAt: creditCardsTable.updatedAt,
 } as const;
 
-export function splitInstallmentAmounts(totalAmount: number, installmentCount: number): number[] {
-  const baseAmount = Math.floor(totalAmount / installmentCount);
-  const remainder = totalAmount - baseAmount * installmentCount;
-  return Array.from({ length: installmentCount }, (_value, index) =>
-    index === installmentCount - 1 ? baseAmount + remainder : baseAmount,
-  );
-}
+export { splitInstallmentAmounts } from "@luraba/domain";
 
 export function toCreditCardRow(row: CreditCardSelectRow): CreditCardRow {
   return {

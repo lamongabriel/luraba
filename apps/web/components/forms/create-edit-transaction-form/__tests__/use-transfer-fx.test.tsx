@@ -92,6 +92,8 @@ function values(overrides: Partial<CreateEditTransactionFormValues> = {}) {
     purchaseDate: "2026-08-01",
     postedDate: "2026-08-01",
     installmentCount: 1,
+    customInstallments: false,
+    installmentAmounts: [],
     includeInBudget: false,
     tagIds: [],
     items: [],

@@ -20,6 +20,7 @@ import {
   bulkDeleteTransactions,
   bulkUpdateTransactions,
 } from "./bulk-transactions.js";
+import { updateCardPurchase, updateInstallment } from "./card-purchases.js";
 import {
   contributeToGoal,
   createGoal,
@@ -99,6 +100,8 @@ export const tools: AnyTool[] = [
   deleteTransaction,
   createRefund,
   cancelPurchase,
+  updateCardPurchase,
+  updateInstallment,
   createCreditCardPayment,
   bulkUpdateTransactions,
   bulkCategorizeTransactions,

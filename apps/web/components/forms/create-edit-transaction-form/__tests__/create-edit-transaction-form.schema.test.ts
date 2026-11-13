@@ -21,6 +21,8 @@ const base = {
   purchaseDate: "2026-08-01",
   postedDate: "2026-08-01",
   installmentCount: 1,
+  customInstallments: false,
+  installmentAmounts: [],
   includeInBudget: true,
   tagIds: [],
   items: [],
@@ -59,6 +61,23 @@ describe("createEditTransactionFormSchema", () => {
     },
   ] as const)("accepts the $kind form branch", (branch) => {
     expect(createEditTransactionFormSchema.safeParse({ ...base, ...branch }).success).toBe(true);
+  });
+
+  it("requires every installment amount once they are set by hand", () => {
+    const card = {
+      ...base,
+      kind: "credit_card_purchase",
+      creditCardId: CARD_ID,
+      customInstallments: true,
+    } as const;
+    expect(
+      createEditTransactionFormSchema.safeParse({ ...card, installmentAmounts: [34.06, 34.06] })
+        .success,
+    ).toBe(true);
+    expect(
+      createEditTransactionFormSchema.safeParse({ ...card, installmentAmounts: [34.06, ""] })
+        .success,
+    ).toBe(false);
   });
 
   it("rejects a transfer to the same account", () => {

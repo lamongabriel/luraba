@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   describeInstallments,
   INSTALLMENT_COUNT_OPTIONS,
+  isStandardSplit,
   MAX_INSTALLMENTS,
   splitInstallments,
 } from "../installments";
@@ -45,5 +46,16 @@ describe("INSTALLMENT_COUNT_OPTIONS", () => {
   it("offers 1x to the maximum", () => {
     expect(INSTALLMENT_COUNT_OPTIONS[0]).toEqual({ value: "1", label: "1x" });
     expect(INSTALLMENT_COUNT_OPTIONS).toHaveLength(MAX_INSTALLMENTS);
+  });
+});
+
+describe("isStandardSplit", () => {
+  it("recognizes the default split and spots hand-set amounts", () => {
+    expect(isStandardSplit([3405, 3405, 3405, 3405, 3408])).toBe(true);
+    expect(isStandardSplit([3406, 3405, 3405, 3405, 3405])).toBe(false);
+  });
+  it("supports the other rounding modes", () => {
+    expect(splitInstallments(17_028, 5, "remainder_first")).toEqual([3408, 3405, 3405, 3405, 3405]);
+    expect(splitInstallments(17_028, 5, "round_up_all")).toEqual([3406, 3406, 3406, 3406, 3406]);
   });
 });

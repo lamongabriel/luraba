@@ -178,12 +178,17 @@ export function useCreateEditTransactionForm({
     itemPrecision.current = getCurrencyPrecision(lookups, selectedCurrencyCode);
 
     if (values.kind === "credit_card_purchase") {
+      const precision = getCurrencyPrecision(lookups, selectedCurrencyCode);
+      const exact = values.customInstallments
+        ? values.installmentAmounts.map((value) => majorToMinorUnits(Number(value), precision))
+        : undefined;
       const body = {
-        amount: amountMinor,
+        // The installments are the source of truth when set by hand: the API sums them into the total.
+        ...(exact ? { installmentAmounts: exact } : { amount: amountMinor }),
         categoryId: values.categoryId || null,
         description: values.description,
         includeInBudget: values.includeInBudget,
-        installmentCount: values.installmentCount,
+        ...(exact ? {} : { installmentCount: values.installmentCount }),
         merchantId,
         postedDate: values.postedDate,
         purchaseDate: values.purchaseDate,

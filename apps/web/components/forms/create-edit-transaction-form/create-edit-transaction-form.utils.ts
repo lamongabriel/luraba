@@ -6,6 +6,7 @@ import type {
 } from "@luraba/contracts";
 import { formatDatePattern as format, now } from "@luraba/domain";
 import { minorToMajorUnits } from "@/lib/finance";
+import { isStandardSplit } from "@/lib/installments";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
 
 import type {
@@ -67,6 +68,8 @@ export function getTransactionFormDefaultValues(
     row?.currencyCode ??
     getCardCurrencyCode(lookups, purchase?.creditCardId ?? payment?.creditCardId ?? "");
 
+  const purchaseInstallments =
+    purchase?.installments.map((installment) => installment.amount) ?? [];
   return {
     kind,
     description: purchase?.description ?? payment?.description ?? row?.description ?? "",
@@ -86,6 +89,11 @@ export function getTransactionFormDefaultValues(
     purchaseDate: purchase?.purchaseDate ?? payment?.paymentDate ?? row?.purchaseDate ?? today,
     postedDate: purchase?.postedDate ?? payment?.postedDate ?? row?.postedDate ?? today,
     installmentCount: purchase?.installmentCount ?? row?.installmentCount ?? 1,
+    // Installments set by hand (or changed by a cancellation) open as the list, so saving keeps them.
+    customInstallments: purchaseInstallments.length > 0 && !isStandardSplit(purchaseInstallments),
+    installmentAmounts: purchaseInstallments.map((amount) =>
+      toMajorAmount(amount, currencyCode, lookups),
+    ),
     includeInBudget: purchase?.includeInBudget ?? row?.includeInBudget ?? true,
     tagIds: purchase?.tags.map((tag) => tag.id) ?? row?.tags.map((tag) => tag.id) ?? [],
     items: items.map((item) => ({

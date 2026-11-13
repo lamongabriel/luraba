@@ -34,6 +34,7 @@ import type {
   ListCreditCardsResponse,
   UpdateCreditCardCycleDto,
   UpdateCreditCardDto,
+  UpdateCreditCardInstallmentDto,
   UpdateCreditCardPaymentDto,
   UpdateCreditCardPurchaseDto,
 } from "./credit-cards.types";
@@ -317,6 +318,16 @@ export async function updatePurchase(
   dto: UpdateCreditCardPurchaseDto,
 ): Promise<CreditCardPurchaseResponse> {
   return purchaseService.updatePurchase(context, creditCardId, purchaseId, dto);
+}
+
+export async function updateInstallment(
+  context: HouseholdContext,
+  creditCardId: string,
+  purchaseId: string,
+  installmentId: string,
+  dto: UpdateCreditCardInstallmentDto,
+): Promise<CreditCardPurchaseResponse> {
+  return purchaseService.updateInstallment(context, creditCardId, purchaseId, installmentId, dto);
 }
 
 export async function deletePurchase(
