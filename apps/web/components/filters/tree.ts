@@ -189,30 +189,3 @@ export function setFieldRule(
 export function usedFieldIds(tree: FilterTree): Set<string> {
   return new Set(rulesOf(tree).map((rule) => rule.path[0] ?? ""));
 }
-
-/** Short summary of a field's rule for the mobile rows ("3 selected", "$10 - $50"). */
-export function summarizeRule(
-  def: FilterFieldDef,
-  values: FilterValues,
-  formatAmount: (amount: number) => string,
-): string | null {
-  if (!values.has(def.id)) return null;
-  if (def.kind === "multiselect") {
-    const picked = values.list(def.id);
-    const labels = picked.map(
-      (id) => def.options.find((option) => option.value === id)?.label ?? id,
-    );
-    return labels.length <= 2 ? labels.join(", ") : `${labels.length} selected`;
-  }
-  if (def.kind === "boolean") {
-    return values.flag(def.id) ? (def.trueLabel ?? "Yes") : (def.falseLabel ?? "No");
-  }
-  if (def.kind === "money") {
-    const { min, max } = values.money(def.id);
-    if (min !== null && max !== null) return `${formatAmount(min)} - ${formatAmount(max)}`;
-    if (min !== null) return `At least ${formatAmount(min)}`;
-    return `At most ${formatAmount(max ?? 0)}`;
-  }
-  const { from, to } = values.dates(def.id);
-  return [from, to].filter(Boolean).join(" - ");
-}
