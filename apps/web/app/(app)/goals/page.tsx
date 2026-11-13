@@ -93,6 +93,7 @@ export default function GoalsPage() {
     <InternalPageLayout
       title="Goals"
       subtitle="Save toward what matters."
+      inlineActions
       actions={
         <PageAddButton
           label="Create goal"
@@ -155,7 +156,7 @@ export default function GoalsPage() {
         open={linking !== null}
         onOpenChange={(open) => !open && setLinking(null)}
         goalId={linking?.id ?? ""}
-        currencyCode={linking?.currencyCode ?? "USD"}
+        currencyCode={linking?.currencyCode ?? ""}
         language={language}
       />
       <ConfirmDialog

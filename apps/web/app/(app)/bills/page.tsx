@@ -6,7 +6,6 @@ import { BILL_GROUP_HEADER_HEIGHT } from "@/components/bills/bill-layout";
 import { BillRow } from "@/components/bills/bill-row";
 import { BillSheet } from "@/components/bills/bill-sheet";
 import { BillsMonthSummary } from "@/components/bills/bills-month-summary";
-import { EmptyState } from "@/components/empty-state";
 import { MonthPresetButton, useMonthFilter } from "@/components/filters";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { PageAddButton } from "@/components/finance/page-add-button";
@@ -18,7 +17,7 @@ import { formatMonthKeyLabel } from "@/lib/credit-card-invoices";
 import { cn } from "@/lib/utils";
 import { useMarkOccurrencePaidMutation } from "@/mutations/bills/use-bill-mutations";
 import { useBillForecastQuery, useBillsQuery } from "@/queries/bills/use-bills-queries";
-import { BillsEmpty } from "./_empty";
+import { BillsEmpty, BillsMonthEmpty } from "./_empty";
 import { BillsError } from "./_error";
 import { BillsLoading } from "./_loading";
 
@@ -68,6 +67,7 @@ export default function BillsPage() {
     <InternalPageLayout
       title="Bills"
       subtitle="What is due, and what is paid."
+      inlineActions
       actions={
         <>
           <MonthPresetButton
@@ -105,10 +105,7 @@ export default function BillsPage() {
           {items.length > 0 ? (
             <BillsMonthSummary items={items} language={language} />
           ) : (
-            <EmptyState
-              title={`Nothing due in ${monthLabel}`}
-              description="Pick another month, or see every bill below."
-            />
+            <BillsMonthEmpty monthLabel={monthLabel} />
           )}
 
           {groups.map((group) => (

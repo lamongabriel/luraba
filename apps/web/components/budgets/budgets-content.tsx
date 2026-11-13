@@ -66,6 +66,7 @@ export function BudgetsContent({
         emptyTitle="No limits yet"
         emptyDescription="Add a budget to see how the month is split."
         heightClassName={BUDGET_ALLOCATION_HEIGHT}
+        className="mx-auto max-w-2xl"
         {...money}
       />
       <ul className={BUDGET_GRID}>

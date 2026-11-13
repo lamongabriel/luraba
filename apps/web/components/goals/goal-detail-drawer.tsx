@@ -74,7 +74,7 @@ export function GoalDetailDrawer({
 }) {
   const query = useGoalQuery(goal?.id ?? "", { enabled: Boolean(goal) });
   const detail: GoalDetail | undefined = query.data;
-  const money = { currencyCode: goal?.currencyCode ?? "USD", language };
+  const money = { currencyCode: goal?.currencyCode ?? "", language };
   const sentence = goal && pace ? paceSentence(goal, pace, language) : null;
   const paceDisplay = pace && pace.status !== "none" ? GOAL_PACE_DISPLAY[pace.status] : null;
 
@@ -86,7 +86,9 @@ export function GoalDetailDrawer({
           <SidePanelDescription>
             {goal?.targetDate
               ? `Target ${formatShortDate(goal.targetDate, language)}`
-              : "No target date"}
+              : goal?.monthlyContribution
+                ? "Monthly plan"
+                : "No target date"}
           </SidePanelDescription>
         </SidePanelHeader>
         {goal && pace ? (

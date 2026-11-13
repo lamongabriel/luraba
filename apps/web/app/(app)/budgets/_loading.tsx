@@ -25,6 +25,7 @@ export function BudgetsLoading() {
         data={[]}
         currencyCode="USD"
         heightClassName={BUDGET_ALLOCATION_HEIGHT}
+        className="mx-auto max-w-2xl"
       />
       <LoadingRegion label="Loading budgets" className={BUDGET_GRID}>
         {SKELETON_KEYS.map((key) => (
