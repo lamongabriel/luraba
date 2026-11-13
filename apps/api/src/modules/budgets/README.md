@@ -15,7 +15,7 @@ Monthly budgets per household (`/budgets/:month`, `YYYY-MM`).
 A parent category's budget is the **cap** for its subcategories: `PUT /budgets/:month` returns 422 when the subcategory
 budgets of a budgeted parent add up to more than the parent's. Without a parent budget the subcategories are free-standing.
 `totals.expenseBudgeted` counts the parent once (subcategories of a budgeted parent are inside it). Category rows still carry
-each category's own planned and actual amounts; the web page adds a parent's own spending to its subcategories' to show it once.
+each category's own planned and actual amounts; the web page adds a parent's own spending to its subcategories' to show it once. That rollup is `buildBudgetItems` in `@luraba/domain` (`budget-items.ts`), used by the web page and by the MCP `report_budget` tool so both show the same figures; the API itself stays flat.
 
 ## Insights
 

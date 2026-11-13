@@ -1,4 +1,5 @@
 export * from "./bills.js";
+export * from "./budget-items.js";
 export * from "./classification.js";
 export * from "./credit-cards.js";
 export * from "./date.js";
