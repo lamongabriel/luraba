@@ -1,3 +1,4 @@
+import { ChartLineData01Icon, Coins01Icon } from "@hugeicons/core-free-icons";
 import type { Goal, GoalKind } from "@luraba/contracts";
 
 export const GOAL_STATE_LABELS: Record<Goal["state"], string> = {
@@ -46,3 +47,9 @@ export function formatMonths(months: number): string {
   ];
   return parts.filter(Boolean).join(" ");
 }
+
+/** The glyph of a goal by kind (goals have no icon of their own). */
+export const GOAL_KIND_ICON = {
+  savings: Coins01Icon,
+  investment: ChartLineData01Icon,
+} as const;
