@@ -8,7 +8,9 @@ import {
   AmountDisplay,
   amountKindForTransactionType,
   CategoryDisplay,
+  ConversionDisplay,
   CreditCardDisplay,
+  formatFxRate,
   getAccountVisual,
   MerchantDisplay,
   ProductDisplay,
@@ -140,5 +142,39 @@ describe("CreditCardDisplay", () => {
     );
 
     expect(screen.getByText("No institution")).toBeInTheDocument();
+  });
+});
+
+describe("ConversionDisplay", () => {
+  it("shows the original amount, the converted amount and the rate with its day", () => {
+    render(
+      <ConversionDisplay
+        originalAmount={549_541}
+        originalCurrency="BRL"
+        amount={97_516}
+        currencyCode="USD"
+        fxRate={0.17743941}
+        rateDate="2026-11-10"
+      />,
+    );
+    const text = screen.getByText(/@/u).parentElement?.textContent ?? "";
+    expect(text).toContain("R$5,495.41");
+    expect(text).toContain("$975.16");
+    expect(text).toContain("@ 0.17743941 on 10 Nov 2026");
+  });
+
+  it("keeps up to 8 decimals of the rate and omits the rate when unknown", () => {
+    expect(formatFxRate(5.5311)).toBe("5.5311");
+    expect(formatFxRate(0.180795863)).toBe("0.18079586");
+    const { container } = render(
+      <ConversionDisplay
+        originalAmount={1000}
+        originalCurrency="BRL"
+        amount={180}
+        currencyCode="USD"
+        fxRate={null}
+      />,
+    );
+    expect(container.textContent).not.toContain("@");
   });
 });

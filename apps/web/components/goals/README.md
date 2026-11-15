@@ -22,7 +22,7 @@ No KPI tiles; the summary is two inline counters in the page header ("Total save
 | `goal-detail-drawer.tsx` | The goal in a `SidePanel` (a bottom drawer on mobile): ring, saved, pace sentence, plan rows, the same action buttons, the progress chart and the latest contributions; the full list (edit or remove a contribution) stays on `/goals/[id]`. |
 | `goal-layout.ts` | Grid, card and total sizes shared with `_loading.tsx`. |
 | `goal-sheet.tsx` | Create/edit form (`FormSheet`). Money is typed in major units and converted with `majorToMinorUnits`; the expected return is typed as a percentage and sent as basis points. |
-| `contribution-modal.tsx` | Add, withdraw or edit a manual contribution (`initialWithdrawal` opens on Withdraw). |
+| `contribution-modal.tsx` | Add, withdraw or edit a manual contribution (`initialWithdrawal` opens on Withdraw). Editing a contribution made in another currency (pass `goalCurrencyCode`): the amount is the ORIGINAL one, a `ConversionDisplay` preview shows the converted amount (the stored rate for an amount-only edit, the new day's historical rate through `useContributionQuoteQuery` when the date moves, with loading and "enter the rate yourself" states) and the optional rate field (up to 10 decimals) overrides it. Saving sends `fxRate` (typed), `recompute` (date moved) or neither. There is no web form yet that creates a contribution in another currency (`/contribute` has none, see below). |
 | `link-transaction-modal.tsx` | Count an existing expense or transfer (all of it, or part) toward the goal. Only same-currency transactions are offered. |
 | `goal-progress-chart.tsx` | Recharts line chart: saved so far (solid) and the monthly plan's projection (dashed), against the target line. |
 | `_empty.tsx`, `_error.tsx`, `_loading.tsx` (next to the page) | The three states; the skeleton is the total line plus six card skeletons. |
@@ -38,6 +38,8 @@ No KPI tiles; the summary is two inline counters in the page header ("Total save
 - The API's `estimate.onTrack` (state `on_track` / `behind`) is separate and unchanged; the page shows the pace helper's answer.
 
 Moving funds between accounts (`POST /goals/:id/move`, `/contribute`, `/withdraw` with accounts) has no web form yet; the page offers the manual contribution, withdrawal and transaction-link flows. Add a "Move funds" action to the card menu and drawer when it is built.
+
+Contribution rows (the drawer's latest list and `/goals/[id]`) show `ConversionDisplay` ("R$5,495.41 → $975.16 @ 0.17743941 on 10 Nov 2026") under the date when the money was in another currency. The rate is the stored one at full precision (the display shows up to 8 decimals); the API rounds only the converted amount, once.
 
 Data comes from `services/goals.service.ts` → `queries/goals` → `mutations/goals`. Every mutation
 invalidates `goalQueryKeys.all` because progress depends on all contributions. Labels, badge variants

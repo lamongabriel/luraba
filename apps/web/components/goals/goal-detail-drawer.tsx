@@ -6,7 +6,7 @@ import { formatShortDate } from "@luraba/domain";
 import Link from "next/link";
 
 import { ProgressRing } from "@/components/charts";
-import { AmountDisplay } from "@/components/display";
+import { AmountDisplay, ConversionDisplay } from "@/components/display";
 import { ErrorState } from "@/components/error-state";
 import {
   SidePanel,
@@ -198,6 +198,18 @@ export function GoalDetailDrawer({
                             <p className="text-sm">
                               {formatShortDate(item.contributedOn, language)}
                             </p>
+                            {item.originalCurrency && item.originalAmount !== null ? (
+                              <ConversionDisplay
+                                originalAmount={item.originalAmount}
+                                originalCurrency={item.originalCurrency}
+                                amount={item.amount}
+                                currencyCode={goal.currencyCode}
+                                fxRate={item.fxRate}
+                                rateDate={item.fxRateDate}
+                                size="xs"
+                                language={language}
+                              />
+                            ) : null}
                             {item.note || item.transaction ? (
                               <p className="truncate text-xs text-muted-foreground">
                                 {item.transaction ? item.transaction.description : item.note}

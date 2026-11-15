@@ -31,6 +31,7 @@ export {
   isMixedCombined,
 } from "./combined-amount";
 export * from "./constants";
+export { ConversionDisplay, formatFxRate } from "./conversion-display";
 export { CreditCardDisplay, type CreditCardDisplayInput } from "./credit-card-display";
 export { CurrencyDisplay, CurrencyLabel, StaticCurrencyDisplay } from "./currency-display";
 export { DisplayMark } from "./display-mark";
