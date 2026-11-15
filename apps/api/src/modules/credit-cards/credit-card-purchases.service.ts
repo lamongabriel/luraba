@@ -37,7 +37,6 @@ import type {
   CreditExpenseTiming,
   CreditInstallmentBudgetMode,
 } from "@/shared/validation/preferences";
-import { recomputeCardAllocations } from "./credit-card-allocations";
 import {
   createInstallmentsForPurchase,
   recreateBudgetRecognitionsForPurchase,
@@ -511,9 +510,8 @@ export async function updatePurchase(
     }
 
     await unlockCycles(tx, overriddenCycleIds);
+    // Re-derives the card's allocations from its payments, so no phantom cents are left on the changed invoices.
     await syncCardCycles(tx, card, context.timezone);
-    // The invoices changed: lay the card's payments over them again so no phantom cents are left.
-    if (affectedCycleIds.length > 0) await recomputeCardAllocations(tx, card, context.timezone);
   });
 
   return getPurchase(context, creditCardId, purchaseId);
@@ -646,7 +644,7 @@ export async function updateInstallment(
       });
     }
     await unlockCycles(tx, overriddenCycleIds);
-    await recomputeCardAllocations(tx, card, context.timezone);
+    await syncCardCycles(tx, card, context.timezone);
   });
 
   return getPurchase(context, creditCardId, purchaseId);

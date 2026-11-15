@@ -39,7 +39,7 @@ server use the same endpoints as the web form and are listed the same way.
 ## Refunds, cancellations, chargebacks and cashback
 
 Money that comes back without a source account is a `refund` transaction (`transaction_type` value) with a
-detail row in `transaction_refunds` (`reason`: refund, cancellation, chargeback, cashback; optional
+detail row in `transaction_refunds` (`reason`: refund, cancellation, chargeback, cashback, split; optional
 `original_transaction_id`; for a card, `credit_card_id` and the `billing_cycle_id` of its posted date).
 Create one with `POST /transactions` (`type: "refund"`, exactly one of `accountId` / `creditCardId`);
 `transactions.refunds.service.ts` validates and writes it. Cancelling a card purchase is
@@ -55,14 +55,47 @@ Create one with `POST /transactions` (`type: "refund"`, exactly one of `accountI
   rows), the account insights and the MCP spending report all net it. A refund of an installment purchase is
   recognised in the month of the refund; the installments are recognised on their own dates, so a single credit
   of a plan that has not fully posted yet shows as a temporary negative until the later installments post.
-- **Caps and defaults:** with `originalTransactionId` the amount cannot exceed what is left to refund (a card
-  purchase counts its full amount across installments), the category and merchant default to the original's, and
-  a card purchase can only be refunded to its own card.
+- **Caps and defaults:** with `originalTransactionId` the category and merchant default to the original's and the
+  total of all linked rows cannot exceed the original (a card purchase counts its full amount across
+  installments).
 - **Invoices:** `syncCardCycles` subtracts a cycle's credits from its statement (never below zero). The invoice
   view lists them apart from purchases (`credits` on the cycle details) and the feed carries `billing_cycle_id`
   for them, so `billingCycleIds` shows them.
 - **Edits:** only metadata (description, merchant, tags, `includeInBudget`); amount, account, category and date are
   fixed (delete and record again). Deleting a card credit puts the amount back on the invoice.
+
+### Money back linked to any purchase
+
+`originalTransactionId` may point at **any expense or card purchase**, whichever account or card receives the money
+(a friend's Pix into a bank account for a card purchase, cashback into another account). One purchase can have many
+linked rows. `reason: "split"` is a friend paying their share.
+
+- **Posting is unchanged.** The money-back row keeps its own account or card, ledger entries, category, merchant and
+  date. Only the link to the original is new. So a card purchase refunded to a bank account moves that account's
+  balance and nothing on the card: its used limit, owed balance and invoices stay exactly as they were. (Refunded to
+  the card itself it lowers the invoice and restores the limit, as before.)
+- **Reports net by the money-back row, not the original.** Spending, budgets and analytics subtract the row in its own
+  category (defaulted from the original) and in the month of its own date, same as a same-account refund. A Pix received
+  in November for an October purchase lowers November's spending in that category; October is not rewritten.
+- **Cap:** the sum of all rows linked to a purchase (`sumRefundedAgainst`, positive ledger entries) must stay within
+  the original's full amount, checked on create and on link (a re-linked row does not count against itself).
+- **Currency:** the money back must be in the original's currency. A mismatch is rejected (422), never converted, so
+  the sums stay exact.
+- **Original rules:** must exist in the household (404 otherwise) and be an expense or card purchase; a refund,
+  transfer, income or adjustment is rejected (422), as is linking a row to itself.
+- **Link endpoint:** `PATCH /transactions/:id/link-refund` (`transactions.update`, body `{ originalTransactionId }`,
+  `null` unlinks) re-points an existing refund/cashback/split row. Only the link moves, never its amount, category or
+  ledger entries, so old unlinked cashback and splits can be backfilled. `transaction_refunds` has no household
+  column: the row is reached through the household-scoped transaction first.
+- **Net cost on the wire:** expenses and card purchase rows (detail and list) carry `moneyBack`:
+  `{ totalAmount, receivedBack, outOfPocket, entries[] }` in minor units (`totalAmount` is the whole purchase across
+  installments; each entry has the reason, date, account or card and amount), computed by `attachMoneyBack` in the
+  refunds service. It is `null` on every other row.
+- **`cancel_purchase` with linked rows:** it credits the card only for what is left after all linked rows (the remainder
+  of the purchase). A purchase with 82 received in a bank account and 188 credited by the cancellation ends fully
+  covered; the card still owes the 82 that came back elsewhere, because that money is already someone else's.
+- **Deleting** a linked row simply drops it from the net cost. Deleting the original sets the link to null
+  (`on delete set null`), turning the row into plain unlinked money back.
 
 ## Notes and statement name
 

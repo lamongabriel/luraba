@@ -8,9 +8,12 @@
 
 - **Transactions**: `search_transactions`, `get_transaction`, `create_transaction` (income, expense, transfer,
   credit card purchase with installments), `update_transaction`, `delete_transaction`, and
-  `create_refund` (refund, cancellation, chargeback or cashback: a credit with no source account, never income;
+  `create_refund` (refund, cancellation, chargeback, cashback or split: a credit with no source account, never income;
   on a card it lowers the invoice and restores the limit, on an account it raises the balance, and reports net
-  it against the category), `cancel_purchase` (credit a card purchase once, or drop the unbilled installments and
+  it against the category; with `originalTransactionId` it links to any expense or card purchase, whichever
+  account or card gets the money), `link_refund` (link or unlink an existing money-back row, `dryRun` supported;
+  `get_transaction` and `search_transactions` rows then show `receivedBack`, `outOfPocket` and `receivedBackRows`),
+  `cancel_purchase` (credit a card purchase once, or drop the unbilled installments and
   credit the billed ones), `create_credit_card_payment` (pay a card bill from an account; neutral in reports), and
   `bulk_update_transactions`, `bulk_categorize_transactions`, `bulk_delete_transactions`.
 - **Card installments**: `create_transaction` for a `credit_card_purchase` takes `installmentAmounts` (exact amount of
@@ -45,7 +48,7 @@
   25% of the estimate, due within 10 days; `linkBill=false` turns it off). Bills have no pay-from account and no
   "custom" frequency: choose the account when paying, and pick the closest frequency.
 - **Goals and the monthly plan**: `create_goal`, `update_goal`, `list_goals`, `delete_goal` (needs `confirm`),
-  `contribute_to_goal` (a transfer plus progress; other currencies store the FX rate used), `move_goal_funds`
+  `contribute_to_goal` (a transfer plus progress; other currencies use `fxRate` as given or the historical rate of the contribution date, and store the original amount, the converted amount, the rate, its source and its day; `dryRun` previews the conversion in major units), `update_goal_contribution` (fix a past contribution's amount, date, rate or note, recomputing at the date's rate by default; `list_goals` with `goal` + `includeContributions` lists the ids), `move_goal_funds`
   (progress unchanged), `withdraw_from_goal` (pays an expense or returns money to an account), `set_monthly_plan`
   (projected lines for a month or range), `report_safe_to_spend` (how much can I still spend this month in cash and
   next month on the card, one combined number in the base currency plus per currency; optional what-if `purchaseAmount` with `via` cash or card) and `report_monthly_plan` (projected vs actual per line: ask "how am I
@@ -76,7 +79,7 @@
 - **Reference data**: `whoami`, `list_households`, `list_accounts`, `list_credit_cards`, and list/create/update for
   categories, merchants and tags.
 - **Reports**: `report_spending` (by category, merchant or tag), `report_income_expense`, `report_balances` (accounts
-  and net worth: `combinedNetWorth` in the household base currency plus per currency), `report_credit_cards` (card count, what is owed this month, due dates; `combined` in the base currency plus `totals` per currency), `report_budget` (a parent category's `actual`, `remaining` and `overBudget` include its subcategories, as on the Budgets page; the parent also has `ownActual`, `allocated`, `unallocated` and `subcategories`, each with its `parent`),
+  and net worth: `combinedNetWorth` in the household base currency plus per currency), `report_credit_cards` (card count, what is owed this month, due dates and each card's `creditBalance`; `combined` in the base currency plus `totals` per currency), `recompute_card_allocations` (audit or repair which invoices card payments cover; `dryRun` defaults to true and lists the invoices whose paid amount would change; writing needs `dryRun: false` and `confirm: true`), `report_budget` (a parent category's `actual`, `remaining` and `overBudget` include its subcategories, as on the Budgets page; the parent also has `ownActual`, `allocated`, `unallocated` and `subcategories`, each with its `parent`),
   `report_goals`, `report_top_expenses`.
 - **Resources**: `luraba://guide/overview` and `luraba://guide/transactions`.
 

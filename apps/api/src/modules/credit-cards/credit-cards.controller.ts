@@ -40,6 +40,11 @@ export const update = createHouseholdHandler({
   response: creditCardsEndpoints.update.response,
   handle: ({ household, params, body }) => service.updateCreditCard(household, params.id, body),
 });
+export const recomputeAllocations = createHouseholdHandler({
+  body: creditCardsEndpoints.recomputeAllocations.body,
+  response: creditCardsEndpoints.recomputeAllocations.response,
+  handle: ({ household, body }) => service.recomputeAllocations(household, body),
+});
 export const archive = createHouseholdHandler({
   params: creditCardsEndpoints.archive.params,
   response: creditCardsEndpoints.archive.response,

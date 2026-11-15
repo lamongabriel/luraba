@@ -17,6 +17,10 @@ import {
   SidePanelSettingCard,
 } from "@/components/side-panel/side-panel-section";
 import { TransactionItemsList } from "@/components/transactions/transaction-items-list";
+import {
+  TransactionLinkedPurchase,
+  TransactionNetCost,
+} from "@/components/transactions/transaction-money-back";
 import { TransactionParties } from "@/components/transactions/transaction-parties";
 import { TransactionTextFields } from "@/components/transactions/transaction-text-fields";
 import { useTransactionInlineUpdates } from "@/components/transactions/use-transaction-inline-updates";
@@ -31,12 +35,14 @@ const CLEAR_CATEGORY = "__uncategorized__";
 export function TransactionDetails({
   lookups,
   onDelete,
+  onOpenTransaction,
   payment,
   purchase,
   row,
 }: {
   lookups: TransactionLookups;
   onDelete: () => void;
+  onOpenTransaction?: (row: TransactionFeedRow) => void;
   payment?: CreditCardPayment;
   purchase?: CreditCardPurchase;
   row: TransactionFeedRow;
@@ -111,6 +117,14 @@ export function TransactionDetails({
           </SidePanelDetailRow>
         ) : null}
       </SidePanelSection>
+
+      {row.originType === "refund" ? (
+        <TransactionLinkedPurchase row={row} onOpenTransaction={onOpenTransaction} />
+      ) : null}
+
+      {row.originType === "expense" || row.originType === "credit_card_installment" ? (
+        <TransactionNetCost lookups={lookups} precision={precision} transactionId={row.id} />
+      ) : null}
 
       {row.rowKind !== "credit_card_payment" ? (
         <SidePanelSection title="Classification">

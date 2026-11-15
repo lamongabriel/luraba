@@ -1,4 +1,4 @@
--- 0058_card_statements
+-- 0060_card_statements
 -- Card invoices match the issuer to the cent: statement imports, installment audit trail, reconciled invoices
 -- and the rounding pattern learned per card.
 ALTER TABLE "credit_card_billing_cycles" ADD COLUMN "reconciled_at" timestamp;

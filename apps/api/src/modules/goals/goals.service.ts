@@ -4,10 +4,12 @@ import type {
   createGoalContributionBodySchema,
   Goal,
   GoalContribution,
+  GoalContributionQuote,
   GoalDetail,
   GoalLocation,
   GoalState,
   GoalsReport,
+  goalContributionQuoteQuerySchema,
   moveGoalFundsBodySchema,
   updateGoalBodySchema,
   updateGoalContributionBodySchema,
@@ -19,12 +21,14 @@ import {
   formatISODate,
   formatISODateTime,
   getTodayInTimezone,
+  normalizeFxRate,
   parseISODate,
 } from "@luraba/domain";
 import type { z } from "zod";
 import type { HouseholdContext } from "@/config/permissions";
 import { accountsRepository } from "@/modules/accounts/accounts.repository";
 import {
+  isLinkedTransfer,
   type LinkedTransaction,
   loadLinkedTransactions,
   requireLinkedTransaction,
@@ -32,6 +36,12 @@ import {
 import * as transactionsService from "@/modules/transactions/transactions.service";
 import { ConflictError, isUniqueViolation, NotFoundError, ValidationError } from "@/shared/errors";
 import { createListMeta, type ListResult } from "@/shared/list";
+import {
+  type ContributionRate,
+  convertWithContributionRate,
+  MANUAL_RATE_SOURCE,
+  resolveContributionRate,
+} from "./goals.fx";
 import { type CreateGoalValues, goalsRepository, type NewContribution } from "./goals.repository";
 import type { GoalContributionRecord, GoalRecord } from "./goals.types";
 
@@ -88,6 +98,8 @@ function mapContribution(
     originalAmount: row.originalAmount,
     originalCurrency: row.originalCurrency,
     fxRate: row.fxRate === null ? null : Number(row.fxRate),
+    fxRateSource: row.fxRateSource,
+    fxRateDate: row.fxRateDate ? formatISODate(row.fxRateDate) : null,
     contributedOn: formatISODate(row.contributedOn),
     note: row.note,
     transaction: row.transactionId ? (transactions.get(row.transactionId) ?? null) : null,
@@ -373,12 +385,76 @@ export async function updateContribution(
 ): Promise<GoalDetail> {
   const goal = await requireGoal(context, goalId);
   const current = await requireContribution(goalId, contributionId);
+  const foreign = current.kind === "contribution" && current.originalCurrency !== null;
+  if (!foreign && (body.fxRate !== undefined || body.recompute !== undefined)) {
+    throw new ValidationError("Only a contribution made in another currency has an exchange rate");
+  }
 
-  const amount = body.amount ?? current.amount;
+  const day = body.contributedOn ? toDay(body.contributedOn) : current.contributedOn;
+  let amount = body.amount ?? current.amount;
+  let fxChanges: ReturnType<typeof fxColumns> | null = null;
+  let originalAmount = current.originalAmount;
+  if (foreign && current.originalCurrency) {
+    originalAmount = body.amount ?? current.originalAmount;
+    if (originalAmount === null || originalAmount <= 0) {
+      throw new ValidationError("The amount must be more than zero");
+    }
+    // The rate stays as stored unless a new one is given or a recompute is asked for.
+    const keep =
+      body.fxRate === undefined && !body.recompute && current.fxRate !== null
+        ? {
+            rate: normalizeFxRate(current.fxRate),
+            source: current.fxRateSource ?? MANUAL_RATE_SOURCE,
+            rateDate: current.fxRateDate ?? current.contributedOn,
+          }
+        : null;
+    const converted = keep
+      ? {
+          rate: keep,
+          amount: await convertWithContributionRate({
+            amount: originalAmount,
+            rate: keep.rate,
+            from: current.originalCurrency,
+            to: goal.currencyCode,
+          }),
+        }
+      : await convertContribution({
+          amount: originalAmount,
+          from: current.originalCurrency,
+          to: goal.currencyCode,
+          day,
+          fxRate: body.fxRate,
+        });
+    if (converted.amount <= 0) {
+      throw new ValidationError("The converted amount must be more than zero");
+    }
+    amount = converted.amount;
+    fxChanges = fxColumns(converted.rate);
+  }
+
   const transactionId =
     body.transactionId === undefined ? current.transactionId : body.transactionId;
   if (transactionId) {
-    assertTransactionFits(goal, await requireLinkedTransaction(context, transactionId), amount);
+    const linked = await requireLinkedTransaction(context, transactionId);
+    // A foreign contribution is linked to a transfer whose sides hold the original and the converted
+    // amounts, so the "fits" check only applies to goal-currency links.
+    if (!foreign) assertTransactionFits(goal, linked, amount);
+  }
+
+  // Keep the books in step: the linked transfer takes the new amounts and date.
+  const changed =
+    amount !== current.amount || formatISODate(day) !== formatISODate(current.contributedOn);
+  if (changed && transactionId && transactionId === current.transactionId) {
+    await syncLinkedTransfer(context, current, {
+      transactionId,
+      day,
+      goalCurrencyCode: goal.currencyCode,
+      goalAmount: amount,
+      original:
+        foreign && current.originalCurrency && originalAmount !== null
+          ? { amount: originalAmount, currencyCode: current.originalCurrency }
+          : null,
+    });
   }
 
   try {
@@ -386,8 +462,9 @@ export async function updateContribution(
       amount,
       transactionId,
       ...(current.kind === "move" ? {} : { kind: amount < 0 ? "withdrawal" : "contribution" }),
-      ...(body.contributedOn ? { contributedOn: toDay(body.contributedOn) } : {}),
+      ...(body.contributedOn ? { contributedOn: day } : {}),
       ...(body.note !== undefined ? { note: body.note } : {}),
+      ...(fxChanges ? { originalAmount, ...fxChanges } : {}),
     });
   } catch (error) {
     if (isUniqueViolation(error)) {
@@ -396,6 +473,41 @@ export async function updateContribution(
     throw error;
   }
   return presentGoal(context, goal);
+}
+
+/**
+ * Brings the transfer behind a contribution in line with it: the side in the goal's currency takes the
+ * converted amount, the side in the original currency the original amount, and the transfer moves to the
+ * contribution's day. Skipped when the link is not a transfer between two known accounts.
+ */
+export async function syncLinkedTransfer(
+  context: HouseholdContext,
+  row: GoalContributionRecord,
+  input: {
+    transactionId: string;
+    day: Date;
+    goalCurrencyCode: string;
+    goalAmount: number;
+    original: { amount: number; currencyCode: string } | null;
+  },
+): Promise<void> {
+  if (!row.fromAccountId || !row.toAccountId) return;
+  if (!(await isLinkedTransfer(context, input.transactionId))) return;
+  const [from, to] = await Promise.all([
+    requireCashAccount(context, row.fromAccountId),
+    requireCashAccount(context, row.toAccountId),
+  ]);
+  const amounts = transferAmounts(from.currencyId, to.currencyId, {
+    amount: input.goalAmount,
+    currencyCode: input.goalCurrencyCode,
+    ...(input.original ? { counterpart: input.original } : {}),
+  });
+  if (!amounts) return;
+  await transactionsService.updateTransaction(context, input.transactionId, {
+    ...amounts,
+    purchaseDate: input.day,
+    postedDate: input.day,
+  });
 }
 
 export async function removeContribution(
@@ -409,12 +521,90 @@ export async function removeContribution(
   return presentGoal(context, goal);
 }
 
+/** Resolves the rate (explicit or historical for `day`) and converts `amount` once, at the end. */
+async function convertContribution(input: {
+  amount: number;
+  from: string;
+  to: string;
+  day: Date;
+  fxRate?: number | null | undefined;
+}): Promise<{ amount: number; rate: ContributionRate }> {
+  const rate = await resolveContributionRate({
+    from: input.from,
+    to: input.to,
+    day: input.day,
+    fxRate: input.fxRate,
+  });
+  const amount = await convertWithContributionRate({
+    amount: input.amount,
+    rate: rate.rate,
+    from: input.from,
+    to: input.to,
+  });
+  return { amount, rate };
+}
+
+/** The columns that record a rate on a contribution row (all null for a same-currency one). */
+function fxColumns(rate: ContributionRate | null) {
+  return {
+    fxRate: rate?.rate ?? null,
+    fxRateSource: rate?.source ?? null,
+    fxRateDate: rate?.rateDate ?? null,
+  };
+}
+
+/** What a contribution in another currency would be worth on `day` (the web preview and the MCP dry run). */
+export async function quoteContribution(
+  context: HouseholdContext,
+  query: z.output<typeof goalContributionQuoteQuerySchema>,
+): Promise<GoalContributionQuote> {
+  const day = query.date ? toDay(query.date) : getTodayInTimezone(context.timezone);
+  const from = query.fromCurrencyCode.toUpperCase();
+  const to = query.toCurrencyCode.toUpperCase();
+  const { amount, rate } = await convertContribution({ amount: query.amount, from, to, day });
+  return {
+    fromCurrencyCode: from,
+    toCurrencyCode: to,
+    fxRate: Number(rate.rate),
+    fxRateSource: rate.source,
+    fxRateDate: formatISODate(rate.rateDate),
+    requestedDate: formatISODate(day),
+    originalAmount: query.amount,
+    convertedAmount: amount,
+  };
+}
+
 // ─── Funds: contribute, move, withdraw ───────────────────────────────────
 
 async function requireCashAccount(context: HouseholdContext, accountId: string) {
   const account = await accountsRepository.get(accountId, context);
   if (!account) throw new NotFoundError("Account");
   return account;
+}
+
+/** The amount each side of a funds transfer takes, from what is known in `currencyCode` (and its counterpart). */
+function transferAmounts(
+  fromCurrencyCode: string,
+  toCurrencyCode: string,
+  input: {
+    amount: number;
+    currencyCode: string;
+    counterpart?: { amount: number; currencyCode: string } | undefined;
+  },
+): { fromAmount?: number; toAmount?: number } | null {
+  const amountIn = (currencyCode: string) =>
+    currencyCode === input.currencyCode
+      ? input.amount
+      : currencyCode === input.counterpart?.currencyCode
+        ? input.counterpart.amount
+        : undefined;
+  const fromAmount = amountIn(fromCurrencyCode);
+  const toAmount = amountIn(toCurrencyCode);
+  if (fromAmount === undefined && toAmount === undefined) return null;
+  return {
+    ...(fromAmount === undefined ? {} : { fromAmount }),
+    ...(toAmount === undefined ? {} : { toAmount }),
+  };
 }
 
 /**
@@ -441,21 +631,7 @@ async function createFundsTransfer(
     requireCashAccount(context, input.fromAccountId),
     requireCashAccount(context, input.toAccountId),
   ]);
-  const amountIn = (currencyCode: string) =>
-    currencyCode === input.currencyCode
-      ? input.amount
-      : currencyCode === input.counterpart?.currencyCode
-        ? input.counterpart.amount
-        : undefined;
-  const fromAmount = amountIn(from.currencyId);
-  const toAmount = amountIn(to.currencyId);
-  const amounts =
-    fromAmount === undefined && toAmount === undefined
-      ? null
-      : {
-          ...(fromAmount === undefined ? {} : { fromAmount }),
-          ...(toAmount === undefined ? {} : { toAmount }),
-        };
+  const amounts = transferAmounts(from.currencyId, to.currencyId, input);
   if (!amounts) {
     throw new ValidationError(
       `Neither account is in ${input.currencyCode}; give the amount in the currency of one of them`,
@@ -500,16 +676,20 @@ export async function contributeToGoal(
   const goal = await requireGoal(context, goalId);
   const currencyCode = body.currencyCode ?? goal.currencyCode;
   const foreign = currencyCode !== goal.currencyCode;
-  if (foreign && !body.fxRate) {
-    throw new ValidationError(
-      `This goal is in ${goal.currencyCode}; give fxRate (${goal.currencyCode} per 1 ${currencyCode})`,
-    );
-  }
-  const goalAmount = foreign ? Math.round(body.amount * (body.fxRate ?? 1)) : body.amount;
-  if (goalAmount <= 0) throw new ValidationError("The converted amount must be more than zero");
   const date = body.contributedOn
     ? toDay(body.contributedOn)
     : getTodayInTimezone(context.timezone);
+  const converted = foreign
+    ? await convertContribution({
+        amount: body.amount,
+        from: currencyCode,
+        to: goal.currencyCode,
+        day: date,
+        fxRate: body.fxRate,
+      })
+    : null;
+  const goalAmount = converted ? converted.amount : body.amount;
+  if (goalAmount <= 0) throw new ValidationError("The converted amount must be more than zero");
 
   let transactionId = body.transactionId;
   if (transactionId) {
@@ -540,7 +720,7 @@ export async function contributeToGoal(
     toAccountId: body.toAccountId,
     originalAmount: foreign ? body.amount : null,
     originalCurrency: foreign ? currencyCode : null,
-    fxRate: foreign ? String(body.fxRate) : null,
+    ...fxColumns(converted?.rate ?? null),
   });
   return presentGoal(context, goal);
 }

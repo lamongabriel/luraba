@@ -4,8 +4,10 @@ import {
   type CreateTransactionInput,
   type CreateTransactionResult,
   type DeleteTransactionResult,
+  type LinkRefundInput,
   type ListTransactionsQuery,
   type ListTransactionsResult,
+  type Transaction,
   type TransactionAnalyticsQuery,
   type TransactionAnalyticsResult,
   transactionsEndpoints,
@@ -50,4 +52,13 @@ export function updateTransaction(
 
 export function deleteTransaction(id: string): Promise<DeleteTransactionResult> {
   return requestContract(transactionsEndpoints.delete, { params: { id } });
+}
+
+export function getTransaction(id: string): Promise<Transaction> {
+  return requestContract(transactionsEndpoints.get, { params: { id } });
+}
+
+/** Links a money-back row to the purchase it belongs to, or unlinks it with `null`. */
+export function linkRefund(id: string, body: LinkRefundInput): Promise<Transaction> {
+  return requestContract(transactionsEndpoints.linkRefund, { params: { id }, body });
 }

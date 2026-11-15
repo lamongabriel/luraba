@@ -3,7 +3,7 @@ import type {
   CurrencyRate,
   getCurrencyRateQuerySchema,
 } from "@luraba/contracts/currencies";
-import { formatISODate, now } from "@luraba/domain";
+import { formatISODate, fractionToFxRate, now } from "@luraba/domain";
 import type { z } from "zod";
 import { fxService } from "@/modules/fx/fx.service";
 import { NotFoundError } from "@/shared/errors";
@@ -13,9 +13,12 @@ import { currenciesRepository } from "./currencies.repository";
 
 type CurrencyRateQuery = z.output<typeof getCurrencyRateQuerySchema>;
 
+/**
+ * The rate at full precision (up to 14 decimals). It used to be rounded to 2 decimals, which made a
+ * BRL to USD rate of 0.1808 read 0.18 and skewed every amount converted with it (goal contributions).
+ */
 function formatRate(rateNumerator: number, rateDenominator: number): number {
-  const decimalRate = rateNumerator / rateDenominator;
-  return Math.round((decimalRate + Number.EPSILON) * 100) / 100;
+  return Number(fractionToFxRate(rateNumerator, rateDenominator));
 }
 
 export async function listCurrencies(query: ListCurrenciesQuery): Promise<ListResult<Currency>> {

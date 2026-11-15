@@ -1,7 +1,14 @@
-import { formatISODate, isAfter, isBefore, now, toStartOfDay } from "@luraba/domain";
+import {
+  formatISODate,
+  fractionToFxRate,
+  isAfter,
+  isBefore,
+  now,
+  toStartOfDay,
+} from "@luraba/domain";
 import { FX_PRIMARY_PROVIDER_ID, FX_PROVIDER_FAILURE_MESSAGES } from "@/config/fx";
 import { currenciesRepository } from "@/modules/currencies/currencies.repository";
-import { DependencyUnavailableError, NotFoundError } from "@/shared/errors";
+import { DependencyUnavailableError, NotFoundError, ValidationError } from "@/shared/errors";
 import { fxProviderOrder, fxProvidersById } from "./fx.providers";
 import { fxRateRepository } from "./fx.repository";
 import type {
@@ -99,6 +106,18 @@ type CurrencyRepositoryLike = {
   listPrecisions: typeof currenciesRepository.listPrecisions;
 };
 
+/** A rate for one market day, as an exact decimal (never rounded), with where it came from. */
+export type FxDayRate = {
+  /** `toCurrencyCode` per 1 `fromCurrencyCode`, up to 14 decimals. */
+  rate: string;
+  source: string;
+  /** The market day the rate is from; before the requested day when that was not a business day. */
+  rateDate: Date;
+};
+
+/** How many days before the requested day a rate may be from (weekends and holidays). */
+export const FX_MAX_LOOKBACK_DAYS = 7;
+
 type FxProvidersById = Record<FxProviderId, FxProvider>;
 
 export class FxService {
@@ -149,6 +168,66 @@ export class FxService {
 
     this.rateLookupCache.set(lookupKey, lookupPromise);
     return lookupPromise;
+  }
+
+  /**
+   * The rate for a given day for dated records (goal contributions): the provider's rate for that day,
+   * else the closest previous business day within `FX_MAX_LOOKBACK_DAYS`. Never today's rate for a past
+   * day, and never a household override (those are "now" rates). Throws a validation error asking for an
+   * explicit rate when none exists.
+   *
+   * Providers publish fewer digits for rates below 1 (0.1808) than above (5.5311), so when the pair's rate
+   * is below 1 the inverse pair is fetched and inverted exactly: more significant digits, same market.
+   */
+  async getDayRate(query: FxRateQuery): Promise<FxDayRate> {
+    const from = query.fromCurrencyCode.toUpperCase();
+    const to = query.toCurrencyCode.toUpperCase();
+    const date = toStartOfUtcDay(query.date);
+    const missing = () =>
+      new ValidationError(
+        `No ${from} to ${to} exchange rate is available for ${formatISODate(date)} (or the ${FX_MAX_LOOKBACK_DAYS} days before it); give the rate yourself`,
+      );
+    if (from === to) return { rate: "1", source: FX_PRIMARY_PROVIDER_ID, rateDate: date };
+
+    let resolved: FxResolvedRate;
+    try {
+      resolved = await this.getRate({ fromCurrencyCode: from, toCurrencyCode: to, date });
+    } catch (error) {
+      if (error instanceof DependencyUnavailableError) throw missing();
+      throw error;
+    }
+    const ageDays = Math.round((date.getTime() - resolved.rateDate.getTime()) / 86_400_000);
+    if (ageDays > FX_MAX_LOOKBACK_DAYS) throw missing();
+
+    if (resolved.rateNumerator < resolved.rateDenominator) {
+      const sharper = await this.findInversePair(resolved);
+      if (sharper) resolved = sharper;
+    }
+    return {
+      rate: fractionToFxRate(resolved.rateNumerator, resolved.rateDenominator),
+      source: resolved.provider,
+      rateDate: resolved.rateDate,
+    };
+  }
+
+  /** The same market day and provider fetched the other way round, inverted; undefined when unavailable. */
+  private async findInversePair(rate: FxResolvedRate): Promise<FxResolvedRate | undefined> {
+    const stored = await this.repository.findRateByDate(
+      rate.provider,
+      rate.toCurrencyCode,
+      rate.fromCurrencyCode,
+      rate.rateDate,
+    );
+    if (stored) return invertFxRate(mapStoredRate(stored));
+    const fetched = await this.fetchAndStoreRate({
+      fromCurrencyCode: rate.toCurrencyCode,
+      toCurrencyCode: rate.fromCurrencyCode,
+      date: rate.rateDate,
+      provider: rate.provider,
+    });
+    return fetched && formatISODate(fetched.rateDate) === formatISODate(rate.rateDate)
+      ? invertFxRate(fetched)
+      : undefined;
   }
 
   async convertAmount(input: FxConversionInput): Promise<number> {

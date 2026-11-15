@@ -8,6 +8,7 @@ import { listTransactions } from "@/services/transactions.service";
 export const transactionQueryKeys = {
   all: ["transactions"] as const,
   lists: () => [...transactionQueryKeys.all, "list"] as const,
+  detail: (id: string) => [...transactionQueryKeys.all, "detail", id] as const,
   list: (filters: ListTransactionsQuery) => [...transactionQueryKeys.lists(), filters] as const,
 };
 

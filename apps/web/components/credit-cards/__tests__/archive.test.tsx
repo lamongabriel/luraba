@@ -37,6 +37,7 @@ const card = (archived: boolean): CreditCardOverviewCard => ({
     used: 0,
     available: 100_000,
   },
+  creditBalance: 0,
 });
 
 describe("archive services", () => {

@@ -17,6 +17,8 @@ import type {
   creditCardPaymentSchema,
   creditCardPurchaseSchema,
   creditCardSchema,
+  recomputeCardAllocationsInputSchema,
+  recomputeCardAllocationsResultSchema,
   reconcileCycleInputSchema,
   updateCreditCardCycleInputSchema,
   updateCreditCardInputSchema,
@@ -54,3 +56,5 @@ export type CreditCardOverviewResponse = z.input<typeof creditCardOverviewSchema
 export type CancelCreditCardPurchaseDto = z.output<typeof cancelCreditCardPurchaseInputSchema>;
 export type CardStatementDto = z.output<typeof cardStatementInputSchema>;
 export type ReconcileCycleDto = z.output<typeof reconcileCycleInputSchema>;
+export type RecomputeCardAllocationsDto = z.output<typeof recomputeCardAllocationsInputSchema>;
+export type RecomputeCardAllocationsResponse = z.input<typeof recomputeCardAllocationsResultSchema>;

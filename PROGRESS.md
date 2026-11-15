@@ -70,9 +70,31 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 
 ## Card invoices match the issuer to the cent (branch `claude/clever-hugle-37df7b`)
 - Shipped: domain matching and learned rounding (`card-statements.ts`), Nubank/Inter/XP/Inter Global CSV and OFX parsers,
-  migration `0058_card_statements`, contracts and API (preview/apply/reconcile/unreconcile/audits/patterns, lock with
+  migration `0060_card_statements`, contracts and API (preview/apply/reconcile/unreconcile/audits/patterns, lock with
   override, payment rounding flag), MCP `import_card_statement` and `reconcile_invoice` plus `installmentPlan`, and the
   web import sheet, reconciled badge, audit trail, override confirms, learned rounding select and shorthand field.
 - Not done: PDF statements (export CSV or OFX); the real-browser check at 375 and 1280px (see the final report).
-- Allocations seam: `recomputeCardAllocations` in `apps/api/src/modules/credit-cards/credit-card-allocations.ts`; point it at
-  card-allocations-fix there. Migration number 0058 may need renumbering at merge (money-back-links, piggy-banks).
+- Allocations: statement writes end with `syncCardCycles` (derived allocations from card-allocations-fix); migration renumbered to 0060.
+## Fix: card payment allocations derived from payments and statements (branch claude/priceless-kirch-a65160)
+- Root cause: `credit_card_payment_allocations` rows were written only when a payment was created/edited/deleted, each filling the invoice's `remainingAmount` at that moment. Editing an installment, cancelling, refunding etc. only recomputed `paid_amount` as the sum of those old rows, so an invoice could show paid above its statement and spill cents onto later invoices. The local `luraba_db` copy shows it: for XP Visa Infinite and Ultravioleta Black the card's payments total 0.04 more than the Sep-Nov statements (real overpayments from rounding, e.g. XP Nov payment 2095.89 against a 2095.85 invoice), and the old code attached that 0.04 to the Dec invoice. It is a real payment, now shown as credit.
+- Fix: `syncCardCycles` (called by every mutation) now recomputes the whole card with the pure `allocatePayments` (`@luraba/domain`): payments by date, oldest closed invoice first, capped at the statement; only closed invoices take payments; the rest is an explicit credit balance (`creditBalance` on overview cards, `creditAmount` on payments, limit breakdown, web card panel, `report_credit_cards`). It settles later invoices by itself once they close.
+- Behavior change to know: paying toward an invoice that has not closed yet (e.g. Northstar Dec 400.10 prepaid) now shows as credit until the invoice closes, then applies.
+- New: `POST /credit-cards/recompute-allocations` (dryRun default true), MCP `recompute_card_allocations`, backfill script `pnpm --filter @luraba/api db:recompute-allocations [--apply] [--card id] [--json]` (dry run by default, idempotent, NOT run on deploy), `assertCardAllocationInvariant` test helper, regression tests in `credit-card-allocations.test.ts`.
+- Local dry run on `luraba_db` (older prod copy): 3 invoices would change: Ultravioleta Dec 0.04 -> 0.00, XP Dec 0.04 -> 0.00, Northstar Dec 400.10 -> 0.00 (credit). Inter Prime Black is unchanged there because the dump predates the 66.36 -> 66.34 edit.
+- Production, after deploy: dry run first (`node dist/db/maintenance/recompute-card-allocations.js` in the api container, or call the MCP tool with the default dryRun), review the list, then `--apply` (or `recompute_card_allocations` with `dryRun: false`). Cards also heal on their next read/mutation, so skipping the backfill is safe.
+- Verified: typecheck, biome, web 232, MCP 49, domain 113, contracts 22, API integration 492 (own DB `luraba_db_test_ccalloc`). Not verified: the credit balance row in a browser.
+
+## Money back linked to any purchase (branch claude/jolly-jang-4fea3f)
+- Migration `0058_refund_reason_split` adds the `split` reason. Refunds, cashback and splits can link to any expense or card purchase whichever account or card gets the money; many rows per purchase; cap = sum of linked rows <= original; same currency only (422, no conversion). Posting is unchanged (the row keeps its own account/ledger/category/date), so a card purchase refunded to a bank account leaves the card's limit and invoice untouched. Reports net by the money-back row's own category and month (same as same-account refunds).
+- API: `PATCH /transactions/:id/link-refund` (link, relink, unlink); `moneyBack { totalAmount, receivedBack, outOfPocket, entries }` on expenses and card purchases (detail and list). `cancel_purchase` credits only what is left after linked rows.
+- MCP: `create_refund` with any account/card + `split`, new `link_refund` (dryRun), `receivedBack` / `outOfPocket` / `receivedBackRows` on `get_transaction` and `search_transactions`.
+- Web: "Net cost" block on purchase detail, "Linked purchase" (For + link/unlink picker) on money-back rows, `RefundReasonDisplay`, split label.
+- Backfill is for the owner after deploy: Mario's R$82 Pix (Inter, 2026-11-07) -> Lanchonight (XP Visa, purchaseId 302587e0-2a96-40b3-be10-4c649c4ea13f) and each unlinked Inter Global gift-card cashback, via `link_refund`.
+- Tip: parallel sessions share `luraba_db_test`; run the full suite with `DB_NAME=luraba_db_test_moneyback`.
+
+
+## Goal contributions in another currency (branch `claude/elated-wilbur-5a555a`)
+- Bug: `contribute_to_goal` stored `fxRate` 0.18 for BRL -> USD. Root cause: `GET /currencies/rate` rounded the rate to 2 decimals and the MCP tool sent it as `fxRate`. Fixed at the source: the rate is an exact decimal (`numeric(28,14)`, migration 0059, renumber at merge: 0058 is taken by other branches), resolved for the contribution's date (closest previous business day within 7 days, else a 422 asking for `fxRate`), stored with its source and day, and only the converted amount is rounded (once, half up).
+- Added: `GET /goals/contribution-quote`, `fxRate`/`recompute` on `PATCH /goals/:id/contributions/:id` (moves the linked transfer too), MCP `update_goal_contribution`, major-unit dry runs for contribute/move/withdraw, `ConversionDisplay` in the web (contribution rows, edit modal with live preview and rate override), `pnpm --filter @luraba/api goals:fx-backfill` (dry run by default, idempotent). Details in `apps/api/src/modules/goals/README.md`.
+- Owner step after deploying: run the backfill dry run against production, review, then `--apply` (see the report of this session).
+- Not done: no web form creates a contribution in another currency (there was none); `create_goal`/`update_goal`/`set_monthly_plan` dry runs still print minor units.

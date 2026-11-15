@@ -27,8 +27,11 @@ import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
 import { assertNotArchived } from "@/modules/accounts/accounts.guards";
 import { NotFoundError, ValidationError } from "@/shared/errors";
-import { recomputeCardAllocations } from "./credit-card-allocations";
-import { getBillingCycle, listCyclesThroughMonth } from "./credit-card-cycles.service";
+import {
+  getBillingCycle,
+  listCyclesThroughMonth,
+  syncCardCycles,
+} from "./credit-card-cycles.service";
 import { loadPurchase, writeInstallmentChange } from "./credit-card-purchases.service";
 import { learnRoundingPatterns, recordInstallmentAudit } from "./credit-card-reconciliation";
 import * as creditCardsRepository from "./credit-cards.repository";
@@ -317,8 +320,8 @@ export async function applyStatement(
       });
     }
 
-    // Payments are laid over the corrected invoices again: paid == min(statement, payments), no phantom cents.
-    await recomputeCardAllocations(tx, card, context.timezone);
+    // Allocations are derived: recompute the card so paid == min(statement, payments), no phantom cents.
+    await syncCardCycles(tx, card, context.timezone);
 
     const [after] = await tx
       .select({ statementAmount: creditCardBillingCyclesTable.statementAmount })

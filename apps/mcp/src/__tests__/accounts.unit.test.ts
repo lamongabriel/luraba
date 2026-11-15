@@ -329,4 +329,47 @@ describe("account tools over a mocked API", () => {
     expect(listed.data.creditCards[0].archived).toBe(true);
     await close();
   });
+
+  it("recompute_card_allocations defaults to a dry run and lists the invoices that change", async () => {
+    const result = {
+      dryRun: true,
+      cards: [
+        {
+          creditCardId: ids(6),
+          name: "Inter",
+          currencyCode: "BRL",
+          creditBalance: 200,
+          changedInvoices: [
+            {
+              cycleId: ids(8),
+              closingDate: "2026-10-28",
+              dueDate: "2026-11-05",
+              statementAmount: 69_593,
+              previousPaid: 69_595,
+              paid: 69_593,
+            },
+          ],
+        },
+      ],
+    };
+    const { call, calls, close } = await setup((url, init) => {
+      if (init.method === "POST" && url.pathname.endsWith("/recompute-allocations"))
+        return { success: true, data: result };
+      return page([]);
+    });
+    const out = await call("recompute_card_allocations", {});
+    expect(out.data.status).toBe("dry_run");
+    expect(out.data.cards[0].changedInvoices[0]).toMatchObject({
+      paidBefore: { amount: 695.95 },
+      paidAfter: { amount: 695.93 },
+    });
+    expect(out.data.cards[0].creditBalance.amount).toBe(2);
+    const post = calls.find((c) => c.method === "POST");
+    expect(post?.path).toBe("/credit-cards/recompute-allocations");
+    expect(post?.body).toMatchObject({ dryRun: true });
+    const refused = await call("recompute_card_allocations", { dryRun: false });
+    expect(refused.data.status).toBe("confirmation_required");
+    expect(calls.filter((c) => c.method === "POST")).toHaveLength(1);
+    await close();
+  });
 });

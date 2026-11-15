@@ -61,7 +61,7 @@ describe("currencies service", () => {
       toCurrency: { code: "BRL", symbol: "R$", precision: 2 },
       provider: "frankfurter",
       rateDate: "2026-05-03",
-      rate: 4.98,
+      rate: 4.9835,
       amount: 10_000,
       convertedAmount: 49_835,
     });

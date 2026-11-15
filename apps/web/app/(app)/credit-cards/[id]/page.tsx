@@ -257,7 +257,14 @@ export default function CreditCardDetailPage() {
             last4={card.last4}
             name={card.name}
           />
-          <CreditCardDetailsPanel card={card} />
+          <CreditCardDetailsPanel
+            card={card}
+            creditBalance={
+              overviewQuery.data?.cards.find((item) => item.creditCardId === id)?.creditBalance
+            }
+            language={language}
+            precision={precision}
+          />
           {limitBreakdown ? (
             <LimitBreakdown
               breakdown={limitBreakdown}

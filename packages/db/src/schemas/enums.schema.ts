@@ -140,6 +140,7 @@ export const refundReasonEnum = pgEnum("refund_reason", [
   "cancellation",
   "chargeback",
   "cashback",
+  "split",
 ]);
 export const categoryTypeEnum = pgEnum("category_type", ["expense", "income"]);
 

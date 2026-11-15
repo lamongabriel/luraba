@@ -147,6 +147,8 @@ describe("goal tools over a mocked API", () => {
                 toAccountId: ids(20),
                 originalAmount: null,
                 fxRate: null,
+                fxRateSource: null,
+                fxRateDate: null,
                 originalCurrency: null,
                 contributedOn: "2026-11-02",
                 note: null,
@@ -181,6 +183,144 @@ describe("goal tools over a mocked API", () => {
       toAccountId: ids(20),
     });
     expect(JSON.stringify(post?.body)).toContain('"contributedOn":"2026-11-02');
+    await close();
+  });
+
+  const brlContribution = (over: Record<string, unknown> = {}) => ({
+    id: ids(40),
+    kind: "contribution",
+    amount: 98_917,
+    fromAccountId: ids(21),
+    toAccountId: ids(20),
+    originalAmount: 549_541,
+    originalCurrency: "BRL",
+    fxRate: 0.18,
+    fxRateSource: null,
+    fxRateDate: null,
+    contributedOn: "2026-11-10",
+    note: null,
+    createdAt: now,
+    transaction: null,
+    ...over,
+  });
+  const quote = {
+    fromCurrencyCode: "BRL",
+    toCurrencyCode: "USD",
+    fxRate: 0.17743941,
+    fxRateSource: "frankfurter",
+    fxRateDate: "2026-11-10",
+    requestedDate: "2026-11-10",
+    originalAmount: 549_541,
+    convertedAmount: 97_516,
+  };
+
+  it("previews a foreign contribution in major units with the date's rate and writes nothing", async () => {
+    const { call, calls, close } = await setup((path) => {
+      if (path === "/goals/contribution-quote") return { success: true, data: quote };
+      return lists(path);
+    });
+    const result = await call("contribute_to_goal", {
+      goal: "Honeymoon",
+      amount: 5495.41,
+      currency: "BRL",
+      date: "2026-11-10",
+      fromAccount: "Inter Global",
+      toAccount: "Savings A",
+      dryRun: true,
+    });
+    expect(result.data.status).toBe("dry_run");
+    const would = result.data.wouldRecord;
+    expect(would.amount).toMatchObject({ amount: 5495.41, currency: "BRL" });
+    expect(would.countsTowardGoal).toMatchObject({ amount: 975.16, currency: "USD" });
+    expect(would.conversion).toMatchObject({ fxRate: 0.17743941, fxRateDate: "2026-11-10" });
+    expect(would.conversion.text).toContain("R$5,495.41 -> $975.16 @ 0.17743941 on 2026-11-10");
+    // Never the minor-unit number the old dry run showed.
+    expect(JSON.stringify(result.data)).not.toContain("549541");
+    const quoteCall = calls.find((c) => c.path === "/goals/contribution-quote");
+    expect(quoteCall).toBeDefined();
+    expect(calls.some((c) => c.method === "POST")).toBe(false);
+    expect(calls.some((c) => c.path.startsWith("/currencies"))).toBe(false);
+    await close();
+  });
+
+  it("sends an explicit rate untouched and no rate when none is given", async () => {
+    const { call, calls, close } = await setup((path, method) => {
+      if (method === "POST") return { success: true, data: goal(10, "Honeymoon") };
+      return lists(path);
+    });
+    const base = {
+      goal: "Honeymoon",
+      amount: 5495.41,
+      currency: "BRL",
+      date: "2026-11-10",
+      fromAccount: "Inter Global",
+      toAccount: "Savings A",
+    };
+    await call("contribute_to_goal", { ...base, fxRate: 0.1774394123 });
+    await call("contribute_to_goal", base);
+    const posts = calls.filter((c) => c.method === "POST");
+    expect(posts[0]?.body).toMatchObject({
+      amount: 549_541,
+      currencyCode: "BRL",
+      fxRate: 0.1774394123,
+    });
+    expect(posts[1]?.body).not.toHaveProperty("fxRate");
+    expect(calls.some((c) => c.path.startsWith("/currencies"))).toBe(false);
+    await close();
+  });
+
+  it("fixes a past contribution: previews before and after, then recomputes at the date's rate", async () => {
+    const withRow = goal(10, "Honeymoon", { contributions: [brlContribution()] });
+    const { call, calls, close } = await setup((path, method) => {
+      if (path === "/goals/contribution-quote") return { success: true, data: quote };
+      if (method === "GET" && path === `/goals/${ids(10)}`) return { success: true, data: withRow };
+      if (method === "PATCH")
+        return {
+          success: true,
+          data: goal(10, "Honeymoon", {
+            saved: 97_516,
+            contributions: [
+              brlContribution({
+                amount: 97_516,
+                fxRate: 0.17743941,
+                fxRateSource: "frankfurter",
+                fxRateDate: "2026-11-10",
+              }),
+            ],
+          }),
+        };
+      return lists(path);
+    });
+    const args = { goal: "Honeymoon", contribution: ids(40) };
+    const dry = await call("update_goal_contribution", { ...args, dryRun: true });
+    expect(dry.data.status).toBe("dry_run");
+    expect(dry.data.before.amount.amount).toBe(989.17);
+    expect(dry.data.after.amount.amount).toBe(975.16);
+    expect(dry.data.after.conversion.original.amount).toBe(5495.41);
+    expect(calls.some((c) => c.method === "PATCH")).toBe(false);
+
+    const done = await call("update_goal_contribution", { ...args, date: "2026-11-10" });
+    expect(done.data.status).toBe("updated");
+    expect(done.data.after.conversion.fxRateSource).toBe("frankfurter");
+    const patch = calls.find((c) => c.method === "PATCH");
+    expect(patch?.path).toBe(`/goals/${ids(10)}/contributions/${ids(40)}`);
+    expect(patch?.body).toMatchObject({ recompute: true });
+    expect(JSON.stringify(patch?.body)).toContain('"contributedOn":"2026-11-10');
+
+    await call("update_goal_contribution", {
+      ...args,
+      amount: 1000,
+      fxRate: 0.1775,
+      recompute: false,
+    });
+    const last = calls.filter((c) => c.method === "PATCH").at(-1);
+    expect(last?.body).toEqual({ amount: 100_000, fxRate: 0.1775, recompute: false });
+
+    const unknown = await call("update_goal_contribution", {
+      goal: "Honeymoon",
+      contribution: ids(99),
+    });
+    expect(unknown.isError).toBe(true);
     await close();
   });
 

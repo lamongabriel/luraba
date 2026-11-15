@@ -12,6 +12,7 @@ const path = getEndpointRouterPath;
 
 router.get(path(goalsEndpoints.list), read, controller.list);
 router.get(path(goalsEndpoints.report), read, controller.report);
+router.get(path(goalsEndpoints.contributionQuote), read, controller.contributionQuote);
 router.get(path(goalsEndpoints.get), read, controller.get);
 router.post(path(goalsEndpoints.create), create, controller.create);
 router.patch(path(goalsEndpoints.update), update, controller.update);

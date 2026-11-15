@@ -18,6 +18,7 @@ import {
   deleteCreditCardPurchaseQuerySchema,
   listCreditCardCyclesQuerySchema,
   listCreditCardsQuerySchema,
+  recomputeCardAllocationsInputSchema,
   updateCreditCardCycleInputSchema,
   updateCreditCardInputSchema,
   updateCreditCardInstallmentInputSchema,
@@ -33,6 +34,7 @@ import {
   creditCardPaymentSchema,
   creditCardPurchaseSchema,
   creditCardSchema,
+  recomputeCardAllocationsResultSchema,
 } from "./resource.js";
 import {
   cardRoundingPatternsSchema,
@@ -88,6 +90,13 @@ export const creditCardsEndpoints = {
     params: creditCardIdParamsSchema,
     body: updateCreditCardInputSchema,
     response: creditCardSchema,
+    status: 200,
+  }),
+  recomputeAllocations: defineEndpoint({
+    method: "post",
+    path: "/credit-cards/recompute-allocations",
+    body: recomputeCardAllocationsInputSchema,
+    response: recomputeCardAllocationsResultSchema,
     status: 200,
   }),
   archive: defineEndpoint({

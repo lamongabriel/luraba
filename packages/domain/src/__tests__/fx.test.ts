@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { combineMinorUnits, isMixedCurrencies } from "../fx.js";
+import {
+  combineMinorUnits,
+  convertMinorUnitsWithRate,
+  fractionToFxRate,
+  isMixedCurrencies,
+  normalizeFxRate,
+} from "../fx.js";
 
 const fx = {
   baseCurrencyCode: "USD",
@@ -71,5 +77,40 @@ describe("isMixedCurrencies", () => {
     expect(isMixedCurrencies({ USD: 1 }, "USD")).toBe(false);
     expect(isMixedCurrencies({ USD: 1, BRL: 0 }, "USD")).toBe(false);
     expect(isMixedCurrencies({ USD: 1, BRL: 2 }, "USD")).toBe(true);
+  });
+});
+
+describe("exact decimal rates", () => {
+  it("keeps every digit of a rate and never goes through a 2-decimal rate", () => {
+    expect(normalizeFxRate("0.18077")).toBe("0.18077");
+    expect(normalizeFxRate(0.18077)).toBe("0.18077");
+    expect(normalizeFxRate(1e-7)).toBe("0.0000001");
+    expect(normalizeFxRate("5.5311000")).toBe("5.5311");
+    expect(normalizeFxRate("0.123456789012345")).toBe("0.12345678901235");
+    expect(() => normalizeFxRate("-1")).toThrow();
+    expect(() => normalizeFxRate("0")).toThrow();
+  });
+
+  it("turns a fraction into a decimal rate, half up", () => {
+    expect(fractionToFxRate(10_000, 55_311)).toBe("0.18079586339065");
+    expect(fractionToFxRate(1, 3)).toBe("0.33333333333333");
+    expect(fractionToFxRate(2, 3)).toBe("0.66666666666667");
+    expect(fractionToFxRate(56_354, 10_000)).toBe("5.6354");
+  });
+
+  it("rounds only the converted amount: R$5,495.41 at the exact rate, not at 0.18", () => {
+    const exact = convertMinorUnitsWithRate(549_541, "0.17744", 2, 2);
+    expect(exact).toBe(97_511);
+    // The reported bug: the rate was rounded to 2 decimals first.
+    expect(convertMinorUnitsWithRate(549_541, "0.18", 2, 2)).toBe(98_917);
+    expect(convertMinorUnitsWithRate(549_541, "0.17744", 2, 2)).not.toBe(98_917);
+  });
+
+  it("rounds half up to the target minor unit and handles other precisions", () => {
+    expect(convertMinorUnitsWithRate(1, "0.5", 2, 2)).toBe(1); // 0.5 cent -> 1
+    expect(convertMinorUnitsWithRate(1, "0.4999", 2, 2)).toBe(0);
+    expect(convertMinorUnitsWithRate(10_000, "150.5", 2, 0)).toBe(15_050); // USD -> JPY
+    expect(convertMinorUnitsWithRate(150_000, "0.0066", 0, 2)).toBe(99_000); // JPY -> USD
+    expect(convertMinorUnitsWithRate(-1000, "0.18077", 2, 2)).toBe(-181);
   });
 });

@@ -5,6 +5,7 @@ import {
   createCreditCard,
   deleteAccount,
   deleteCreditCard,
+  recomputeCardAllocations,
   unarchiveAccount,
   unarchiveCreditCard,
   updateAccount,
@@ -35,6 +36,7 @@ import {
   reportMonthlyPlan,
   setMonthlyPlan,
   updateGoal,
+  updateGoalContribution,
   withdrawFromGoal,
 } from "./goals.js";
 import { listIcons } from "./icons.js";
@@ -53,7 +55,7 @@ import {
   updateTag,
   whoami,
 } from "./reference.js";
-import { cancelPurchase, createCreditCardPayment, createRefund } from "./refunds.js";
+import { cancelPurchase, createCreditCardPayment, createRefund, linkRefund } from "./refunds.js";
 import {
   reportBalances,
   reportBudget,
@@ -91,6 +93,7 @@ export const tools: AnyTool[] = [
   updateCreditCard,
   archiveCreditCard,
   unarchiveCreditCard,
+  recomputeCardAllocations,
   deleteCreditCard,
   listCategories,
   listIcons,
@@ -108,6 +111,7 @@ export const tools: AnyTool[] = [
   updateTransaction,
   deleteTransaction,
   createRefund,
+  linkRefund,
   cancelPurchase,
   updateCardPurchase,
   updateInstallment,
@@ -136,6 +140,7 @@ export const tools: AnyTool[] = [
   listGoals,
   deleteGoal,
   contributeToGoal,
+  updateGoalContribution,
   moveGoalFunds,
   withdrawFromGoal,
   setMonthlyPlan,

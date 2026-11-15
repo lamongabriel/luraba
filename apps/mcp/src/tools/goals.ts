@@ -1,14 +1,15 @@
 import {
   type CreateGoalInput,
-  currenciesEndpoints,
+  type GoalContribution,
   type GoalDetail,
   goalsEndpoints,
   type MonthlyPlanReport,
   monthlyPlansEndpoints,
 } from "@luraba/contracts";
+import { convertMinorUnitsWithRate } from "@luraba/domain";
 import { z } from "zod";
 import { fetchAllPages, PAGE_SIZE } from "../client/fetch-all.js";
-import { majorToMinor, majorToMoney, toMoney } from "../format/money.js";
+import { currencyPrecision, majorToMinor, majorToMoney, toMoney } from "../format/money.js";
 import { resolveByName } from "../resolve/match.js";
 import { clarificationOutput, Problems } from "../resolve/problems.js";
 import {
@@ -66,6 +67,51 @@ function describeGoal(
       account: location.accountId ? (names.get(location.accountId) ?? "Unknown") : "Not assigned",
       amount: toMoney(location.amount, c),
     })),
+  };
+}
+
+/** The rate as an agent reads it: up to 8 decimals, trailing zeros trimmed. */
+const rateText = (rate: number) => String(Number(rate.toFixed(8)));
+
+/** `R$5,495.41 -> $975.12 @ 0.17743941 on 2026-11-10`, plus the numbers behind it, all in major units. */
+function describeConversion(input: {
+  original: { amount: number; currency: string };
+  converted: { amount: number; currency: string };
+  fxRate: number;
+  source: string | null;
+  rateDate: string | null;
+}) {
+  const original = toMoney(input.original.amount, input.original.currency);
+  const converted = toMoney(input.converted.amount, input.converted.currency);
+  return {
+    original,
+    converted,
+    fxRate: input.fxRate,
+    fxRateSource: input.source,
+    fxRateDate: input.rateDate,
+    text: `${original.formatted} -> ${converted.formatted} @ ${rateText(input.fxRate)}${input.rateDate ? ` on ${input.rateDate}` : ""}`,
+  };
+}
+
+/** One contribution row for an agent: major-unit money, and the conversion when it was in another currency. */
+function describeContribution(row: GoalContribution, goalCurrency: string) {
+  return {
+    id: row.id,
+    kind: row.kind,
+    date: row.contributedOn,
+    amount: toMoney(row.amount, goalCurrency),
+    note: row.note,
+    transferId: row.transaction?.id ?? null,
+    conversion:
+      row.originalCurrency && row.originalAmount !== null && row.fxRate !== null
+        ? describeConversion({
+            original: { amount: row.originalAmount, currency: row.originalCurrency },
+            converted: { amount: row.amount, currency: goalCurrency },
+            fxRate: row.fxRate,
+            source: row.fxRateSource,
+            rateDate: row.fxRateDate,
+          })
+        : null,
   };
 }
 
@@ -219,21 +265,47 @@ export const listGoals = defineTool({
   name: "list_goals",
   title: "List goals",
   description:
-    "List the goals with plan, saved amount, percent, state and where each goal's money currently sits (by account). Use report_goals for this month's contributed-vs-planned numbers and on-track status.",
+    "List the goals with plan, saved amount, percent, state and where each goal's money currently sits (by account). Pass goal (name or id) with includeContributions=true to also list that goal's contributions with their ids, original amounts and the exchange rate used (needed by update_goal_contribution). Use report_goals for this month's contributed-vs-planned numbers and on-track status.",
   input: z.object({
     status: z.enum(["active", "paused", "canceled"]).optional(),
     type: z.enum(GOAL_TYPES).optional(),
+    goal: z.string().optional().describe("Only this goal (name or id)."),
+    includeContributions: z
+      .boolean()
+      .default(false)
+      .describe("With goal: list its contributions, withdrawals and moves."),
   }),
   annotations: READ_ONLY,
   async handler(context, args): Promise<ToolOutput> {
+    const problems = new Problems();
+    const only = args.goal ? await resolveGoal(context, problems, args.goal) : undefined;
+    if (problems.any || (args.goal && !only)) return clarificationOutput(problems);
     const goals = (await loadGoals(context)).filter(
       (goal) =>
-        (!args.status || goal.status === args.status) && (!args.type || goal.kind === args.type),
+        (!only || goal.id === only.id) &&
+        (!args.status || goal.status === args.status) &&
+        (!args.type || goal.kind === args.type),
     );
     const names = await accountNames(context);
+    const contributions =
+      only && args.includeContributions
+        ? (await context.client.request(goalsEndpoints.get, { params: { id: only.id } }))
+            .contributions
+        : null;
     return {
       summary: `${goals.length} goal(s).`,
-      data: { goals: goals.map((goal) => describeGoal(goal, names)) },
+      data: {
+        goals: goals.map((goal) => ({
+          ...describeGoal(goal, names),
+          ...(contributions
+            ? {
+                contributions: contributions.map((row) =>
+                  describeContribution(row, goal.currencyCode),
+                ),
+              }
+            : {}),
+        })),
+      },
     };
   },
 });
@@ -276,12 +348,16 @@ export const contributeToGoal = defineTool({
   name: "contribute_to_goal",
   title: "Put money toward a goal",
   description:
-    "Record money put toward a goal: creates a transfer from fromAccount to toAccount (neutral in spending and income) and adds the amount to the goal's progress. Use when the user says they saved or invested money for a goal. toAccount is where the money now sits (a savings pot, a brokerage). Pass transferId to link an existing transfer instead of creating one. If amount is in another currency than the goal's, the FX rate used (goal units per 1 of that currency) is stored: give fxRate, or leave it out to use today's rate. Amount is positive, in major units; date defaults to today. Use dryRun=true to preview.",
+    "Record money put toward a goal: creates a transfer from fromAccount to toAccount (neutral in spending and income) and adds the amount to the goal's progress. Use when the user says they saved or invested money for a goal. toAccount is where the money now sits (a savings pot, a brokerage). Pass transferId to link an existing transfer instead of creating one. If amount is in another currency than the goal's, it is converted with fxRate (goal units per 1 of that currency, any number of decimals, used exactly as given) or, when fxRate is left out, with the historical rate for the contribution date (the closest previous business day; never today's rate for a past date; an error asks for fxRate when none exists). The original amount, the converted amount, the rate, its source and its day are stored and returned. Amount is positive, in major units; date defaults to today. Use dryRun=true to preview the conversion.",
   input: z.object({
     goal: z.string().describe("Goal name or id."),
     amount: z.number().positive(),
     currency: z.string().length(3).optional().describe("Defaults to the goal's currency."),
-    fxRate: z.number().positive().optional(),
+    fxRate: z
+      .number()
+      .positive()
+      .optional()
+      .describe("Goal units per 1 of `currency`. Leave out to use the date's historical rate."),
     date: z.iso.date().optional(),
     fromAccount: z.string(),
     toAccount: z.string(),
@@ -299,16 +375,12 @@ export const contributeToGoal = defineTool({
       return clarificationOutput(problems);
 
     const currency = (args.currency ?? goal.currencyCode).toUpperCase();
-    let fxRate = args.fxRate;
-    if (currency !== goal.currencyCode && fxRate === undefined) {
-      const quote = await context.client.request(currenciesEndpoints.rate, {
-        query: { fromCurrencyCode: currency, toCurrencyCode: goal.currencyCode },
-      });
-      fxRate = Number(quote.rate);
-    }
+    const foreign = currency !== goal.currencyCode;
     const body = {
       amount: majorToMinor(args.amount, currency),
-      ...(currency === goal.currencyCode ? {} : { currencyCode: currency, fxRate }),
+      ...(foreign
+        ? { currencyCode: currency, ...(args.fxRate === undefined ? {} : { fxRate: args.fxRate }) }
+        : {}),
       ...(args.date ? { contributedOn: args.date } : {}),
       fromAccountId,
       toAccountId,
@@ -316,9 +388,53 @@ export const contributeToGoal = defineTool({
       ...(args.note ? { note: args.note } : {}),
     };
     if (args.dryRun) {
+      let conversion: ReturnType<typeof describeConversion> | null = null;
+      if (foreign) {
+        const quote =
+          args.fxRate === undefined
+            ? await context.client.request(goalsEndpoints.contributionQuote, {
+                query: {
+                  fromCurrencyCode: currency,
+                  toCurrencyCode: goal.currencyCode,
+                  ...(args.date ? { date: args.date } : {}),
+                  amount: body.amount,
+                },
+              })
+            : null;
+        conversion = describeConversion({
+          original: { amount: body.amount, currency },
+          converted: {
+            amount:
+              quote?.convertedAmount ??
+              convertMinorUnitsWithRate(
+                body.amount,
+                args.fxRate as number,
+                currencyPrecision(currency),
+                currencyPrecision(goal.currencyCode),
+              ),
+            currency: goal.currencyCode,
+          },
+          fxRate: quote?.fxRate ?? (args.fxRate as number),
+          source: quote?.fxRateSource ?? "manual",
+          rateDate: quote?.fxRateDate ?? args.date ?? null,
+        });
+      }
       return {
-        summary: "Dry run: nothing was recorded.",
-        data: { status: "dry_run", goal: goal.name, wouldRecord: body },
+        summary: `Dry run: nothing was recorded.${conversion ? ` ${conversion.text}.` : ""}`,
+        data: {
+          status: "dry_run",
+          goal: goal.name,
+          wouldRecord: {
+            amount: majorToMoney(args.amount, currency),
+            countsTowardGoal: conversion?.converted ?? majorToMoney(args.amount, currency),
+            date: args.date ?? "today",
+            fromAccount: args.fromAccount,
+            toAccount: args.toAccount,
+            transferId: args.transferId ?? null,
+            note: args.note ?? null,
+            conversion,
+          },
+        },
       };
     }
     const updated = await context.client.request(goalsEndpoints.contribute, {
@@ -326,21 +442,153 @@ export const contributeToGoal = defineTool({
       body,
     });
     context.refs.invalidate();
-    const contribution = updated.contributions[0];
+    const contribution = updated.contributions.at(-1);
+    const shown = contribution ? describeContribution(contribution, updated.currencyCode) : null;
     return {
-      summary: `Added ${majorToMoney(args.amount, currency).formatted} to "${goal.name}". Saved: ${toMoney(updated.saved, updated.currencyCode).formatted}.`,
+      summary: `Added ${shown?.conversion?.text ?? majorToMoney(args.amount, currency).formatted} to "${goal.name}". Saved: ${toMoney(updated.saved, updated.currencyCode).formatted}.`,
       data: {
         status: "recorded",
         goal: describeGoal(updated, await accountNames(context)),
-        contribution: contribution
-          ? {
-              amount: toMoney(contribution.amount, updated.currencyCode),
-              date: contribution.contributedOn,
-              fxRateUsed: contribution.fxRate,
-              originalCurrency: contribution.originalCurrency,
-              transferId: contribution.transaction?.id ?? null,
-            }
-          : null,
+        contribution: shown,
+      },
+    };
+  },
+});
+
+export const updateGoalContribution = defineTool({
+  name: "update_goal_contribution",
+  title: "Fix a goal contribution",
+  description:
+    "Correct a past contribution to a goal: its amount, date, exchange rate or note. Find the contribution id with list_goals (goal + includeContributions=true). For a contribution made in another currency, amount is in that ORIGINAL currency (for example BRL), and the converted amount is recomputed: with recompute=true (default) the historical rate for the (new) date is looked up again, unless fxRate is given, which is used exactly as typed (goal units per 1 of the original currency, any number of decimals). recompute=false keeps the stored rate. The goal's saved total, its per-account locations and the transfer behind the contribution are updated together. Use dryRun=true to see before and after.",
+  input: z.object({
+    goal: z.string().describe("Goal name or id."),
+    contribution: z.uuid().describe("Contribution id from list_goals."),
+    amount: z
+      .number()
+      .positive()
+      .optional()
+      .describe("New amount in major units, in the contribution's original currency."),
+    date: z.iso.date().optional(),
+    fxRate: z.number().positive().optional(),
+    recompute: z
+      .boolean()
+      .default(true)
+      .describe("Look up the date's historical rate again (ignored when fxRate is given)."),
+    note: z.string().max(500).optional(),
+    dryRun: z.boolean().default(false),
+  }),
+  annotations: IDEMPOTENT_WRITE,
+  async handler(context, args): Promise<ToolOutput> {
+    const problems = new Problems();
+    const goal = await resolveGoal(context, problems, args.goal);
+    if (problems.any || !goal) return clarificationOutput(problems);
+    const detail = await context.client.request(goalsEndpoints.get, { params: { id: goal.id } });
+    const current = detail.contributions.find((row) => row.id === args.contribution);
+    if (!current) {
+      return {
+        isError: true,
+        summary: `"${goal.name}" has no contribution ${args.contribution}. Use list_goals with includeContributions=true.`,
+        data: { status: "not_found", contribution: args.contribution },
+      };
+    }
+    const foreign = current.kind === "contribution" && current.originalCurrency !== null;
+    if (!foreign && args.fxRate !== undefined) {
+      return {
+        isError: true,
+        summary: "That contribution is in the goal's currency; it has no exchange rate.",
+        data: { status: "invalid_input", field: "fxRate" },
+      };
+    }
+    const currency = foreign ? (current.originalCurrency as string) : goal.currencyCode;
+    const body = {
+      ...(args.amount === undefined ? {} : { amount: majorToMinor(args.amount, currency) }),
+      ...(args.date ? { contributedOn: args.date } : {}),
+      ...(args.fxRate === undefined ? {} : { fxRate: args.fxRate }),
+      ...(foreign ? { recompute: args.recompute } : {}),
+      ...(args.note === undefined ? {} : { note: args.note }),
+    };
+    // A foreign contribution with nothing else given is a plain "recompute at the date's rate".
+    if (Object.keys(body).length === 0) {
+      return {
+        isError: true,
+        summary: "Nothing to change: give amount, date, fxRate or note.",
+        data: { status: "invalid_input" },
+      };
+    }
+
+    const before = describeContribution(current, goal.currencyCode);
+    if (args.dryRun) {
+      let after = before;
+      if (foreign && current.originalAmount !== null && current.fxRate !== null) {
+        const originalAmount = body.amount ?? current.originalAmount;
+        const day = args.date ?? current.contributedOn;
+        const quote =
+          args.fxRate === undefined && args.recompute
+            ? await context.client.request(goalsEndpoints.contributionQuote, {
+                query: {
+                  fromCurrencyCode: currency,
+                  toCurrencyCode: goal.currencyCode,
+                  date: day,
+                  amount: originalAmount,
+                },
+              })
+            : null;
+        const rate = quote?.fxRate ?? args.fxRate ?? current.fxRate;
+        const converted =
+          quote?.convertedAmount ??
+          convertMinorUnitsWithRate(
+            originalAmount,
+            rate,
+            currencyPrecision(currency),
+            currencyPrecision(goal.currencyCode),
+          );
+        after = {
+          ...before,
+          date: day,
+          amount: toMoney(converted, goal.currencyCode),
+          conversion: describeConversion({
+            original: { amount: originalAmount, currency },
+            converted: { amount: converted, currency: goal.currencyCode },
+            fxRate: rate,
+            source: quote
+              ? quote.fxRateSource
+              : args.fxRate === undefined
+                ? current.fxRateSource
+                : "manual",
+            rateDate: quote
+              ? quote.fxRateDate
+              : args.fxRate === undefined
+                ? current.fxRateDate
+                : day,
+          }),
+        };
+      } else {
+        after = {
+          ...before,
+          date: args.date ?? before.date,
+          amount: args.amount === undefined ? before.amount : majorToMoney(args.amount, currency),
+        };
+      }
+      return {
+        summary: `Dry run: nothing was changed. ${before.conversion?.text ?? before.amount.formatted} => ${after.conversion?.text ?? after.amount.formatted}.`,
+        data: { status: "dry_run", goal: goal.name, before, after },
+      };
+    }
+
+    const updated = await context.client.request(goalsEndpoints.updateContribution, {
+      params: { id: goal.id, contributionId: current.id },
+      body,
+    });
+    context.refs.invalidate();
+    const row = updated.contributions.find((item) => item.id === current.id);
+    const after = row ? describeContribution(row, updated.currencyCode) : null;
+    return {
+      summary: `Updated the contribution to "${goal.name}": ${after?.conversion?.text ?? after?.amount.formatted}. Saved: ${toMoney(updated.saved, updated.currencyCode).formatted}.`,
+      data: {
+        status: "updated",
+        before,
+        after,
+        goal: describeGoal(updated, await accountNames(context)),
       },
     };
   },
@@ -381,7 +629,18 @@ export const moveGoalFunds = defineTool({
     if (args.dryRun) {
       return {
         summary: "Dry run: nothing was moved.",
-        data: { status: "dry_run", wouldMove: body },
+        data: {
+          status: "dry_run",
+          goal: goal.name,
+          wouldMove: {
+            amount: majorToMoney(args.amount, goal.currencyCode),
+            fromAccount: args.fromAccount,
+            toAccount: args.toAccount,
+            date: args.date ?? "today",
+            transferId: args.transferId ?? null,
+            note: args.note ?? null,
+          },
+        },
       };
     }
     const updated = await context.client.request(goalsEndpoints.moveFunds, {
@@ -438,7 +697,18 @@ export const withdrawFromGoal = defineTool({
     if (args.dryRun) {
       return {
         summary: "Dry run: nothing was withdrawn.",
-        data: { status: "dry_run", wouldWithdraw: body },
+        data: {
+          status: "dry_run",
+          goal: goal.name,
+          wouldWithdraw: {
+            amount: args.amount === undefined ? null : majorToMoney(args.amount, goal.currencyCode),
+            fromAccount: args.fromAccount,
+            toAccount: args.toAccount ?? null,
+            expenseId: args.expenseId ?? null,
+            date: args.date ?? "today",
+            note: args.note ?? null,
+          },
+        },
       };
     }
     const updated = await context.client.request(goalsEndpoints.withdraw, {
