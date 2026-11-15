@@ -15,6 +15,7 @@ import { AccountDisplay, AmountDisplay, CategoryDisplay, MerchantDisplay, TagDis
 | `MemberDisplay` / `MemberMark` | Who created a record: a household member's picture or initials + name | `userId` (a record's `createdByUserId`; unknown or null renders "Unknown"), `size` |
 | `TransactionTypeMark` | The type glyph in a tile (leading mark of a list row with no merchant) | `type`, `size` |
 | `TransactionTypeDisplay` | Expense, income, transfer, adjustment, card purchase, card payment, refund (shown as money back, green with a plus; `REFUND_REASON_LABELS` names the reason) | `type`, `variant="badge" \| "inline" \| "icon"`, `size` |
+| `RefundReasonDisplay` | Why money came back (refund, cancellation, chargeback, cashback, split): money-back glyph + `REFUND_REASON_LABELS` label | `reason`, `size` |
 | `MerchantDisplay` / `MerchantMark` | Logo, else a shop icon, + name | `merchant`, `size`, `detail="domain"` |
 | `HouseholdDisplay` / `HouseholdMark` | Uploaded picture, else initials, + name | `household`, `size` |
 | `ProductDisplay` / `ProductMark` | Product (or a transaction item): picture, else a package icon, + name on one compact line, optional muted `detail` (price) after the name | `product`, `size`, `detail` |

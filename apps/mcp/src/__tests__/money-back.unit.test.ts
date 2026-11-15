@@ -168,7 +168,12 @@ async function setup() {
         success: true,
         data: {
           ...cashback,
-          refund: { ...cashback.refund, originalTransactionId: body.originalTransactionId },
+          refund: {
+            reason: "cashback",
+            originalTransactionId: body.originalTransactionId,
+            creditCardId: null,
+            billingCycleId: null,
+          },
         },
       });
     return json(page([]));
