@@ -50,6 +50,10 @@ export const ATTACHMENT_TARGETS = {
     scope: "household",
     roles: { image: { cardinality: "one", kinds: ["image"], label: "Image" } },
   },
+  piggy_bank: {
+    scope: "household",
+    roles: { cover: { cardinality: "one", kinds: ["image"], label: "Cover" } },
+  },
   credit_card: {
     scope: "household",
     roles: { image: { cardinality: "one", kinds: ["image"], label: "Card image" } },

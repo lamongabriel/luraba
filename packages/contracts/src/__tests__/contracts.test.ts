@@ -26,6 +26,7 @@ const EXPECTED_MODULE_COUNTS = {
   creditCards: 23,
   exports: 1,
   goals: 12,
+  piggyBanks: 17,
   monthlyPlans: 3,
   currencies: 2,
   fx: 4,
@@ -222,6 +223,23 @@ const EXPECTED_ENDPOINTS = [
   "GET /monthly-plans",
   "GET /monthly-plans/safe-to-spend",
   "PUT /monthly-plans",
+  "GET /piggy-banks",
+  "GET /piggy-banks/report",
+  "GET /piggy-banks/:id",
+  "POST /piggy-banks",
+  "PATCH /piggy-banks/:id",
+  "POST /piggy-banks/:id/archive",
+  "POST /piggy-banks/:id/unarchive",
+  "GET /piggy-banks/:id/movements",
+  "POST /piggy-banks/:id/deposit",
+  "POST /piggy-banks/:id/withdraw",
+  "POST /piggy-banks/bulk-deposit",
+  "POST /piggy-banks/move",
+  "POST /piggy-banks/:id/balance",
+  "POST /piggy-banks/accrue",
+  "GET /goals/:id/piggy-banks",
+  "PUT /goals/:id/piggy-banks",
+  "GET /goals/:id/piggy-plan",
   "GET /products",
   "GET /products/:id",
   "POST /products",
@@ -286,7 +304,7 @@ const EXPECTED_ENDPOINTS = [
 ] as const;
 
 describe("HTTP contract inventory", () => {
-  it("contains the complete 236-route inventory by module", () => {
+  it("contains the complete 253-route inventory by module", () => {
     expect(
       Object.fromEntries(
         Object.entries(contractModules).map(([module, endpoints]) => [
@@ -295,7 +313,7 @@ describe("HTTP contract inventory", () => {
         ]),
       ),
     ).toEqual(EXPECTED_MODULE_COUNTS);
-    expect(allEndpoints).toHaveLength(236);
+    expect(allEndpoints).toHaveLength(253);
     expect(allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`)).toEqual(
       EXPECTED_ENDPOINTS,
     );
@@ -304,7 +322,7 @@ describe("HTTP contract inventory", () => {
   it("has unique method/path pairs and complete endpoint schemas", () => {
     const identities = allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`);
 
-    expect(new Set(identities).size).toBe(236);
+    expect(new Set(identities).size).toBe(253);
 
     for (const endpoint of allEndpoints) {
       expect(endpoint.path).toMatch(/^\/[a-z][a-z0-9/-]*(?::[A-Za-z][A-Za-z0-9_]*)?/);

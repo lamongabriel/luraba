@@ -44,6 +44,7 @@ export {
   oauthConsentTable as oauthConsent,
 } from "./schemas/oauth.schema.js";
 export * from "./schemas/payment-methods.schema.js";
+export * from "./schemas/piggy-banks.schema.js";
 export * from "./schemas/products.schema.js";
 export * from "./schemas/splits.schema.js";
 export * from "./schemas/tags.schema.js";
