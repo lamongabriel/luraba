@@ -22,19 +22,24 @@ import {
   GiftIcon,
   Globe02Icon,
   Home01Icon,
+  Hospital01Icon,
   Invoice01Icon,
   Money01Icon,
   MoneyBag02Icon,
+  Mortarboard01Icon,
   Motorbike01Icon,
   Package01Icon,
   PercentIcon,
   PieChart02Icon,
   PiggyBankIcon,
+  Shield01Icon,
   SlidersHorizontalIcon,
+  SmartPhone01Icon,
   SplitIcon,
   Store01Icon,
   TradeDownIcon,
   TradeUpIcon,
+  Tree01Icon,
   Wallet01Icon as WalletIcon,
 } from "@hugeicons/core-free-icons";
 import type { HugeiconsIcon } from "@hugeicons/react";
@@ -43,6 +48,7 @@ import type {
   AccountType,
   AssetClass,
   InvestmentEventType,
+  PiggyBankCoverPreset,
   TransactionFeedOriginType,
   TransactionType,
 } from "@luraba/contracts";
@@ -221,6 +227,29 @@ export function amountKindForSignedAmount(amount: number): AmountKind {
 export const PRODUCT_FALLBACK = { icon: Package01Icon, color: "#a16207" } as const;
 export const MERCHANT_FALLBACK = { icon: Store01Icon, color: "#64748b" } as const;
 
+/* ------------------------------------------------------------ piggy banks */
+
+export const PIGGY_BANK_FALLBACK = { icon: PiggyBankIcon, color: "#ec4899" } as const;
+
+/** The built-in covers a piggy bank can use when it has no picture (contract: `PIGGY_BANK_COVER_PRESETS`). */
+export const PIGGY_BANK_COVER_DISPLAY: Record<
+  PiggyBankCoverPreset,
+  { label: string; icon: DisplayIcon; color: string }
+> = {
+  savings: { label: "Savings", icon: PiggyBankIcon, color: "#ec4899" },
+  travel: { label: "Travel", icon: Airplane01Icon, color: "#0ea5e9" },
+  home: { label: "Home", icon: Home01Icon, color: "#f59e0b" },
+  car: { label: "Car", icon: Car01Icon, color: "#64748b" },
+  phone: { label: "Phone", icon: SmartPhone01Icon, color: "#8b5cf6" },
+  education: { label: "Education", icon: Mortarboard01Icon, color: "#6366f1" },
+  emergency: { label: "Emergency", icon: Shield01Icon, color: "#ef4444" },
+  gift: { label: "Gift", icon: GiftIcon, color: "#d946ef" },
+  health: { label: "Health", icon: Hospital01Icon, color: "#14b8a6" },
+  land: { label: "Land", icon: Tree01Icon, color: "#16a34a" },
+  taxes: { label: "Taxes", icon: Invoice01Icon, color: "#a16207" },
+  investment: { label: "Investment", icon: ChartIncreaseIcon, color: "#10b981" },
+};
+
 /* ------------------------------------------------------------ empty labels */
 
 export const EMPTY_LABELS = {
@@ -228,6 +257,7 @@ export const EMPTY_LABELS = {
   category: "Uncategorized",
   merchant: "No merchant",
   product: "No product",
+  piggyBank: "No piggy bank",
   member: "Unknown",
   asset: "No asset",
 } as const;

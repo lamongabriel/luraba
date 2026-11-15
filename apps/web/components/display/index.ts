@@ -42,6 +42,7 @@ export {
 export { CategoryDisplay, TagDisplay } from "./label-display";
 export { MemberDisplay, MemberMark } from "./member-display";
 export { MerchantDisplay, MerchantMark } from "./merchant-display";
+export { PiggyBankDisplay, PiggyBankMark } from "./piggy-bank-display";
 export { ProductDisplay, ProductMark } from "./product-display";
 export {
   getTransactionTypeLabel,
