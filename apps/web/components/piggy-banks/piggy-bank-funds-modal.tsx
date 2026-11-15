@@ -22,7 +22,7 @@ import {
   useWithdrawFromPiggyBankMutation,
 } from "@/mutations/piggy-banks/use-piggy-bank-mutations";
 import { useAccountsQuery } from "@/queries/accounts/use-accounts-query";
-import { useAuthSessionStore } from "@/stores/auth-session-store";
+import { useAuthSessionStore, useDefaultCurrencyCode } from "@/stores/auth-session-store";
 
 export type PiggyFundsMode = "deposit" | "withdraw" | "move" | "balance";
 
@@ -68,6 +68,7 @@ export function PiggyBankFundsModal({
   initialMode?: PiggyFundsMode;
 }) {
   const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
+  const defaultCurrency = useDefaultCurrencyCode();
   const precisionOf = useCurrencyPrecision();
   const accounts = useAccountsQuery({ perPage: 200 });
   const [mode, setMode] = React.useState<PiggyFundsMode>(initialMode);
@@ -113,7 +114,7 @@ export function PiggyBankFundsModal({
     move.errorMessage ||
     setBalance.errorMessage;
 
-  const currency = piggyBank?.currencyCode ?? "USD";
+  const currency = piggyBank?.currencyCode ?? defaultCurrency;
   const precision = precisionOf(currency);
   const sameAccount = siblings.filter(
     (item) =>

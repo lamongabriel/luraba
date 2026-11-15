@@ -112,6 +112,17 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
     permissions: [P.GOALS_READ, P.GOALS_CREATE, P.GOALS_UPDATE, P.GOALS_DELETE],
   },
   {
+    key: "piggyBanks",
+    label: "Piggy banks",
+    description: "Savings buckets inside accounts, with daily interest.",
+    permissions: [
+      P.PIGGY_BANKS_READ,
+      P.PIGGY_BANKS_CREATE,
+      P.PIGGY_BANKS_UPDATE,
+      P.PIGGY_BANKS_DELETE,
+    ],
+  },
+  {
     key: "splits",
     label: "Splits",
     description: "Shared expenses and who owes what.",

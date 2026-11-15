@@ -5,8 +5,8 @@ import {
   type CreatePiggyBankInput,
   defaultPiggyDayCount,
   PIGGY_BANK_COVER_PRESETS,
+  type PiggyBank,
   type PiggyBankCoverPreset,
-  type PiggyBankDetail,
   type UpdatePiggyBankInput,
 } from "@luraba/contracts";
 import * as React from "react";
@@ -110,7 +110,7 @@ function PiggyBankForm({
   onCancel,
   onSuccess,
 }: {
-  piggyBank?: PiggyBankDetail;
+  piggyBank?: PiggyBank;
   defaultAccountId?: string;
   onCancel: () => void;
   onSuccess: () => void;
@@ -343,7 +343,7 @@ export function PiggyBankSheet({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  piggyBank?: PiggyBankDetail;
+  piggyBank?: PiggyBank;
   defaultAccountId?: string;
 }) {
   const close = React.useCallback(() => onOpenChange(false), [onOpenChange]);

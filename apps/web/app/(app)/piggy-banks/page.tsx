@@ -218,6 +218,11 @@ export default function PiggyBanksPage() {
       </DataBoundary>
 
       <PiggyBankSheet open={createOpen} onOpenChange={setCreateOpen} />
+      <PiggyBankSheet
+        open={editing !== null}
+        onOpenChange={(open) => !open && setEditing(null)}
+        piggyBank={editing ?? undefined}
+      />
       <PiggyBankFundsModal
         open={funds !== null}
         onOpenChange={(open) => !open && setFunds(null)}

@@ -20,6 +20,7 @@ import { GoalSheet } from "@/components/goals/goal-sheet";
 import { LinkGoalTransactionModal } from "@/components/goals/link-transaction-modal";
 import { KpiCard, KpiGrid } from "@/components/kpi";
 import { PERMISSIONS, useCan } from "@/components/permissions";
+import { GoalPiggyBanksSection } from "@/components/piggy-banks/goal-piggy-banks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -281,6 +282,8 @@ export default function GoalDetailsPage() {
           {goal.expectedReturnBps ? ", including the expected return" : ""}.
         </Typography>
       </section>
+
+      <GoalPiggyBanksSection goalId={goal.id} language={language} />
 
       <section className="rounded-xl border border-border/60 p-4">
         <Typography variant="small-strong">Contributions</Typography>
