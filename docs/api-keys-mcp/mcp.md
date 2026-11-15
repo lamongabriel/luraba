@@ -20,6 +20,13 @@
   edits a card purchase (text, category, merchant, tags, dates, total, count or the full installment list) and
   `update_installment` fixes one installment's amount or invoice by number; installments on closed invoices keep their
   amounts unless the full list is sent. Both support `dryRun`.
+- **Invoice reconciliation**: `import_card_statement(card, file, dryRun)` reads an issuer CSV or OFX (Nubank, Inter, XP,
+  Inter Global; not PDF), matches it to the invoice, fixes rounding cents (up to 5 per installment) and reports matched /
+  corrected / review / missing / not-on-statement lines; with `dryRun` nothing is written. When the invoice then equals the
+  issuer's total it is reconciled and locked. `reconcile_invoice(card, month, issuerTotal)` does the same from the total
+  on the issuer's app. `create_transaction` and `update_card_purchase` also take `installmentPlan` text such as
+  `1st installment 364.90, rest 364.88`, and `override: true` to change a purchase on a locked invoice. New purchases use
+  the card's learned rounding when no `roundingMode` is given and report which one was applied.
 - **Transaction text**: every transaction has a short English `description` title (40 characters or less), an
   `originalDescription` (the bank's raw statement text, copied verbatim, never translated or cleaned) and free-form
   `notes`. `create_transaction`, `create_refund`, `cancel_purchase`, `create_credit_card_payment` and

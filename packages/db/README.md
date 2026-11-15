@@ -19,3 +19,7 @@ Drizzle schema and database client shared by the API and the worker. Migrations 
   list queries hide archived rows by default (see the accounts module README).
 - Rebuild after changes (`pnpm --filter @luraba/db build`); then write the matching SQL migration
   by hand (see `apps/api/README.md`).
+
+Card statements (`card-statements.schema.ts`, migration `0058`): `card_statement_imports`, `card_statement_lines`,
+`card_installment_audits` and `card_rounding_patterns`; `credit_card_billing_cycles` gained `reconciled_at` and
+`issuer_total`. They are reached through the credit-cards module. Other sessions also add 0058+ migrations: renumber at merge.

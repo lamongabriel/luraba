@@ -67,3 +67,12 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 - Web: Archive/Unarchive row in the account and card edit sheets, "Show archived" header button on /accounts and /credit-cards, dimmed archived rows and tiles; pickers never offer archived accounts.
 - Note: parallel sessions share the `luraba_db_test` database and wipe it mid-run; this work used `DB_NAME=luraba_db_test_archive`.
 - Known gap: editing an existing transaction that sits on an archived account shows an empty account picker (the picker omits archived accounts).
+
+## Card invoices match the issuer to the cent (branch `claude/clever-hugle-37df7b`)
+- Shipped: domain matching and learned rounding (`card-statements.ts`), Nubank/Inter/XP/Inter Global CSV and OFX parsers,
+  migration `0058_card_statements`, contracts and API (preview/apply/reconcile/unreconcile/audits/patterns, lock with
+  override, payment rounding flag), MCP `import_card_statement` and `reconcile_invoice` plus `installmentPlan`, and the
+  web import sheet, reconciled badge, audit trail, override confirms, learned rounding select and shorthand field.
+- Not done: PDF statements (export CSV or OFX); the real-browser check at 375 and 1280px (see the final report).
+- Allocations seam: `recomputeCardAllocations` in `apps/api/src/modules/credit-cards/credit-card-allocations.ts`; point it at
+  card-allocations-fix there. Migration number 0058 may need renumbering at merge (money-back-links, piggy-banks).

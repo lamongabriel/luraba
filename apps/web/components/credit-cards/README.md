@@ -76,3 +76,16 @@ list) beside a right column with the invoice and its transactions in a grid with
 The month selector in the header is followed by a "Current invoice" button that appears only when the selected invoice is not the
 current (open) one. Loading twins (`_loading.tsx`) use the same sections and constants (`INVOICE_STRIP_HEIGHT`,
 `INVOICE_COMPOSITION_HEIGHT`).
+
+## Reconciled invoices (statement import)
+
+- `StatementImportSheet` (`FormSheet`): pick the file (read as text) and the invoice; the preview runs on its own and
+  writes nothing, then Apply saves. Lines that need attention are `ListRow`s with a status badge
+  (`STATEMENT_LINE_STATUS`); matches only count in the summary line.
+- `InvoiceSummary` shows "Reconciled · locked", the Import statement and Unlock actions and the "Rounding mismatch -
+  import statement" note; `CreditCardTile` shows the same flag on the dashboard. `InvoiceAuditTrail` lists every cent
+  changed on the selected invoice (hidden when there is none).
+- A save or delete refused with 409 `RECONCILED_INVOICE` opens a confirm ("Save anyway", "Delete anyway") and retries
+  with `override: true` (`use-create-edit-transaction-form.ts`, `delete-transaction-modal.tsx`).
+- The purchase form shows the card's learned extra-cents default with an override select (`roundingMode`, "auto" means
+  the default) and a shorthand field (`parseInstallmentPlanText`) that fills the exact installment list.

@@ -87,3 +87,47 @@ date edit (`rebuildSchedulesFromClosingDate`) keep the stored amounts.
 Both refuse when nothing is left to refund. A partial refund of an installment purchase is a plain `refund`
 transaction (a single credit). Credits reduce the invoice statement; `GET .../cycles/:cycleId` lists them in
 `credits`.
+
+## Statement import and reconciled invoices
+
+The issuer's invoice is the source of truth; a Luraba split is only a forecast until the invoice is reconciled.
+Code: `statements/statement.parsers.ts` (files), `credit-card-statements.service.ts` (preview, apply, reconcile),
+`credit-card-reconciliation.ts` (lock, audit, payment check, learned pattern), `@luraba/domain` `card-statements.ts`
+(pure matching and pattern rules), `credit-card-allocations.ts` (the allocations seam).
+
+- **Parsers** (`parseCardStatement`): Nubank, Inter, XP and Inter Global CSV, and OFX; the layout is detected from the
+  header unless `issuer` is sent. Brazilian decimals (`1.234,56`), negatives, IOF rows and IOF refunds (an IOF line is
+  paired with its refund and the pair is netted, status `netted`) and payment rows (status `payment`, ignored for the
+  invoice total) are handled. **PDF is not supported** (no reliable text extraction): export CSV or OFX.
+- **Matching** (`matchStatement`): a statement line is paired with a Luraba installment on the invoice by text score,
+  installment number and the date; each pair becomes `matched` (same amount), `corrected` (differs by at most
+  `STATEMENT_CORRECTION_TOLERANCE`, 5 cents: fixed automatically), `review` (a larger difference: never changed) or
+  `missing` (a line with no installment). Luraba installments with no line are `extra` ("not on statement"). Nothing is
+  guessed across installments of different purchases.
+- **Apply** (`POST /credit-cards/:id/statements`, one transaction; `.../statements/preview` runs the same code and writes
+  nothing): each `corrected` installment goes through `writeInstallmentChange` (purchase total, ledger, budget and limit
+  follow), an audit row is written (`card_installment_audits`, source `statement`) and the cycle is recomputed
+  (`syncCardCycles`, then `recomputeCardAllocations`). The file is saved in `card_statement_imports` and
+  `card_statement_lines`.
+- **Reconciled state**: when the recomputed invoice total equals the issuer total, `billing_cycles.reconciled_at` and
+  `issuer_total` are set. `POST .../cycles/reconcile` (`month`, `issuerTotal`) does the same from a typed total, and
+  `POST .../cycles/:cycleId/unreconcile` lifts it.
+- **Lock rule**: editing, deleting or cancelling a purchase with an installment on a reconciled invoice is refused
+  with 409 `RECONCILED_INVOICE` (`assertInvoicesUnlocked`) unless the request sends `override: true` (body, or query for
+  delete). An override unlocks the invoice and writes an `override` audit row. Purchases show `locked` per installment.
+- **Payment check**: a card payment within `PAYMENT_MISMATCH_TOLERANCE` (10 cents), but not equal, of an invoice total
+  that is not reconciled is flagged: the payment response has `roundingMismatch {billingCycleId, difference}`, cycles
+  and the overview invoice carry `roundingMismatch`, and the dashboard tile says "Rounding mismatch - import statement".
+  An exact payment, a reconciled invoice or a larger difference is never flagged.
+- **Learned pattern** (`GET .../rounding-patterns`): from reconciled purchases the card (and each merchant) learns where
+  the issuer puts the extra cents (`first`, `last`, `middle`, `none`). `first` becomes `remainder_first`, `none`
+  `round_down_all`, `last` the default, `middle` cannot be reproduced and is not applied. Create and update of a purchase
+  use it when no `roundingMode` is sent (`appliedRoundingMode` and `roundingModeSource` in the response say which and
+  why); an explicit `roundingMode` always wins.
+- **Allocations seam**: payment allocations are never computed here. Every write calls `recomputeCardAllocations`
+  (`credit-card-allocations.ts`), which today wraps `rebuildAllPaymentAllocations` (delete the card's allocations and
+  replay the payments oldest first). To use the card-allocations-fix logic, change only the body of that one function.
+- Endpoints: `previewStatement`, `applyStatement`, `listStatements`, `reconcileCycle`, `unreconcileCycle`,
+  `installmentAudits` (`purchaseId` or `billingCycleId`), `roundingPatterns`. Typing the shorthand
+  `1st installment 364.90, rest 364.88` is `parseInstallmentPlanText` (domain), used by the MCP `installmentPlan` and the
+  web form.

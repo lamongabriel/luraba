@@ -122,3 +122,10 @@ Contracts are in `packages/contracts/src/imports`. The upload is a multipart rou
 registry (`POST /imports`, fields `file` and `accountId` or `creditCardId`, 10 MB); everything else is a
 contract endpoint. Tests: `__tests__/` (`pnpm test:integration src/modules/imports`; the pure column
 logic is in `columns.unit.test.ts`).
+
+## Card statements are a separate flow
+
+The wizard above creates transactions. An issuer's card invoice is different: it never creates purchases, it matches and
+corrects the installments Luraba already has so the invoice equals the issuer to the cent. That flow (parsers, matching,
+reconciled lock, audit trail) lives in the credit-cards module: see "Statement import and reconciled invoices" in
+[../credit-cards/README.md](../credit-cards/README.md).
