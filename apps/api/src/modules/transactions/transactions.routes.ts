@@ -45,6 +45,11 @@ router.patch(
   requireAccess({ permission: PERMISSIONS.TRANSACTIONS_UPDATE }),
   transactionsController.update,
 );
+router.patch(
+  getEndpointRouterPath(transactionsEndpoints.linkRefund),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_UPDATE }),
+  transactionsController.linkRefund,
+);
 router.delete(
   getEndpointRouterPath(transactionsEndpoints.delete),
   requireAccess({ permission: PERMISSIONS.TRANSACTIONS_DELETE }),

@@ -60,6 +60,14 @@ export const update = createHouseholdHandler({
     transactionsService.updateTransaction(household, params.id, body),
 });
 
+export const linkRefund = createHouseholdHandler({
+  params: transactionsEndpoints.linkRefund.params,
+  body: transactionsEndpoints.linkRefund.body,
+  response: transactionsEndpoints.linkRefund.response,
+  handle: ({ household, params, body }) =>
+    transactionsService.linkRefund(household, params.id, body.originalTransactionId),
+});
+
 export const deleteTransaction = createHouseholdHandler({
   params: transactionsEndpoints.delete.params,
   status: "no-content",

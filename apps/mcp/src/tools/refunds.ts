@@ -43,13 +43,14 @@ const DEFAULT_DESCRIPTIONS = {
   cancellation: "Cancellation",
   chargeback: "Chargeback",
   cashback: "Cashback",
+  split: "Split",
 } as const;
 
 export const createRefund = defineTool({
   name: "create_refund",
-  title: "Record a refund, cancellation, chargeback or cashback",
+  title: "Record a refund, cancellation, chargeback, cashback or split",
   description:
-    'Record money that comes back with no source account. It is a CREDIT, never income: on a credit card it lowers the invoice it lands on and restores the available limit; on a bank account it raises the balance. In spending, budget and category reports it counts as negative spending in the category of the original purchase (or the category you give; use an expense category like "Cashback & Rewards" for general cashback). Pass originalTransactionId (the id from search_transactions) to link it: the card/account and category default from the original, and the amount cannot exceed what is left to refund (partial refunds are fine). Without a link give creditCard or account. Do NOT use this to pay a card bill: use create_credit_card_payment. For an installment purchase use cancel_purchase to cancel it. Amount is positive, in major units. description is a short English title; the raw statement text goes in originalDescription and free-form remarks in notes. If a name is ambiguous nothing is created and the candidates come back as status "needs_clarification". Use dryRun=true to preview.',
+    'Record money that comes back with no source account. It is a CREDIT, never income: on a credit card it lowers the invoice it lands on and restores the available limit; on a bank account it raises the balance. In spending, budget and category reports it counts as negative spending in the category of the original purchase (or the category you give; use an expense category like "Cashback & Rewards" for general cashback). Reason "split" is a friend paying back their share. Pass originalTransactionId (the id from search_transactions) to link it to ANY expense or card purchase, whichever account or card receives the money (a Pix into a bank account for a card purchase is fine: the invoice and limit of the card do not change, only the net cost of the purchase): the category and merchant default from the original, creditCard/account default to where the original was paid, and the total of all linked money-back rows cannot exceed the original (many rows per purchase are fine; same currency only). Linked rows show up as receivedBack / outOfPocket on get_transaction and search_transactions. Without a link give creditCard or account. To link an existing row use link_refund. Do NOT use this to pay a card bill: use create_credit_card_payment. For an installment purchase use cancel_purchase to cancel it. Amount is positive, in major units. description is a short English title; the raw statement text goes in originalDescription and free-form remarks in notes. If a name is ambiguous nothing is created and the candidates come back as status "needs_clarification". Use dryRun=true to preview.',
   input: z.object({
     reason: z.enum(REFUND_REASONS),
     amount: z.number().positive().describe("Positive amount in major units."),
@@ -174,6 +175,89 @@ export const createRefund = defineTool({
         ...(cardId
           ? await invoiceSummary(context, cardId, created.refund?.billingCycleId ?? null)
           : {}),
+      },
+    };
+  },
+});
+
+export const linkRefund = defineTool({
+  name: "link_refund",
+  title: "Link money back to a purchase",
+  description:
+    "Link an existing refund, cashback, split or other money-back row (refundId, a transaction of type refund) to the expense or card purchase it belongs to (originalTransactionId, ids from search_transactions), whichever account or card each one is on. Nothing else changes: balances, invoices and the card limit stay as they are; the purchase's receivedBack and outOfPocket move. The total of all rows linked to a purchase cannot exceed its amount and both must be in the same currency. Pass originalTransactionId null (or omit with unlink=true) to detach. Use dryRun=true to preview the new net cost.",
+  input: z.object({
+    refundId: z.uuid().describe("The money-back row (type refund) to link."),
+    originalTransactionId: z
+      .uuid()
+      .nullable()
+      .describe("The expense or card purchase it belongs to; null detaches it."),
+    dryRun: z.boolean().default(false),
+  }),
+  annotations: WRITE,
+  async handler(context, args): Promise<ToolOutput> {
+    const refund = await context.client.request(transactionsEndpoints.get, {
+      params: { id: args.refundId },
+    });
+    if (refund.type !== "refund") {
+      return {
+        isError: true,
+        summary: "refundId must be a refund, cashback, split or other money-back row.",
+        data: { status: "invalid_input", type: refund.type },
+      };
+    }
+    const original = args.originalTransactionId
+      ? await context.client.request(transactionsEndpoints.get, {
+          params: { id: args.originalTransactionId },
+        })
+      : null;
+    const currency = refund.currencyCode;
+    if (args.dryRun) {
+      const total = original?.moneyBack?.totalAmount ?? null;
+      const others =
+        original?.moneyBack?.entries
+          .filter((entry) => entry.transactionId !== refund.id)
+          .reduce((sum, entry) => sum + entry.amount, 0) ?? 0;
+      return {
+        summary: "Dry run: nothing was linked.",
+        data: {
+          status: "dry_run",
+          refund: {
+            id: refund.id,
+            description: refund.description,
+            amount: toMoney(refund.amount, currency),
+          },
+          linkTo: original ? { id: original.id, description: original.description } : null,
+          ...(total === null
+            ? {}
+            : {
+                receivedBackAfter: toMoney(others + refund.amount, currency),
+                outOfPocketAfter: toMoney(total - others - refund.amount, currency),
+                fits: others + refund.amount <= total,
+              }),
+        },
+      };
+    }
+    const linked = await context.client.request(transactionsEndpoints.linkRefund, {
+      params: { id: args.refundId },
+      body: { originalTransactionId: args.originalTransactionId },
+    });
+    const names = await loadNameMaps(context.refs);
+    const purchase = original
+      ? summarizeRow(
+          await context.client.request(transactionsEndpoints.get, {
+            params: { id: original.id },
+          }),
+          names,
+        )
+      : null;
+    return {
+      summary: original
+        ? `Linked "${linked.description}" to "${original.description}".`
+        : `Unlinked "${linked.description}".`,
+      data: {
+        status: original ? "linked" : "unlinked",
+        refund: summarizeRow(linked, names),
+        purchase,
       },
     };
   },

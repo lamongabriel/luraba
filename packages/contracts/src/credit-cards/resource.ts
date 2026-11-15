@@ -3,6 +3,7 @@ import { createdByUserIdSchema, currencyCodeSchema, wireDateTimeSchema } from ".
 import { combinedAmountSchema, combinedFxSchema } from "../fx/resource.js";
 import { creditExpenseTimingSchema, creditInstallmentBudgetModeSchema } from "../preferences.js";
 import { tagSummarySchema } from "../tags/resource.js";
+import { refundReasonSchema } from "../transactions/resource.js";
 
 export const creditCardCycleStatusSchema = z.enum(["open", "closed", "paid"]);
 export const creditCardCycleDisplayStatusSchema = z.enum([
@@ -92,7 +93,7 @@ export const creditCardCyclePaymentSchema = z.object({
 export const creditCardCycleCreditSchema = z.object({
   transactionId: z.uuid(),
   description: z.string(),
-  reason: z.enum(["refund", "cancellation", "chargeback", "cashback"]),
+  reason: refundReasonSchema,
   postedDate: z.iso.date(),
   /** Minor units, positive: how much the invoice went down. */
   amount: z.number().int(),
