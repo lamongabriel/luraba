@@ -10,6 +10,7 @@ export const INSTALLMENT_ROUNDING_MODES = [
   "remainder_last",
   "remainder_first",
   "round_up_all",
+  "round_down_all",
 ] as const;
 export type InstallmentRoundingMode = (typeof INSTALLMENT_ROUNDING_MODES)[number];
 
@@ -18,6 +19,8 @@ export type InstallmentRoundingMode = (typeof INSTALLMENT_ROUNDING_MODES)[number
  * - `remainder_last` (default): every part is `floor(total / count)`, the last takes the leftover cents.
  * - `remainder_first`: same, the first takes the leftover cents.
  * - `round_up_all`: every part is `ceil(total / count)`; the parts then add up to a little more than the total.
+ * - `round_down_all`: every part is `floor(total / count)`; the leftover cents are dropped (some issuers bill
+ *   26.63 x 3 for a 79.90 purchase).
  */
 export function splitInstallmentAmounts(
   totalAmount: number,
@@ -31,6 +34,7 @@ export function splitInstallmentAmounts(
     );
   }
   const baseAmount = Math.floor(totalAmount / installmentCount);
+  if (mode === "round_down_all") return Array.from({ length: installmentCount }, () => baseAmount);
   const remainder = totalAmount - baseAmount * installmentCount;
   const remainderIndex = mode === "remainder_first" ? 0 : installmentCount - 1;
   return Array.from({ length: installmentCount }, (_value, index) =>
@@ -104,7 +108,7 @@ export function resolveInstallmentPlan(
     return fail("Every installment amount must be greater than zero");
   }
   const total = amounts.reduce((sum, value) => sum + value, 0);
-  // With a rounding mode the total is derived (round_up_all adds cents), so only exact lists must match `amount`.
+  // With a rounding mode the total is derived (round_up_all adds cents, round_down_all drops them), so only exact lists must match `amount`.
   if (
     amount !== undefined &&
     (installmentAmounts || installmentAmount !== undefined) &&
