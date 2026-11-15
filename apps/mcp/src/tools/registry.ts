@@ -38,6 +38,18 @@ import {
 } from "./goals.js";
 import { listIcons } from "./icons.js";
 import {
+  archivePiggyBank,
+  createPiggyBank,
+  depositToPiggyBank,
+  linkGoalToPiggyBank,
+  listPiggyBanks,
+  moveBetweenPiggyBanks,
+  reportPiggyBanks,
+  setPiggyBankBalance,
+  updatePiggyBank,
+  withdrawFromPiggyBank,
+} from "./piggy-banks.js";
+import {
   createCategory,
   createMerchant,
   createTag,
@@ -138,4 +150,14 @@ export const tools: AnyTool[] = [
   setMonthlyPlan,
   reportMonthlyPlan,
   reportSafeToSpend,
+  listPiggyBanks,
+  createPiggyBank,
+  updatePiggyBank,
+  archivePiggyBank,
+  depositToPiggyBank,
+  withdrawFromPiggyBank,
+  moveBetweenPiggyBanks,
+  setPiggyBankBalance,
+  linkGoalToPiggyBank,
+  reportPiggyBanks,
 ];
