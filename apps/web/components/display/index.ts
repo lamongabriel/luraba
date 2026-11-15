@@ -31,6 +31,7 @@ export {
   isMixedCombined,
 } from "./combined-amount";
 export * from "./constants";
+export { ConversionDisplay, formatFxRate } from "./conversion-display";
 export { CreditCardDisplay, type CreditCardDisplayInput } from "./credit-card-display";
 export { CurrencyDisplay, CurrencyLabel, StaticCurrencyDisplay } from "./currency-display";
 export { DisplayMark } from "./display-mark";
@@ -44,6 +45,7 @@ export { MemberDisplay, MemberMark } from "./member-display";
 export { MerchantDisplay, MerchantMark } from "./merchant-display";
 export { PiggyBankDisplay, PiggyBankMark } from "./piggy-bank-display";
 export { ProductDisplay, ProductMark } from "./product-display";
+export { RefundReasonDisplay } from "./refund-reason-display";
 export {
   getTransactionTypeLabel,
   TransactionTypeDisplay,

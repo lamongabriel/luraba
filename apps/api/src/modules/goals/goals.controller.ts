@@ -93,3 +93,9 @@ export const withdraw = createHouseholdHandler({
   status: "created",
   handle: ({ household, params, body }) => service.withdrawFromGoal(household, params.id, body),
 });
+
+export const contributionQuote = createHouseholdHandler({
+  query: e.contributionQuote.query,
+  response: e.contributionQuote.response,
+  handle: ({ household, query }) => service.quoteContribution(household, query),
+});

@@ -1,4 +1,4 @@
--- 0058_piggy_banks
+-- 0061_piggy_banks
 -- Piggy banks (Nubank Caixinhas style): savings buckets inside one real account, with daily
 -- interest accrual and goal links. Schema only: no existing data is touched (see docs/piggy-banks.md
 -- for the idempotent "adopt" script that creates the Unallocated piggy bank).

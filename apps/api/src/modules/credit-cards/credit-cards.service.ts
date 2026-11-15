@@ -32,6 +32,8 @@ import type {
   CreditCardPurchaseResponse,
   CreditCardResponse,
   ListCreditCardsResponse,
+  RecomputeCardAllocationsDto,
+  RecomputeCardAllocationsResponse,
   UpdateCreditCardCycleDto,
   UpdateCreditCardDto,
   UpdateCreditCardInstallmentDto,
@@ -418,4 +420,33 @@ export async function getOverview(context: HouseholdContext, query: CreditCardOv
 
 export async function getInsights(context: HouseholdContext, query: CreditCardInsightsQuery) {
   return insightsService.getInsights(context, query);
+}
+
+/**
+ * Recomputes card payment allocations (see `syncCardCycles`) for one card or every card of the
+ * household. `dryRun` (the default at the API) only reports the invoices whose paid amount would change.
+ */
+export async function recomputeAllocations(
+  context: HouseholdContext,
+  dto: RecomputeCardAllocationsDto,
+): Promise<RecomputeCardAllocationsResponse> {
+  const cards = dto.creditCardId
+    ? [await creditCardsRepository.findByIdOrThrow(context.householdId, dto.creditCardId)]
+    : await creditCardsRepository.listByHouseholdId(context.householdId, {
+        includeArchived: true,
+      });
+  const results = [];
+  for (const card of cards) {
+    const result = await paymentService.recomputeCardAllocations(context, card.id, {
+      dryRun: dto.dryRun,
+    });
+    results.push({
+      creditCardId: card.id,
+      name: card.name,
+      currencyCode: card.currencyCode,
+      creditBalance: result.creditBalance,
+      changedInvoices: result.changedInvoices,
+    });
+  }
+  return { dryRun: dto.dryRun, cards: results };
 }

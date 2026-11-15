@@ -128,7 +128,7 @@ browser, so no request per slider move.
 
 ## 7. Migration of "Nubank Caixinhas"
 
-The schema migration (`0058_piggy_banks`) only creates tables; **it does not touch data**, because
+The schema migration (`0061_piggy_banks`) only creates tables; **it does not touch data**, because
 production must not change until the owner decides. The data step is an idempotent script:
 
 ```bash

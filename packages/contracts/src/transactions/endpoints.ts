@@ -3,6 +3,7 @@ import { defineEndpoint } from "../api.js";
 import { listMetaSchema, listMetaWithSummarySchema } from "../list.js";
 import {
   createTransactionInputSchema,
+  linkRefundInputSchema,
   listTransactionsQuerySchema,
   replaceTransactionItemsBodySchema,
   transactionAnalyticsQuerySchema,
@@ -62,6 +63,14 @@ export const transactionsEndpoints = {
     path: "/transactions/:id",
     params: transactionIdParamsSchema,
     body: updateTransactionInputSchema,
+    response: transactionSchema,
+    status: 200,
+  }),
+  linkRefund: defineEndpoint({
+    method: "patch",
+    path: "/transactions/:id/link-refund",
+    params: transactionIdParamsSchema,
+    body: linkRefundInputSchema,
     response: transactionSchema,
     status: 200,
   }),

@@ -16,6 +16,7 @@ import {
 } from "@luraba/domain";
 import type { HouseholdContext } from "@/config/permissions";
 import { fxService } from "@/modules/fx/fx.service";
+import { convertWithContributionRate, resolveContributionRate } from "@/modules/goals/goals.fx";
 import { goalsRepository } from "@/modules/goals/goals.repository";
 import type { GoalRecord } from "@/modules/goals/goals.types";
 import { loadIndexData } from "@/modules/investments/investments.macro";
@@ -36,6 +37,26 @@ export type LinkedProgress = {
 async function convert(amount: number, from: string, to: string, date: Date): Promise<number> {
   if (amount === 0 || from === to) return amount;
   return fxService.convertAmount({ amount, fromCurrencyCode: from, toCurrencyCode: to, date });
+}
+
+/**
+ * Past flows are converted with the historical rate of their month (the same full-precision approach as goal
+ * contributions: `resolveContributionRate` + `convertWithContributionRate`), never today's rate for a past day.
+ * The day is the last day of the month, or today for the current month.
+ */
+async function convertForMonth(
+  amount: number,
+  from: string,
+  to: string,
+  month: string,
+  today: Date,
+): Promise<number> {
+  if (amount === 0 || from === to) return amount;
+  const [year, monthNumber] = month.slice(0, 7).split("-").map(Number) as [number, number];
+  const monthEnd = new Date(Date.UTC(year, monthNumber, 0));
+  const day = monthEnd.getTime() < today.getTime() ? monthEnd : today;
+  const rate = await resolveContributionRate({ from, to, day });
+  return convertWithContributionRate({ amount, rate: rate.rate, from, to });
 }
 
 /** Expected yearly rate (a fraction) of a piggy bank from today's index projections. */
@@ -256,10 +277,11 @@ export async function getGoalPiggyPlan(
     const currencies = new Map(progress.piggyBanks.map((item) => [item.id, item.currencyCode]));
     const byMonth = new Map<string, number>();
     for (const flow of flows) {
-      const converted = await convert(
+      const converted = await convertForMonth(
         flow.total,
         currencies.get(flow.piggyBankId) ?? goal.currencyCode,
         goal.currencyCode,
+        flow.month,
         today,
       );
       byMonth.set(flow.month, (byMonth.get(flow.month) ?? 0) + converted);

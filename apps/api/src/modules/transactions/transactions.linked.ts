@@ -43,3 +43,12 @@ export async function requireLinkedTransaction(
   if (!transaction) throw new NotFoundError("Transaction");
   return transaction;
 }
+
+/** Whether the household's transaction is a transfer between two accounts (not an expense or income). */
+export async function isLinkedTransfer(
+  context: HouseholdContext,
+  transactionId: string,
+): Promise<boolean> {
+  const rows = await transactionsRepository.listDetailedByTransactionIds(context, [transactionId]);
+  return mapDetailedRows(rows)[0]?.type === "transfer";
+}

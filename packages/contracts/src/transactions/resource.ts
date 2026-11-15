@@ -10,8 +10,14 @@ export const transactionTypeSchema = z.enum([
   "adjustment",
   "refund",
 ]);
-/** Why money came back: a refund, a cancelled order, a chargeback or cashback. */
-export const REFUND_REASONS = ["refund", "cancellation", "chargeback", "cashback"] as const;
+/** Why money came back: a refund, a cancelled order, a chargeback, cashback or a friend paying their share. */
+export const REFUND_REASONS = [
+  "refund",
+  "cancellation",
+  "chargeback",
+  "cashback",
+  "split",
+] as const;
 export const refundReasonSchema = z.enum(REFUND_REASONS);
 /** Set on `refund` transactions only. A card credit has `creditCardId` and the invoice it lands on. */
 export const transactionRefundSchema = z.object({
@@ -21,6 +27,30 @@ export const transactionRefundSchema = z.object({
   billingCycleId: z.uuid().nullable(),
 });
 export const transactionTagSchema = tagSummarySchema;
+/** One money-back row linked to a purchase: where it landed and how much, in the purchase's currency. */
+export const moneyBackEntrySchema = z.object({
+  transactionId: z.uuid(),
+  reason: refundReasonSchema,
+  description: z.string(),
+  amount: z.number().int(),
+  currencyCode: z.string(),
+  postedDate: z.string(),
+  accountId: z.uuid().nullable(),
+  accountName: z.string().nullable(),
+  accountClassification: accountClassificationSchema.nullable(),
+  creditCardId: z.uuid().nullable(),
+});
+/**
+ * Net cost of an expense or card purchase (minor units, the purchase's currency): `totalAmount` is the full
+ * purchase (all installments), `receivedBack` the sum of every linked money-back row and `outOfPocket` the
+ * difference. Null on everything that is not an expense or card purchase.
+ */
+export const transactionMoneyBackSchema = z.object({
+  totalAmount: z.number().int(),
+  receivedBack: z.number().int(),
+  outOfPocket: z.number().int(),
+  entries: z.array(moneyBackEntrySchema),
+});
 export const transactionSchema = z.object({
   id: z.uuid(),
   type: transactionTypeSchema,
@@ -46,6 +76,7 @@ export const transactionSchema = z.object({
   paymentMethodTranslationKey: z.string().nullable(),
   tags: z.array(transactionTagSchema),
   refund: transactionRefundSchema.nullable(),
+  moneyBack: transactionMoneyBackSchema.nullable().default(null),
   includeInBudget: z.boolean(),
   purchaseDate: z.string(),
   postedDate: z.string(),
@@ -136,6 +167,8 @@ export const upcomingTransactionSchema = z.object({
   isOverdue: z.boolean().default(false),
 });
 
+export type TransactionMoneyBack = z.output<typeof transactionMoneyBackSchema>;
+export type MoneyBackEntry = z.output<typeof moneyBackEntrySchema>;
 export type TransactionRefund = z.output<typeof transactionRefundSchema>;
 export type RefundReason = z.output<typeof refundReasonSchema>;
 export type Transaction = z.output<typeof transactionSchema>;

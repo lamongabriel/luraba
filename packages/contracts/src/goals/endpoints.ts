@@ -6,6 +6,7 @@ import {
   createGoalBodySchema,
   createGoalContributionBodySchema,
   goalContributionParamsSchema,
+  goalContributionQuoteQuerySchema,
   goalIdParamsSchema,
   goalsReportQuerySchema,
   listGoalsQuerySchema,
@@ -14,7 +15,12 @@ import {
   updateGoalContributionBodySchema,
   withdrawFromGoalBodySchema,
 } from "./requests.js";
-import { goalDetailSchema, goalSchema, goalsReportSchema } from "./resource.js";
+import {
+  goalContributionQuoteSchema,
+  goalDetailSchema,
+  goalSchema,
+  goalsReportSchema,
+} from "./resource.js";
 
 export const goalsEndpoints = {
   list: defineEndpoint({
@@ -31,6 +37,14 @@ export const goalsEndpoints = {
     path: "/goals/report",
     query: goalsReportQuerySchema,
     response: goalsReportSchema,
+    status: 200,
+  }),
+  /** The historical rate and converted amount for a contribution in another currency (preview). */
+  contributionQuote: defineEndpoint({
+    method: "get",
+    path: "/goals/contribution-quote",
+    query: goalContributionQuoteQuerySchema,
+    response: goalContributionQuoteSchema,
     status: 200,
   }),
   get: defineEndpoint({

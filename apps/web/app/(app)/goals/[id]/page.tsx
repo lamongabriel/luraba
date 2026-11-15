@@ -11,6 +11,7 @@ import type { GoalContribution, GoalDetail } from "@luraba/contracts";
 import { formatShortDate } from "@luraba/domain";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
+import { ConversionDisplay } from "@/components/display";
 import { HeaderAddButton, HeaderButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MoneyValue } from "@/components/finance/money-value";
@@ -86,6 +87,18 @@ function ContributionRow({
         <Typography variant="small-strong">
           {formatShortDate(contribution.contributedOn, language)}
         </Typography>
+        {contribution.originalCurrency && contribution.originalAmount !== null ? (
+          <ConversionDisplay
+            originalAmount={contribution.originalAmount}
+            originalCurrency={contribution.originalCurrency}
+            amount={contribution.amount}
+            currencyCode={currencyCode}
+            fxRate={contribution.fxRate}
+            rateDate={contribution.fxRateDate}
+            size="xs"
+            language={language}
+          />
+        ) : null}
         {contribution.transaction ? (
           <Typography variant="small-muted" className="truncate">
             From “{contribution.transaction.description}”
@@ -325,6 +338,7 @@ export default function GoalDetailsPage() {
         onOpenChange={setAddOpen}
         goalId={goal.id}
         contribution={editing}
+        goalCurrencyCode={goal.currencyCode}
       />
       <LinkGoalTransactionModal
         open={linkOpen}

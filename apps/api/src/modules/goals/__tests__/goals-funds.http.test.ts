@@ -1,8 +1,9 @@
 import request from "supertest";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import app from "@/app";
 import * as accountsService from "@/modules/accounts/accounts.service";
 import * as categoriesService from "@/modules/categories/categories.service";
+import { fxProvidersById } from "@/modules/fx/fx.providers";
 import * as transactionsService from "@/modules/transactions/transactions.service";
 import { createAuthenticatedContext, createAuthHeaders } from "@/test/auth";
 import { buildAccountInput, buildCategoryInput } from "@/test/factories";
@@ -214,6 +215,11 @@ describe("goal funds", () => {
     const s = await setup();
     const furniture = await s.createGoal("Furniture", 250);
 
+    // No rate given and the providers are offline: asks for one instead of guessing.
+    const offline = Object.values(fxProvidersById).flatMap((provider) => [
+      vi.spyOn(provider, "getHistoricalRates").mockRejectedValue(new Error("offline")),
+      vi.spyOn(provider, "getLatestRates").mockRejectedValue(new Error("offline")),
+    ]);
     const missingRate = await s.post(`${furniture}/contribute`, {
       amount: 100_000,
       currencyCode: "BRL",
@@ -221,6 +227,7 @@ describe("goal funds", () => {
       toAccountId: s.accounts.savingsA.id,
     });
     expect(missingRate.status).toBe(422);
+    for (const spy of offline) spy.mockRestore();
 
     const response = await s.post(`${furniture}/contribute`, {
       amount: 100_000,

@@ -123,7 +123,24 @@ describe("report_credit_cards", () => {
     const { call, close } = await setup({
       "/credit-cards/overview": {
         month: "2026-11",
-        cards: [],
+        cards: [
+          {
+            creditCardId: ID,
+            name: "Inter",
+            archived: false,
+            institutionName: null,
+            institutionLogoUrl: null,
+            brand: "Visa",
+            last4: "1234",
+            color: null,
+            currencyCode: "BRL",
+            closingDay: 28,
+            dueDay: 5,
+            invoice: null,
+            limit: limit(null),
+            creditBalance: 200,
+          },
+        ],
         totals: [
           {
             currencyCode: "BRL",
@@ -159,6 +176,7 @@ describe("report_credit_cards", () => {
     expect(result.data.combined.owedThisMonth.byCurrency).toHaveLength(2);
     expect(result.data.fx).toMatchObject({ baseCurrency: "USD", asOf: "2026-11-12" });
     expect(result.data.totals).toHaveLength(1);
+    expect(result.data.cards[0].creditBalance).toMatchObject({ amount: 2, currency: "BRL" });
     await close();
   });
 });

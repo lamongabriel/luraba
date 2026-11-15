@@ -36,6 +36,11 @@ router.patch(
   creditCardsController.update,
 );
 router.post(
+  getEndpointRouterPath(creditCardsEndpoints.recomputeAllocations),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_UPDATE }),
+  creditCardsController.recomputeAllocations,
+);
+router.post(
   getEndpointRouterPath(creditCardsEndpoints.archive),
   requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_UPDATE }),
   creditCardsController.archive,

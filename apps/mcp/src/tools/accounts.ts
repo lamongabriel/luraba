@@ -420,6 +420,55 @@ export const archiveCreditCard = defineTool({
   },
 });
 
+export const recomputeCardAllocations = defineTool({
+  name: "recompute_card_allocations",
+  title: "Recompute credit card payment allocations",
+  description:
+    "Rebuilds which invoices each card payment covers, from scratch: payments oldest first fill invoices oldest first, never above an invoice's statement; whatever no invoice absorbs is the card's credit balance. Invoice paid amounts are derived this way automatically after every change, so use this only to audit or repair a card (or all cards when creditCard is omitted). Idempotent. dryRun defaults to TRUE: it only lists the invoices whose paid amount would change; pass dryRun=false AND confirm=true to write.",
+  input: z.object({
+    creditCard: z.string().optional().describe("Name, last 4 or id. Omit to recompute every card."),
+    dryRun: z.boolean().default(true),
+    confirm: z.boolean().default(false).describe("Required to write (dryRun=false)."),
+  }),
+  annotations: IDEMPOTENT_WRITE,
+  async handler({ client, refs }, { creditCard, dryRun, confirm }) {
+    if (!dryRun && !confirm)
+      return {
+        isError: true,
+        summary:
+          "Writing allocations needs confirm=true. Run with dryRun=true first and review the invoices that change.",
+        data: { status: "confirmation_required" },
+      };
+    const problems = new Problems();
+    const id = creditCard
+      ? problems.take("creditCard", await refs.resolveCreditCard(creditCard, true))
+      : undefined;
+    if (problems.any) return clarificationOutput(problems);
+    const result = await client.request(creditCardsEndpoints.recomputeAllocations, {
+      body: { creditCardId: id, dryRun },
+    });
+    if (!dryRun) refs.invalidate("creditCards");
+    const cards = result.cards.map((card) => ({
+      creditCard: card.name,
+      creditBalance: toMoney(card.creditBalance, card.currencyCode),
+      changedInvoices: card.changedInvoices.map((invoice) => ({
+        closingDate: invoice.closingDate,
+        dueDate: invoice.dueDate,
+        statement: toMoney(invoice.statementAmount, card.currencyCode),
+        paidBefore: toMoney(invoice.previousPaid, card.currencyCode),
+        paidAfter: toMoney(invoice.paid, card.currencyCode),
+      })),
+    }));
+    const changed = cards.reduce((sum, card) => sum + card.changedInvoices.length, 0);
+    return {
+      summary: dryRun
+        ? `Dry run: ${changed} invoice(s) across ${cards.length} card(s) would change.`
+        : `Recomputed ${cards.length} card(s); ${changed} invoice(s) changed.`,
+      data: { status: dryRun ? "dry_run" : "recomputed", cards },
+    };
+  },
+});
+
 export const unarchiveCreditCard = defineTool({
   name: "unarchive_credit_card",
   title: "Unarchive a credit card",

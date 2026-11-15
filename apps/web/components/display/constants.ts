@@ -185,6 +185,7 @@ export const REFUND_REASON_LABELS = {
   cancellation: "Cancellation",
   chargeback: "Chargeback",
   cashback: "Cashback",
+  split: "Split",
 } as const;
 
 /* ----------------------------------------------------------------- amounts */

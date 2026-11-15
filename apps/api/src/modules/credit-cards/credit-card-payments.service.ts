@@ -1,11 +1,12 @@
 import { accountsTable } from "@luraba/db/schemas/accounts.schema";
+import { creditCardBillingCyclesTable } from "@luraba/db/schemas/credit-card-billing-cycles.schema";
 import { creditCardPaymentAllocationsTable } from "@luraba/db/schemas/credit-card-payment-allocations.schema";
 import { creditCardPaymentsTable } from "@luraba/db/schemas/credit-card-payments.schema";
 import { entriesTable } from "@luraba/db/schemas/entries.schema";
 import { ledgerAccountsTable } from "@luraba/db/schemas/ledger-accounts.schema";
 import { transactionsTable } from "@luraba/db/schemas/transactions.schema";
 import { formatISODate } from "@luraba/domain";
-import { and, asc, eq, inArray, lt } from "drizzle-orm";
+import { and, asc, eq, lt } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
 import type { TxClient } from "@/db/types";
@@ -14,7 +15,11 @@ import { entriesRepository } from "@/modules/entries/entries.repository";
 import * as entriesService from "@/modules/entries/entries.service";
 import { ledgerAccountsRepository } from "@/modules/ledger-accounts/ledger-accounts.repository";
 import { NotFoundError, ValidationError } from "@/shared/errors";
-import { listPayableCycles, syncCardCycles } from "./credit-card-cycles.service";
+import {
+  type AllocationChange,
+  syncCardCycles,
+  syncCardCyclesWithChanges,
+} from "./credit-card-cycles.service";
 import type { CreditCardRow } from "./credit-cards.helpers";
 import * as creditCardsRepository from "./credit-cards.repository";
 import {
@@ -96,8 +101,12 @@ async function loadPaymentAllocations(paymentId: string) {
       amount: creditCardPaymentAllocationsTable.amount,
     })
     .from(creditCardPaymentAllocationsTable)
+    .innerJoin(
+      creditCardBillingCyclesTable,
+      eq(creditCardBillingCyclesTable.id, creditCardPaymentAllocationsTable.billingCycleId),
+    )
     .where(eq(creditCardPaymentAllocationsTable.paymentId, paymentId))
-    .orderBy(asc(creditCardPaymentAllocationsTable.createdAt));
+    .orderBy(asc(creditCardBillingCyclesTable.dueDate));
 }
 
 async function mapPaymentResponse(
@@ -117,6 +126,11 @@ async function mapPaymentResponse(
     postedDate: formatISODate(payment.postedDate),
     amount: payment.amount,
     fromAccountId: payment.fromAccountId,
+    /** The part of the payment no invoice absorbed: card credit carried forward. */
+    creditAmount: Math.max(
+      payment.amount - allocations.reduce((sum, allocation) => sum + allocation.amount, 0),
+      0,
+    ),
     allocations: allocations.flatMap((allocation) =>
       allocation.billingCycleId
         ? [
@@ -156,56 +170,9 @@ async function createTransferEntriesForPayment(
   ]);
 }
 
-async function applySinglePayment(
-  tx: TxClient,
-  card: CreditCardRow,
-  timezone: string,
-  payment: Pick<PaymentRow, "paymentId" | "amount">,
-) {
-  const payableCycles = await listPayableCycles(tx, card, timezone);
-  let remainingAmount = payment.amount;
-
-  for (const cycle of payableCycles) {
-    if (remainingAmount <= 0) break;
-    const allocatedAmount = Math.min(cycle.remainingAmount, remainingAmount);
-    if (allocatedAmount <= 0) continue;
-
-    await tx.insert(creditCardPaymentAllocationsTable).values({
-      paymentId: payment.paymentId,
-      billingCycleId: cycle.id,
-      amount: allocatedAmount,
-    });
-
-    remainingAmount -= allocatedAmount;
-  }
-
-  await syncCardCycles(tx, card, timezone);
-}
-
+/** Payments never write allocations themselves: the one recompute for the whole card does. */
 async function rebuildAllPaymentAllocations(tx: TxClient, card: CreditCardRow, timezone: string) {
-  const payments = await tx
-    .select({
-      paymentId: creditCardPaymentsTable.id,
-      amount: creditCardPaymentsTable.amount,
-      postedDate: transactionsTable.postedDate,
-      createdAt: creditCardPaymentsTable.createdAt,
-    })
-    .from(creditCardPaymentsTable)
-    .innerJoin(transactionsTable, eq(transactionsTable.id, creditCardPaymentsTable.transactionId))
-    .where(eq(creditCardPaymentsTable.creditCardId, card.id))
-    .orderBy(asc(transactionsTable.postedDate), asc(creditCardPaymentsTable.createdAt));
-
-  const paymentIds = payments.map((payment) => payment.paymentId);
-  if (paymentIds.length > 0) {
-    await tx
-      .delete(creditCardPaymentAllocationsTable)
-      .where(inArray(creditCardPaymentAllocationsTable.paymentId, paymentIds));
-  }
   await syncCardCycles(tx, card, timezone);
-
-  for (const payment of payments) {
-    await applySinglePayment(tx, card, timezone, payment);
-  }
 }
 
 async function ensurePaymentAmountWithinUsedLimit(
@@ -341,4 +308,35 @@ export async function deletePayment(
     );
     await rebuildAllPaymentAllocations(tx, card, context.timezone);
   });
+}
+
+export type RecomputeAllocationsResult = {
+  creditCardId: string;
+  dryRun: boolean;
+  /** Invoices whose paid amount changes (dry run) or changed (write). */
+  changedInvoices: AllocationChange[];
+  /** Payments no invoice absorbs, in minor units. */
+  creditBalance: number;
+};
+
+/**
+ * Recomputes every allocation of one card from its payments and statements (idempotent). With
+ * `dryRun` it only reports the invoices whose paid amount would change.
+ */
+export async function recomputeCardAllocations(
+  context: HouseholdContext,
+  creditCardId: string,
+  options: { dryRun?: boolean } = {},
+): Promise<RecomputeAllocationsResult> {
+  const card = await creditCardsRepository.findByIdOrThrow(context.householdId, creditCardId);
+  const dryRun = options.dryRun ?? false;
+  const result = await db.transaction((tx) =>
+    syncCardCyclesWithChanges(tx, card, context.timezone, { dryRun }),
+  );
+  return {
+    creditCardId,
+    dryRun,
+    changedInvoices: result.changes,
+    creditBalance: result.creditBalance,
+  };
 }
