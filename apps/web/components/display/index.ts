@@ -43,6 +43,7 @@ export { CategoryDisplay, TagDisplay } from "./label-display";
 export { MemberDisplay, MemberMark } from "./member-display";
 export { MerchantDisplay, MerchantMark } from "./merchant-display";
 export { ProductDisplay, ProductMark } from "./product-display";
+export { RefundReasonDisplay } from "./refund-reason-display";
 export {
   getTransactionTypeLabel,
   TransactionTypeDisplay,

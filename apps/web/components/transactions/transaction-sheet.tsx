@@ -46,7 +46,12 @@ export function TransactionSheet({
 }) {
   const language = useAuthSessionStore((state) => state.user?.preferences.language ?? "en");
   // The page may clear the row as soon as the sheet closes; keep showing it until the exit ends.
-  const row = useRetainedValue(liveRow, open);
+  const retainedRow = useRetainedValue(liveRow, open);
+  // "For: <purchase>" on a money-back row opens that purchase here; a new row from the page resets it.
+  const [openedRow, setOpenedRow] = React.useState<TransactionFeedRow | null>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset whenever the page selects another row or closes
+  React.useEffect(() => setOpenedRow(null), [liveRow, open]);
+  const row = openedRow ?? retainedRow;
   const purchaseQuery = useQuery({
     enabled: open && Boolean(row?.creditCardId && row?.purchaseId),
     queryKey: ["credit-cards", row?.creditCardId, "purchases", row?.purchaseId],
@@ -100,6 +105,7 @@ export function TransactionSheet({
                 key={row.rowId}
                 lookups={lookups}
                 onDelete={() => onDelete(row)}
+                onOpenTransaction={setOpenedRow}
                 row={row}
                 purchase={purchaseQuery.data}
                 payment={paymentQuery.data}

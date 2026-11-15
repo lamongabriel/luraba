@@ -35,9 +35,11 @@ import {
 } from "./transactions.helpers";
 import type { ListTransactionsQuery } from "./transactions.query";
 import {
+  attachMoneyBack,
   attachRefundDetails,
   createRefund,
   listRefundDetails,
+  setRefundLink,
 } from "./transactions.refunds.service";
 import * as txRepository from "./transactions.repository";
 import type {
@@ -150,7 +152,7 @@ async function loadCreatedTransaction(
     throw new NotFoundError("Transaction");
   }
 
-  return (await attachRefundDetails([transaction]))[0];
+  return (await attachMoneyBack(context, await attachRefundDetails([transaction])))[0];
 }
 
 // -----------------------------------------------------------------------------
@@ -593,7 +595,7 @@ async function hydrateTransactionFeedPage(
   ];
   const rowsByKey = new Map(hydratedRows.map((row) => [getFeedRowHydrationKey(row), row]));
 
-  return page.rows.map((key) => {
+  const ordered = page.rows.map((key) => {
     const row = rowsByKey.get(getFeedRowHydrationKey(key));
     if (!row) {
       throw new NotFoundError("Transaction");
@@ -601,6 +603,7 @@ async function hydrateTransactionFeedPage(
 
     return row;
   });
+  return attachMoneyBack(context, ordered);
 }
 
 export async function listTransactions(
@@ -625,9 +628,22 @@ export async function getTransaction(
   transactionId: string,
 ): Promise<TransactionResponse> {
   const rows = await txRepository.listDetailedByTransactionIds(context, [transactionId]);
-  const [transaction] = await attachRefundDetails(mapDetailedRows(rows));
+  const [transaction] = await attachMoneyBack(
+    context,
+    await attachRefundDetails(mapDetailedRows(rows)),
+  );
   if (!transaction) throw new NotFoundError("Transaction");
   return transaction;
+}
+
+/** Links an existing money-back row to a purchase (or unlinks it with `null`); see the refunds service. */
+export async function linkRefund(
+  context: HouseholdContext,
+  transactionId: string,
+  originalTransactionId: string | null,
+): Promise<TransactionResponse> {
+  await setRefundLink(context, transactionId, originalTransactionId);
+  return getTransaction(context, transactionId);
 }
 
 export async function updateTransaction(

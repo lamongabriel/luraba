@@ -76,3 +76,12 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 - Local dry run on `luraba_db` (older prod copy): 3 invoices would change: Ultravioleta Dec 0.04 -> 0.00, XP Dec 0.04 -> 0.00, Northstar Dec 400.10 -> 0.00 (credit). Inter Prime Black is unchanged there because the dump predates the 66.36 -> 66.34 edit.
 - Production, after deploy: dry run first (`node dist/db/maintenance/recompute-card-allocations.js` in the api container, or call the MCP tool with the default dryRun), review the list, then `--apply` (or `recompute_card_allocations` with `dryRun: false`). Cards also heal on their next read/mutation, so skipping the backfill is safe.
 - Verified: typecheck, biome, web 232, MCP 49, domain 113, contracts 22, API integration 492 (own DB `luraba_db_test_ccalloc`). Not verified: the credit balance row in a browser.
+
+## Money back linked to any purchase (branch claude/jolly-jang-4fea3f)
+- Migration `0058_refund_reason_split` adds the `split` reason. Refunds, cashback and splits can link to any expense or card purchase whichever account or card gets the money; many rows per purchase; cap = sum of linked rows <= original; same currency only (422, no conversion). Posting is unchanged (the row keeps its own account/ledger/category/date), so a card purchase refunded to a bank account leaves the card's limit and invoice untouched. Reports net by the money-back row's own category and month (same as same-account refunds).
+- API: `PATCH /transactions/:id/link-refund` (link, relink, unlink); `moneyBack { totalAmount, receivedBack, outOfPocket, entries }` on expenses and card purchases (detail and list). `cancel_purchase` credits only what is left after linked rows.
+- MCP: `create_refund` with any account/card + `split`, new `link_refund` (dryRun), `receivedBack` / `outOfPocket` / `receivedBackRows` on `get_transaction` and `search_transactions`.
+- Web: "Net cost" block on purchase detail, "Linked purchase" (For + link/unlink picker) on money-back rows, `RefundReasonDisplay`, split label.
+- Backfill is for the owner after deploy: Mario's R$82 Pix (Inter, 2026-11-07) -> Lanchonight (XP Visa, purchaseId 302587e0-2a96-40b3-be10-4c649c4ea13f) and each unlinked Inter Global gift-card cashback, via `link_refund`.
+- Tip: parallel sessions share `luraba_db_test`; run the full suite with `DB_NAME=luraba_db_test_moneyback`.
+

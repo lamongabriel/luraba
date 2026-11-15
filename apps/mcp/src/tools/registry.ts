@@ -53,7 +53,7 @@ import {
   updateTag,
   whoami,
 } from "./reference.js";
-import { cancelPurchase, createCreditCardPayment, createRefund } from "./refunds.js";
+import { cancelPurchase, createCreditCardPayment, createRefund, linkRefund } from "./refunds.js";
 import {
   reportBalances,
   reportBudget,
@@ -109,6 +109,7 @@ export const tools: AnyTool[] = [
   updateTransaction,
   deleteTransaction,
   createRefund,
+  linkRefund,
   cancelPurchase,
   updateCardPurchase,
   updateInstallment,

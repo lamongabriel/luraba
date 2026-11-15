@@ -28,6 +28,21 @@ export type TransactionSummary = {
   purchaseId: string | null;
   /** Refund rows: why the money came back and the purchase it is linked to. */
   refund: { reason: string; originalTransactionId: string | null } | null;
+  /**
+   * Expense and card purchase rows: what came back (refunds, cashback, splits linked to it, whichever
+   * account or card got the money), as a positive amount, and what is left out of pocket. Null elsewhere.
+   */
+  receivedBack: Money | null;
+  outOfPocket: Money | null;
+  /** The linked money-back rows behind `receivedBack`. */
+  receivedBackRows: Array<{
+    id: string;
+    reason: string;
+    description: string;
+    date: string;
+    account: string | null;
+    amount: Money;
+  }>;
 };
 
 type NameMaps = {
@@ -77,6 +92,7 @@ type RowLike = Pick<
       | "originType"
       | "purchaseId"
       | "refund"
+      | "moneyBack"
     >
   >;
 
@@ -113,5 +129,15 @@ export function summarizeRow(row: RowLike, names: NameMaps): TransactionSummary 
     refund: row.refund
       ? { reason: row.refund.reason, originalTransactionId: row.refund.originalTransactionId }
       : null,
+    receivedBack: row.moneyBack ? toMoney(row.moneyBack.receivedBack, row.currencyCode) : null,
+    outOfPocket: row.moneyBack ? toMoney(row.moneyBack.outOfPocket, row.currencyCode) : null,
+    receivedBackRows: (row.moneyBack?.entries ?? []).map((entry) => ({
+      id: entry.transactionId,
+      reason: entry.reason,
+      description: entry.description,
+      date: entry.postedDate,
+      account: entry.accountName,
+      amount: toMoney(entry.amount, entry.currencyCode),
+    })),
   };
 }

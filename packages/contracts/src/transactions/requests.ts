@@ -82,8 +82,9 @@ const adjustmentSchema = z.strictObject({
 });
 /**
  * Money that comes back without a source account: set `accountId` (it raises the balance) or
- * `creditCardId` (it lowers the open invoice). With `originalTransactionId` the category defaults to
- * the original's. Reports net it against the category; it is never income.
+ * `creditCardId` (it lowers the open invoice). With `originalTransactionId` (any expense or card
+ * purchase, whichever account or card receives the money) the category and merchant default to the
+ * original's. Reports net it against the category; it is never income.
  */
 const refundSchema = z.strictObject({
   type: z.literal("refund"),
@@ -216,6 +217,11 @@ export const upcomingTransactionsQuerySchema = transactionAnalyticsQuerySchema.e
   sortDirection: z.enum(["asc", "desc"]).default("asc"),
 });
 export const transactionIdParamsSchema = idParamsSchema;
+/** Links a money-back row (refund, cashback, split...) to a purchase, or unlinks it with `null`. */
+export const linkRefundInputSchema = z.strictObject({
+  originalTransactionId: z.uuid().nullable(),
+});
+export type LinkRefundInput = z.input<typeof linkRefundInputSchema>;
 
 export type CreateTransactionInput = z.input<typeof createTransactionInputSchema>;
 export type UpdateTransactionInput = z.input<typeof updateTransactionInputSchema>;

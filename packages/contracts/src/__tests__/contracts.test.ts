@@ -42,7 +42,7 @@ const EXPECTED_MODULE_COUNTS = {
   splits: 16,
   tags: 4,
   products: 5,
-  transactions: 9,
+  transactions: 10,
   uploads: 10,
 } as const;
 
@@ -271,6 +271,7 @@ const EXPECTED_ENDPOINTS = [
   "POST /transactions",
   "GET /transactions/:id",
   "PATCH /transactions/:id",
+  "PATCH /transactions/:id/link-refund",
   "GET /transactions/:id/items",
   "PUT /transactions/:id/items",
   "DELETE /transactions/:id",

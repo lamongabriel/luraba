@@ -8,9 +8,12 @@
 
 - **Transactions**: `search_transactions`, `get_transaction`, `create_transaction` (income, expense, transfer,
   credit card purchase with installments), `update_transaction`, `delete_transaction`, and
-  `create_refund` (refund, cancellation, chargeback or cashback: a credit with no source account, never income;
+  `create_refund` (refund, cancellation, chargeback, cashback or split: a credit with no source account, never income;
   on a card it lowers the invoice and restores the limit, on an account it raises the balance, and reports net
-  it against the category), `cancel_purchase` (credit a card purchase once, or drop the unbilled installments and
+  it against the category; with `originalTransactionId` it links to any expense or card purchase, whichever
+  account or card gets the money), `link_refund` (link or unlink an existing money-back row, `dryRun` supported;
+  `get_transaction` and `search_transactions` rows then show `receivedBack`, `outOfPocket` and `receivedBackRows`),
+  `cancel_purchase` (credit a card purchase once, or drop the unbilled installments and
   credit the billed ones), `create_credit_card_payment` (pay a card bill from an account; neutral in reports), and
   `bulk_update_transactions`, `bulk_categorize_transactions`, `bulk_delete_transactions`.
 - **Card installments**: `create_transaction` for a `credit_card_purchase` takes `installmentAmounts` (exact amount of

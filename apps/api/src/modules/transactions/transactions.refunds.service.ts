@@ -1,3 +1,4 @@
+import type { MoneyBackEntry, TransactionMoneyBack } from "@luraba/contracts";
 import { creditCardPurchasesTable } from "@luraba/db/schemas/credit-card-purchases.schema";
 import { startOfMonth as toBudgetMonth } from "@luraba/domain";
 import { eq } from "drizzle-orm";
@@ -61,8 +62,8 @@ async function loadOriginal(
   const rows = await txRepository.listDetailedByTransactionIds(context, [originalTransactionId]);
   const [transaction] = mapDetailedRows(rows);
   if (!transaction) throw new NotFoundError("Original transaction");
-  if (transaction.type === "refund" || transaction.type === "transfer") {
-    throw new ValidationError("A refund must be linked to a purchase or an expense");
+  if (transaction.type !== "expense") {
+    throw new ValidationError("Money back can only be linked to an expense or a card purchase");
   }
   const [purchase] = await db
     .select({
@@ -78,6 +79,35 @@ async function loadOriginal(
     creditCardId: purchase?.creditCardId ?? null,
     includeInBudget: purchase?.includeInBudget ?? transaction.includeInBudget,
   };
+}
+
+/**
+ * Rules for pointing money back at a purchase, whichever account or card the money lands on: the same
+ * currency (no conversion, so the sums stay exact) and a total of linked rows that stays within the
+ * original's full amount. `excludeTransactionId` leaves out the row being re-linked.
+ */
+async function assertCanLink(
+  context: HouseholdContext,
+  original: OriginalInfo,
+  originalTransactionId: string,
+  moneyBack: { amount: number; currencyCode: string },
+  excludeTransactionId?: string,
+): Promise<void> {
+  if (original.transaction.currencyCode !== moneyBack.currencyCode) {
+    throw new ValidationError(
+      `The purchase is in ${original.transaction.currencyCode} but the money back is in ${moneyBack.currencyCode}; link rows in the same currency`,
+    );
+  }
+  const refunded = await refundsRepository.sumRefundedAgainst(
+    context.householdId,
+    originalTransactionId,
+    excludeTransactionId,
+  );
+  if (moneyBack.amount > original.amount - refunded) {
+    throw new ValidationError(
+      `Money back exceeds what is left on the original (${original.amount - refunded} minor units)`,
+    );
+  }
 }
 
 /** Reads the amount that can still come back against a transaction. */
@@ -202,23 +232,10 @@ export async function createRefund(context: HouseholdContext, dto: RefundDto): P
   }
 
   if (original) {
-    if (original.creditCardId && original.creditCardId !== card?.id) {
-      throw new ValidationError("This purchase was made on a credit card; refund it to that card");
-    }
-    if (!original.creditCardId && card) {
-      throw new ValidationError(
-        "This transaction was not a card purchase; refund it to an account",
-      );
-    }
-    const refunded = await refundsRepository.sumRefundedAgainst(
-      context.householdId,
-      dto.originalTransactionId as string,
-    );
-    if (dto.amount > original.amount - refunded) {
-      throw new ValidationError(
-        `Refund exceeds what is left to refund on the original (${original.amount - refunded} minor units)`,
-      );
-    }
+    await assertCanLink(context, original, dto.originalTransactionId as string, {
+      amount: dto.amount,
+      currencyCode,
+    });
   }
 
   const categoryId =
@@ -280,4 +297,107 @@ export async function attachRefundDetails<T extends TransactionResponse>(
 
 export function listRefundDetails(transactionIds: string[]) {
   return refundsRepository.listByTransactionIds(transactionIds);
+}
+
+/**
+ * Links an existing money-back row to a purchase (or unlinks it with `null`). Only the link changes:
+ * the row keeps its own account or card, category, date and ledger entries, so balances, invoices and the
+ * card's used limit stay as they were; only the net cost of the purchase moves.
+ */
+export async function setRefundLink(
+  context: HouseholdContext,
+  refundTransactionId: string,
+  originalTransactionId: string | null,
+): Promise<void> {
+  const rows = await txRepository.listDetailedByTransactionIds(context, [refundTransactionId]);
+  const [transaction] = mapDetailedRows(rows);
+  if (!transaction) throw new NotFoundError("Transaction");
+  const [detail] = await refundsRepository.listByTransactionIds([refundTransactionId]);
+  if (transaction.type !== "refund" || !detail) {
+    throw new ValidationError(
+      "Only a refund, cancellation, chargeback, cashback or split can be linked",
+    );
+  }
+  if (originalTransactionId) {
+    if (originalTransactionId === refundTransactionId) {
+      throw new ValidationError("A transaction cannot be linked to itself");
+    }
+    const original = await loadOriginal(context, originalTransactionId);
+    await assertCanLink(
+      context,
+      original,
+      originalTransactionId,
+      { amount: transaction.amount, currencyCode: transaction.currencyCode },
+      refundTransactionId,
+    );
+  }
+  await db.transaction((tx) =>
+    refundsRepository.setOriginalTransactionId(tx, refundTransactionId, originalTransactionId),
+  );
+}
+
+type MoneyBackCandidate = {
+  id: string;
+  type: string;
+  amount: number;
+  currencyCode: string;
+  moneyBack?: TransactionMoneyBack | null;
+};
+
+/**
+ * Adds the net cost (`moneyBack`) to expenses and card purchases: the full purchase, the sum of the
+ * linked money-back rows (each with where it landed) and what is left out of pocket. A card purchase
+ * counts its full amount across installments. Every other row is returned untouched.
+ */
+export async function attachMoneyBack<T extends MoneyBackCandidate>(
+  context: HouseholdContext,
+  rows: T[],
+): Promise<T[]> {
+  const ids = [...new Set(rows.filter((row) => row.type === "expense").map((row) => row.id))];
+  if (ids.length === 0) return rows;
+  const [links, totals] = await Promise.all([
+    refundsRepository.listLinkedToOriginals(context.householdId, ids),
+    refundsRepository.listPurchaseTotals(ids),
+  ]);
+  const moneyBackRows = links.length
+    ? mapDetailedRows(
+        await txRepository.listDetailedByTransactionIds(
+          context,
+          links.map((link) => link.transactionId),
+        ),
+      )
+    : [];
+  const byId = new Map(moneyBackRows.map((row) => [row.id, row]));
+  const entriesByOriginal = new Map<string, MoneyBackEntry[]>();
+  for (const link of links) {
+    const row = byId.get(link.transactionId);
+    if (!row) continue;
+    const list = entriesByOriginal.get(link.originalTransactionId) ?? [];
+    list.push({
+      transactionId: row.id,
+      reason: link.reason,
+      description: row.description,
+      amount: row.amount,
+      currencyCode: row.currencyCode,
+      postedDate: row.postedDate,
+      accountId: row.accountId,
+      accountName: row.accountName,
+      accountClassification: row.accountClassification,
+      creditCardId: link.creditCardId,
+    });
+    entriesByOriginal.set(link.originalTransactionId, list);
+  }
+  return rows.map((row) => {
+    if (row.type !== "expense") return row;
+    const entries = (entriesByOriginal.get(row.id) ?? []).sort(
+      (a, b) =>
+        a.postedDate.localeCompare(b.postedDate) || a.transactionId.localeCompare(b.transactionId),
+    );
+    const totalAmount = totals.get(row.id) ?? row.amount;
+    const receivedBack = entries.reduce((sum, entry) => sum + entry.amount, 0);
+    return {
+      ...row,
+      moneyBack: { totalAmount, receivedBack, outOfPocket: totalAmount - receivedBack, entries },
+    };
+  });
 }

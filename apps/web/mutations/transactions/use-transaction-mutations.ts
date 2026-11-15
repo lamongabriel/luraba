@@ -3,6 +3,8 @@
 import type {
   CreateTransactionInput,
   CreateTransactionResult,
+  LinkRefundInput,
+  Transaction,
   UpdateTransactionInput,
   UpdateTransactionResult,
 } from "@luraba/contracts";
@@ -14,6 +16,7 @@ import {
 import {
   createTransaction,
   deleteTransaction,
+  linkRefund,
   updateTransaction,
 } from "@/services/transactions.service";
 
@@ -61,4 +64,19 @@ export function useDeleteTransactionMutation<TContext = unknown>(
   options?: UseAppMutationOptions<void, string, TContext>,
 ) {
   return useAppMutation(deleteTransactionMutationDefinition, options);
+}
+
+export const linkRefundMutationDefinition = createAppMutationDefinition<
+  Transaction,
+  { id: string; body: LinkRefundInput }
+>({
+  defaultErrorMessage: "We couldn't link this money back. Please try again.",
+  mutationFn: ({ id, body }) => linkRefund(id, body),
+  mutationKey: ["transactions", "link-refund"],
+});
+
+export function useLinkRefundMutation<TContext = unknown>(
+  options?: UseAppMutationOptions<Transaction, { id: string; body: LinkRefundInput }, TContext>,
+) {
+  return useAppMutation(linkRefundMutationDefinition, options);
 }
