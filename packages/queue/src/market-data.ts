@@ -17,6 +17,8 @@ export const MARKET_DATA_SCHEDULES: Record<MarketDataJobName, number> = {
   [MARKET_DATA_JOBS.syncTesouro]: 6 * ONE_HOUR_SECONDS * 1000,
   [MARKET_DATA_JOBS.snapshot]: DAY_MS,
   [MARKET_DATA_JOBS.reminders]: DAY_MS,
+  // Several times a day: finished days are skipped, and a day whose CDI was late is picked up.
+  [MARKET_DATA_JOBS.piggyAccrue]: 6 * ONE_HOUR_SECONDS * 1000,
 };
 
 export function createMarketDataQueue(connection: Redis): MarketDataQueue {

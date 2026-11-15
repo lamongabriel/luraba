@@ -50,5 +50,7 @@ export const MARKET_DATA_JOBS = {
   snapshot: "snapshot",
   /** Recurring (daily): maturity and DARF reminders. */
   reminders: "reminders",
+  /** Recurring (daily): sync the CDI/Selic/IPCA series, then credit piggy bank interest. */
+  piggyAccrue: "piggy-accrue",
 } as const;
 export type MarketDataJobName = (typeof MARKET_DATA_JOBS)[keyof typeof MARKET_DATA_JOBS];

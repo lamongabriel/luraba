@@ -49,6 +49,11 @@ export async function runMarketDataJob(name: MarketDataJobName): Promise<void> {
       await sendInvestmentReminders();
       return;
     }
+    case MARKET_DATA_JOBS.piggyAccrue: {
+      const { runDailyAccrual } = await import("@/modules/piggy-banks/piggy-banks.jobs");
+      await runDailyAccrual();
+      return;
+    }
     default:
       logger.warn({ name }, "[investments] Unknown market-data job");
   }
@@ -85,7 +90,11 @@ export async function startMarketDataJobs(): Promise<void> {
   }
   // Warm up on boot so the first load after a restart is fresh.
   setTimeout(() => {
-    for (const name of [MARKET_DATA_JOBS.syncMacro, MARKET_DATA_JOBS.refreshQuotes]) {
+    for (const name of [
+      MARKET_DATA_JOBS.syncMacro,
+      MARKET_DATA_JOBS.refreshQuotes,
+      MARKET_DATA_JOBS.piggyAccrue,
+    ]) {
       void runMarketDataJob(name).catch((err) =>
         logger.debug({ err, name }, "[investments] Warm-up failed"),
       );
