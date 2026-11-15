@@ -70,6 +70,7 @@ add its README in the same change, and update the READMEs you rely on if the rul
 | Laying out or restyling any web page (cards, spacing, columns, charts, in-place edits) | [docs/design-language.md](docs/design-language.md) (**mandatory**) |
 | Notifications, queues, the worker | [packages/notifications/README.md](packages/notifications/README.md), [packages/queue/README.md](packages/queue/README.md), [apps/worker/README.md](apps/worker/README.md) |
 | Goals page (`/goals`: cards, pace, detail drawer) | [apps/web/components/goals/README.md](apps/web/components/goals/README.md), [apps/api/src/modules/goals/README.md](apps/api/src/modules/goals/README.md) |
+| Piggy banks (savings buckets inside an account: ledger model, daily interest, goal links, `/piggy-banks`) | [docs/piggy-banks.md](docs/piggy-banks.md), [apps/api/src/modules/piggy-banks/README.md](apps/api/src/modules/piggy-banks/README.md), [apps/web/components/piggy-banks/README.md](apps/web/components/piggy-banks/README.md) |
 | Bills page (`/bills`: month summary, grouped rows) | [apps/web/components/bills/README.md](apps/web/components/bills/README.md) |
 | Monthly plan and left-to-spend (API only, no page for now) | [apps/api/src/modules/monthly-plans/README.md](apps/api/src/modules/monthly-plans/README.md) |
 | Budgets page (`/budgets`: allocation donut, budget cards, editor drawer, card settings) | [apps/web/components/budgets/README.md](apps/web/components/budgets/README.md), [apps/api/src/modules/budgets/README.md](apps/api/src/modules/budgets/README.md) |

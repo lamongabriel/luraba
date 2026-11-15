@@ -86,7 +86,7 @@ piggy bank with a yield from `accrued_through + 1` (or the first movement) up to
 day's CDI is published after the day ends), one day at a time, in one DB transaction per piggy-bank
 day. A day already in `piggy_bank_accruals` is skipped, so re-running a day never credits twice and a
 backfill after downtime is just "run it again". It is scheduled through `@luraba/queue`
-(`PIGGY_BANK_JOBS.accrue`, daily) and consumed next to the market-data consumer in the API process,
+(`MARKET_DATA_JOBS.piggyAccrue`, every 6 hours; finished days are skipped) and consumed next to the market-data consumer in the API process,
 because it posts ledger transactions through the transactions service. (The worker app cannot import
 API services; the investments macro jobs follow the same pattern.) It also runs on API boot after the
 macro warm-up and through `POST /piggy-banks/accrue` for the owner.

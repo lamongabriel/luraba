@@ -89,6 +89,18 @@ bill due month or the month after; each installment or the full purchase) defaul
 can be overridden per month (`budget_month_settings`); purchases are stamped with the resolved setting.
 `GET /budgets/:month/insights` adds the six-month history and the most expensive categories. Details: `apps/api/src/modules/budgets/README.md`, `apps/web/components/budgets/README.md`.
 
+### Piggy banks
+
+A piggy bank (`piggy_banks`) is a named part of one cash account's balance (Nubank Caixinhas). There is **no
+ledger account per piggy bank**: the parent account's ledger account stays the real balance and the piggy banks
+are sub-balances summed from `piggy_bank_movements` (`free = balance - sum(piggy balances)`). Deposits from
+another account are normal transfers plus a movement; moves between piggy banks are movements only; interest is
+an income transaction (Investment Income > Interest) plus an `interest` movement. Daily interest is accrued by an
+idempotent job (`piggy_bank_accruals`, primary key piggy bank + day) that reads CDI, Selic and IPCA from
+`macro_index_values` (the market-data sync) and runs in the API process on the market-data queue
+(`piggy-accrue`), because the worker app cannot import API ledger services. Goals can link to piggy banks
+(`goal_piggy_banks`): progress becomes the linked balances. Full design: [piggy-banks.md](piggy-banks.md).
+
 ### Goals
 
 A goal (`goals`) is an amount to save or invest, optionally by a date and at a planned monthly
