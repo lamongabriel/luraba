@@ -2,7 +2,7 @@ import { creditCardBillingCyclesTable } from "@luraba/db/schemas/credit-card-bil
 import { creditCardPaymentAllocationsTable } from "@luraba/db/schemas/credit-card-payment-allocations.schema";
 import { creditCardPaymentsTable } from "@luraba/db/schemas/credit-card-payments.schema";
 import { transactionsTable } from "@luraba/db/schemas/transactions.schema";
-import { allocatePayments } from "@luraba/domain";
+import { allocatePayments, getTodayInTimezone } from "@luraba/domain";
 import { asc, eq } from "drizzle-orm";
 import { expect } from "vitest";
 import { db } from "@/db";
@@ -14,6 +14,7 @@ import { db } from "@/db";
  * Returns the credit balance so a test can assert it.
  */
 export async function assertCardAllocationInvariant(creditCardId: string): Promise<number> {
+  const today = getTodayInTimezone("UTC");
   const payments = await db
     .select({
       id: creditCardPaymentsTable.id,
@@ -39,7 +40,11 @@ export async function assertCardAllocationInvariant(creditCardId: string): Promi
 
   const expected = allocatePayments(
     payments,
-    cycles.map((cycle) => ({ id: cycle.id, statementAmount: cycle.statementAmount })),
+    cycles.map((cycle) => ({
+      id: cycle.id,
+      statementAmount: cycle.statementAmount,
+      payable: cycle.closingDate <= today,
+    })),
   );
   const totalPayments = payments.reduce((sum, payment) => sum + payment.amount, 0);
   const totalAllocated = stored.reduce((sum, row) => sum + row.amount, 0);

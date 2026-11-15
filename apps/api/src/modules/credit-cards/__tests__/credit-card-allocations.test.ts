@@ -89,11 +89,11 @@ describe("card payment allocations are derived from payments and statements", ()
 
     first = (await cycles()).find((c) => c.closingDate === "2026-04-25");
     expect(first).toMatchObject({ statementAmount: 6634, paidAmount: 6634, remainingAmount: 0 });
-    // The 2 left over is credit; it then covers the next invoice, never a phantom on the first.
+    // The 2 left over is credit, never a phantom on an invoice that has not even closed.
     const credit = await assertCardAllocationInvariant(card.id);
-    expect(credit).toBe(0);
+    expect(credit).toBe(2);
     const second = (await cycles()).find((c) => c.closingDate === "2026-05-25");
-    expect(second?.paidAmount).toBe(2);
+    expect(second?.paidAmount).toBe(0);
   });
 
   it("applies payments oldest-first by date and keeps the leftover as credit", async () => {
@@ -122,6 +122,18 @@ describe("card payment allocations are derived from payments and statements", ()
     expect(lateAfter.allocations.map((a) => a.amount)).toEqual([500]);
   });
 
+  it("settles an invoice with the card credit once it closes", async () => {
+    const { card, buy, pay, cycles } = await setup();
+    await buy([1000, 1000]);
+    await pay(1000);
+    await pay(1);
+    expect(await assertCardAllocationInvariant(card.id)).toBe(1);
+    vi.setSystemTime(new Date("2026-05-26T12:00:00.000Z"));
+    const second = (await cycles()).find((c) => c.closingDate === "2026-05-25");
+    expect(second).toMatchObject({ statementAmount: 1000, paidAmount: 1, remainingAmount: 999 });
+    expect(await assertCardAllocationInvariant(card.id)).toBe(0);
+  });
+
   it("recomputes after deleting a purchase, a payment and cancelling", async () => {
     const { hc, card, buy, pay, cycles } = await setup();
     const a = await buy([3000, 3000]);
@@ -129,7 +141,7 @@ describe("card payment allocations are derived from payments and statements", ()
     const p = await pay(5000);
     await assertCardAllocationInvariant(card.id);
     await creditCardsService.deletePurchase(hc, card.id, b.purchaseId);
-    expect(await assertCardAllocationInvariant(card.id)).toBe(2000 - 2000 + 0);
+    expect(await assertCardAllocationInvariant(card.id)).toBe(2000);
     const first = (await cycles()).find((c) => c.closingDate === "2026-04-25");
     expect(first).toMatchObject({ statementAmount: 3000, paidAmount: 3000 });
     await creditCardsService.deletePayment(hc, card.id, p.paymentId);

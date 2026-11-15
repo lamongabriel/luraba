@@ -42,11 +42,19 @@ export function buildLimitBreakdown(
   creditLimitAmount: number,
   cycles: readonly LimitCycle[],
   today: string,
+  /** Payments no invoice absorbs yet (card credit): they free limit, open invoice first. */
+  creditBalance = 0,
 ): LimitBreakdown {
   const totals = { closed: 0, open: 0, future: 0 };
   for (const cycle of cycles) {
     if (cycle.remainingAmount <= 0) continue;
     totals[classifyCycleForLimit(cycle, today)] += cycle.remainingAmount;
+  }
+  let credit = Math.max(creditBalance, 0);
+  for (const bucket of ["closed", "open", "future"] as const) {
+    const used = Math.min(totals[bucket], credit);
+    totals[bucket] -= used;
+    credit -= used;
   }
   const used = totals.closed + totals.open + totals.future;
   const limit = creditLimitAmount < 0 ? null : creditLimitAmount;
@@ -108,7 +116,16 @@ export function pickDefaultInvoiceMonth(
 }
 
 export type AllocationPayment = { id: string; amount: number };
-export type AllocationInvoice = { id: string; statementAmount: number };
+export type AllocationInvoice = {
+  id: string;
+  statementAmount: number;
+  /**
+   * Whether payments may be applied to it. Only closed invoices are: an open invoice's statement is
+   * still moving, so money that exceeds the closed invoices stays card credit until it closes.
+   * Defaults to true.
+   */
+  payable?: boolean;
+};
 export type PaymentAllocation = { paymentId: string; invoiceId: string; amount: number };
 export type PaymentAllocationResult = {
   allocations: PaymentAllocation[];
@@ -120,9 +137,10 @@ export type PaymentAllocationResult = {
 
 /**
  * Pure, deterministic payment allocation for ONE card. `payments` must already be ordered
- * (oldest first) and `invoices` oldest first (by due date). Each payment fills the oldest invoice
- * that still has something to pay, capped at that invoice's statement. Whatever no invoice can
- * absorb is the card credit balance; it is never attached to an invoice. Recomputing from scratch
+ * (oldest first) and `invoices` oldest first (by due date). Each payment fills the oldest payable
+ * invoice that still has something to pay, capped at that invoice's statement. Whatever no invoice
+ * can absorb is the card credit balance; it is never attached to an invoice (and settles later
+ * invoices by itself once they become payable, because the whole card is recomputed). Recomputing from scratch
  * after any change is what keeps "paid" equal to min(statement, payments) with no phantom cents.
  */
 export function allocatePayments(
@@ -131,7 +149,7 @@ export function allocatePayments(
 ): PaymentAllocationResult {
   const open = invoices.map((invoice) => ({
     id: invoice.id,
-    remaining: Math.max(invoice.statementAmount, 0),
+    remaining: invoice.payable === false ? 0 : Math.max(invoice.statementAmount, 0),
   }));
   const paidByInvoice = new Map(invoices.map((invoice) => [invoice.id, 0]));
   const allocations: PaymentAllocation[] = [];

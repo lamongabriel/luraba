@@ -212,7 +212,7 @@ export const reportCreditCards = defineTool({
   name: "report_credit_cards",
   title: "Credit card status",
   description:
-    "How many credit cards there are, and for a month (default current) each card's invoice due that month: amount, paid, still owed, due date and status, plus totals (`combined` is ONE number per figure in the household base currency at the latest rate, see `fx`; `totals` keeps each currency) and the next due dates. Answers 'how much do I owe on my cards this month'.",
+    "How many credit cards there are, and for a month (default current) each card's invoice due that month: amount, paid, still owed, due date and status, plus totals (`combined` is ONE number per figure in the household base currency at the latest rate, see `fx`; `totals` keeps each currency) and the next due dates. Each card also has `creditBalance`: payments beyond what its invoices ask for, carried forward (never counted as paid on an invoice). Answers 'how much do I owe on my cards this month'.",
   input: z.object({
     month: z
       .string()
@@ -236,6 +236,8 @@ export const reportCreditCards = defineTool({
         paid: toMoney(card.invoice.paidAmount, card.currencyCode),
         owed: toMoney(card.invoice.remainingAmount, card.currencyCode),
       },
+      // Payments no invoice absorbs (e.g. an invoice shrank after it was paid), carried forward.
+      creditBalance: toMoney(card.creditBalance, card.currencyCode),
       limit: card.limit.limit === null ? null : toMoney(card.limit.limit, card.currencyCode),
       available:
         card.limit.available === null ? null : toMoney(card.limit.available, card.currencyCode),

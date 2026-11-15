@@ -85,7 +85,7 @@ export async function getOverview(
         closingDay: card.closingDay,
         dueDay: card.dueDay,
         invoice: pickInvoiceForMonth(cycles, monthKey),
-        limit: buildLimitBreakdown(card.creditLimitAmount, cycles, today),
+        limit: buildLimitBreakdown(card.creditLimitAmount, cycles, today, creditBalance),
         creditBalance,
       };
     }),

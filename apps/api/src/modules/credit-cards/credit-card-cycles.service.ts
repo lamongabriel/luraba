@@ -390,8 +390,9 @@ export type AllocationChange = {
 /**
  * THE single place card payments are applied to invoices. Everything a statement or a payment can
  * change (purchases, installments, cancellations, refunds, payments, cycle dates) ends by calling
- * this. Allocation is derived, never edited: the payments, oldest first, fill the invoices, oldest
- * due date first, each capped at its statement; what no invoice absorbs is the card credit balance.
+ * this. Allocation is derived, never edited: the payments, oldest first, fill the closed invoices,
+ * oldest due date first, each capped at its statement; what no invoice absorbs is the card credit
+ * balance (and settles an invoice by itself once it closes).
  * The stored rows and the cycles' paid/remaining/status are rewritten from that result (only when
  * they differ), so they cannot go stale. With `dryRun` nothing is written and the changes are returned.
  */
@@ -445,7 +446,12 @@ export async function syncCardCyclesWithChanges(
   });
   const allocation = allocatePayments(
     payments,
-    oldestFirst.map((cycle) => ({ id: cycle.id, statementAmount: statements.get(cycle.id) ?? 0 })),
+    oldestFirst.map((cycle) => ({
+      id: cycle.id,
+      statementAmount: statements.get(cycle.id) ?? 0,
+      // Only closed invoices take payments; the rest stays card credit until the invoice closes.
+      payable: cycle.closingDate <= today,
+    })),
   );
 
   const key = (row: { paymentId: string; billingCycleId: string | null; amount: number }) =>

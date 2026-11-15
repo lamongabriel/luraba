@@ -15,6 +15,39 @@ installments, available. `totals` are grouped per currency (cards' own currency)
 (see [fx](../fx/README.md)); `combined.limitUsed` is the limit consumed across all cards. `GET .../cycles/:cycleId` also returns the `payments` applied to
 that invoice.
 
+## Payment allocation (derived, never edited)
+
+Which invoice a payment covers is **derived**, not remembered. `syncCardCycles` (`credit-card-cycles.service.ts`)
+is the one function that does it, and every mutation that can change a statement or a payment already ends
+with it, inside its own `db.transaction`: purchase create/update/delete, `PATCH .../installments/:id`, cancel
+(both modes), refunds and credits, payment create/update/delete, cycle date edits and schedule rebuilds.
+It recomputes the **whole card** with the pure `allocatePayments` (`@luraba/domain`):
+
+1. payments ordered by posted date, then creation;
+2. applied to invoices oldest due date first, each **capped at its statement** (installments minus credits);
+3. only **closed** invoices (`closingDate <= today`) take payments; an open invoice's statement is still moving;
+4. whatever no invoice absorbs is the card's **credit balance**: it is never attached to an invoice, and it
+   settles later invoices by itself the moment they close (the next recompute picks it up).
+
+The result is written to `credit_card_payment_allocations` (a cache that powers `payment.allocations` and
+`cycle.payments`) and to `paid_amount` / `remaining_amount` / `status` of the cycles, only when it differs.
+So `paid <= statement` and `sum(allocated) + creditBalance = sum(payments)` always hold; the reusable test
+assertion is `assertCardAllocationInvariant` (`apps/api/src/test/card-allocations.ts`).
+
+- **Why it broke before:** allocations were written only when a payment changed, and a payment filled
+  `remainingAmount` at that moment. Editing an installment later left the old rows, so an invoice could show
+  more paid than its statement and cents landed on later invoices.
+- **Credit balance** is exposed as `creditBalance` on each overview card, `creditAmount` on a payment, and in
+  the limit breakdown (it frees limit, open invoice first). The web shows it in the card detail panel.
+- **Prepaying an open invoice** therefore shows as credit until that invoice closes, then applies on its own.
+- **Repair / audit:** `POST /credit-cards/recompute-allocations` (`credit_cards.update`; body `creditCardId?`,
+  `dryRun` defaults to **true**) and the MCP tool `recompute_card_allocations`. Idempotent; the dry run lists
+  every invoice whose paid amount would change.
+- **Backfill:** `pnpm --filter @luraba/api db:recompute-allocations [--apply] [--card <id>] [--json]`
+  (`src/db/maintenance/recompute-card-allocations.ts`; built image: `node dist/db/maintenance/recompute-card-allocations.js`).
+  Dry run by default. It is **not** a migration and does not run on deploy; run it once by hand after deploying
+  (see PROGRESS.md for the exact steps). Cards also heal on their next read or mutation.
+
 ## Insights
 
 `GET /credit-cards/insights?month=YYYY-MM` (`credit-card-insights.service.ts`, SQL in `credit-card-insights.repository.ts`)

@@ -150,6 +150,19 @@ describe("allocatePayments", () => {
     expect(allocated + result.creditBalance).toBe(91_000);
   });
 
+  it("leaves payments as credit while the invoice is not payable yet", () => {
+    const result = allocatePayments(
+      [{ id: "p1", amount: 100 }],
+      [
+        { id: "a", statementAmount: 60 },
+        { id: "open", statementAmount: 500, payable: false },
+      ],
+    );
+    expect(result.paidByInvoice.get("a")).toBe(60);
+    expect(result.paidByInvoice.get("open")).toBe(0);
+    expect(result.creditBalance).toBe(40);
+  });
+
   it("is deterministic for the same input", () => {
     const payments = [
       { id: "p1", amount: 10 },
@@ -158,5 +171,21 @@ describe("allocatePayments", () => {
     expect(allocatePayments(payments, invoices).allocations).toEqual(
       allocatePayments(payments, invoices).allocations,
     );
+  });
+});
+
+describe("buildLimitBreakdown credit", () => {
+  it("frees limit with the card credit, open invoice first", () => {
+    const cycles = [
+      { periodStart: "2026-10-01", closingDate: "2026-10-28", remainingAmount: 100 },
+      { periodStart: "2026-10-29", closingDate: "2026-11-28", remainingAmount: 300 },
+    ];
+    const breakdown = buildLimitBreakdown(1000, cycles, "2026-11-15", 150);
+    expect(breakdown).toMatchObject({
+      closedInvoice: 0,
+      openInvoice: 250,
+      used: 250,
+      available: 750,
+    });
   });
 });
