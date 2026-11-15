@@ -1,7 +1,7 @@
 "use client";
 
 import type { PiggyBank } from "@luraba/contracts";
-import { todayISODate } from "@luraba/domain";
+import { formatMoney, todayISODate } from "@luraba/domain";
 import * as React from "react";
 import { AccountSelectControl, AmountDisplay, PiggyBankDisplay } from "@/components/display";
 import { ComboboxControl } from "@/components/forms/form-combobox";
@@ -13,7 +13,7 @@ import { Modal, ModalBody, ModalContent, ModalFooter } from "@/components/ui/mod
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
 import { useCurrencyPrecision } from "@/hooks/use-currency-precision";
-import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance";
+import { majorToMinorUnits } from "@/lib/finance";
 import {
   useBulkDepositMutation,
   useDepositToPiggyBankMutation,
@@ -302,7 +302,7 @@ export function PiggyBankFundsModal({
               />
               {mode === "balance" && piggyBank ? (
                 <Typography variant="small-muted">
-                  Computed now: {String(minorToMajorUnits(piggyBank.balance, precision))}
+                  Computed now: {formatMoney(piggyBank.balance, currency, { precision })}
                 </Typography>
               ) : null}
             </div>

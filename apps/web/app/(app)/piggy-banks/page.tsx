@@ -20,6 +20,7 @@ import {
 } from "@/components/piggy-banks/piggy-bank-funds-modal";
 import {
   PIGGY_ACCOUNT_ROW_HEIGHT,
+  PIGGY_ACCOUNT_ROW_LAYOUT,
   PIGGY_BANKS_GRID,
 } from "@/components/piggy-banks/piggy-bank-layout";
 import { PiggyBankSheet } from "@/components/piggy-banks/piggy-bank-sheet";
@@ -53,7 +54,8 @@ function AccountRow({
   return (
     <li
       className={cn(
-        "flex items-center justify-between gap-3 border-b border-border/60 last:border-b-0",
+        PIGGY_ACCOUNT_ROW_LAYOUT,
+        "border-b border-border/60 last:border-b-0",
         PIGGY_ACCOUNT_ROW_HEIGHT,
       )}
     >
@@ -157,7 +159,7 @@ export default function PiggyBanksPage() {
                     fx={earned.fx}
                     language={language}
                     size="sm"
-                    kind="income"
+                    kind={(earned.combined.total ?? 0) > 0 ? "income" : "neutral"}
                   />
                 ),
               },

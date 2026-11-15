@@ -2,6 +2,7 @@
 
 import {
   buildProjectionSeries,
+  formatMoney,
   type PiggyGoalPlanInput,
   type PiggyPlanMode,
   planWithYield,
@@ -23,6 +24,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
 import { useCurrencyPrecision } from "@/hooks/use-currency-precision";
+import { formatMonthKeyLabel } from "@/lib/credit-card-invoices";
 import { majorToMinorUnits, minorToMajorUnits } from "@/lib/finance";
 import { useSetGoalPiggyBanksMutation } from "@/mutations/piggy-banks/use-piggy-bank-mutations";
 import {
@@ -158,6 +160,7 @@ export function GoalPiggyBanksSection({ goalId, language }: { goalId: string; la
   const currency = data.currencyCode;
   const precision = precisionOf(currency);
   const money = { currencyCode: currency, language, precision };
+  const fmt = (minor: number) => formatMoney(minor, currency, { precision });
   const linkedIds = data.piggyBanks.map((piggy) => piggy.id);
   const linkAction = (
     <PermissionButton
@@ -245,7 +248,7 @@ export function GoalPiggyBanksSection({ goalId, language }: { goalId: string; la
           <div className="grid gap-4 sm:grid-cols-3">
             {mode === "target_by_date" ? null : (
               <div className="space-y-2">
-                <Label>Per month: {monthlyMajor ?? 0}</Label>
+                <Label>Per month: {fmt(monthly)}</Label>
                 <Slider
                   min={0}
                   max={sliderMax}
@@ -282,15 +285,15 @@ export function GoalPiggyBanksSection({ goalId, language }: { goalId: string; la
             {plan.months === null
               ? "At this pace the target is never reached."
               : mode === "target_by_date"
-                ? `Deposit about ${(minorToMajorUnits(plan.monthly, precision)).toFixed(2)} a month for ${plan.months} months.`
-                : `${plan.reachesTarget ? "Reaches" : "Ends below"} the target after ${plan.months} months with ${(minorToMajorUnits(plan.finalValue ?? 0, precision)).toFixed(2)}, of which interest is ${(minorToMajorUnits(plan.interest ?? 0, precision)).toFixed(2)}.`}
+                ? `Deposit about ${fmt(plan.monthly)} a month for ${plan.months} months.`
+                : `${plan.reachesTarget ? "Reaches" : "Ends below"} the target after ${plan.months} months with ${fmt(plan.finalValue ?? 0)}, of which interest is ${fmt(plan.interest ?? 0)}.`}
           </Typography>
         </div>
       </PanelCard>
 
       <PiggyBankProjectionChart
         title="Projection"
-        description="Balance with interest against deposits only."
+        description="Balance with interest against the same deposits without interest."
         points={points}
         currencyCode={currency}
         precision={precision}
@@ -310,12 +313,12 @@ export function GoalPiggyBanksSection({ goalId, language }: { goalId: string; la
             {data.tracking.rows.map((row) => (
               <ListRow
                 key={row.month}
-                title={row.month}
-                subtitle={`Planned ${minorToMajorUnits(row.planned, precision).toFixed(2)}`}
+                title={formatMonthKeyLabel(row.month, language)}
+                subtitle={`Planned ${fmt(row.planned)}`}
                 amount={<AmountDisplay amount={row.actual} {...money} />}
                 meta={
                   row.catchUp > 0
-                    ? `${STATUS_LABEL[row.status]} · catch up ${minorToMajorUnits(row.catchUp, precision).toFixed(2)}`
+                    ? `${STATUS_LABEL[row.status]} · catch up ${fmt(row.catchUp)}`
                     : STATUS_LABEL[row.status]
                 }
               />

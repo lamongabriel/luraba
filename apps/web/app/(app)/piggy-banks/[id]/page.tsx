@@ -86,14 +86,24 @@ export default function PiggyBankDetailPage() {
           <KpiCard
             title="Earned this month"
             value={
-              <AmountDisplay amount={piggy.earnings.month} {...money} kind="income" size="lg" />
+              <AmountDisplay
+                amount={piggy.earnings.month}
+                {...money}
+                kind={piggy.earnings.month > 0 ? "income" : "neutral"}
+                size="lg"
+              />
             }
             secondary={`${(piggy.annualRate * 100).toFixed(2)}% a year expected`}
           />
           <KpiCard
             title="Earned in total"
             value={
-              <AmountDisplay amount={piggy.earnings.allTime} {...money} kind="income" size="lg" />
+              <AmountDisplay
+                amount={piggy.earnings.allTime}
+                {...money}
+                kind={piggy.earnings.allTime > 0 ? "income" : "neutral"}
+                size="lg"
+              />
             }
           />
         </KpiGrid>

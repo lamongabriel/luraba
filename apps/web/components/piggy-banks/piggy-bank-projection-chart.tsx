@@ -33,11 +33,12 @@ export function PiggyBankProjectionChart({
       data={points.map((point) => ({
         date: point.date,
         balance: point.balance,
-        deposits: point.deposits,
+        // The starting balance plus what is deposited, so the gap to the balance line is the interest.
+        deposits: point.deposits + (points[0]?.balance ?? 0),
       }))}
       series={[
         { key: "balance", label: "Balance with interest" },
-        { key: "deposits", label: "Deposits only" },
+        { key: "deposits", label: "Without interest" },
       ]}
       currencyCode={currencyCode}
       precision={precision}

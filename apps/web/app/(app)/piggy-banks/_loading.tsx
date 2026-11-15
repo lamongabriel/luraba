@@ -1,5 +1,6 @@
 import {
   PIGGY_ACCOUNT_ROW_HEIGHT,
+  PIGGY_ACCOUNT_ROW_LAYOUT,
   PIGGY_BANK_CARD_HEIGHT,
   PIGGY_BANK_SKELETON_KEYS,
   PIGGY_BANKS_GRID,
@@ -12,7 +13,13 @@ import { cn } from "@/lib/utils";
 export function PiggyBanksLoading() {
   return (
     <LoadingRegion label="Loading piggy banks" className="space-y-5">
-      <div className={cn("flex items-center justify-between gap-3", PIGGY_ACCOUNT_ROW_HEIGHT)}>
+      <div
+        className={cn(
+          PIGGY_ACCOUNT_ROW_LAYOUT,
+          "border-b border-border/60",
+          PIGGY_ACCOUNT_ROW_HEIGHT,
+        )}
+      >
         <div className="flex items-center gap-3">
           <Skeleton className="size-8 rounded-md" />
           <Skeleton className="h-4 w-36" />

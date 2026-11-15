@@ -10,4 +10,7 @@ export const PIGGY_BANK_SKELETON_KEYS = Array.from(
   (_, index) => `piggy-bank-${index}`,
 );
 /** The account summary strip above the grid (one row per parent account) and its skeleton. */
-export const PIGGY_ACCOUNT_ROW_HEIGHT = "h-16";
+/** On a phone the name and the two amounts stack on two lines. */
+export const PIGGY_ACCOUNT_ROW_HEIGHT = "h-20 sm:h-16";
+export const PIGGY_ACCOUNT_ROW_LAYOUT =
+  "flex flex-col justify-center gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3";
