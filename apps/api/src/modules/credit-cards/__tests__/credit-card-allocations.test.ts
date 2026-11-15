@@ -187,4 +187,30 @@ describe("card payment allocations are derived from payments and statements", ()
     });
     expect(again.cards[0].changedInvoices).toEqual([]);
   });
+
+  it("Ultravioleta scenario: three payments over three invoices, excess is credit, nothing overdue", async () => {
+    const { card, buy, pay, cycles } = await setup();
+    vi.setSystemTime(new Date("2026-11-15T12:00:00.000Z"));
+    await buy([244_407], "2026-08-20");
+    await buy([215_095], "2026-09-10");
+    await buy([166_099], "2026-10-10");
+    await buy([1_000], "2026-11-10"); // open invoice: gives the used-limit headroom to overpay by 0.04
+    // Payments exceed the three statements by 0.04 in total (the first is 0.04 over its invoice).
+    await pay(244_411, "2026-09-08");
+    await pay(215_095, "2026-09-29");
+    await pay(166_099, "2026-11-04");
+
+    const closed = (await cycles()).filter((c) => c.statementAmount > 1_000);
+    expect(closed).toHaveLength(3);
+    for (const cycle of closed) {
+      expect(cycle.paidAmount).toBe(cycle.statementAmount);
+      expect(cycle.remainingAmount).toBe(0);
+      expect(cycle.displayStatus).toBe("paid");
+    }
+    const all = await cycles();
+    expect(all.every((c) => c.displayStatus !== "overdue")).toBe(true);
+    // The open invoice after them takes nothing: the 0.04 is explicit card credit.
+    expect(all.find((c) => c.statementAmount === 1_000)?.paidAmount).toBe(0);
+    expect(await assertCardAllocationInvariant(card.id)).toBe(4);
+  });
 });

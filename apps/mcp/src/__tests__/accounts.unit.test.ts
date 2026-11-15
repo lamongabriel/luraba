@@ -367,6 +367,9 @@ describe("account tools over a mocked API", () => {
     const post = calls.find((c) => c.method === "POST");
     expect(post?.path).toBe("/credit-cards/recompute-allocations");
     expect(post?.body).toMatchObject({ dryRun: true });
+    const refused = await call("recompute_card_allocations", { dryRun: false });
+    expect(refused.data.status).toBe("confirmation_required");
+    expect(calls.filter((c) => c.method === "POST")).toHaveLength(1);
     await close();
   });
 });
