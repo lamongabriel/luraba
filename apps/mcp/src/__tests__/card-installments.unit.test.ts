@@ -59,6 +59,7 @@ const installment = (n: number, amount: number) => ({
   billingCycleId: ids(200 + n),
   closingDate: month(n, 25),
   dueDate: month(n, 5),
+  locked: false,
 });
 const purchase = (amounts: number[]) => ({
   purchaseId: ids(50),
@@ -78,6 +79,8 @@ const purchase = (amounts: number[]) => ({
   budgetExpenseTiming: "payment_month",
   budgetInstallmentMode: "per_installment",
   installments: amounts.map((amount, index) => installment(index + 1, amount)),
+  appliedRoundingMode: null,
+  roundingModeSource: null,
   createdAt: now,
 });
 

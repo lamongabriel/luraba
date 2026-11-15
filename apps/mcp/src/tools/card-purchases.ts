@@ -1,5 +1,5 @@
 import { type CreditCardPurchase, creditCardsEndpoints } from "@luraba/contracts";
-import { resolveInstallmentPlan } from "@luraba/domain";
+import { parseInstallmentPlanText, resolveInstallmentPlan } from "@luraba/domain";
 import { z } from "zod";
 import { majorToMinor, toMoney } from "../format/money.js";
 import { clarificationOutput, Problems } from "../resolve/problems.js";
@@ -23,6 +23,7 @@ function describePurchase(purchase: CreditCardPurchase, currency: string) {
       number: installment.installmentNumber,
       installmentId: installment.installmentId,
       amount: toMoney(installment.amount, currency),
+      locked: installment.locked,
       invoiceId: installment.billingCycleId,
       closingDate: installment.closingDate,
       dueDate: installment.dueDate,
@@ -70,7 +71,25 @@ export const updateCardPurchase = defineTool({
       .positive()
       .optional()
       .describe("Every installment costs this much (with installments)."),
-    roundingMode: z.enum(["remainder_last", "remainder_first", "round_up_all"]).optional(),
+    installmentPlan: z
+      .string()
+      .max(500)
+      .optional()
+      .describe(
+        'Shorthand for the exact installments, e.g. "1st installment 364.90, rest 364.88", "3rd 478.64, others 478.63" (with installments), "26.63 x3" or "133.34, 133.33, 133.33". Major units. Replaces installmentAmounts.',
+      ),
+    roundingMode: z
+      .enum(["remainder_last", "remainder_first", "round_up_all", "round_down_all"])
+      .optional()
+      .describe(
+        "How an even split places the leftover cents. Without it the card's learned pattern is used (learned from reconciled invoices), else remainder_last.",
+      ),
+    override: z
+      .boolean()
+      .default(false)
+      .describe(
+        "Needed when an installment being changed is on an invoice reconciled with the issuer (locked). The change is logged and the invoice unlocked.",
+      ),
     createMissing: z.boolean().default(false),
     dryRun: z.boolean().default(false),
   }),
@@ -94,6 +113,18 @@ export const updateCardPurchase = defineTool({
     if (problems.any) return clarificationOutput(problems);
 
     const minor = (value: number) => majorToMinor(value, card.currency);
+    let planAmounts = args.installmentAmounts;
+    if (args.installmentPlan !== undefined) {
+      const parsed = parseInstallmentPlanText(args.installmentPlan, args.installments);
+      if (!parsed.ok) {
+        return {
+          isError: true,
+          summary: parsed.error,
+          data: { status: "invalid_input", error: parsed.error },
+        };
+      }
+      planAmounts = parsed.amounts.map((value) => value / 100);
+    }
     const body = {
       ...(args.description === undefined ? {} : { description: args.description }),
       ...(args.originalDescription === undefined
@@ -108,9 +139,7 @@ export const updateCardPurchase = defineTool({
       ...(classification.tagIds ? { tagIds: classification.tagIds } : {}),
       ...(args.amount === undefined ? {} : { amount: minor(args.amount) }),
       ...(args.installments === undefined ? {} : { installmentCount: args.installments }),
-      ...(args.installmentAmounts
-        ? { installmentAmounts: args.installmentAmounts.map(minor) }
-        : {}),
+      ...(planAmounts ? { installmentAmounts: planAmounts.map(minor) } : {}),
       ...(args.installmentAmount === undefined
         ? {}
         : { installmentAmount: minor(args.installmentAmount) }),
@@ -176,7 +205,7 @@ export const updateCardPurchase = defineTool({
 
     const after = await context.client.request(creditCardsEndpoints.updatePurchase, {
       params: { id: card.id, purchaseId: args.purchaseId },
-      body,
+      body: { ...body, ...(args.override ? { override: true } : {}) },
     });
     return {
       summary: `Updated card purchase "${after.description}": ${toMoney(after.amount, card.currency).formatted} in ${after.installmentCount} installment(s).`,
@@ -189,13 +218,19 @@ export const updateInstallment = defineTool({
   name: "update_installment",
   title: "Update one card installment",
   description:
-    "Change one installment of a credit card purchase: its amount (major units; the purchase total, the invoice, the card's available limit and reports follow) and/or the invoice it lands on (invoiceId, from the installments of get/update_card_purchase output). Use this to match the exact amount on the issuer's invoice, e.g. an installment of 34.08 that is really 34.06. Identify it by purchaseId, creditCard and installmentNumber. Use dryRun=true to preview.",
+    "Change one installment of a credit card purchase: its amount (major units; the purchase total, the invoice, the card's available limit and reports follow) and/or the invoice it lands on (invoiceId, from the installments of get/update_card_purchase output). Use this to match the exact amount on the issuer's invoice, e.g. an installment of 34.08 that is really 34.06. Identify it by purchaseId, creditCard and installmentNumber. An installment on a reconciled (locked) invoice needs override=true. To fix cents from an issuer statement use import_card_statement instead. Use dryRun=true to preview.",
   input: z.object({
     purchaseId: z.uuid(),
     creditCard: z.string().describe("The card name, last 4 or id."),
     installmentNumber: z.number().int().min(1).max(60),
     amount: z.number().positive().optional().describe("The installment's new amount."),
     invoiceId: z.uuid().optional().describe("Move the installment to this invoice."),
+    override: z
+      .boolean()
+      .default(false)
+      .describe(
+        "Needed when the installment is on an invoice reconciled with the issuer (locked). The change is logged and the invoice unlocked.",
+      ),
     dryRun: z.boolean().default(false),
   }),
   annotations: WRITE,
@@ -246,6 +281,7 @@ export const updateInstallment = defineTool({
       body: {
         ...(args.amount === undefined ? {} : { amount: nextAmount }),
         ...(args.invoiceId ? { billingCycleId: args.invoiceId } : {}),
+        ...(args.override ? { override: true } : {}),
       },
     });
     return {

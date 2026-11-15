@@ -25,6 +25,7 @@ import {
   bulkUpdateTransactions,
 } from "./bulk-transactions.js";
 import { updateCardPurchase, updateInstallment } from "./card-purchases.js";
+import { importCardStatement, reconcileInvoice } from "./card-statements.js";
 import {
   contributeToGoal,
   createGoal,
@@ -110,6 +111,8 @@ export const tools: AnyTool[] = [
   cancelPurchase,
   updateCardPurchase,
   updateInstallment,
+  importCardStatement,
+  reconcileInvoice,
   createCreditCardPayment,
   bulkUpdateTransactions,
   bulkCategorizeTransactions,

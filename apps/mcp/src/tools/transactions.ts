@@ -8,7 +8,7 @@ import {
   transactionsEndpoints,
   type UpdateTransactionInput,
 } from "@luraba/contracts";
-import { resolveInstallmentPlan } from "@luraba/domain";
+import { parseInstallmentPlanText, resolveInstallmentPlan } from "@luraba/domain";
 import { z } from "zod";
 import { LurabaApiError } from "../client/errors.js";
 import { majorToMinor, majorToMoney, toMoney } from "../format/money.js";
@@ -332,11 +332,18 @@ const createInput = z.object({
     .describe(
       "Credit card purchase only: every installment costs exactly this much (with installments); the total is this times the count.",
     ),
-  roundingMode: z
-    .enum(["remainder_last", "remainder_first", "round_up_all"])
+  installmentPlan: z
+    .string()
+    .max(500)
     .optional()
     .describe(
-      "Credit card purchase only: how an even split places the leftover cents. remainder_last (default): the last installment takes them; remainder_first: the first; round_up_all: every installment is rounded up and the total becomes their sum.",
+      'Credit card purchase only: shorthand for the exact installments in major units, e.g. "1st installment 364.90, rest 364.88" (with installments), "3rd 478.64, others 478.63", "26.63 x3" or "133.34, 133.33, 133.33". Replaces installmentAmounts.',
+    ),
+  roundingMode: z
+    .enum(["remainder_last", "remainder_first", "round_up_all", "round_down_all"])
+    .optional()
+    .describe(
+      "Credit card purchase only: how an even split places the leftover cents. Left out, the card's learned pattern is used (learned from invoices reconciled with the issuer; the result says which), else remainder_last. remainder_last: the last installment takes them; remainder_first: the first; round_up_all: every installment is rounded up and the total becomes their sum; round_down_all: every installment is rounded down and the cents are dropped.",
     ),
   paymentMethod: z.string().optional().describe("Payment method code or name (expense/income)."),
   category: z.string().optional(),
@@ -463,15 +470,25 @@ export const createTransaction = defineTool({
       if (problems.any) return clarificationOutput(problems);
       if (!cardId || !currency) return missing("creditCard");
       const cardCurrency = currency;
+      let planAmounts = args.installmentAmounts;
+      if (args.installmentPlan !== undefined) {
+        const parsed = parseInstallmentPlanText(args.installmentPlan, args.installments);
+        if (!parsed.ok) {
+          return {
+            isError: true,
+            summary: parsed.error,
+            data: { status: "invalid_input", error: parsed.error },
+          };
+        }
+        planAmounts = parsed.amounts.map((value) => value / 100);
+      }
       const purchase = {
         description: args.description,
         ...textFields(args),
         ...(args.amount === undefined ? {} : { amount: majorToMinor(args.amount, cardCurrency) }),
-        ...(args.installmentAmounts
+        ...(planAmounts
           ? {
-              installmentAmounts: args.installmentAmounts.map((value) =>
-                majorToMinor(value, cardCurrency),
-              ),
+              installmentAmounts: planAmounts.map((value) => majorToMinor(value, cardCurrency)),
             }
           : {}),
         ...(args.installmentAmount === undefined
@@ -571,7 +588,7 @@ async function createCardPurchase(
     amount?: number;
     installmentAmounts?: number[];
     installmentAmount?: number;
-    roundingMode?: "remainder_last" | "remainder_first" | "round_up_all";
+    roundingMode?: "remainder_last" | "remainder_first" | "round_up_all" | "round_down_all";
     purchaseDate: string;
     postedDate: string;
     installmentCount?: number;
@@ -667,6 +684,15 @@ async function createCardPurchase(
         })),
       },
       alsoCreated: classification.created,
+      ...(created.appliedRoundingMode
+        ? {
+            roundingMode: created.appliedRoundingMode,
+            roundingModeSource:
+              created.roundingModeSource === "learned"
+                ? "learned from this card's reconciled invoices (pass roundingMode to override)"
+                : created.roundingModeSource,
+          }
+        : {}),
       ...billFields(bill),
       note: `Listed in Transactions on the purchase date; installments 2..n on the 1st of each following month. The invoice closing and due dates are in installments[].`,
     },
