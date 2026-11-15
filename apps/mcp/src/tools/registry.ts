@@ -35,6 +35,7 @@ import {
   reportMonthlyPlan,
   setMonthlyPlan,
   updateGoal,
+  updateGoalContribution,
   withdrawFromGoal,
 } from "./goals.js";
 import { listIcons } from "./icons.js";
@@ -136,6 +137,7 @@ export const tools: AnyTool[] = [
   listGoals,
   deleteGoal,
   contributeToGoal,
+  updateGoalContribution,
   moveGoalFunds,
   withdrawFromGoal,
   setMonthlyPlan,

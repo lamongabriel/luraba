@@ -98,6 +98,8 @@ const contributionAmountSchema = z.coerce
   .max(MAX_SAFE_MINOR_UNITS)
   .refine((value) => value !== 0, "The amount cannot be zero");
 
+const fxRateSchema = z.coerce.number().positive().max(1_000_000);
+
 export const createGoalContributionBodySchema = z
   .object({
     /** Required unless a transaction is linked, which supplies it. */
@@ -115,15 +117,26 @@ export const createGoalContributionBodySchema = z
 
 export const updateGoalContributionBodySchema = z
   .object({
+    /**
+     * Minor units. For a contribution made in another currency this is the ORIGINAL amount (in
+     * `originalCurrency`) and the goal-currency amount is recomputed from the rate; otherwise it is in
+     * the goal's currency.
+     */
     amount: contributionAmountSchema,
     contributedOn: dateInputSchema,
     note: z.string().trim().max(500).nullable(),
     transactionId: z.uuid().nullable(),
+    /** Goal units per unit of the original currency; stored at full precision. Wins over `recompute`. */
+    fxRate: fxRateSchema,
+    /**
+     * Foreign contributions only: look the rate up again for the (new) date. Without `fxRate` and
+     * without `recompute` the stored rate is kept.
+     */
+    recompute: z.boolean(),
   })
   .partial()
   .refine((value) => Object.keys(value).length > 0, "At least one field must be provided");
 
-const fxRateSchema = z.coerce.number().positive().max(1_000_000);
 const accountIdSchema = z.uuid();
 
 /**
@@ -189,3 +202,16 @@ export type MoveGoalFundsInput = z.input<typeof moveGoalFundsBodySchema>;
 export type WithdrawFromGoalInput = z.input<typeof withdrawFromGoalBodySchema>;
 export type GoalsReportQuery = z.input<typeof goalsReportQuerySchema>;
 export type ListGoalsQuery = z.input<typeof listGoalsQuerySchema>;
+
+/**
+ * What a contribution in another currency would be worth: the historical rate for `date` (the closest
+ * previous business day when the market was closed) and the converted amount.
+ */
+export const goalContributionQuoteQuerySchema = z.object({
+  fromCurrencyCode: currencyCodeSchema,
+  toCurrencyCode: currencyCodeSchema,
+  /** Defaults to today. */
+  date: dateInputSchema.optional(),
+  /** Minor units of `fromCurrencyCode`. */
+  amount: moneyAmountSchema,
+});

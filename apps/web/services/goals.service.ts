@@ -43,3 +43,14 @@ export const updateContribution = (
 
 export const removeContribution = (target: ContributionTarget): Promise<GetGoalResult> =>
   requestContract(goalsEndpoints.removeContribution, { params: target });
+
+export type ContributionQuoteQuery = {
+  fromCurrencyCode: string;
+  toCurrencyCode: string;
+  date?: string;
+  amount: number;
+};
+
+/** The historical rate and converted amount of a contribution in another currency (the form preview). */
+export const quoteContribution = (query: ContributionQuoteQuery) =>
+  requestContract(goalsEndpoints.contributionQuote, { query });

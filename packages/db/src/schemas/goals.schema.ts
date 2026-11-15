@@ -86,7 +86,11 @@ export const goalContributionsTable = pgTable(
     originalAmount: bigint("original_amount", { mode: "number" }),
     originalCurrency: varchar("original_currency", { length: 3 }),
     /** Goal-currency units per unit of the original currency, at the time of the contribution. */
-    fxRate: numeric("fx_rate", { precision: 24, scale: 10 }),
+    fxRate: numeric("fx_rate", { precision: 28, scale: 14 }),
+    /** `frankfurter`, `yahoo`, or `manual` when given by hand; null on rows older than migration 0059. */
+    fxRateSource: varchar("fx_rate_source", { length: 32 }),
+    /** The market day the rate is from (the closest previous business day to `contributedOn`). */
+    fxRateDate: date("fx_rate_date", { mode: "date" }),
     contributedOn: date("contributed_on", { mode: "date" }).notNull(),
     note: text(),
     /** The transaction that moved the money, when there is one. It can back one contribution. */

@@ -85,3 +85,9 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 - Backfill is for the owner after deploy: Mario's R$82 Pix (Inter, 2026-11-07) -> Lanchonight (XP Visa, purchaseId 302587e0-2a96-40b3-be10-4c649c4ea13f) and each unlinked Inter Global gift-card cashback, via `link_refund`.
 - Tip: parallel sessions share `luraba_db_test`; run the full suite with `DB_NAME=luraba_db_test_moneyback`.
 
+
+## Goal contributions in another currency (branch `claude/elated-wilbur-5a555a`)
+- Bug: `contribute_to_goal` stored `fxRate` 0.18 for BRL -> USD. Root cause: `GET /currencies/rate` rounded the rate to 2 decimals and the MCP tool sent it as `fxRate`. Fixed at the source: the rate is an exact decimal (`numeric(28,14)`, migration 0059, renumber at merge: 0058 is taken by other branches), resolved for the contribution's date (closest previous business day within 7 days, else a 422 asking for `fxRate`), stored with its source and day, and only the converted amount is rounded (once, half up).
+- Added: `GET /goals/contribution-quote`, `fxRate`/`recompute` on `PATCH /goals/:id/contributions/:id` (moves the linked transfer too), MCP `update_goal_contribution`, major-unit dry runs for contribute/move/withdraw, `ConversionDisplay` in the web (contribution rows, edit modal with live preview and rate override), `pnpm --filter @luraba/api goals:fx-backfill` (dry run by default, idempotent). Details in `apps/api/src/modules/goals/README.md`.
+- Owner step after deploying: run the backfill dry run against production, review, then `--apply` (see the report of this session).
+- Not done: no web form creates a contribution in another currency (there was none); `create_goal`/`update_goal`/`set_monthly_plan` dry runs still print minor units.

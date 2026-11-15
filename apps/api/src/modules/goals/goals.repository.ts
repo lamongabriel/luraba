@@ -1,6 +1,6 @@
 import type { GoalKind, GoalStatus } from "@luraba/contracts/goals";
 import { goalContributionsTable, goalsTable } from "@luraba/db/schemas/goals.schema";
-import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import type { HouseholdContext } from "@/config/permissions";
 import { db } from "@/db";
 import { buildIlikeSearch, type DbListPage, getPagination } from "@/shared/list";
@@ -16,7 +16,18 @@ export type NewContribution = Omit<
   "id" | "createdAt" | "updatedAt"
 >;
 export type ContributionChanges = Partial<
-  Pick<GoalContributionRecord, "amount" | "contributedOn" | "note" | "transactionId">
+  Pick<
+    GoalContributionRecord,
+    | "amount"
+    | "kind"
+    | "contributedOn"
+    | "note"
+    | "transactionId"
+    | "originalAmount"
+    | "fxRate"
+    | "fxRateSource"
+    | "fxRateDate"
+  >
 >;
 
 /**
@@ -90,6 +101,28 @@ class GoalsRepository extends HouseholdScopedRepository<GoalRecord, CreateGoalVa
         asc(goalContributionsTable.createdAt),
         asc(goalContributionsTable.id),
       );
+  }
+
+  /**
+   * Every contribution made in another currency than its goal's, across ALL households, with its goal.
+   * For the FX backfill only (an operator script, not a request); request code never calls this.
+   */
+  async listForeignContributions(): Promise<
+    { contribution: GoalContributionRecord; goal: GoalRecord }[]
+  > {
+    return db
+      .select({ contribution: goalContributionsTable, goal: goalsTable })
+      .from(goalContributionsTable)
+      .innerJoin(goalsTable, eq(goalContributionsTable.goalId, goalsTable.id))
+      .where(
+        and(
+          eq(goalContributionsTable.kind, "contribution"),
+          isNotNull(goalContributionsTable.originalCurrency),
+          isNotNull(goalContributionsTable.originalAmount),
+          ne(goalContributionsTable.originalCurrency, goalsTable.currencyCode),
+        ),
+      )
+      .orderBy(asc(goalContributionsTable.contributedOn), asc(goalContributionsTable.id));
   }
 
   async getContribution(
