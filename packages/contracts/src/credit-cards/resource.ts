@@ -137,6 +137,8 @@ export const creditCardOverviewCardSchema = z.object({
   /** The invoice due in the requested month, if the card has one. */
   invoice: creditCardOverviewInvoiceSchema.nullable(),
   limit: creditCardLimitBreakdownSchema,
+  /** Payments beyond what every invoice asks for (card credit carried forward), minor units. */
+  creditBalance: z.number().int(),
 });
 export const creditCardOverviewTotalsSchema = z.object({
   currencyCode: currencyCodeSchema,
@@ -248,7 +250,32 @@ export const creditCardPaymentSchema = z.object({
   amount: z.number().int(),
   fromAccountId: z.uuid(),
   allocations: z.array(z.object({ billingCycleId: z.uuid(), amount: z.number().int() })),
+  /** The part of the payment no invoice absorbs (card credit carried forward), in minor units. */
+  creditAmount: z.number().int(),
   createdAt: wireDateTimeSchema,
+});
+export const recomputeCardAllocationsResultSchema = z.object({
+  dryRun: z.boolean(),
+  cards: z.array(
+    z.object({
+      creditCardId: z.uuid(),
+      name: z.string(),
+      currencyCode: currencyCodeSchema,
+      /** Payments no invoice absorbs, in minor units. */
+      creditBalance: z.number().int(),
+      /** Invoices whose paid amount changes (dry run) or changed. */
+      changedInvoices: z.array(
+        z.object({
+          cycleId: z.uuid(),
+          closingDate: z.iso.date(),
+          dueDate: z.iso.date(),
+          statementAmount: z.number().int(),
+          previousPaid: z.number().int(),
+          paid: z.number().int(),
+        }),
+      ),
+    }),
+  ),
 });
 export const creditCardForecastSchema = z.object({
   creditCardId: z.uuid(),
@@ -261,6 +288,7 @@ export type CreditCard = z.output<typeof creditCardSchema>;
 export type CreditCardCycle = z.output<typeof creditCardCycleSchema>;
 export type CreditCardCycleDetails = z.output<typeof creditCardCycleDetailsSchema>;
 export type CreditCardPurchase = z.output<typeof creditCardPurchaseSchema>;
+export type RecomputeCardAllocationsResult = z.output<typeof recomputeCardAllocationsResultSchema>;
 export type CreditCardPayment = z.output<typeof creditCardPaymentSchema>;
 export type CreditCardCyclePayment = z.output<typeof creditCardCyclePaymentSchema>;
 export type CreditCardLimitBreakdown = z.output<typeof creditCardLimitBreakdownSchema>;

@@ -159,6 +159,12 @@ export const cancelCreditCardPurchaseInputSchema = z.object({
   description: z.string().min(1).max(512).optional(),
   ...transactionTextFields,
 });
+/** `dryRun` defaults to true: nothing is written until the caller sends `dryRun: false`. */
+export const recomputeCardAllocationsInputSchema = z.object({
+  /** One card; omit to recompute every card of the household. */
+  creditCardId: z.uuid().optional(),
+  dryRun: z.boolean().default(true),
+});
 export const createCreditCardPaymentInputSchema = z.object({
   description: z.string().min(1).max(512).optional(),
   ...transactionTextFields,
@@ -276,6 +282,7 @@ export type CreditCardForecastQuery = z.input<typeof creditCardForecastQuerySche
 export type CreateCreditCardInput = z.input<typeof createCreditCardInputSchema>;
 export type UpdateCreditCardInput = z.input<typeof updateCreditCardInputSchema>;
 export type UpdateCreditCardCycleInput = z.input<typeof updateCreditCardCycleInputSchema>;
+export type RecomputeCardAllocationsInput = z.input<typeof recomputeCardAllocationsInputSchema>;
 export type CancelCreditCardPurchaseInput = z.input<typeof cancelCreditCardPurchaseInputSchema>;
 export type CreateCreditCardPurchaseInput = z.input<typeof createCreditCardPurchaseInputSchema>;
 export type UpdateCreditCardInstallmentInput = z.input<

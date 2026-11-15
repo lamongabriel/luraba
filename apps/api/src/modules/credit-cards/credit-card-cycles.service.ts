@@ -9,6 +9,7 @@ import { transactionsTable } from "@luraba/db/schemas/transactions.schema";
 import {
   addDays,
   addMonths,
+  allocatePayments,
   buildCycleForPurchaseDate,
   buildCycleFromClosingDate,
   formatISODate,
@@ -376,36 +377,101 @@ export async function restampMonthPurchases(
   }
 }
 
+/** What a recompute would change for one invoice (minor units). */
+export type AllocationChange = {
+  cycleId: string;
+  closingDate: string;
+  dueDate: string;
+  statementAmount: number;
+  previousPaid: number;
+  paid: number;
+};
+
+/**
+ * THE single place card payments are applied to invoices. Everything a statement or a payment can
+ * change (purchases, installments, cancellations, refunds, payments, cycle dates) ends by calling
+ * this. Allocation is derived, never edited: the payments, oldest first, fill the invoices, oldest
+ * due date first, each capped at its statement; what no invoice absorbs is the card credit balance.
+ * The stored rows and the cycles' paid/remaining/status are rewritten from that result (only when
+ * they differ), so they cannot go stale. With `dryRun` nothing is written and the changes are returned.
+ */
 export async function syncCardCycles(
   tx: TxClient,
   card: CreditCardRow,
   timezone: string,
+  options: { dryRun?: boolean } = {},
 ): Promise<Array<typeof creditCardBillingCyclesTable.$inferSelect>> {
-  await ensureCurrentCycle(tx, card, timezone);
+  const { cycles } = await syncCardCyclesWithChanges(tx, card, timezone, options);
+  return cycles;
+}
 
-  const [cycles, installmentSums, allocationSums, creditSums] = await Promise.all([
+export async function syncCardCyclesWithChanges(
+  tx: TxClient,
+  card: CreditCardRow,
+  timezone: string,
+  options: { dryRun?: boolean } = {},
+): Promise<{
+  cycles: Array<typeof creditCardBillingCyclesTable.$inferSelect>;
+  changes: AllocationChange[];
+  creditBalance: number;
+}> {
+  const dryRun = options.dryRun ?? false;
+  if (!dryRun) await ensureCurrentCycle(tx, card, timezone);
+
+  const [cycles, installmentSums, payments, storedAllocations, creditSums] = await Promise.all([
     cycleRepository.listCyclesByCardId(tx, card.id),
     cycleRepository.listInstallmentTotals(tx, card.id),
-    cycleRepository.listPaymentAllocationTotals(tx, card.id),
+    cycleRepository.listCardPaymentsInOrder(tx, card.id),
+    cycleRepository.listStoredAllocations(tx, card.id),
     cycleRepository.listRefundCreditTotals(tx, card.id),
   ]);
   const creditTotals = new Map(creditSums.map((row) => [row.billingCycleId ?? "", row.amount]));
 
   const today = getTodayInTimezone(timezone);
   const installmentTotals = new Map(installmentSums.map((row) => [row.billingCycleId, row.amount]));
-  const paymentTotals = new Map(
-    allocationSums.map((row) => [row.billingCycleId ?? "", row.amount]),
+
+  // Credits (refunds, cashback) reduce what the invoice asks for; they never push it below zero.
+  const statements = new Map(
+    cycles.map((cycle) => [
+      cycle.id,
+      Math.max((installmentTotals.get(cycle.id) ?? 0) - (creditTotals.get(cycle.id) ?? 0), 0),
+    ]),
+  );
+  const oldestFirst = [...cycles].sort((left, right) => {
+    if (left.dueDate.getTime() !== right.dueDate.getTime()) {
+      return left.dueDate.getTime() - right.dueDate.getTime();
+    }
+    return left.closingDate.getTime() - right.closingDate.getTime();
+  });
+  const allocation = allocatePayments(
+    payments,
+    oldestFirst.map((cycle) => ({ id: cycle.id, statementAmount: statements.get(cycle.id) ?? 0 })),
   );
 
+  const key = (row: { paymentId: string; billingCycleId: string | null; amount: number }) =>
+    `${row.paymentId}|${row.billingCycleId ?? ""}|${row.amount}`;
+  const fresh = allocation.allocations.map((row) => ({
+    paymentId: row.paymentId,
+    billingCycleId: row.invoiceId,
+    amount: row.amount,
+  }));
+  const sameRows =
+    fresh.length === storedAllocations.length &&
+    [...fresh.map(key)].sort().join("\n") === [...storedAllocations.map(key)].sort().join("\n");
+  if (!dryRun && !sameRows) {
+    await cycleRepository.replaceCardAllocations(
+      tx,
+      payments.map((payment) => payment.id),
+      fresh,
+    );
+  }
+
   const updatedCycles: Array<typeof creditCardBillingCyclesTable.$inferSelect> = [];
+  const changes: AllocationChange[] = [];
 
   for (const cycle of cycles) {
-    // Credits (refunds, cashback) reduce what the invoice asks for; they never push it below zero.
-    const statementAmount = Math.max(
-      (installmentTotals.get(cycle.id) ?? 0) - (creditTotals.get(cycle.id) ?? 0),
-      0,
-    );
-    const paidAmount = paymentTotals.get(cycle.id) ?? 0;
+    const statementAmount = statements.get(cycle.id) ?? 0;
+    const paidAmount = allocation.paidByInvoice.get(cycle.id) ?? 0;
     const remainingAmount = Math.max(statementAmount - paidAmount, 0);
 
     const status =
@@ -414,6 +480,32 @@ export async function syncCardCycles(
         : cycle.closingDate < today
           ? "closed"
           : "open";
+
+    if (cycle.paidAmount !== paidAmount) {
+      changes.push({
+        cycleId: cycle.id,
+        closingDate: formatISODate(cycle.closingDate),
+        dueDate: formatISODate(cycle.dueDate),
+        statementAmount,
+        previousPaid: cycle.paidAmount,
+        paid: paidAmount,
+      });
+    }
+
+    if (dryRun) {
+      updatedCycles.push({ ...cycle, statementAmount, paidAmount, remainingAmount, status });
+      continue;
+    }
+
+    const unchanged =
+      cycle.statementAmount === statementAmount &&
+      cycle.paidAmount === paidAmount &&
+      cycle.remainingAmount === remainingAmount &&
+      cycle.status === status;
+    if (unchanged) {
+      updatedCycles.push(cycle);
+      continue;
+    }
 
     const updated = await cycleRepository.updateCycle(tx, cycle.id, {
       statementAmount,
@@ -427,7 +519,7 @@ export async function syncCardCycles(
     updatedCycles.push(updated);
   }
 
-  return updatedCycles;
+  return { cycles: updatedCycles, changes, creditBalance: allocation.creditBalance };
 }
 
 /** The remembered amounts when there is one for every installment, otherwise undefined (even split). */
@@ -880,14 +972,5 @@ export async function listCardsWithCurrentCycle(referenceDate: Date) {
         lte(creditCardBillingCyclesTable.periodStart, referenceDate),
         gte(creditCardBillingCyclesTable.periodEnd, referenceDate),
       ),
-    );
-}
-
-export async function listPayableCycles(tx: TxClient, card: CreditCardRow, timezone: string) {
-  const syncedCycles = await syncCardCycles(tx, card, timezone);
-  return [...syncedCycles]
-    .filter((cycle) => cycle.remainingAmount > 0)
-    .sort((left, right) =>
-      left.dueDate < right.dueDate ? -1 : left.dueDate > right.dueDate ? 1 : 0,
     );
 }

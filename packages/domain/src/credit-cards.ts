@@ -106,3 +106,50 @@ export function pickDefaultInvoiceMonth(
 
   return active[0] ?? fallbackMonth;
 }
+
+export type AllocationPayment = { id: string; amount: number };
+export type AllocationInvoice = { id: string; statementAmount: number };
+export type PaymentAllocation = { paymentId: string; invoiceId: string; amount: number };
+export type PaymentAllocationResult = {
+  allocations: PaymentAllocation[];
+  /** Per invoice: how much of its statement the payments cover (never above the statement). */
+  paidByInvoice: Map<string, number>;
+  /** Payments that no invoice could absorb: the card credit balance, in minor units. */
+  creditBalance: number;
+};
+
+/**
+ * Pure, deterministic payment allocation for ONE card. `payments` must already be ordered
+ * (oldest first) and `invoices` oldest first (by due date). Each payment fills the oldest invoice
+ * that still has something to pay, capped at that invoice's statement. Whatever no invoice can
+ * absorb is the card credit balance; it is never attached to an invoice. Recomputing from scratch
+ * after any change is what keeps "paid" equal to min(statement, payments) with no phantom cents.
+ */
+export function allocatePayments(
+  payments: readonly AllocationPayment[],
+  invoices: readonly AllocationInvoice[],
+): PaymentAllocationResult {
+  const open = invoices.map((invoice) => ({
+    id: invoice.id,
+    remaining: Math.max(invoice.statementAmount, 0),
+  }));
+  const paidByInvoice = new Map(invoices.map((invoice) => [invoice.id, 0]));
+  const allocations: PaymentAllocation[] = [];
+  let creditBalance = 0;
+
+  for (const payment of payments) {
+    let left = Math.max(payment.amount, 0);
+    for (const invoice of open) {
+      if (left <= 0) break;
+      if (invoice.remaining <= 0) continue;
+      const amount = Math.min(invoice.remaining, left);
+      invoice.remaining -= amount;
+      left -= amount;
+      paidByInvoice.set(invoice.id, (paidByInvoice.get(invoice.id) ?? 0) + amount);
+      allocations.push({ paymentId: payment.id, invoiceId: invoice.id, amount });
+    }
+    creditBalance += left;
+  }
+
+  return { allocations, paidByInvoice, creditBalance };
+}

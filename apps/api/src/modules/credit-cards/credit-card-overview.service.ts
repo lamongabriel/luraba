@@ -10,6 +10,7 @@ import {
 } from "@luraba/domain";
 import type { HouseholdContext } from "@/config/permissions";
 import { buildCombinedFx, combineAmounts } from "@/modules/fx/fx-combine.service";
+import { getCardCreditBalance } from "./credit-card-cycles.repository";
 import { listCyclesThroughMonth } from "./credit-card-cycles.service";
 import * as creditCardsRepository from "./credit-cards.repository";
 import type {
@@ -69,6 +70,7 @@ export async function getOverview(
   const overviewCards: OverviewCard[] = await Promise.all(
     cards.map(async (card) => {
       const cycles = await listCyclesThroughMonth(context, card, monthStart);
+      const creditBalance = await getCardCreditBalance(card.id);
 
       return {
         creditCardId: card.id,
@@ -84,6 +86,7 @@ export async function getOverview(
         dueDay: card.dueDay,
         invoice: pickInvoiceForMonth(cycles, monthKey),
         limit: buildLimitBreakdown(card.creditLimitAmount, cycles, today),
+        creditBalance,
       };
     }),
   );

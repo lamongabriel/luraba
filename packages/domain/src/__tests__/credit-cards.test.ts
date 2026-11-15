@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  allocatePayments,
   buildLimitBreakdown,
   classifyCycleForLimit,
   pickDefaultInvoiceMonth,
@@ -98,5 +99,64 @@ describe("pickDefaultInvoiceMonth", () => {
 
   it("falls back when no invoice is active", () => {
     expect(pickDefaultInvoiceMonth([], "2026-10")).toBe("2026-10");
+  });
+});
+
+describe("allocatePayments", () => {
+  const invoices = [
+    { id: "a", statementAmount: 69_593 },
+    { id: "b", statementAmount: 5_000 },
+    { id: "c", statementAmount: 0 },
+  ];
+
+  it("applies payments oldest-first, capped at each statement", () => {
+    const result = allocatePayments([{ id: "p1", amount: 70_000 }], invoices);
+    expect(result.allocations).toEqual([
+      { paymentId: "p1", invoiceId: "a", amount: 69_593 },
+      { paymentId: "p1", invoiceId: "b", amount: 407 },
+    ]);
+    expect(result.paidByInvoice.get("b")).toBe(407);
+    expect(result.creditBalance).toBe(0);
+  });
+
+  it("turns overpayment into a credit balance, never an invoice amount", () => {
+    const result = allocatePayments([{ id: "p1", amount: 80_000 }], invoices);
+    expect(result.paidByInvoice.get("a")).toBe(69_593);
+    expect(result.paidByInvoice.get("b")).toBe(5_000);
+    expect(result.paidByInvoice.get("c")).toBe(0);
+    expect(result.creditBalance).toBe(5_407);
+  });
+
+  it("follows a shrunk statement with no phantom cents", () => {
+    const paid = allocatePayments(
+      [{ id: "p1", amount: 69_593 }],
+      [
+        { id: "a", statementAmount: 69_593 },
+        { id: "b", statementAmount: 4 },
+      ],
+    );
+    expect(paid.paidByInvoice.get("a")).toBe(69_593);
+    expect(paid.paidByInvoice.get("b")).toBe(0);
+  });
+
+  it("keeps sum(allocated) + credit = sum(payments)", () => {
+    const payments = [
+      { id: "p1", amount: 30_000 },
+      { id: "p2", amount: 60_000 },
+      { id: "p3", amount: 1_000 },
+    ];
+    const result = allocatePayments(payments, invoices);
+    const allocated = result.allocations.reduce((sum, row) => sum + row.amount, 0);
+    expect(allocated + result.creditBalance).toBe(91_000);
+  });
+
+  it("is deterministic for the same input", () => {
+    const payments = [
+      { id: "p1", amount: 10 },
+      { id: "p2", amount: 20 },
+    ];
+    expect(allocatePayments(payments, invoices).allocations).toEqual(
+      allocatePayments(payments, invoices).allocations,
+    );
   });
 });

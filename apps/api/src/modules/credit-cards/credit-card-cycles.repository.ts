@@ -244,21 +244,65 @@ export async function listRefundCreditTotals(tx: TxClient, creditCardId: string)
     .groupBy(transactionRefundsTable.billingCycleId);
 }
 
-export async function listPaymentAllocationTotals(tx: TxClient, creditCardId: string) {
+/** The card's payments in the order they are applied: oldest posted date first, then creation order. */
+export async function listCardPaymentsInOrder(tx: TxClient, creditCardId: string) {
   return tx
     .select({
+      id: creditCardPaymentsTable.id,
+      amount: creditCardPaymentsTable.amount,
+    })
+    .from(creditCardPaymentsTable)
+    .innerJoin(transactionsTable, eq(transactionsTable.id, creditCardPaymentsTable.transactionId))
+    .where(eq(creditCardPaymentsTable.creditCardId, creditCardId))
+    .orderBy(
+      asc(transactionsTable.postedDate),
+      asc(creditCardPaymentsTable.createdAt),
+      asc(creditCardPaymentsTable.id),
+    );
+}
+
+/** The stored (derived) allocation rows of a card, for diffing against a fresh computation. */
+export async function listStoredAllocations(tx: TxClient, creditCardId: string) {
+  return tx
+    .select({
+      paymentId: creditCardPaymentAllocationsTable.paymentId,
       billingCycleId: creditCardPaymentAllocationsTable.billingCycleId,
-      amount: sql<number>`coalesce(sum(${creditCardPaymentAllocationsTable.amount}), 0)`.mapWith(
-        Number,
-      ),
+      amount: creditCardPaymentAllocationsTable.amount,
     })
     .from(creditCardPaymentAllocationsTable)
     .innerJoin(
       creditCardPaymentsTable,
       eq(creditCardPaymentsTable.id, creditCardPaymentAllocationsTable.paymentId),
     )
-    .where(eq(creditCardPaymentsTable.creditCardId, creditCardId))
-    .groupBy(creditCardPaymentAllocationsTable.billingCycleId);
+    .where(eq(creditCardPaymentsTable.creditCardId, creditCardId));
+}
+
+export async function replaceCardAllocations(
+  tx: TxClient,
+  paymentIds: string[],
+  rows: Array<{ paymentId: string; billingCycleId: string; amount: number }>,
+) {
+  if (paymentIds.length > 0) {
+    await tx
+      .delete(creditCardPaymentAllocationsTable)
+      .where(inArray(creditCardPaymentAllocationsTable.paymentId, paymentIds));
+  }
+  if (rows.length > 0) await tx.insert(creditCardPaymentAllocationsTable).values(rows);
+}
+
+/** Payments not absorbed by any invoice (minor units): the card credit balance. */
+export async function getCardCreditBalance(creditCardId: string): Promise<number> {
+  const result = await db.execute<{ credit: string | number }>(sql`
+    select
+      coalesce((select sum(p.amount) from credit_card_payments p where p.credit_card_id = ${creditCardId}), 0)
+      - coalesce((
+        select sum(a.amount)
+        from credit_card_payment_allocations a
+        join credit_card_payments p on p.id = a.payment_id
+        where p.credit_card_id = ${creditCardId}
+      ), 0) as credit
+  `);
+  return Number(result.rows[0]?.credit ?? 0);
 }
 
 export async function loadCycleItems(
@@ -318,7 +362,7 @@ export async function loadCyclePayments(cardId: string, cycleId: string) {
         eq(creditCardPaymentAllocationsTable.billingCycleId, cycleId),
       ),
     )
-    .orderBy(asc(transactionsTable.purchaseDate), asc(creditCardPaymentAllocationsTable.createdAt));
+    .orderBy(asc(transactionsTable.purchaseDate), asc(creditCardPaymentAllocationsTable.id));
 }
 
 /** Credits (refunds, cancellations, chargebacks, cashback) applied to one invoice. */

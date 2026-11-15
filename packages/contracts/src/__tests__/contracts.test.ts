@@ -104,6 +104,7 @@ const EXPECTED_ENDPOINTS = [
   "POST /credit-cards",
   "GET /credit-cards/:id",
   "PATCH /credit-cards/:id",
+  "POST /credit-cards/recompute-allocations",
   "POST /credit-cards/:id/archive",
   "POST /credit-cards/:id/unarchive",
   "DELETE /credit-cards/:id",
