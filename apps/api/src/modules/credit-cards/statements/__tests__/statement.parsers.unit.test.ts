@@ -79,8 +79,8 @@ describe("parseCardStatement", () => {
     expect(statement.payments).toHaveLength(1);
     expect(statement.lines.find((line) => line.description === "SHOPEE")).toMatchObject({
       amount: 6634,
-      installment: { number: 1, total: 3 },
-      date: "2026-09-03",
+      installment: { number: 3, total: 3 },
+      date: "2026-08-03",
     });
     expect(statement.total).toBe(6634 + 1890);
   });

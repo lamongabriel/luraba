@@ -37,7 +37,7 @@ export const nubankNov2026 = [
 /** Inter card CSV: semicolons, dd/mm/yyyy, "R$ 1.234,56", installment in the Lancamento or Tipo column. */
 export const interNov2026 = [
   "Data;Lançamento;Categoria;Tipo;Valor",
-  "03/09/2026;SHOPEE;COMPRAS;Parcela 1/3;R$ 66,34",
+  "03/08/2026;SHOPEE;COMPRAS;Parcela 3/3;R$ 66,34",
   "10/11/2026;PADARIA CENTRAL;ALIMENTACAO;Compra à vista;R$ 18,90",
   "12/11/2026;PAGAMENTO ON LINE;PAGAMENTO;Pagamento;- R$ 500,00",
 ].join("\n");
