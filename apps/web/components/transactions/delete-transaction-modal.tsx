@@ -87,7 +87,7 @@ export function DeleteTransactionModal({
       confirmLabel={locked ? "Delete anyway" : "Delete transaction"}
       loadingLabel="Deleting..."
       isLoading={mutation.isPending}
-      errorMessage={mutation.errorMessage || undefined}
+      errorMessage={locked ? undefined : mutation.errorMessage || undefined}
       onConfirm={handleDelete}
     >
       {row ? <Typography variant="small-muted">{row.description}</Typography> : null}

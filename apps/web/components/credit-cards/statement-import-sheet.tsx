@@ -150,6 +150,17 @@ export function StatementImportSheet({
       showSign={false}
     />
   );
+  const small = (amount: number) => (
+    <AmountDisplay
+      amount={amount}
+      currencyCode={card.currencyCode}
+      language={language}
+      precision={precision}
+      size="sm"
+      showSign={false}
+      className="text-muted-foreground"
+    />
+  );
   const attention = result
     ? ATTENTION_ORDER.flatMap((status) => result.lines.filter((line) => line.status === status))
     : [];
@@ -217,8 +228,13 @@ export function StatementImportSheet({
               {
                 label: "Luraba after fixes",
                 value: money(result.lurabaTotalAfter),
+                hint: result.reconciled ? "Matches the issuer" : "After the cents are fixed",
+              },
+              {
+                label: "Difference",
+                value: money(Math.abs(result.remainingDifference)),
                 hint: result.reconciled
-                  ? "Matches the issuer"
+                  ? "Nothing left to fix"
                   : result.remainingDifference > 0
                     ? "Luraba is higher"
                     : "Luraba is lower",
@@ -248,7 +264,7 @@ export function StatementImportSheet({
                         : null}
                       {line.lurabaAmount !== null ? (
                         <>
-                          {line.installment ? " · " : null}Luraba had {money(line.lurabaAmount)}
+                          {line.installment ? " · " : null}Luraba had {small(line.lurabaAmount)}
                         </>
                       ) : null}
                     </>

@@ -1,6 +1,5 @@
 "use client";
 
-import { formatShortDate } from "@luraba/domain";
 import { AmountDisplay } from "@/components/display";
 import { PageSection } from "@/components/finance/page-section";
 import { ListRow } from "@/components/lists/list-row";
@@ -44,6 +43,17 @@ export function InvoiceAuditTrail({
       showSign={false}
     />
   );
+  const small = (amount: number) => (
+    <AmountDisplay
+      amount={amount}
+      currencyCode={currencyCode}
+      language={language}
+      precision={precision}
+      size="sm"
+      showSign={false}
+      className="text-muted-foreground"
+    />
+  );
 
   return (
     <PageSection title="Changes to this invoice" description="Every amount Luraba changed, and why">
@@ -65,15 +75,14 @@ export function InvoiceAuditTrail({
           {audits.map((audit) => (
             <ListRow
               key={audit.id}
-              title={audit.note}
+              title={audit.note.split(":")[0]}
               subtitle={
                 <>
-                  Installment {audit.installmentNumber} · {money(audit.previousAmount)} →{" "}
-                  {money(audit.newAmount)}
+                  {small(audit.previousAmount)} → {small(audit.newAmount)}
                 </>
               }
               amount={money(audit.newAmount - audit.previousAmount)}
-              meta={`${SOURCE_LABELS[audit.source]} · ${formatShortDate(audit.createdAt.slice(0, 10), language)}`}
+              meta={SOURCE_LABELS[audit.source]}
             />
           ))}
         </div>

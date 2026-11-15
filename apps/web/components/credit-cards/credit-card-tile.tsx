@@ -74,13 +74,13 @@ export function CreditCardTile({
               <HugeiconsIcon icon={Archive02Icon} strokeWidth={2} className="size-3.5" />
               Archived
             </>
+          ) : invoice?.roundingMismatch != null && invoice.reconciledAt == null ? (
+            <>Rounding mismatch - import statement</>
           ) : paidInFull ? (
             <>
               <HugeiconsIcon icon={CheckmarkCircle02Icon} strokeWidth={2} className="size-3.5" />
               Paid in full
             </>
-          ) : invoice?.roundingMismatch != null && invoice.reconciledAt == null ? (
-            <>Rounding mismatch - import statement</>
           ) : null}
         </p>
         <div className="mt-2 flex items-end justify-between gap-3">
