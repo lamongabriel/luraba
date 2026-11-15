@@ -40,9 +40,7 @@ of when it will be reached.
 - **Funds endpoints** (`goals.service.ts`, permission `goals.update`; each returns the goal detail):
   - `POST /goals/:id/contribute`: creates a transfer `fromAccountId` -> `toAccountId` (neutral in spending and
     income) and a `contribution` row linked to it, or links `transactionId` instead of creating one. The amount is
-    in `currencyCode` (default the goal's); in another currency `fxRate` (goal units per 1 of that currency) is
-    required, the converted amount is the progress, and `originalAmount`/`originalCurrency`/`fxRate` are stored.
-    The account in the goal's currency gets exactly the converted amount, so the stored rate matches the books.
+    in `currencyCode` (default the goal's). See "Contributions in another currency" below.
   - `POST /goals/:id/move`: a transfer plus a `move` row; fails (422) when `fromAccountId` holds less of this
     goal than the amount.
   - `POST /goals/:id/withdraw`: a `withdrawal` row. Link the expense it paid for (`expenseId`, amount defaults to
@@ -54,7 +52,47 @@ of when it will be reached.
 - `endMonth` (`end_month`, first of the month, exposed as `YYYY-MM`) is the last month of the monthly plan;
   the start month is the start date's. It is separate from `targetDate`. `targetAmount` stays required: the MCP
   `create_goal` fills it with monthly x months when only an end month is given.
+- `GET /goals/contribution-quote?fromCurrencyCode&toCurrencyCode&date&amount` (`goals.read`): the rate and converted
+  amount a contribution would get on a day. The web form preview and the MCP dry run use it.
+- `PATCH /goals/:id/contributions/:contributionId` (`goals.update`): amount, date, note, link, and for a foreign
+  contribution `fxRate` / `recompute` (below). It also moves the linked transfer (below).
 - Contribution endpoints return the whole goal detail so the client refreshes in one call.
 - Goals send no notifications yet.
+
+## Contributions in another currency
+
+Root cause of the "0.18 instead of 0.1774" bug: `GET /currencies/rate` rounded the rate to 2 decimals and the MCP
+`contribute_to_goal` sent that rounded number as `fxRate`. The column was never the problem (it was `numeric(24,10)`).
+
+- **Rate**: `fxRate` is "goal units per 1 of the original currency". Given explicitly it is used exactly as typed (up
+  to 14 decimals, source `manual`). Without it the rate is the provider's **historical rate for the contribution date**
+  (`FxService.getDayRate`, the same Frankfurter/Yahoo cache as the rest of the app, see [fx](../fx/README.md)): the
+  closest previous business day within 7 days, never today's rate for a past date. When none exists (providers down
+  and nothing cached within a week) the request fails with 422 "give the rate yourself"; nothing is guessed.
+  Household FX overrides are "now" rates and are not used for dated records.
+- **Storage** (migration 0059): `fx_rate numeric(28,14)` (exact decimal string, never a float), `fx_rate_source`
+  (`frankfurter`, `yahoo-finance2` or `manual`; null on rows older than the migration), `fx_rate_date` (the market day
+  the rate is from, before `contributed_on` when the market was closed), `original_amount` and `original_currency`
+  (what was actually put in) next to `amount` (the converted goal-currency amount, the progress). The wire has
+  `fxRate` (number), `fxRateSource` and `fxRateDate`.
+- **Rounding**: the rate is never rounded. `converted = round_half_up(original * rate)` in the goal currency's minor unit,
+  once, with exact BigInt maths (`convertMinorUnitsWithRate` in `@luraba/domain`, tested without a database).
+- **Same rule elsewhere**: a withdrawal and a move are always in the goal's currency and store no rate. A transfer
+  between accounts of different currencies converts with the transfer's own date (`FxService.convertAmount`, also
+  historical).
+- **The transfer stays in step**: the side in the goal's currency of the contribution's transfer gets exactly the
+  converted amount (so the books and the stored rate agree), the side in the original currency the original amount.
+  Editing a contribution updates that transfer's amounts and date (`syncLinkedTransfer`); a link that is not a
+  transfer between the two stored accounts is left alone. Saved totals and `locations` are computed from the rows, so
+  they follow.
+- **Editing** (`PATCH`): for a foreign contribution `amount` is in the **original** currency. The rate is kept unless
+  `fxRate` is given (manual) or `recompute: true` (look up the new date's rate). A rate on a goal-currency contribution
+  is a 422.
+- **Backfill** (`pnpm --filter @luraba/api goals:fx-backfill`, `src/scripts/goals-fx-backfill.ts`,
+  `goals.fx-backfill.service.ts`): recomputes every foreign contribution from its date's rate. **Dry run by default**
+  (prints old vs new amount, rate, source and day per row), `--apply` writes (contribution + its transfer), `--json`
+  for machine output, `--include-manual` also recomputes rates given by hand (skipped otherwise). Idempotent: a row
+  already at its date's rate reports `=` and a second `--apply` changes nothing. A row with no rate for its date is
+  reported and left alone. In a built image run `node dist/scripts/goals-fx-backfill.js [--apply]`.
 
 General module conventions: [../README.md](../README.md).

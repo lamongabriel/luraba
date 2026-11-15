@@ -10,6 +10,12 @@ Exchange-rate providers (`providers/`), sync (`fx.sync.ts`), cached rates (`exch
   (`rate_numerator / rate_denominator`), so the app keeps working offline with the last known rate.
 - `FxService.getRate` looks for the day's rate (direct, then inverted), fetches it if missing, and falls back to the
   latest stored rate on or before the day. It throws `DependencyUnavailableError` when nothing exists.
+- `FxService.getDayRate({ from, to, date })` is the rate for **dated records** (goal contributions): an exact decimal
+  string (up to 14 decimals, never rounded), the provider id and the market day. Closest previous business day within
+  7 days (`FX_MAX_LOOKBACK_DAYS`), a validation error asking for a rate when none exists, never today's rate for a past
+  day and never a household override. Providers publish fewer digits for rates below 1 (`BRL -> USD` 0.1808) than above
+  (`USD -> BRL` 5.5311), so for a pair below 1 the inverse pair of the same day and provider is fetched and inverted
+  exactly. `GET /currencies/rate` also returns the rate at full precision now (it used to round to 2 decimals).
 - Manual override: `household_fx_overrides` (migration 0056), one row per household and pair, managed with
   `GET/PUT /fx/overrides` and `DELETE /fx/overrides/:from/:to` (`household.update`, i.e. the owner; reading needs
   `household.read`). It wins over the market rate, in either direction (an override `BRL -> USD` also serves `USD -> BRL`,

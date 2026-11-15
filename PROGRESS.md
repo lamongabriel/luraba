@@ -67,3 +67,9 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 - Web: Archive/Unarchive row in the account and card edit sheets, "Show archived" header button on /accounts and /credit-cards, dimmed archived rows and tiles; pickers never offer archived accounts.
 - Note: parallel sessions share the `luraba_db_test` database and wipe it mid-run; this work used `DB_NAME=luraba_db_test_archive`.
 - Known gap: editing an existing transaction that sits on an archived account shows an empty account picker (the picker omits archived accounts).
+
+## Goal contributions in another currency (branch `claude/elated-wilbur-5a555a`)
+- Bug: `contribute_to_goal` stored `fxRate` 0.18 for BRL -> USD. Root cause: `GET /currencies/rate` rounded the rate to 2 decimals and the MCP tool sent it as `fxRate`. Fixed at the source: the rate is an exact decimal (`numeric(28,14)`, migration 0059, renumber at merge: 0058 is taken by other branches), resolved for the contribution's date (closest previous business day within 7 days, else a 422 asking for `fxRate`), stored with its source and day, and only the converted amount is rounded (once, half up).
+- Added: `GET /goals/contribution-quote`, `fxRate`/`recompute` on `PATCH /goals/:id/contributions/:id` (moves the linked transfer too), MCP `update_goal_contribution`, major-unit dry runs for contribute/move/withdraw, `ConversionDisplay` in the web (contribution rows, edit modal with live preview and rate override), `pnpm --filter @luraba/api goals:fx-backfill` (dry run by default, idempotent). Details in `apps/api/src/modules/goals/README.md`.
+- Owner step after deploying: run the backfill dry run against production, review, then `--apply` (see the report of this session).
+- Not done: no web form creates a contribution in another currency (there was none); `create_goal`/`update_goal`/`set_monthly_plan` dry runs still print minor units.
