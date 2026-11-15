@@ -23,7 +23,7 @@ const EXPECTED_MODULE_COUNTS = {
   bills: 15,
   budgets: 4,
   categories: 4,
-  creditCards: 23,
+  creditCards: 24,
   exports: 1,
   goals: 12,
   monthlyPlans: 3,
