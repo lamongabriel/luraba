@@ -81,6 +81,7 @@ export const INSTALLMENT_ROUNDING_MODES = [
   "remainder_last",
   "remainder_first",
   "round_up_all",
+  "round_down_all",
 ] as const;
 const installmentRoundingModeSchema = z.enum(INSTALLMENT_ROUNDING_MODES);
 /**
@@ -96,6 +97,11 @@ const installmentPlanFields = {
   installmentAmount: moneyAmountSchema.optional(),
   roundingMode: installmentRoundingModeSchema.optional(),
 };
+/**
+ * Editing an installment on an invoice already reconciled with the issuer is refused (409 `RECONCILED_INVOICE`)
+ * unless this is true. The override is recorded in the audit trail and unlocks the invoice.
+ */
+const overrideField = { override: z.boolean().optional() };
 const createCreditCardPurchaseObject = z.object({
   description: z.string().min(1).max(512),
   ...transactionTextFields,
@@ -126,9 +132,11 @@ export const updateCreditCardPurchaseInputSchema = createCreditCardPurchaseObjec
     originalDescription: originalDescriptionSchema.nullable().optional(),
     /** `null` clears it. */
     notes: notesSchema.nullable().optional(),
+    ...overrideField,
   })
   .refine(
-    (value) => Object.values(value).some((field) => field !== undefined),
+    (value) =>
+      Object.entries(value).some(([key, field]) => key !== "override" && field !== undefined),
     "At least one purchase field must be provided",
   );
 export const creditCardInstallmentParamsSchema = z.object({
@@ -141,6 +149,7 @@ export const updateCreditCardInstallmentInputSchema = z
   .object({
     amount: moneyAmountSchema.optional(),
     billingCycleId: z.uuid().optional(),
+    ...overrideField,
   })
   .refine(
     (value) => value.amount !== undefined || value.billingCycleId !== undefined,
@@ -158,6 +167,11 @@ export const cancelCreditCardPurchaseInputSchema = z.object({
   date: dateInputSchema.optional(),
   description: z.string().min(1).max(512).optional(),
   ...transactionTextFields,
+  ...overrideField,
+});
+/** Deleting a purchase with installments on a reconciled invoice needs `override=true`. */
+export const deleteCreditCardPurchaseQuerySchema = z.object({
+  override: booleanQuerySchema.optional(),
 });
 export const createCreditCardPaymentInputSchema = z.object({
   description: z.string().min(1).max(512).optional(),
@@ -276,6 +290,7 @@ export type CreditCardForecastQuery = z.input<typeof creditCardForecastQuerySche
 export type CreateCreditCardInput = z.input<typeof createCreditCardInputSchema>;
 export type UpdateCreditCardInput = z.input<typeof updateCreditCardInputSchema>;
 export type UpdateCreditCardCycleInput = z.input<typeof updateCreditCardCycleInputSchema>;
+export type DeleteCreditCardPurchaseQuery = z.input<typeof deleteCreditCardPurchaseQuerySchema>;
 export type CancelCreditCardPurchaseInput = z.input<typeof cancelCreditCardPurchaseInputSchema>;
 export type CreateCreditCardPurchaseInput = z.input<typeof createCreditCardPurchaseInputSchema>;
 export type UpdateCreditCardInstallmentInput = z.input<

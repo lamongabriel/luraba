@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  detectPartialRoundingPattern,
   detectRoundingPattern,
   learnRoundingPattern,
   type MatchableInstallment,
@@ -196,5 +197,53 @@ describe("parseInstallmentPlanText", () => {
     expect(parseInstallmentPlanText("1st 10.00, 2nd 10.00, 3rd 10.00", 2)).toMatchObject({
       ok: false,
     });
+  });
+});
+
+describe("detectPartialRoundingPattern", () => {
+  const detect = detectPartialRoundingPattern;
+  it("reads complete lists as a whole", () => {
+    expect(
+      detect(
+        [
+          { number: 1, amount: 13334 },
+          { number: 2, amount: 13332 },
+          { number: 3, amount: 13332 },
+        ],
+        3,
+      ),
+    ).toBe("first");
+  });
+  it("only claims what the confirmed installments prove", () => {
+    // KaBuM: only 2/10..4/10 are known, 3/10 is the higher one: not enough to say where the cents go
+    expect(
+      detect(
+        [
+          { number: 2, amount: 47863 },
+          { number: 3, amount: 47864 },
+          { number: 4, amount: 47863 },
+        ],
+        10,
+      ),
+    ).toBeNull();
+    expect(
+      detect(
+        [
+          { number: 1, amount: 47863 },
+          { number: 3, amount: 47864 },
+        ],
+        10,
+      ),
+    ).toBe("middle");
+    expect(
+      detect(
+        [
+          { number: 1, amount: 36490 },
+          { number: 2, amount: 36488 },
+        ],
+        5,
+      ),
+    ).toBe("first");
+    expect(detect([{ number: 1, amount: 100 }], 3)).toBeNull();
   });
 });

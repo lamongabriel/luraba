@@ -17,6 +17,10 @@ export const creditCardBillingCyclesTable = pgTable(
     statementAmount: bigint("statement_amount", { mode: "number" }).notNull().default(0),
     paidAmount: bigint("paid_amount", { mode: "number" }).notNull().default(0),
     remainingAmount: bigint("remaining_amount", { mode: "number" }).notNull().default(0),
+    /** Set when the invoice total equalled the issuer's closed total; editing its installments then needs an override. */
+    reconciledAt: timestamp("reconciled_at"),
+    /** The issuer's closed total (minor units) the invoice was reconciled against. */
+    issuerTotal: bigint("issuer_total", { mode: "number" }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

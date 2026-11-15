@@ -180,6 +180,10 @@ export function mapCycleRow(
     statementAmount: row.statementAmount,
     paidAmount: row.paidAmount,
     remainingAmount: row.remainingAmount,
+    reconciledAt: row.reconciledAt ?? null,
+    issuerTotal: row.issuerTotal ?? null,
+    // Filled in by `decorateCycles` (it needs the card's payments).
+    roundingMismatch: null,
   };
 }
 

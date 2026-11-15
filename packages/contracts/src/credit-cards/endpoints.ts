@@ -15,6 +15,7 @@ import {
   creditCardOverviewQuerySchema,
   creditCardPaymentParamsSchema,
   creditCardPurchaseParamsSchema,
+  deleteCreditCardPurchaseQuerySchema,
   listCreditCardCyclesQuerySchema,
   listCreditCardsQuerySchema,
   updateCreditCardCycleInputSchema,
@@ -33,6 +34,16 @@ import {
   creditCardPurchaseSchema,
   creditCardSchema,
 } from "./resource.js";
+import {
+  cardRoundingPatternsSchema,
+  cardStatementImportSchema,
+  cardStatementInputSchema,
+  cardStatementResultSchema,
+  installmentAuditSchema,
+  installmentAuditsQuerySchema,
+  reconcileCycleInputSchema,
+  reconcileCycleResultSchema,
+} from "./statements.js";
 
 export const creditCardsEndpoints = {
   list: defineEndpoint({
@@ -166,6 +177,7 @@ export const creditCardsEndpoints = {
     method: "delete",
     path: "/credit-cards/:id/purchases/:purchaseId",
     params: creditCardPurchaseParamsSchema,
+    query: deleteCreditCardPurchaseQuerySchema,
     status: 204,
   }),
   createPayment: defineEndpoint({
@@ -196,6 +208,59 @@ export const creditCardsEndpoints = {
     path: "/credit-cards/:id/payments/:paymentId",
     params: creditCardPaymentParamsSchema,
     status: 204,
+  }),
+  previewStatement: defineEndpoint({
+    method: "post",
+    path: "/credit-cards/:id/statements/preview",
+    params: creditCardIdParamsSchema,
+    body: cardStatementInputSchema,
+    response: cardStatementResultSchema,
+    status: 200,
+  }),
+  applyStatement: defineEndpoint({
+    method: "post",
+    path: "/credit-cards/:id/statements",
+    params: creditCardIdParamsSchema,
+    body: cardStatementInputSchema,
+    response: cardStatementResultSchema,
+    status: 201,
+  }),
+  listStatements: defineEndpoint({
+    method: "get",
+    path: "/credit-cards/:id/statements",
+    params: creditCardIdParamsSchema,
+    response: z.array(cardStatementImportSchema),
+    status: 200,
+  }),
+  reconcileCycle: defineEndpoint({
+    method: "post",
+    path: "/credit-cards/:id/cycles/reconcile",
+    params: creditCardIdParamsSchema,
+    body: reconcileCycleInputSchema,
+    response: reconcileCycleResultSchema,
+    status: 200,
+  }),
+  unreconcileCycle: defineEndpoint({
+    method: "post",
+    path: "/credit-cards/:id/cycles/:cycleId/unreconcile",
+    params: creditCardCycleParamsSchema,
+    response: creditCardCycleDetailsSchema,
+    status: 200,
+  }),
+  installmentAudits: defineEndpoint({
+    method: "get",
+    path: "/credit-cards/:id/installment-audits",
+    params: creditCardIdParamsSchema,
+    query: installmentAuditsQuerySchema,
+    response: z.array(installmentAuditSchema),
+    status: 200,
+  }),
+  roundingPatterns: defineEndpoint({
+    method: "get",
+    path: "/credit-cards/:id/rounding-patterns",
+    params: creditCardIdParamsSchema,
+    response: cardRoundingPatternsSchema,
+    status: 200,
   }),
   forecast: defineEndpoint({
     method: "get",

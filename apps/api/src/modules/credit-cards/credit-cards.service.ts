@@ -367,8 +367,9 @@ export async function deletePurchase(
   context: HouseholdContext,
   creditCardId: string,
   purchaseId: string,
+  options: { override?: boolean } = {},
 ): Promise<void> {
-  return purchaseService.deletePurchase(context, creditCardId, purchaseId);
+  return purchaseService.deletePurchase(context, creditCardId, purchaseId, options);
 }
 
 export async function createPayment(

@@ -35,6 +35,8 @@ function pickInvoiceForMonth(cycles: CreditCardCycleSummary[], monthKey: string)
     statementAmount: invoice.statementAmount,
     paidAmount: invoice.paidAmount,
     remainingAmount: invoice.remainingAmount,
+    reconciledAt: invoice.reconciledAt,
+    roundingMismatch: invoice.roundingMismatch,
   };
 }
 

@@ -130,6 +130,8 @@ export function buildCreditCardCyclesCte(
         cycles.closing_date,
         cycles.due_date,
         cycles.status,
+        cycles.reconciled_at,
+        cycles.issuer_total,
         coalesce(installments.statement_amount, 0)::integer as statement_amount,
         coalesce(payments.paid_amount, 0)::integer as paid_amount,
         cycles.created_at,

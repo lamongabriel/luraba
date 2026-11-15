@@ -36,6 +36,7 @@ import {
   hasCycleActivity,
 } from "./credit-card-cycle-engine";
 import * as cycleRepository from "./credit-card-cycles.repository";
+import { decorateCycles } from "./credit-card-reconciliation";
 import {
   type CreditCardRow,
   mapCycleItems,
@@ -612,7 +613,7 @@ export async function listBillingCycles(
   );
 
   return {
-    data: page.rows,
+    data: await decorateCycles(creditCardId, page.rows),
     meta: createListMeta(query, page.totalCount),
   };
 }
@@ -631,7 +632,10 @@ export async function getBillingCycle(
   });
 
   const items = await cycleRepository.loadCycleItems(creditCardId, cycleId);
-  const [enrichedCycle] = enrichCycleSummaries([cycle], context.timezone);
+  const [enrichedCycle] = await decorateCycles(
+    creditCardId,
+    enrichCycleSummaries([cycle], context.timezone),
+  );
 
   const payments = await cycleRepository.loadCyclePayments(creditCardId, cycleId);
   const credits = await cycleRepository.loadCycleCredits(creditCardId, cycleId);
@@ -766,7 +770,7 @@ export async function listCyclesThroughMonth(
     return extended ? syncCardCycles(tx, card, context.timezone) : synced;
   });
 
-  return enrichCycleSummaries(cycles, context.timezone);
+  return decorateCycles(card.id, enrichCycleSummaries(cycles, context.timezone));
 }
 
 export async function getForecast(

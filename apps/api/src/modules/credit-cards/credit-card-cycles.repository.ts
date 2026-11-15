@@ -125,6 +125,8 @@ export async function listCyclesPage(
     statementAmount: number;
     paidAmount: number;
     remainingAmount: number;
+    reconciledAt: Date | string | null;
+    issuerTotal: number | null;
     createdAt: Date;
     updatedAt: Date;
     displayStatus: CreditCardCycleSummary["displayStatus"];
@@ -144,6 +146,8 @@ export async function listCyclesPage(
       statement_amount as "statementAmount",
       paid_amount as "paidAmount",
       remaining_amount as "remainingAmount",
+      reconciled_at as "reconciledAt",
+      issuer_total as "issuerTotal",
       created_at as "createdAt",
       updated_at as "updatedAt",
       display_status as "displayStatus",
@@ -164,6 +168,7 @@ export async function listCyclesPage(
         periodEnd: toDate(row.periodEnd),
         closingDate: toDate(row.closingDate),
         dueDate: toDate(row.dueDate),
+        reconciledAt: row.reconciledAt ? toDate(row.reconciledAt) : null,
       };
 
       return {

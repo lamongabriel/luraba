@@ -24,6 +24,15 @@ export const baseCycleSchema = z.object({
   statementAmount: z.number().int(),
   paidAmount: z.number().int(),
   remainingAmount: z.number().int(),
+  /** When the invoice was reconciled with the issuer's closed total; its installments are then locked. */
+  reconciledAt: wireDateTimeSchema.nullable(),
+  /** The issuer's closed total the invoice was reconciled against (minor units). */
+  issuerTotal: z.number().int().nullable(),
+  /**
+   * A payment differs from this invoice by a few cents (at most 10): paid minus invoice, signed. Import the issuer's
+   * statement to settle it. Null when there is no mismatch or the invoice is reconciled.
+   */
+  roundingMismatch: z.number().int().nullable(),
 });
 export const creditCardCycleSchema = baseCycleSchema.extend({
   displayStatus: creditCardCycleDisplayStatusSchema,
@@ -120,6 +129,9 @@ export const creditCardOverviewInvoiceSchema = z.object({
   statementAmount: z.number().int(),
   paidAmount: z.number().int(),
   remainingAmount: z.number().int(),
+  reconciledAt: wireDateTimeSchema.nullable(),
+  /** See `baseCycleSchema.roundingMismatch`: shown on the dashboard as "rounding mismatch - import statement". */
+  roundingMismatch: z.number().int().nullable(),
 });
 export const creditCardOverviewCardSchema = z.object({
   creditCardId: z.uuid(),
@@ -232,8 +244,19 @@ export const creditCardPurchaseSchema = z.object({
       billingCycleId: z.uuid(),
       closingDate: z.iso.date(),
       dueDate: z.iso.date(),
+      /** The installment's invoice is reconciled with the issuer: editing it needs `override`. */
+      locked: z.boolean(),
     }),
   ),
+  /**
+   * The rounding mode the amount was split with when the purchase was created or re-split without an explicit mode
+   * (the card's learned pattern, or the default). Null for exact amounts and other reads.
+   */
+  appliedRoundingMode: z
+    .enum(["remainder_last", "remainder_first", "round_up_all", "round_down_all"])
+    .nullable(),
+  /** Where `appliedRoundingMode` came from. */
+  roundingModeSource: z.enum(["explicit", "learned", "default"]).nullable(),
   createdAt: wireDateTimeSchema,
 });
 export const creditCardPaymentSchema = z.object({
@@ -248,6 +271,8 @@ export const creditCardPaymentSchema = z.object({
   amount: z.number().int(),
   fromAccountId: z.uuid(),
   allocations: z.array(z.object({ billingCycleId: z.uuid(), amount: z.number().int() })),
+  /** Set when the payment is a few cents off an invoice it paid: paid minus invoice. Import the statement to settle it. */
+  roundingMismatch: z.object({ billingCycleId: z.uuid(), difference: z.number().int() }).nullable(),
   createdAt: wireDateTimeSchema,
 });
 export const creditCardForecastSchema = z.object({

@@ -1,6 +1,7 @@
 import { creditCardsEndpoints } from "@luraba/contracts";
 import { createHouseholdHandler } from "@/shared/controllers/household.controller";
 import { withApiMeta } from "@/shared/response";
+import * as statementsService from "./credit-card-statements.service";
 import * as service from "./credit-cards.service";
 
 export const list = createHouseholdHandler({
@@ -111,9 +112,10 @@ export const cancelPurchase = createHouseholdHandler({
 });
 export const deletePurchase = createHouseholdHandler({
   params: creditCardsEndpoints.deletePurchase.params,
+  query: creditCardsEndpoints.deletePurchase.query,
   status: "no-content",
-  handle: ({ household, params }) =>
-    service.deletePurchase(household, params.id, params.purchaseId),
+  handle: ({ household, params, query }) =>
+    service.deletePurchase(household, params.id, params.purchaseId, { override: query.override }),
 });
 export const createPayment = createHouseholdHandler({
   params: creditCardsEndpoints.createPayment.params,
@@ -144,4 +146,49 @@ export const getForecast = createHouseholdHandler({
   query: creditCardsEndpoints.forecast.query,
   response: creditCardsEndpoints.forecast.response,
   handle: ({ household, params, query }) => service.getForecast(household, params.id, query),
+});
+export const previewStatement = createHouseholdHandler({
+  params: creditCardsEndpoints.previewStatement.params,
+  body: creditCardsEndpoints.previewStatement.body,
+  response: creditCardsEndpoints.previewStatement.response,
+  handle: ({ household, params, body }) =>
+    statementsService.previewStatement(household, params.id, body),
+});
+export const applyStatement = createHouseholdHandler({
+  params: creditCardsEndpoints.applyStatement.params,
+  body: creditCardsEndpoints.applyStatement.body,
+  response: creditCardsEndpoints.applyStatement.response,
+  status: "created",
+  handle: ({ household, params, body }) =>
+    statementsService.applyStatement(household, params.id, body),
+});
+export const listStatements = createHouseholdHandler({
+  params: creditCardsEndpoints.listStatements.params,
+  response: creditCardsEndpoints.listStatements.response,
+  handle: ({ household, params }) => statementsService.listStatementImports(household, params.id),
+});
+export const reconcileCycle = createHouseholdHandler({
+  params: creditCardsEndpoints.reconcileCycle.params,
+  body: creditCardsEndpoints.reconcileCycle.body,
+  response: creditCardsEndpoints.reconcileCycle.response,
+  handle: ({ household, params, body }) =>
+    statementsService.reconcileCycle(household, params.id, body),
+});
+export const unreconcileCycle = createHouseholdHandler({
+  params: creditCardsEndpoints.unreconcileCycle.params,
+  response: creditCardsEndpoints.unreconcileCycle.response,
+  handle: ({ household, params }) =>
+    statementsService.unreconcileCycle(household, params.id, params.cycleId),
+});
+export const listInstallmentAudits = createHouseholdHandler({
+  params: creditCardsEndpoints.installmentAudits.params,
+  query: creditCardsEndpoints.installmentAudits.query,
+  response: creditCardsEndpoints.installmentAudits.response,
+  handle: ({ household, params, query }) =>
+    statementsService.listInstallmentAudits(household, params.id, query),
+});
+export const getRoundingPatterns = createHouseholdHandler({
+  params: creditCardsEndpoints.roundingPatterns.params,
+  response: creditCardsEndpoints.roundingPatterns.response,
+  handle: ({ household, params }) => statementsService.getRoundingPatterns(household, params.id),
 });

@@ -121,4 +121,40 @@ router.get(
   creditCardsController.getForecast,
 );
 
+router.post(
+  getEndpointRouterPath(creditCardsEndpoints.previewStatement),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
+  creditCardsController.previewStatement,
+);
+router.post(
+  getEndpointRouterPath(creditCardsEndpoints.applyStatement),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_UPDATE }),
+  creditCardsController.applyStatement,
+);
+router.get(
+  getEndpointRouterPath(creditCardsEndpoints.listStatements),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
+  creditCardsController.listStatements,
+);
+router.post(
+  getEndpointRouterPath(creditCardsEndpoints.reconcileCycle),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_UPDATE }),
+  creditCardsController.reconcileCycle,
+);
+router.post(
+  getEndpointRouterPath(creditCardsEndpoints.unreconcileCycle),
+  requireAccess({ permission: PERMISSIONS.TRANSACTIONS_UPDATE }),
+  creditCardsController.unreconcileCycle,
+);
+router.get(
+  getEndpointRouterPath(creditCardsEndpoints.installmentAudits),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
+  creditCardsController.listInstallmentAudits,
+);
+router.get(
+  getEndpointRouterPath(creditCardsEndpoints.roundingPatterns),
+  requireAccess({ permission: PERMISSIONS.CREDIT_CARDS_READ }),
+  creditCardsController.getRoundingPatterns,
+);
+
 export default router;

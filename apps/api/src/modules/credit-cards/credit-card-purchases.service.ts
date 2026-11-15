@@ -7,6 +7,7 @@ import {
   formatISODate,
   getTodayInTimezone,
   type InstallmentPlan,
+  type InstallmentRoundingMode,
   resolveInstallmentPlan,
   splitInstallmentAmounts,
   startOfMonth,
@@ -36,11 +37,18 @@ import type {
   CreditExpenseTiming,
   CreditInstallmentBudgetMode,
 } from "@/shared/validation/preferences";
+import { recomputeCardAllocations } from "./credit-card-allocations";
 import {
   createInstallmentsForPurchase,
   recreateBudgetRecognitionsForPurchase,
   syncCardCycles,
 } from "./credit-card-cycles.service";
+import {
+  assertInvoicesUnlocked,
+  findLearnedRoundingMode,
+  recordInstallmentAudit,
+  unlockCycles,
+} from "./credit-card-reconciliation";
 import * as creditCardsRepository from "./credit-cards.repository";
 import {
   createUnderlyingExpenseTransaction,
@@ -59,7 +67,7 @@ import type {
   UpdateCreditCardPurchaseDto,
 } from "./credit-cards.types";
 
-type PurchaseWithTransactionRow = {
+export type PurchaseWithTransactionRow = {
   purchaseId: string;
   creditCardId: string;
   transactionId: string;
@@ -78,12 +86,13 @@ type PurchaseWithTransactionRow = {
   createdAt: Date;
 };
 
-async function loadPurchase(
+export async function loadPurchase(
   householdId: string,
   creditCardId: string,
   purchaseId: string,
+  executor: TxClient | typeof db = db,
 ): Promise<PurchaseWithTransactionRow> {
-  const rows = await db
+  const rows = await executor
     .select({
       purchaseId: creditCardPurchasesTable.id,
       creditCardId: creditCardPurchasesTable.creditCardId,
@@ -121,8 +130,11 @@ async function loadPurchase(
   };
 }
 
-async function loadPurchaseInstallments(purchaseId: string) {
-  return db
+export async function loadPurchaseInstallments(
+  purchaseId: string,
+  executor: TxClient | typeof db = db,
+) {
+  return executor
     .select({
       installmentId: creditCardInstallmentsTable.id,
       installmentNumber: creditCardInstallmentsTable.installmentNumber,
@@ -130,6 +142,7 @@ async function loadPurchaseInstallments(purchaseId: string) {
       billingCycleId: creditCardInstallmentsTable.billingCycleId,
       closingDate: creditCardBillingCyclesTable.closingDate,
       dueDate: creditCardBillingCyclesTable.dueDate,
+      reconciledAt: creditCardBillingCyclesTable.reconciledAt,
     })
     .from(creditCardInstallmentsTable)
     .innerJoin(
@@ -170,7 +183,10 @@ async function mapPurchaseResponse(
       billingCycleId: installment.billingCycleId,
       closingDate: formatISODate(installment.closingDate),
       dueDate: formatISODate(installment.dueDate),
+      locked: installment.reconciledAt !== null,
     })),
+    appliedRoundingMode: null,
+    roundingModeSource: null,
     createdAt: purchase.createdAt,
   };
 }
@@ -189,15 +205,32 @@ export async function createPurchase(
   assertNotArchived(card, "Credit card");
   await ensureExpenseCategory(context, dto.categoryId);
   await ensureMerchant(context, dto.merchantId);
+  const hasExactAmounts =
+    dto.installmentAmounts !== undefined || dto.installmentAmount !== undefined;
+  // The card's learned rounding pattern is the default split; an explicit roundingMode or exact amounts win.
+  const learnedMode =
+    !hasExactAmounts && !dto.roundingMode && (dto.installmentCount ?? 1) > 1
+      ? await findLearnedRoundingMode(card.id, dto.merchantId)
+      : null;
   const plan = requirePlan(
     resolveInstallmentPlan({
       amount: dto.amount,
       installmentCount: dto.installmentCount,
       installmentAmounts: dto.installmentAmounts,
       installmentAmount: dto.installmentAmount,
-      roundingMode: dto.roundingMode,
+      roundingMode: dto.roundingMode ?? learnedMode ?? undefined,
     }),
   );
+  const appliedRoundingMode = hasExactAmounts
+    ? null
+    : (dto.roundingMode ?? learnedMode ?? "remainder_last");
+  const roundingModeSource = hasExactAmounts
+    ? null
+    : dto.roundingMode
+      ? ("explicit" as const)
+      : learnedMode
+        ? ("learned" as const)
+        : ("default" as const);
   const amount = plan.total;
   const installmentCount = plan.amounts.length;
   await ensureCardHasAvailableCredit(card, amount);
@@ -275,6 +308,7 @@ export async function createPurchase(
           billingCycleId: installment.billingCycleId,
           closingDate: cycle.closingDate,
           dueDate: cycle.dueDate,
+          locked: cycle.reconciledAt !== null,
         };
       }),
     };
@@ -302,6 +336,8 @@ export async function createPurchase(
       closingDate: formatISODate(installment.closingDate),
       dueDate: formatISODate(installment.dueDate),
     })),
+    appliedRoundingMode,
+    roundingModeSource,
     createdAt: result.purchase.createdAt,
   };
 }
@@ -346,12 +382,37 @@ export async function updatePurchase(
   const billedCount = existingInstallments.filter(
     (installment) => installment.closingDate <= today,
   ).length;
-  const finalAmounts = resolveUpdatedAmounts(dto, existingPurchase, existingInstallments, {
-    billedCount: postedDateChanged ? 0 : billedCount,
-  });
+  const planChange =
+    dto.amount !== undefined ||
+    dto.installmentCount !== undefined ||
+    dto.roundingMode !== undefined;
+  const learnedMode =
+    planChange &&
+    !dto.roundingMode &&
+    dto.installmentAmounts === undefined &&
+    dto.installmentAmount === undefined
+      ? await findLearnedRoundingMode(card.id, merchantId)
+      : null;
+  const finalAmounts = resolveUpdatedAmounts(
+    dto,
+    existingPurchase,
+    existingInstallments,
+    { billedCount: postedDateChanged ? 0 : billedCount },
+    learnedMode,
+  );
   const amount = finalAmounts.reduce((total, value) => total + value, 0);
   const installmentCount = finalAmounts.length;
   const keepThrough = postedDateChanged ? 0 : Math.min(billedCount, installmentCount);
+
+  // Touching an installment on a reconciled invoice needs an explicit override.
+  const affectedCycleIds = existingInstallments
+    .filter(
+      (installment) =>
+        installment.installmentNumber > keepThrough ||
+        finalAmounts[installment.installmentNumber - 1] !== installment.amount,
+    )
+    .map((installment) => installment.billingCycleId);
+  const overriddenCycleIds = await assertInvoicesUnlocked(db, affectedCycleIds, dto.override);
 
   await ensureExpenseCategory(context, categoryId);
   await ensureMerchant(context, merchantId ?? undefined);
@@ -393,6 +454,19 @@ export async function updatePurchase(
             .update(creditCardInstallmentsTable)
             .set({ amount: nextAmount })
             .where(eq(creditCardInstallmentsTable.id, installment.installmentId));
+          await recordInstallmentAudit(tx, {
+            householdId: context.householdId,
+            creditCardId: card.id,
+            purchaseId,
+            installmentId: installment.installmentId,
+            billingCycleId: installment.billingCycleId,
+            installmentNumber: installment.installmentNumber,
+            previousAmount: installment.amount,
+            newAmount: nextAmount,
+            source: overriddenCycleIds.includes(installment.billingCycleId) ? "override" : "manual",
+            description,
+            userId: context.userId,
+          });
         }
       }
     }
@@ -436,7 +510,10 @@ export async function updatePurchase(
       await replaceTransactionTags(tx, existingPurchase.transactionId, tagIds);
     }
 
+    await unlockCycles(tx, overriddenCycleIds);
     await syncCardCycles(tx, card, context.timezone);
+    // The invoices changed: lay the card's payments over them again so no phantom cents are left.
+    if (affectedCycleIds.length > 0) await recomputeCardAllocations(tx, card, context.timezone);
   });
 
   return getPurchase(context, creditCardId, purchaseId);
@@ -453,6 +530,7 @@ function resolveUpdatedAmounts(
   purchase: PurchaseWithTransactionRow,
   installments: Awaited<ReturnType<typeof loadPurchaseInstallments>>,
   { billedCount }: { billedCount: number },
+  learnedMode: InstallmentRoundingMode | null = null,
 ): number[] {
   const current = installments.map((installment) => installment.amount);
   const hasExact = dto.installmentAmounts !== undefined || dto.installmentAmount !== undefined;
@@ -470,7 +548,7 @@ function resolveUpdatedAmounts(
         installmentCount: dto.installmentCount,
         installmentAmounts: dto.installmentAmounts,
         installmentAmount: dto.installmentAmount,
-        roundingMode: dto.roundingMode,
+        roundingMode: dto.roundingMode ?? learnedMode ?? undefined,
       },
       purchase.installmentCount,
     ),
@@ -492,7 +570,7 @@ function resolveUpdatedAmounts(
     ...splitInstallmentAmounts(
       remaining,
       plan.amounts.length - billedCount,
-      dto.roundingMode ?? "remainder_last",
+      dto.roundingMode ?? learnedMode ?? "remainder_last",
     ),
   ];
 }
@@ -533,57 +611,110 @@ export async function updateInstallment(
     if (!cycle[0]) throw new NotFoundError("Billing cycle");
   }
 
+  const movesInvoice =
+    dto.billingCycleId !== undefined && dto.billingCycleId !== installment.billingCycleId;
+  const changesAmount = nextAmount !== installment.amount;
+  const overriddenCycleIds =
+    changesAmount || movesInvoice
+      ? await assertInvoicesUnlocked(
+          db,
+          [installment.billingCycleId, ...(dto.billingCycleId ? [dto.billingCycleId] : [])],
+          dto.override,
+        )
+      : [];
+
   await db.transaction(async (tx) => {
-    await tx
-      .update(creditCardInstallmentsTable)
-      .set({
-        amount: nextAmount,
-        billingCycleId: dto.billingCycleId ?? installment.billingCycleId,
-      })
-      .where(eq(creditCardInstallmentsTable.id, installmentId));
-
-    if (nextTotal !== purchase.amount) {
-      await tx
-        .update(creditCardPurchasesTable)
-        .set({ purchaseAmount: nextTotal })
-        .where(eq(creditCardPurchasesTable.id, purchaseId));
-      await rewritePurchaseEntries(tx, card, purchase, nextTotal);
+    await writeInstallmentChange(tx, context, card, purchase, {
+      installmentId,
+      amount: nextAmount,
+      billingCycleId: dto.billingCycleId ?? installment.billingCycleId,
+      total: nextTotal,
+    });
+    if (changesAmount) {
+      await recordInstallmentAudit(tx, {
+        householdId: context.householdId,
+        creditCardId: card.id,
+        purchaseId,
+        installmentId,
+        billingCycleId: installment.billingCycleId,
+        installmentNumber: installment.installmentNumber,
+        previousAmount: installment.amount,
+        newAmount: nextAmount,
+        source: overriddenCycleIds.length > 0 ? "override" : "manual",
+        description: purchase.description,
+        userId: context.userId,
+      });
     }
-
-    await tx
-      .delete(creditCardBudgetRecognitionsTable)
-      .where(eq(creditCardBudgetRecognitionsTable.purchaseId, purchaseId));
-    if (purchase.includeInBudget && purchase.categoryId) {
-      await recreateBudgetRecognitionsForPurchase(
-        tx,
-        {
-          id: purchaseId,
-          purchaseAmount: nextTotal,
-          installmentCount: purchase.installmentCount,
-          budgetExpenseTiming: purchase.budgetExpenseTiming,
-          budgetInstallmentMode: purchase.budgetInstallmentMode,
-        },
-        {
-          categoryId: purchase.categoryId,
-          currencyCode: card.currencyCode,
-          purchaseDate: purchase.postedDate,
-        },
-      );
-    }
-
-    await syncCardCycles(tx, card, context.timezone);
+    await unlockCycles(tx, overriddenCycleIds);
+    await recomputeCardAllocations(tx, card, context.timezone);
   });
 
   return getPurchase(context, creditCardId, purchaseId);
+}
+
+/**
+ * The write behind `updateInstallment` (and behind statement corrections): the installment row, the purchase total,
+ * its ledger entries and budget recognitions follow. No lock check, no audit, no allocation recompute: callers own
+ * those because they differ (a manual edit asks for an override, a statement import is the source of truth).
+ */
+export async function writeInstallmentChange(
+  tx: TxClient,
+  context: Pick<HouseholdContext, "timezone">,
+  card: Awaited<ReturnType<typeof creditCardsRepository.findByIdOrThrow>>,
+  purchase: PurchaseWithTransactionRow,
+  change: { installmentId: string; amount: number; billingCycleId: string; total: number },
+): Promise<void> {
+  await tx
+    .update(creditCardInstallmentsTable)
+    .set({ amount: change.amount, billingCycleId: change.billingCycleId })
+    .where(eq(creditCardInstallmentsTable.id, change.installmentId));
+
+  if (change.total !== purchase.amount) {
+    await tx
+      .update(creditCardPurchasesTable)
+      .set({ purchaseAmount: change.total })
+      .where(eq(creditCardPurchasesTable.id, purchase.purchaseId));
+    await rewritePurchaseEntries(tx, card, purchase, change.total);
+  }
+
+  await tx
+    .delete(creditCardBudgetRecognitionsTable)
+    .where(eq(creditCardBudgetRecognitionsTable.purchaseId, purchase.purchaseId));
+  if (purchase.includeInBudget && purchase.categoryId) {
+    await recreateBudgetRecognitionsForPurchase(
+      tx,
+      {
+        id: purchase.purchaseId,
+        purchaseAmount: change.total,
+        installmentCount: purchase.installmentCount,
+        budgetExpenseTiming: purchase.budgetExpenseTiming,
+        budgetInstallmentMode: purchase.budgetInstallmentMode,
+      },
+      {
+        categoryId: purchase.categoryId,
+        currencyCode: card.currencyCode,
+        purchaseDate: purchase.postedDate,
+      },
+    );
+  }
+
+  await syncCardCycles(tx, card, context.timezone);
 }
 
 export async function deletePurchase(
   context: HouseholdContext,
   creditCardId: string,
   purchaseId: string,
+  options: { override?: boolean } = {},
 ): Promise<void> {
   const card = await creditCardsRepository.findByIdOrThrow(context.householdId, creditCardId);
   const existingPurchase = await loadPurchase(context.householdId, creditCardId, purchaseId);
+  const existingInstallments = await loadPurchaseInstallments(purchaseId);
+  const overriddenCycleIds = await assertInvoicesUnlocked(
+    db,
+    existingInstallments.map((installment) => installment.billingCycleId),
+    options.override,
+  );
 
   await db.transaction(async (tx) => {
     await deleteUnderlyingTransactionInTransaction(
@@ -591,6 +722,7 @@ export async function deletePurchase(
       context.householdId,
       existingPurchase.transactionId,
     );
+    await unlockCycles(tx, overriddenCycleIds);
     await syncCardCycles(tx, card, context.timezone);
   });
 }
@@ -634,7 +766,14 @@ export async function cancelPurchase(
     );
   }
 
+  const overriddenCycleIds = await assertInvoicesUnlocked(
+    db,
+    future.map((installment) => installment.billingCycleId),
+    dto.override,
+  );
+
   const refundTransactionId = await db.transaction(async (tx) => {
+    await unlockCycles(tx, overriddenCycleIds);
     if (future.length > 0) {
       const nextAmount = purchase.amount - futureAmount;
       await tx.delete(creditCardInstallmentsTable).where(

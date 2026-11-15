@@ -23,7 +23,7 @@ const EXPECTED_MODULE_COUNTS = {
   bills: 15,
   budgets: 4,
   categories: 4,
-  creditCards: 23,
+  creditCards: 30,
   exports: 1,
   goals: 12,
   monthlyPlans: 3,
@@ -120,6 +120,13 @@ const EXPECTED_ENDPOINTS = [
   "GET /credit-cards/:id/payments/:paymentId",
   "PATCH /credit-cards/:id/payments/:paymentId",
   "DELETE /credit-cards/:id/payments/:paymentId",
+  "POST /credit-cards/:id/statements/preview",
+  "POST /credit-cards/:id/statements",
+  "GET /credit-cards/:id/statements",
+  "POST /credit-cards/:id/cycles/reconcile",
+  "POST /credit-cards/:id/cycles/:cycleId/unreconcile",
+  "GET /credit-cards/:id/installment-audits",
+  "GET /credit-cards/:id/rounding-patterns",
   "GET /credit-cards/:id/forecast",
   "GET /exports",
   "GET /goals",
@@ -295,7 +302,7 @@ describe("HTTP contract inventory", () => {
         ]),
       ),
     ).toEqual(EXPECTED_MODULE_COUNTS);
-    expect(allEndpoints).toHaveLength(236);
+    expect(allEndpoints).toHaveLength(243);
     expect(allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`)).toEqual(
       EXPECTED_ENDPOINTS,
     );
@@ -304,7 +311,7 @@ describe("HTTP contract inventory", () => {
   it("has unique method/path pairs and complete endpoint schemas", () => {
     const identities = allEndpoints.map(({ method, path }) => `${method.toUpperCase()} ${path}`);
 
-    expect(new Set(identities).size).toBe(236);
+    expect(new Set(identities).size).toBe(243);
 
     for (const endpoint of allEndpoints) {
       expect(endpoint.path).toMatch(/^\/[a-z][a-z0-9/-]*(?::[A-Za-z][A-Za-z0-9_]*)?/);

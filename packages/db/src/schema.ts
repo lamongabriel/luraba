@@ -11,6 +11,7 @@ export { authVerificationsTable as authVerifications } from "./schemas/auth-veri
 export * from "./schemas/bills.schema.js";
 export * from "./schemas/budget-month-settings.schema.js";
 export * from "./schemas/budgets.schema.js";
+export * from "./schemas/card-statements.schema.js";
 export * from "./schemas/categories.schema.js";
 export * from "./schemas/credit-card-billing-cycles.schema.js";
 export * from "./schemas/credit-card-budget-recognitions.schema.js";

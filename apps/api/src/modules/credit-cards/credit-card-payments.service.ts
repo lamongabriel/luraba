@@ -1,4 +1,5 @@
 import { accountsTable } from "@luraba/db/schemas/accounts.schema";
+import { creditCardBillingCyclesTable } from "@luraba/db/schemas/credit-card-billing-cycles.schema";
 import { creditCardPaymentAllocationsTable } from "@luraba/db/schemas/credit-card-payment-allocations.schema";
 import { creditCardPaymentsTable } from "@luraba/db/schemas/credit-card-payments.schema";
 import { entriesTable } from "@luraba/db/schemas/entries.schema";
@@ -15,6 +16,7 @@ import * as entriesService from "@/modules/entries/entries.service";
 import { ledgerAccountsRepository } from "@/modules/ledger-accounts/ledger-accounts.repository";
 import { NotFoundError, ValidationError } from "@/shared/errors";
 import { listPayableCycles, syncCardCycles } from "./credit-card-cycles.service";
+import { findPaymentRoundingMismatch } from "./credit-card-reconciliation";
 import type { CreditCardRow } from "./credit-cards.helpers";
 import * as creditCardsRepository from "./credit-cards.repository";
 import {
@@ -105,6 +107,21 @@ async function mapPaymentResponse(
   payment: PaymentRow,
 ): Promise<CreditCardPaymentResponse> {
   const allocations = await loadPaymentAllocations(payment.paymentId);
+  const cycleIds = allocations.flatMap((allocation) =>
+    allocation.billingCycleId ? [allocation.billingCycleId] : [],
+  );
+  const cycles =
+    cycleIds.length > 0
+      ? await db
+          .select({
+            id: creditCardBillingCyclesTable.id,
+            statementAmount: creditCardBillingCyclesTable.statementAmount,
+            reconciledAt: creditCardBillingCyclesTable.reconciledAt,
+          })
+          .from(creditCardBillingCyclesTable)
+          .where(inArray(creditCardBillingCyclesTable.id, cycleIds))
+      : [];
+  const roundingMismatch = findPaymentRoundingMismatch(payment.amount, cycles);
 
   return {
     paymentId: payment.paymentId,
@@ -127,6 +144,7 @@ async function mapPaymentResponse(
           ]
         : [],
     ),
+    roundingMismatch,
     createdAt: payment.createdAt,
   };
 }
@@ -182,7 +200,11 @@ async function applySinglePayment(
   await syncCardCycles(tx, card, timezone);
 }
 
-async function rebuildAllPaymentAllocations(tx: TxClient, card: CreditCardRow, timezone: string) {
+export async function rebuildAllPaymentAllocations(
+  tx: TxClient,
+  card: CreditCardRow,
+  timezone: string,
+) {
   const payments = await tx
     .select({
       paymentId: creditCardPaymentsTable.id,

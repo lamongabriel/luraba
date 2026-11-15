@@ -257,6 +257,34 @@ export function detectRoundingPattern(amounts: number[]): RoundingPatternDetecti
   return { kind: "middle", position: first + 1 };
 }
 
+/**
+ * Like `detectRoundingPattern`, for a purchase whose invoices are only partly reconciled (`known` are the confirmed
+ * installments). A complete list is read as a whole; a partial one only when the confirmed amounts prove the
+ * pattern: the higher amount on installment 1 (`first`) or on the last (`last`), or on a middle one while installment
+ * 1 or the last is confirmed lower (`middle`). Anything else is unknown (null), including equal partial amounts.
+ */
+export function detectPartialRoundingPattern(
+  known: Array<{ number: number; amount: number }>,
+  installmentCount: number,
+): RoundingPatternKind | null {
+  const sorted = [...known].sort((a, b) => a.number - b.number);
+  if (sorted.length < 2) return null;
+  if (sorted.length === installmentCount) {
+    return detectRoundingPattern(sorted.map((entry) => entry.amount)).kind;
+  }
+  const distinct = [...new Set(sorted.map((entry) => entry.amount))].sort((a, b) => a - b);
+  if (distinct.length !== 2) return distinct.length > 2 ? "irregular" : null;
+  const low = distinct[0] as number;
+  const high = distinct[1] as number;
+  if (high - low > MAX_ROUNDING_SPREAD) return "irregular";
+  const highs = sorted.filter((entry) => entry.amount === high).map((entry) => entry.number);
+  const lows = sorted.filter((entry) => entry.amount === low).map((entry) => entry.number);
+  if (highs.includes(1)) return "first";
+  if (highs.includes(installmentCount)) return "last";
+  if (lows.includes(1) || lows.includes(installmentCount)) return "middle";
+  return null;
+}
+
 /** The pattern an issuer follows, learned from reconciled purchases. `none` = every installment is rounded down. */
 export type LearnedRoundingPattern = "first" | "last" | "middle" | "none";
 
