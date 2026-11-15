@@ -26,6 +26,10 @@ export const goalContributionSchema = z.object({
   originalCurrency: z.string().nullable(),
   /** Goal units per unit of `originalCurrency`, as used. */
   fxRate: z.number().nullable(),
+  /** Where the rate came from: a provider id (`frankfurter`), or `manual` when it was given by hand. */
+  fxRateSource: z.string().nullable(),
+  /** The market day the rate is from (the closest previous business day when `contributedOn` was not one). */
+  fxRateDate: wireDateSchema.nullable(),
   contributedOn: wireDateSchema,
   note: z.string().nullable(),
   transaction: goalLinkedTransactionSchema.nullable(),
@@ -101,6 +105,7 @@ export const goalDetailSchema = goalSchema.extend({
 
 export type GoalLinkedTransaction = z.output<typeof goalLinkedTransactionSchema>;
 export type GoalContribution = z.output<typeof goalContributionSchema>;
+export type GoalContributionQuote = z.output<typeof goalContributionQuoteSchema>;
 export type GoalEstimate = z.output<typeof goalEstimateSchema>;
 export type GoalTimelinePoint = z.output<typeof goalTimelinePointSchema>;
 export type Goal = z.output<typeof goalSchema>;
@@ -130,3 +135,17 @@ export type GoalReportRow = z.output<typeof goalReportRowSchema>;
 export type GoalsReport = z.output<typeof goalsReportSchema>;
 export type GoalLocation = z.output<typeof goalLocationSchema>;
 export type GoalDetail = z.output<typeof goalDetailSchema>;
+
+export const goalContributionQuoteSchema = z.object({
+  fromCurrencyCode: z.string(),
+  toCurrencyCode: z.string(),
+  /** Goal units per unit of `fromCurrencyCode`, at full precision. */
+  fxRate: z.number(),
+  fxRateSource: z.string(),
+  /** The market day the rate is from. */
+  fxRateDate: wireDateSchema,
+  requestedDate: wireDateSchema,
+  originalAmount: z.number().int(),
+  /** Minor units of `toCurrencyCode`, rounded once, half up. */
+  convertedAmount: z.number().int(),
+});

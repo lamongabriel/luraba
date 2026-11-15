@@ -89,3 +89,76 @@ export function isMixedCurrencies(
     ([code, amount]) => amount !== 0 && code.toUpperCase() !== baseCurrencyCode,
   );
 }
+
+// ─── Exact decimal rates (goal contributions in another currency) ────────
+
+/** Decimal places kept when a rate is stored or shown (`numeric(28, 14)` in the database). */
+export const FX_RATE_SCALE = 14;
+
+const DECIMAL_RATE = /^(\d+)(?:\.(\d+))?$/u;
+
+function roundHalfUpDivision(numerator: bigint, denominator: bigint): bigint {
+  const quotient = numerator / denominator;
+  return (numerator % denominator) * 2n >= denominator ? quotient + 1n : quotient;
+}
+
+/**
+ * Normalizes a positive rate (a decimal string or a number) to a plain decimal string with at most
+ * `FX_RATE_SCALE` places and no exponent, trailing zeros trimmed. Never goes through a rounded
+ * intermediate: `0.18077` stays `0.18077`, `1e-7` becomes `0.0000001`.
+ */
+export function normalizeFxRate(rate: string | number): string {
+  const text = typeof rate === "number" ? numberToPlainDecimal(rate) : rate.trim();
+  const match = DECIMAL_RATE.exec(text);
+  if (!match) throw new Error(`Invalid exchange rate: ${String(rate)}`);
+  const whole = match[1] as string;
+  const fraction = match[2] ?? "";
+  let scaled = BigInt(whole + fraction.padEnd(FX_RATE_SCALE, "0").slice(0, FX_RATE_SCALE));
+  if ((fraction.charCodeAt(FX_RATE_SCALE) || 48) >= 53) scaled += 1n;
+  if (scaled <= 0n) throw new Error(`Invalid exchange rate: ${String(rate)}`);
+  const digits = scaled.toString().padStart(FX_RATE_SCALE + 1, "0");
+  const decimals = digits.slice(-FX_RATE_SCALE).replace(/0+$/u, "");
+  const integer = digits.slice(0, -FX_RATE_SCALE);
+  return decimals ? `${integer}.${decimals}` : integer;
+}
+
+function numberToPlainDecimal(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) throw new Error(`Invalid exchange rate: ${value}`);
+  const text = String(value);
+  if (!/e/iu.test(text)) return text;
+  return value.toFixed(FX_RATE_SCALE);
+}
+
+/** An exact fraction (`numerator / denominator`, both positive) as a decimal string, half up. */
+export function fractionToFxRate(numerator: number | bigint, denominator: number | bigint): string {
+  const n = BigInt(numerator);
+  const d = BigInt(denominator);
+  if (n <= 0n || d <= 0n) throw new Error("An exchange rate must be positive");
+  const scaled = roundHalfUpDivision(n * 10n ** BigInt(FX_RATE_SCALE), d);
+  return normalizeFxRate(
+    `${scaled / 10n ** BigInt(FX_RATE_SCALE)}.${(scaled % 10n ** BigInt(FX_RATE_SCALE)).toString().padStart(FX_RATE_SCALE, "0")}`,
+  );
+}
+
+/**
+ * Converts minor units of one currency into minor units of another with an exact decimal rate
+ * (`target units per 1 source unit`). The rate is never rounded; only the result is, once, half up
+ * (away from zero for negatives) to the target currency's minor unit.
+ */
+export function convertMinorUnitsWithRate(
+  amountMinor: number,
+  rate: string | number,
+  sourcePrecision: number,
+  targetPrecision: number,
+): number {
+  const normalized = normalizeFxRate(rate);
+  const [whole = "0", fraction = ""] = normalized.split(".");
+  const rateScaled = BigInt(whole + fraction);
+  const rateDenominator = 10n ** BigInt(fraction.length);
+  const negative = amountMinor < 0;
+  const absolute = BigInt(Math.abs(amountMinor));
+  const numerator = absolute * rateScaled * 10n ** BigInt(targetPrecision);
+  const denominator = rateDenominator * 10n ** BigInt(sourcePrecision);
+  const rounded = Number(roundHalfUpDivision(numerator, denominator));
+  return negative ? -rounded : rounded;
+}
