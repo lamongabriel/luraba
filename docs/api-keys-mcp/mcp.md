@@ -38,7 +38,7 @@
   25% of the estimate, due within 10 days; `linkBill=false` turns it off). Bills have no pay-from account and no
   "custom" frequency: choose the account when paying, and pick the closest frequency.
 - **Goals and the monthly plan**: `create_goal`, `update_goal`, `list_goals`, `delete_goal` (needs `confirm`),
-  `contribute_to_goal` (a transfer plus progress; other currencies store the FX rate used), `move_goal_funds`
+  `contribute_to_goal` (a transfer plus progress; other currencies use `fxRate` as given or the historical rate of the contribution date, and store the original amount, the converted amount, the rate, its source and its day; `dryRun` previews the conversion in major units), `update_goal_contribution` (fix a past contribution's amount, date, rate or note, recomputing at the date's rate by default; `list_goals` with `goal` + `includeContributions` lists the ids), `move_goal_funds`
   (progress unchanged), `withdraw_from_goal` (pays an expense or returns money to an account), `set_monthly_plan`
   (projected lines for a month or range), `report_safe_to_spend` (how much can I still spend this month in cash and
   next month on the card, one combined number in the base currency plus per currency; optional what-if `purchaseAmount` with `via` cash or card) and `report_monthly_plan` (projected vs actual per line: ask "how am I
