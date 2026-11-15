@@ -21,6 +21,7 @@ import { monthlyPlansEndpoints } from "./monthly-plans/endpoints.js";
 import { notificationsEndpoints } from "./notifications/endpoints.js";
 import { onboardingEndpoints } from "./onboarding/endpoints.js";
 import { paymentMethodsEndpoints } from "./payment-methods/endpoints.js";
+import { piggyBanksEndpoints } from "./piggy-banks/endpoints.js";
 import { productsEndpoints } from "./products/endpoints.js";
 import { referenceDataEndpoints } from "./reference-data/endpoints.js";
 import { splitsEndpoints } from "./splits/endpoints.js";
@@ -50,6 +51,7 @@ export const contractModules = {
   investments: investmentsEndpoints,
   merchants: merchantsEndpoints,
   monthlyPlans: monthlyPlansEndpoints,
+  piggyBanks: piggyBanksEndpoints,
   products: productsEndpoints,
   notifications: notificationsEndpoints,
   onboarding: onboardingEndpoints,

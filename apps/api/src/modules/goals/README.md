@@ -96,3 +96,12 @@ Root cause of the "0.18 instead of 0.1774" bug: `GET /currencies/rate` rounded t
   reported and left alone. In a built image run `node dist/scripts/goals-fx-backfill.js [--apply]`.
 
 General module conventions: [../README.md](../README.md).
+
+## Linked piggy banks
+
+A goal can link to piggy banks (`goal_piggy_banks`, `PUT /goals/:id/piggy-banks`, owned by the
+[piggy-banks module](../piggy-banks/README.md)). For a linked goal `saved` is the sum of the linked balances
+(interest included, FX converted), `locations` are the parent accounts, the expected return is the weighted
+yield of the linked piggy banks, and the contribution, withdraw and move endpoints return 409
+(`assertGoalNotLinked`). The report's `contributed` is the net flow into the linked piggy banks that month.
+`GET /goals/:id/piggy-plan` holds the yield-aware plan and tracking.

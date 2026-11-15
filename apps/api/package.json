@@ -12,6 +12,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:recompute-allocations": "tsx src/db/maintenance/recompute-card-allocations.ts",
     "seed:mock": "tsx src/db/mock/run.ts",
+    "piggy:adopt": "tsx src/scripts/piggy-adopt.ts",
     "goals:fx-backfill": "tsx src/scripts/goals-fx-backfill.ts",
     "test:integration": "DOTENV_CONFIG_PATH=.env.test NODE_ENV=test RUN_DB_TESTS=1 vitest run --config vitest.config.ts",
     "test:unit": "vitest run --config vitest.unit.config.ts",

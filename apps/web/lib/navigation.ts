@@ -5,6 +5,7 @@ import {
   Coins01Icon,
   CreditCardIcon,
   DashboardSquare01Icon,
+  PiggyBankIcon,
   Settings02Icon,
   Target02Icon,
   UserGroupIcon,
@@ -56,6 +57,12 @@ export const mainNav: NavigationItem[] = [
     href: "/goals",
     icon: Target02Icon,
     permission: PERMISSIONS.GOALS_READ,
+  },
+  {
+    title: "Piggy banks",
+    href: "/piggy-banks",
+    icon: PiggyBankIcon,
+    permission: PERMISSIONS.PIGGY_BANKS_READ,
   },
   {
     title: "Investments",

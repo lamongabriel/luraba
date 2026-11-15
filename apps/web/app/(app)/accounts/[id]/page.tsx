@@ -29,6 +29,7 @@ import { DateFilterChip, useDateFilter } from "@/components/filters";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { KpiStripSkeleton } from "@/components/kpi";
 import { PERMISSIONS, PermissionButton, ResourceAccessBoundary } from "@/components/permissions";
+import { AccountPiggyBanks } from "@/components/piggy-banks/account-piggy-banks";
 import { Button } from "@/components/ui/button";
 import { useCurrencyPrecision } from "@/hooks/use-currency-precision";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -166,6 +167,7 @@ export default function AccountDetailsPage() {
             </div>
 
             <aside className={ACCOUNT_SIDE_COLUMN} aria-label="Account details">
+              <AccountPiggyBanks account={account} language={language} precision={precision} />
               <AccountCreditCards account={account} language={language} precision={precision} />
               <AccountLoanOutlook account={account} language={language} precision={precision} />
               <AccountExpenseBreakdownChart {...chartProps} />

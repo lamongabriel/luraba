@@ -11,4 +11,5 @@ export * from "./investments/index.js";
 export * from "./loans.js";
 export * from "./money.js";
 export * from "./periods.js";
+export * from "./piggy-banks.js";
 export * from "./recurrency.js";

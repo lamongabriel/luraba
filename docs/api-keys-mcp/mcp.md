@@ -47,6 +47,12 @@
   to a bill automatically when exactly one unpaid occurrence matches (same category or merchant, amount within
   25% of the estimate, due within 10 days; `linkBill=false` turns it off). Bills have no pay-from account and no
   "custom" frequency: choose the account when paying, and pick the closest frequency.
+- **Piggy banks** (savings buckets inside a cash account, like Nubank Caixinhas): `list_piggy_banks`,
+  `create_piggy_bank`, `update_piggy_bank`, `archive_piggy_bank` (needs `confirm`, zero balance only),
+  `deposit_to_piggy_bank` (one piggy bank, or `allocations` to split one transfer), `withdraw_from_piggy_bank`,
+  `move_between_piggy_banks`, `set_piggy_bank_balance` (the real balance becomes an adjustment and recalibrates
+  the daily interest), `link_goal_to_piggy_bank` (progress follows the linked balances) and `report_piggy_banks`
+  (net if withdrawn, earnings, 12-month projection). Names are resolved like accounts; writes take `dryRun`.
 - **Goals and the monthly plan**: `create_goal`, `update_goal`, `list_goals`, `delete_goal` (needs `confirm`),
   `contribute_to_goal` (a transfer plus progress; other currencies use `fxRate` as given or the historical rate of the contribution date, and store the original amount, the converted amount, the rate, its source and its day; `dryRun` previews the conversion in major units), `update_goal_contribution` (fix a past contribution's amount, date, rate or note, recomputing at the date's rate by default; `list_goals` with `goal` + `includeContributions` lists the ids), `move_goal_funds`
   (progress unchanged), `withdraw_from_goal` (pays an expense or returns money to an account), `set_monthly_plan`

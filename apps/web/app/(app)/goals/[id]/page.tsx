@@ -21,6 +21,7 @@ import { GoalSheet } from "@/components/goals/goal-sheet";
 import { LinkGoalTransactionModal } from "@/components/goals/link-transaction-modal";
 import { KpiCard, KpiGrid } from "@/components/kpi";
 import { PERMISSIONS, useCan } from "@/components/permissions";
+import { GoalPiggyBanksSection } from "@/components/piggy-banks/goal-piggy-banks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,6 +44,7 @@ import {
   useRemoveContributionMutation,
 } from "@/mutations/goals/use-goal-mutations";
 import { useGoalQuery } from "@/queries/goals/use-goals-queries";
+import { useGoalPiggyPlanQuery } from "@/queries/piggy-banks/use-piggy-banks-queries";
 import { useAuthSessionStore } from "@/stores/auth-session-store";
 import { GoalDetailError } from "./_error";
 import { GoalDetailLoading } from "./_loading";
@@ -156,6 +158,9 @@ export default function GoalDetailsPage() {
   });
   const removeContribution = useRemoveContributionMutation();
   const goal = query.data;
+  // A goal that follows piggy banks takes no manual contributions (the API answers 409).
+  const piggyPlan = useGoalPiggyPlanQuery(id);
+  const linkedToPiggyBanks = (piggyPlan.data?.piggyBanks.length ?? 0) > 0;
 
   if (query.isPending) return <GoalDetailLoading />;
 
@@ -183,26 +188,30 @@ export default function GoalDetailsPage() {
             permission={PERMISSIONS.GOALS_UPDATE}
             onClick={() => setEditOpen(true)}
           />
-          <HeaderButton
-            label="Link transaction"
-            icon={Link01Icon}
-            permission={PERMISSIONS.GOALS_UPDATE}
-            onClick={() => setLinkOpen(true)}
-          />
+          {linkedToPiggyBanks ? null : (
+            <HeaderButton
+              label="Link transaction"
+              icon={Link01Icon}
+              permission={PERMISSIONS.GOALS_UPDATE}
+              onClick={() => setLinkOpen(true)}
+            />
+          )}
           <HeaderButton
             label="Delete goal"
             icon={Delete02Icon}
             permission={PERMISSIONS.GOALS_DELETE}
             onClick={() => setDeleteOpen(true)}
           />
-          <HeaderAddButton
-            label="Add money"
-            permission={PERMISSIONS.GOALS_UPDATE}
-            onClick={() => {
-              setEditing(undefined);
-              setAddOpen(true);
-            }}
-          />
+          {linkedToPiggyBanks ? null : (
+            <HeaderAddButton
+              label="Add money"
+              permission={PERMISSIONS.GOALS_UPDATE}
+              onClick={() => {
+                setEditing(undefined);
+                setAddOpen(true);
+              }}
+            />
+          )}
         </>
       }
     >
@@ -294,6 +303,8 @@ export default function GoalDetailsPage() {
           {goal.expectedReturnBps ? ", including the expected return" : ""}.
         </Typography>
       </section>
+
+      <GoalPiggyBanksSection goalId={goal.id} language={language} />
 
       <section className="rounded-xl border border-border/60 p-4">
         <Typography variant="small-strong">Contributions</Typography>

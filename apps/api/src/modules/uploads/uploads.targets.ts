@@ -5,6 +5,7 @@ import { categoriesTable } from "@luraba/db/schemas/categories.schema";
 import { creditCardsTable } from "@luraba/db/schemas/credit-cards.schema";
 import { householdMembersTable } from "@luraba/db/schemas/households.schema";
 import { merchantsTable } from "@luraba/db/schemas/merchants.schema";
+import { piggyBanksTable } from "@luraba/db/schemas/piggy-banks.schema";
 import { productsTable } from "@luraba/db/schemas/products.schema";
 import { splitsTable } from "@luraba/db/schemas/splits.schema";
 import { transactionsTable } from "@luraba/db/schemas/transactions.schema";
@@ -24,6 +25,7 @@ const HOUSEHOLD_TARGET_TABLES = {
   product: productsTable,
   account: accountsTable,
   credit_card: creditCardsTable,
+  piggy_bank: piggyBanksTable,
   category: categoriesTable,
   transaction: transactionsTable,
   bill: billsTable,

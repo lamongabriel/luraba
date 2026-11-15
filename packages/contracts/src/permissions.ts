@@ -82,6 +82,10 @@ export const PERMISSIONS = {
   CREDIT_CARDS_CREATE: "creditCards.create",
   CREDIT_CARDS_UPDATE: "creditCards.update",
   CREDIT_CARDS_DELETE: "creditCards.delete",
+  PIGGY_BANKS_READ: "piggyBanks.read",
+  PIGGY_BANKS_CREATE: "piggyBanks.create",
+  PIGGY_BANKS_UPDATE: "piggyBanks.update",
+  PIGGY_BANKS_DELETE: "piggyBanks.delete",
 } as const;
 
 export const householdPermissionSchema = z.enum(PERMISSIONS);
@@ -169,6 +173,9 @@ export const HOUSEHOLD_ROLE_PERMISSIONS: Readonly<
     PERMISSIONS.CREDIT_CARDS_READ,
     PERMISSIONS.INVESTMENTS_READ,
     PERMISSIONS.INVESTMENTS_WRITE,
+    PERMISSIONS.PIGGY_BANKS_READ,
+    PERMISSIONS.PIGGY_BANKS_CREATE,
+    PERMISSIONS.PIGGY_BANKS_UPDATE,
   ]),
   viewer: new Set([
     PERMISSIONS.HOUSEHOLD_READ,
@@ -187,6 +194,7 @@ export const HOUSEHOLD_ROLE_PERMISSIONS: Readonly<
     PERMISSIONS.BUDGETS_READ,
     PERMISSIONS.CREDIT_CARDS_READ,
     PERMISSIONS.INVESTMENTS_READ,
+    PERMISSIONS.PIGGY_BANKS_READ,
   ]),
 };
 

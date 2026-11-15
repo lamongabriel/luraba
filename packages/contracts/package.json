@@ -59,6 +59,10 @@
       "types": "./dist/monthly-plans/index.d.ts",
       "import": "./dist/monthly-plans/index.js"
     },
+    "./piggy-banks": {
+      "types": "./dist/piggy-banks/index.d.ts",
+      "import": "./dist/piggy-banks/index.js"
+    },
     "./goals": {
       "types": "./dist/goals/index.d.ts",
       "import": "./dist/goals/index.js"
