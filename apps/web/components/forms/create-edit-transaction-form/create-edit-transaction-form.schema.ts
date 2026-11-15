@@ -60,6 +60,14 @@ export const createEditTransactionFormSchema = z
       .max(60, "Use no more than 60 installments."),
     /** Card purchase: the installment amounts are typed by hand (as the invoice shows them) instead of an even split. */
     customInstallments: z.boolean(),
+    /** Where the extra cents of an even split go; "auto" uses the card's learned pattern (or the last installment). */
+    roundingMode: z.enum([
+      "auto",
+      "remainder_last",
+      "remainder_first",
+      "round_up_all",
+      "round_down_all",
+    ]),
     installmentAmounts: z.array(amountSchema).max(60, "Use no more than 60 installments."),
     includeInBudget: z.boolean(),
     tagIds: z.array(z.uuid()).max(50, "Choose no more than 50 tags."),

@@ -22,6 +22,7 @@ const base = {
   postedDate: "2026-08-01",
   installmentCount: 1,
   customInstallments: false,
+  roundingMode: "auto",
   installmentAmounts: [],
   includeInBudget: true,
   tagIds: [],

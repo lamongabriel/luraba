@@ -53,6 +53,8 @@ export function InvoiceSummary({
   details,
   cardName,
   onPay,
+  onImportStatement,
+  onUnlock,
   currencyCode,
   language,
   precision,
@@ -63,6 +65,10 @@ export function InvoiceSummary({
   details: CreditCardCycleDetails | undefined;
   cardName: string;
   onPay: () => void;
+  /** Opens the statement import for this invoice. */
+  onImportStatement?: () => void;
+  /** Lifts the lock of a reconciled invoice (asks for confirmation first). */
+  onUnlock?: () => void;
 } & InvoiceMoney) {
   const status = INVOICE_STATUS[cycle.displayStatus];
   const monthKey = invoiceMonthKey(cycle);
@@ -87,8 +93,28 @@ export function InvoiceSummary({
             {formatMonthKeyLabel(monthKey, language)} invoice
           </Typography>
           <Badge className={cn("border-0", status.badge)}>{status.label}</Badge>
+          {cycle.reconciledAt ? (
+            <Badge className="border-0 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
+              Reconciled · locked
+            </Badge>
+          ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
+          {onImportStatement ? (
+            <PermissionButton
+              permission={PERMISSIONS.TRANSACTIONS_UPDATE}
+              deniedMessage="Your household role cannot change purchases."
+              variant="outline"
+              onClick={onImportStatement}
+            >
+              Import statement
+            </PermissionButton>
+          ) : null}
+          {cycle.reconciledAt && onUnlock ? (
+            <Button type="button" variant="outline" onClick={onUnlock}>
+              Unlock
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="outline"
@@ -115,6 +141,12 @@ export function InvoiceSummary({
           ) : null}
         </div>
       </div>
+      {cycle.roundingMismatch !== null && !cycle.reconciledAt ? (
+        <p className="text-sm text-orange-700 dark:text-orange-300">
+          Rounding mismatch - import statement. The issuer's total differs from Luraba's by a few
+          cents.
+        </p>
+      ) : null}
       <KpiStrip
         label="Invoice figures"
         items={[

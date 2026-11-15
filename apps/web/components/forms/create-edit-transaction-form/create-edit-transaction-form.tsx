@@ -7,6 +7,7 @@ import { MAX_PER_PAGE } from "@luraba/contracts";
 import { useWatch } from "react-hook-form";
 import { FormActions } from "@/components/forms/form-actions";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Typography } from "@/components/ui/typography";
 import { useProductsQuery } from "@/queries/products/use-products-query";
 import type { TransactionLookups } from "@/queries/transactions/use-transaction-lookups-query";
@@ -38,6 +39,9 @@ export function CreateEditTransactionForm({
   row?: TransactionFeedRow | null;
 }) {
   const {
+    confirmOverride,
+    dismissOverride,
+    needsOverride,
     errorMessage,
     form,
     fromCurrencyCode,
@@ -154,7 +158,18 @@ export function CreateEditTransactionForm({
 
       {kind !== "credit_card_payment" ? <SettingsSection control={form.control} /> : null}
 
-      {errorMessage ? (
+      <ConfirmDialog
+        open={needsOverride}
+        onOpenChange={(next) => !next && dismissOverride()}
+        variant="warning"
+        title="Change a reconciled invoice?"
+        description="This invoice matches the issuer to the cent and is locked. Saving unlocks it and records the change in its audit trail."
+        confirmLabel="Save anyway"
+        loadingLabel="Saving..."
+        isLoading={isPending}
+        onConfirm={confirmOverride}
+      />
+      {errorMessage && !needsOverride ? (
         <div className="rounded-xl bg-destructive/10 px-3 py-3">
           <Typography variant="small-destructive">{errorMessage}</Typography>
         </div>

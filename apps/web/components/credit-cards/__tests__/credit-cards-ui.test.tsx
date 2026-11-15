@@ -35,6 +35,9 @@ const cycle = (overrides: Partial<CreditCardCycle>): CreditCardCycle => ({
   isCurrent: false,
   isNext: false,
   hasActivity: true,
+  reconciledAt: null,
+  issuerTotal: null,
+  roundingMismatch: null,
   ...overrides,
 });
 

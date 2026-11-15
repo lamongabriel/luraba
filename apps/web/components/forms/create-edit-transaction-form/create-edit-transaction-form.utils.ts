@@ -91,6 +91,7 @@ export function getTransactionFormDefaultValues(
     installmentCount: purchase?.installmentCount ?? row?.installmentCount ?? 1,
     // Installments set by hand (or changed by a cancellation) open as the list, so saving keeps them.
     customInstallments: purchaseInstallments.length > 0 && !isStandardSplit(purchaseInstallments),
+    roundingMode: "auto",
     installmentAmounts: purchaseInstallments.map((amount) =>
       toMajorAmount(amount, currencyCode, lookups),
     ),

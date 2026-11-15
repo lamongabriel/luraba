@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  type CardRoundingPatterns,
+  type CardStatementImport,
+  type CardStatementInput,
+  type CardStatementResult,
   type CreateCreditCardInput,
   type CreateCreditCardPaymentInput,
   type CreateCreditCardPaymentResult,
@@ -21,10 +25,13 @@ import {
   type GetCreditCardPaymentResult,
   type GetCreditCardPurchaseResult,
   type GetCreditCardResult,
+  type InstallmentAudit,
   type ListCreditCardCyclesQuery,
   type ListCreditCardCyclesResult,
   type ListCreditCardsQuery,
   type ListCreditCardsResult,
+  type ReconcileCycleInput,
+  type ReconcileCycleResult,
   type UpdateCreditCardCycleInput,
   type UpdateCreditCardCycleResult,
   type UpdateCreditCardInput,
@@ -141,9 +148,11 @@ export function updateCreditCardPurchase(
 export function deleteCreditCardPurchase(
   id: string,
   purchaseId: string,
+  query: { override?: boolean } = {},
 ): Promise<DeleteCreditCardPurchaseResult> {
   return requestContract(creditCardsEndpoints.deletePurchase, {
     params: { id, purchaseId },
+    query,
   });
 }
 
@@ -194,4 +203,44 @@ export function getCreditCardForecast(
     params: { id },
     query,
   });
+}
+
+export function previewCardStatement(
+  id: string,
+  input: CardStatementInput,
+): Promise<CardStatementResult> {
+  return requestContract(creditCardsEndpoints.previewStatement, { params: { id }, body: input });
+}
+
+export function applyCardStatement(
+  id: string,
+  input: CardStatementInput,
+): Promise<CardStatementResult> {
+  return requestContract(creditCardsEndpoints.applyStatement, { params: { id }, body: input });
+}
+
+export function listCardStatements(id: string): Promise<CardStatementImport[]> {
+  return requestContract(creditCardsEndpoints.listStatements, { params: { id } });
+}
+
+export function reconcileCreditCardCycle(
+  id: string,
+  input: ReconcileCycleInput,
+): Promise<ReconcileCycleResult> {
+  return requestContract(creditCardsEndpoints.reconcileCycle, { params: { id }, body: input });
+}
+
+export function unreconcileCreditCardCycle(id: string, cycleId: string) {
+  return requestContract(creditCardsEndpoints.unreconcileCycle, { params: { id, cycleId } });
+}
+
+export function listInstallmentAudits(
+  id: string,
+  query: { purchaseId?: string; billingCycleId?: string } = {},
+): Promise<InstallmentAudit[]> {
+  return requestContract(creditCardsEndpoints.installmentAudits, { params: { id }, query });
+}
+
+export function getCardRoundingPatterns(id: string): Promise<CardRoundingPatterns> {
+  return requestContract(creditCardsEndpoints.roundingPatterns, { params: { id } });
 }

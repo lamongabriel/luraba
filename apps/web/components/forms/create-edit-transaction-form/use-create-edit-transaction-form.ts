@@ -152,6 +152,17 @@ export function useCreateEditTransactionForm({
     successToast: false,
   });
 
+  // An edit to a purchase on a reconciled invoice is refused until the user confirms the override.
+  const lastPurchaseUpdate = React.useRef<
+    Parameters<typeof updatePurchaseMutation.mutate>[0] | undefined
+  >(undefined);
+  const needsOverride = updatePurchaseMutation.error?.code === "RECONCILED_INVOICE";
+  const confirmOverride = () => {
+    const variables = lastPurchaseUpdate.current;
+    if (!variables) return;
+    updatePurchaseMutation.mutate({ ...variables, body: { ...variables.body, override: true } });
+  };
+
   const resetMutations = () => {
     createTransactionMutation.reset();
     updateTransactionMutation.reset();
@@ -189,6 +200,7 @@ export function useCreateEditTransactionForm({
         description: values.description,
         includeInBudget: values.includeInBudget,
         ...(exact ? {} : { installmentCount: values.installmentCount }),
+        ...(!exact && values.roundingMode !== "auto" ? { roundingMode: values.roundingMode } : {}),
         merchantId,
         postedDate: values.postedDate,
         purchaseDate: values.purchaseDate,
@@ -196,11 +208,9 @@ export function useCreateEditTransactionForm({
       };
 
       if (row?.purchaseId) {
-        updatePurchaseMutation.mutate({
-          creditCardId: values.creditCardId,
-          purchaseId: row.purchaseId,
-          body,
-        });
+        const variables = { creditCardId: values.creditCardId, purchaseId: row.purchaseId, body };
+        lastPurchaseUpdate.current = variables;
+        updatePurchaseMutation.mutate(variables);
         return;
       }
 
@@ -292,6 +302,9 @@ export function useCreateEditTransactionForm({
   ];
 
   return {
+    confirmOverride,
+    dismissOverride: () => updatePurchaseMutation.reset(),
+    needsOverride,
     errorMessage: mutations.map((mutation) => mutation.errorMessage).find(Boolean) ?? "",
     form,
     fromCurrencyCode: transferFx.fromCurrencyCode,

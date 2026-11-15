@@ -40,13 +40,19 @@ export function describeInstallments(
   currencyCode: string,
   language = "en",
   precision = 2,
+  mode: InstallmentRoundingMode = "remainder_last",
 ): string {
   if (count < 2 || !Number.isFinite(totalMinor) || totalMinor <= 0) return "";
-  const parts = splitInstallments(totalMinor, count);
+  const parts = splitInstallments(totalMinor, count, mode);
   const money = (amount: number) =>
     formatCurrency(amount, currencyCode, language, undefined, precision);
-  const regular = parts[0] ?? 0;
+  const first = parts[0] ?? 0;
   const last = parts[parts.length - 1] ?? 0;
-  if (last === regular) return `${count} installments of ${money(regular)}`;
-  return `${count} installments: ${count - 1} of ${money(regular)} and 1 of ${money(last)}`;
+  if (parts.every((value) => value === first)) {
+    return `${count} installments of ${money(first)}`;
+  }
+  if (last === parts[1]) {
+    return `${count} installments: 1 of ${money(first)} and ${count - 1} of ${money(last)}`;
+  }
+  return `${count} installments: ${count - 1} of ${money(first)} and 1 of ${money(last)}`;
 }

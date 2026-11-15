@@ -1,6 +1,7 @@
 import { CreditCardIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { CreditCard, Merchant } from "@luraba/contracts";
+import { parseInstallmentPlanText } from "@luraba/domain";
 import * as React from "react";
 import {
   type Control,
@@ -11,6 +12,8 @@ import {
 } from "react-hook-form";
 import { AccountSelect } from "@/components/display";
 import { FormItem } from "@/components/forms/form-item";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Typography } from "@/components/ui/typography";
 import {
@@ -18,10 +21,26 @@ import {
   INSTALLMENT_COUNT_OPTIONS,
   splitInstallments,
 } from "@/lib/installments";
+import { useRoundingPatternsQuery } from "@/queries/credit-cards/use-credit-cards-query";
 
 import type { CreateEditTransactionFormValues } from "../create-edit-transaction-form.schema";
 import { ClassificationFields } from "./classification-fields";
 import { TransactionFormSection } from "./transaction-form-section";
+
+const ROUNDING_LABELS = {
+  remainder_last: "last installment",
+  remainder_first: "first installment",
+  round_up_all: "rounded up, every installment",
+  round_down_all: "rounded down, every installment",
+} as const;
+
+const ROUNDING_OPTIONS = [
+  { value: "auto", label: "Card default" },
+  { value: "remainder_last", label: "Last installment" },
+  { value: "remainder_first", label: "First installment" },
+  { value: "round_up_all", label: "Round every installment up" },
+  { value: "round_down_all", label: "Round every installment down" },
+];
 
 export function CreditCardPurchaseSection({
   cards,
@@ -48,6 +67,13 @@ export function CreditCardPurchaseSection({
   const installmentCount = useWatch({ control, name: "installmentCount" });
   const custom = useWatch({ control, name: "customInstallments" });
   const installmentAmounts = useWatch({ control, name: "installmentAmounts" });
+  const creditCardId = useWatch({ control, name: "creditCardId" });
+  const roundingMode = useWatch({ control, name: "roundingMode" });
+  const patterns = useRoundingPatternsQuery(creditCardId, { enabled: !custom });
+  const learnedMode = patterns.data?.card?.roundingMode ?? null;
+  const effectiveMode = roundingMode === "auto" ? (learnedMode ?? "remainder_last") : roundingMode;
+  const [planText, setPlanText] = React.useState("");
+  const [planError, setPlanError] = React.useState<string | null>(null);
   const totalMinor = Math.round((Number(amount) || 0) * 10 ** precision);
   const toMinor = (value: number | "") => Math.round((Number(value) || 0) * 10 ** precision);
   const toMajor = (minor: number) => minor / 10 ** precision;
@@ -83,8 +109,31 @@ export function CreditCardPurchaseSection({
     }
   };
   const preview = currencyCode
-    ? describeInstallments(totalMinor, Number(installmentCount), currencyCode, language, precision)
+    ? describeInstallments(
+        totalMinor,
+        Number(installmentCount),
+        currencyCode,
+        language,
+        precision,
+        effectiveMode,
+      )
     : "";
+  // "1st installment 364.90, rest 364.88" fills the exact list, like typing every row by hand.
+  const applyPlanText = () => {
+    const result = parseInstallmentPlanText(planText, Number(installmentCount) || undefined);
+    if (!result.ok) return setPlanError(result.error);
+    setPlanError(null);
+    setValue("installmentCount", result.amounts.length, { shouldDirty: true });
+    setValue(
+      "installmentAmounts",
+      result.amounts.map((value) => toMajor(value)),
+      { shouldDirty: true },
+    );
+    setValue("customInstallments", true, { shouldDirty: true });
+    setValue("amount", toMajor(result.amounts.reduce((sum, value) => sum + value, 0)), {
+      shouldDirty: true,
+    });
+  };
   const countOptions = INSTALLMENT_COUNT_OPTIONS.some(
     (option) => option.value === String(installmentCount),
   )
@@ -149,6 +198,59 @@ export function CreditCardPurchaseSection({
           </div>
         )}
       />
+      {!custom && Number(installmentCount) > 1 ? (
+        <FormItem
+          type="select"
+          control={control}
+          name="roundingMode"
+          label="Extra cents go on"
+          options={ROUNDING_OPTIONS.map((option) =>
+            option.value === "auto"
+              ? {
+                  ...option,
+                  label: learnedMode
+                    ? `${option.label} (${ROUNDING_LABELS[learnedMode]}, learned)`
+                    : `${option.label} (${ROUNDING_LABELS.remainder_last})`,
+                }
+              : option,
+          )}
+          description={
+            learnedMode
+              ? `Learned from this card's reconciled invoices (${patterns.data?.card?.samples} purchases). Change it for a store that rounds differently.`
+              : undefined
+          }
+        />
+      ) : null}
+      <div className="space-y-1.5">
+        <div className="flex gap-2">
+          <Input
+            value={planText}
+            onChange={(event) => setPlanText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter") return;
+              event.preventDefault();
+              applyPlanText();
+            }}
+            placeholder="1st installment 364.90, rest 364.88"
+            aria-label="Installment shorthand"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={applyPlanText}
+            disabled={!planText.trim()}
+          >
+            Apply
+          </Button>
+        </div>
+        {planError ? (
+          <Typography variant="small-destructive">{planError}</Typography>
+        ) : (
+          <Typography variant="small-muted">
+            Or type the invoice's amounts in one line, like the example.
+          </Typography>
+        )}
+      </div>
       {custom ? (
         <div className="grid gap-3 sm:grid-cols-2" data-slot="installment-amounts">
           {(installmentAmounts ?? []).map((_, index) => (

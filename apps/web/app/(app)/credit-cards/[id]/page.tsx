@@ -3,6 +3,7 @@
 import { Calendar03Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import type { ListTransactionsQuery, TransactionFeedRow } from "@luraba/contracts";
 import { buildLimitBreakdown, todayISODate } from "@luraba/domain";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 import { CardPurchasesTable } from "@/components/credit-cards/card-purchases-table";
@@ -10,6 +11,7 @@ import { CardTransactionSheet } from "@/components/credit-cards/card-transaction
 import { CreditCardDetailsPanel } from "@/components/credit-cards/credit-card-details-panel";
 import { CreditCardPreview } from "@/components/credit-cards/credit-card-preview";
 import { CreditCardSheet } from "@/components/credit-cards/credit-card-sheet";
+import { InvoiceAuditTrail } from "@/components/credit-cards/invoice-audit-trail";
 import {
   InvoiceComposition,
   InvoicePayments,
@@ -19,16 +21,20 @@ import { InvoiceHistoryChart } from "@/components/credit-cards/invoice-history-c
 import { InvoiceList, InvoiceListSkeleton } from "@/components/credit-cards/invoice-list";
 import { LimitBreakdown, LimitBreakdownSkeleton } from "@/components/credit-cards/limit-breakdown";
 import { PayInvoiceModal } from "@/components/credit-cards/pay-invoice-modal";
+import { StatementImportSheet } from "@/components/credit-cards/statement-import-sheet";
 import { HeaderButton } from "@/components/finance/header-actions";
 import { InternalPageLayout } from "@/components/finance/internal-page-layout";
 import { MonthSelect } from "@/components/finance/month-select";
 import { PageSection } from "@/components/finance/page-section";
 import { PERMISSIONS } from "@/components/permissions";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCurrencyPrecision } from "@/hooks/use-currency-precision";
 import { useDisclosure } from "@/hooks/use-disclosure";
 import { currentMonthKey, invoiceMonthKey, shiftMonthKey } from "@/lib/credit-card-invoices";
 import { FALLBACK_CURRENCY_CODE } from "@/lib/finance";
+import { useUnreconcileCycleMutation } from "@/mutations/credit-cards/use-credit-card-mutations";
 import {
+  creditCardQueryKeys,
   useCreditCardCycleQuery,
   useCreditCardForecastQuery,
   useCreditCardOverviewQuery,
@@ -52,9 +58,19 @@ export default function CreditCardDetailPage() {
   const precisionOf = useCurrencyPrecision();
   const editSheet = useDisclosure();
   const payModal = useDisclosure();
+  const importSheet = useDisclosure();
+  const unlockDialog = useDisclosure();
   const [chosenCycleId, setChosenCycleId] = React.useState<string | undefined>();
   const [selectedRow, setSelectedRow] = React.useState<TransactionFeedRow | null>(null);
 
+  const queryClient = useQueryClient();
+  const unlock = useUnreconcileCycleMutation({
+    successToast: { title: "Invoice unlocked" },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: creditCardQueryKeys.all });
+      unlockDialog.onClose();
+    },
+  });
   const cardQuery = useCreditCardQuery(id);
   const thisMonth = currentMonthKey(timezone);
   const forecastQuery = useCreditCardForecastQuery(id, {
@@ -156,11 +172,20 @@ export default function CreditCardDetailPage() {
           details={cycleQuery.data}
           cardName={card.name}
           onPay={payModal.onOpen}
+          onImportStatement={importSheet.onOpen}
+          onUnlock={unlockDialog.onOpen}
           currencyCode={card.currencyCode}
           language={language}
           precision={precision}
         />
       </div>
+      <InvoiceAuditTrail
+        creditCardId={id}
+        cycleId={selectedCycle.id}
+        currencyCode={card.currencyCode}
+        language={language}
+        precision={precision}
+      />
       {hasPayments && cycleQuery.data ? (
         <InvoicePayments
           payments={cycleQuery.data.payments}
@@ -286,6 +311,29 @@ export default function CreditCardDetailPage() {
         suggestedAmount={unpaidUpToSelected}
         precision={precision}
         coversOlderInvoices={coversOlder}
+      />
+      <StatementImportSheet
+        open={importSheet.isOpen}
+        onOpenChange={importSheet.setIsOpen}
+        card={card}
+        months={cycles.map(invoiceMonthKey)}
+        defaultMonth={selectedCycle ? invoiceMonthKey(selectedCycle) : ""}
+        language={language}
+        precision={precision}
+      />
+      <ConfirmDialog
+        open={unlockDialog.isOpen}
+        onOpenChange={unlockDialog.setIsOpen}
+        variant="warning"
+        title="Unlock this invoice?"
+        description="Edits to its purchases will no longer ask for an override. Import the statement again to lock it."
+        confirmLabel="Unlock invoice"
+        loadingLabel="Unlocking..."
+        isLoading={unlock.isPending}
+        errorMessage={unlock.errorMessage || undefined}
+        onConfirm={() =>
+          selectedCycle && unlock.mutate({ creditCardId: id, cycleId: selectedCycle.id })
+        }
       />
       <CardTransactionSheet row={selectedRow} onClose={() => setSelectedRow(null)} />
     </InternalPageLayout>

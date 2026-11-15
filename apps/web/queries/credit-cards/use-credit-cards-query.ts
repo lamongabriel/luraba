@@ -1,6 +1,8 @@
 "use client";
 
 import type {
+  CardRoundingPatterns,
+  CardStatementImport,
   CreditCardForecastQuery,
   CreditCardInsightsQuery,
   CreditCardOverviewQuery,
@@ -11,6 +13,7 @@ import type {
   GetCreditCardPaymentResult,
   GetCreditCardPurchaseResult,
   GetCreditCardResult,
+  InstallmentAudit,
   ListCreditCardCyclesQuery,
   ListCreditCardCyclesResult,
   ListCreditCardsQuery,
@@ -19,6 +22,7 @@ import type {
 import { useQuery } from "@tanstack/react-query";
 import type { AppQueryOptions } from "@/queries/query-options";
 import {
+  getCardRoundingPatterns,
   getCreditCard,
   getCreditCardCycle,
   getCreditCardForecast,
@@ -26,8 +30,10 @@ import {
   getCreditCardOverview,
   getCreditCardPayment,
   getCreditCardPurchase,
+  listCardStatements,
   listCreditCardCycles,
   listCreditCards,
+  listInstallmentAudits,
 } from "@/services/credit-cards.service";
 
 export const creditCardQueryKeys = {
@@ -48,6 +54,12 @@ export const creditCardQueryKeys = {
     [...creditCardQueryKeys.detail(creditCardId), "purchase", purchaseId] as const,
   payment: (creditCardId: string, paymentId: string) =>
     [...creditCardQueryKeys.detail(creditCardId), "payment", paymentId] as const,
+  statements: (creditCardId: string) =>
+    [...creditCardQueryKeys.detail(creditCardId), "statements"] as const,
+  audits: (creditCardId: string, query: { purchaseId?: string; billingCycleId?: string } = {}) =>
+    [...creditCardQueryKeys.detail(creditCardId), "audits", query] as const,
+  roundingPatterns: (creditCardId: string) =>
+    [...creditCardQueryKeys.detail(creditCardId), "rounding-patterns"] as const,
   forecast: (creditCardId: string, query: CreditCardForecastQuery = {}) =>
     [...creditCardQueryKeys.detail(creditCardId), "forecast", query] as const,
 };
@@ -162,5 +174,42 @@ export function useCreditCardInsightsQuery<TData = GetCreditCardInsightsResult>(
     queryFn: () => getCreditCardInsights(query),
     placeholderData: (previousData) => previousData,
     ...options,
+  });
+}
+
+export function useCardStatementsQuery<TData = CardStatementImport[]>(
+  creditCardId: string,
+  options?: AppQueryOptions<CardStatementImport[], TData>,
+) {
+  return useQuery({
+    queryKey: creditCardQueryKeys.statements(creditCardId),
+    queryFn: () => listCardStatements(creditCardId),
+    ...options,
+    enabled: Boolean(creditCardId) && (options?.enabled ?? true),
+  });
+}
+
+export function useInstallmentAuditsQuery<TData = InstallmentAudit[]>(
+  creditCardId: string,
+  query: { purchaseId?: string; billingCycleId?: string } = {},
+  options?: AppQueryOptions<InstallmentAudit[], TData>,
+) {
+  return useQuery({
+    queryKey: creditCardQueryKeys.audits(creditCardId, query),
+    queryFn: () => listInstallmentAudits(creditCardId, query),
+    ...options,
+    enabled: Boolean(creditCardId) && (options?.enabled ?? true),
+  });
+}
+
+export function useRoundingPatternsQuery<TData = CardRoundingPatterns>(
+  creditCardId: string,
+  options?: AppQueryOptions<CardRoundingPatterns, TData>,
+) {
+  return useQuery({
+    queryKey: creditCardQueryKeys.roundingPatterns(creditCardId),
+    queryFn: () => getCardRoundingPatterns(creditCardId),
+    ...options,
+    enabled: Boolean(creditCardId) && (options?.enabled ?? true),
   });
 }

@@ -75,15 +75,20 @@ export function useUpdateCreditCardPurchaseMutation<TContext = unknown>(
 
 export const deleteCreditCardPurchaseMutationDefinition = createAppMutationDefinition<
   void,
-  { creditCardId: string; purchaseId: string }
+  { creditCardId: string; purchaseId: string; override?: boolean }
 >({
   defaultErrorMessage: "We couldn't delete this credit card purchase. Please try again.",
-  mutationFn: ({ creditCardId, purchaseId }) => deleteCreditCardPurchase(creditCardId, purchaseId),
+  mutationFn: ({ creditCardId, purchaseId, override }) =>
+    deleteCreditCardPurchase(creditCardId, purchaseId, override ? { override } : {}),
   mutationKey: ["credit-cards", "purchases", "delete"],
 });
 
 export function useDeleteCreditCardPurchaseMutation<TContext = unknown>(
-  options?: UseAppMutationOptions<void, { creditCardId: string; purchaseId: string }, TContext>,
+  options?: UseAppMutationOptions<
+    void,
+    { creditCardId: string; purchaseId: string; override?: boolean },
+    TContext
+  >,
 ) {
   return useAppMutation(deleteCreditCardPurchaseMutationDefinition, options);
 }

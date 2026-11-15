@@ -47,11 +47,20 @@ export function DeleteTransactionModal({
         ? paymentMutation
         : transactionMutation;
 
+  // The purchase is on an invoice that matches the issuer to the cent: the API refuses until it is overridden.
+  const locked =
+    row?.rowKind === "credit_card_installment" &&
+    purchaseMutation.error?.code === "RECONCILED_INVOICE";
+
   const handleDelete = () => {
     if (!row) return;
 
     if (row.rowKind === "credit_card_installment" && row.creditCardId && row.purchaseId) {
-      purchaseMutation.mutate({ creditCardId: row.creditCardId, purchaseId: row.purchaseId });
+      purchaseMutation.mutate({
+        creditCardId: row.creditCardId,
+        purchaseId: row.purchaseId,
+        override: locked,
+      });
       return;
     }
 
@@ -67,13 +76,15 @@ export function DeleteTransactionModal({
     <ConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Delete transaction?"
+      title={locked ? "Delete from a reconciled invoice?" : "Delete transaction?"}
       description={
-        row?.rowKind === "credit_card_installment"
-          ? "This installment belongs to a credit card purchase. Deleting it removes the parent purchase and every installment in its schedule."
-          : "This transaction and its ledger entries will be permanently removed."
+        locked
+          ? "This invoice matches the issuer to the cent and is locked. Deleting this purchase unlocks the invoice and records the change in its audit trail."
+          : row?.rowKind === "credit_card_installment"
+            ? "This installment belongs to a credit card purchase. Deleting it removes the parent purchase and every installment in its schedule."
+            : "This transaction and its ledger entries will be permanently removed."
       }
-      confirmLabel="Delete transaction"
+      confirmLabel={locked ? "Delete anyway" : "Delete transaction"}
       loadingLabel="Deleting..."
       isLoading={mutation.isPending}
       errorMessage={mutation.errorMessage || undefined}
