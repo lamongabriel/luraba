@@ -21,6 +21,7 @@ import {
   notificationsEndpoints,
   onboardingEndpoints,
   paymentMethodsEndpoints,
+  piggyBanksEndpoints,
   productsEndpoints,
   referenceDataEndpoints,
   splitsEndpoints,
@@ -51,6 +52,7 @@ import monthlyPlansRouter from "@/modules/monthly-plans/monthly-plans.routes";
 import notificationsRouter from "@/modules/notifications/notifications.routes";
 import onboardingRouter from "@/modules/onboarding/onboarding.routes";
 import paymentMethodsRouter from "@/modules/payment-methods/payment-methods.routes";
+import piggyBanksRouter, { goalPiggyBanksRouter } from "@/modules/piggy-banks/piggy-banks.routes";
 import productsRouter from "@/modules/products/products.routes";
 import referenceDataRouter from "@/modules/reference-data/reference-data.routes";
 import splitsRouter from "@/modules/splits/splits.routes";
@@ -70,7 +72,9 @@ router.use(getEndpointBasePath(integrationsEndpoints.list), integrationsRouter);
 router.use(getEndpointBasePath(accountsEndpoints.list), accountsRouter);
 router.use(getEndpointBasePath(billsEndpoints.list), billsRouter);
 router.use(getEndpointBasePath(splitsEndpoints.list), splitsRouter);
+router.use(getEndpointBasePath(goalsEndpoints.list), goalPiggyBanksRouter);
 router.use(getEndpointBasePath(goalsEndpoints.list), goalsRouter);
+router.use(getEndpointBasePath(piggyBanksEndpoints.list), piggyBanksRouter);
 router.use(getEndpointBasePath(monthlyPlansEndpoints.report), monthlyPlansRouter);
 router.use(getEndpointBasePath(importsEndpoints.list), importsRouter);
 router.use(getEndpointBasePath(exportsEndpoints.list), exportsRouter);

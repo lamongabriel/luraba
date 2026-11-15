@@ -223,7 +223,14 @@ describe("projectedAnnualRate and weightedAnnualRate", () => {
       ]),
     ).toBeCloseTo(0.175, 12);
     expect(weightedAnnualRate([])).toBe(0);
-    expect(weightedAnnualRate([{ balance: 0, annualRate: 0.5 }])).toBe(0);
+    // nothing saved yet: the plain average stands in
+    expect(weightedAnnualRate([{ balance: 0, annualRate: 0.5 }])).toBe(0.5);
+    expect(
+      weightedAnnualRate([
+        { balance: 0, annualRate: 0.1 },
+        { balance: 0, annualRate: 0.2 },
+      ]),
+    ).toBeCloseTo(0.15, 12);
   });
 });
 

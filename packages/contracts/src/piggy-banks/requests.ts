@@ -126,3 +126,11 @@ export const runPiggyBankAccrualBodySchema = z.object({
 });
 
 export { currencyCodeSchema };
+
+export type CreatePiggyBankInput = z.output<typeof createPiggyBankBodySchema>;
+export type UpdatePiggyBankInput = z.output<typeof updatePiggyBankBodySchema>;
+export type DepositToPiggyBankInput = z.output<typeof depositToPiggyBankBodySchema>;
+export type WithdrawFromPiggyBankInput = z.output<typeof withdrawFromPiggyBankBodySchema>;
+export type BulkDepositInput = z.output<typeof bulkDepositBodySchema>;
+export type MovePiggyBankFundsInput = z.output<typeof movePiggyBankFundsBodySchema>;
+export type SetPiggyBankBalanceInput = z.output<typeof setPiggyBankBalanceBodySchema>;

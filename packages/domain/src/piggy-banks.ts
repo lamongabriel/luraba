@@ -166,12 +166,17 @@ export function projectedAnnualRate(config: PiggyYield, data: IndexData): number
   return factor.pow(basis).minus(1).toNumber();
 }
 
-/** Balance-weighted yearly rate of several piggy banks (a fraction); 0 when the total is 0. */
+/**
+ * Balance-weighted yearly rate of several piggy banks (a fraction). With nothing saved yet there
+ * is no weight, so the plain average stands in: an empty piggy bank still earns its rate once it
+ * gets money, and a plan for it should count that.
+ */
 export function weightedAnnualRate(
   items: readonly { balance: number; annualRate: number }[],
 ): number {
+  if (items.length === 0) return 0;
   const total = items.reduce((sum, item) => sum + Math.max(0, item.balance), 0);
-  if (total <= 0) return 0;
+  if (total <= 0) return items.reduce((sum, item) => sum + item.annualRate, 0) / items.length;
   return items.reduce(
     (sum, item) => sum + (Math.max(0, item.balance) / total) * item.annualRate,
     0,

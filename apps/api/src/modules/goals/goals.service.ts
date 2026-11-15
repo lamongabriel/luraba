@@ -20,10 +20,17 @@ import {
   formatISODateTime,
   getTodayInTimezone,
   parseISODate,
+  weightedAnnualRate,
 } from "@luraba/domain";
 import type { z } from "zod";
 import type { HouseholdContext } from "@/config/permissions";
 import { accountsRepository } from "@/modules/accounts/accounts.repository";
+import {
+  assertGoalNotLinked,
+  type LinkedProgress,
+  linkedMonthFlow,
+  loadLinkedProgress,
+} from "@/modules/piggy-banks/piggy-banks.goals.service";
 import {
   type LinkedTransaction,
   loadLinkedTransactions,
@@ -113,23 +120,56 @@ function locationsOf(rows: readonly GoalContributionRecord[]): GoalLocation[] {
     .sort((a, b) => b.amount - a.amount);
 }
 
-function planOf(goal: GoalRecord, saved: number, today: Date) {
+/** Where a linked goal's money sits: the parent accounts of its piggy banks. */
+function linkedLocations(linked: LinkedProgress): GoalLocation[] {
+  const byAccount = new Map<string, number>();
+  for (const item of linked.piggyBanks) {
+    byAccount.set(
+      item.parentAccountId,
+      (byAccount.get(item.parentAccountId) ?? 0) + item.balanceInGoalCurrency,
+    );
+  }
+  return [...byAccount]
+    .filter(([, amount]) => amount !== 0)
+    .map(([accountId, amount]) => ({ accountId, amount }))
+    .sort((a, b) => b.amount - a.amount);
+}
+
+/** Linked piggy banks earn a known yield: the estimate uses their weighted rate. */
+function linkedReturnBps(progress: LinkedProgress | undefined): number | null {
+  if (!progress || progress.piggyBanks.length === 0) return null;
+  const rate = weightedAnnualRate(
+    progress.piggyBanks.map((item) => ({
+      balance: item.balanceInGoalCurrency,
+      annualRate: item.annualRate,
+    })),
+  );
+  return rate > 0 ? Math.round(rate * 10_000) : null;
+}
+
+function planOf(goal: GoalRecord, saved: number, today: Date, progress?: LinkedProgress) {
   return {
     targetAmount: goal.targetAmount,
     saved,
     startDate: goal.startDate,
     targetDate: goal.targetDate,
     monthlyContribution: goal.monthlyContribution,
-    expectedReturnBps: goal.expectedReturnBps,
+    expectedReturnBps: linkedReturnBps(progress) ?? goal.expectedReturnBps,
     today,
   };
 }
 
-function mapGoal(goal: GoalRecord, allRows: readonly GoalContributionRecord[], today: Date): Goal {
+function mapGoal(
+  goal: GoalRecord,
+  allRows: readonly GoalContributionRecord[],
+  today: Date,
+  linked?: LinkedProgress,
+): Goal {
   const contributions = allRows.filter(countsAsProgress);
-  const saved = contributions.reduce((sum, row) => sum + row.amount, 0);
-  const estimate = estimateGoal(planOf(goal, saved, today));
-  const achievedOn = findAchievedOn(goal.targetAmount, contributions);
+  // A goal with linked piggy banks is driven by their balances; contributions no longer count.
+  const saved = linked ? linked.saved : contributions.reduce((sum, row) => sum + row.amount, 0);
+  const estimate = estimateGoal(planOf(goal, saved, today, linked));
+  const achievedOn = linked ? null : findAchievedOn(goal.targetAmount, contributions);
   const last = contributions.at(-1);
 
   return {
@@ -147,7 +187,7 @@ function mapGoal(goal: GoalRecord, allRows: readonly GoalContributionRecord[], t
     expectedReturnBps: goal.expectedReturnBps,
     accountId: goal.accountId,
     endMonth: goal.endMonth ? monthKey(goal.endMonth) : null,
-    locations: locationsOf(allRows),
+    locations: linked ? linkedLocations(linked) : locationsOf(allRows),
     saved,
     contributionCount: contributions.length,
     lastContributionOn: last ? formatISODate(last.contributedOn) : null,
@@ -170,13 +210,14 @@ async function buildSummaries(
 ): Promise<Goal[]> {
   const today = getTodayInTimezone(context.timezone);
   const rows = await goalsRepository.listContributions(goals.map((goal) => goal.id));
+  const linked = await loadLinkedProgress(context, goals);
   const byGoal = new Map<string, GoalContributionRecord[]>();
   for (const row of rows) {
     const list = byGoal.get(row.goalId) ?? [];
     list.push(row);
     byGoal.set(row.goalId, list);
   }
-  return goals.map((goal) => mapGoal(goal, byGoal.get(goal.id) ?? [], today));
+  return goals.map((goal) => mapGoal(goal, byGoal.get(goal.id) ?? [], today, linked.get(goal.id)));
 }
 
 async function presentGoal(context: HouseholdContext, goal: GoalRecord): Promise<GoalDetail> {
@@ -186,10 +227,15 @@ async function presentGoal(context: HouseholdContext, goal: GoalRecord): Promise
     context,
     rows.map((row) => row.transactionId),
   );
-  const summary = mapGoal(goal, rows, today);
+  const linked = (await loadLinkedProgress(context, [goal])).get(goal.id);
+  const summary = mapGoal(goal, rows, today, linked);
   const timeline = buildGoalTimeline(
-    planOf(goal, summary.saved, today),
-    rows.filter(countsAsProgress).map((row) => ({ date: row.contributedOn, amount: row.amount })),
+    planOf(goal, summary.saved, today, linked),
+    linked
+      ? []
+      : rows
+          .filter(countsAsProgress)
+          .map((row) => ({ date: row.contributedOn, amount: row.amount })),
   );
 
   return {
@@ -333,6 +379,7 @@ export async function addContribution(
   body: CreateContributionInput,
 ): Promise<GoalDetail> {
   const goal = await requireGoal(context, goalId);
+  await assertGoalNotLinked(goal.id);
 
   let amount = body.amount;
   let contributedOn = body.contributedOn ? toDay(body.contributedOn) : undefined;
@@ -372,6 +419,7 @@ export async function updateContribution(
   body: UpdateContributionInput,
 ): Promise<GoalDetail> {
   const goal = await requireGoal(context, goalId);
+  await assertGoalNotLinked(goal.id);
   const current = await requireContribution(goalId, contributionId);
 
   const amount = body.amount ?? current.amount;
@@ -404,6 +452,7 @@ export async function removeContribution(
   contributionId: string,
 ): Promise<GoalDetail> {
   const goal = await requireGoal(context, goalId);
+  await assertGoalNotLinked(goal.id);
   await requireContribution(goalId, contributionId);
   await goalsRepository.deleteContribution(contributionId);
   return presentGoal(context, goal);
@@ -498,6 +547,7 @@ export async function contributeToGoal(
   body: ContributeInput,
 ): Promise<GoalDetail> {
   const goal = await requireGoal(context, goalId);
+  await assertGoalNotLinked(goal.id);
   const currencyCode = body.currencyCode ?? goal.currencyCode;
   const foreign = currencyCode !== goal.currencyCode;
   if (foreign && !body.fxRate) {
@@ -551,6 +601,7 @@ export async function moveGoalFunds(
   body: MoveInput,
 ): Promise<GoalDetail> {
   const goal = await requireGoal(context, goalId);
+  await assertGoalNotLinked(goal.id);
   const rows = await goalsRepository.listContributions([goalId]);
   const held = locationsOf(rows).find((item) => item.accountId === body.fromAccountId)?.amount ?? 0;
   if (held < body.amount) {
@@ -593,6 +644,7 @@ export async function withdrawFromGoal(
   body: WithdrawInput,
 ): Promise<GoalDetail> {
   const goal = await requireGoal(context, goalId);
+  await assertGoalNotLinked(goal.id);
   await requireCashAccount(context, body.fromAccountId);
 
   let amount = body.amount;
@@ -651,6 +703,12 @@ export async function getGoalsReport(
   );
   const summaries = await buildSummaries(context, goals);
   const rows = await goalsRepository.listContributions(goals.map((goal) => goal.id));
+  const linked = await loadLinkedProgress(context, goals);
+  const linkedFlows = new Map<string, number>();
+  for (const goal of goals) {
+    const progress = linked.get(goal.id);
+    if (progress) linkedFlows.set(goal.id, await linkedMonthFlow(context, goal, progress, key));
+  }
 
   return {
     month: key,
@@ -660,12 +718,16 @@ export async function getGoalsReport(
         goal.status === "active" &&
         monthKey(goal.startDate) <= key &&
         (!goal.endMonth || monthKey(goal.endMonth) >= key);
-      const contributed = rows
-        .filter(
-          (row) =>
-            row.goalId === goal.id && countsAsProgress(row) && monthKey(row.contributedOn) === key,
-        )
-        .reduce((sum, row) => sum + row.amount, 0);
+      const contributed = linked.has(goal.id)
+        ? (linkedFlows.get(goal.id) ?? 0)
+        : rows
+            .filter(
+              (row) =>
+                row.goalId === goal.id &&
+                countsAsProgress(row) &&
+                monthKey(row.contributedOn) === key,
+            )
+            .reduce((sum, row) => sum + row.amount, 0);
       return {
         goalId: goal.id,
         name: goal.name,

@@ -239,3 +239,4 @@ export type PiggyBanksReport = z.output<typeof piggyBanksReportSchema>;
 export type GoalPiggyBanks = z.output<typeof goalPiggyBanksSchema>;
 export type GoalPiggyPlan = z.output<typeof goalPiggyPlanSchema>;
 export type PiggyProjectionPoint = z.output<typeof piggyProjectionPointSchema>;
+export type PiggyBankGoalLink = z.output<typeof piggyBankGoalLinkSchema>;
