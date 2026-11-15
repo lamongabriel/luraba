@@ -84,6 +84,6 @@ date edit (`rebuildSchedulesFromClosingDate`) keep the stored amounts.
   its ledger entries and budget recognitions) to what was billed, then credits the billed part. The card's used
   limit shrinks with it; the category nets to zero once the credit is in.
 
-Both refuse when nothing is left to refund. A partial refund of an installment purchase is a plain `refund`
+Both refuse when nothing is left to refund. "Left" subtracts every linked money-back row, even rows paid into a bank account (a split or cashback), so the card is credited only for the remainder. A partial refund of an installment purchase is a plain `refund`
 transaction (a single credit). Credits reduce the invoice statement; `GET .../cycles/:cycleId` lists them in
 `credits`.

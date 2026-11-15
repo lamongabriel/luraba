@@ -19,7 +19,7 @@ Setup and usage for humans: [docs/api-keys-mcp/mcp.md](../../docs/api-keys-mcp/m
 | `src/client/` | `LurabaClient` (typed by the contract: validates requests and responses), `fetchAllPages`, error mapping. |
 | `src/mcp/` | `createMcpServer` (low-level `Server`, tools + resources) and the zod to JSON Schema helper. |
 | `src/http/app.ts` | Express + streamable HTTP. A session is bound to the bearer credential that opened it (API key or OAuth token, verified once against the API); missing or bad credentials get a 401 with `WWW-Authenticate: Bearer resource_metadata=...` so OAuth clients start the sign-in. Served publicly at `<base URL>/mcp` through the API proxy. |
-| `src/tools/` | One file per area (`card-purchases.ts` the `update_card_purchase` and `update_installment` tools, `accounts.ts` holds the account and credit card write tools, `refunds.ts` the refund, purchase cancellation and card payment tools, `bills.ts` the recurring bill and budget tools, `bill-matching.ts` the auto-link of new expenses to bills, `goals.ts` the goal, goal funds and monthly plan tools, `safe-to-spend.ts` the left-to-spend report; `reports.ts` `report_budget` reuses `buildBudgetItems` from `@luraba/domain` so a parent's actual includes its subcategories exactly as the Budgets page shows it); `registry.ts` is the list the server exposes. |
+| `src/tools/` | One file per area (`card-purchases.ts` the `update_card_purchase` and `update_installment` tools, `accounts.ts` holds the account and credit card write tools, `refunds.ts` the refund (any account or card, `split` reason), `link_refund`, purchase cancellation and card payment tools, `bills.ts` the recurring bill and budget tools, `bill-matching.ts` the auto-link of new expenses to bills, `goals.ts` the goal, goal funds and monthly plan tools, `safe-to-spend.ts` the left-to-spend report; `reports.ts` `report_budget` reuses `buildBudgetItems` from `@luraba/domain` so a parent's actual includes its subcategories exactly as the Budgets page shows it); `registry.ts` is the list the server exposes. |
 | `src/resolve/` | Forgiving name resolution (`id`, exact, partial) that returns candidates instead of guessing. |
 | `src/format/` | Money (major units + currency), periods, transaction summaries. |
 | `src/context/resources.ts` | `luraba://guide/...` resources an agent can read first. |
@@ -58,3 +58,13 @@ Setup and usage for humans: [docs/api-keys-mcp/mcp.md](../../docs/api-keys-mcp/m
 Start them on their own ports (for example API 3101, web 3100, MCP 3433) and stop only what you started: keep the
 PID (`$!`) or use `lsof -tiTCP:<port> -sTCP:LISTEN | xargs kill`. Never `pkill -f` or `killall` with a command-line
 pattern such as `src/server.ts`: it matches every worktree's processes, including a developer's own `pnpm dev`.
+
+## Money back linked to a purchase
+
+`create_refund` takes `originalTransactionId` for any expense or card purchase, whichever `account` / `creditCard`
+receives the money (reason `split` is a friend paying their share). `link_refund` (`refundId`,
+`originalTransactionId` or `null`, `dryRun`) links or unlinks an existing row. `get_transaction` and
+`search_transactions` rows carry `receivedBack` and `outOfPocket` (positive major-unit money objects, `null` on
+non-expenses) and `receivedBackRows` (id, reason, description, date, account, amount). The amount cap, same-currency
+rule and reporting are documented in the API [transactions README](../api/src/modules/transactions/README.md).
+

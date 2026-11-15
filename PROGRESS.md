@@ -67,3 +67,12 @@ Production (`main`, deployed) is at `3c28137`: notes/originalDescription, `/plan
 - Web: Archive/Unarchive row in the account and card edit sheets, "Show archived" header button on /accounts and /credit-cards, dimmed archived rows and tiles; pickers never offer archived accounts.
 - Note: parallel sessions share the `luraba_db_test` database and wipe it mid-run; this work used `DB_NAME=luraba_db_test_archive`.
 - Known gap: editing an existing transaction that sits on an archived account shows an empty account picker (the picker omits archived accounts).
+
+## Money back linked to any purchase (branch claude/jolly-jang-4fea3f)
+- Migration `0058_refund_reason_split` adds the `split` reason. Refunds, cashback and splits can link to any expense or card purchase whichever account or card gets the money; many rows per purchase; cap = sum of linked rows <= original; same currency only (422, no conversion). Posting is unchanged (the row keeps its own account/ledger/category/date), so a card purchase refunded to a bank account leaves the card's limit and invoice untouched. Reports net by the money-back row's own category and month (same as same-account refunds).
+- API: `PATCH /transactions/:id/link-refund` (link, relink, unlink); `moneyBack { totalAmount, receivedBack, outOfPocket, entries }` on expenses and card purchases (detail and list). `cancel_purchase` credits only what is left after linked rows.
+- MCP: `create_refund` with any account/card + `split`, new `link_refund` (dryRun), `receivedBack` / `outOfPocket` / `receivedBackRows` on `get_transaction` and `search_transactions`.
+- Web: "Net cost" block on purchase detail, "Linked purchase" (For + link/unlink picker) on money-back rows, `RefundReasonDisplay`, split label.
+- Backfill is for the owner after deploy: Mario's R$82 Pix (Inter, 2026-11-07) -> Lanchonight (XP Visa, purchaseId 302587e0-2a96-40b3-be10-4c649c4ea13f) and each unlinked Inter Global gift-card cashback, via `link_refund`.
+- Tip: parallel sessions share `luraba_db_test`; run the full suite with `DB_NAME=luraba_db_test_moneyback`.
+
